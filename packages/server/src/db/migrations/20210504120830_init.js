@@ -1,4 +1,4 @@
-import { THEME, ACCOUNT_STATUS, SKU_STATUS, IMAGE_EXTENSION, IMAGE_USE, ORDER_STATUS, TASK_STATUS } from '@local/shared';
+import { THEME, ACCOUNT_STATUS, SKU_STATUS, IMAGE_USE, ORDER_STATUS, TASK_STATUS } from '@local/shared';
 import { TABLES } from '../tables';
 
 export async function up (knex) {
