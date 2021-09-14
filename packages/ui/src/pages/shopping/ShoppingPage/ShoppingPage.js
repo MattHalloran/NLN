@@ -79,7 +79,7 @@ function ShoppingPage({
         setHideOutOfStock(event.target.checked);
     }, [])
 
-    const traitOptionsToSelector = useCallback((field, title) => {
+    const traitOptionsToSelector = useCallback((title, field) => {
         if (!traitOptions) return;
         let options = traitOptions[field];
         if (!options || !Array.isArray(options) || options.length <= 0) return null;
@@ -124,19 +124,21 @@ function ShoppingPage({
     );
 
     let traitList = [
-        ['size', 'Sizes'],
-        ['optimalLight', 'Optimal Light'],
-        ['droughtTolerance', 'Drought Tolerance'],
-        ['grownHeight', 'Grown Height'],
-        ['grownSpread', 'Grown Spread'],
-        ['growthRate', 'Growth Rate'],
-        ['saltTolerance', 'Salt Tolerance'],
-        ['attractsPolinatorsAndWildlifes', 'Pollinator'],
-        ['lightRanges', 'Light Range'],
-        ['soilMoistures', 'Soil Moisture'],
-        ['soilPhs', 'Soil PH'],
-        ['soilTypes', 'Soil Type'],
-        ['zones', 'Zone'],
+        // ['size', 'Sizes'], TODO this is a sku field, and must be treated as such
+        ['Attracts Pollinators & Wildlife', 'attractsPollinatorsAndWildlife'],
+        ['Bloom Colors', 'bloomColors'],
+        ['Bloom Times', 'bloomTimes'],
+        ['Drought Tolerance', 'droughtTolerance'],
+        ['Grown Height', 'grownHeight'],
+        ['Grown Spread', 'grownSpread'],
+        ['Growth Rate', 'growthRate'],
+        ['Hardiness Zones', 'zone'],
+        ['Light Ranges', 'lightRanges'],
+        ['Optimal Light', 'optimalLight'],
+        ['Salt Tolerance', 'saltTolerance'],
+        ['Soil Moistures', 'soilMoistures'],
+        ['Soil PHs', 'soilPhs'],
+        ['Soil Types', 'soilTypes'],
     ]
 
     return (

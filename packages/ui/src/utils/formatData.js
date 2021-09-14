@@ -7,6 +7,7 @@ import _ from 'lodash';
 export const showPrice = (price) => {
     if (!price) return 'N/A';
     let result = Number(price);
+    if (result < 0) return 'N/A';
     if (isNaN(result)) return price;
     return `$${result.toFixed(2)}`;
 }

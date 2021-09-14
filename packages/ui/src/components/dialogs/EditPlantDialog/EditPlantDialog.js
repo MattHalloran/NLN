@@ -5,6 +5,7 @@ import {
     Autocomplete,
     Button,
     Dialog,
+    FormControlLabel,
     Grid,
     IconButton,
     List,
@@ -12,6 +13,7 @@ import {
     ListItemText,
     ListSubheader,
     Slide,
+    Switch,
     TextField,
     Toolbar,
     Tooltip,
@@ -77,6 +79,10 @@ const useStyles = makeStyles((theme) => ({
     title: {
         paddingBottom: '1vh',
     },
+    toggle: {
+        position: 'absolute',
+        right: 0,
+    },
     gridContainer: {
         paddingBottom: '3vh',
     },
@@ -135,6 +141,9 @@ function EditPlantDialog({
     const [imageData, setImageData] = useState([]);
     const [imagesChanged, setImagesChanged] = useState(false);
     const [addImages] = useMutation(addImagesMutation);
+
+    const [compactView, setCompactView] = useState(false);
+    const toggleCompactView = () => setCompactView(view => !view);
 
     const uploadImages = (acceptedFiles) => {
         mutationWrapper({
@@ -287,6 +296,17 @@ function EditPlantDialog({
                     <IconButton edge="start" color="inherit" onClick={onClose} aria-label="close">
                         <CloseIcon />
                     </IconButton>
+                    <FormControlLabel
+                        className={classes.toggle}
+                        control={
+                            <Switch
+                                checked={compactView}
+                                onChange={toggleCompactView}
+                                color="secondary"
+                            />
+                        }
+                        label="Compact View"
+                    />
                 </Toolbar>
             </AppBar>
             <div className={classes.container}>
@@ -344,34 +364,52 @@ function EditPlantDialog({
                                 onChange={e => updateTrait('commonName', e.target.value, false)}
                             />
                         </Grid>
-                        {/* Select which trait you'd like to edit */}
-                        <Grid item xs={12} sm={6}>
-                            <Autocomplete
-                                fullWidth
-                                freeSolo
-                                id="setTraitField"
-                                name="setTraitField"
-                                options={Object.keys(PLANT_TRAITS)}
-                                onChange={(_, value) => setSelectedTrait(PLANT_TRAITS[value])}
-                                renderInput={(params) => (
-                                    <TextField
-                                        {...params}
-                                        label="Select plant trait"
-                                        value={PLANT_TRAITS[selectedTrait] ?? ''}
+                        {
+                            compactView ? <React.Fragment>
+                                {/* Select which trait you'd like to edit */}
+                                < Grid item xs={12} sm={6}>
+                                    <Autocomplete
+                                        fullWidth
+                                        freeSolo
+                                        id="setTraitField"
+                                        name="setTraitField"
+                                        options={Object.keys(PLANT_TRAITS)}
+                                        onChange={(_, value) => setSelectedTrait(PLANT_TRAITS[value])}
+                                        renderInput={(params) => (
+                                            <TextField
+                                                {...params}
+                                                label="Select plant trait"
+                                                value={PLANT_TRAITS[selectedTrait] ?? ''}
+                                            />
+                                        )}
                                     />
-                                )}
-                            />
-                        </Grid>
-                        {/* Edit selected trait */}
-                        <Grid item xs={12} sm={6}>
-                            <TextField
-                                fullWidth
-                                size="small"
-                                label="Trait value"
-                                value={getPlantTrait(selectedTrait, changedPlant) ?? ''}
-                                onChange={e => updateTrait(selectedTrait, e.target.value, true)}
-                            />
-                        </Grid>
+                                </Grid>
+                                {/* Edit selected trait */}
+                                <Grid item xs={12} sm={6}>
+                                    <TextField
+                                        fullWidth
+                                        size="small"
+                                        label="Trait value"
+                                        value={getPlantTrait(selectedTrait, changedPlant) ?? ''}
+                                        onChange={e => updateTrait(selectedTrait, e.target.value, true)}
+                                    />
+                                </Grid>
+                            </React.Fragment> :
+                                <React.Fragment>
+                                    {Object.entries(PLANT_TRAITS).map(([label, field]) => (
+                                        <Grid item xs={12} sm={6}>
+                                            <TextField
+                                                fullWidth
+                                                size="small"
+                                                label={label}
+                                                value={getPlantTrait(field, changedPlant) ?? ''}
+                                                onChange={e => updateTrait(field, e.target.value, true)}
+                                            />
+                                        </Grid>
+                                    ))}
+                                </React.Fragment>
+                        }
+
                     </Grid>
                     <Typography className={classes.title} variant="h5" component="h3">Edit images</Typography>
                     <Grid className={classes.gridContainer} container spacing={2}>
@@ -433,7 +471,7 @@ function EditPlantDialog({
                     {options}
                 </div>
             </div>
-        </Dialog>
+        </Dialog >
     );
 }
 
