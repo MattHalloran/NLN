@@ -361,7 +361,18 @@ function EditPlantDialog({
                                 size="small"
                                 label="Common Name"
                                 value={getPlantTrait('commonName', changedPlant)}
-                                onChange={e => updateTrait('commonName', e.target.value, false)}
+                                onChange={e => updateTrait('commonName', e.target.value, true)}
+                            />
+                        </Grid>
+                        <Grid item xs={12}>
+                            <TextField
+                                fullWidth
+                                multiline
+                                maxRows={compactView ? 4 : 10}
+                                size="small"
+                                label="Description"
+                                value={getPlantTrait('description', changedPlant)}
+                                onChange={e => updateTrait('description', e.target.value, true)}
                             />
                         </Grid>
                         {
