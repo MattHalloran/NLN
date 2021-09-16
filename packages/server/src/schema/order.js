@@ -3,6 +3,7 @@ import { TABLES } from '../db';
 import { CODE, ORDER_STATUS } from '@local/shared';
 import { CustomError } from '../error';
 import { PrismaSelect } from '@paljs/plugins';
+import { orderNotifyAdmin } from '../worker/email/queue';
 
 const _model = TABLES.Order;
 
@@ -145,6 +146,7 @@ export const resolvers = {
                 where: { id: curr.id },
                 data: { status: ORDER_STATUS.Pending }
             });
+            orderNotifyAdmin();
             return true;
         },
         cancelOrder: async (_, args, context) => {

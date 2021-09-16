@@ -78,7 +78,7 @@ const useStyles = makeStyles((theme) => ({
         borderRadius: 0,
     },
     icon: {
-        fill: theme.palette.mode === 'light' ? 'black': 'white',
+        fill: theme.palette.mode === 'light' ? 'black' : 'white',
     },
     optionsContainer: {
         padding: theme.spacing(2),
@@ -177,7 +177,7 @@ function PlantDialog({
             </Grid>
             <Grid item xs={6} sm={4}>
                 <QuantityBox
-                    style={{height: '100%'}}
+                    style={{ height: '100%' }}
                     min_value={0}
                     max_value={Math.max.apply(Math, plant.skus.map(s => s.availability))}
                     initial_value={1}
@@ -188,7 +188,7 @@ function PlantDialog({
                 <Button
                     disabled={!currSku}
                     fullWidth
-                    style={{height: '100%'}}
+                    style={{ height: '100%' }}
                     color="secondary"
                     startIcon={<AddShoppingCartIcon />}
                     onClick={() => onAddToCart(getPlantTrait('commonName', plant) ?? plant.latinName, currSku, quantity)}
@@ -244,11 +244,6 @@ function PlantDialog({
                         }
                     </Grid>
                     <Grid item lg={6} xs={12}>
-                        {plant.description ?
-                            <Collapse style={{ height: '20%' }} title="Description">
-                                <p>{plant.description}</p>
-                            </Collapse>
-                            : null}
                         {displayedTraitData.length > 0 ? (
                             <React.Fragment>
                                 <ListItem className={classes.menuItem} button onClick={handleDetailsClick}>
@@ -257,6 +252,7 @@ function PlantDialog({
                                     {detailsOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                                 </ListItem>
                                 <Collapse in={detailsOpen} timeout='auto' unmountOnExit>
+                                    {getPlantTrait('description', plant) ? <p style={{padding: theme.spacing(2)}}>{getPlantTrait('description', plant)}</p> : null}
                                     <List>{displayedTraitData}</List>
                                 </Collapse>
                             </React.Fragment>
