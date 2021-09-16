@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import PropTypes from 'prop-types';
-import { FormControl, FormHelperText, IconButton, Input, InputLabel, TextField } from '@material-ui/core';
+import { FormControl, IconButton, Input, InputLabel } from '@material-ui/core';
 import {
     Add as AddIcon,
     Remove as RemoveIcon
