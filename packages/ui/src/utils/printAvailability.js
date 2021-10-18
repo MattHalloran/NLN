@@ -30,7 +30,7 @@ export const printAvailability = (session, title) => {
     const client = initializeApollo();
     client.query({
         query: skusQuery,
-        sortBy: SKU_SORT_OPTIONS.AZ
+        variables: { sortBy: SKU_SORT_OPTIONS.AZ }
     }).then(response => {
         const data = response.data.skus;
         const priceVisible = session !== null;
