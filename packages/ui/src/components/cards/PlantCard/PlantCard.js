@@ -1,7 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types'
 import {
-    Button,
     Card,
     CardActionArea,
     CardActions,
@@ -95,7 +94,7 @@ function PlantCard({
                 {display}
                 <CardContent className={classes.content}>
                     <Typography gutterBottom variant="h6" component="h3">
-                        {getPlantTrait('commonName', plant) ?? plant.latinName}
+                        {plant.latinName ?? getPlantTrait('commonName', plant)}
                     </Typography>
                     <div className="size-container">
                         {sizes}
