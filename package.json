@@ -3,7 +3,11 @@
     "workspaces": [
         "packages/*"
     ],
+    "author": "New Life Nursery",
     "license": "MIT",
+    "resolutions": {
+        "babel-loader": "8.1.0"
+    },
     "devDependencies": {
         "eslint": "^7.31.0",
         "patch-package": "^6.4.7",
