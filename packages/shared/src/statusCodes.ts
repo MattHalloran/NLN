@@ -31,6 +31,11 @@ export const CODE = {
         code: 'BAD_CREDENTIALS',
         message: 'Error: Email or password incorrect'
     },
+    RateLimitExceeded: {
+        code: 'RateLimitExceeded',
+        message: 'This resource has been requested too many times. Please try again later.',
+        snack: 'Rate limit exceeded',
+    },
     SoftLockout: {
         code: 'SOFT_LOCKOUT',
         message: 'Error: Too many login attempts. Try again in 15 minutes'

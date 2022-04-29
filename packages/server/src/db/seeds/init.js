@@ -4,7 +4,7 @@ import bcrypt from 'bcrypt';
 import { HASHING_ROUNDS } from '../../consts';
 import { db } from '../db';
 
-export async function seed() {
+export async function init() {
     console.info('🌱 Starting database intial seed...');
 
     // Find existing roles
