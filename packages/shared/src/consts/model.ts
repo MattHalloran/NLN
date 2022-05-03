@@ -95,10 +95,6 @@ export const TASK_STATUS = {
     Active: 'Active',
     Completed: 'Completed',
 }
-export const THEME = {
-    Light: 'light',
-    Dark: 'dark'
-}
 export const TRAIT_NAME = {
     DroughtTolerance: 'Drought tolerance',
     GrownHeight: 'Grown height',

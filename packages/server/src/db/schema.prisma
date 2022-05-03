@@ -133,7 +133,7 @@ model image {
   created_at   DateTime       @default(now()) @db.Timestamptz(6)
   updated_at   DateTime       @default(now()) @db.Timestamptz(6)
   files        image_file[]
-  labels       image_labels[]
+  labels       image_label[]
   plant_images plant_images[]
 }
 
@@ -145,14 +145,14 @@ model image_file {
   image  image  @relation(fields: [hash], references: [hash], onDelete: Cascade)
 }
 
-model image_labels {
+model image_label {
   id    Int    @id @default(autoincrement())
   hash  String @db.VarChar(128)
   label String @db.VarChar(255)
   index Int
   image image  @relation(fields: [hash], references: [hash], onDelete: Cascade)
 
-  @@unique([hash, label], name: "image_labels_hash_label_unique")
+  @@unique([hash, label], name: "image_label_hash_label_unique")
 }
 
 model order {
