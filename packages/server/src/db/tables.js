@@ -1,6 +1,6 @@
 export const ASSOCIATION_TABLES = {
     BusinessDiscounts: 'business_discounts',
-    ImageLabels: 'image_labels',
+    ImageLabels: 'image_label',
     PlantImages: 'plant_images',
     SkuDiscounts: 'sku_discounts',
     SkuSizes: 'sku_sizes',

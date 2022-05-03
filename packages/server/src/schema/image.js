@@ -121,7 +121,7 @@ export const resolvers = {
                 if (args.label) {
                     // Update position in label
                     await context.prisma[TABLES.ImageLabels].update({
-                        where: { image_labels_hash_label_unique: { hash: curr.hash, label: args.label } },
+                        where: { image_label_hash_label_unique: { hash: curr.hash, label: args.label } },
                         data: { index: i }
                     })
                 }

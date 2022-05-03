@@ -6,7 +6,7 @@ services:
             dockerfile: ./packages/ui/Dockerfile
             args:
                 PROJECT_DIR: "${PROJECT_DIR}"
-        container_name: nln_ui
+        container_name: ui
         environment: 
             NODE_ENV: "${NODE_ENV}"
             PROJECT_DIR: "${PROJECT_DIR}"
@@ -33,7 +33,7 @@ services:
             dockerfile: ./packages/server/Dockerfile
             args:
                 PROJECT_DIR: "${PROJECT_DIR}"
-        container_name: nln_server
+        container_name: server
         environment: 
             NODE_ENV: "${NODE_ENV}"
             JWT_SECRET: "${JWT_SECRET}"
@@ -68,6 +68,7 @@ services:
             - ./packages/server:${PROJECT_DIR}/packages/server:z
             - ./packages/shared:${PROJECT_DIR}/packages/shared:z
             - ./data/logs:${PROJECT_DIR}/data/logs:z
+            - ./assets:${PROJECT_DIR}/assets:z
             - ./data/uploads:${PROJECT_DIR}/data/uploads:z
             - ./packages/server/src/db/migrations:${PROJECT_DIR}/packages/server/src/db/migrations
         depends_on: 
@@ -77,7 +78,7 @@ services:
     db:
         image: postgres:13
         restart: always
-        container_name: nln_db
+        container_name: db
         environment: 
             POSTGRES_DB: "${DB_NAME}"
             POSTGRES_USER: "${DB_USER}"
@@ -92,7 +93,7 @@ services:
             - ./packages/db/entrypoint:/docker-entrypoint-initdb.d
     redis:
         image: redis
-        container_name: nln_redis
+        container_name: redis
         restart: always
         networks:
           - app   
