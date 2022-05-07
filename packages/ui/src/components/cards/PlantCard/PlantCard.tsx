@@ -78,7 +78,7 @@ function PlantCard({
             sx={{...displayImage}}
         />
     } else {
-        display = <NoImageWithTextIcon sx={{...displayImage}} />
+        display = <NoImageWithTextIcon style={{...displayImage}} />
     }
 
     return (
