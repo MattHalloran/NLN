@@ -1,15 +1,16 @@
-# Run this file by typing: docker-compose up -d
+# Run this file by typing: docker-compose up -f docker-compose-prod.yml -d
 version: "3.9"
 services:
     ui:
         build:
             context: .
-            dockerfile: ./packages/ui/Dockerfile
+            dockerfile: ./packages/ui/Dockerfile-prod
             args:
                 PROJECT_DIR: "${PROJECT_DIR}"
         container_name: ui
+        restart: always
         environment: 
-            NODE_ENV: "development"
+            NODE_ENV: "production"
             PROJECT_DIR: "${PROJECT_DIR}"
             VIRTUAL_HOST: "${VIRTUAL_HOST}"
             VIRTUAL_PATH: "/"
@@ -36,8 +37,9 @@ services:
             args:
                 PROJECT_DIR: "${PROJECT_DIR}"
         container_name: server
+        restart: always
         environment: 
-            NODE_ENV: "development"
+            NODE_ENV: "production"
             JWT_SECRET: "${JWT_SECRET}"
             PROJECT_DIR: "${PROJECT_DIR}"
             REACT_APP_SERVER_LOCATION: "${SERVER_LOCATION}"
@@ -100,10 +102,10 @@ services:
         networks:
           - app   
         volumes:
-          - ./data/redis:/srv/app/data/redis:z   
+          - ./data/redis:/srv/app/data/redis:z    
         ports:
-            - ${PORT_REDIS}:6379
-        command: /bin/sh -c "chmod +x /srv/app/data/redis* && redis-server /usr/local/etc/redis/redis.conf"
+          - ${PORT_REDIS}:6379
+        command: /bin/sh -c "mkdir -p /srv/app/data/redis/appendonlydir && rm -f /srv/app/data/redis/dump.rdb && redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru --appendonly yes --dbfilename dump.rdb --dir /srv/app/data/redis/"
     # adminer:
     #     image: adminer
     #     restart: always
