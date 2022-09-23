@@ -28,5 +28,5 @@
     },
     "include": [
         "src"
-, "validation/src/index.ts", "consts/src/statusCodes.ts", "consts/src/api.ts", "route"    ]
+    ],
 }
