@@ -148,9 +148,12 @@ build/
 #Database
 *.db
 
-#Postgres
-*data/postgres/
-*data/certbot/
+#Persistent data
+data/logs/
+data/postgres/
+data/redis/
+data/stats/
+data/uploads/
 
 #Assets
 *assets/images/
