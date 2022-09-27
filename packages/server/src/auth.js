@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import { CODE, COOKIE } from '@local/shared';
+import { CODE, COOKIE } from '@shared/consts';
 import { TABLES } from './db';
 import { CustomError } from './error';
 import pkg from '@prisma/client';

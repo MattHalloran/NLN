@@ -13,7 +13,7 @@ import { makeStyles } from '@material-ui/styles';
 import AdapterDateFns from '@material-ui/lab/AdapterDateFns';
 import LocalizationProvider from '@material-ui/lab/LocalizationProvider';
 import DatePicker from '@material-ui/lab/DatePicker';
-import { IMAGE_USE } from '@local/shared';
+import { IMAGE_USE } from '@shared/consts';
 
 const useStyles = makeStyles((theme) => ({
     tablePaper: {

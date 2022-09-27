@@ -1,6 +1,6 @@
 import { gql } from 'apollo-server-express';
 import { TABLES } from '../db';
-import { CODE, PLANT_SORT_OPTIONS, SKU_STATUS } from '@local/shared';
+import { CODE, PLANT_SORT_OPTIONS, SKU_STATUS } from '@shared/consts';
 import { CustomError } from '../error';
 import { PrismaSelect } from '@paljs/plugins';
 

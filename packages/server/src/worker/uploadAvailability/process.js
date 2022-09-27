@@ -1,5 +1,5 @@
 import { TABLES } from "../../db";
-import { SKU_STATUS } from "@local/shared";
+import { SKU_STATUS } from '@shared/consts';
 import pkg from '@prisma/client';
 const { PrismaClient } = pkg;
 

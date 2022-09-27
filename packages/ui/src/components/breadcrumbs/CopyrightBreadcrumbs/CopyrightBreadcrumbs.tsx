@@ -1,5 +1,5 @@
 import { BreadcrumbsBase } from '../BreadcrumbsBase/BreadcrumbsBase';
-import { APP_LINKS } from '@local/shared';
+import { APP_LINKS } from '@shared/consts';
 import { CopyrightBreadcrumbsProps } from '../types';
 
 export const CopyrightBreadcrumbs = ({ 

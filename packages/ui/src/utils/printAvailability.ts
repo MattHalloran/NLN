@@ -4,7 +4,7 @@ import { showPrice, PUBS, PubSub } from 'utils';
 import { skusQuery } from 'graphql/query';
 import { initializeApollo } from 'graphql/utils/initialize';
 import { getPlantTrait } from "./plantTools";
-import { SKU_SORT_OPTIONS } from '@local/shared';
+import { SKU_SORT_OPTIONS } from '@shared/consts';
 
 const TITLE_FONT_SIZE = 30;
 const LIST_FONT_SIZE = 24;

@@ -1,7 +1,7 @@
 import React from 'react';
 import { signUpMutation } from 'graphql/mutation';
 import { useMutation } from '@apollo/client';
-import { CODE, DEFAULT_PRONOUNS, signUpSchema } from '@local/shared';
+import { CODE, DEFAULT_PRONOUNS, signUpSchema } from '@shared/consts';
 import { useFormik } from 'formik';
 import {
     Button,

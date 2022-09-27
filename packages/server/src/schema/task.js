@@ -1,6 +1,6 @@
 import { gql } from 'apollo-server-express';
 import { TABLES } from '../db';
-import { CODE, TASK_STATUS } from '@local/shared';
+import { CODE, TASK_STATUS } from '@shared/consts';
 import { CustomError } from '../error';
 import { PrismaSelect } from '@paljs/plugins';
 

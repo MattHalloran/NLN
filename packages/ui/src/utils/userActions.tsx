@@ -5,7 +5,7 @@ import {
     Shop as ShopIcon,
     ShoppingCart as ShoppingCartIcon
 } from '@mui/icons-material';
-import { ROLES } from '@local/shared';
+import { ROLES } from '@shared/consts';
 import { LINKS } from 'utils';
 import _ from 'lodash';
 

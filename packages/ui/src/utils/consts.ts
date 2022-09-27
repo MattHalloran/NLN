@@ -1,4 +1,4 @@
-import { COOKIE, ORDER_STATUS } from '@local/shared';
+import { COOKIE, ORDER_STATUS } from '@shared/consts';
 
 export const ORDER_FILTERS = [
     {

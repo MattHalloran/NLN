@@ -27,7 +27,7 @@ import { CartTable } from 'components';
 import { updateOrderMutation } from 'graphql/mutation';
 import { useMutation } from '@apollo/client';
 import { findWithAttr, ORDER_FILTERS } from 'utils';
-import { ORDER_STATUS, ROLES } from '@local/shared';
+import { ORDER_STATUS, ROLES } from '@shared/consts';
 import _ from 'lodash';
 import { mutationWrapper } from 'graphql/utils/wrappers';
 

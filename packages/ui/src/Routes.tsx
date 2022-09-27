@@ -2,7 +2,7 @@ import React, { Suspense } from 'react';
 import { lazily } from 'react-lazily'
 import PropTypes from 'prop-types';
 import { Switch, Route } from 'react-router-dom';
-import { ROLES } from '@local/shared';
+import { ROLES } from '@shared/consts';
 import { LINKS } from 'utils';
 import { Sitemap } from 'Sitemap';
 import {

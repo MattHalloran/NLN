@@ -1,5 +1,5 @@
 import { gql } from 'apollo-server-express';
-import { CODE, SKU_SORT_OPTIONS, SKU_STATUS } from '@local/shared';
+import { CODE, SKU_SORT_OPTIONS, SKU_STATUS } from '@shared/consts';
 import { CustomError } from '../error';
 import { saveFile } from '../utils';
 import { uploadAvailability } from '../worker/uploadAvailability/queue';

@@ -2,7 +2,7 @@ import React from 'react';
 import { useHistory, useParams } from 'react-router-dom';
 import { loginMutation } from 'graphql/mutation';
 import { useMutation } from '@apollo/client';
-import { CODE, logInSchema } from '@local/shared';
+import { CODE, logInSchema } from '@shared/consts';
 import { useFormik } from 'formik';
 import {
     Button,

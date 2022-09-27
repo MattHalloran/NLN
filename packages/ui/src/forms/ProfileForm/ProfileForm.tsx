@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { DEFAULT_PRONOUNS, profileSchema } from '@local/shared';
+import { DEFAULT_PRONOUNS, profileSchema } from '@shared/consts';
 import { useMutation, useQuery } from '@apollo/client';
 import { updateCustomerMutation } from 'graphql/mutation';
 import { profileQuery } from 'graphql/query';

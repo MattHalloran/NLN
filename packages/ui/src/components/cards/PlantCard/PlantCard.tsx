@@ -16,7 +16,7 @@ import {
 import { Launch as LaunchIcon } from '@mui/icons-material';
 import { showPrice, getImageSrc, getPlantTrait, getServerUrl } from 'utils';
 import { NoImageWithTextIcon } from 'assets/img';
-import { IMAGE_USE, SKU_STATUS } from '@local/shared';
+import { IMAGE_USE, SKU_STATUS } from '@shared/consts';
 
 const displayImage: SxProps<Theme> = {
     minHeight: 200,
