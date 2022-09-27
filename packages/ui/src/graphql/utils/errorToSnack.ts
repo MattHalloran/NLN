@@ -1,4 +1,4 @@
-import { CODE } from "@local/shared";
+import { CODE } from '@shared/consts';
 
 /**
  * Converts a GraphQL error into a snackbar message.

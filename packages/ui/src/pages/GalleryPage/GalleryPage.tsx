@@ -6,7 +6,7 @@ import { getImageSrc, getServerUrl, PUBS, PubSub } from 'utils';
 import { makeStyles } from '@mui/styles';
 import { imagesByLabelQuery } from 'graphql/query';
 import { useQuery } from '@apollo/client';
-import { IMAGE_SIZE } from '@local/shared';
+import { IMAGE_SIZE } from '@shared/consts';
 import { useTheme } from '@emotion/react';
 
 const useStyles = makeStyles(() => ({

@@ -2,7 +2,7 @@ import PropTypes from 'prop-types';
 import { useRef } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
 import { getImageSrc, getServerUrl } from 'utils';
-import { IMAGE_SIZE } from '@local/shared';
+import { IMAGE_SIZE } from '@shared/consts';
 import { Card, CardActions, CardContent, CardMedia, IconButton } from '@mui/material';
 import {
     Edit as EditIcon,

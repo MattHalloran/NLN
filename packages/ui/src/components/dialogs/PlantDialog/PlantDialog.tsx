@@ -47,7 +47,7 @@ import {
     ExpandMore as ExpandMoreIcon,
     Info as InfoIcon,
 } from '@mui/icons-material';
-import { IMAGE_SIZE } from '@local/shared';
+import { IMAGE_SIZE } from '@shared/consts';
 import _ from 'lodash';
 import Carousel from 'react-gallery-carousel';
 import 'react-gallery-carousel/dist/index.css';

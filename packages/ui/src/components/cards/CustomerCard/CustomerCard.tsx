@@ -22,7 +22,7 @@ import {
 import { makeStyles } from '@material-ui/styles';
 import { changeCustomerStatusMutation, deleteCustomerMutation } from 'graphql/mutation';
 import { useMutation } from '@apollo/client';
-import { ACCOUNT_STATUS } from '@local/shared';
+import { ACCOUNT_STATUS } from '@shared/consts';
 import { mutationWrapper } from 'graphql/utils/wrappers';
 import { useTheme } from '@emotion/react';
 import { emailLink, mapIfExists, phoneLink, PUBS, PubSub, showPhone } from 'utils';

@@ -21,7 +21,7 @@ import {
     Update as UpdateIcon
 } from '@mui/icons-material';
 import _ from 'lodash';
-import { ACCOUNT_STATUS } from '@local/shared';
+import { ACCOUNT_STATUS } from '@shared/consts';
 import { mutationWrapper } from 'graphql/utils/wrappers';
 import { deleteCustomerMutation, updateCustomerMutation } from 'graphql/mutation';
 import { PUBS, PubSub } from 'utils';

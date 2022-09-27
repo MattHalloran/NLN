@@ -1,7 +1,7 @@
 import React from 'react';
 import { resetPasswordMutation } from 'graphql/mutation';
 import { useMutation } from '@apollo/client';
-import { resetPasswordSchema } from '@local/shared';
+import { resetPasswordSchema } from '@shared/consts';
 import { useFormik } from 'formik';
 import {
     Button,

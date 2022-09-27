@@ -2,7 +2,7 @@ import { PrismaSelect } from "@paljs/plugins";
 import { TABLES } from "../tables";
 import { onlyPrimitives } from "../../utils/objectTools";
 import { CustomError } from "../../error";
-import { CODE, ORDER_STATUS } from '@local/shared';
+import { CODE, ORDER_STATUS } from '@shared/consts';
 
 // Validates email address, and returns customer data
 export async function customerFromEmail(email, prisma) {

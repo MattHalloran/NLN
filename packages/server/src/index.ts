@@ -36,7 +36,7 @@ const main = async () => {
 
     // Cross-Origin access. Accepts requests from localhost and dns
     // If you want a public server, set origin to true instead
-    let origins: Array<string | RegExp> = ['https://cardano-mainnet.blockfrost.io'];
+    let origins: Array<string | RegExp> = [];
     if (process.env.REACT_APP_SERVER_LOCATION === 'local') {
         origins.push(
             /^http:\/\/localhost(?::[0-9]+)?$/,

@@ -19,7 +19,7 @@ import {
     Close as CloseIcon,
 } from '@mui/icons-material';
 import _ from 'lodash';
-import { DEFAULT_PRONOUNS, addCustomerSchema } from '@local/shared';
+import { DEFAULT_PRONOUNS, addCustomerSchema } from '@shared/consts';
 import { mutationWrapper } from 'graphql/utils/wrappers';
 import { addCustomerMutation } from 'graphql/mutation';
 import { useFormik } from 'formik';

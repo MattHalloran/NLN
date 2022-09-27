@@ -6,7 +6,7 @@ import pkg from '@prisma/client';
 import probe from 'probe-image-size';
 import imghash from 'imghash';
 import sharp from 'sharp';
-import { IMAGE_EXTENSION, IMAGE_SIZE } from '@local/shared';
+import { IMAGE_EXTENSION, IMAGE_SIZE } from '@shared/consts';
 import { TABLES } from '../db';
 const { PrismaClient } = pkg;
 const prisma = new PrismaClient();

@@ -1,6 +1,6 @@
 import { gql } from 'apollo-server-express';
 import { TABLES } from '../db';
-import { CODE, IMAGE_SIZE } from '@local/shared';
+import { CODE, IMAGE_SIZE } from '@shared/consts';
 import { CustomError } from '../error';
 import { deleteImage, saveImage } from '../utils';
 import { PrismaSelect } from '@paljs/plugins';

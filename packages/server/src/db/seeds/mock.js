@@ -1,4 +1,4 @@
-import { ACCOUNT_STATUS } from '@local/shared';
+import { ACCOUNT_STATUS } from '@shared/conts';
 import { TABLES } from '../tables';
 import bcrypt from 'bcrypt';
 import { HASHING_ROUNDS } from '../../consts';

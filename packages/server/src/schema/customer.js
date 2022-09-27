@@ -1,7 +1,7 @@
 import { gql } from 'apollo-server-express';
 import { TABLES } from '../db';
 import bcrypt from 'bcrypt';
-import { ACCOUNT_STATUS, CODE, COOKIE, logInSchema, passwordSchema, signUpSchema, requestPasswordChangeSchema } from '@local/shared';
+import { ACCOUNT_STATUS, CODE, COOKIE, logInSchema, passwordSchema, signUpSchema, requestPasswordChangeSchema } from '@shared/consts';
 import { CustomError, validateArgs } from '../error';
 import { generateToken } from '../auth';
 import { customerNotifyAdmin, sendResetPasswordLink, sendVerificationLink } from '../worker/email/queue';
