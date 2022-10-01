@@ -1,10 +1,10 @@
 import { gql } from 'apollo-server-express';
-import { db, TABLES } from '../db';
+import { db } from '../db';
 import { CODE } from '@shared/consts';
 import { CustomError } from '../error';
 import { PrismaSelect } from '@paljs/plugins';
 
-const _model = TABLES.Phone;
+const _model = 'phone';
 
 export const typeDef = gql`
     input PhoneInput {

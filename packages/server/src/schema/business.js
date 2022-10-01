@@ -1,10 +1,9 @@
 import { gql } from 'apollo-server-express';
 import { CODE } from '@shared/consts';
 import { CustomError } from '../error';
-import { TABLES } from '../db';
 import { PrismaSelect } from '@paljs/plugins';
 
-const _model = TABLES.Business;
+const _model = 'business';
 
 export const typeDef = gql`
     input BusinessInput {

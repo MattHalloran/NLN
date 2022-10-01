@@ -1,11 +1,10 @@
 import { gql } from 'apollo-server-express';
-import { TABLES } from '../db';
 import { CODE, ORDER_STATUS } from '@shared/consts';
 import { CustomError } from '../error';
 import { PrismaSelect } from '@paljs/plugins';
 import { orderNotifyAdmin } from '../worker/email/queue';
 
-const _model = TABLES.Order;
+const _model = 'order';
 
 export const typeDef = gql`
     enum OrderStatus {
@@ -120,14 +119,14 @@ export const resolvers = {
                 const updatedItemIds = args.input.items.map(i => i.id);
                 const deletingItemIds = curr.items.filter(i => !updatedItemIds.includes(i.id)).map(i => i.id);
                 if (updatedItemIds.length > 0) {
-                    const updateMany = args.input.items.map(d => context.prisma[TABLES.OrderItem].updateMany({
+                    const updateMany = args.input.items.map(d => context.prisma.order_item.updateMany({
                         where: { id: d.id },
                         data: { ...d }
                     }))
                     Promise.all(updateMany)
                 }
                 if (deletingItemIds.length > 0) {
-                    await context.prisma[TABLES.OrderItem].deleteMany({ where: { id: { in: deletingItemIds } } })
+                    await context.prisma.order_item.deleteMany({ where: { id: { in: deletingItemIds } } })
                 }
             }
             return await context.prisma[_model].update({

@@ -7,7 +7,7 @@ services:
       dockerfile: ./packages/ui/Dockerfile
       args:
         PROJECT_DIR: "${PROJECT_DIR}"
-    container_name: ui
+    container_name: nln_ui
     environment:
       NODE_ENV: "development"
       REACT_APP_SERVER_LOCATION: "${SERVER_LOCATION}"
@@ -38,7 +38,7 @@ services:
       dockerfile: ./packages/server/Dockerfile
       args:
         PROJECT_DIR: "${PROJECT_DIR}"
-    container_name: server
+    container_name: nln_server
     environment:
       NODE_ENV: "development"
       JWT_SECRET: "${JWT_SECRET}"
@@ -81,7 +81,7 @@ services:
   db:
     image: postgres:13-alpine
     restart: always
-    container_name: db
+    container_name: nln_db
     environment:
       POSTGRES_DB: "${DB_NAME}"
       POSTGRES_USER: "${DB_USER}"
@@ -96,7 +96,7 @@ services:
       - ./packages/db/entrypoint:/docker-entrypoint-initdb.d
   redis:
     image: redis:7-alpine
-    container_name: redis
+    container_name: nln_redis
     restart: always
     networks:
       - app

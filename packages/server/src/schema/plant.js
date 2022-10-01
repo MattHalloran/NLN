@@ -1,10 +1,9 @@
 import { gql } from 'apollo-server-express';
-import { TABLES } from '../db';
 import { CODE, PLANT_SORT_OPTIONS, SKU_STATUS } from '@shared/consts';
 import { CustomError } from '../error';
 import { PrismaSelect } from '@paljs/plugins';
 
-const _model = TABLES.Plant;
+const _model = 'plant';
 
 export const typeDef = gql`
 
@@ -106,12 +105,12 @@ export const resolvers = {
             const plant = await context.prisma[_model].create((new PrismaSelect(info).value), { data: { id: args.input.id, latinName: args.input.latinName } });
             // Create trait objects
             for (const { name, value } of (args.input.traits || [])) {
-                await prisma[TABLES.PlantTrait].create({ data: { plantId: plant.id, name, value } });
+                await prisma.plant_trait.create({ data: { plantId: plant.id, name, value } });
             }
             // Create images
             if (Array.isArray(args.input.images)) {
                 for (let i = 0; i < args.input.length; i++) {
-                    await prisma[TABLES.PlantImages].create({ data: {
+                    await prisma.plant_image.create({ data: {
                         plantId: plant.id,
                         hash: args.input.images[i].hash,
                         isDisplay: args.input.images[i].isDisplay ?? false,
@@ -129,7 +128,7 @@ export const resolvers = {
             // Must be admin
             if (!context.req.isAdmin) return new CustomError(CODE.Unauthorized);
             // Update images
-            await context.prisma[TABLES.PlantImages].deleteMany({ where: { plantId: args.input.id } });
+            await context.prisma.plant_image.deleteMany({ where: { plantId: args.input.id } });
             if (Array.isArray(args.input.images)) {
                 let rowIds = [];
                 // Upsert passed in images
@@ -138,14 +137,14 @@ export const resolvers = {
                     const rowData = { plantId: args.input.id, hash: curr.hash, index: i, isDisplay: curr.isDisplay ?? false };
                     const rowId = { plantId: args.input.id, hash: curr.hash };
                     rowIds.push(rowId);
-                    await context.prisma[TABLES.PlantImages].upsert({
+                    await context.prisma.plant_image.upsert({
                         where: { plant_images_plantid_hash_unique: rowId },
                         update: rowData,
                         create: rowData
                     })
                 }
                 // Delete images not passed in
-                await context.prisma[TABLES.PlantImages].deleteMany({ 
+                await context.prisma.plant_image.deleteMany({ 
                     where: {
                         AND: [
                             { plantId: { in: rowIds.map(r => r.plantId ) } },
@@ -155,10 +154,10 @@ export const resolvers = {
                 })
             }
             // Update traits
-            await context.prisma[TABLES.PlantTrait].deleteMany({ where: { plantId: args.input.id } });
+            await context.prisma.plant_trait.deleteMany({ where: { plantId: args.input.id } });
             for (const { name, value } of (args.input.traits || [])) {
                 const updateData = { plantId: args.input.id, name, value };
-                await context.prisma[TABLES.PlantTrait].upsert({
+                await context.prisma.plant_trait.upsert({
                     where: { plant_trait_plantid_name_unique: { plantId: args.input.id, name }},
                     update: updateData,
                     create: updateData
@@ -166,11 +165,11 @@ export const resolvers = {
             }
             // Update SKUs
             if (args.input.skus) {
-                const currSkus = await context.prisma[TABLES.Sku].findMany({ where: { plantId: args.input.id }});
+                const currSkus = await context.prisma.sku.findMany({ where: { plantId: args.input.id }});
                 const deletedSkus = currSkus.map(s => s.sku).filter(s => !args.input.skus.some(sku => sku.sku === s));
-                await context.prisma[TABLES.Sku].deleteMany({ where: { sku: { in: deletedSkus } } });
+                await context.prisma.sku.deleteMany({ where: { sku: { in: deletedSkus } } });
                 for (const sku of args.input.skus) {
-                    await context.prisma[TABLES.Sku].upsert({
+                    await context.prisma.sku.upsert({
                         where: { sku: sku.sku},
                         update: sku,
                         create: { plantId: args.input.id, ...sku }

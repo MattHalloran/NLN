@@ -1,10 +1,9 @@
 import { gql } from 'apollo-server-express';
-import { TABLES } from '../db';
 import { CODE, TASK_STATUS } from '@shared/consts';
 import { CustomError } from '../error';
 import { PrismaSelect } from '@paljs/plugins';
 
-const _model = TABLES.Task;
+const _model = 'task';
 
 export const typeDef = gql`
     enum TaskStatus {
