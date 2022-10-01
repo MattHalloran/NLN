@@ -1,4 +1,3 @@
-import { TABLES } from "../../db";
 import { SKU_STATUS } from '@shared/consts';
 import pkg from '@prisma/client';
 const { PrismaClient } = pkg;
@@ -25,17 +24,17 @@ export async function uploadAvailabilityProcess(job) {
         availability: header.indexOf('Quantity')
     }
     // Hide all existing SKUs, so only the SKUs in this file can be set to visible
-    await prisma[TABLES.Sku].updateMany({ data: { status: SKU_STATUS.Inactive } })
+    await prisma.sku.updateMany({ data: { status: SKU_STATUS.Inactive } })
     for (const row of content) {
         // Insert or update plant data from row
         const latinName = row[index.latinName];
-        let plant = await prisma[TABLES.Plant].findUnique({ where: { latinName }, select: {
+        let plant = await prisma.plant.findUnique({ where: { latinName }, select: {
             id: true,
             traits: { select: { id: true, name: true, value: true } }
         } });
         if (!plant) {
             console.info(`Creating new plant: ${latinName}`);
-            plant = await prisma[TABLES.Plant].create({ data: { latinName } });
+            plant = await prisma.plant.create({ data: { latinName } });
         }
         // If traits don't exist, replace with empty array
         if (!Array.isArray(plant.traits)) plant.traits = [];
@@ -44,7 +43,7 @@ export async function uploadAvailabilityProcess(job) {
             if (row[index[key]]) {
                 try {
                     const updateData = { plantId: plant.id, name: key, value: row[index[key]] };
-                    await prisma[TABLES.PlantTrait].upsert({
+                    await prisma.plant_trait.upsert({
                         where: { plant_trait_plantid_name_unique: { plantId: plant.id, name: key }},
                         update: updateData,
                         create: updateData
@@ -67,7 +66,7 @@ export async function uploadAvailabilityProcess(job) {
             continue;
         }
         try {
-            await prisma[TABLES.Sku].upsert({
+            await prisma.sku.upsert({
                 where: { sku: sku_data.sku },
                 update: sku_data,
                 create: sku_data

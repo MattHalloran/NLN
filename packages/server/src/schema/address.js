@@ -1,10 +1,9 @@
 import { gql } from 'apollo-server-express';
-import { TABLES } from '../db';
 import { CODE } from '@shared/consts';
 import { CustomError } from '../error';
 import { PrismaSelect } from '@paljs/plugins';
 
-const _model = TABLES.Address;
+const _model = 'address';
 
 export const typeDef = gql`
     input AddressInput {

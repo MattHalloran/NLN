@@ -1,5 +1,4 @@
 import { gql } from 'apollo-server-express';
-import { TABLES } from '../db';
 import bcrypt from 'bcrypt';
 import { ACCOUNT_STATUS, CODE, COOKIE, logInSchema, passwordSchema, signUpSchema, requestPasswordChangeSchema } from '@shared/consts';
 import { CustomError, validateArgs } from '../error';
@@ -9,7 +8,7 @@ import { HASHING_ROUNDS } from '../consts';
 import { PrismaSelect } from '@paljs/plugins';
 import { customerFromEmail, getCart, getCustomerSelect, upsertCustomer } from '../db/models/customer';
 
-const _model = TABLES.Customer;
+const _model = 'customer';
 const LOGIN_ATTEMPTS_TO_SOFT_LOCKOUT = 3;
 const SOFT_LOCKOUT_DURATION = 15 * 60 * 1000;
 const REQUEST_PASSWORD_RESET_DURATION = 2 * 24 * 3600 * 1000;
@@ -230,7 +229,7 @@ export const resolvers = {
             const validateError = await validateArgs(signUpSchema, args);
             if (validateError) return validateError;
             // Find customer role to give to new user
-            const customerRole = await context.prisma[TABLES.Role].findUnique({ where: { title: 'Customer' } });
+            const customerRole = await context.prisma.role.findUnique({ where: { title: 'Customer' } });
             if (!customerRole) return new CustomError(CODE.ErrorUnknown);
             const customer = await upsertCustomer({
                 prisma: context.prisma,
@@ -265,7 +264,7 @@ export const resolvers = {
             if(!context.req.isAdmin) return new CustomError(CODE.Unauthorized);
             const prismaInfo = getCustomerSelect(info);
             // Find customer role to give to new user
-            const customerRole = await context.prisma[TABLES.Role].findUnique({ where: { title: 'Customer' } });
+            const customerRole = await context.prisma.role.findUnique({ where: { title: 'Customer' } });
             if (!customerRole) return new CustomError(CODE.ErrorUnknown);
             const customer = await upsertCustomer({
                 prisma: context.prisma,
@@ -395,7 +394,7 @@ export const resolvers = {
             // Return customer data
             const prismaInfo = getCustomerSelect(info);
             const cart = await getCart(context.prisma, info, customer.id);
-            const customerData = await context.prisma[TABLES.Customer].findUnique({ where: { id: customer.id }, ...prismaInfo });
+            const customerData = await context.prisma.customer.findUnique({ where: { id: customer.id }, ...prismaInfo });
             if (cart) customerData.cart = cart;
             return customerData;
         },
@@ -411,7 +410,7 @@ export const resolvers = {
         addCustomerRole: async (_, args, context, info) => {
             // Must be admin
             if (!context.req.isAdmin) return new CustomError(CODE.Unauthorized);
-            await context.prisma[TABLES.CustomerRoles].create({ data: { 
+            await context.prisma.customer_role.create({ data: { 
                 customerId: args.id,
                 roleId: args.roleId
             } })
@@ -420,7 +419,7 @@ export const resolvers = {
         removeCustomerRole: async (_, args, context) => {
             // Must be admin
             if (!context.req.isAdmin) return new CustomError(CODE.Unauthorized);
-            return await context.prisma[TABLES.CustomerRoles].delete({ where: { 
+            return await context.prisma.customer_role.delete({ where: { 
                 customerId: args.id,
                 roleId: args.roleId
             } })

@@ -1,8 +1,8 @@
 import { gql } from 'apollo-server-express';
-import { db, TABLES } from '../db';
+import { db } from '../db';
 import { PrismaSelect } from '@paljs/plugins';
 
-const _model = TABLES.PlantTrait;
+const _model = 'plant_trait';
 
 export const typeDef = gql`
     type PlantTrait {
@@ -26,10 +26,10 @@ export const typeDef = gql`
 export const resolvers = {
     Query: {
         traitNames: async () => {
-            return await db(TABLES.PlantTrait).select('name').unique();
+            return await db('plant_trait').select('name').unique();
         },
         traitValues: async (_, args) => {
-            return await db(TABLES.PlantTrait).select('value').where('name', args.name)
+            return await db('plant_trait').select('value').where('name', args.name)
         },
         // Returns all values previously entered for every trait
         traitOptions: async (_, _args, context) => {

@@ -3,10 +3,10 @@ import { CODE, SKU_SORT_OPTIONS, SKU_STATUS } from '@shared/consts';
 import { CustomError } from '../error';
 import { saveFile } from '../utils';
 import { uploadAvailability } from '../worker/uploadAvailability/queue';
-import { db, TABLES } from '../db';
+import { db } from '../db';
 import { PrismaSelect } from '@paljs/plugins';
 
-const _model = TABLES.Sku;
+const _model = 'sku';
 
 export const typeDef = gql`
     enum SkuStatus {

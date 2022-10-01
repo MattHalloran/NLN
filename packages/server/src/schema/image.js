@@ -1,11 +1,10 @@
 import { gql } from 'apollo-server-express';
-import { TABLES } from '../db';
 import { CODE, IMAGE_SIZE } from '@shared/consts';
 import { CustomError } from '../error';
 import { deleteImage, saveImage } from '../utils';
 import { PrismaSelect } from '@paljs/plugins';
 
-const _model = TABLES.Image;
+const _model = 'image';
 
 export const typeDef = gql`
     enum ImageSize {
@@ -120,7 +119,7 @@ export const resolvers = {
                 const curr = args.data[i];
                 if (args.label) {
                     // Update position in label
-                    await context.prisma[TABLES.ImageLabels].update({
+                    await context.prisma.image_label.update({
                         where: { image_label_hash_label_unique: { hash: curr.hash, label: args.label } },
                         data: { index: i }
                     })
@@ -153,13 +152,13 @@ export const resolvers = {
         deleteImagesByLabel: async (_, args, context) => {
             // Must be admin
             if (!context.req.isAdmin) return new CustomError(CODE.Unauthorized);
-            const imagesToDelete = await context.prisma[TABLES.Image].findMany({
+            const imagesToDelete = await context.prisma.image.findMany({
                 where: { every: { label: { in: args.labels } } },
                 select: {
                     hash: true
                 }
             });
-            await context.prisma[TABLES.ImageLabels].deleteMany({
+            await context.prisma.image_label.deleteMany({
                 where: { label: { in: args.labels }}
             });
             let count = 0;
