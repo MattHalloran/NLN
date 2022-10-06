@@ -1,12 +1,13 @@
 import { gql } from 'apollo-server-express';
 import bcrypt from 'bcrypt';
-import { ACCOUNT_STATUS, CODE, COOKIE, logInSchema, passwordSchema, signUpSchema, requestPasswordChangeSchema } from '@shared/consts';
+import { ACCOUNT_STATUS, CODE, COOKIE, passwordSchema, signUpSchema, requestPasswordChangeSchema } from '@shared/consts';
 import { CustomError, validateArgs } from '../error';
 import { generateToken } from '../auth';
 import { customerNotifyAdmin, sendResetPasswordLink, sendVerificationLink } from '../worker/email/queue';
 import { HASHING_ROUNDS } from '../consts';
 import { PrismaSelect } from '@paljs/plugins';
 import { customerFromEmail, getCart, getCustomerSelect, upsertCustomer } from '../db/models/customer';
+import { logInSchema } from '@shared/validation';
 
 const _model = 'customer';
 const LOGIN_ATTEMPTS_TO_SOFT_LOCKOUT = 3;

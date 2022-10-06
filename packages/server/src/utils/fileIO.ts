@@ -2,7 +2,7 @@ import path from 'path';
 import fs from 'fs';
 import { genErrorCode, logger, LogLevel } from '../logger';
 import pkg from '@prisma/client';
-// import convert from 'heic-convert';
+import convert from 'heic-convert';
 import probe from 'probe-image-size';
 import imghash from 'imghash';
 import sharp from 'sharp';
@@ -191,12 +191,11 @@ export async function saveImage({ file, alt, description, labels, errorOnDuplica
         console.log('GOT DIMENSIONS', dimensions);
         // If image is .heic or .heif, convert to jpg. Thanks, Apple
         if (['.heic', '.heif'].includes(extCheck.toLowerCase())) {
-            console.log('converting image buffer')
-            // image_buffer = await convert({ //TODO breaks for some reason
-            //     buffer: image_buffer, // the HEIC file buffer
-            //     format: 'JPEG',      // output format
-            //     quality: 1           // the jpeg compression quality, between 0 and 1
-            // });
+            image_buffer = await convert({ //TODO breaks for some reason
+                buffer: image_buffer, // the HEIC file buffer
+                format: 'JPEG',      // output format
+                quality: 1           // the jpeg compression quality, between 0 and 1
+            });
             extCheck = 'jpg'
         }
         // Determine image hash
