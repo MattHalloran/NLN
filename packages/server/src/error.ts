@@ -16,7 +16,7 @@ export async function validateArgs(schema: any, args: any) {
         await schema.validate(args, { abortEarly: false });
     } catch (err: any) {
         console.info('Invalid arguments')
-        return new CustomError({
+        throw new CustomError({
             code: 'ARGS_VALIDATION_FAILED',
             message: err.errors
         })

@@ -3,17 +3,9 @@ import { customerSessionFields } from 'graphql/fragment';
 
 export const updateCustomerMutation = gql`
     ${customerSessionFields}
-    mutation updateCustomer(
-        $input: CustomerInput!
-        $currentPassword: String!
-        $newPassword: String
-    ) {
-    updateCustomer(
-        input: $input
-        currentPassword: $currentPassword
-        newPassword: $newPassword
-    ) {
-        ...customerSessionFields
+    mutation updateCustomer(input: UpdateCustomerInput!) {
+        updateCustomer(input: $input) {
+            ...customerSessionFields
+        }
     }
-}
 `

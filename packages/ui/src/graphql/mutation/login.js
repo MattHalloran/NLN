@@ -5,21 +5,15 @@ export const loginMutation = gql`
     ${customerSessionFields}
     ${orderFields}
     ${orderItemFields}
-    mutation login(
-        $email: String
-        $password: String
-    ) {
-    login(
-        email: $email
-        password: $password
-    ) {
-        ...customerSessionFields
-        cart {
-            ...orderFields
-            items {
-                ...orderItemFields
+    mutation login(input: LoginInput!) {
+        login(input: $input) {
+            ...customerSessionFields
+            cart {
+                ...orderFields
+                items {
+                    ...orderItemFields
+                }
             }
         }
     }
-}
 `

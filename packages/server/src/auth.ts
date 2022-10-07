@@ -66,12 +66,12 @@ export async function generateToken(res, customerId, businessId) {
 
 // Middleware that restricts access to customers (or admins)
 export async function requireCustomer(req, _, next) {
-    if (!req.isCustomer) return new CustomError(CODE.Unauthorized);
+    if (!req.isCustomer) throw new CustomError(CODE.Unauthorized);
     next();
 }
 
 // Middle ware that restricts access to admins
 export async function requireAdmin(req, _, next) {
-    if (!req.isAdmin) return new CustomError(CODE.Unauthorized);
+    if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
     next();
 }

@@ -3,13 +3,14 @@ import { uploadAvailabilityProcess } from './process';
 import XLSX from 'xlsx';
 import fs from 'fs'
 
-const uploadAvailabilityQueue = new Bull('uploadAvailability', { redis: { 
-    port: process.env.REDIS_CONN.split(':')[1],
-    host: process.env.REDIS_CONN.split(':')[0]
-} });
+const split = (process.env.REDIS_CONN || 'redis:6379').split(':');
+export const HOST = split[0];
+export const PORT = Number(split[1]);
+
+const uploadAvailabilityQueue = new Bull('uploadAvailability', { redis: { port: PORT, host: HOST } });
 uploadAvailabilityQueue.process(uploadAvailabilityProcess);
 
-export async function uploadAvailability(filename) {
+export async function uploadAvailability(filename: string) {
     // Wait to make sure file has been fully downloaded and is ready to read
     await new Promise(r => setTimeout(r, 1000));
     // Parse file

@@ -5,37 +5,15 @@ export const signUpMutation = gql`
     ${customerSessionFields}
     ${orderFields}
     ${orderItemFields}
-    mutation signUp(
-        $firstName: String!
-        $lastName: String!
-        $pronouns: String
-        $business: String!
-        $email: String!
-        $phone: String!
-        $accountApproved: Boolean!
-        $theme: String!
-        $marketingEmails: Boolean!
-        $password: String!
-    ) {
-    signUp(
-        firstName: $firstName
-        lastName: $lastName
-        pronouns: $pronouns
-        business: $business
-        email: $email
-        phone: $phone
-        accountApproved: $accountApproved
-        theme: $theme
-        marketingEmails: $marketingEmails
-        password: $password
-    ) {
-        ...customerSessionFields
-        cart {
-            ...orderFields
-            items {
-                ...orderItemFields
+    mutation signUp(input: SignUpInput!) {
+    signUp(input: $input) {
+            ...customerSessionFields
+            cart {
+                ...orderFields
+                items {
+                    ...orderItemFields
+                }
             }
         }
     }
-}
 `

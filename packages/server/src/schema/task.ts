@@ -2,6 +2,9 @@ import { gql } from 'apollo-server-express';
 import { CODE, TASK_STATUS } from '@shared/consts';
 import { CustomError } from '../error';
 import { PrismaSelect } from '@paljs/plugins';
+import { IWrap, RecursivePartial } from '../types';
+import { Context } from '../context';
+import { GraphQLResolveInfo } from 'graphql';
 
 const _model = 'task';
 
@@ -31,11 +34,11 @@ export const typeDef = gql`
 export const resolvers = {
     TaskStatus: TASK_STATUS,
     Query: {
-        tasks: async (_, args, context) => {
+        tasks: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
             // Must be admin
-            if (!context.req.isAdmin) return new CustomError(CODE.Unauthorized);
-            return await context.prisma[_model].findMany({
-                where: { status: args.status }
+            if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
+            return await prisma[_model].findMany({
+                where: { status: input.status }
             });
         }
     }
