@@ -1,6 +1,4 @@
-import pkg from 'lodash';
-const { merge } = pkg;
-import { makeExecutableSchema } from 'apollo-server-express';
+import { makeExecutableSchema } from '@graphql-tools/schema';
 import * as Root from './root';
 import * as Address from './address';
 import * as Business from './business';
@@ -17,12 +15,14 @@ import * as PlantTrait from './plantTrait';
 import * as Role from './role';
 import * as Sku from './sku';
 import * as Task from './task';
+import pkg from 'lodash';
+const { merge } = pkg;
 
-const models = [Root, Address, Business, Customer, Discount, 
-                Email, Feedback, Image, Order, OrderItem, 
-                Phone, Plant, PlantTrait, Role, Sku, Task]
+const models = [Root, Address, Business, Customer, Discount,
+    Email, Feedback, Image, Order, OrderItem,
+    Phone, Plant, PlantTrait, Role, Sku, Task]
 
 export const schema = makeExecutableSchema({
     typeDefs: models.map(m => m.typeDef),
-    resolvers: merge(...models.map(m => m.resolvers))
+    resolvers: merge(models.map(m => m.resolvers)),
 })

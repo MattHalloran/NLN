@@ -80,8 +80,12 @@ export const resolvers = {
             if (input.active === true) activeQuery = activeQueryBase;
             else if (input.active === false && req.isAdmin) activeQuery = { NOT: activeQueryBase };
             // Toggle for showing/hiding plants that have no SKUs with any availability
-            let onlyInStock;
-            if (input.onlyInStock === true) onlyInStock = { skus: { some: { availability: { gt: 0 } } } };
+            const onlyInStock = {
+                skus: {
+                    ...(input.onlyInStock === true ? { some: { availability: { gt: 0}} } : {}),
+                    every: { status: 'Active' },
+                }
+            }
             return await prisma.plant.findMany({ 
                 where: { 
                     ...idQuery,
@@ -103,7 +107,7 @@ export const resolvers = {
             if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
             // TODO handle images
             // Create plant object
-            const plant = await prisma.plant.create((new PrismaSelect(info).value), { data: { id: input.id, latinName: input.latinName } });
+            const plant = await prisma.plant.create({ data: { id: input.id, latinName: input.latinName }, ...(new PrismaSelect(info).value) });
             // Create trait objects
             for (const { name, value } of (input.traits || [])) {
                 await prisma.plant_trait.create({ data: { plantId: plant.id, name, value } });
@@ -167,7 +171,7 @@ export const resolvers = {
             // Update SKUs
             if (input.skus) {
                 const currSkus = await prisma.sku.findMany({ where: { plantId: input.id }});
-                const deletedSkus = currSkus.map((s: any) => s.sku).filter((s: any) => !input.skus.some((sku: any) => sku.sku === s));
+                const deletedSkus = currSkus.map((s) => s.sku).filter((s) => !input.skus.some((sku: any) => sku.sku === s));
                 await prisma.sku.deleteMany({ where: { sku: { in: deletedSkus } } });
                 for (const sku of input.skus) {
                     await prisma.sku.upsert({

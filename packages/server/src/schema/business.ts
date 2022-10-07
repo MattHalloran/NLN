@@ -49,7 +49,7 @@ export const resolvers = {
         addBusiness: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
             // Must be admin
             if(!req.isAdmin) throw new CustomError(CODE.Unauthorized);
-            return await prisma.business.create((new PrismaSelect(info).value), { data: { ...input } })
+            return await prisma.business.create({ data: { ...input }, ...(new PrismaSelect(info).value) })
         },
         updateBusiness: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
             // Must be admin, or updating your own

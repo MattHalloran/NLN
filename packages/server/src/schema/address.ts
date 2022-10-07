@@ -60,11 +60,12 @@ export const resolvers = {
         addAddress: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
             // Must be admin, or adding to your own
             if(!req.isAdmin && (req.businessId !== input.businessId)) throw new CustomError(CODE.Unauthorized);
-            return await prisma.address.create((new PrismaSelect(info).value), { data: { ...input } })
+            return await prisma.address.create({ data: { ...input }, ...(new PrismaSelect(info).value) })
         },
         updateAddress: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
             // Must be admin, or updating your own
             const curr = await prisma.address.findUnique({ where: { id: input.id } });
+            if (!curr) throw new CustomError(CODE.NotFound);
             if (!req.isAdmin && req.businessId !== curr.businessId) throw new CustomError(CODE.Unauthorized);
             return await prisma.address.update({
                 where: { id: input.id || undefined },
@@ -76,7 +77,7 @@ export const resolvers = {
             // Must be admin, or deleting your own
             const specified = await prisma.address.findMany({ where: { id: { in: input.ids } } });
             if (!specified) throw new CustomError(CODE.ErrorUnknown);
-            const businessIds = [...new Set(specified.map((s: any) => s.businessId))];
+            const businessIds = [...new Set(specified.map((s) => s.businessId))];
             if (!req.isAdmin && (businessIds.length > 1 || req.businessId !== businessIds[0])) throw new CustomError(CODE.Unauthorized);
             return await prisma.address.deleteMany({ where: { id: { in: input.ids } } });
         }

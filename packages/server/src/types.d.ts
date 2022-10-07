@@ -8,8 +8,9 @@ declare global {
         interface Request {
             businessId?: string | null;
             customerId?: string | null;
-            isLoggedIn?: boolean;
             isAdmin?: boolean;
+            isCustomer?: boolean;
+            isLoggedIn?: boolean;
             languages: string[] | null;
             roles?: string[];
             userId: string | null;

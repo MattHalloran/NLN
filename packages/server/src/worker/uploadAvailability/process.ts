@@ -34,7 +34,8 @@ export async function uploadAvailabilityProcess(job: any) {
         } });
         if (!plant) {
             console.info(`Creating new plant: ${latinName}`);
-            plant = await prisma.plant.create({ data: { latinName } });
+            const newPlant = await prisma.plant.create({ data: { latinName } });
+            plant = { id: newPlant.id, traits: [] };
         }
         // If traits don't exist, replace with empty array
         if (!Array.isArray(plant.traits)) plant.traits = [];

@@ -27,6 +27,10 @@ export const CODE = {
         code: 'NO_CUSTOMER',
         message: 'Error: No user with that email'
     },
+    NotFound: {
+        code: 'NOT_FOUND',
+        message: 'Error: Object not found'
+    },
     BadCredentials: {
         code: 'BAD_CREDENTIALS',
         message: 'Error: Email or password incorrect'

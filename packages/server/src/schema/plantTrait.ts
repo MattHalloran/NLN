@@ -35,7 +35,7 @@ export const resolvers = {
                     name: true
                 }
             })
-            return traits.map((t: any) => t.name);
+            return traits.map((t) => t.name);
         },
         traitValues: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
             const traits = await prisma.plant_trait.findMany({
@@ -44,7 +44,7 @@ export const resolvers = {
                     value: true
                 }
             })
-            return traits.map((t: any) => t.value);
+            return traits.map((t) => t.value);
         },
         // Returns all values previously entered for every trait
         traitOptions: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {

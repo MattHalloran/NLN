@@ -28,7 +28,7 @@ export async function authenticate(req: Request, _: Response, next: NextFunction
         return;
     }
     // Second, verify that the session token is valid
-    jwt.verify(token, process.env.JWT_SECRET, async (error, payload) => {
+    jwt.verify(token, process.env.JWT_SECRET ?? '', async (error: any, payload: any) => {
         if (error || isNaN(payload.exp) || payload.exp < Date.now()) {
             next();
             return;
@@ -45,7 +45,7 @@ export async function authenticate(req: Request, _: Response, next: NextFunction
 }
 
 // Generates a JSON Web Token (JWT)
-export async function generateToken(res: Response, customerId, businessId) {
+export async function generateToken(res: Response, customerId: string, businessId: string) {
     const customerRoles = await findCustomerRoles(customerId);
     const tokenContents = {
         iat: Date.now(),
@@ -57,7 +57,7 @@ export async function generateToken(res: Response, customerId, businessId) {
         isAdmin: customerRoles.includes('admin'),
         exp: Date.now() + SESSION_MILLI,
     }
-    const token = jwt.sign(tokenContents, process.env.JWT_SECRET);
+    const token = jwt.sign(tokenContents, process.env.JWT_SECRET ?? '');
     res.cookie(COOKIE.Jwt, token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
