@@ -2,9 +2,10 @@ import { PrismaSelect } from "@paljs/plugins";
 import { onlyPrimitives } from "../../utils/objectTools";
 import { CustomError } from "../../error";
 import { CODE, ORDER_STATUS } from '@shared/consts';
+import { PrismaType } from "../../types";
 
 // Validates email address, and returns customer data
-export async function customerFromEmail(email, prisma) {
+export async function customerFromEmail(email: string, prisma: PrismaType) {
     if (!email) throw new CustomError(CODE.BadCredentials);
     // Validate email address
     const emailRow = await prisma.email.findUnique({ where: { emailAddress: email } });

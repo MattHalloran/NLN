@@ -6,7 +6,7 @@ const prisma = new PrismaClient()
 
 // Reads an .xls availability file into the database.
 // SKUs of plants not in the availability file will be hidden
-export async function uploadAvailabilityProcess(job) {
+export async function uploadAvailabilityProcess(job: any) {
     console.info('📊 Updating availability...')
     console.info('SKUs not in the availability data will be hidden');
 

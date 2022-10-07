@@ -3,8 +3,10 @@ import { CODE, SKU_SORT_OPTIONS, SKU_STATUS } from '@shared/consts';
 import { CustomError } from '../error';
 import { saveFile } from '../utils';
 import { uploadAvailability } from '../worker/uploadAvailability/queue';
-import { db } from '../db';
 import { PrismaSelect } from '@paljs/plugins';
+import { IWrap, RecursivePartial } from '../types';
+import { Context } from '../context';
+import { GraphQLResolveInfo } from 'graphql';
 
 const _model = 'sku';
 
@@ -63,7 +65,7 @@ export const typeDef = gql`
         uploadAvailability(file: Upload!): Boolean
         addSku(input: SkuInput!): Sku!
         updateSku(input: SkuInput!): Sku!
-        deleteSkus(ids: [ID!]!): Count!
+        deleteSkus(input: DeleteManyInput!): Count!
     }
 `
 
@@ -81,24 +83,24 @@ export const resolvers = {
     SkuSortBy: SKU_SORT_OPTIONS,
     Query: {
         // Query all SKUs
-        skus: async (_, args, context, info) => {
+        skus: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
             let idQuery;
-            if (Array.isArray(args.ids)) idQuery = { id: { in: args.ids } };
+            if (Array.isArray(input.ids)) idQuery = { id: { in: input.ids } };
             // Determine sort order
             let sortQuery;
-            if (args.sortBy !== undefined) sortQuery = SORT_TO_QUERY[args.sortBy];
+            if (input.sortBy !== undefined) sortQuery = SORT_TO_QUERY[input.sortBy];
             let searchQuery;
-            if (args.searchString !== undefined && args.searchString.length > 0) {
+            if (input.searchString !== undefined && input.searchString.length > 0) {
                 searchQuery = {
                     OR: [
-                        { plant: { latinName: { contains: args.searchString.trim(), mode: 'insensitive' } } },
-                        { plant: { traits: { some: { value: { contains: args.searchString.trim(), mode: 'insensitive' } } } } }
+                        { plant: { latinName: { contains: input.searchString.trim(), mode: 'insensitive' } } },
+                        { plant: { traits: { some: { value: { contains: input.searchString.trim(), mode: 'insensitive' } } } } }
                     ]
                 }
             }
             let onlyInStockQuery;
-            if (!args.onlyInStock) onlyInStockQuery = { availability: { gt: 0 } };
-            return await context.prisma[_model].findMany({
+            if (!input.onlyInStock) onlyInStockQuery = { availability: { gt: 0 } };
+            return await prisma[_model].findMany({
                 where: {
                     ...idQuery,
                     ...searchQuery,
@@ -110,32 +112,32 @@ export const resolvers = {
         }
     },
     Mutation: {
-        uploadAvailability: async (_, args) => {
-            const { createReadStream, mimetype } = await args.file;
+        uploadAvailability: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<boolean> => {
+            const { createReadStream, mimetype } = await input.file;
             const stream = createReadStream();
             const filename = `private/availability-${Date.now()}.xls`;
             const { success, filename: finalFileName } = await saveFile(stream, filename, mimetype, false, ['.csv', '.xls', '.xlsx', 'text/csv', 'application/vnd.ms-excel', 'application/csv', 'text/x-csv', 'application/x-csv', 'text/comma-separated-values', 'text/x-comma-separated-values']);
             if (success) uploadAvailability(finalFileName);
             return success;
         },
-        addSku: async (_, args, context, info) => {
+        addSku: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
             // Must be admin
-            if (!context.req.isAdmin) return new CustomError(CODE.Unauthorized);
-            return await context.prisma[_model].create((new PrismaSelect(info).value), { data: { ...args.input } })
+            if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
+            return await prisma[_model].create((new PrismaSelect(info).value), { data: { ...input } })
         },
-        updateSku: async (_, args, context, info) => {
+        updateSku: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
             // Must be admin
-            if (!context.req.isAdmin) return new CustomError(CODE.Unauthorized);
-            return await context.prisma[_model].update({
-                where: { id: args.input.id || undefined },
-                data: { ...args.input },
+            if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
+            return await prisma[_model].update({
+                where: { id: input.id || undefined },
+                data: { ...input },
                 ...(new PrismaSelect(info).value)
             })
         },
-        deleteSkus: async (_, args, context) => {
+        deleteSkus: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
             // Must be admin
-            if (!context.req.isAdmin) return new CustomError(CODE.Unauthorized);
-            return await context.prisma[_model].deleteMany({ where: { id: { in: args.ids } } });
+            if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
+            return await prisma[_model].deleteMany({ where: { id: { in: input.ids } } });
         }
     }
 }

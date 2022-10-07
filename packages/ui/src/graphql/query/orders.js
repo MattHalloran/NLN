@@ -5,16 +5,8 @@ export const ordersQuery = gql`
     ${orderFields}
     ${orderItemFields}
     ${customerContactFields}
-    query Orders(
-        $ids: [ID!]
-        $status: OrderStatus
-        $searchString: String
-    ) {
-        orders(
-            ids: $ids
-            status: $status
-            searchString: $searchString
-        ) {
+    query Orders(input: OrdersInput!) {
+        orders(input: $input) {
             ...orderFields
             items {
                 ...orderItemFields

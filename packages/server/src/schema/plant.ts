@@ -2,6 +2,9 @@ import { gql } from 'apollo-server-express';
 import { CODE, PLANT_SORT_OPTIONS, SKU_STATUS } from '@shared/consts';
 import { CustomError } from '../error';
 import { PrismaSelect } from '@paljs/plugins';
+import { IWrap, RecursivePartial } from '../types';
+import { Context } from '../context';
+import { GraphQLResolveInfo } from 'graphql';
 
 const _model = 'plant';
 
@@ -47,7 +50,7 @@ export const typeDef = gql`
     extend type Mutation {
         addPlant(input: PlantInput!): Plant!
         updatePlant(input: PlantInput!): Plant!
-        deletePlants(ids: [ID!]!): Count!
+        deletePlants(input: DeleteManyInput!): Count!
     }
 `
 
@@ -60,28 +63,28 @@ const SORT_TO_QUERY = {
 
 export const resolvers = {
     Query: {
-        plants: async (_, args, context, info) => {
+        plants: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
             let idQuery;
-            if (Array.isArray(args.ids)) { idQuery = { id: { in: args.ids } } }
+            if (Array.isArray(input.ids)) { idQuery = { id: { in: input.ids } } }
             // Determine sort order
             let sortQuery;
-            if (args.sortBy !== undefined) sortQuery = SORT_TO_QUERY[args.sortBy];
+            if (input.sortBy !== undefined) sortQuery = SORT_TO_QUERY[input.sortBy];
             // If search string provided, match by latinName or trait name
             let searchQuery;
-            if (args.searchString.length > 0) searchQuery = { OR: [
-                { latinName: { contains: args.searchString.trim(), mode: 'insensitive' } },
-                { traits: { some: { value: { contains: args.searchString.trim(), mode: 'insensitive' } } } }
+            if (input.searchString.length > 0) searchQuery = { OR: [
+                { latinName: { contains: input.searchString.trim(), mode: 'insensitive' } },
+                { traits: { some: { value: { contains: input.searchString.trim(), mode: 'insensitive' } } } }
             ] };
             // Toggle for showing active/inactive plants (whether the plant has any SKUs available to order)
             // Only admins can view inactive plants
             let activeQuery;
             let activeQueryBase = { skus: {  some: { status: SKU_STATUS.Active } } };
-            if (args.active === true) activeQuery = activeQueryBase;
-            else if (args.active === false && context.req.isAdmin) activeQuery = { NOT: activeQueryBase };
+            if (input.active === true) activeQuery = activeQueryBase;
+            else if (input.active === false && req.isAdmin) activeQuery = { NOT: activeQueryBase };
             // Toggle for showing/hiding plants that have no SKUs with any availability
             let onlyInStock;
-            if (args.onlyInStock === true) onlyInStock = { skus: { some: { availability: { gt: 0 } } } };
-            return await context.prisma[_model].findMany({ 
+            if (input.onlyInStock === true) onlyInStock = { skus: { some: { availability: { gt: 0 } } } };
+            return await prisma[_model].findMany({ 
                 where: { 
                     ...idQuery,
                     ...searchQuery,
@@ -97,23 +100,23 @@ export const resolvers = {
         // Inserting plants is different than other inserts, because the fields are dynamic.
         // Because of this, the add must be done manually
         // NOTE: images must be uploaded first
-        addPlant: async (_, args, context, info) => {
+        addPlant: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
             // Must be admin
-            if (!context.req.isAdmin) return new CustomError(CODE.Unauthorized);
+            if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
             // TODO handle images
             // Create plant object
-            const plant = await context.prisma[_model].create((new PrismaSelect(info).value), { data: { id: args.input.id, latinName: args.input.latinName } });
+            const plant = await prisma[_model].create((new PrismaSelect(info).value), { data: { id: input.id, latinName: input.latinName } });
             // Create trait objects
-            for (const { name, value } of (args.input.traits || [])) {
+            for (const { name, value } of (input.traits || [])) {
                 await prisma.plant_trait.create({ data: { plantId: plant.id, name, value } });
             }
             // Create images
-            if (Array.isArray(args.input.images)) {
-                for (let i = 0; i < args.input.length; i++) {
+            if (Array.isArray(input.images)) {
+                for (let i = 0; i < input.length; i++) {
                     await prisma.plant_image.create({ data: {
                         plantId: plant.id,
-                        hash: args.input.images[i].hash,
-                        isDisplay: args.input.images[i].isDisplay ?? false,
+                        hash: input.images[i].hash,
+                        isDisplay: input.images[i].isDisplay ?? false,
                         index: i
                     }})
                 }
@@ -124,27 +127,27 @@ export const resolvers = {
             });
         },
         // NOTE: Images must be uploaded separately
-        updatePlant: async (_, args, context, info) => {
+        updatePlant: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
             // Must be admin
-            if (!context.req.isAdmin) return new CustomError(CODE.Unauthorized);
+            if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
             // Update images
-            await context.prisma.plant_image.deleteMany({ where: { plantId: args.input.id } });
-            if (Array.isArray(args.input.images)) {
+            await prisma.plant_image.deleteMany({ where: { plantId: input.id } });
+            if (Array.isArray(input.images)) {
                 let rowIds = [];
                 // Upsert passed in images
-                for (let i = 0; i < args.input.images.length; i++) {
-                    const curr = args.input.images[i];
-                    const rowData = { plantId: args.input.id, hash: curr.hash, index: i, isDisplay: curr.isDisplay ?? false };
-                    const rowId = { plantId: args.input.id, hash: curr.hash };
+                for (let i = 0; i < input.images.length; i++) {
+                    const curr = input.images[i];
+                    const rowData = { plantId: input.id, hash: curr.hash, index: i, isDisplay: curr.isDisplay ?? false };
+                    const rowId = { plantId: input.id, hash: curr.hash };
                     rowIds.push(rowId);
-                    await context.prisma.plant_image.upsert({
+                    await prisma.plant_image.upsert({
                         where: { plant_images_plantid_hash_unique: rowId },
                         update: rowData,
                         create: rowData
                     })
                 }
                 // Delete images not passed in
-                await context.prisma.plant_image.deleteMany({ 
+                await prisma.plant_image.deleteMany({ 
                     where: {
                         AND: [
                             { plantId: { in: rowIds.map(r => r.plantId ) } },
@@ -154,40 +157,40 @@ export const resolvers = {
                 })
             }
             // Update traits
-            await context.prisma.plant_trait.deleteMany({ where: { plantId: args.input.id } });
-            for (const { name, value } of (args.input.traits || [])) {
-                const updateData = { plantId: args.input.id, name, value };
-                await context.prisma.plant_trait.upsert({
-                    where: { plant_trait_plantid_name_unique: { plantId: args.input.id, name }},
+            await prisma.plant_trait.deleteMany({ where: { plantId: input.id } });
+            for (const { name, value } of (input.traits || [])) {
+                const updateData = { plantId: input.id, name, value };
+                await prisma.plant_trait.upsert({
+                    where: { plant_trait_plantid_name_unique: { plantId: input.id, name }},
                     update: updateData,
                     create: updateData
                 })
             }
             // Update SKUs
-            if (args.input.skus) {
-                const currSkus = await context.prisma.sku.findMany({ where: { plantId: args.input.id }});
-                const deletedSkus = currSkus.map(s => s.sku).filter(s => !args.input.skus.some(sku => sku.sku === s));
-                await context.prisma.sku.deleteMany({ where: { sku: { in: deletedSkus } } });
-                for (const sku of args.input.skus) {
-                    await context.prisma.sku.upsert({
+            if (input.skus) {
+                const currSkus = await prisma.sku.findMany({ where: { plantId: input.id }});
+                const deletedSkus = currSkus.map((s: any) => s.sku).filter((s: any) => !input.skus.some((sku: any) => sku.sku === s));
+                await prisma.sku.deleteMany({ where: { sku: { in: deletedSkus } } });
+                for (const sku of input.skus) {
+                    await prisma.sku.upsert({
                         where: { sku: sku.sku},
                         update: sku,
-                        create: { plantId: args.input.id, ...sku }
+                        create: { plantId: input.id, ...sku }
                     })
                 }
             }
             // Update latin name
-            return await context.prisma[_model].update({
-                where: { id: args.input.id },
-                data: { latinName: args.input.latinName },
+            return await prisma[_model].update({
+                where: { id: input.id },
+                data: { latinName: input.latinName },
                 ...(new PrismaSelect(info).value)
             })
         },
-        deletePlants: async (_, args, context) => {
+        deletePlants: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
             // Must be admin
-            if (!context.req.isAdmin) return new CustomError(CODE.Unauthorized);
+            if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
             // TODO handle images
-            return await context.prisma[_model].deleteMany({ where: { id: { in: args.ids } } });
+            return await prisma[_model].deleteMany({ where: { id: { in: input.ids } } });
         },
     }
 }

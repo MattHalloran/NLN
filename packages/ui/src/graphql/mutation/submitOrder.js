@@ -1,11 +1,7 @@
 import { gql } from 'graphql-tag';
 
 export const submitOrderMutation = gql`
-    mutation submitOrder(
-        $id: ID!
-    ) {
-    submitOrder(
-        id: $id
-    )
-}
+    mutation submitOrder(input: FindByIdInput!) {
+        submitOrder(input: $input)
+    }
 `

@@ -1,11 +1,7 @@
 import { gql } from 'graphql-tag';
 
 export const deleteCustomerMutation = gql`
-    mutation deleteCustomer(
-        $id: ID!
-    ) {
-    deleteCustomer(
-        id: $id
-    )
-}
+    mutation deleteCustomer(input: DeleteCustomerInput!) {
+        deleteCustomer(input: $input)
+    }
 `

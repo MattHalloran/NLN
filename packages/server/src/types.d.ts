@@ -6,7 +6,10 @@ import { Maybe } from 'schema/types';
 declare global {
     namespace Express {
         interface Request {
+            businessId?: string | null;
+            customerId?: string | null;
             isLoggedIn?: boolean;
+            isAdmin?: boolean;
             languages: string[] | null;
             roles?: string[];
             userId: string | null;

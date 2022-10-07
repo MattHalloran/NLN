@@ -5,18 +5,8 @@ export const skusQuery = gql`
     ${skuFields}
     ${plantFields}
     ${discountFields}
-    query SkusQuery(
-        $ids: [ID!]
-        $sortBy: SkuSortBy
-        $searchString: String
-        $onlyInStock: Boolean
-    ) {
-        skus(
-            ids: $ids
-            sortBy: $sortBy
-            searchString: $searchString
-            onlyInStock: $onlyInStock
-        ) {
+    query SkusQuery(input: SkusInput!) {
+        skus(input: $input) {
             ...skuFields
             discounts {
                 discount {
