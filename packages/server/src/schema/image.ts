@@ -89,13 +89,13 @@ export const resolvers = {
                 select: { hash: true, labels: { select: { label: true, index: true } } }
             })
             // Sort by position
-            images = images.sort((a: any, b: any) => {
-                const aIndex = a.labels.find((l: any) => l.label === input.label);
-                const bIndex = b.labels.find((l: any) => l.label === input.label);
-                return aIndex > bIndex;
+            images = images.sort((a, b) => {
+                const aIndex = a.labels.find((l) => l.label === input.label);
+                const bIndex = b.labels.find((l) => l.label === input.label);
+                return (aIndex?.index ?? 0) - (bIndex?.index ?? 0);
             })
             return await prisma.image.findMany({ 
-                where: { hash: { in: images.map((i: any) => i.hash) } },
+                where: { hash: { in: images.map((i) => i.hash) } },
                 ...(new PrismaSelect(info).value)
             });
         }
@@ -162,7 +162,7 @@ export const resolvers = {
             // Must be admin
             if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
             const imagesToDelete = await prisma.image.findMany({
-                where: { every: { label: { in: input.labels } } },
+                where: { labels: { every: { label: { in: input.labels } } } },
                 select: {
                     hash: true
                 }

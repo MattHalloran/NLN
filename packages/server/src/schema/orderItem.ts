@@ -38,7 +38,7 @@ export const resolvers = {
             // Must be signed in
             if (!req.customerId) throw new CustomError(CODE.Unauthorized);
             // If no orderId, find or create a new order
-            let order;
+            let order: any;
             if (!input.orderId) {
                 const cartData = { customerId: req.customerId, status: ORDER_STATUS.Draft };
                 // Find current cart
@@ -78,7 +78,7 @@ export const resolvers = {
                 }
             })
             customerIds = [...new Set(customerIds)];
-            if (!req.isAdmin && (customerIds.length > 1 || req.customerId !== customerIds[0])) throw new CustomError(CODE.Unauthorized);
+            if (!req.isAdmin && (customerIds.length > 1 || req.customerId !== customerIds[0].id)) throw new CustomError(CODE.Unauthorized);
             return await prisma.order_item.deleteMany({ where: { id: { in: input.ids } } });
         },
     }

@@ -46,13 +46,13 @@ export const resolvers = {
         addEmail: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
             // Must be admin, or adding to your own
             if(!req.isAdmin || (req.businessId !== input.businessId)) throw new CustomError(CODE.Unauthorized);
-            return await prisma.email.create((new PrismaSelect(info).value), { data: { ...input } });
+            return await prisma.email.create({ data: { ...input }, ...(new PrismaSelect(info).value) });
         },
         updateEmail: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
             // Must be admin, or updating your own
             if(!req.isAdmin) throw new CustomError(CODE.Unauthorized);
             const curr = await prisma.email.findUnique({ where: { id: input.id } });
-            if (req.businessId !== curr.businessId) throw new CustomError(CODE.Unauthorized);
+            if (!curr || req.businessId !== curr.businessId) throw new CustomError(CODE.Unauthorized);
             return await prisma.email.update({
                 where: { id: input.id || undefined },
                 data: { ...input },
@@ -64,7 +64,7 @@ export const resolvers = {
             // TODO must keep at least one email per customer
             const specified = await prisma.email.findMany({ where: { id: { in: input.ids } } });
             if (!specified) throw new CustomError(CODE.ErrorUnknown);
-            const businessIds = [...new Set(specified.map((s: any) => s.businessId))];
+            const businessIds = [...new Set(specified.map((s) => s.businessId))];
             if (!req.isAdmin && (businessIds.length > 1 || req.businessId !== businessIds[0])) throw new CustomError(CODE.Unauthorized);
             return await prisma.email.deleteMany({ where: { id: { in: input.ids } } });
         }

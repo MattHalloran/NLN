@@ -10,7 +10,7 @@ export async function customerFromEmail(email: string, prisma: PrismaType) {
     if (!email) throw new CustomError(CODE.BadCredentials);
     // Validate email address
     const emailRow = await prisma.email.findUnique({ where: { emailAddress: email } });
-    if (!emailRow) throw new CustomError(CODE.BadCredentials);
+    if (!emailRow || !emailRow.customerId) throw new CustomError(CODE.BadCredentials);
     // Find customer
     let customer = await prisma.customer.findUnique({ where: { id: emailRow.customerId } });
     if (!customer) throw new CustomError(CODE.ErrorUnknown);
@@ -29,13 +29,11 @@ export function getCustomerSelect(info: GraphQLResolveInfo) {
 // so it must be manually queried
 export async function getCart(prisma: PrismaType, info: GraphQLResolveInfo, customerId: string) {
     const selectInfo = new PrismaSelect(info).value.select.cart;
-    let results;
-    if (selectInfo) {
-        results = await prisma.order.findMany({ 
-            where: { customerId: customerId, status: ORDER_STATUS.Draft },
-            ...selectInfo
-        });
-    }
+    if (!selectInfo) return null;
+    const results = await prisma.order.findMany({
+        where: { customerId: customerId, status: ORDER_STATUS.Draft },
+        ...selectInfo
+    });
     return results?.length > 0 ? results[0] : null;
 }
 
@@ -43,7 +41,7 @@ export async function getCart(prisma: PrismaType, info: GraphQLResolveInfo, cust
 export async function upsertCustomer({ prisma, info, data }: { prisma: PrismaType, info: GraphQLResolveInfo, data: any }) {
     // Remove relationship data, as they are handled on a 
     // case-by-case basis
-    let cleanedData = onlyPrimitives(data);
+    let cleanedData: any = onlyPrimitives(data);
     // If user already exists, try to find their business
     let business;
     if (data.id) {
@@ -66,7 +64,7 @@ export async function upsertCustomer({ prisma, info, data }: { prisma: PrismaTyp
     if (!data.id) {
         customer = await prisma.customer.create({ data: cleanedData })
     } else {
-        customer = await prisma.customer.update({ 
+        customer = await prisma.customer.update({
             where: { id: data.id },
             data: cleanedData
         })
@@ -86,7 +84,7 @@ export async function upsertCustomer({ prisma, info, data }: { prisma: PrismaTyp
     }
     // Upsert phones
     for (const phone of (data.phones ?? [])) {
-        const phoneExists = await prisma.phone.findUnique({ where: { number: phone.number }});
+        const phoneExists = await prisma.phone.findUnique({ where: { number: phone.number } });
         if (phoneExists && phoneExists.id !== phone.id) throw new CustomError(CODE.PhoneInUse)
         if (!phone.id) {
             await prisma.phone.create({ data: { ...phone, id: undefined, customerId: customer.id } })
@@ -101,7 +99,7 @@ export async function upsertCustomer({ prisma, info, data }: { prisma: PrismaTyp
     for (const role of (data.roles ?? [])) {
         if (!role.id) continue;
         const roleData = { customerId: customer.id, roleId: role.id };
-        await prisma.customer_role.upsert({
+        await prisma.customer_roles.upsert({
             where: { customer_roles_customerid_roleid_unique: roleData },
             create: roleData,
             update: roleData
@@ -109,7 +107,7 @@ export async function upsertCustomer({ prisma, info, data }: { prisma: PrismaTyp
     }
     const prismaInfo = getCustomerSelect(info);
     const cart = await getCart(prisma, info, customer.id);
-    const customerData = await prisma.customer.findUnique({ where: { id: customer.id }, ...prismaInfo });
+    const customerData: any = await prisma.customer.findUnique({ where: { id: customer.id }, ...prismaInfo });
     if (cart) customerData.cart = cart;
     return customerData;
 }

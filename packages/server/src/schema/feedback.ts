@@ -39,13 +39,13 @@ export const resolvers = {
     },
     Mutation: {
         addFeedback: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
-            return await prisma.feedback.create((new PrismaSelect(info).value), { data: { ...input } })
+            return await prisma.feedback.create({ data: { ...input }, ...(new PrismaSelect(info).value) })
         },
         deleteFeedbacks: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
             // Must be admin, or deleting your own
             const specified = await prisma.feedback.findMany({ where: { id: { in: input.ids } } });
             if (!specified) throw new CustomError(CODE.ErrorUnknown);
-            const customer_ids = [...new Set(specified.map((s: any) => s.customerId))];
+            const customer_ids = [...new Set(specified.map((s) => s.customerId))];
             if (!req.isAdmin && (customer_ids.length > 1 || req.customerId !== customer_ids[0])) throw new CustomError(CODE.Unauthorized);
             return await prisma.feedback.deleteMany({ where: { id: { in: input.ids } } });
         }

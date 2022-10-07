@@ -49,7 +49,7 @@ export const resolvers = {
         addRole: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
             // Must be admin
             if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
-            return await prisma.role.create((new PrismaSelect(info).value), { data: { ...input } })
+            return await prisma.role.create({ data: { ...input }, ...(new PrismaSelect(info).value) })
         },
         updateRole: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
             // Must be admin

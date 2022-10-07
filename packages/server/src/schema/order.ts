@@ -109,7 +109,7 @@ export const resolvers = {
     Mutation: {
         updateOrder: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
             // Must be admin, or updating your own
-            const curr = await prisma.order.findUnique({
+            const curr: any = await prisma.order.findUnique({
                 where: { id: input.id },
                 select: { id: true, customerId: true, status: true, items: { select: { id: true } } }
             });
@@ -144,7 +144,7 @@ export const resolvers = {
         },
         submitOrder: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<boolean> => {
             // Must be admin, or submitting your own
-            const curr = await prisma.order.findUnique({ where: { id: input.id } });
+            const curr: any = await prisma.order.findUnique({ where: { id: input.id } });
             if (!req.isAdmin && req.customerId !== curr.customerId) throw new CustomError(CODE.Unauthorized);
             // Only orders in the draft state can be submitted
             if (curr.status !== ORDER_STATUS.Draft) throw new CustomError(CODE.ErrorUnknown);
@@ -155,9 +155,10 @@ export const resolvers = {
             orderNotifyAdmin();
             return true;
         },
-        cancelOrder: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
+        cancelOrder: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<any> => {
             // Must be admin, or canceling your own
             const curr = await prisma.order.findUnique({ where: { id: input.id } });
+            if (!curr) throw new CustomError(CODE.NotFound);
             if (!req.isAdmin && req.customerId !== curr.customerId) throw new CustomError(CODE.Unauthorized);
             let order_status = curr.status;
             // Only pending orders can be fully cancelled by customer
