@@ -7,8 +7,6 @@ import { IWrap, RecursivePartial } from '../types';
 import { Context } from '../context';
 import { GraphQLResolveInfo } from 'graphql';
 
-const _model = 'image';
-
 export const typeDef = gql`
     enum ImageSize {
         XXS
@@ -86,7 +84,7 @@ export const resolvers = {
     Query: {
         imagesByLabel: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
             // Get all images with label
-            let images = await prisma[_model].findMany({
+            let images = await prisma.image.findMany({
                 where: { labels: { some: { label: input.label } } },
                 select: { hash: true, labels: { select: { label: true, index: true } } }
             })
@@ -96,7 +94,7 @@ export const resolvers = {
                 const bIndex = b.labels.find((l: any) => l.label === input.label);
                 return aIndex > bIndex;
             })
-            return await prisma[_model].findMany({ 
+            return await prisma.image.findMany({ 
                 where: { hash: { in: images.map((i: any) => i.hash) } },
                 ...(new PrismaSelect(info).value)
             });
@@ -136,7 +134,7 @@ export const resolvers = {
                     })
                 }
                 // Update alt and description
-                await prisma[_model].update({
+                await prisma.image.update({
                     where: { hash: curr.hash },
                     data: { 
                         alt: curr.alt,

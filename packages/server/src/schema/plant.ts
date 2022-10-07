@@ -6,8 +6,6 @@ import { IWrap, RecursivePartial } from '../types';
 import { Context } from '../context';
 import { GraphQLResolveInfo } from 'graphql';
 
-const _model = 'plant';
-
 export const typeDef = gql`
 
     input PlantTraitInput {
@@ -84,7 +82,7 @@ export const resolvers = {
             // Toggle for showing/hiding plants that have no SKUs with any availability
             let onlyInStock;
             if (input.onlyInStock === true) onlyInStock = { skus: { some: { availability: { gt: 0 } } } };
-            return await prisma[_model].findMany({ 
+            return await prisma.plant.findMany({ 
                 where: { 
                     ...idQuery,
                     ...searchQuery,
@@ -105,7 +103,7 @@ export const resolvers = {
             if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
             // TODO handle images
             // Create plant object
-            const plant = await prisma[_model].create((new PrismaSelect(info).value), { data: { id: input.id, latinName: input.latinName } });
+            const plant = await prisma.plant.create((new PrismaSelect(info).value), { data: { id: input.id, latinName: input.latinName } });
             // Create trait objects
             for (const { name, value } of (input.traits || [])) {
                 await prisma.plant_trait.create({ data: { plantId: plant.id, name, value } });
@@ -113,7 +111,7 @@ export const resolvers = {
             // Create images
             if (Array.isArray(input.images)) {
                 for (let i = 0; i < input.length; i++) {
-                    await prisma.plant_image.create({ data: {
+                    await prisma.plant_images.create({ data: {
                         plantId: plant.id,
                         hash: input.images[i].hash,
                         isDisplay: input.images[i].isDisplay ?? false,
@@ -121,7 +119,7 @@ export const resolvers = {
                     }})
                 }
             }
-            return await prisma[_model].findUnique({ 
+            return await prisma.plant.findUnique({ 
                 where: { id: plant.id },
                 ...(new PrismaSelect(info).value)
             });
@@ -131,7 +129,7 @@ export const resolvers = {
             // Must be admin
             if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
             // Update images
-            await prisma.plant_image.deleteMany({ where: { plantId: input.id } });
+            await prisma.plant_images.deleteMany({ where: { plantId: input.id } });
             if (Array.isArray(input.images)) {
                 let rowIds = [];
                 // Upsert passed in images
@@ -140,14 +138,14 @@ export const resolvers = {
                     const rowData = { plantId: input.id, hash: curr.hash, index: i, isDisplay: curr.isDisplay ?? false };
                     const rowId = { plantId: input.id, hash: curr.hash };
                     rowIds.push(rowId);
-                    await prisma.plant_image.upsert({
+                    await prisma.plant_images.upsert({
                         where: { plant_images_plantid_hash_unique: rowId },
                         update: rowData,
                         create: rowData
                     })
                 }
                 // Delete images not passed in
-                await prisma.plant_image.deleteMany({ 
+                await prisma.plant_images.deleteMany({ 
                     where: {
                         AND: [
                             { plantId: { in: rowIds.map(r => r.plantId ) } },
@@ -180,7 +178,7 @@ export const resolvers = {
                 }
             }
             // Update latin name
-            return await prisma[_model].update({
+            return await prisma.plant.update({
                 where: { id: input.id },
                 data: { latinName: input.latinName },
                 ...(new PrismaSelect(info).value)
@@ -190,7 +188,7 @@ export const resolvers = {
             // Must be admin
             if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
             // TODO handle images
-            return await prisma[_model].deleteMany({ where: { id: { in: input.ids } } });
+            return await prisma.plant.deleteMany({ where: { id: { in: input.ids } } });
         },
     }
 }

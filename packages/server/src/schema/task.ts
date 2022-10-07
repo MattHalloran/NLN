@@ -6,8 +6,6 @@ import { IWrap, RecursivePartial } from '../types';
 import { Context } from '../context';
 import { GraphQLResolveInfo } from 'graphql';
 
-const _model = 'task';
-
 export const typeDef = gql`
     enum TaskStatus {
         Unknown
@@ -37,7 +35,7 @@ export const resolvers = {
         tasks: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
             // Must be admin
             if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
-            return await prisma[_model].findMany({
+            return await prisma.queue_task.findMany({
                 where: { status: input.status }
             });
         }

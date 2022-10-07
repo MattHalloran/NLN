@@ -6,8 +6,6 @@ import { IWrap, RecursivePartial } from '../types';
 import { Context } from '../context';
 import { GraphQLResolveInfo } from 'graphql';
 
-const _model = 'order_item'
-
 export const typeDef = gql`
 
     input OrderItemInput {
@@ -64,7 +62,7 @@ export const resolvers = {
                 if (!editable_order_statuses.includes(order.status)) throw new CustomError(CODE.Unauthorized);
             }
             // Add to existing order item, or create a new one
-            return await prisma[_model].upsert({
+            return await prisma.order_item.upsert({
                 where: { order_item_orderid_skuid_unique: { orderId: order.id, skuId: input.skuId } },
                 create: { orderId: order.id, skuId: input.skuId, quantity: input.quantity },
                 update: { quantity: { increment: input.quantity } },
@@ -73,13 +71,15 @@ export const resolvers = {
         },
         deleteOrderItems: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
             // Must be admin, or deleting your own
-            let customer_ids = await db('order')
-                .select(`order.customerId`)
-                .leftJoin('order_item', 'order.id', 'order_item.orderId')
-                .whereIn('order_item.id', input.ids)
-            customer_ids = [...new Set(customer_ids)];
-            if (!req.isAdmin && (customer_ids.length > 1 || req.customerId !== customer_ids[0])) throw new CustomError(CODE.Unauthorized);
-            return await prisma[_model].deleteMany({ where: { id: { in: input.ids } } });
+            // Find customerIds associated with orders that have the given order item ids
+            let customerIds = await prisma.customer.findMany({
+                where: {
+                    orders: { some: { items: { some: { id: { in: input.ids } } } } }
+                }
+            })
+            customerIds = [...new Set(customerIds)];
+            if (!req.isAdmin && (customerIds.length > 1 || req.customerId !== customerIds[0])) throw new CustomError(CODE.Unauthorized);
+            return await prisma.order_item.deleteMany({ where: { id: { in: input.ids } } });
         },
     }
 }

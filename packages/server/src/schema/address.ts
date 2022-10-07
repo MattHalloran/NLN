@@ -6,8 +6,6 @@ import { IWrap, RecursivePartial } from '../types';
 import { Context } from '../context';
 import { GraphQLResolveInfo } from 'graphql';
 
-const _model = 'address';
-
 export const typeDef = gql`
     input AddressInput {
         id: ID
@@ -55,20 +53,20 @@ export const resolvers = {
         addresses: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
             // Must be admin
             if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
-            return await prisma[_model].findMany((new PrismaSelect(info).value));
+            return await prisma.address.findMany((new PrismaSelect(info).value));
         }
     },
     Mutation: {
         addAddress: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
             // Must be admin, or adding to your own
             if(!req.isAdmin && (req.businessId !== input.businessId)) throw new CustomError(CODE.Unauthorized);
-            return await prisma[_model].create((new PrismaSelect(info).value), { data: { ...input } })
+            return await prisma.address.create((new PrismaSelect(info).value), { data: { ...input } })
         },
         updateAddress: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
             // Must be admin, or updating your own
-            const curr = await prisma[_model].findUnique({ where: { id: input.id } });
+            const curr = await prisma.address.findUnique({ where: { id: input.id } });
             if (!req.isAdmin && req.businessId !== curr.businessId) throw new CustomError(CODE.Unauthorized);
-            return await prisma[_model].update({
+            return await prisma.address.update({
                 where: { id: input.id || undefined },
                 data: { ...input },
                 ...(new PrismaSelect(info).value)
@@ -76,11 +74,11 @@ export const resolvers = {
         },
         deleteAddresses: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
             // Must be admin, or deleting your own
-            const specified = await prisma[_model].findMany({ where: { id: { in: input.ids } } });
+            const specified = await prisma.address.findMany({ where: { id: { in: input.ids } } });
             if (!specified) throw new CustomError(CODE.ErrorUnknown);
             const businessIds = [...new Set(specified.map((s: any) => s.businessId))];
             if (!req.isAdmin && (businessIds.length > 1 || req.businessId !== businessIds[0])) throw new CustomError(CODE.Unauthorized);
-            return await prisma[_model].deleteMany({ where: { id: { in: input.ids } } });
+            return await prisma.address.deleteMany({ where: { id: { in: input.ids } } });
         }
     }
 }

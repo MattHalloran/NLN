@@ -6,8 +6,6 @@ import { IWrap, RecursivePartial } from '../types';
 import { Context } from '../context';
 import { GraphQLResolveInfo } from 'graphql';
 
-const _model = 'discount';
-
 export const typeDef = gql`
     input DiscountInput {
         id: ID
@@ -45,19 +43,19 @@ export const resolvers = {
         discounts: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
             // Must be admin
             if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
-            return await prisma[_model].findMany((new PrismaSelect(info).value));
+            return await prisma.discount.findMany((new PrismaSelect(info).value));
         }
     },
     Mutation: {
         addDiscount: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
             // Must be admin
             if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
-            return await prisma[_model].create((new PrismaSelect(info).value), { data: { ...input } })
+            return await prisma.discount.create((new PrismaSelect(info).value), { data: { ...input } })
         },
         updateDiscount: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
             // Must be admin
             if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
-            return await prisma[_model].update({
+            return await prisma.discount.update({
                 where: { id: input.id || undefined },
                 data: { ...input },
                 ...(new PrismaSelect(info).value)
@@ -66,7 +64,7 @@ export const resolvers = {
         deleteDiscounts: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
             // Must be admin
             if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
-            return await prisma[_model].deleteMany({ where: { id: { in: input.ids } } });
+            return await prisma.discount.deleteMany({ where: { id: { in: input.ids } } });
         }
     }
 }
