@@ -3,6 +3,7 @@ import { onlyPrimitives } from "../../utils/objectTools";
 import { CustomError } from "../../error";
 import { CODE, ORDER_STATUS } from '@shared/consts';
 import { PrismaType } from "../../types";
+import { GraphQLResolveInfo } from "graphql";
 
 // Validates email address, and returns customer data
 export async function customerFromEmail(email: string, prisma: PrismaType) {
@@ -18,7 +19,7 @@ export async function customerFromEmail(email: string, prisma: PrismaType) {
 
 // 'cart' is not a field or relationship in the database,
 // so it must be removed from the select
-export function getCustomerSelect(info) {
+export function getCustomerSelect(info: GraphQLResolveInfo) {
     let prismaInfo = new PrismaSelect(info).value;
     delete prismaInfo.select.cart;
     return prismaInfo;
@@ -26,7 +27,7 @@ export function getCustomerSelect(info) {
 
 // 'cart' is not a field or relationship in the database,
 // so it must be manually queried
-export async function getCart(prisma, info, customerId) {
+export async function getCart(prisma: PrismaType, info: GraphQLResolveInfo, customerId: string) {
     const selectInfo = new PrismaSelect(info).value.select.cart;
     let results;
     if (selectInfo) {
@@ -39,7 +40,7 @@ export async function getCart(prisma, info, customerId) {
 }
 
 // Upsert a customer, with business, emails, phones, and roles
-export async function upsertCustomer({ prisma, info, data }) {
+export async function upsertCustomer({ prisma, info, data }: { prisma: PrismaType, info: GraphQLResolveInfo, data: any }) {
     // Remove relationship data, as they are handled on a 
     // case-by-case basis
     let cleanedData = onlyPrimitives(data);

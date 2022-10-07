@@ -7,8 +7,6 @@ import { IWrap, RecursivePartial } from '../types';
 import { Context } from '../context';
 import { GraphQLResolveInfo } from 'graphql';
 
-const _model = 'order';
-
 export const typeDef = gql`
     enum OrderStatus {
         CanceledByAdmin
@@ -97,7 +95,7 @@ export const resolvers = {
                     ]
                 }
             }
-            return await prisma[_model].findMany({
+            return await prisma.order.findMany({
                 where: {
                     ...idQuery,
                     ...searchQuery,
@@ -111,7 +109,7 @@ export const resolvers = {
     Mutation: {
         updateOrder: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
             // Must be admin, or updating your own
-            const curr = await prisma[_model].findUnique({
+            const curr = await prisma.order.findUnique({
                 where: { id: input.id },
                 select: { id: true, customerId: true, status: true, items: { select: { id: true } } }
             });
@@ -138,7 +136,7 @@ export const resolvers = {
                     await prisma.order_item.deleteMany({ where: { id: { in: deletingItemIds } } })
                 }
             }
-            return await prisma[_model].update({
+            return await prisma.order.update({
                 where: { id: curr.id },
                 data: { ...input, items: undefined },
                 ...(new PrismaSelect(info).value)
@@ -146,11 +144,11 @@ export const resolvers = {
         },
         submitOrder: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<boolean> => {
             // Must be admin, or submitting your own
-            const curr = await prisma[_model].findUnique({ where: { id: input.id } });
+            const curr = await prisma.order.findUnique({ where: { id: input.id } });
             if (!req.isAdmin && req.customerId !== curr.customerId) throw new CustomError(CODE.Unauthorized);
             // Only orders in the draft state can be submitted
             if (curr.status !== ORDER_STATUS.Draft) throw new CustomError(CODE.ErrorUnknown);
-            await prisma[_model].update({
+            await prisma.order.update({
                 where: { id: curr.id },
                 data: { status: ORDER_STATUS.Pending }
             });
@@ -159,7 +157,7 @@ export const resolvers = {
         },
         cancelOrder: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
             // Must be admin, or canceling your own
-            const curr = await prisma[_model].findUnique({ where: { id: input.id } });
+            const curr = await prisma.order.findUnique({ where: { id: input.id } });
             if (!req.isAdmin && req.customerId !== curr.customerId) throw new CustomError(CODE.Unauthorized);
             let order_status = curr.status;
             // Only pending orders can be fully cancelled by customer
@@ -170,7 +168,7 @@ export const resolvers = {
             if (curr.status in pending_order_statuses) {
                 order_status = ORDER_STATUS.PendingCancel;
             }
-            await prisma[_model].update({
+            await prisma.order.update({
                 where: { id: curr.id },
                 data: { status: order_status }
             })
@@ -179,7 +177,7 @@ export const resolvers = {
         deleteOrders: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
             // Must be admin
             if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
-            return await prisma[_model].deleteMany({ where: { id: { in: input.ids } } });
+            return await prisma.order.deleteMany({ where: { id: { in: input.ids } } });
         }
     }
 }

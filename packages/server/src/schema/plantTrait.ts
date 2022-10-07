@@ -4,8 +4,6 @@ import { IWrap, RecursivePartial } from '../types';
 import { Context } from '../context';
 import { GraphQLResolveInfo } from 'graphql';
 
-const _model = 'plant_trait';
-
 export const typeDef = gql`
     input TraitValuesInput {
         name: String!
@@ -51,7 +49,7 @@ export const resolvers = {
         // Returns all values previously entered for every trait
         traitOptions: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
             // Query all data
-            const trait_data = await prisma[_model].findMany();
+            const trait_data = await prisma.plant_trait.findMany();
             // Combine data into object
             let options: { [x: string]: any } = {};
             for (const row of trait_data) {

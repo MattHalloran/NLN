@@ -7,18 +7,6 @@ datasource db {
   url      = env("DB_URL")
 }
 
-model knex_migrations {
-  id             Int       @id @default(autoincrement())
-  name           String?   @db.VarChar(255)
-  batch          Int?
-  migration_time DateTime? @db.Timestamptz(6)
-}
-
-model knex_migrations_lock {
-  index     Int  @id @default(autoincrement())
-  is_locked Int?
-}
-
 model address {
   id                    String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   tag                   String?   @db.VarChar(128)
