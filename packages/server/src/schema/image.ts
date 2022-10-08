@@ -46,6 +46,10 @@ export const typeDef = gql`
         labels: [String!]!
     }
 
+    input ImagesByLabelInput {
+        label: String!
+    }
+
     type AddImageResponse {
         success: Boolean!
         src: String
@@ -67,7 +71,7 @@ export const typeDef = gql`
     }
 
     extend type Query {
-        imagesByLabel(label: String!): [Image!]!
+        imagesByLabel(input: ImagesByLabelInput!): [Image!]!
     }
 
     extend type Mutation {

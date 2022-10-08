@@ -38,6 +38,17 @@ export const typeDef = gql`
         discountIds: [ID!]
     }
 
+    input UploadAvailabilityInput {
+        file: Upload!
+    }
+
+    input SkusInput {
+        ids: [ID!]
+        sortBy: SkuSortBy
+        searchString: String
+        onlyInStock: Boolean
+    }
+
     type SkuDiscount {
         discount: Discount!
     }
@@ -56,11 +67,11 @@ export const typeDef = gql`
     }
 
     extend type Query {
-        skus(ids: [ID!], sortBy: SkuSortBy, searchString: String, onlyInStock: Boolean): [Sku!]!
+        skus(input: SkusInput!): [Sku!]!
     }
 
     extend type Mutation {
-        uploadAvailability(file: Upload!): Boolean
+        uploadAvailability(input: UploadAvailabilityInput!): Boolean
         addSku(input: SkuInput!): Sku!
         updateSku(input: SkuInput!): Sku!
         deleteSkus(input: DeleteManyInput!): Count!

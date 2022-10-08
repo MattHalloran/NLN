@@ -45,14 +45,14 @@ export function sendResetPasswordLink(email: string, userId: string | number, co
     });
 }
 
-export function sendVerificationLink(email: string, userId: string | number, code: string) {
+export function sendVerificationLink(email: string, userId: string | number) {
     // Replace all "${VERIFY_LINK}" in welcomeTemplate with the the actual link
-    const link = `${WEBSITE}/start?code=${userId}:${code}`;
+    const link = `${WEBSITE}/start?code=${userId}`;
     const html = welcomeTemplate.replace(/\$\{VERIFY_LINK\}/g, link);
     emailQueue.add({
         to: [email],
         subject: `Verify ${BUSINESS_NAME} Account`,
-        text: `Welcome to ${BUSINESS_NAME}! Please log in through this link (${WEBSITE}/start?code=${userId}:${code}) to verify your account. If you did not create an account with us, please ignore this link.`,
+        text: `Welcome to ${BUSINESS_NAME}! Please log in through this link (${WEBSITE}/start?code=${userId}) to verify your account. If you did not create an account with us, please ignore this link.`,
         html,
     });
 }

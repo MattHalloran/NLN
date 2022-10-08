@@ -26,6 +26,14 @@ export const typeDef = gql`
         skus: [SkuInput!]
     }
 
+    input PlantsInput {
+        ids: [ID!]
+        sortBy: SkuSortBy
+        searchString: String
+        active: Boolean
+        onlyInStock: Boolean
+    }
+
     type PlantImage {
         index: Int!
         isDisplay: Boolean!
@@ -42,7 +50,7 @@ export const typeDef = gql`
     }
 
     extend type Query {
-        plants(ids: [ID!], sortBy: SkuSortBy, searchString: String, active: Boolean, onlyInStock: Boolean): [Plant!]!
+        plants(input: PlantsInput!): [Plant!]!
     }
 
     extend type Mutation {

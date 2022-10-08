@@ -10,11 +10,11 @@ export async function uploadAvailabilityProcess(job: any) {
     console.info('📊 Updating availability...')
     console.info('SKUs not in the availability data will be hidden');
 
-    const rows = job.data.rows;
+    const rows: any[] = job.data.rows;
     const header = rows[0];
     const content = rows.slice(1, rows.length);
     // Determine which columns data is in
-    const index = {
+    const index: { [x: string]: number } = {
         latinName: header.indexOf('Botanical Name'),
         commonName: header.indexOf('Common Name'),
         size: header.indexOf('Size'),

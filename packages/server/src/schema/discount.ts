@@ -5,6 +5,7 @@ import { PrismaSelect } from '@paljs/plugins';
 import { IWrap, RecursivePartial } from '../types';
 import { Context } from '../context';
 import { GraphQLResolveInfo } from 'graphql';
+import { Discount } from './types';
 
 export const typeDef = gql`
     input DiscountInput {
@@ -40,10 +41,10 @@ export const typeDef = gql`
 
 export const resolvers = {
     Query: {
-        discounts: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
+        discounts: async (_parent: undefined, _input: undefined, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<Discount>[]> => {
             // Must be admin
             if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
-            return await prisma.discount.findMany((new PrismaSelect(info).value));
+            return await prisma.discount.findMany((new PrismaSelect(info).value)) as any[]
         }
     },
     Mutation: {
