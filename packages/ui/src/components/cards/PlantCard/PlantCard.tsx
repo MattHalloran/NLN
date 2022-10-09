@@ -13,7 +13,6 @@ import {
     Tooltip,
     Typography
 } from '@mui/material';
-import { Launch as LaunchIcon } from '@mui/icons-material';
 import { showPrice, getImageSrc, getPlantTrait, getServerUrl } from 'utils';
 import { NoImageWithTextIcon } from 'assets/img';
 import { IMAGE_USE, SKU_STATUS } from '@shared/consts';
@@ -41,10 +40,10 @@ const chip: SxProps<Theme> = {
 } as const
 
 
-function PlantCard({
+export const PlantCard = ({
     onClick,
     plant,
-}) {
+}) => {
     const SkuStatus = {
         [SKU_STATUS.Deleted]: deleted,
         [SKU_STATUS.Inactive]: inactive,
@@ -117,10 +116,3 @@ function PlantCard({
         </Card>
     );
 }
-
-PlantCard.propTypes = {
-    onClick: PropTypes.func.isRequired,
-    plant: PropTypes.object.isRequired,
-}
-
-export { PlantCard };

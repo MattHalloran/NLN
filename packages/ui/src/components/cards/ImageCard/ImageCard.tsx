@@ -1,21 +1,16 @@
-import PropTypes from 'prop-types';
 import { useRef } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
 import { getImageSrc, getServerUrl } from 'utils';
 import { IMAGE_SIZE } from '@shared/consts';
 import { Card, CardActions, CardContent, CardMedia, IconButton } from '@mui/material';
-import {
-    Edit as EditIcon,
-    Delete as DeleteIcon
-} from '@mui/icons-material';
 
-function ImageCard({
+export const ImageCard = ({
     onDelete,
     onEdit,
     data,
     index,
     moveCard
-}) {
+}) => {
     const ref = useRef(null);
 
     const [, drop] = useDrop({
@@ -91,13 +86,3 @@ function ImageCard({
         </Card>
     );
 }
-
-ImageCard.propTypes = {
-    onDelete: PropTypes.func.isRequired,
-    onEdit: PropTypes.func.isRequired,
-    data: PropTypes.object.isRequired,
-    index: PropTypes.number.isRequired,
-    moveCard: PropTypes.func.isRequired,
-}
-
-export { ImageCard };

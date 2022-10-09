@@ -12,7 +12,7 @@ import {
     Typography
 } from '@mui/material';
 import { makeStyles } from '@material-ui/styles';
-import { LINKS, PUBS, PubSub } from 'utils';
+import { LINKS, PubSub } from 'utils';
 import { mutationWrapper } from 'graphql/utils/wrappers';
 
 const useStyles = makeStyles((theme) => ({

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ordersQuery } from 'graphql/query';
 import { useQuery } from '@apollo/client';
-import { ORDER_FILTERS, PUBS, PubSub } from 'utils';
+import { ORDER_FILTERS, PubSub } from 'utils';
 import { makeStyles } from '@material-ui/styles';
 import {
     AdminBreadcrumbs,

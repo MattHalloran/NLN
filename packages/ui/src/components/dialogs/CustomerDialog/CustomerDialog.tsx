@@ -1,6 +1,4 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import PropTypes from 'prop-types';
-import { makeStyles } from '@material-ui/styles';
 import {
     AppBar,
     Button,
@@ -11,20 +9,15 @@ import {
     Toolbar,
     Typography,
 } from '@mui/material';
-import {
-    AddCircle as AddCircleIcon,
-    Close as CloseIcon,
-    Delete as DeleteIcon,
-    Lock as LockIcon,
-    LockOpen as LockOpenIcon,
-    Restore as RestoreIcon,
-    Update as UpdateIcon
-} from '@mui/icons-material';
 import _ from 'lodash';
 import { ACCOUNT_STATUS } from '@shared/consts';
-import { mutationWrapper } from 'graphql/utils/wrappers';
 import { deleteCustomerMutation, updateCustomerMutation } from 'graphql/mutation';
-import { PUBS, PubSub } from 'utils';
+import { PubSub } from 'utils';
+import { CancelIcon, CloseIcon, CreateIcon, DeleteIcon, LockIcon, SaveIcon } from '@shared/icons';
+import { documentNodeWrapper } from 'graphql/utils';
+import { updateCustomerVariables } from 'graphql/generated/updateCustomer';
+import { deleteCustomerVariables } from 'graphql/generated/deleteCustomer';
+import { AccountStatus } from 'graphql/generated/globalTypes';
 
 const useStyles = makeStyles((theme) => ({
     appBar: {
@@ -58,18 +51,18 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 
 // Associates account states with a dynamic action button
 // curr_account_value: [curr_account_label, toggled_account_label, toggled_account_value, toggle_icon]
-const statusToggle = {
-    [ACCOUNT_STATUS.Deleted]: ['Deleted', 'Undelete', ACCOUNT_STATUS.Unlocked, (<AddCircleIcon />)],
+const statusToggle: { [key in AccountStatus]: [string, string, AccountStatus, JSX.Element] } = {
+    [ACCOUNT_STATUS.Deleted]: ['Deleted', 'Undelete', ACCOUNT_STATUS.Unlocked, (<CreateIcon />)],
     [ACCOUNT_STATUS.Unlocked]: ['Unlocked', 'Lock', ACCOUNT_STATUS.HardLock, (<LockIcon />)],
     [ACCOUNT_STATUS.SoftLock]: ['Soft Locked (password timeout)', 'Unlock', ACCOUNT_STATUS.Unlocked, (<LockOpenIcon />)],
     [ACCOUNT_STATUS.HardLock]: ['Hard Locked', 'Unlock', ACCOUNT_STATUS.Unlocked, (<LockOpenIcon />)]
 }
 
-function CustomerDialog({
+export const CustomerDialog = ({
     customer,
     open = true,
     onClose,
-}) {
+}) => {
     const classes = useStyles();
     // Stores the modified customer data before updating
     const [currCustomer, setCurrCustomer] = useState(customer);
@@ -87,23 +80,23 @@ function CustomerDialog({
 
     // Locks/unlocks/undeletes a user
     const toggleLock = useCallback(() => {
-        mutationWrapper({
-            mutation: updateCustomerMutation,
-            data: { variables: { id: currCustomer.id, status: statusToggleData[2] } },
+        documentNodeWrapper<any, updateCustomerVariables>({
+            node: updateCustomerMutation,
+            input: { id: currCustomer.id, status: statusToggleData[2] },
             successMessage: () => 'Customer updated.',
             errorMessage: () => 'Failed to update customer.'
         })
     }, [currCustomer, statusToggleData])
 
     const deleteCustomer = useCallback(() => {
-        mutationWrapper({
-            mutation: deleteCustomerMutation,
-            data: { variables: { id: currCustomer?.id }},
+        documentNodeWrapper<any, deleteCustomerVariables>({
+            node: deleteCustomerMutation,
+            input: { id: currCustomer?.id },
             successMessage: () => 'Customer deleted.',
             onSuccess: onClose,
         })
     }, [currCustomer?.id, onClose])
-    
+
     const confirmDelete = useCallback(() => {
         PubSub.publish(PUBS.AlertDialog, {
             message: `Are you sure you want to delete the account for ${currCustomer.firstName} ${currCustomer.lastName}?`,
@@ -114,9 +107,9 @@ function CustomerDialog({
     }, [currCustomer, deleteCustomer])
 
     const updateCustomer = useCallback(() => {
-        mutationWrapper({
-            mutation: updateCustomerMutation,
-            data: { variables: { ...currCustomer }},
+        documentNodeWrapper<any, updateCustomerVariables>({
+            node: updateCustomerMutation,
+            input: { ...currCustomer },
             successMessage: () => 'Customer updated.',
         })
     }, [currCustomer])
@@ -128,7 +121,7 @@ function CustomerDialog({
                 <Button
                     fullWidth
                     disabled={!changes_made}
-                    startIcon={<RestoreIcon />}
+                    startIcon={<CancelIcon />}
                     onClick={revert}
                 >Revert</Button>
             </Grid>
@@ -152,7 +145,7 @@ function CustomerDialog({
                 <Button
                     fullWidth
                     disabled={!changes_made}
-                    startIcon={<UpdateIcon />}
+                    startIcon={<SaveIcon />}
                     onClick={updateCustomer}
                 >Update</Button>
             </Grid>
@@ -179,7 +172,7 @@ function CustomerDialog({
                 </Toolbar>
             </AppBar>
             <div className={classes.container}>
-    
+
                 <div className={classes.bottom}>
                     {options}
                 </div>
@@ -187,11 +180,3 @@ function CustomerDialog({
         </Dialog>
     );
 }
-
-CustomerDialog.propTypes = {
-    plant: PropTypes.object,
-    open: PropTypes.bool,
-    onClose: PropTypes.func.isRequired,
-}
-
-export { CustomerDialog };

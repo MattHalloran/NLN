@@ -4,16 +4,15 @@ import {
     QuantityBox,
     Selector
 } from 'components';
-import { deleteArrayIndex, showPrice, updateObject, PUBS, PubSub, getImageSrc, getPlantTrait, updateArray } from 'utils';
+import { deleteArrayIndex, showPrice, updateObject, PubSub, getImageSrc, getPlantTrait, updateArray } from 'utils';
 import { NoImageIcon } from 'assets/img';
 import { IconButton } from '@mui/material';
-import { Close as CloseIcon } from '@mui/icons-material';
 import { Paper, Grid, TableContainer, Table, TableHead, TableRow, TableCell, TableBody, TextField } from '@mui/material';
-import { makeStyles } from '@material-ui/styles';
 import AdapterDateFns from '@material-ui/lab/AdapterDateFns';
 import LocalizationProvider from '@material-ui/lab/LocalizationProvider';
 import DatePicker from '@material-ui/lab/DatePicker';
 import { IMAGE_USE } from '@shared/consts';
+import { CloseIcon } from '@shared/icons';
 
 const useStyles = makeStyles((theme) => ({
     tablePaper: {
@@ -68,7 +67,7 @@ function CartTable({
     const updateItemQuantity = useCallback((sku, quantity) => {
         let index = cart.items.findIndex(i => i.sku.sku === sku);
         if (index < 0 || index >= (cart.items.length)) {
-            PubSub.publish(PUBS.Snack, { message: 'Failed to update item quantity', severity: 'error', data: { index: index } });
+            PubSub.get().publishSnack({ message: 'Failed to update item quantity', severity: SnackSeverity.Error, data: { index: index } });
             return;
         }
         onUpdate(updateObject(cart, 'items', updateArray(cart.items, index, updateObject(cart.items[index], 'quantity', quantity))))
@@ -77,7 +76,7 @@ function CartTable({
     const deleteCartItem = useCallback((sku) => {
         let index = cart.items.findIndex(i => i.sku.sku === sku.sku);
         if (index < 0) {
-            PubSub.publish(PUBS.Snack, { message: `Failed to remove item for ${sku.sku}`, severity: 'error', data: sku });
+            PubSub.get().publishSnack({ message: `Failed to remove item for ${sku.sku}`, severity: SnackSeverity.Error, data: sku });
             return;
         }
         let changed_item_list = deleteArrayIndex(cart.items, index);

@@ -1,10 +1,7 @@
 import { useRef, useCallback, useEffect } from "react";
-import { Box, FormControl, IconButton, Input, InputLabel, SxProps, Theme, Tooltip } from '@mui/material';
-import {
-    Add as AddIcon,
-    Remove as RemoveIcon
-} from '@mui/icons-material';
+import { Box, FormControl, IconButton, Input, InputLabel, SxProps, Theme, Tooltip, useTheme } from '@mui/material';
 import { QuantityBoxProps } from "../types";
+import { MinusIcon, PlusIcon } from "@shared/icons";
 
 const buttonProps: SxProps<Theme> = {
     minWidth: 30,
@@ -27,6 +24,7 @@ type HoldRefs = {
 
 export const QuantityBox = ({
     autoFocus = false,
+    disabled = false,
     error = false, // TODO use
     handleChange,
     helperText = '', //TODO use
@@ -41,6 +39,8 @@ export const QuantityBox = ({
     value,
     ...props
 }: QuantityBoxProps) => {
+    const { palette } = useTheme();
+
     const holdRefs = useRef<HoldRefs>({
         which: null,
         speed: 1,
@@ -95,6 +95,7 @@ export const QuantityBox = ({
             }}>
                 <IconButton
                     aria-label='minus'
+                    disabled={disabled}
                     onMouseDown={handleMinusDown}
                     onMouseUp={stopTouch}
                     onTouchStart={handleMinusDown}
@@ -103,11 +104,12 @@ export const QuantityBox = ({
                     sx={{
                         ...buttonProps,
                         borderRadius: '5px 0 0 5px',
+                        maxWidth: '48px',
                     }}>
-                    <RemoveIcon />
+                    <MinusIcon />
                 </IconButton>
                 <FormControl sx={{
-                    background: (t) => t.palette.primary.contrastText,
+                    background: palette.background.paper,
                     width: '60%',
                     maxWidth: `12ch`,
                     height: '100%',
@@ -116,20 +118,30 @@ export const QuantityBox = ({
                         display: "none",
                     }
                 }}>
-                    <InputLabel htmlFor={`quantity-box-${id}`} sx={{ color: 'grey', paddingTop: '10px' }}>{label}</InputLabel>
+                    <InputLabel
+                        htmlFor={`quantity-box-${id}`}
+                        sx={{
+                            color: palette.background.textSecondary,
+                            paddingTop: '10px'
+                        }}
+                    >{label}</InputLabel>
                     <Input
                         autoFocus={autoFocus}
+                        disabled={disabled}
                         id={`quantity-box-${id}`}
                         aria-describedby={`helper-text-${id}`}
-                        style={{ color: 'black' }}
                         type="number"
                         inputProps={{ min, max }}
                         value={value}
                         onChange={(e) => updateValue(e.target.value)}
+                        sx={{
+                            color: palette.background.textPrimary,
+                        }}
                     />
                 </FormControl>
                 <IconButton
                     aria-label='plus'
+                    disabled={disabled}
                     onMouseDown={handlePlusDown}
                     onMouseUp={stopTouch}
                     onTouchStart={handlePlusDown}
@@ -138,8 +150,9 @@ export const QuantityBox = ({
                     sx={{
                         ...buttonProps,
                         borderRadius: '0 5px 5px 0',
+                        maxWidth: '48px',
                     }}>
-                    <AddIcon />
+                    <PlusIcon />
                 </IconButton>
             </Box>
         </Tooltip>

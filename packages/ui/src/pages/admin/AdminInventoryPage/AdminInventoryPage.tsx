@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 import { uploadAvailabilityMutation } from 'graphql/mutation';
 import { plantsQuery, traitOptionsQuery } from 'graphql/query';
 import { useQuery, useMutation } from '@apollo/client';
-import { PUBS, PubSub, SORT_OPTIONS } from 'utils';
+import { PubSub, SORT_OPTIONS } from 'utils';
 import {
     AdminBreadcrumbs,
     EditPlantDialog,

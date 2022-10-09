@@ -7,10 +7,8 @@ const paths = [
     ['Terms', LINKS.Terms]
 ]
 
-const PolicyBreadcrumbs = ({...props}) => BreadcrumbsBase({
+export const PolicyBreadcrumbs = ({...props}) => BreadcrumbsBase({
     paths: paths,
     ariaLabel: 'Policies breadcrumb',
     ...props
 })
-
-export { PolicyBreadcrumbs };

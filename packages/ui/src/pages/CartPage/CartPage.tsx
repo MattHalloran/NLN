@@ -1,14 +1,9 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import PropTypes from "prop-types";
 import { useHistory } from 'react-router';
-import { LINKS, PUBS, PubSub } from 'utils';
+import { LINKS, PubSub } from 'utils';
 import { Button } from '@mui/material';
 import { CartTable } from 'components';
-import {
-    ArrowBack as ArrowBackIcon,
-    ArrowForward as ArrowForwardIcon,
-    Update as UpdateIcon
-} from '@mui/icons-material';
 import { updateOrderMutation, submitOrderMutation } from 'graphql/mutation';
 import { useMutation } from '@apollo/client';
 import { Typography, Grid } from '@mui/material';

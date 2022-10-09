@@ -37,7 +37,7 @@ const {
     TermsPage,
 } = lazily(() => import('./pages'));
 
-function Routes({
+export const Routes({
     session,
     onSessionUpdate,
     business,
@@ -274,5 +274,3 @@ Routes.propTypes = {
     cart: PropTypes.object,
     onRedirect: PropTypes.func.isRequired,
 }
-
-export { Routes };

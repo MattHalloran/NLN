@@ -1,7 +1,6 @@
 import React from 'react';
 import PropTypes from "prop-types";
 import { TextField, InputAdornment, IconButton } from '@mui/material';
-import { Search as SearchIcon } from '@mui/icons-material';
 import AwesomeDebouncePromise from 'awesome-debounce-promise';
 
 function SearchBar({

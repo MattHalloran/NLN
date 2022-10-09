@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import PropTypes from 'prop-types';
 import {
     AppBar,
     Autocomplete,
@@ -19,14 +18,6 @@ import {
     Tooltip,
     Typography
 } from '@mui/material';
-import {
-    AddBox as AddBoxIcon,
-    Close as CloseIcon,
-    Delete as DeleteIcon,
-    Restore as RestoreIcon,
-    Update as UpdateIcon
-} from '@mui/icons-material';
-import { makeStyles } from '@material-ui/styles';
 import { addImagesMutation, deletePlantsMutation, updatePlantMutation } from 'graphql/mutation';
 import { useMutation } from '@apollo/client';
 import { Dropzone, ImageList } from 'components';
@@ -35,7 +26,6 @@ import {
     deleteArrayIndex,
     getPlantTrait,
     makeID,
-    PUBS,
     PubSub,
     setPlantSkuField,
     setPlantTrait
@@ -43,6 +33,7 @@ import {
 // import { DropzoneAreaBase } from 'material-ui-dropzone';
 import _ from 'lodash';
 import { mutationWrapper } from 'graphql/utils/wrappers';
+import { CancelIcon, CloseIcon, DeleteIcon, SaveIcon } from '@shared/icons';
 
 // Common plant traits, and their corresponding field names
 const PLANT_TRAITS = {
@@ -126,13 +117,13 @@ const Transition = React.forwardRef(function Transition(props, ref) {
     return <Slide direction="up" ref={ref} {...props} />;
 });
 
-function EditPlantDialog({
+export const EditPlantDialog = ({
     plant,
     selectedSku,
     trait_options,
     open = true,
     onClose,
-}) {
+}) => {
     const classes = useStyles();
     const [changedPlant, setChangedPlant] = useState(plant);
     const [updatePlant] = useMutation(updatePlantMutation);
@@ -266,7 +257,7 @@ function EditPlantDialog({
                 <Button
                     fullWidth
                     disabled={!changes_made}
-                    startIcon={<RestoreIcon />}
+                    startIcon={<CancelIcon />}
                     onClick={revertPlant}
                 >Revert</Button>
             </Grid>
@@ -282,7 +273,7 @@ function EditPlantDialog({
                 <Button
                     fullWidth
                     disabled={!changes_made}
-                    startIcon={<UpdateIcon />}
+                    startIcon={<SaveIcon />}
                     onClick={savePlant}
                 >Update</Button>
             </Grid>
@@ -485,13 +476,3 @@ function EditPlantDialog({
         </Dialog >
     );
 }
-
-EditPlantDialog.propTypes = {
-    sku: PropTypes.object.isRequired,
-    selectedSku: PropTypes.object,
-    trait_options: PropTypes.array,
-    open: PropTypes.bool,
-    onClose: PropTypes.func.isRequired,
-}
-
-export { EditPlantDialog };
