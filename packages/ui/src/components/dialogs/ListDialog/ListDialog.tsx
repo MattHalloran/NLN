@@ -6,7 +6,6 @@ import {
     ListItem,
     ListItemText
 } from '@mui/material';
-import { makeStyles } from '@material-ui/styles';
 
 const useStyles = makeStyles((theme) => ({
     root: {

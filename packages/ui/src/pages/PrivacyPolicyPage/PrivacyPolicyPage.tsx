@@ -4,8 +4,6 @@ import { readAssetsQuery } from 'graphql/query/readAssets';
 import ReactMarkdown from 'react-markdown';
 import { PolicyBreadcrumbs } from 'components';
 import { convertToDot, valueFromDot } from "utils";
-import { useTheme } from "@emotion/react";
-import { makeStyles } from "@material-ui/styles";
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -15,11 +13,11 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-function PrivacyPolicyPage({
+export const PrivacyPolicyPage = ({
     business
-}) {
-    const classes = useStyles();
-    const theme = useTheme();
+}) => {
+    const { palette } = useTheme();
+
     const [privacy, setPrivacy] = useState(null);
     const { data: privacyData } = useQuery(readAssetsQuery, { variables: { files: ['privacy.md'] } });
 
@@ -39,9 +37,3 @@ function PrivacyPolicyPage({
         </div>
     );
 }
-
-PrivacyPolicyPage.propTypes = {
-    
-}
-
-export { PrivacyPolicyPage };

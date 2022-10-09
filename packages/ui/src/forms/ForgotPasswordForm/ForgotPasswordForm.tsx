@@ -10,7 +10,6 @@ import {
     TextField,
     Typography
 } from '@mui/material';
-import { makeStyles } from '@material-ui/styles';
 import { LINKS } from 'utils';
 import { mutationWrapper } from 'graphql/utils/wrappers';
 import { useHistory } from 'react-router-dom';

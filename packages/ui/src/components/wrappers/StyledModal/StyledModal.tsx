@@ -1,7 +1,5 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 import { Modal, IconButton } from '@mui/material';
-import { makeStyles } from '@material-ui/styles';
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -40,13 +38,13 @@ const useStyles = makeStyles((theme) => ({
 
 // const ESCAPE_KEY = 27;
 
-function StyledModal({
+export const StyledModal = ({
     open = true,
     scrollable = false,
     onClose,
     children,
-}) {
-    const classes = useStyles();
+}) => {
+    const { palette } = useTheme();
 
     return (
         <Modal
@@ -54,26 +52,17 @@ function StyledModal({
             style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             open={open}
             onClose={onClose}>
-            <div style={{margin: 'auto', maxWidth: 'calc(100vw - 100px)', maxHeight: 'calc(100vh - 50px)'}} className={classes.content}>
-                <div className={`${classes.bodyChildren} ${scrollable ? classes.scrollable : ''}`}>
+            <Box style={{margin: 'auto', maxWidth: 'calc(100vw - 100px)', maxHeight: 'calc(100vh - 50px)'}} className={classes.content}>
+                <Box className={`${classes.bodyChildren} ${scrollable ? classes.scrollable : ''}`}>
                     {children}
-                </div>
+                </Box>
                 <IconButton
                     className={classes.xButton}
                     aria-label="close modal"
                     onClick={onClose}>
                     <CloseIcon className={classes.x} />
                 </IconButton>
-            </div>
+            </Box>
         </Modal>
     );
 }
-
-StyledModal.propTypes = {
-    open: PropTypes.bool,
-    scrollable: PropTypes.bool,
-    children: PropTypes.any.isRequired,
-    onClose: PropTypes.func.isRequired,
-}
-
-export { StyledModal };

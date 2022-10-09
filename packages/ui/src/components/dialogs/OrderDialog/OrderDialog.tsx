@@ -1,5 +1,4 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import PropTypes from 'prop-types';
 import {
     AppBar,
     Button,
@@ -10,14 +9,12 @@ import {
     Toolbar,
     Typography,
 } from '@mui/material';
-import { makeStyles } from '@material-ui/styles';
 import { CartTable } from 'components';
 import { updateOrderMutation } from 'graphql/mutation';
 import { useMutation } from '@apollo/client';
 import { findWithAttr, ORDER_FILTERS } from 'utils';
 import { ORDER_STATUS, ROLES } from '@shared/consts';
 import _ from 'lodash';
-import { mutationWrapper } from 'graphql/utils/wrappers';
 
 const useStyles = makeStyles((theme) => ({
     appBar: {
@@ -52,13 +49,14 @@ const Transition = React.forwardRef(function Transition(props, ref) {
     return <Slide direction="up" ref={ref} {...props} />;
 });
 
-function OrderDialog({
+export const OrderDialog = ({
     order,
     userRoles,
     open = true,
     onClose,
-}) {
-    const classes = useStyles();
+}) => {
+    const { palette } = useTheme();
+
     // Holds order changes before update is final
     const [changedOrder, setChangedOrder] = useState(order);
     const [updateOrder, { loading }] = useMutation(updateOrderMutation);
@@ -217,11 +215,3 @@ function OrderDialog({
         </Dialog>
     );
 }
-
-OrderDialog.propTypes = {
-    order: PropTypes.object,
-    open: PropTypes.bool,
-    onClose: PropTypes.func.isRequired,
-}
-
-export { OrderDialog };

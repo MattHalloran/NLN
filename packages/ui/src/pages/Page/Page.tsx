@@ -1,10 +1,9 @@
-import React, { useEffect } from 'react';
-import PropTypes from 'prop-types';
+import { useEffect } from 'react';
 import { LINKS } from 'utils';
 import { useLocation } from 'react-router-dom';
 import { useHistory } from 'react-router';
 
-const Page = ({
+export const Page = ({
     title,
     sessionChecked,
     redirect = LINKS.Home,
@@ -32,15 +31,3 @@ const Page = ({
 
     return children;
 };
-
-Page.propTypes = {
-    title: PropTypes.string,
-    sessionChecked: PropTypes.bool.isRequired,
-    redirect: PropTypes.string,
-    userRoles: PropTypes.oneOfType([PropTypes.string, PropTypes.number, PropTypes.array]),
-    restrictedToRoles: PropTypes.oneOfType([PropTypes.string, PropTypes.number, PropTypes.array]),
-    fullWidth: PropTypes.bool,
-    children: PropTypes.object.isRequired,
-}
-
-export { Page };

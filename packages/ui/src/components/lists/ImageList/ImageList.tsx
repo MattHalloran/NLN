@@ -1,7 +1,5 @@
 import React, { useCallback, useState } from 'react';
 import update from 'immutability-helper';
-import { makeStyles } from '@material-ui/styles';
-import PropTypes from 'prop-types';
 import { ImageCard } from 'components';
 import { EditImageDialog } from 'components';
 
@@ -13,11 +11,12 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-function ImageList({
+export const ImageList = ({
     data,
     onUpdate
-}) {
-    const classes = useStyles();
+}) => {
+    const { palette } = useTheme();
+
     const [selected, setSelected] = useState(-1);
 
     const moveCard = useCallback((dragIndex, hoverIndex) => {
@@ -67,10 +66,3 @@ function ImageList({
         </div>
     );
 }
-
-ImageList.propTypes = {
-    data: PropTypes.array,
-    onUpdate: PropTypes.func.isRequired,
-}
-
-export { ImageList };

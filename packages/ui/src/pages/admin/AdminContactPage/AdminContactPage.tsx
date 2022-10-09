@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { makeStyles } from '@material-ui/styles';
 import { AdminBreadcrumbs } from 'components';
 import ReactMarkdown from 'react-markdown';
 import gfm from 'remark-gfm';
@@ -12,7 +11,6 @@ import {
 import { useMutation } from '@apollo/client';
 import { writeAssetsMutation } from 'graphql/mutation';
 import { mutationWrapper } from 'graphql/utils/wrappers';
-import { useTheme } from '@emotion/react';
 
 const useStyles = makeStyles((theme) => ({
     header: {

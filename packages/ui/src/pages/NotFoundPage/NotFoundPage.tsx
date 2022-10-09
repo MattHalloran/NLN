@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@mui/material';
-import { makeStyles } from '@material-ui/styles';
 import { LINKS } from 'utils';
 
 const useStyles = makeStyles((theme) => ({
@@ -13,8 +12,8 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-function NotFoundPage() {
-    const classes = useStyles();
+export const NotFoundPage = () => {
+    const { palette } = useTheme();
 
     return (
         <div id="page">
@@ -29,9 +28,3 @@ function NotFoundPage() {
         </div>
     );
 }
-
-NotFoundPage.propTypes = {
-    
-}
-
-export { NotFoundPage };

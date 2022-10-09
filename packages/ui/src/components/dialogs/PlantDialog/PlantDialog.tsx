@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import PropTypes from 'prop-types';
-import { makeStyles, useTheme } from '@material-ui/styles';
 import {
     AppBar,
     Avatar,
@@ -88,21 +86,22 @@ const Transition = React.forwardRef(function Transition(props, ref) {
     return <Slide direction="up" ref={ref} {...props} />;
 });
 
-function PlantDialog({
+export const PlantDialog = ({
     plant,
     selectedSku,
     onSessionUpdate,
     onAddToCart,
     open = true,
     onClose,
-}) {
+}) => {
     plant = {
         ...plant,
         latinName: plant?.latinName,
         skus: plant?.skus ?? [],
     }
-    const classes = useStyles();
-    const theme = useTheme();
+
+    const { palette } = useTheme();
+
     const [quantity, setQuantity] = useState(1);
     const [orderOptions, setOrderOptions] = useState([]);
     const [detailsOpen, setDetailsOpen] = useState(true);
@@ -259,14 +258,3 @@ function PlantDialog({
         </Dialog>
     );
 }
-
-PlantDialog.propTypes = {
-    plant: PropTypes.object,
-    selectedSku: PropTypes.object,
-    onSessionUpdate: PropTypes.func.isRequired,
-    onAddToCart: PropTypes.func.isRequired,
-    open: PropTypes.bool,
-    onClose: PropTypes.func.isRequired,
-}
-
-export { PlantDialog };

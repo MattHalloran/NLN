@@ -1,5 +1,4 @@
 import React from 'react';
-import PropTypes from 'prop-types'
 import {
     Card,
     CardActionArea,
@@ -11,11 +10,13 @@ import {
     SxProps,
     Theme,
     Tooltip,
-    Typography
+    Typography,
+    useTheme
 } from '@mui/material';
 import { showPrice, getImageSrc, getPlantTrait, getServerUrl } from 'utils';
 import { NoImageWithTextIcon } from 'assets/img';
 import { IMAGE_USE, SKU_STATUS } from '@shared/consts';
+import { OpenInNewIcon } from '@shared/icons';
 
 const displayImage: SxProps<Theme> = {
     minHeight: 200,
@@ -44,6 +45,8 @@ export const PlantCard = ({
     onClick,
     plant,
 }) => {
+    const { palette } = useTheme();
+
     const SkuStatus = {
         [SKU_STATUS.Deleted]: deleted,
         [SKU_STATUS.Inactive]: inactive,
@@ -109,7 +112,7 @@ export const PlantCard = ({
             <CardActions>
                 <Tooltip title="View" placement="bottom">
                     <IconButton onClick={onClick}>
-                        <LaunchIcon sx={{color: (t) => t.palette.secondary.light,}} />
+                        <OpenInNewIcon fill={palette.secondary.light} />
                     </IconButton>
                 </Tooltip>
             </CardActions>

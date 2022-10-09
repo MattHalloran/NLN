@@ -1,5 +1,4 @@
 import React, { useCallback } from 'react';
-import PropTypes from 'prop-types';
 import { FormControl, InputLabel, Select, MenuItem, Chip } from '@mui/material';
 import { makeStyles, useTheme } from '@material-ui/styles';
 import _ from 'lodash';
@@ -16,7 +15,7 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-function Selector({
+export const Selector = ({
     options,
     selected,
     handleChange,
@@ -27,9 +26,9 @@ function Selector({
     label = 'Select',
     color,
     ...props
-}) {
-    const classes = useStyles();
-    const theme = useTheme();
+}) => {
+    const { palette } = useTheme();
+    
     const displayColor = color ?? theme.palette.background.contrastText;
 
     // Formats selected into label/value object array.
@@ -104,16 +103,3 @@ function Selector({
         </FormControl>
     );
 }
-
-Selector.propTypes = {
-    options: PropTypes.array.isRequired,
-    selected: PropTypes.any.isRequired,
-    handleChange: PropTypes.func.isRequired,
-    fullWidth: PropTypes.bool,
-    multiple: PropTypes.bool,
-    inputAriaLabel: PropTypes.string,
-    noneOption: PropTypes.bool,
-    label: PropTypes.string,
-}
-
-export { Selector };

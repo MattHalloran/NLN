@@ -1,9 +1,7 @@
 // Code inspired by https://github.com/rmolinamir/hero-slider
 import React, { useEffect, useState } from 'react';
-import PropTypes from 'prop-types';
 import { useHistory } from 'react-router-dom';
 import { Typography, Button } from '@mui/material';
-import { makeStyles } from '@material-ui/styles';
 import { LINKS } from 'utils';
 import { Slider } from './Slider.js'
 import { imagesByLabelQuery } from 'graphql/query';
@@ -54,12 +52,13 @@ const useStyles = makeStyles(() => ({
     }
 }));
 
-function Hero({
+export const Hero = ({
     text,
     subtext,
-}) {
+}) => {
     let history = useHistory();
-    const classes = useStyles();
+    const { palette } = useTheme();
+
     const [images, setImages] = useState([]);
     const { data } = useQuery(imagesByLabelQuery, { variables: { label: 'hero' } });
     useEffect(() => {
@@ -84,10 +83,3 @@ function Hero({
         </div>
     );
 };
-
-Hero.propTypes = {
-    text: PropTypes.string.isRequired,
-    subtext: PropTypes.string.isRequired,
-}
-
-export { Hero };

@@ -1,5 +1,4 @@
 import React, { useCallback } from 'react';
-import PropTypes from 'prop-types';
 import {
     QuantityBox,
     Selector
@@ -47,13 +46,14 @@ const DELIVERY_OPTIONS = [
     },
 ]
 
-function CartTable({
+export const CartTable = ({
     cart,
     onUpdate,
     editable = true,
     ...props
-}) {
-    const classes = useStyles();
+}) => {
+    const { palette } = useTheme();
+
     let all_total = Array.isArray(cart?.items) ? cart.items.map(i => (+i.sku.price)*(+i.quantity)).reduce((a, b) => (+a)+(+b), 0) : -1;
 
     const updateCartField = useCallback((fieldName, value) => {
@@ -119,15 +119,15 @@ function CartTable({
                 <TableCell className={classes.tableCol} align="right">{price}</TableCell>
                 <TableCell className={classes.tableCol} align="right">
                     {editable ? (<QuantityBox
-                        min_value={0}
-                        max_value={data.sku?.availability ?? 100}
+                        min={0}
+                        max={data.sku?.availability ?? 100}
                         initial_value={quantity}
                         valueFunc={(q) => updateItemQuantity(data.sku.sku, q)} />) : quantity}
                 </TableCell>
                 <TableCell className={classes.tableCol} align="right">{total}</TableCell>
             </TableRow>
         );
-    }, [classes.displayImage, classes.tableCol, deleteCartItem, editable, updateItemQuantity])
+    }, [deleteCartItem, editable, updateItemQuantity])
 
     let headCells = [
         { id: 'productImage', align: 'left', disablePadding: true, label: 'Product' },
@@ -140,7 +140,7 @@ function CartTable({
     if (editable) headCells.unshift({ id: 'close', align: 'left', disablePadding: true, label: '' });
 
     return (
-        <div {...props} >
+        <Box {...props} >
             <TableContainer className={classes.tablePaper} component={Paper}>
                 <Table aria-label="cart table">
                     <TableHead className={classes.tableHead}>
@@ -198,14 +198,6 @@ function CartTable({
                     />
                 </Grid>
             </Grid>
-        </div>
+        </Box>
     );
 }
-
-CartTable.propTypes = {
-    cart: PropTypes.object.isRequired,
-    onUpdate: PropTypes.func.isRequired,
-    editable: PropTypes.bool,
-}
-
-export { CartTable };

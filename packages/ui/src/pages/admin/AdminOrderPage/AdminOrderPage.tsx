@@ -2,15 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { ordersQuery } from 'graphql/query';
 import { useQuery } from '@apollo/client';
 import { ORDER_FILTERS, PubSub } from 'utils';
-import { makeStyles } from '@material-ui/styles';
 import {
     AdminBreadcrumbs,
     OrderCard,
     OrderDialog,
     Selector,
 } from 'components';
-import { Typography } from '@mui/material';
-import { useTheme } from '@emotion/react';
+import { Typography, useTheme } from '@mui/material';
 
 const useStyles = makeStyles((theme) => ({
     header: {
@@ -27,8 +25,8 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function AdminOrderPage({ userRoles }) {
-    const classes = useStyles();
-    const theme = useTheme();
+    const { palette } = useTheme();
+
     const [filter, setFilter] = useState(ORDER_FILTERS[0].value);
     // Selected order data. Used for popup
     const [currOrder, setCurrOrder] = useState(null);

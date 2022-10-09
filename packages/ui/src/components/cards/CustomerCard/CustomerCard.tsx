@@ -5,12 +5,12 @@ import {
     CardContent,
     IconButton,
     Tooltip,
-    Typography
+    Typography,
+    useTheme
 } from '@mui/material';
 import { changeCustomerStatusMutation, deleteCustomerMutation } from 'graphql/mutation';
 import { useMutation } from '@apollo/client';
 import { ACCOUNT_STATUS } from '@shared/consts';
-import { useTheme } from '@emotion/react';
 import { emailLink, mapIfExists, phoneLink, PubSub, showPhone } from 'utils';
 import { ListDialog } from 'components/dialogs';
 import { DeleteForeverIcon, DeleteIcon, EditIcon, EmailIcon, LockIcon } from '@shared/icons';
@@ -81,11 +81,14 @@ export const  CustomerCard = ({
     }, [customer, deleteCustomer])
 
     const confirmDelete = useCallback(() => {
-        PubSub.publish(PUBS.AlertDialog, {
+        PubSub.get().publishAlertDialog({
             message: `Are you sure you want to delete the account for ${customer.firstName} ${customer.lastName}?`,
-            firstButtonText: 'Yes',
-            firstButtonClicked: () => modifyCustomer(ACCOUNT_STATUS.Deleted, 'Customer deleted.'),
-            secondButtonText: 'No',
+            buttons: [{
+                text: 'Yes',
+                onClick: () => { modifyCustomer(ACCOUNT_STATUS.Deleted, 'Customer deleted.') },
+            }, {
+                text: 'No',
+            }]
         });
     }, [customer, modifyCustomer])
 
@@ -97,7 +100,7 @@ export const  CustomerCard = ({
     let delete_action = [confirmDelete, <DeleteIcon fill={palette.secondary.light} />, 'Delete user'];
     let permanent_delete_action = [confirmPermanentDelete, <DeleteForeverIcon fill={palette.secondary.light} />, 'Permanently delete user']
 
-    let actions = [edit_action];
+    let actions: [(() => any), JSX.Element, string][] = [edit_action];
     // Actions for customer accounts
     if (!Array.isArray(customer?.roles) || !customer.roles.some(r => ['Owner', 'Admin'].includes(r.role.title))) {
         switch (customer?.status) {

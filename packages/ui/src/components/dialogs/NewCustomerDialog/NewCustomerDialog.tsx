@@ -1,6 +1,4 @@
 import React from 'react';
-import PropTypes from 'prop-types';
-import { makeStyles } from '@material-ui/styles';
 import {
     AppBar,
     Autocomplete,
@@ -15,7 +13,6 @@ import {
 } from '@mui/material';
 import _ from 'lodash';
 import { DEFAULT_PRONOUNS, addCustomerSchema } from '@shared/consts';
-import { mutationWrapper } from 'graphql/utils/wrappers';
 import { addCustomerMutation } from 'graphql/mutation';
 import { useFormik } from 'formik';
 import { useMutation } from '@apollo/client';
@@ -57,11 +54,12 @@ const Transition = React.forwardRef(function Transition(props, ref) {
     return <Slide direction="up" ref={ref} {...props} />;
 });
 
-function NewCustomerDialog({
+export const NewCustomerDialog = ({
     open = true,
     onClose,
-}) {
-    const classes = useStyles();
+}) => {
+    const { palette } = useTheme();
+    
     // Stores the modified customer data before updating
     const [addCustomer] = useMutation(addCustomerMutation);
 
@@ -227,11 +225,3 @@ function NewCustomerDialog({
         </Dialog>
     );
 }
-
-NewCustomerDialog.propTypes = {
-    plant: PropTypes.object,
-    open: PropTypes.bool,
-    onClose: PropTypes.func.isRequired,
-}
-
-export { NewCustomerDialog };

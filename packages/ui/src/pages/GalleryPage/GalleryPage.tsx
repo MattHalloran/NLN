@@ -3,11 +3,9 @@ import Carousel from 'react-gallery-carousel';
 import 'react-gallery-carousel/dist/index.css';
 import { InformationalBreadcrumbs } from 'components';
 import { getImageSrc, getServerUrl, PubSub } from 'utils';
-import { makeStyles } from '@mui/styles';
 import { imagesByLabelQuery } from 'graphql/query';
 import { useQuery } from '@apollo/client';
 import { IMAGE_SIZE } from '@shared/consts';
-import { useTheme } from '@emotion/react';
 
 const useStyles = makeStyles(() => ({
     imageList: {
@@ -34,9 +32,9 @@ const useStyles = makeStyles(() => ({
     }
 }));
 
-function GalleryPage() {
-    const classes = useStyles();
-    const theme = useTheme();
+export const GalleryPage = () => {
+    const { palette } = useTheme();
+
     const [images, setImages] = useState([]);
     const { data: imageData, error } = useQuery(imagesByLabelQuery, { variables: { label: 'gallery' } });
 
@@ -65,8 +63,3 @@ function GalleryPage() {
         </div>
     );
 }
-
-GalleryPage.propTypes = {
-}
-
-export { GalleryPage };

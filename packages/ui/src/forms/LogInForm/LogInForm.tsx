@@ -2,7 +2,7 @@ import React from 'react';
 import { useHistory, useParams } from 'react-router-dom';
 import { loginMutation } from 'graphql/mutation';
 import { useMutation } from '@apollo/client';
-import { CODE, logInSchema } from '@shared/consts';
+import { CODE } from '@shared/consts';
 import { useFormik } from 'formik';
 import {
     Button,
@@ -11,9 +11,7 @@ import {
     TextField,
     Typography
 } from '@mui/material';
-import { makeStyles } from '@material-ui/styles';
 import { LINKS, PubSub } from 'utils';
-import { mutationWrapper } from 'graphql/utils/wrappers';
 
 const useStyles = makeStyles((theme) => ({
     form: {
@@ -52,15 +50,17 @@ function LogInForm({
         onSubmit: (values) => {
             mutationWrapper({
                 mutation: login,
-                data: { variables: { ...values, verificationCode: urlParams.code } },
+                input: { ...values, verificationCode: urlParams.code },
                 successCondition: (response) => response.data.login !== null,
                 onSuccess: (response) => { onSessionUpdate(response.data.login); onRedirect(LINKS.Shopping) },
                 onError: (response) => {
                     if (Array.isArray(response.graphQLErrors) && response.graphQLErrors.some(e => e.extensions.code === CODE.MustResetPassword.code)) {
-                        PubSub.publish(PUBS.AlertDialog, {
+                        PubSub.get().publishAlertDialog({
                             message: 'Before signing in, please follow the link sent to your email to change your password.',
-                            firstButtonText: 'OK',
-                            firstButtonClicked: () => history.push(LINKS.Home),
+                            buttons: [{
+                                text: 'OK',
+                                onClock: () => history.push(LINKS.Home),
+                            }]
                         });
                     }
                 }

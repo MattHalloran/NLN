@@ -1,12 +1,10 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 import {
     ContactInfo,
     PopupMenu
 } from 'components';
 import { getUserActions, LINKS, updateArray } from 'utils';
 import { Container, Button, IconButton, Badge, List, ListItem, ListItemIcon, ListItemText } from '@mui/material';
-import { makeStyles } from '@material-ui/styles';
 import _ from 'lodash';
 
 const useStyles = makeStyles((theme) => ({
@@ -34,15 +32,15 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-function NavList({
+export const NavList = ({
     session,
     business,
     logout,
     roles,
     cart,
     onRedirect
-}) {
-    const classes = useStyles();
+}) => {
+    const { palette } = useTheme();
     
     let nav_options = getUserActions(session, roles, cart);
 
@@ -121,12 +119,3 @@ function NavList({
         </Container>
     );
 }
-
-NavList.propTypes = {
-    session: PropTypes.object,
-    logout: PropTypes.func.isRequired,
-    roles: PropTypes.array,
-    cart: PropTypes.object,
-}
-
-export { NavList };
