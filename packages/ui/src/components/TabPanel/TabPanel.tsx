@@ -1,8 +1,6 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
-import { makeStyles } from '@material-ui/styles';
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -10,12 +8,13 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-function TabPanel(props) {
-    const classes = useStyles();
+export const TabPanel = (props) => {
+    const { palette } = useTheme();
+
     const { children, value, index, ...other } = props;
 
     return (
-        <div
+        <Box
             className={classes.root}
             role="tabpanel"
             hidden={value !== index}
@@ -28,14 +27,6 @@ function TabPanel(props) {
                     <Typography>{children}</Typography>
                 </Box>
             )}
-        </div>
+        </Box>
     );
 }
-
-TabPanel.propTypes = {
-    children: PropTypes.node,
-    index: PropTypes.any.isRequired,
-    value: PropTypes.any.isRequired,
-};
-
-export { TabPanel };

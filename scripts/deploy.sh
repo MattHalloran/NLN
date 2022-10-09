@@ -13,7 +13,7 @@
 # Arguments (all optional):
 # -v: Version number to use (e.g. "1.0.0")
 # -n: Nginx proxy location (e.g. "/root/NginxSSLReverseProxy")
-# -l: Project location (e.g. "/root/Vrooli")
+# -l: Project location (e.g. "/root/NLN")
 # -h: Show this help message
 HERE=`dirname $0`
 source "${HERE}/prettify.sh"
@@ -55,10 +55,10 @@ fi
 
 # Ask for project location, if not supplied in arguments
 if [ -z "$PROJECT_LOCATION" ]; then
-    echo "Where is the project located? (defaults to /root/Vrooli)"
+    echo "Where is the project located? (defaults to /root/NLN)"
     read -r PROJECT_LOCATION
     if [ -z "$PROJECT_LOCATION" ]; then
-        PROJECT_LOCATION="/root/Vrooli"
+        PROJECT_LOCATION="/root/NLN"
     fi
 fi
 

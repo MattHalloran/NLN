@@ -1,15 +1,15 @@
 import React from 'react';
-import PropTypes from "prop-types";
 import { TextField, InputAdornment, IconButton } from '@mui/material';
 import AwesomeDebouncePromise from 'awesome-debounce-promise';
+import { SearchIcon } from '@shared/icons';
 
-function SearchBar({
+export const SearchBar = ({
     label = 'Search...',
     value,
     onChange,
     debounce,
     ...props
-}) {
+}) => {
 
     const onChangeDebounced = AwesomeDebouncePromise(
         onChange,
@@ -34,12 +34,3 @@ function SearchBar({
         />
     );
 }
-
-SearchBar.propTypes = {
-    label: PropTypes.string,
-    value: PropTypes.string,
-    onChange: PropTypes.func.isRequired,
-    debounce: PropTypes.number,
-}
-
-export { SearchBar };

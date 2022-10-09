@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import PropTypes from 'prop-types';
 import { 
     ContactInfo,
 } from 'components';
 import { getUserActions, LINKS, PubSub } from 'utils';
 import { IconButton, SwipeableDrawer, List, ListItem, ListItemIcon, Badge, Collapse, Divider, ListItemText } from '@mui/material';
-import { makeStyles } from '@material-ui/styles';
 import { CopyrightBreadcrumbs } from 'components';
 import { useTheme } from '@emotion/react';
 import _ from 'lodash';
@@ -45,16 +43,16 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-function Hamburger({
+export const Hamburger = ({
     session,
     business,
     logout,
     roles,
     cart,
     onRedirect
-}) {
-    const classes = useStyles();
-    const theme = useTheme();
+}) => {
+    const { palette } = useTheme();
+
     const [contactOpen, setContactOpen] = useState(true);
     const [socialOpen, setSocialOpen] = useState(false);
     const [open, setOpen] = useState(false);
@@ -168,12 +166,3 @@ function Hamburger({
         </React.Fragment>
     );
 }
-
-Hamburger.propTypes = {
-    session: PropTypes.object,
-    logout: PropTypes.func.isRequired,
-    roles: PropTypes.array,
-    cart: PropTypes.object,
-}
-
-export { Hamburger };

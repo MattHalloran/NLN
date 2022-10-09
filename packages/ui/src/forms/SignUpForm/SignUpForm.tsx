@@ -1,7 +1,7 @@
 import React from 'react';
 import { signUpMutation } from 'graphql/mutation';
 import { useMutation } from '@apollo/client';
-import { CODE, DEFAULT_PRONOUNS, signUpSchema } from '@shared/consts';
+import { CODE, DEFAULT_PRONOUNS } from '@shared/consts';
 import { useFormik } from 'formik';
 import {
     Button,
@@ -17,9 +17,7 @@ import {
     Typography
 } from '@mui/material';
 import { Autocomplete } from '@material-ui/lab';
-import { makeStyles } from '@material-ui/styles';
 import { LINKS, PubSub } from 'utils';
-import { mutationWrapper } from 'graphql/utils/wrappers';
 import { useHistory } from 'react-router-dom';
 import { useTheme } from '@emotion/react';
 

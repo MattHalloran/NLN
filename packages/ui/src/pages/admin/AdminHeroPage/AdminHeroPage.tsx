@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useState } from 'react';
 import {
     Typography
 } from '@mui/material';
-import { makeStyles } from '@material-ui/styles';
 import { imagesByLabelQuery } from 'graphql/query';
 import { addImagesMutation, updateImagesMutation } from 'graphql/mutation';
 import { useQuery, useMutation } from '@apollo/client';
@@ -11,8 +10,6 @@ import {
     Dropzone, 
     WrappedImageList 
 } from 'components';
-import { mutationWrapper } from 'graphql/utils/wrappers';
-import { useTheme } from '@emotion/react';
 
 const useStyles = makeStyles((theme) => ({
     header: {
@@ -21,8 +18,8 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function AdminHeroPage() {
-    const classes = useStyles();
-    const theme = useTheme();
+    const { palette } = useTheme();
+
     const [imageData, setImageData] = useState([]);
     const { data: currImages, refetch: refetchImages } = useQuery(imagesByLabelQuery, { variables: { label: 'hero' } });
     const [addImages] = useMutation(addImagesMutation);

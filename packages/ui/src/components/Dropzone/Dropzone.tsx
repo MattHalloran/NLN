@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import PropTypes from 'prop-types';
 import { PubSub } from 'utils';
 import { Button, Grid } from '@mui/material';
 import { SnackSeverity } from 'components/dialogs';
@@ -50,7 +49,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 
-function Dropzone({
+export const Dropzone = ({
     acceptedFileTypes = ['image/*', '.heic', '.heif'],
     dropzoneText = 'Drag \'n\' drop files here or click',
     onUpload,
@@ -59,8 +58,9 @@ function Dropzone({
     uploadText = 'Upload file(s)',
     cancelText = 'Cancel upload',
     disabled = false
-}) {
-    const classes = useStyles();
+}) => {
+    const { palette } = useTheme();
+
     const [files, setFiles] = useState([]);
     const { getRootProps, getInputProps } = useDropzone({
         accept: acceptedFileTypes,
@@ -129,16 +129,3 @@ function Dropzone({
         </section>
     );
 }
-
-Dropzone.propTypes = {
-    acceptedFileTypes: PropTypes.array,
-    dropzoneText: PropTypes.string,
-    onUpload: PropTypes.func.isRequired,
-    showThumbs: PropTypes.bool,
-    maxFiles: PropTypes.number,
-    uploadText: PropTypes.string,
-    cancelText: PropTypes.string,
-    disabled: PropTypes.bool,
-}
-
-export { Dropzone };

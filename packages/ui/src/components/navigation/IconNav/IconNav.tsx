@@ -1,7 +1,5 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 import { useHistory } from 'react-router-dom';
-import { makeStyles } from '@material-ui/styles';
 import { BottomNavigation, BottomNavigationAction, Badge } from '@mui/material';
 import { getUserActions } from 'utils';
 
@@ -23,14 +21,14 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-function IconNav({
+export const IconNav = ({
     session,
     userRoles,
     cart,
     ...props
-}) {
+}) => {
     let history = useHistory();
-    const classes = useStyles();
+    const { palette } = useTheme();
 
     let actions = getUserActions(session, userRoles, cart);
 
@@ -52,11 +50,3 @@ function IconNav({
         </BottomNavigation>
     );
 }
-
-IconNav.propTypes = {
-    session: PropTypes.object,
-    userRoles: PropTypes.array,
-    cart: PropTypes.object,
-}
-
-export { IconNav };

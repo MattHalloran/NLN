@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import PropTypes from 'prop-types';
 import Logo from 'assets/img/nln-logo-colorized.png';
 import { hexToRGB, LINKS } from 'utils';
 import { AppBar, Toolbar, Typography, Slide, useScrollTrigger } from '@mui/material';
-import { makeStyles } from '@material-ui/styles';
 import { Hamburger } from './Hamburger';
 import { NavList } from './NavList';
 import { logoutMutation } from 'graphql/mutation';
@@ -71,9 +69,9 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-function HideOnScroll({
+export const HideOnScroll = ({
     children,
-}) {
+}) => {
     const trigger = useScrollTrigger();
 
     return (
@@ -83,19 +81,16 @@ function HideOnScroll({
     );
 }
 
-HideOnScroll.propTypes = {
-    children: PropTypes.element.isRequired,
-};
-
-function Navbar({
+export const Navbar = ({
     session,
     business,
     onSessionUpdate,
     roles,
     cart,
     onRedirect
-}) {
-    const classes = useStyles();
+}) => {
+    const { palette } = useTheme();
+    
     const [show_hamburger, setShowHamburger] = useState(false);
     const [logout] = useMutation(logoutMutation);
 
@@ -129,25 +124,17 @@ function Navbar({
         <HideOnScroll>
             <AppBar>
                 <Toolbar className={classes.root}>
-                    <div className={classes.navLogoContainer} onClick={() => onRedirect(LINKS.Home)}>
-                        <div className={classes.navLogoDiv}>
+                    <Box className={classes.navLogoContainer} onClick={() => onRedirect(LINKS.Home)}>
+                        <Box className={classes.navLogoBox}>
                             <img src={Logo} alt={`${business?.BUSINESS_NAME?.Short} Logo`} className={classes.navLogo} />
-                        </div>
+                        </Box>
                         <Typography className={classes.navName} variant="h6" noWrap>{business?.BUSINESS_NAME?.Short}</Typography>
-                    </div>
-                    <div className={classes.toRight}>
+                    </Box>
+                    <Box className={classes.toRight}>
                         {show_hamburger ? <Hamburger {...child_props} /> : <NavList {...child_props} />}
-                    </div>
+                    </Box>
                 </Toolbar>
             </AppBar>
         </HideOnScroll>
     );
 }
-
-Navbar.propTypes = {
-    session: PropTypes.object,
-    roles: PropTypes.array,
-    cart: PropTypes.object,
-}
-
-export { Navbar };

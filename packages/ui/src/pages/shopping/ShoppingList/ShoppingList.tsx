@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useHistory } from "react-router-dom";
-import PropTypes from "prop-types";
 import { plantsQuery } from 'graphql/query';
 import { upsertOrderItemMutation } from 'graphql/mutation';
 import { useQuery, useMutation } from '@apollo/client';
@@ -9,8 +8,6 @@ import {
     PlantCard,
     PlantDialog
 } from 'components';
-import { makeStyles } from '@material-ui/styles';
-import { mutationWrapper } from "graphql/utils/wrappers";
 
 const useStyles = makeStyles(() => ({
     root: {
@@ -20,7 +17,7 @@ const useStyles = makeStyles(() => ({
     },
 }));
 
-function ShoppingList({
+export const ShoppingList = ({
     session,
     onSessionUpdate,
     cart,
@@ -28,8 +25,9 @@ function ShoppingList({
     filters,
     hideOutOfStock,
     searchString = '',
-}) {
-    const classes = useStyles();
+}) => {
+    const { palette } = useTheme();
+
     // Plant data for all visible plants (i.e. not filtered)
     const [plants, setPlants] = useState([]);
     const track_scrolling_id = 'scroll-tracked';
@@ -115,14 +113,3 @@ function ShoppingList({
         </div>
     );
 }
-
-ShoppingList.propTypes = {
-    session: PropTypes.object,
-    onSessionUpdate: PropTypes.func.isRequired,
-    cart: PropTypes.object,
-    sortBy: PropTypes.string,
-    filters: PropTypes.object,
-    searchString: PropTypes.string,
-};
-
-export { ShoppingList };

@@ -1,7 +1,5 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 import clsx from 'clsx';
-import { makeStyles } from '@material-ui/styles';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
@@ -26,12 +24,12 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-function EnhancedTableToolbar({
+export const EnhancedTableToolbar = ({
     title,
     numSelected = 0,
     onDelete,
-}) {
-    const classes = useStyles();
+}) => {
+    const { palette } = useTheme();
 
     return (
         <Toolbar
@@ -49,21 +47,13 @@ function EnhancedTableToolbar({
                 </Typography>
             )}
 
-            {numSelected > 0 ? (
+            {numSelected > 0 && (
                 <Tooltip title="Delete">
                     <IconButton onClick={onDelete} aria-label="delete">
                         <DeleteIcon className={classes.icon} />
                     </IconButton>
                 </Tooltip>
-            ) : null}
+            )}
         </Toolbar>
     );
 };
-
-EnhancedTableToolbar.propTypes = {
-    title: PropTypes.string.isRequired,
-    numSelected: PropTypes.number,
-    onDelete: PropTypes.func.isRequired,
-};
-
-export { EnhancedTableToolbar };

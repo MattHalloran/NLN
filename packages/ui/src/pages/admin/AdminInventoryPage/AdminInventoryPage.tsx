@@ -22,9 +22,6 @@ import {
     Switch,
     Typography
 } from '@mui/material';
-import { makeStyles } from '@material-ui/styles';
-import { mutationWrapper } from 'graphql/utils/wrappers';
-import { useTheme } from '@emotion/react';
 
 const useStyles = makeStyles((theme) => ({
     header: {
@@ -41,8 +38,8 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function AdminInventoryPage() {
-    const classes = useStyles();
-    const theme = useTheme();
+    const { palette } = useTheme();
+    
     const [showActive, setShowActive] = useState(true);
     const [searchString, setSearchString] = useState('');
     // Selected plant data. Used for popup. { plant, selectedSku }

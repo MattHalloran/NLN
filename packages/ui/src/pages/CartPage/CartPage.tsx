@@ -1,5 +1,4 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import PropTypes from "prop-types";
 import { useHistory } from 'react-router';
 import { LINKS, PubSub } from 'utils';
 import { Button } from '@mui/material';
@@ -7,9 +6,7 @@ import { CartTable } from 'components';
 import { updateOrderMutation, submitOrderMutation } from 'graphql/mutation';
 import { useMutation } from '@apollo/client';
 import { Typography, Grid } from '@mui/material';
-import { makeStyles } from '@material-ui/styles';
 import _ from 'lodash';
-import { mutationWrapper } from 'graphql/utils/wrappers';
 
 const useStyles = makeStyles((theme) => ({
     header: {
@@ -30,13 +27,14 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-function CartPage({
+export const CartPage = ({
     business,
     cart,
     onSessionUpdate
-}) {
+}) => {
+    const { palette } = useTheme();
+
     let history = useHistory();
-    const classes = useStyles();
     // Holds cart changes before update is final
     const [changedCart, setChangedCart] = useState(null);
     const [updateOrder, {loading}] = useMutation(updateOrderMutation);
@@ -123,19 +121,13 @@ function CartPage({
     )
 
     return (
-        <div id='page'>
-            <div className={classes.header}>
+        <Box id='page'>
+            <Box className={classes.header}>
                 <Typography variant="h3" component="h1">Cart</Typography>
-            </div>
+            </Box>
             { options}
             <CartTable className={classes.padTop} cart={changedCart} onUpdate={(d) => setChangedCart(d)} />
             { options}
-        </div>
+        </Box>
     );
 }
-
-CartPage.propTypes = {
-    cart: PropTypes.object,
-}
-
-export { CartPage };

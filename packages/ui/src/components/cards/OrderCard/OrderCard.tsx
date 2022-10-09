@@ -1,5 +1,4 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 import { useState } from 'react';
 import {
     Button,
@@ -76,26 +75,21 @@ export const OrderCard = ({
             </CardContent>
             <CardActions>
                 <Button variant="text" onClick={onEdit} sx={{ color: palette.secondary.light }}>View</Button>
-                {(phoneList?.length > 0) ?
+                {phoneList && phoneList.length &&
                     (<Tooltip title="View phone numbers" placement="bottom">
                         <IconButton onClick={() => setPhoneDialogOpen(true)}>
                             <PhoneIcon fill={palette.secondary.light} />
                         </IconButton>
                     </Tooltip>)
-                    : null}
-                {(emailList?.length > 0) ?
+                }
+                {emailList && emailList.length > 0 &&
                     (<Tooltip title="View emails" placement="bottom">
                         <IconButton onClick={() => setEmailDialogOpen(true)}>
                             <EmailIcon fill={palette.secondary.light} />
                         </IconButton>
                     </Tooltip>)
-                    : null}
+                }
             </CardActions>
         </Card>
     );
-}
-
-OrderCard.propTypes = {
-    order: PropTypes.object,
-    onClick: PropTypes.func,
 }

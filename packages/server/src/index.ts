@@ -12,7 +12,7 @@ import { genErrorCode, logger, LogLevel } from './logger';
 
 const SERVER_URL = process.env.REACT_APP_SERVER_LOCATION === 'local' ?
     `http://localhost:5329/api` :
-    `https://app.vrooli.com/api`;
+    `https://newlifenurseryinc.com/api`;
 
 const main = async () => {
     console.info('Starting server...')
@@ -46,10 +46,10 @@ const main = async () => {
     }
     else {
         origins.push(
-            `http://app.vrooli.com`,
-            `http://www.app.vrooli.com`,
-            `https://app.vrooli.com`,
-            `https://www.app.vrooli.com`,
+            `http://newlifenurseryinc.com`,
+            `http://www.newlifenurseryinc.com`,
+            `https://newlifenurseryinc.com`,
+            `https://www.newlifenurseryinc.com`,
         )
     }
     app.use(cors({

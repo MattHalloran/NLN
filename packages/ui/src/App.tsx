@@ -16,7 +16,6 @@ import { useMutation, useQuery } from '@apollo/client';
 import { readAssetsQuery } from 'graphql/query/readAssets';
 import { loginMutation } from 'graphql/mutation';
 import { Box, CircularProgress, CssBaseline, StyledEngineProvider, ThemeProvider } from '@mui/material';
-import { makeStyles } from '@mui/styles';
 import { Session } from 'types';
 
 const useStyles = makeStyles(() => ({

@@ -2,12 +2,9 @@ import React from 'react';
 import ProvenWinners from 'assets/img/proven-winners.png';
 import AmericanHort from 'assets/img/american-hort.png';
 import NJNLA from 'assets/img/njnla_logo.jpg';
-import PropTypes from 'prop-types';
 import { LINKS, printAvailability } from 'utils';
-import { makeStyles } from '@material-ui/styles';
 import { List, ListItem, ListItemIcon, ListItemText, Grid, ButtonBase, Tooltip } from '@mui/material';
 import { CopyrightBreadcrumbs } from 'components';
-import { useTheme } from '@emotion/react';
 import { useHistory } from 'react-router';
 
 const useStyles = makeStyles((theme) => ({
@@ -38,13 +35,12 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-function Footer({
+export const Footer = ({
     session,
     business
-}) {
-    const classes = useStyles();
+}) => {
     const history = useHistory();
-    const theme = useTheme();
+    const { palette } = useTheme();
 
     const contactLinks = [
         ['address', 'View in Google Maps', business?.ADDRESS?.Link, business?.ADDRESS?.Label, BusinessIcon],
@@ -121,9 +117,3 @@ function Footer({
         </div>
     );
 }
-
-Footer.propTypes = {
-    session: PropTypes.object,
-}
-
-export { Footer };

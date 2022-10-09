@@ -1,6 +1,5 @@
 import React, { Suspense } from 'react';
 import { lazily } from 'react-lazily'
-import PropTypes from 'prop-types';
 import { Switch, Route } from 'react-router-dom';
 import { ROLES } from '@shared/consts';
 import { LINKS } from 'utils';
@@ -37,14 +36,14 @@ const {
     TermsPage,
 } = lazily(() => import('./pages'));
 
-export const Routes({
+export const Routes = ({
     session,
     onSessionUpdate,
     business,
     userRoles,
     cart,
     onRedirect
-}) {
+}) => {
 
     const common = {
         sessionChecked: session !== null && session !== undefined,
@@ -265,12 +264,4 @@ export const Routes({
             </Switch>
         </Suspense>
     );
-}
-
-Routes.propTypes = {
-    session: PropTypes.object,
-    onSessionUpdate: PropTypes.func.isRequired,
-    roles: PropTypes.array,
-    cart: PropTypes.object,
-    onRedirect: PropTypes.func.isRequired,
 }

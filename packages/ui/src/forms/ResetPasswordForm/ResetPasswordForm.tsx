@@ -8,7 +8,6 @@ import {
     Grid,
     TextField
 } from '@mui/material';
-import { makeStyles } from '@material-ui/styles';
 import { LINKS } from 'utils';
 import { mutationWrapper } from 'graphql/utils/wrappers';
 import { useParams } from 'react-router-dom';

@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import PropTypes from 'prop-types';
 import {
     SearchBar,
     Selector
@@ -8,9 +7,8 @@ import { ShoppingList } from '../ShoppingList/ShoppingList';
 import { SORT_OPTIONS, PubSub } from 'utils';
 import { traitOptionsQuery } from 'graphql/query';
 import { useQuery } from '@apollo/client';
-import { Switch, Grid, Button, SwipeableDrawer, FormControlLabel } from '@mui/material';
+import { Switch, Grid, Button, SwipeableDrawer, FormControlLabel, Box } from '@mui/material';
 import { printAvailability } from 'utils';
-import { makeStyles } from '@material-ui/styles';
 
 const useStyles = makeStyles((theme) => ({
     drawerPaper: {
@@ -31,13 +29,14 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-function ShoppingPage({
+export const ShoppingPage = ({
     session,
     onSessionUpdate,
     business,
     cart,
-}) {
-    const classes = useStyles();
+}) => {
+    const { palette } = useTheme();
+
     const [open, setOpen] = useState(false);
     const { data: traitOptionsData } = useQuery(traitOptionsQuery);
     const [traitOptions, setTraitOptions] = useState({});
@@ -51,7 +50,7 @@ function ShoppingPage({
             setOpen(open => b === 'toggle' ? !open : b);
         });
         return (() => {
-            PubSub.unsubscribe(openSub);
+            PubSub.get().unsubscribe(openSub);
         })
     }, [])
 
@@ -136,10 +135,10 @@ function ShoppingPage({
     ]
 
     return (
-        <div id='page'>
+        <Box id='page'>
             <SwipeableDrawer classes={{ paper: classes.drawerPaper }} anchor="left" open={open} onOpen={()=>{}} onClose={() => PubSub.publish(PUBS.ArrowMenuOpen, false)}>
                 {optionsContainer}
-                <div>
+                <Box>
                     <Selector
                         fullWidth
                         options={SORT_OPTIONS}
@@ -153,10 +152,10 @@ function ShoppingPage({
                     {traitList.map(d => traitOptionsToSelector(...d))}
                     {/* {filters_to_checkbox(['Yes', 'No'], 'Jersey Native')}
                     {filters_to_checkbox(['Yes', 'No'], 'Discountable')} */}
-                </div>
+                </Box>
                 {optionsContainer}
             </SwipeableDrawer>
-            <div className={classes.formControl}>
+            <Box className={classes.formControl}>
                 <FormControlLabel
                     control={
                         <Switch
@@ -177,7 +176,7 @@ function ShoppingPage({
                     startIcon={<PrintIcon />}
                     onClick={() => printAvailability(session, business?.BUSINESS_NAME?.Long)}
                 >Print</Button>
-            </div>
+            </Box>
             <ShoppingList
                 session={session}
                 onSessionUpdate={onSessionUpdate}
@@ -187,14 +186,6 @@ function ShoppingPage({
                 searchString={searchString}
                 hideOutOfStock={hideOutOfStock}
             />
-        </div>
+        </Box>
     );
 }
-
-ShoppingPage.propTypes = {
-    session: PropTypes.object,
-    onSessionUpdate: PropTypes.func.isRequired,
-    cart: PropTypes.object,
-}
-
-export { ShoppingPage };

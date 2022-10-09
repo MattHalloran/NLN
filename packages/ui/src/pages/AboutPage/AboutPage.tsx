@@ -6,8 +6,6 @@ import {
 } from '@mui/material';
 import Facebook from 'assets/img/Facebook.png';
 import Instagram from 'assets/img/Instagram.png';
-import { makeStyles } from '@material-ui/styles';
-import { useTheme } from '@emotion/react';
 
 const useStyles = makeStyles((theme) => ({
     header: {
@@ -22,8 +20,8 @@ const useStyles = makeStyles((theme) => ({
 function AboutPage({
     business,
 }) {
-    const classes = useStyles();
     const theme = useTheme();
+    
     const socials = [
         [Facebook, 'Facebook', business?.SOCIAL?.Facebook],
         [Instagram, 'Instagram', business?.SOCIAL?.Instagram],

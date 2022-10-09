@@ -1,7 +1,5 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 import { TableCell, TableHead, TableRow, Checkbox } from '@mui/material';
-import { makeStyles } from '@material-ui/styles';
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -35,13 +33,13 @@ const exampleCells = [
     { id: 'protein', align: 'right', disablePadding: false, label: 'Protein (g)' },
 ];
 
-function EnhancedTableHead({
+export const EnhancedTableHead = ({
     headCells = exampleCells,
     numSelected = 0,
     rowCount,
     onSelectAllClick,
-}) {
-    const classes = useStyles();
+}) => {
+    const { palette } = useTheme();
 
     return (
         <TableHead className={classes.root}>
@@ -69,12 +67,3 @@ function EnhancedTableHead({
         </TableHead>
     );
 }
-
-EnhancedTableHead.propTypes = {
-    headCells: PropTypes.array,
-    numSelected: PropTypes.number,
-    onSelectAllClick: PropTypes.func.isRequired,
-    rowCount: PropTypes.number.isRequired,
-};
-
-export { EnhancedTableHead };

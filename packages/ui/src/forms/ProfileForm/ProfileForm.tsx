@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { DEFAULT_PRONOUNS, profileSchema } from '@shared/consts';
+import { DEFAULT_PRONOUNS } from '@shared/consts';
 import { useMutation, useQuery } from '@apollo/client';
 import { updateCustomerMutation } from 'graphql/mutation';
 import { profileQuery } from 'graphql/query';
@@ -10,8 +10,6 @@ import { Button, Container, FormHelperText, Grid, TextField, Checkbox, FormContr
 import FormControl from '@mui/material/FormControl';
 import Radio from '@mui/material/Radio';
 import RadioGroup from '@mui/material/RadioGroup';
-import { makeStyles } from '@material-ui/styles';
-import { mutationWrapper } from 'graphql/utils/wrappers';
 
 const useStyles = makeStyles((theme) => ({
     form: {

@@ -2,7 +2,6 @@ import React from 'react';
 import { useHistory } from 'react-router-dom';
 import { LINKS } from 'utils';
 import { Typography, Card, CardContent, CardActions, Button, Tooltip, IconButton } from '@mui/material';
-import { makeStyles } from '@material-ui/styles';
 
 const useStyles = makeStyles((theme) => ({
     header: {
