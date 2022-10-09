@@ -11,12 +11,6 @@ import {
     TableRow, 
     Tooltip 
 } from '@mui/material';
-import { 
-    Email as EmailIcon,
-    Phone as PhoneIcon,
-    Room as RoomIcon
-} from "@mui/icons-material";
-import { makeStyles } from '@material-ui/styles';
 
 const useStyles = makeStyles((theme) => ({
     tableHead: {
@@ -44,10 +38,10 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-function ContactInfo({
+export const ContactInfo = ({
     business,
     ...props
-}) {
+}) => {
     const classes = useStyles();
 
     const openLink = (e, link) => {
@@ -106,5 +100,3 @@ function ContactInfo({
         </div>
     );
 }
-
-export { ContactInfo };

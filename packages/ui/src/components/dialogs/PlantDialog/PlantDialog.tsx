@@ -40,13 +40,6 @@ import {
     QuantityBox,
     Selector
 } from 'components';
-import {
-    AddShoppingCart as AddShoppingCartIcon,
-    Close as CloseIcon,
-    ExpandLess as ExpandLessIcon,
-    ExpandMore as ExpandMoreIcon,
-    Info as InfoIcon,
-} from '@mui/icons-material';
 import { IMAGE_SIZE } from '@shared/consts';
 import _ from 'lodash';
 import Carousel from 'react-gallery-carousel';

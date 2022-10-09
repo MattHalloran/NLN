@@ -1,10 +1,11 @@
 import { jsPDF } from "jspdf";
 import 'jspdf-autotable';
-import { showPrice, PUBS, PubSub } from 'utils';
+import { showPrice, PubSub } from 'utils';
 import { skusQuery } from 'graphql/query';
 import { initializeApollo } from 'graphql/utils/initialize';
 import { getPlantTrait } from "./plantTools";
 import { SKU_SORT_OPTIONS } from '@shared/consts';
+import { SnackSeverity } from "components";
 
 const TITLE_FONT_SIZE = 30;
 const LIST_FONT_SIZE = 24;
@@ -49,9 +50,9 @@ export const printAvailability = (session, title) => {
             body: table_data,
         })
         let windowReference = window.open();
-        let blob = doc.output('blob', {filename:`availability_${date.getDay()}-${date.getMonth()}-${date.getFullYear()}.pdf`});
+        let blob = doc.output('blob', { filename: `availability_${date.getDay()}-${date.getMonth()}-${date.getFullYear()}.pdf` });
         windowReference.location = URL.createObjectURL(blob);
     }).catch(error => {
-        PubSub.publish(PUBS.Snack, {message: 'Failed to load inventory.', severity: 'error', data: error });
+        PubSub.get().publishSnack({ message: 'Failed to load inventory.', severity: SnackSeverity.Error, data: error });
     });
 }

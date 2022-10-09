@@ -7,10 +7,8 @@ const paths = [
     ['Gallery', LINKS.Gallery]
 ]
 
-const InformationalBreadcrumbs = ({...props}) => BreadcrumbsBase({
+export const InformationalBreadcrumbs = ({...props}) => BreadcrumbsBase({
     paths: paths,
     ariaLabel: 'About us breadcrumb',
     ...props
 })
-
-export { InformationalBreadcrumbs };

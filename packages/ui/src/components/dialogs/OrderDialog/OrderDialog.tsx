@@ -10,18 +10,6 @@ import {
     Toolbar,
     Typography,
 } from '@mui/material';
-import {
-    Block as BlockIcon,
-    Close as CloseIcon,
-    Done as DoneIcon,
-    DoneAll as DoneAllIcon,
-    Edit as EditIcon,
-    EventAvailable as EventAvailableIcon,
-    LocalShipping as LocalShippingIcon,
-    ThumbDown as ThumbDownIcon,
-    ThumbUp as ThumbUpIcon,
-    Update as UpdateIcon
-} from '@mui/icons-material';
 import { makeStyles } from '@material-ui/styles';
 import { CartTable } from 'components';
 import { updateOrderMutation } from 'graphql/mutation';

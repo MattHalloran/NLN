@@ -2,28 +2,14 @@ import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { 
     ContactInfo,
-    Copyright
 } from 'components';
-import { getUserActions, LINKS, PUBS, PubSub } from 'utils';
-import {
-    Close as CloseIcon,
-    ContactSupport as ContactSupportIcon,
-    ExitToApp as ExitToAppIcon,
-    ExpandLess as ExpandLessIcon,
-    ExpandMore as ExpandMoreIcon,
-    Facebook as FacebookIcon,
-    Home as HomeIcon,
-    Menu as MenuIcon,
-    Info as InfoIcon,
-    Instagram as InstagramIcon,
-    PhotoLibrary as PhotoLibraryIcon,
-    Share as ShareIcon,
-} from '@mui/icons-material';
+import { getUserActions, LINKS, PubSub } from 'utils';
 import { IconButton, SwipeableDrawer, List, ListItem, ListItemIcon, Badge, Collapse, Divider, ListItemText } from '@mui/material';
 import { makeStyles } from '@material-ui/styles';
 import { CopyrightBreadcrumbs } from 'components';
 import { useTheme } from '@emotion/react';
 import _ from 'lodash';
+import { ExpandLessIcon, ExpandMoreIcon, FacebookIcon, InstagramIcon } from '@shared/icons';
 
 const useStyles = makeStyles((theme) => ({
     drawerPaper: {

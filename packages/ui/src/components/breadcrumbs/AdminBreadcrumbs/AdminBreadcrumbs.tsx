@@ -11,10 +11,8 @@ const paths = [
     ['Contact Info', LINKS.AdminContactInfo]
 ]
 
-const AdminBreadcrumbs = ({...props}) => BreadcrumbsBase({
+export const AdminBreadcrumbs = ({...props}) => BreadcrumbsBase({
     paths: paths,
     ariaLabel: 'Admin breadcrumb',
     ...props
 })
-
-export { AdminBreadcrumbs };

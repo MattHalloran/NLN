@@ -5,16 +5,10 @@ import {
     Selector
 } from 'components';
 import { ShoppingList } from '../ShoppingList/ShoppingList';
-import { SORT_OPTIONS, PUBS, PubSub } from 'utils';
+import { SORT_OPTIONS, PubSub } from 'utils';
 import { traitOptionsQuery } from 'graphql/query';
 import { useQuery } from '@apollo/client';
 import { Switch, Grid, Button, SwipeableDrawer, FormControlLabel } from '@mui/material';
-import {
-    Close as CloseIcon,
-    FilterList as FilterListIcon,
-    Print as PrintIcon,
-    Restore as RestoreIcon
-} from '@mui/icons-material';
 import { printAvailability } from 'utils';
 import { makeStyles } from '@material-ui/styles';
 

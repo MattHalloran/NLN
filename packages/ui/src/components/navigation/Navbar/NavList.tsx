@@ -6,11 +6,6 @@ import {
 } from 'components';
 import { getUserActions, LINKS, updateArray } from 'utils';
 import { Container, Button, IconButton, Badge, List, ListItem, ListItemIcon, ListItemText } from '@mui/material';
-import {
-    Info as InfoIcon,
-    PhotoLibrary as PhotoLibraryIcon,
-    ShoppingCart as ShoppingCartIcon
-} from '@mui/icons-material';
 import { makeStyles } from '@material-ui/styles';
 import _ from 'lodash';
 

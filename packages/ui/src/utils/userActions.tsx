@@ -1,10 +1,3 @@
-import {
-    Person as PersonIcon,
-    PersonAdd as PersonAddIcon,
-    Settings as SettingsIcon,
-    Shop as ShopIcon,
-    ShoppingCart as ShoppingCartIcon
-} from '@mui/icons-material';
 import { ROLES } from '@shared/consts';
 import { LINKS } from 'utils';
 import _ from 'lodash';

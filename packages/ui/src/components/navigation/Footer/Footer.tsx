@@ -6,12 +6,6 @@ import PropTypes from 'prop-types';
 import { LINKS, printAvailability } from 'utils';
 import { makeStyles } from '@material-ui/styles';
 import { List, ListItem, ListItemIcon, ListItemText, Grid, ButtonBase, Tooltip } from '@mui/material';
-import {
-    Business as BusinessIcon,
-    Email as EmailIcon,
-    Phone as PhoneIcon,
-    Print as PrintIcon
-} from '@mui/icons-material';
 import { CopyrightBreadcrumbs } from 'components';
 import { useTheme } from '@emotion/react';
 import { useHistory } from 'react-router';

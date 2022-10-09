@@ -4,9 +4,9 @@ import {
     Footer,
     IconNav,
     Navbar,
-    Snack
+    SnackStack,
 } from 'components';
-import { PUBS, PubSub, themes } from 'utils';
+import { PubSub, themes } from 'utils';
 import { GlobalHotKeys } from "react-hotkeys";
 import { Routes } from 'Routes';
 import { useHistory } from 'react-router';
@@ -82,9 +82,9 @@ export function App() {
     }, [session])
 
     const handlers = {
-        OPEN_MENU: () => PubSub.publish(PUBS.BurgerMenuOpen, true),
-        TOGGLE_MENU: () => PubSub.publish(PUBS.BurgerMenuOpen, 'toggle'),
-        CLOSE_MENU: () => PubSub.publish(PUBS.BurgerMenuOpen, false),
+        OPEN_MENU: () => PubSub.get().publishBurgerMenu(true),
+        TOGGLE_MENU: () => PubSub.get().publishBurgerMenu('toggle'),
+        CLOSE_MENU: () => PubSub.get().publishBurgerMenu(false),
         CLOSE_MENU_OR_POPUP: () => {
             handlers.CLOSE_MENU();
         },
@@ -106,20 +106,20 @@ export function App() {
     useEffect(() => {
         checkLogin();
         // Handle loading spinner, which can have a delay
-        let loadingSub = PubSub.subscribe(PUBS.Loading, (_, data) => {
+        let loadingSub = PubSub.get().subscribeLoading((delay) => {
             if (timeoutRef.current) clearTimeout(timeoutRef.current);
-            if (Number.isInteger(data)) {
-                timeoutRef.current = setTimeout(() => setLoading(true), Math.abs(data));
+            if (Number.isInteger(delay)) {
+                timeoutRef.current = setTimeout(() => setLoading(true), Math.abs(delay as number));
             } else {
-                setLoading(Boolean(data));
+                setLoading(Boolean(delay));
             }
         });
-        let businessSub = PubSub.subscribe(PUBS.Business, (_, data) => setBusiness(data));
-        let themeSub = PubSub.subscribe(PUBS.Theme, (_, data) => setTheme(themes[data] ?? themes.light));
+        let businessSub = PubSub.get().subscribeBusiness((data) => setBusiness(data));
+        let themeSub = PubSub.get().subscribeTheme((theme) => setTheme(themes[theme as any] ?? themes.light));
         return (() => {
-            PubSub.unsubscribe(loadingSub);
-            PubSub.unsubscribe(businessSub);
-            PubSub.unsubscribe(themeSub);
+            PubSub.get().unsubscribe(loadingSub);
+            PubSub.get().unsubscribe(businessSub);
+            PubSub.get().unsubscribe(themeSub);
         })
     }, [checkLogin])
 
@@ -160,7 +160,7 @@ export function App() {
                                     </Box>
                                 }
                                 <AlertDialog />
-                                <Snack />
+                                <SnackStack />
                                 <Routes
                                     session={session}
                                     onSessionUpdate={checkLogin}

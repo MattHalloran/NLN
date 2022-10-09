@@ -2,7 +2,6 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { Modal, IconButton } from '@mui/material';
 import { makeStyles } from '@material-ui/styles';
-import { Close as CloseIcon } from '@mui/icons-material';
 
 const useStyles = makeStyles((theme) => ({
     root: {

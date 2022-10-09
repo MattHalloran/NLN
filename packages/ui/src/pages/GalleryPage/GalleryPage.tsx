@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Carousel from 'react-gallery-carousel';
 import 'react-gallery-carousel/dist/index.css';
 import { InformationalBreadcrumbs } from 'components';
-import { getImageSrc, getServerUrl, PUBS, PubSub } from 'utils';
+import { getImageSrc, getServerUrl, PubSub } from 'utils';
 import { makeStyles } from '@mui/styles';
 import { imagesByLabelQuery } from 'graphql/query';
 import { useQuery } from '@apollo/client';

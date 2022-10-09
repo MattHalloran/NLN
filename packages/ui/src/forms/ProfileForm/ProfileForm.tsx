@@ -5,7 +5,7 @@ import { updateCustomerMutation } from 'graphql/mutation';
 import { profileQuery } from 'graphql/query';
 import { useFormik } from 'formik';
 import { Autocomplete } from '@material-ui/lab';
-import { PUBS, PubSub } from 'utils';
+import { PubSub } from 'utils';
 import { Button, Container, FormHelperText, Grid, TextField, Checkbox, FormControlLabel } from '@mui/material';
 import FormControl from '@mui/material/FormControl';
 import Radio from '@mui/material/Radio';

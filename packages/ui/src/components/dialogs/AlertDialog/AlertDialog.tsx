@@ -1,62 +1,80 @@
-import React, { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
     Button,
     Dialog,
     DialogActions,
     DialogContent,
     DialogContentText,
-    DialogTitle,
 } from '@mui/material';
-import { PUBS, PubSub } from 'utils';
+import { firstString, PubSub } from 'utils';
+import { DialogTitle } from 'components';
 
-const default_state = {
-    title: null,
-    message: null,
-    firstButtonText: 'Ok',
-    firstButtonClicked: null,
-    secondButtonText: null,
-    secondButtonClicked: null,
+interface StateButton {
+    text: string;
+    onClick?: (() => void);
+}
+
+export interface AlertDialogState {
+    title?: string;
+    message?: string;
+    buttons: StateButton[];
+}
+
+const default_state: AlertDialogState = {
+    buttons: [{ text: 'Ok' }],
 };
 
-function AlertDialog() {
-    const [state, setState] = useState(default_state)
-    let open = state.title !== null || state.message !== null;
+const titleAria = 'alert-dialog-title';
+const descriptionAria = 'alert-dialog-description';
+
+export const AlertDialog = () => {
+    const [state, setState] = useState<AlertDialogState>(default_state)
+    let open = Boolean(state.title) || Boolean(state.message);
 
     useEffect(() => {
-        let dialogSub = PubSub.subscribe(PUBS.AlertDialog, (_, o) => setState({...default_state, ...o}));
-        return () => PubSub.unsubscribe(dialogSub);
+        let dialogSub = PubSub.get().subscribeAlertDialog((o) => setState({ ...default_state, ...o }));
+        return () => { PubSub.get().unsubscribe(dialogSub) };
     }, [])
 
-    const handleClick = (action) => {
-        if (action) action();
+    const handleClick = useCallback((event: any, action: ((e?: any) => void) | null | undefined) => {
+        if (action) action(event);
         setState(default_state);
-    }
+    }, []);
+
+    const resetState = useCallback(() => setState(default_state), []);
 
     return (
         <Dialog
             open={open}
-            onClose={() => setState(default_state)}
-            aria-labelledby="alert-dialog-title"
-            aria-describedby="alert-dialog-description"
+            disableScrollLock={true}
+            onClose={resetState}
+            aria-labelledby={titleAria}
+            aria-describedby={descriptionAria}
         >
-            {state.title ? <DialogTitle id="alert-dialog-title">{state.title}</DialogTitle> : null}
+            <DialogTitle
+                ariaLabel={titleAria}
+                title={firstString(state.title)}
+                onClose={resetState}
+            />
             <DialogContent>
-                <DialogContentText id="alert-dialog-description">
+                <DialogContentText id={descriptionAria} sx={{
+                    whiteSpace: 'pre-wrap',
+                    wordWrap: 'break-word',
+                    paddingTop: 2,
+                }}>
                     {state.message}
                 </DialogContentText>
             </DialogContent>
+            {/* Actions */}
             <DialogActions>
-                <Button onClick={() => handleClick(state.firstButtonClicked)} color="secondary">
-                    {state.firstButtonText}
-                </Button>
-                {state.secondButtonText ? (
-                    <Button onClick={() => handleClick(state.secondButtonClicked)} color="secondary">
-                        {state.secondButtonText}
-                    </Button>
+                {state?.buttons && state.buttons.length > 0 ? (
+                    state.buttons.map((b: StateButton, index) => (
+                        <Button key={`alert-button-${index}`} onClick={(e) => handleClick(e, b.onClick)} color="secondary">
+                            {b.text}
+                        </Button>
+                    ))
                 ) : null}
             </DialogActions>
-        </Dialog>
+        </Dialog >
     );
 }
-
-export { AlertDialog };

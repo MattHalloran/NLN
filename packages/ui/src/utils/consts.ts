@@ -1,4 +1,4 @@
-import { COOKIE, ORDER_STATUS } from '@shared/consts';
+import { ORDER_STATUS } from '@shared/consts';
 
 export const ORDER_FILTERS = [
     {
@@ -73,14 +73,3 @@ export const SORT_OPTIONS = [
         value: 'Oldest',
     }
 ]
-
-export const PUBS = {
-    ...COOKIE,
-    Loading: "loading",
-    AlertDialog: "alertDialog",
-    Snack: "snack",
-    BurgerMenuOpen: "burgerMenuOpen",
-    ArrowMenuOpen: "arrowMenuOpen",
-    Business: "business",
-    Theme: "theme",
-}

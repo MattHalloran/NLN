@@ -13,11 +13,6 @@ import {
     Toolbar,
     Typography,
 } from '@mui/material';
-import {
-    AddCircle as AddCircleIcon,
-    Cancel as CancelIcon,
-    Close as CloseIcon,
-} from '@mui/icons-material';
 import _ from 'lodash';
 import { DEFAULT_PRONOUNS, addCustomerSchema } from '@shared/consts';
 import { mutationWrapper } from 'graphql/utils/wrappers';

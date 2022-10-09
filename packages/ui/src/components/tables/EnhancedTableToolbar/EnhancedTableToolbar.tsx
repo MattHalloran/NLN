@@ -6,7 +6,6 @@ import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
-import { Delete as DeleteIcon } from '@mui/icons-material';
 
 const useStyles = makeStyles((theme) => ({
     root: {
