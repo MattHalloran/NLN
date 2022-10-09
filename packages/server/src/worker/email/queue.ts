@@ -60,7 +60,7 @@ export function sendVerificationLink(email: string, userId: string | number) {
 export function feedbackNotifyAdmin(text: string, from?: string) {
     emailQueue.add({
         to: [process.env.SITE_EMAIL_USERNAME],
-        subject: `Received Vrooli Feedback!`,
+        subject: `You've received feedback!`,
         text: `Feedback from ${from ?? 'anonymous'}: ${text}`,
     });
 }
