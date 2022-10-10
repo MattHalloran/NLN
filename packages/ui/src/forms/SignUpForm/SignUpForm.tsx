@@ -14,20 +14,21 @@ import {
     Radio,
     RadioGroup,
     TextField,
-    Typography
+    Typography,
+    useTheme
 } from '@mui/material';
 import { Autocomplete } from '@material-ui/lab';
 import { LINKS, PubSub } from 'utils';
 import { useHistory } from 'react-router-dom';
-import { useTheme } from '@emotion/react';
+import { signUpSchema } from '@shared/validation';
 
-const useStyles = makeStyles((theme) => ({
+makeStyles((theme) => ({
     form: {
         width: '100%',
-        marginTop: theme.spacing(3),
+        marginTop: spacing(3),
     },
     submit: {
-        margin: theme.spacing(3, 0, 2),
+        margin: spacing(3, 0, 2),
     },
     phoneInput: {
         width: '100%',
@@ -36,7 +37,7 @@ const useStyles = makeStyles((theme) => ({
         flexDirection: 'row-reverse',
     },
     clickSize: {
-        color: theme.palette.secondary.light,
+        color: palette.secondary.light,
         cursor: 'pointer',
         minHeight: '48px', // Lighthouse recommends this for SEO, as it is more clickable
         display: 'flex',
@@ -44,12 +45,12 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-function SignUpForm({
+export const SignUpForm = ({
     business,
     onSessionUpdate
-}) {
-    const classes = useStyles();
-    const theme = useTheme();
+}) => {
+    const { palette, spacing } = useTheme();
+    
     const history = useHistory();
     const [signUp, { loading }] = useMutation(signUpMutation);
 
@@ -74,30 +75,36 @@ function SignUpForm({
                     ...values, 
                     accountApproved: Boolean(values.accountApproved),
                     marketingEmails: Boolean(values.marketingEmails),
-                    theme: theme.palette.mode ?? 'light',
+                    theme: palette.mode ?? 'light',
                 } },
                 onSuccess: (response) => {
                     onSessionUpdate(response.data.signUp);
                     if (response.data.signUp?.accountApproved) {
-                        PubSub.publish(PUBS.AlertDialog, {
+                        PubSub.get().publishAlertDialog({
                             message: `Welcome to ${business?.BUSINESS_NAME?.Short}. You may now begin shopping. Please verify your email within 48 hours.`,
-                            firstButtonText: 'OK',
-                            firstButtonClicked: () => history.push(LINKS.Shopping),
+                            buttons: [{
+                                text: 'OK',
+                                onClick: () => history.push(LINKS.Shopping),
+                            }]
                         });
                     } else {
-                        PubSub.publish(PUBS.AlertDialog, {
+                        PubSub.get().publishAlertDialog({
                             message: `Welcome to ${business?.BUSINESS_NAME?.Short}. Please verify your email within 48 hours. Since you have never ordered from us before, we must approve your account before you can order. If this was a mistake, you can edit this in the /profile page.`,
-                            firstButtonText: 'OK',
-                            firstButtonClicked: () => history.push(LINKS.Profile),
+                            buttons: [{
+                                text: 'OK',
+                                onClick: () => history.push(LINKS.Profile),
+                            }]
                         });
                     }
                 },
                 onError: (response) => {
                     if (Array.isArray(response.graphQLErrors) && response.graphQLErrors.some(e => e.extensions.code === CODE.EmailInUse.code)) {
-                        PubSub.publish(PUBS.AlertDialog, {
+                        PubSub.get().publishAlertDialog({
                             message: `${response.message}. Press OK if you would like to be redirected to the forgot password form.`,
-                            firstButtonText: 'OK',
-                            firstButtonClicked: () => history.push(LINKS.ForgotPassword),
+                            buttons: [{
+                                text: 'OK',
+                                onClick: () => history.push(LINKS.ForgotPassword),
+                            }]
                         });
                     }
                 }
@@ -282,5 +289,3 @@ function SignUpForm({
         </form>
     );
 }
-
-export { SignUpForm };

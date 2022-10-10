@@ -6,7 +6,7 @@ import { Dots } from './Dots';
 const DEFAULT_DELAY = 3000;
 const DEFAULT_DURATION = 1000;
 
-const useStyles = makeStyles({
+makeStyles({
     slider: {
         position: 'relative',
         height: '100vh',
@@ -17,19 +17,20 @@ const useStyles = makeStyles({
     },
 });
 
-const Slider = ({
+export const Slider = ({
     images = [],
     autoPlay = true,
     slidingDelay = DEFAULT_DELAY,
     slidingDuration = DEFAULT_DURATION,
 }) => {
-    const classes = useStyles();
+    const { palette } = useTheme();
+
     const [width, setWidth] = useState(window.innerWidth);
     const [slideIndex, setSlideIndex] = useState(0);
     const [translate, setTranslate] = useState(0);
     const [transition, setTransition] = useState(0);
     const sliderRef = useRef()
-    const timeoutRef = useRef(null);
+    const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     // Play and wait have circular dependencies, so they must be memoized together
     const { wait } = useMemo(() => {
@@ -69,7 +70,7 @@ const Slider = ({
     }, [width, images])
 
     return (
-        <div className={classes.slider} ref={sliderRef}>
+        <Box className={classes.slider} ref={sliderRef}>
             <SliderContent
                 translate={translate}
                 transition={transition}
@@ -78,8 +79,6 @@ const Slider = ({
                 {slides}
             </SliderContent>
             <Dots quantity={images.length} activeIndex={slideIndex} />
-        </div>
+        </Box>
     )
 }
-
-export { Slider };

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
+    PageContainer,
     SearchBar,
     Selector
 } from 'components';
@@ -9,23 +10,24 @@ import { traitOptionsQuery } from 'graphql/query';
 import { useQuery } from '@apollo/client';
 import { Switch, Grid, Button, SwipeableDrawer, FormControlLabel, Box } from '@mui/material';
 import { printAvailability } from 'utils';
+import { CloseIcon } from '@shared/icons';
 
-const useStyles = makeStyles((theme) => ({
+makeStyles((theme) => ({
     drawerPaper: {
-        background: theme.palette.primary.light,
-        color: theme.palette.primary.contrastText,
-        borderRight: `2px solid ${theme.palette.text.primary}`,
-        padding: theme.spacing(1),
+        background: palette.primary.light,
+        color: palette.primary.contrastText,
+        borderRight: `2px solid ${palette.text.primary}`,
+        padding: spacing(1),
     },
     formControl: {
         display: 'flex',
         justifyContent: 'center',
         '& > *': {
-            margin: theme.spacing(1),
+            margin: spacing(1),
         },
     },
     padBottom: {
-        marginBottom: theme.spacing(2),
+        marginBottom: spacing(2),
     },
 }));
 
@@ -35,7 +37,7 @@ export const ShoppingPage = ({
     business,
     cart,
 }) => {
-    const { palette } = useTheme();
+    const { palette, spacing } = useTheme();
 
     const [open, setOpen] = useState(false);
     const { data: traitOptionsData } = useQuery(traitOptionsQuery);
@@ -46,8 +48,8 @@ export const ShoppingPage = ({
     const [hideOutOfStock, setHideOutOfStock] = useState(false);
 
     useEffect(() => {
-        let openSub = PubSub.subscribe(PUBS.ArrowMenuOpen, (_, b) => {
-            setOpen(open => b === 'toggle' ? !open : b);
+        let openSub = PubSub.get().subscribeArrowMenuOpen((data) => {
+            setOpen(open => data === 'toggle' ? !open : data);
         });
         return (() => {
             PubSub.get().unsubscribe(openSub);
@@ -110,7 +112,7 @@ export const ShoppingPage = ({
                     fullWidth
                     color="secondary"
                     startIcon={<CloseIcon />}
-                    onClick={() => PubSub.publish(PUBS.ArrowMenuOpen, false)}
+                    onClick={() => PubSub.get().publishArrowMenuOpen(false)}
                 >Close</Button>
             </Grid>
         </Grid>
@@ -135,8 +137,8 @@ export const ShoppingPage = ({
     ]
 
     return (
-        <Box id='page'>
-            <SwipeableDrawer classes={{ paper: classes.drawerPaper }} anchor="left" open={open} onOpen={()=>{}} onClose={() => PubSub.publish(PUBS.ArrowMenuOpen, false)}>
+        <PageContainer>
+            <SwipeableDrawer classes={{ paper: classes.drawerPaper }} anchor="left" open={open} onOpen={()=>{}} onClose={() => PubSub.get().publishArrowMenuOpen(false)}>
                 {optionsContainer}
                 <Box>
                     <Selector
@@ -169,7 +171,7 @@ export const ShoppingPage = ({
                 <Button
                     color="secondary"
                     startIcon={<FilterListIcon />}
-                    onClick={() => PubSub.publish(PUBS.ArrowMenuOpen, 'toggle')}
+                    onClick={() => PubSub.get().publishArrowMenuOpen('toggle')}
                 >Filter</Button>
                 <Button
                     color="secondary"
@@ -186,6 +188,6 @@ export const ShoppingPage = ({
                 searchString={searchString}
                 hideOutOfStock={hideOutOfStock}
             />
-        </Box>
+        </PageContainer>
     );
 }

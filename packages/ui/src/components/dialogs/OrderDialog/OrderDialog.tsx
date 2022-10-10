@@ -15,8 +15,9 @@ import { useMutation } from '@apollo/client';
 import { findWithAttr, ORDER_FILTERS } from 'utils';
 import { ORDER_STATUS, ROLES } from '@shared/consts';
 import _ from 'lodash';
+import { CancelIcon, CloseIcon, CompleteIcon, EditIcon, SaveIcon, ScheduleIcon, SuccessIcon } from '@shared/icons';
 
-const useStyles = makeStyles((theme) => ({
+makeStyles((theme) => ({
     appBar: {
         position: 'relative',
     },
@@ -24,18 +25,18 @@ const useStyles = makeStyles((theme) => ({
         textAlign: 'center',
     },
     optionsContainer: {
-        padding: theme.spacing(2),
+        padding: spacing(2),
     },
     container: {
-        background: theme.palette.background.default,
+        background: palette.background.default,
         flex: 'auto',
         paddingBottom: '15vh',
     },
     pad: {
-        padding: theme.spacing(1),
+        padding: spacing(1),
     },
     bottom: {
-        background: theme.palette.primary.main,
+        background: palette.primary.main,
         position: 'fixed',
         bottom: '0',
         width: '-webkit-fill-available',
@@ -55,7 +56,7 @@ export const OrderDialog = ({
     open = true,
     onClose,
 }) => {
-    const { palette } = useTheme();
+    const { palette, spacing } = useTheme();
 
     // Holds order changes before update is final
     const [changedOrder, setChangedOrder] = useState(order);
@@ -87,7 +88,7 @@ export const OrderDialog = ({
     const setOrderStatus = useCallback((status, successMessage, errorMessage) => {
         mutationWrapper({
             mutation: updateOrder,
-            data: { variables: { input: { id: order.id, status: status } } },
+            input: { id: order.id, status: status },
             successMessage: () => successMessage,
             errorMessage: () => errorMessage,
         })
@@ -105,15 +106,15 @@ export const OrderDialog = ({
         return {
             [ORDER_STATUS.CanceledByAdmin]: [
                 isOwner && !isCanceled,
-                'Cancel order', <BlockIcon />, 'Order canceled.', 'Failed to cancel order.'
+                'Cancel order', <CancelIcon />, 'Order canceled.', 'Failed to cancel order.'
             ],
             [ORDER_STATUS.CanceledByCustomer]: [
                 isCustomer && !isCanceled && !isOutTheDoor && order?.status !== ORDER_STATUS.Approved,
-                'Cancel order', <BlockIcon />, 'Order canceled.', 'Failed to cancel order.'
+                'Cancel order', <CancelIcon />, 'Order canceled.', 'Failed to cancel order.'
             ],
             [ORDER_STATUS.PendingCancel]: [
                 isCustomer && order.status === ORDER_STATUS.Approved,
-                'Request cancellation', <BlockIcon />, 'Order cancellation requested.', 'Failed to request cancellation.'
+                'Request cancellation', <CancelIcon />, 'Order cancellation requested.', 'Failed to request cancellation.'
             ],
             [ORDER_STATUS.Rejected]: [
                 isOwner && !isCanceled,
@@ -125,7 +126,7 @@ export const OrderDialog = ({
             ],
             [ORDER_STATUS.Pending]: [
                 isCustomer && [ORDER_STATUS.Draft, ORDER_STATUS.PendingCancel].includes(order?.status),
-                'Submit order', <DoneIcon />, 'Order approved.', 'Failed to approve order.'
+                'Submit order', <CompleteIcon />, 'Order approved.', 'Failed to approve order.'
             ],
             [ORDER_STATUS.Approved]: [
                 isOwner && (order?.status === ORDER_STATUS.Pending || isCanceled),
@@ -133,7 +134,7 @@ export const OrderDialog = ({
             ],
             [ORDER_STATUS.Scheduled]: [
                 isOwner && [ORDER_STATUS.Approved, ORDER_STATUS.InTransit].includes(order?.status),
-                'Set order status to "scheduled"', <EventAvailableIcon />, 'Order status set to "scheduled".', 'Failed to update order status.'
+                'Set order status to "scheduled"', <ScheduleIcon />, 'Order status set to "scheduled".', 'Failed to update order status.'
             ],
             [ORDER_STATUS.InTransit]: [
                 isOwner && [ORDER_STATUS.Scheduled, ORDER_STATUS.Delivered].includes(order?.status),
@@ -141,7 +142,7 @@ export const OrderDialog = ({
             ],
             [ORDER_STATUS.Delivered]: [
                 isOwner && order?.status === ORDER_STATUS.InTransit,
-                'Set order status to "Delivered"', <DoneAllIcon />, 'Order status set to "delivered".', 'Failed to update order status.'
+                'Set order status to "Delivered"', <SuccessIcon />, 'Order status set to "delivered".', 'Failed to update order status.'
             ]
         }
     }, [order, userRoles])
@@ -166,7 +167,7 @@ export const OrderDialog = ({
             <Grid item xs={12} sm={4}>
                 <Button
                     fullWidth
-                    startIcon={<UpdateIcon />}
+                    startIcon={<SaveIcon />}
                     onClick={orderUpdate}
                     disabled={loading || _.isEqual(order, changedOrder)}
                 >Update</Button>
@@ -203,15 +204,15 @@ export const OrderDialog = ({
                     </Grid>
                 </Toolbar>
             </AppBar>
-            <div className={classes.container}>
-                <div className={classes.pad}>
+            <Box className={classes.container}>
+                <Box className={classes.pad}>
                     <Typography variant="body1" gutterBottom>{status_string}</Typography>
                     <CartTable cart={order} editable={editableStatuses.includes(order?.status)} onUpdate={(data) => setChangedOrder(data)} />
-                </div>
-                <div className={classes.bottom}>
+                </Box>
+                <Box className={classes.bottom}>
                     {options}
-                </div>
-            </div>
+                </Box>
+            </Box>
         </Dialog>
     );
 }

@@ -7,24 +7,24 @@ import {
     ListItemText
 } from '@mui/material';
 
-const useStyles = makeStyles((theme) => ({
+ makeStyles((theme) => ({
     root: {
-        background: theme.palette.background.paper,
+        background: palette.background.paper,
     },
     title: {
-        background: theme.palette.primary.dark,
-        color: theme.palette.primary.contrastText,
+        background: palette.primary.dark,
+        color: palette.primary.contrastText,
     },
 }));
 
-function ListDialog({
+export const ListDialog = ({
     open = true,
     onClose,
     title = 'Select Item',
     data,
     ...props
-}) {
-    const classes = useStyles();
+}) => {
+    const { palette } = useTheme();
 
     return (
         <Dialog
@@ -46,5 +46,3 @@ function ListDialog({
         </Dialog>
     );
 }
-
-export { ListDialog };

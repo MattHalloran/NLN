@@ -2,18 +2,19 @@ import React from 'react';
 import Popover from '@mui/material/Popover';
 import { Button } from '@mui/material';
 
-const useStyles = makeStyles((theme) => ({
+makeStyles((theme) => ({
     paper: {
-        background: theme.palette.primary.light,
+        background: palette.primary.light,
     },
 }));
 
-export function PopupMenu({
+export const PopupMenu = ({
     text = 'Menu',
     children,
     ...props
-}) {
-    const classes = useStyles();
+}) => {
+    const { palette } = useTheme();
+
     const [anchorEl, setAnchorEl] = React.useState(null);
 
     const handleClick = (event) => {
@@ -27,7 +28,7 @@ export function PopupMenu({
     const open = Boolean(anchorEl);
     const id = open ? 'simple-popover' : undefined;
     return (
-        <div>
+        <Box>
             <Button aria-describedby={id} {...props} onClick={handleClick}>
                 {text}
             </Button>
@@ -50,6 +51,6 @@ export function PopupMenu({
             >
                 {children}
             </Popover>
-        </div>
+        </Box>
     )
 }

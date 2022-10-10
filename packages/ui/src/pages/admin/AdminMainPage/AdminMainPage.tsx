@@ -1,15 +1,16 @@
 import React from 'react';
 import { useHistory } from 'react-router-dom';
 import { LINKS } from 'utils';
-import { Typography, Card, CardContent, CardActions, Button, Tooltip, IconButton } from '@mui/material';
+import { Typography, Card, CardContent, CardActions, Tooltip, IconButton } from '@mui/material';
+import { OpenInNewIcon } from '@shared/icons';
 
-const useStyles = makeStyles((theme) => ({
+makeStyles((theme) => ({
     header: {
         textAlign: 'center',
     },
     card: {
-        background: theme.palette.primary.main,
-        color: theme.palette.primary.contrastText,
+        background: palette.primary.main,
+        color: palette.primary.contrastText,
         cursor: 'pointer',
     },
     flexed: {
@@ -19,13 +20,13 @@ const useStyles = makeStyles((theme) => ({
         alignItems: 'stretch',
     },
     icon: {
-        color: theme.palette.secondary.light,
+        color: palette.secondary.light,
     },
 }));
 
 function AdminMainPage() {
     let history = useHistory();
-    const classes = useStyles();
+    const { palette } = useTheme();
 
     const card_data = [
         ['Orders', "Approve, create, and edit customer's orders", LINKS.AdminOrders],
@@ -37,11 +38,11 @@ function AdminMainPage() {
     ]
 
     return (
-        <div id='page'>
-            <div className={classes.header}>
+        <PageContainer>
+            <Box className={classes.header}>
                 <Typography variant="h3" component="h1">Manage Site</Typography>
-            </div>
-            <div className={classes.flexed}>
+            </Box>
+            <Box className={classes.flexed}>
                 {card_data.map(([title, description, link]) => (
                     <Card className={classes.card} onClick={() => history.push(link)}>
                         <CardContent>
@@ -55,14 +56,14 @@ function AdminMainPage() {
                         <CardActions>
                             <Tooltip title="Open" placement="bottom">
                                 <IconButton onClick={() => history.push(link)}>
-                                    <LaunchIcon className={classes.icon} />
+                                    <OpenInNewIcon className={classes.icon} />
                                 </IconButton>
                             </Tooltip>
                         </CardActions>
                     </Card>
                 ))}
-            </div>
-        </div >
+            </Box>
+        </PageContainer>
     );
 }
 

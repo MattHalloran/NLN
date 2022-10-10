@@ -4,11 +4,12 @@ import { readAssetsQuery } from 'graphql/query/readAssets';
 import ReactMarkdown from 'react-markdown';
 import { PolicyBreadcrumbs } from 'components';
 import { convertToDot, valueFromDot } from "utils";
+import { useTheme } from "@mui/material";
 
-const useStyles = makeStyles((theme) => ({
+makeStyles((theme) => ({
     root: {
         '& a': {
-            color: theme.palette.secondary.light,
+            color: palette.secondary.light,
         },
     },
 }));

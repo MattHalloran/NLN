@@ -1,16 +1,16 @@
 import React from 'react';
-import { TableCell, TableHead, TableRow, Checkbox } from '@mui/material';
+import { TableCell, TableHead, TableRow, Checkbox, useTheme } from '@mui/material';
 
-const useStyles = makeStyles((theme) => ({
+makeStyles((theme) => ({
     root: {
-        background: theme.palette.primary.main,
-        color: theme.palette.primary.contrastText,
+        background: palette.primary.main,
+        color: palette.primary.contrastText,
     },
     check: {
-        color: theme.palette.primary.contrastText,
+        color: palette.primary.contrastText,
     },
     cell: {
-        color: theme.palette.primary.contrastText,
+        color: palette.primary.contrastText,
     },
     visuallyHidden: {
         border: 0,

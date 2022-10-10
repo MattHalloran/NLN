@@ -10,7 +10,7 @@ export const FormPage = ({
     const { palette } = useTheme();
 
     return (
-        <Box id='page' maxWidth={maxWidth}>
+        <PageContainer>
             <Box sx={{
                 backgroundColor: palette.background.paper,
                 display: 'grid',
@@ -23,6 +23,7 @@ export const FormPage = ({
                 left: '50%',
                 transform: 'translateX(-50%)',
                 marginBottom: '20px'
+                maxWidth,
             }}>
                 <Container className={classes.header}>
                     <Typography variant="h3" >{title}</Typography>
@@ -31,6 +32,6 @@ export const FormPage = ({
                     {children}
                 </Container>
             </Box>
-        </Box>
+        </PageContainer>
     );
 }

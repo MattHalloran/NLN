@@ -12,12 +12,14 @@ import {
     Typography,
 } from '@mui/material';
 import _ from 'lodash';
-import { DEFAULT_PRONOUNS, addCustomerSchema } from '@shared/consts';
+import { DEFAULT_PRONOUNS } from '@shared/consts';
 import { addCustomerMutation } from 'graphql/mutation';
 import { useFormik } from 'formik';
 import { useMutation } from '@apollo/client';
+import { addCustomerVariables, addCustomer_addCustomer } from 'graphql/generated/addCustomer';
+import { CancelIcon, CloseIcon, CreateIcon } from '@shared/icons';
 
-const useStyles = makeStyles((theme) => ({
+ makeStyles((theme) => ({
     appBar: {
         position: 'relative',
     },
@@ -25,17 +27,17 @@ const useStyles = makeStyles((theme) => ({
         textAlign: 'center',
     },
     optionsContainer: {
-        padding: theme.spacing(2),
-        background: theme.palette.primary.main,
+        padding: spacing(2),
+        background: palette.primary.main,
     },
     container: {
-        background: theme.palette.background.default,
+        background: palette.background.default,
         flex: 'auto',
-        padding: theme.spacing(1),
+        padding: spacing(1),
         paddingBottom: '15vh',
     },
     bottom: {
-        background: theme.palette.primary.main,
+        background: palette.primary.main,
         position: 'fixed',
         bottom: '0',
         width: '-webkit-fill-available',
@@ -43,7 +45,7 @@ const useStyles = makeStyles((theme) => ({
     },
     form: {
         width: '100%',
-        marginTop: theme.spacing(3),
+        marginTop: spacing(3),
     },
     phoneInput: {
         width: '100%',
@@ -58,8 +60,8 @@ export const NewCustomerDialog = ({
     open = true,
     onClose,
 }) => {
-    const { palette } = useTheme();
-    
+    const { palette, spacing } = useTheme();
+
     // Stores the modified customer data before updating
     const [addCustomer] = useMutation(addCustomerMutation);
 
@@ -74,16 +76,16 @@ export const NewCustomerDialog = ({
         },
         validationSchema: addCustomerSchema,
         onSubmit: (values) => {
-            mutationWrapper({
+            mutationWrapper<addCustomer_addCustomer, addCustomerVariables>({
                 mutation: addCustomer,
-                data: { variables: { input: {
+                input: {
                     firstName: values.firstName,
                     lastName: values.lastName,
                     pronouns: values.pronouns,
                     business: {name: values.business},
                     emails: [{ emailAddress: values.email }],
                     phones: [{ number: values.phone }],
-                } } },
+                },
                 onSuccess: () => onClose(),
                 successMessage: () => 'Customer created.'
             })
@@ -96,7 +98,7 @@ export const NewCustomerDialog = ({
             <Grid item xs={12} sm={6}>
                 <Button
                     fullWidth
-                    startIcon={<AddCircleIcon />}
+                    startIcon={<CreateIcon />}
                     onClick={() => formik.handleSubmit()}
                 >Create</Button>
             </Grid>
@@ -126,7 +128,7 @@ export const NewCustomerDialog = ({
                     </Grid>
                 </Toolbar>
             </AppBar>
-            <div className={classes.container}>
+            <Box className={classes.container}>
                 <form className={classes.form}>
                     <Grid container spacing={2}>
                         <Grid item xs={12} sm={6}>
@@ -218,10 +220,10 @@ export const NewCustomerDialog = ({
                         </Grid>
                     </Grid>
                 </form>
-                <div className={classes.bottom}>
+                <Box className={classes.bottom}>
                     {options}
-                </div>
-            </div>
+                </Box>
+            </Box>
         </Dialog>
     );
 }

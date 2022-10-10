@@ -17,6 +17,7 @@ import { readAssetsQuery } from 'graphql/query/readAssets';
 import { loginMutation } from 'graphql/mutation';
 import { Box, CircularProgress, CssBaseline, StyledEngineProvider, ThemeProvider } from '@mui/material';
 import { Session } from 'types';
+import { makeStyles } from '@mui/styles';
 
 const useStyles = makeStyles(() => ({
     "@global": {
@@ -129,7 +130,7 @@ export function App() {
             <CssBaseline />
             <ThemeProvider theme={theme}>
                 <DndProvider backend={HTML5Backend}>
-                    <div id="App">
+                    <Box id="App">
                         <GlobalHotKeys keyMap={keyMap} handlers={handlers} />
                         <main
                             id="page-container"
@@ -172,7 +173,7 @@ export function App() {
                             <IconNav session={session} userRoles={session?.roles} cart={cart} />
                             <Footer session={session} business={business} />
                         </main>
-                    </div>
+                    </Box>
                 </DndProvider>
             </ThemeProvider>
         </StyledEngineProvider>

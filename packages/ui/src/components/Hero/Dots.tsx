@@ -1,6 +1,7 @@
+import { Box, useTheme } from '@mui/material';
 import React from 'react';
 
-const useStyles = makeStyles((theme) => ({
+ makeStyles((theme) => ({
     dotContainer: {
         position: 'absolute',
         bottom: '25px',
@@ -19,7 +20,7 @@ const useStyles = makeStyles((theme) => ({
         border: '1px solid black',
     },
     active: {
-        background: theme.palette.primary.main,
+        background: palette.primary.main,
         opacity: '0.9',
     },
     inactive: {
@@ -27,22 +28,20 @@ const useStyles = makeStyles((theme) => ({
     }
 }));
 
-const Dots = ({
+export const Dots = ({
     quantity = 0,
     activeIndex
 }) => {
-    const classes = useStyles();
+    const { palette } = useTheme();
 
     let slides = [];
     for (let i = 0; i < quantity; i++) {
-        slides.push(<div key={'dot-'+i} className={`${classes.dot} ${activeIndex === i ? classes.active : classes.inactive}`} />)
+        slides.push(<Box key={'dot-'+i} className={`${classes.dot} ${activeIndex === i ? classes.active : classes.inactive}`} />)
     }
 
     return (
-        <div className={classes.dotContainer}>
+        <Box className={classes.dotContainer}>
             {slides}
-        </div>
+        </Box>
     )
 }
-
-export { Dots };

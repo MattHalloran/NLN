@@ -5,10 +5,10 @@ import ReactMarkdown from 'react-markdown';
 import { PolicyBreadcrumbs } from 'components';
 import { convertToDot, valueFromDot } from "utils";
 
-const useStyles = makeStyles((theme) => ({
+makeStyles((theme) => ({
     root: {
         '& a': {
-            color: theme.palette.secondary.light,
+            color: palette.secondary.light,
         },
     },
 }));
@@ -31,9 +31,9 @@ export const PrivacyPolicyPage = ({
     }, [privacyData, business])
 
     return (
-        <div id="page" className={classes.root}>
-            <PolicyBreadcrumbs textColor={theme.palette.secondary.dark} />
+        <Box id="page" className={classes.root}>
+            <PolicyBreadcrumbs textColor={palette.secondary.dark} />
             <ReactMarkdown>{ privacy }</ReactMarkdown>
-        </div>
+        </Box>
     );
 }

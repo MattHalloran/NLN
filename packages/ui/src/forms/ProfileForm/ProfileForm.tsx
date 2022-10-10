@@ -11,22 +11,23 @@ import FormControl from '@mui/material/FormControl';
 import Radio from '@mui/material/Radio';
 import RadioGroup from '@mui/material/RadioGroup';
 
-const useStyles = makeStyles((theme) => ({
+ makeStyles((theme) => ({
     form: {
         width: '100%',
-        marginTop: theme.spacing(3),
+        marginTop: spacing(3),
     },
     buttons: {
-        paddingTop: theme.spacing(2),
-        paddingBottom: theme.spacing(2),
+        paddingTop: spacing(2),
+        paddingBottom: spacing(2),
     },
     phoneInput: {
         width: '100%',
     }
 }));
 
-function ProfileForm() {
-    const classes = useStyles()
+export const ProfileForm = () => {
+    const { palette, spacing } = useTheme();
+
     const [editing, setEditing] = useState(false);
     const { data: profile } = useQuery(profileQuery);
     const [updateCustomer, { loading }] = useMutation(updateCustomerMutation);
@@ -79,11 +80,11 @@ function ProfileForm() {
             if (profile?.profile?.phones?.length > 0) input.phones[0].id = profile.profile.phones[0].id;
             mutationWrapper({
                 mutation: updateCustomer,
-                data: { variables: {
+                input: {
                     input: input,
                     currentPassword: values.currentPassword,
                     newPassword: values.newPassword
-                } },
+                },
                 successMessage: () => 'Profile updated.',
             })
         },
@@ -192,7 +193,7 @@ function ProfileForm() {
                                 name="theme"
                                 aria-label="theme-check"
                                 value={formik.values.theme}
-                                onChange={(e) => { formik.handleChange(e); PubSub.publish(PUBS.Theme, e.target.value) }}
+                                onChange={(e) => { formik.handleChange(e); PubSub.get().publishTheme(e.target.value) }}
                             >
                                 <FormControlLabel value="light" control={<Radio />} label="Light ☀️" />
                                 <FormControlLabel value="dark" control={<Radio />} label="Dark 🌙" />

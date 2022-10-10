@@ -7,12 +7,11 @@ import {
     CustomerCard,
     SnackSeverity
 } from 'components';
-import { Button, Typography } from '@mui/material';
-import { useTheme } from '@emotion/react';
+import { Button, Typography, useTheme } from '@mui/material';
 import { CustomerDialog } from 'components/dialogs/CustomerDialog/CustomerDialog';
 import { NewCustomerDialog } from 'components/dialogs/NewCustomerDialog/NewCustomerDialog';
 
-const useStyles = makeStyles((theme) => ({
+makeStyles((theme) => ({
     header: {
         textAlign: 'center',
     },
@@ -23,7 +22,7 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-function AdminCustomerPage() {
+export const AdminCustomerPage = () => {
     const { palette } = useTheme();
 
     const [customers, setCustomers] = useState(null);
@@ -38,7 +37,7 @@ function AdminCustomerPage() {
     }, [data])
 
     return (
-        <div id="page">
+        <Box id="page">
             <CustomerDialog
                 customer={selectedCustomer}
                 open={selectedCustomer !== null}
@@ -47,23 +46,18 @@ function AdminCustomerPage() {
                 open={newCustomerOpen}
                 onClose={() => setNewCustomerOpen(false)} />
             <AdminBreadcrumbs textColor={palette.secondary.dark} />
-            <div className={classes.header}>
+            <Box className={classes.header}>
                 <Typography variant="h3" component="h1">Manage Customers</Typography>
                 <Button color="secondary" onClick={() => setNewCustomerOpen(true)}>Create Customer</Button>
-            </div>
-            <div className={classes.cardFlex}>
+            </Box>
+            <Box className={classes.cardFlex}>
                 {customers?.map((c, index) =>
                 <CustomerCard 
                     key={index}
                     onEdit={setSelectedCustomer}
                     customer={c}
                 />)}
-            </div>
-        </div >
+            </Box>
+        </Box >
     );
 }
-
-AdminCustomerPage.propTypes = {
-}
-
-export { AdminCustomerPage };

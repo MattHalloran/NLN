@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Grid } from '@mui/material';
+import { Button, Grid, useTheme } from '@mui/material';
 import { ImageList } from '../ImageList/ImageList';
 
-const useStyles = makeStyles((theme) => ({
+makeStyles((theme) => ({
     pad: {
-        marginBottom: theme.spacing(2),
-        marginTop: theme.spacing(2)
+        marginBottom: spacing(2),
+        marginTop: spacing(2)
     },
     gridItem: {
         display: 'flex',
@@ -16,7 +16,7 @@ export const WrappedImageList = ({
     data,
     onApply
 }) => {
-    const { palette } = useTheme();
+    const { palette, spacing } = useTheme();
 
     const [changed, setChanged] = useState(null);
 

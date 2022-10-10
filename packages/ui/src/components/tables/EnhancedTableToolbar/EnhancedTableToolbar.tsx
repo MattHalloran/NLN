@@ -4,23 +4,25 @@ import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
+import { useTheme } from '@mui/material';
+import { DeleteIcon } from '@shared/icons';
 
-const useStyles = makeStyles((theme) => ({
+makeStyles((theme) => ({
     root: {
-        paddingLeft: theme.spacing(2),
-        paddingRight: theme.spacing(1),
-        backgroundColor: theme.palette.primary.main,
-        color: theme.palette.primary.contrastText,
+        paddingLeft: spacing(2),
+        paddingRight: spacing(1),
+        backgroundColor: palette.primary.main,
+        color: palette.primary.contrastText,
     },
     highlight: {
-        backgroundColor: theme.palette.primary.dark,
-        color: theme.palette.primary.contrastText,
+        backgroundColor: palette.primary.dark,
+        color: palette.primary.contrastText,
     },
     title: {
         flex: '1 1 100%',
     },
     icon: {
-        fill: theme.palette.primary.contrastText,
+        fill: palette.primary.contrastText,
     },
 }));
 
@@ -29,7 +31,7 @@ export const EnhancedTableToolbar = ({
     numSelected = 0,
     onDelete,
 }) => {
-    const { palette } = useTheme();
+    const { palette, spacing } = useTheme();
 
     return (
         <Toolbar

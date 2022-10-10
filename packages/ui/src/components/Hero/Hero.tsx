@@ -7,7 +7,7 @@ import { Slider } from './Slider.js'
 import { imagesByLabelQuery } from 'graphql/query';
 import { useQuery } from '@apollo/client';
 
-const useStyles = makeStyles(() => ({
+makeStyles(() => ({
     hero: {
         position: 'relative',
         overflow: 'hidden',

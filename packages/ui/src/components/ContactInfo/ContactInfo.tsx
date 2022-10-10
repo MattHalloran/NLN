@@ -11,16 +11,17 @@ import {
     TableRow, 
     Tooltip 
 } from '@mui/material';
+import { EmailIcon, PhoneIcon, PinIcon, SvgComponent } from '@shared/icons';
 
-const useStyles = makeStyles((theme) => ({
+makeStyles((theme) => ({
     tableHead: {
-        background: theme.palette.primary.main,
+        background: palette.primary.main,
     },
     tableHeadCell: {
-        color: theme.palette.primary.contrastText,
+        color: palette.primary.contrastText,
     },
     tableRow: {
-        background: theme.palette.background.paper,
+        background: palette.background.paper,
     },
     nav: {
         alignItems: 'baseline',
@@ -29,12 +30,12 @@ const useStyles = makeStyles((theme) => ({
     },
     navAction: {
         alignItems: 'center',
-        color: theme.palette.primary.contrastText,
+        color: palette.primary.contrastText,
         overflowWrap: 'anywhere',
     },
     iconButton: {
-        background: theme.palette.secondary.main,
-        fill: theme.palette.secondary.contrastText,
+        background: palette.secondary.main,
+        fill: palette.secondary.contrastText,
     },
 }));
 
@@ -42,7 +43,7 @@ export const ContactInfo = ({
     business,
     ...props
 }) => {
-    const classes = useStyles();
+    const { palette } = useTheme();
 
     const openLink = (e, link) => {
         window.location = link;
@@ -60,8 +61,8 @@ export const ContactInfo = ({
         console.error('Failed to read business hours', error);
     }
 
-    const contactInfo = [
-        ['Open in Google Maps', business?.ADDRESS?.Label, business?.ADDRESS?.Link, RoomIcon],
+    const contactInfo: [string, string | undefined, string | undefined, SvgComponent][] = [
+        ['Open in Google Maps', business?.ADDRESS?.Label, business?.ADDRESS?.Link, PinIcon],
         ['Call Us', business?.PHONE?.Label, business?.PHONE?.Link, PhoneIcon],
         ['Email Us', business?.EMAIL?.Label, business?.EMAIL?.Link, EmailIcon]
     ]

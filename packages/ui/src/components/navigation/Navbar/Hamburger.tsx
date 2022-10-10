@@ -3,30 +3,29 @@ import {
     ContactInfo,
 } from 'components';
 import { getUserActions, LINKS, PubSub } from 'utils';
-import { IconButton, SwipeableDrawer, List, ListItem, ListItemIcon, Badge, Collapse, Divider, ListItemText } from '@mui/material';
+import { IconButton, SwipeableDrawer, List, ListItem, ListItemIcon, Badge, Collapse, Divider, ListItemText, useTheme } from '@mui/material';
 import { CopyrightBreadcrumbs } from 'components';
-import { useTheme } from '@emotion/react';
 import _ from 'lodash';
-import { ExpandLessIcon, ExpandMoreIcon, FacebookIcon, InstagramIcon } from '@shared/icons';
+import { CloseIcon, ExpandLessIcon, ExpandMoreIcon, FacebookIcon, HomeIcon, InfoIcon, InstagramIcon, ShareIcon } from '@shared/icons';
 
-const useStyles = makeStyles((theme) => ({
+makeStyles((theme) => ({
     drawerPaper: {
-        background: theme.palette.primary.light,
-        borderLeft: `1px solid ${theme.palette.text.primary}`,
+        background: palette.primary.light,
+        borderLeft: `1px solid ${palette.text.primary}`,
     },
     menuItem: {
-        color: theme.palette.primary.contrastText,
-        borderBottom: `1px solid ${theme.palette.primary.dark}`,
+        color: palette.primary.contrastText,
+        borderBottom: `1px solid ${palette.primary.dark}`,
     },
     close: {
-        color: theme.palette.primary.contrastText,
+        color: palette.primary.contrastText,
         borderRadius: 0,
-        borderBottom: `1px solid ${theme.palette.primary.dark}`,
+        borderBottom: `1px solid ${palette.primary.dark}`,
         justifyContent: 'end',
         direction: 'rtl',
     },
     menuIcon: {
-        color: theme.palette.primary.contrastText,
+        color: palette.primary.contrastText,
     },
     facebook: {
         fill: '#ffffff', //'#43609C', // UCLA blue
@@ -35,7 +34,7 @@ const useStyles = makeStyles((theme) => ({
         fill: '#ffffff', // '#F77737',
     },
     copyright: {
-        color: theme.palette.primary.contrastText,
+        color: palette.primary.contrastText,
         padding: 5,
         display: 'block',
         marginLeft: 'auto',
@@ -58,16 +57,16 @@ export const Hamburger = ({
     const [open, setOpen] = useState(false);
 
     useEffect(() => {
-        let openSub = PubSub.subscribe(PUBS.BurgerMenuOpen, (_, b) => {
+        let openSub = PubSub.get().subscribeBurgerMenu((data) => {
             setOpen(open => b === 'toggle' ? !open : b);
         });
         return (() => {
-            PubSub.unsubscribe(openSub);
+            PubSub.get().unsubscribe(openSub);
         })
     }, [])
 
-    const closeMenu = () => PubSub.publish(PUBS.BurgerMenuOpen, false);
-    const toggleOpen = () => PubSub.publish(PUBS.BurgerMenuOpen, 'toggle');
+    const closeMenu = () => PubSub.get().publishBurgerMenu(false)
+    const toggleOpen = () => PubSub.get().publishBurgerMenu('toggle')
 
     const handleContactClick = () => {
         setContactOpen(!contactOpen);
@@ -157,11 +156,7 @@ export const Hamburger = ({
                     <Divider />
                     {optionsToList(customer_actions)}
                 </List>
-                {/* <div style={{ display: 'flex', justifyContent: 'space-around', background: `${theme.lightPrimaryColor}` }}>
-                <SocialIcon style={{ marginBottom: '0' }} fgColor={theme.headerText} url="https://www.facebook.com/newlifenurseryinc/" target="_blank" rel="noopener noreferrer" />
-                <SocialIcon style={{ marginBottom: '0' }} fgColor={theme.headerText} url="https://www.instagram.com/newlifenurseryinc/" target="_blank" rel="noopener noreferrer" />
-            </div>*/}
-                <CopyrightBreadcrumbs className={classes.copyright} business={business} textColor={theme.palette.primary.contrastText} />
+                <CopyrightBreadcrumbs className={classes.copyright} business={business} textColor={palette.primary.contrastText} />
             </SwipeableDrawer>
         </React.Fragment>
     );

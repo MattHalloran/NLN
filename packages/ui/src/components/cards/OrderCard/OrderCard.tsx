@@ -12,6 +12,7 @@ import {
 } from '@mui/material';
 import { ListDialog } from 'components';
 import { emailLink, mapIfExists, phoneLink, showPhone } from 'utils';
+import { EmailIcon, PhoneIcon } from '@shared/icons';
 
 export const OrderCard = ({
     onEdit,

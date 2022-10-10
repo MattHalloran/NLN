@@ -3,7 +3,7 @@ import update from 'immutability-helper';
 import { ImageCard } from 'components';
 import { EditImageDialog } from 'components';
 
-const useStyles = makeStyles((theme) => ({
+makeStyles((theme) => ({
     flexed: {
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',

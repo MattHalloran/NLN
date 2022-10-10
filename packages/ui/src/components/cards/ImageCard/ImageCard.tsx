@@ -3,6 +3,7 @@ import { useDrag, useDrop } from 'react-dnd';
 import { getImageSrc, getServerUrl } from 'utils';
 import { IMAGE_SIZE } from '@shared/consts';
 import { Card, CardActions, CardContent, CardMedia, IconButton } from '@mui/material';
+import { DeleteIcon, EditIcon } from '@shared/icons';
 
 export const ImageCard = ({
     onDelete,
@@ -11,6 +12,8 @@ export const ImageCard = ({
     index,
     moveCard
 }) => {
+    const { palette } = useTheme();
+
     const ref = useRef(null);
 
     const [, drop] = useDrop({
@@ -77,10 +80,10 @@ export const ImageCard = ({
             </CardContent>
             <CardActions disableSpacing>
                 <IconButton aria-label="edit image data" onClick={onEdit}>
-                    <EditIcon sx={{ color: (t) => t.palette.secondary.light }} />
+                    <EditIcon fill={palette.secondary.light} />
                 </IconButton>
                 <IconButton aria-label="delete image" onClick={onDelete}>
-                    <DeleteIcon sx={{ color: (t) => t.palette.secondary.light }} />
+                    <DeleteIcon fill={palette.secondary.light} />
                 </IconButton>
             </CardActions>
         </Card>

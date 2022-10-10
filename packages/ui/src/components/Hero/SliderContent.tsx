@@ -1,27 +1,20 @@
 import React from 'react';
 
-const useStyles = makeStyles({
-    slider: props => ({
-        transform: `translateX(-${props.translate}px)`,
-        transition: `transform ease-out ${props.transition}ms`,
-        height: '100%',
-        width: `${props.width}px`,
-        display: 'flex',
-    }),
-});
-
-const SliderContent = ({
+export const SliderContent = ({
     translate,
     transition,
     width,
     children
 }) => {
-    const classes = useStyles({translate, transition, width});
     return (
-        <div className={classes.slider}>
+        <Box sx={{
+            transform: `translateX(-${translate}px)`,
+            transition: `transform ease-out ${transition}ms`,
+            height: '100%',
+            width: `${width}px`,
+            display: 'flex',
+        }}>
             {children}
-        </div>
+        </Box>
     )
 }
-
-export { SliderContent }

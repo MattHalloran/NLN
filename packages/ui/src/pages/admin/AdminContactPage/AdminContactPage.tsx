@@ -3,6 +3,7 @@ import { AdminBreadcrumbs } from 'components';
 import ReactMarkdown from 'react-markdown';
 import gfm from 'remark-gfm';
 import {
+    Box,
     Button,
     Grid,
     TextField,
@@ -10,9 +11,8 @@ import {
 } from '@mui/material';
 import { useMutation } from '@apollo/client';
 import { writeAssetsMutation } from 'graphql/mutation';
-import { mutationWrapper } from 'graphql/utils/wrappers';
 
-const useStyles = makeStyles((theme) => ({
+makeStyles((theme) => ({
     header: {
         textAlign: 'center',
     },
@@ -26,19 +26,19 @@ const useStyles = makeStyles((theme) => ({
         height: '100%',
     },
     pad: {
-        marginBottom: theme.spacing(2),
-        marginTop: theme.spacing(2)
+        marginBottom: spacing(2),
+        marginTop: spacing(2)
     },
     gridItem: {
         display: 'flex',
     },
 }));
 
-function AdminContactPage({
+export const AdminContactPage = ({
     business
-}) {
-    const classes = useStyles();
-    const theme = useTheme();
+}) => {
+    const { palette, spacing } = useTheme();
+
     const [hours, setHours] = useState('');
     const [updateHours] = useMutation(writeAssetsMutation);
 
@@ -75,11 +75,11 @@ function AdminContactPage({
     )
 
     return (
-        <div id="page" className={classes.root}>
-            <AdminBreadcrumbs textColor={theme.palette.secondary.dark} />
-            <div className={classes.header}>
+        <Box id="page" className={classes.root}>
+            <AdminBreadcrumbs textColor={palette.secondary.dark} />
+            <Box className={classes.header}>
                 <Typography variant="h3" component="h1">Manage Contact Info</Typography>
-            </div>
+            </Box>
             { options }
             <Grid container spacing={2} direction="row">
                 <Grid item sm={12} md={6}>
@@ -105,11 +105,6 @@ function AdminContactPage({
                 
             </Grid>
             { options }
-        </div>
+        </Box>
     );
 }
-
-AdminContactPage.propTypes = {
-}
-
-export { AdminContactPage };

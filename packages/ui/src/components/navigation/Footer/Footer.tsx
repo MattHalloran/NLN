@@ -7,11 +7,11 @@ import { List, ListItem, ListItemIcon, ListItemText, Grid, ButtonBase, Tooltip }
 import { CopyrightBreadcrumbs } from 'components';
 import { useHistory } from 'react-router';
 
-const useStyles = makeStyles((theme) => ({
+makeStyles((theme) => ({
     root: {
         overflow: 'hidden',
-        backgroundColor: theme.palette.primary.dark,
-        color: theme.palette.primary.contrastText,
+        backgroundColor: palette.primary.dark,
+        color: palette.primary.contrastText,
         position: 'relative',
         paddingBottom: '7vh',
     },
@@ -25,13 +25,13 @@ const useStyles = makeStyles((theme) => ({
     image: {
         maxWidth: '100%',
         maxHeight: 200,
-        background: theme.palette.primary.contrastText,
+        background: palette.primary.contrastText,
     },
     icon: {
-        fill: theme.palette.primary.contrastText,
+        fill: palette.primary.contrastText,
     },
     copyright: {
-        color: theme.palette.primary.contrastText,
+        color: palette.primary.contrastText,
     },
 }));
 
@@ -56,7 +56,7 @@ export const Footer = ({
     ]
 
     return (
-        <div className={classes.root}>
+        <Box className={classes.root}>
             <Grid container justifyContent='center' spacing={1}>
                 <Grid item xs={12} sm={6}>
                     <List component="nav">
@@ -113,7 +113,7 @@ export const Footer = ({
                     </Grid>
                 ))}
             </Grid>
-            <CopyrightBreadcrumbs className={classes.copyright} business={business} textColor={theme.palette.primary.contrastText} />
-        </div>
+            <CopyrightBreadcrumbs className={classes.copyright} business={business} textColor={palette.primary.contrastText} />
+        </Box>
     );
 }
