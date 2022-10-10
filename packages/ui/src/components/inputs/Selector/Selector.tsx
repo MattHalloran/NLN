@@ -1,9 +1,8 @@
 import React, { useCallback } from 'react';
 import { FormControl, InputLabel, Select, MenuItem, Chip } from '@mui/material';
-import { makeStyles, useTheme } from '@material-ui/styles';
 import _ from 'lodash';
 
-const useStyles = makeStyles((theme) => ({
+makeStyles((theme) => ({
     root: {
     },
     fullWidth: {
@@ -28,8 +27,8 @@ export const Selector = ({
     ...props
 }) => {
     const { palette } = useTheme();
-    
-    const displayColor = color ?? theme.palette.background.contrastText;
+
+    const displayColor = color ?? palette.background.contrastText;
 
     // Formats selected into label/value object array.
     // options - Formatted options (array of label/value pairs)
@@ -63,8 +62,8 @@ export const Selector = ({
         return {
             fontWeight:
                 options_formatted.find(o => o.label === label)
-                    ? theme.typography.fontWeightRegular
-                    : theme.typography.fontWeightMedium,
+                    ? typography.fontWeightRegular
+                    : typography.fontWeightMedium,
         };
     }
 

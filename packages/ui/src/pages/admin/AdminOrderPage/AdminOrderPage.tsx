@@ -7,10 +7,11 @@ import {
     OrderCard,
     OrderDialog,
     Selector,
+    SnackSeverity,
 } from 'components';
-import { Typography, useTheme } from '@mui/material';
+import { Box, Typography, useTheme } from '@mui/material';
 
-const useStyles = makeStyles((theme) => ({
+makeStyles((theme) => ({
     header: {
         textAlign: 'center',
     },
@@ -20,12 +21,12 @@ const useStyles = makeStyles((theme) => ({
         gridGap: '20px',
     },
     padBottom: {
-        marginBottom: theme.spacing(2),
+        marginBottom: spacing(2),
     },
 }));
 
-function AdminOrderPage({ userRoles }) {
-    const { palette } = useTheme();
+export const AdminOrderPage = ({ userRoles }) => {
+    const { palette, spacing } = useTheme();
 
     const [filter, setFilter] = useState(ORDER_FILTERS[0].value);
     // Selected order data. Used for popup
@@ -33,7 +34,7 @@ function AdminOrderPage({ userRoles }) {
     const [orders, setOrders] = useState(null);
     const { error, data, refetch } = useQuery(ordersQuery, { variables: { status: filter !== 'All' ? filter : undefined }, pollInterval: 5000 });
     if (error) { 
-        PubSub.publish(PUBS.Snack, { message: error.message, severity: 'error', data: error });
+        PubSub.get().publishSnack({ message: error.message, severity: SnackSeverity.Error, data: error });
     }
     useEffect(() => {
         setOrders(data?.orders);
@@ -44,16 +45,16 @@ function AdminOrderPage({ userRoles }) {
     }, [filter, refetch])
 
     return (
-        <div id="page">
+        <Box id="page">
             {currOrder ? (<OrderDialog 
                 userRoles={userRoles}
                 order={currOrder}
                 open={currOrder !== null}
                 onClose={() => setCurrOrder(null)} />) : null}
-            <AdminBreadcrumbs className={classes.padBottom} textColor={theme.palette.secondary.dark} />
-            <div className={classes.header}>
+            <AdminBreadcrumbs className={classes.padBottom} textColor={palette.secondary.dark} />
+            <Box className={classes.header}>
                 <Typography variant="h3" component="h1">Manage Orders</Typography>
-            </div>
+            </Box>
             <Selector
                 fullWidth
                 options={ORDER_FILTERS}
@@ -62,14 +63,9 @@ function AdminOrderPage({ userRoles }) {
                 inputAriaLabel='order-type-selector-label'
                 label="Sort By" />
             <h3>Count: {orders?.length ?? 0}</h3>
-            <div className={classes.cardFlex}>
+            <Box className={classes.cardFlex}>
                 {orders?.map((o) => <OrderCard key={o.id} order={o} onEdit={() => setCurrOrder(o)} />)}
-            </div>
-        </div >
+            </Box>
+        </Box>
     );
 }
-
-AdminOrderPage.propTypes = {
-}
-
-export { AdminOrderPage };

@@ -9,9 +9,9 @@ import { useMutation } from '@apollo/client';
 
 const SHOW_HAMBURGER_AT = 1000;
 
-const useStyles = makeStyles((theme) => ({
+makeStyles((theme) => ({
     root: {
-        background: theme.palette.primary.main,
+        background: palette.primary.main,
     },
     toRight: {
         marginLeft: 'auto',
@@ -28,7 +28,7 @@ const useStyles = makeStyles((theme) => ({
         marginTop: '5px',
         marginBottom: '5px',
         marginRight: 'auto',
-        background: theme.palette.mode === 'light' ? '#0c3a0b' : 'radial-gradient(circle at center, #757565 0, #757565, white 100%)',
+        background: palette.mode === 'light' ? '#0c3a0b' : 'radial-gradient(circle at center, #757565 0, #757565, white 100%)',
         borderRadius: '500px',
         minHeight: '50px',
         minWidth: '50px',
@@ -36,10 +36,10 @@ const useStyles = makeStyles((theme) => ({
         width: '12vh',
     },
     navLogo: {
-        '-webkit-filter': `drop-shadow(0.5px 0.5px 0 ${hexToRGB(theme.palette.primary.dark, 0.9)})
-                        drop-shadow(-0.5px -0.5px 0 ${hexToRGB(theme.palette.primary.dark, 0.9)})`,
-        filter: `drop-shadow(0.5px 0.5px 0 ${hexToRGB(theme.palette.primary.dark, 0.9)}) 
-                drop-shadow(-0.5px -0.5px 0 ${hexToRGB(theme.palette.primary.dark, 0.9)})`,
+        '-webkit-filter': `drop-shadow(0.5px 0.5px 0 ${hexToRGB(palette.primary.dark, 0.9)})
+                        drop-shadow(-0.5px -0.5px 0 ${hexToRGB(palette.primary.dark, 0.9)})`,
+        filter: `drop-shadow(0.5px 0.5px 0 ${hexToRGB(palette.primary.dark, 0.9)}) 
+                drop-shadow(-0.5px -0.5px 0 ${hexToRGB(palette.primary.dark, 0.9)})`,
         verticalAlign: 'middle',
         fill: 'black',
         marginTop: '0.5vh',
@@ -55,14 +55,14 @@ const useStyles = makeStyles((theme) => ({
         fontSize: '2em',
         marginLeft: '-15px',
         fontFamily: `'Kite One', sans-serif`,
-        color: theme.palette.primary.contrastText,
+        color: palette.primary.contrastText,
     },
-    [theme.breakpoints.down(500)]: {
+    [breakpoints.down(500)]: {
         navName: {
             fontSize: '1.5em',
         }
     },
-    [theme.breakpoints.down(350)]: {
+    [breakpoints.down(350)]: {
         navName: {
             display: 'none',
         }
@@ -90,7 +90,7 @@ export const Navbar = ({
     onRedirect
 }) => {
     const { palette } = useTheme();
-    
+
     const [show_hamburger, setShowHamburger] = useState(false);
     const [logout] = useMutation(logoutMutation);
 

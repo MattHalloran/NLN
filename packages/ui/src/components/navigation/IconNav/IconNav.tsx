@@ -1,20 +1,20 @@
 import React from 'react';
 import { useHistory } from 'react-router-dom';
-import { BottomNavigation, BottomNavigationAction, Badge } from '@mui/material';
+import { BottomNavigation, BottomNavigationAction, Badge, useTheme } from '@mui/material';
 import { getUserActions } from 'utils';
 
-const useStyles = makeStyles((theme) => ({
+makeStyles((theme) => ({
     root: {
-        background: theme.palette.primary.dark,
+        background: palette.primary.dark,
         position: 'fixed',
         zIndex: 5,
         bottom: '0',
         width: '100%',
     },
     icon: {
-        color: theme.palette.primary.contrastText,
+        color: palette.primary.contrastText,
     },
-    [theme.breakpoints.up(960)]: {
+    [breakpoints.up(960)]: {
         root: {
             display: 'none',
         }

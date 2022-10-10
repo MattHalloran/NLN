@@ -7,7 +7,7 @@ import { getUserActions, LINKS, updateArray } from 'utils';
 import { Container, Button, IconButton, Badge, List, ListItem, ListItemIcon, ListItemText } from '@mui/material';
 import _ from 'lodash';
 
-const useStyles = makeStyles((theme) => ({
+makeStyles((theme) => ({
     root: {
         display: 'flex',
         marginTop: '0px',
@@ -17,14 +17,14 @@ const useStyles = makeStyles((theme) => ({
     },
     navItem: {
         background: 'transparent',
-        color: theme.palette.primary.contrastText,
+        color: palette.primary.contrastText,
         textTransform: 'none',
     },
     menuItem: {
-        color: theme.palette.primary.contrastText,
+        color: palette.primary.contrastText,
     },
     menuIcon: {
-        fill: theme.palette.primary.contrastText,
+        fill: palette.primary.contrastText,
     },
     contact: {
         width: 'calc(min(100vw, 400px))',

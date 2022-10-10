@@ -9,6 +9,7 @@ export * from './Hero/Hero';
 export * from './inputs';
 export * from './lists';
 export * from './navigation';
+export * from './PageContainer/PageContainer';
 export * from './PopupMenu/PopupMenu';
 export * from './ScrollToTop/ScrollToTop';
 export * from './tables';

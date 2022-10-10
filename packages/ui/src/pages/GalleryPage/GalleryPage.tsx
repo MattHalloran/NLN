@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import Carousel from 'react-gallery-carousel';
 import 'react-gallery-carousel/dist/index.css';
-import { InformationalBreadcrumbs } from 'components';
+import { InformationalBreadcrumbs, PageContainer, SnackSeverity } from 'components';
 import { getImageSrc, getServerUrl, PubSub } from 'utils';
 import { imagesByLabelQuery } from 'graphql/query';
 import { useQuery } from '@apollo/client';
 import { IMAGE_SIZE } from '@shared/consts';
+import { useTheme } from '@mui/material';
 
-const useStyles = makeStyles(() => ({
+ makeStyles(() => ({
     imageList: {
         spacing: 0,
     },
@@ -38,7 +39,7 @@ export const GalleryPage = () => {
     const [images, setImages] = useState([]);
     const { data: imageData, error } = useQuery(imagesByLabelQuery, { variables: { label: 'gallery' } });
 
-    if (error) PubSub.publish(PUBS.Snack, { message: error.message ?? 'Unknown error occurred', severity: 'error', data: error });
+    if (error) PubSub.get().publishSnack({ message: error.message ?? 'Unknown error occurred', severity: SnackSeverity.Error, data: error });
 
     useEffect(() => {
         if (!Array.isArray(imageData?.imagesByLabel)) {
@@ -57,9 +58,9 @@ export const GalleryPage = () => {
     // useHotkeys('arrowRight', () => navigate(1));
 
     return (
-        <div id='page'>
-            <InformationalBreadcrumbs textColor={theme.palette.secondary.dark} />
+        <PageContainer>
+            <InformationalBreadcrumbs textColor={palette.secondary.dark} />
             <Carousel className={classes.carousel} canAutoPlay={false} images={images} />
-        </div>
+        </PageContainer>
     );
 }

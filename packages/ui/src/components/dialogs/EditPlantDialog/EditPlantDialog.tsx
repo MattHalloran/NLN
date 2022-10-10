@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
     AppBar,
     Autocomplete,
+    Box,
     Button,
     Dialog,
     FormControlLabel,
@@ -16,7 +17,8 @@ import {
     TextField,
     Toolbar,
     Tooltip,
-    Typography
+    Typography,
+    useTheme
 } from '@mui/material';
 import { addImagesMutation, deletePlantsMutation, updatePlantMutation } from 'graphql/mutation';
 import { useMutation } from '@apollo/client';
@@ -32,8 +34,7 @@ import {
 } from 'utils';
 // import { DropzoneAreaBase } from 'material-ui-dropzone';
 import _ from 'lodash';
-import { mutationWrapper } from 'graphql/utils/wrappers';
-import { CancelIcon, CloseIcon, DeleteIcon, SaveIcon } from '@shared/icons';
+import { CancelIcon, CloseIcon, CreateIcon, DeleteIcon, SaveIcon } from '@shared/icons';
 
 // Common plant traits, and their corresponding field names
 const PLANT_TRAITS = {
@@ -53,19 +54,19 @@ const PLANT_TRAITS = {
     'Soil Types': 'soilTypes',
 }
 
-const useStyles = makeStyles((theme) => ({
+makeStyles((theme) => ({
     appBar: {
         position: 'relative',
     },
     container: {
-        background: theme.palette.background.default,
+        background: background.default,
         flex: 'auto',
     },
     sideNav: {
         width: '25%',
         height: '100%',
         float: 'left',
-        borderRight: `2px solid ${theme.palette.text.primary}`,
+        borderRight: `2px solid ${text.primary}`,
     },
     title: {
         paddingBottom: '1vh',
@@ -78,8 +79,8 @@ const useStyles = makeStyles((theme) => ({
         paddingBottom: '3vh',
     },
     optionsContainer: {
-        padding: theme.spacing(2),
-        background: theme.palette.primary.main,
+        padding: spacing(2),
+        background: primary.main,
     },
     displayImage: {
         border: '1px solid black',
@@ -91,19 +92,19 @@ const useStyles = makeStyles((theme) => ({
         width: '75%',
         height: '100%',
         float: 'right',
-        padding: theme.spacing(1),
+        padding: spacing(1),
         paddingBottom: '20vh',
     },
     imageRow: {
         minHeight: '100px',
     },
     selected: {
-        background: theme.palette.primary.dark,
-        color: theme.palette.primary.contrastText,
+        background: primary.dark,
+        color: primary.contrastText,
     },
     skuHeader: {
-        background: theme.palette.primary.light,
-        color: theme.palette.primary.contrastText,
+        background: primary.light,
+        color: primary.contrastText,
     },
     bottom: {
         position: 'fixed',
@@ -124,12 +125,13 @@ export const EditPlantDialog = ({
     open = true,
     onClose,
 }) => {
-    const classes = useStyles();
+    const { palette, spacing } = useTheme();
+    
     const [changedPlant, setChangedPlant] = useState(plant);
     const [updatePlant] = useMutation(updatePlantMutation);
     const [deletePlant] = useMutation(deletePlantsMutation);
 
-    const [imageData, setImageData] = useState([]);
+    const [imageData, setImageData] = useState<any[] | null>([]);
     const [imagesChanged, setImagesChanged] = useState(false);
     const [addImages] = useMutation(addImagesMutation);
 
@@ -139,7 +141,7 @@ export const EditPlantDialog = ({
     const uploadImages = (acceptedFiles) => {
         mutationWrapper({
             mutation: addImages,
-            data: { variables: { files: acceptedFiles, } },
+            input: { files: acceptedFiles, },
             successMessage: () => `Successfully uploaded ${acceptedFiles.length} image(s)`,
             onSuccess: (response) => {
                 setImageData([...imageData, ...response.data.addImages.filter(d => d.success).map(d => {
@@ -183,17 +185,20 @@ export const EditPlantDialog = ({
     }
 
     const confirmDelete = useCallback(() => {
-        PubSub.publish(PUBS.AlertDialog, {
+        PubSub.get().publishAlertDialog({
             message: `Are you sure you want to delete this plant, along with its SKUs? This cannot be undone.`,
-            firstButtonText: 'Yes',
-            firstButtonClicked: () => mutationWrapper({
-                mutation: deletePlant,
-                data: { variables: { ids: [changedPlant.id] } },
-                successMessage: () => 'Plant deleted.',
-                onSuccess: () => onClose(),
-                errorMesage: () => 'Failed to delete plant.',
-            }),
-            secondButtonText: 'No',
+            buttons: [{
+                text: 'Yes',
+                onClick: () => mutationWrapper({
+                    mutation: deletePlant,
+                    data: { variables: { ids: [changedPlant.id] } },
+                    successMessage: () => 'Plant deleted.',
+                    onSuccess: () => onClose(),
+                    errorMesage: () => 'Failed to delete plant.',
+                }),
+            }, {
+                text: 'No',
+            }]
         });
     }, [changedPlant, deletePlant, onClose])
 
@@ -300,8 +305,8 @@ export const EditPlantDialog = ({
                     />
                 </Toolbar>
             </AppBar>
-            <div className={classes.container}>
-                <div className={classes.sideNav}>
+            <Box className={classes.container}>
+                <Box className={classes.sideNav}>
                     <List
                         style={{ paddingTop: '0' }}
                         aria-label="sku select"
@@ -319,7 +324,7 @@ export const EditPlantDialog = ({
                             </ListItem>
                         ))}
                     </List>
-                    <div>
+                    <Box>
                         {currSkuIndex >= 0 ?
                             <Tooltip title="Delete SKU">
                                 <IconButton onClick={removeSku}>
@@ -329,12 +334,12 @@ export const EditPlantDialog = ({
                             : null}
                         <Tooltip title="New SKU">
                             <IconButton onClick={newSku}>
-                                <AddBoxIcon />
+                                <CreateIcon />
                             </IconButton>
                         </Tooltip>
-                    </div>
-                </div>
-                <div className={classes.content}>
+                    </Box>
+                </Box>
+                <Box className={classes.content}>
                     <Typography className={classes.title} variant="h5" component="h3">Edit plant info</Typography>
                     <Grid className={classes.gridContainer} container spacing={2}>
                         <Grid item xs={12} sm={6}>
@@ -468,11 +473,11 @@ export const EditPlantDialog = ({
                             />
                         </Grid>
                     </Grid>
-                </div>
-                <div className={classes.bottom}>
+                </Box>
+                <Box className={classes.bottom}>
                     {options}
-                </div>
-            </div>
+                </Box>
+            </Box>
         </Dialog >
     );
 }

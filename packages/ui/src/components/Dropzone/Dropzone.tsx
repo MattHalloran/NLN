@@ -1,17 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { PubSub } from 'utils';
-import { Button, Grid } from '@mui/material';
+import { Button, Grid, useTheme } from '@mui/material';
 import { SnackSeverity } from 'components/dialogs';
 
-const useStyles = makeStyles((theme) => ({
+makeStyles((theme) => ({
     gridPad: {
-        paddingLeft: theme.spacing(1),
-        paddingRight: theme.spacing(1),
+        paddingLeft: spacing(1),
+        paddingRight: spacing(1),
     },
     itemPad: {
-        marginTop: theme.spacing(1),
-        marginBottom: theme.spacing(1),
+        marginTop: spacing(1),
+        marginBottom: spacing(1),
     },
     dropContainer: {
         background: 'white',
@@ -59,7 +59,7 @@ export const Dropzone = ({
     cancelText = 'Cancel upload',
     disabled = false
 }) => {
-    const { palette } = useTheme();
+    const { palette, spacing } = useTheme();
 
     const [files, setFiles] = useState([]);
     const { getRootProps, getInputProps } = useDropzone({

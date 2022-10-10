@@ -1,7 +1,6 @@
 import React from 'react';
 import { resetPasswordMutation } from 'graphql/mutation';
 import { useMutation } from '@apollo/client';
-import { resetPasswordSchema } from '@shared/consts';
 import { useFormik } from 'formik';
 import {
     Button,
@@ -9,24 +8,24 @@ import {
     TextField
 } from '@mui/material';
 import { LINKS } from 'utils';
-import { mutationWrapper } from 'graphql/utils/wrappers';
 import { useParams } from 'react-router-dom';
 
-const useStyles = makeStyles((theme) => ({
+makeStyles((theme) => ({
     form: {
         width: '100%',
-        marginTop: theme.spacing(3),
+        marginTop: spacing(3),
     },
     submit: {
-        margin: theme.spacing(3, 0, 2),
+        margin: spacing(3, 0, 2),
     },
 }));
 
-function ResetPasswordForm({
+export const ResetPasswordForm = ({
     onSessionUpdate,
     onRedirect
-}) {
-    const classes = useStyles();
+}) => {
+    const { palette, spacing } = useTheme();
+
     const urlParams = useParams();
     const [resetPassword, {loading}] = useMutation(resetPasswordMutation);
 
@@ -92,5 +91,3 @@ function ResetPasswordForm({
         </form>
     );
 }
-
-export { ResetPasswordForm };

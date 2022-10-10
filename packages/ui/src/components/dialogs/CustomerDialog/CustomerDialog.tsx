@@ -13,13 +13,13 @@ import _ from 'lodash';
 import { ACCOUNT_STATUS } from '@shared/consts';
 import { deleteCustomerMutation, updateCustomerMutation } from 'graphql/mutation';
 import { PubSub } from 'utils';
-import { CancelIcon, CloseIcon, CreateIcon, DeleteIcon, LockIcon, SaveIcon } from '@shared/icons';
+import { CancelIcon, CloseIcon, CreateIcon, DeleteIcon, LockIcon, LockOpenIcon, SaveIcon, SvgComponent } from '@shared/icons';
 import { documentNodeWrapper } from 'graphql/utils';
 import { updateCustomerVariables } from 'graphql/generated/updateCustomer';
 import { deleteCustomerVariables } from 'graphql/generated/deleteCustomer';
 import { AccountStatus } from 'graphql/generated/globalTypes';
 
-const useStyles = makeStyles((theme) => ({
+makeStyles((theme) => ({
     appBar: {
         position: 'relative',
     },
@@ -27,17 +27,17 @@ const useStyles = makeStyles((theme) => ({
         textAlign: 'center',
     },
     optionsContainer: {
-        padding: theme.spacing(2),
-        background: theme.palette.primary.main,
+        padding: spacing(2),
+        background: palette.primary.main,
     },
     container: {
-        background: theme.palette.background.default,
+        background: palette.background.default,
         flex: 'auto',
-        padding: theme.spacing(1),
+        padding: spacing(1),
         paddingBottom: '15vh',
     },
     bottom: {
-        background: theme.palette.primary.main,
+        background: palette.primary.main,
         position: 'fixed',
         bottom: '0',
         width: '-webkit-fill-available',
@@ -51,7 +51,7 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 
 // Associates account states with a dynamic action button
 // curr_account_value: [curr_account_label, toggled_account_label, toggled_account_value, toggle_icon]
-const statusToggle: { [key in AccountStatus]: [string, string, AccountStatus, JSX.Element] } = {
+const statusToggle: { [key in AccountStatus]: [string, string, AccountStatus, SvgComponent] } = {
     [ACCOUNT_STATUS.Deleted]: ['Deleted', 'Undelete', ACCOUNT_STATUS.Unlocked, (<CreateIcon />)],
     [ACCOUNT_STATUS.Unlocked]: ['Unlocked', 'Lock', ACCOUNT_STATUS.HardLock, (<LockIcon />)],
     [ACCOUNT_STATUS.SoftLock]: ['Soft Locked (password timeout)', 'Unlock', ACCOUNT_STATUS.Unlocked, (<LockOpenIcon />)],
@@ -63,7 +63,8 @@ export const CustomerDialog = ({
     open = true,
     onClose,
 }) => {
-    const classes = useStyles();
+    const { palette, spacing } = useTheme();
+
     // Stores the modified customer data before updating
     const [currCustomer, setCurrCustomer] = useState(customer);
 
@@ -98,11 +99,14 @@ export const CustomerDialog = ({
     }, [currCustomer?.id, onClose])
 
     const confirmDelete = useCallback(() => {
-        PubSub.publish(PUBS.AlertDialog, {
+        PubSub.get().publishAlertDialog({
             message: `Are you sure you want to delete the account for ${currCustomer.firstName} ${currCustomer.lastName}?`,
-            firstButtonText: 'Yes',
-            firstButtonClicked: deleteCustomer,
-            secondButtonText: 'No',
+            buttons: [{
+                text: 'Yes',
+                onClick: deleteCustomer,
+            }, {
+                text: 'No',
+            }]
         });
     }, [currCustomer, deleteCustomer])
 

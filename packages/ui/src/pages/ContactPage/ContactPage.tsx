@@ -1,21 +1,15 @@
 import React from 'react';
 import { useLayoutEffect } from 'react';
 
-function ContactPage({
+export const ContactPage = ({
     business,
-}) {
+}) => {
     useLayoutEffect(() => {
         document.title = `Contact | ${business?.BUSINESS_NAME?.Short}`;
     })
     return (
-        <div id='page'>
-
-        </div>
+        <PageContainer>
+            {/* TODO */}
+        </PageContainer>
     );
 }
-
-ContactPage.propTypes = {
-}
-
-
-export { ContactPage };

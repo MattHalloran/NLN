@@ -1,23 +1,15 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import {
-    Typography
-} from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import { imagesByLabelQuery } from 'graphql/query';
 import { addImagesMutation, updateImagesMutation } from 'graphql/mutation';
 import { useQuery, useMutation } from '@apollo/client';
-import { 
-    AdminBreadcrumbs, 
-    Dropzone, 
-    WrappedImageList 
+import {
+    AdminBreadcrumbs,
+    Dropzone,
+    WrappedImageList
 } from 'components';
 
-const useStyles = makeStyles((theme) => ({
-    header: {
-        textAlign: 'center',
-    },
-}));
-
-function AdminHeroPage() {
+export const AdminHeroPage = () => {
     const { palette } = useTheme();
 
     const [imageData, setImageData] = useState([]);
@@ -28,7 +20,7 @@ function AdminHeroPage() {
     const uploadImages = (acceptedFiles) => {
         mutationWrapper({
             mutation: addImages,
-            data: { variables: { files: acceptedFiles, labels: ['hero'] } },
+            input: { files: acceptedFiles, labels: ['hero'] },
             successMessage: () => `Successfully uploaded ${acceptedFiles.length} image(s).`,
             onSuccess: () => refetchImages(),
         })
@@ -62,23 +54,18 @@ function AdminHeroPage() {
     }, [imageData, updateImages])
 
     return (
-        <div id='page' className={classes.root}>
-            <AdminBreadcrumbs textColor={theme.palette.secondary.dark} />
-            <div className={classes.header}>
+        <PageContainer>
+            <AdminBreadcrumbs textColor={palette.secondary.dark} />
+            <Box className={classes.header}>
                 <Typography variant="h3" component="h1">Manage Hero</Typography>
-            </div>
+            </Box>
             <Dropzone
                 dropzoneText={'Drag \'n\' drop new images here or click'}
                 onUpload={uploadImages}
                 uploadText='Upload Images'
             />
             <h2>Reorder and delete images</h2>
-            <WrappedImageList data={imageData} onApply={applyChanges}/>
-        </div>
+            <WrappedImageList data={imageData} onApply={applyChanges} />
+        </PageContainer>
     );
 }
-
-AdminHeroPage.propTypes = {
-}
-
-export { AdminHeroPage };

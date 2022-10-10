@@ -14,29 +14,30 @@ import { LINKS } from 'utils';
 import { mutationWrapper } from 'graphql/utils/wrappers';
 import { useHistory } from 'react-router-dom';
 
-const useStyles = makeStyles((theme) => ({
+makeStyles((theme) => ({
     form: {
         width: '100%',
-        marginTop: theme.spacing(3),
+        marginTop: spacing(3),
     },
     submit: {
-        margin: theme.spacing(3, 0, 2),
+        margin: spacing(3, 0, 2),
     },
     linkRight: {
         flexDirection: 'row-reverse',
     },
     clickSize: {
-        color: theme.palette.secondary.light,
+        color: palette.secondary.light,
         minHeight: '48px', // Lighthouse recommends this for SEO, as it is more clickable
         display: 'flex',
         alignItems: 'center',
     },
 }));
 
-function ForgotPasswordForm({
+export const ForgotPasswordForm = ({
     onRedirect
-}) {
-    const classes = useStyles();
+}) => {
+    const { palette, spacing } = useTheme();
+
     const history = useHistory();
     const [requestPasswordChange, {loading}] = useMutation(requestPasswordChangeMutation);
 
@@ -102,5 +103,3 @@ function ForgotPasswordForm({
         </form>
     );
 }
-
-export { ForgotPasswordForm };

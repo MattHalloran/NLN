@@ -1,27 +1,28 @@
 import React, { useCallback } from 'react';
 import {
     QuantityBox,
-    Selector
+    Selector,
+    SnackSeverity
 } from 'components';
 import { deleteArrayIndex, showPrice, updateObject, PubSub, getImageSrc, getPlantTrait, updateArray } from 'utils';
 import { NoImageIcon } from 'assets/img';
-import { IconButton } from '@mui/material';
-import { Paper, Grid, TableContainer, Table, TableHead, TableRow, TableCell, TableBody, TextField } from '@mui/material';
+import { IconButton, useTheme } from '@mui/material';
+import { Box, Paper, Grid, TableContainer, Table, TableHead, TableRow, TableCell, TableBody, TextField } from '@mui/material';
 import AdapterDateFns from '@material-ui/lab/AdapterDateFns';
 import LocalizationProvider from '@material-ui/lab/LocalizationProvider';
 import DatePicker from '@material-ui/lab/DatePicker';
 import { IMAGE_USE } from '@shared/consts';
 import { CloseIcon } from '@shared/icons';
 
-const useStyles = makeStyles((theme) => ({
+makeStyles((theme) => ({
     tablePaper: {
-        background: theme.palette.background.paper,
+        background: palette.background.paper,
     },
     tableIcon: {
-        color: theme.palette.primary.contrastText,
+        color: palette.primary.contrastText,
     },
     tableHead: {
-        background: theme.palette.primary.main,
+        background: palette.primary.main,
     },
     displayImage: {
         maxHeight: '8vh',
@@ -30,7 +31,7 @@ const useStyles = makeStyles((theme) => ({
         verticalAlign: 'middle',
         '& > *': {
             height: 'fit-content',
-            color: theme.palette.primary.contrastText
+            color: palette.primary.contrastText
         }
     }
 }));

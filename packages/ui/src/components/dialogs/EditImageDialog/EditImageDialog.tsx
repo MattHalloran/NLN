@@ -6,16 +6,13 @@ import {
     DialogActions,
     DialogContent,
     DialogTitle,
-    TextField
+    TextField,
+    useTheme
 } from '@mui/material';
 
-const useStyles = makeStyles((theme) => ({
-    title: {
-        background: theme.palette.primary.main,
-        color: theme.palette.primary.contrastText,
-    },
+makeStyles((theme) => ({
     button: {
-        color: theme.palette.primary.main,
+        color: palette.primary.main,
     }
 }));
 
@@ -25,7 +22,8 @@ export const EditImageDialog = ({
     onClose,
     onSave,
 }) => {
-    const classes = useStyles();
+    const { palette } = useTheme();
+
     const [alt, setAlt] = useState('')
     const [description, setDescription] = useState('')
 
@@ -36,7 +34,7 @@ export const EditImageDialog = ({
 
     return (
         <Dialog open={open} onClose={onClose} aria-labelledby="form-dialog-title">
-            <DialogTitle className={classes.title} id="form-dialog-title">Edit Image Data</DialogTitle>
+            <DialogTitle id="form-dialog-title">Edit Image Data</DialogTitle>
             <DialogContent>
                 <TextField
                     fullWidth

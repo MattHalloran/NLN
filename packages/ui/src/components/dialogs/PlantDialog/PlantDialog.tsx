@@ -14,7 +14,8 @@ import {
     ListItemText,
     Slide,
     Toolbar,
-    Typography
+    Typography,
+    useTheme
 } from '@mui/material';
 import { showPrice, getImageSrc, getPlantTrait } from 'utils';
 import {
@@ -43,7 +44,7 @@ import _ from 'lodash';
 import Carousel from 'react-gallery-carousel';
 import 'react-gallery-carousel/dist/index.css';
 
-const useStyles = makeStyles((theme) => ({
+makeStyles((theme) => ({
     appBar: {
         position: 'relative',
     },
@@ -57,7 +58,7 @@ const useStyles = makeStyles((theme) => ({
         textAlign: 'center',
     },
     container: {
-        background: theme.palette.background.default,
+        background: palette.background.default,
         flex: 'auto',
         paddingBottom: '15vh',
     },
@@ -69,13 +70,13 @@ const useStyles = makeStyles((theme) => ({
         borderRadius: 0,
     },
     icon: {
-        fill: theme.palette.mode === 'light' ? 'black' : 'white',
+        fill: palette.mode === 'light' ? 'black' : 'white',
     },
     optionsContainer: {
-        padding: theme.spacing(2),
+        padding: spacing(2),
     },
     bottom: {
-        background: theme.palette.primary.main,
+        background: palette.primary.main,
         position: 'fixed',
         bottom: '0',
         width: '-webkit-fill-available',
@@ -100,7 +101,7 @@ export const PlantDialog = ({
         skus: plant?.skus ?? [],
     }
 
-    const { palette } = useTheme();
+    const { palette, spacing } = useTheme();
 
     const [quantity, setQuantity] = useState(1);
     const [orderOptions, setOrderOptions] = useState([]);
@@ -164,7 +165,7 @@ export const PlantDialog = ({
                     handleChange={(e) => setCurrSku(e.target.value)}
                     inputAriaLabel='size-selector-label'
                     label="Size"
-                    color={theme.palette.primary.contrastText}
+                    color={palette.primary.contrastText}
                 />
             </Grid>
             <Grid item xs={6} sm={4}>
@@ -244,7 +245,7 @@ export const PlantDialog = ({
                                     {detailsOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                                 </ListItem>
                                 <Collapse in={detailsOpen} timeout='auto' unmountOnExit>
-                                    {getPlantTrait('description', plant) ? <p style={{padding: theme.spacing(2)}}>{getPlantTrait('description', plant)}</p> : null}
+                                    {getPlantTrait('description', plant) ? <p style={{padding: spacing(2)}}>{getPlantTrait('description', plant)}</p> : null}
                                     <List>{displayedTraitData}</List>
                                 </Collapse>
                             </React.Fragment>

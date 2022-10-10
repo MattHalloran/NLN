@@ -1,7 +1,8 @@
 import React from 'react';
-import { Modal, IconButton } from '@mui/material';
+import { Modal, IconButton, useTheme, Box } from '@mui/material';
+import { CloseIcon } from '@shared/icons';
 
-const useStyles = makeStyles((theme) => ({
+makeStyles((theme) => ({
     root: {
 
     },
@@ -11,9 +12,9 @@ const useStyles = makeStyles((theme) => ({
     },
     bodyChildren: {
         borderRadius: '10px',
-        backgroundColor: theme.palette.primary.light,
-        color: theme.palette.primary.contrastText,
-        border: `3px solid ${theme.palette.primary.contrastText}`,
+        backgroundColor: palette.primary.light,
+        color: palette.primary.contrastText,
+        border: `3px solid ${palette.primary.contrastText}`,
     },
     xButton: {
         height: 50,
@@ -27,9 +28,6 @@ const useStyles = makeStyles((theme) => ({
         '&:hover': {
             background: '#A8333D',
         }
-    },
-    x: {
-        fill: theme.palette.primary.contrastText,
     },
     scrollable: {
         overflowY: 'scroll',
@@ -60,7 +58,7 @@ export const StyledModal = ({
                     className={classes.xButton}
                     aria-label="close modal"
                     onClick={onClose}>
-                    <CloseIcon className={classes.x} />
+                    <CloseIcon fill={palette.primary.contrastText} />
                 </IconButton>
             </Box>
         </Modal>

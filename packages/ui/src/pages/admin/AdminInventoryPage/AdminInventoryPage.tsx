@@ -17,13 +17,14 @@ import {
     SearchBar
 } from 'components';
 import {
+    Box,
     FormControlLabel,
     Grid,
     Switch,
     Typography
 } from '@mui/material';
 
-const useStyles = makeStyles((theme) => ({
+makeStyles((theme) => ({
     header: {
         textAlign: 'center',
     },
@@ -37,9 +38,9 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-function AdminInventoryPage() {
+export const AdminInventoryPage = () => {
     const { palette } = useTheme();
-    
+
     const [showActive, setShowActive] = useState(true);
     const [searchString, setSearchString] = useState('');
     // Selected plant data. Used for popup. { plant, selectedSku }
@@ -53,33 +54,35 @@ function AdminInventoryPage() {
     const availabilityUpload = (acceptedFiles) => {
         mutationWrapper({
             mutation: uploadAvailability,
-            data: { variables: { file: acceptedFiles[0] } },
-            onSuccess: () => PubSub.publish(PUBS.AlertDialog, {
+            input: { file: acceptedFiles[0] },
+            onSuccess: () => PubSub.get().publishAlertDialog({
                 message: 'Availability uploaded. This process can take up to 30 seconds. The page will update automatically. Please be patient💚',
-                firstButtonText: 'OK',
+                buttons: [{
+                    text: 'OK',
+                }]
             }),
         })
     }
 
     return (
-        <div id="page">
+        <Box id="page">
             <EditPlantDialog
                 plant={selected?.plant}
                 selectedSku={selected?.selectedSku}
                 trait_options={traitOptions?.traitOptions}
                 open={selected !== null}
                 onClose={() => setSelected(null)} />
-            <AdminBreadcrumbs textColor={theme.palette.secondary.dark} />
-            <div className={classes.header}>
+            <AdminBreadcrumbs textColor={palette.secondary.dark} />
+            <Box className={classes.header}>
                 <Typography variant="h3" component="h1">Manage Inventory</Typography>
-            </div>
+            </Box>
             <h3>This page has the following features:</h3>
             <p>👉 Upload availability from a spreadsheet</p>
             <p>👉 Edit/Delete an existing plant</p>
             <p>👉 Add/Edit/Delete SKUs</p>
-            <div>
+            <Box>
                 {/* <Button onClick={() => editSku({})}>Create new plant</Button> */}
-            </div>
+            </Box>
             <Dropzone
                 dropzoneText={'Drag \'n\' drop availability file here or click'}
                 maxFiles={1}
@@ -116,16 +119,11 @@ function AdminInventoryPage() {
                     <SearchBar fullWidth onChange={(e) => setSearchString(e.target.value)} />
                 </Grid>
             </Grid>
-            <div className={classes.cardFlex}>
+            <Box className={classes.cardFlex}>
                 {plantData?.plants?.map((plant, index) => <PlantCard key={index}
                     plant={plant}
                     onClick={setSelected} />)}
-            </div>
-        </div >
+            </Box>
+        </Box >
     );
 }
-
-AdminInventoryPage.propTypes = {
-}
-
-export { AdminInventoryPage };
