@@ -1,9 +1,7 @@
-import React, { Suspense } from 'react';
-import { lazily } from 'react-lazily'
-import { Switch, Route } from 'react-router-dom';
-import { ROLES } from '@shared/consts';
-import { LINKS } from 'utils';
-import { Sitemap } from 'Sitemap';
+import { Suspense } from 'react';
+import { lazily } from 'react-lazily';
+import { Route, Switch } from '@shared/route';
+import { APP_LINKS, ROLES } from '@shared/consts';
 import {
     ForgotPasswordForm,
     LogInForm,
@@ -12,12 +10,20 @@ import {
     SignUpForm
 } from 'forms';
 import { ScrollToTop } from 'components';
+import { Page } from './pages';
+import { Box, CircularProgress } from '@mui/material';
 
 // Lazy loading in the Routes component is a recommended way to improve performance. See https://reactjs.org/docs/code-splitting.html#route-based-code-splitting
-// const AboutPage = lazy(() => import('./pages'), 'AboutPage');
-// const AdminContactPage = lazy(() => import ('./pages/admin/AdminContactPage/AdminContactPage'), 'AdminContactPage');
 const {
     AboutPage,
+    CartPage,
+    FormPage,
+    GalleryPage,
+    HomePage,
+    NotFoundPage,
+    ShoppingPage
+} = lazily(() => import('./pages/main'));
+const {
     AdminContactPage,
     AdminCustomerPage,
     AdminGalleryPage,
@@ -25,16 +31,21 @@ const {
     AdminMainPage,
     AdminInventoryPage,
     AdminOrderPage,
-    CartPage,
-    FormPage,
-    GalleryPage,
-    HomePage,
-    NotFoundPage,
-    Page,
+} = lazily(() => import('./pages/admin'));
+const {
     PrivacyPolicyPage,
-    ShoppingPage,
     TermsPage,
-} = lazily(() => import('./pages'));
+} = lazily(() => import('./pages/legal'));
+
+const Fallback = <Box sx={{
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    zIndex: 100000,
+}}>
+    <CircularProgress size={100} />
+</Box>
 
 export const Routes = ({
     session,
@@ -61,82 +72,71 @@ export const Routes = ({
             <Switch>
                 {/* START PUBLIC PAGES */}
                 <Route
-                    path="/sitemap"
-                    component={Sitemap}
-                />
-                <Route
-                    exact
-                    path={LINKS.Home}
-                    sitemapIndex={true}
+                    path={APP_LINKS.Home}
+                    sitemapIndex
                     priority={1.0}
-                    changefreq="monthly"
-                    render={() => (
+                    changeFreq="monthly">
+                    <Suspense fallback={Fallback}>
                         <Page title={title('Home')} {...common}>
                             <HomePage />
                         </Page>
-                    )}
-                />
+                    </Suspense>
+                </Route>
                 <Route
-                    exact
-                    path={LINKS.About}
-                    sitemapIndex={true}
-                    priority={0.7}
-                    render={() => (
+                    path={APP_LINKS.About}
+                    sitemapIndex
+                    priority={0.7}>
+                    <Suspense fallback={Fallback}>
                         <Page title={title('About')} {...common}>
                             <AboutPage {...common} />
                         </Page>
-                    )}
-                />
+                    </Suspense>
+                </Route>
                 <Route
-                    exact
-                    path={LINKS.PrivacyPolicy}
-                    sitemapIndex={true}
-                    priority={0.1}
-                    render={() => (
+                    path={APP_LINKS.PrivacyPolicy}
+                    sitemapIndex
+                    priority={0.1}>
+                    <Suspense fallback={Fallback}>
                         <Page title={title('Privacy Policy')} {...common}>
                             <PrivacyPolicyPage business={business} />
                         </Page>
-                    )}
-                />
+                    </Suspense>
+                </Route>
                 <Route
-                    exact
-                    path={LINKS.Terms}
-                    sitemapIndex={true}
-                    priority={0.1}
-                    render={() => (
+                    path={APP_LINKS.Terms}
+                    sitemapIndex
+                    priority={0.1}>
+                    <Suspense fallback={Fallback}>
                         <Page title={title('Terms & Conditions')} {...common}>
                             <TermsPage business={business} />
                         </Page>
-                    )}
-                />
+                    </Suspense>
+                </Route>
                 <Route
-                    exact
-                    path={`${LINKS.Gallery}/:img?`}
-                    sitemapIndex={true}
-                    priority={0.3}
-                    render={() => (
+                    path={`${APP_LINKS.Gallery}/:params*`}
+                    sitemapIndex
+                    priority={0.3}>
+                    <Suspense fallback={Fallback}>
                         <Page title={title('Gallery')} {...common}>
                             <GalleryPage />
                         </Page>
-                    )}
-                />
+                    </Suspense>
+                </Route>
                 <Route
-                    exact
-                    path={LINKS.Register}
-                    sitemapIndex={true}
-                    priority={0.9}
-                    render={() => (
+                    path={APP_LINKS.Register}
+                    sitemapIndex
+                    priority={0.9}>
+                    <Suspense fallback={Fallback}>
                         <Page title={title('Sign Up')} {...common}>
                             <FormPage title="Sign Up" maxWidth="700px">
                                 <SignUpForm {...common} />
                             </FormPage>
                         </Page>
-                    )}
-                />
+                    </Suspense>
+                </Route>
                 <Route
-                    exact
-                    path={`${LINKS.LogIn}/:code?`}
-                    sitemapIndex={true}
+                    path={`${APP_LINKS.LogIn}/:params*`}
+                    sitemapIndex
                     priority={0.8}
                     render={() => (
                         <Page title={title('Log In')} {...common}>
@@ -147,9 +147,8 @@ export const Routes = ({
                     )}
                 />
                 <Route
-                    exact
-                    path={`${LINKS.ForgotPassword}/:code?`}
-                    sitemapIndex={true}
+                    path={`${APP_LINKS.ForgotPassword}/:params*`}
+                    sitemapIndex
                     priority={0.1}
                     render={() => (
                         <Page title={title('Forgot Password')} {...common}>
@@ -160,9 +159,8 @@ export const Routes = ({
                     )}
                 />
                 <Route
-                    exact
-                    path={`${LINKS.ResetPassword}/:id?/:code?`}
-                    sitemapIndex={true}
+                    path={`${APP_LINKS.ResetPassword}/:params*`}
+                    sitemapIndex
                     priority={0.1}
                     render={() => (
                         <Page title={title('Reset Password')} {...common}>
@@ -175,9 +173,8 @@ export const Routes = ({
                 {/* END PUBLIC PAGES */}
                 {/* START CUSTOMER PAGES */}
                 <Route
-                    exact
-                    path={LINKS.Profile}
-                    sitemapIndex={true}
+                    path={APP_LINKS.Profile}
+                    sitemapIndex
                     priority={0.4}
                     render={() => (
                         <Page title={title('Profile')} {...common} restrictedToRoles={Object.values(ROLES)}>
@@ -188,21 +185,19 @@ export const Routes = ({
                     )}
                 />
                 <Route
-                    exact
-                    path={`${LINKS.Shopping}/:sku?`}
-                    sitemapIndex={true}
+                    path={`${APP_LINKS.Shopping}/:params*`}
+                    sitemapIndex
                     priority={0.9}
                     render={() => (
-                        <Page title={title('Shop')} {...common} restrictedToRoles={Object.values(ROLES)} redirect={LINKS.LogIn}>
+                        <Page title={title('Shop')} {...common} restrictedToRoles={Object.values(ROLES)} redirect={APP_LINKS.LogIn}>
                             <ShoppingPage {...common} session={session} cart={cart} />
                         </Page>
                     )}
                 />
                 <Route
-                    exact
-                    path={LINKS.Cart}
+                    path={APP_LINKS.Cart}
                     render={() => (
-                        <Page title={title('Cart')} {...common} restrictedToRoles={Object.values(ROLES)} redirect={LINKS.LogIn}>
+                        <Page title={title('Cart')} {...common} restrictedToRoles={Object.values(ROLES)} redirect={APP_LINKS.LogIn}>
                             <CartPage {...common} cart={cart} />
                         </Page>
                     )}
@@ -210,8 +205,7 @@ export const Routes = ({
                 {/* END CUSTOMER PAGES */}
                 {/* START ADMIN PAGES */}
                 <Route
-                    exact
-                    path={LINKS.Admin}
+                    path={APP_LINKS.Admin}
                     render={() => (
                         <Page title={title('Manage Site')} {...common} restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
                             <AdminMainPage />
@@ -219,35 +213,34 @@ export const Routes = ({
                     )}
                 />
                 <Route
-                    exact
-                    path={LINKS.AdminContactInfo}
+                    path={APP_LINKS.AdminContactInfo}
                     render={() => (
                         <Page title={"Edit Contact Info"} {...common} restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
                             <AdminContactPage business={business} />
                         </Page>
                     )}
                 />
-                <Route exact path={LINKS.AdminCustomers} render={() => (
+                <Route path={APP_LINKS.AdminCustomers} render={() => (
                     <Page title={"Customer Page"} {...common} restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
                         <AdminCustomerPage />
                     </Page>
                 )} />
-                <Route exact path={LINKS.AdminGallery} render={() => (
+                <Route path={APP_LINKS.AdminGallery} render={() => (
                     <Page title={"Edit Gallery"} {...common} restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
                         <AdminGalleryPage />
                     </Page>
                 )} />
-                <Route exact path={LINKS.AdminHero} render={() => (
+                <Route path={APP_LINKS.AdminHero} render={() => (
                     <Page title={"Edit Hero"} {...common} restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
                         <AdminHeroPage />
                     </Page>
                 )} />
-                <Route exact path={LINKS.AdminInventory} render={() => (
+                <Route path={APP_LINKS.AdminInventory} render={() => (
                     <Page title={"Edit Inventory Info"} {...common} restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
                         <AdminInventoryPage />
                     </Page>
                 )} />
-                <Route exact path={LINKS.AdminOrders} render={() => (
+                <Route path={APP_LINKS.AdminOrders} render={() => (
                     <Page title={"Order Page"} {...common} restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
                         <AdminOrderPage userRoles={userRoles} />
                     </Page>

@@ -1,4 +1,12 @@
-import { createTheme } from '@mui/material/styles';
+import { createTheme } from '@mui/material';
+
+// Define custom theme properties
+declare module '@mui/material/styles/createPalette' {
+    interface TypeBackground {
+        textPrimary: string;
+        textSecondary: string;
+    }
+}
 
 const commonTheme = createTheme({
     components: {

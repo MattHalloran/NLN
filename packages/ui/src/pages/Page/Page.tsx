@@ -1,12 +1,11 @@
 import { useEffect } from 'react';
-import { LINKS } from 'utils';
 import { useLocation } from 'react-router-dom';
 import { useHistory } from 'react-router';
 
 export const Page = ({
     title,
     sessionChecked,
-    redirect = LINKS.Home,
+    redirect = APP_LINKS.Home,
     userRoles,
     restrictedToRoles,
     children

@@ -1,20 +1,15 @@
 import React from 'react';
-import { 
+import {
     FeaturedPlants,
-    Hero 
+    Hero
 } from 'components';
+import { Box } from '@mui/material';
 
-function HomePage() {
+export const HomePage = () => {
     return (
-        <div>
+        <Box>
             <Hero text="Beautiful, healthy plants" subtext="At competitive prices" />
             <FeaturedPlants />
-        </div >
+        </Box>
     );
 }
-
-HomePage.propTypes = {
-    
-}
-
-export { HomePage };

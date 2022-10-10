@@ -1,18 +1,18 @@
 import React from 'react';
 import { requestPasswordChangeMutation } from 'graphql/mutation';
 import { useMutation } from '@apollo/client';
-import { requestPasswordChangeSchema } from '@shared/consts';
+import { APP_LINKS } from '@shared/consts';
 import { useFormik } from 'formik';
 import {
     Button,
     Grid,
     Link,
     TextField,
-    Typography
+    Typography,
+    useTheme
 } from '@mui/material';
-import { LINKS } from 'utils';
-import { mutationWrapper } from 'graphql/utils/wrappers';
 import { useHistory } from 'react-router-dom';
+import { requestPasswordChangeSchema } from '@shared/validation';
 
 makeStyles((theme) => ({
     form: {
@@ -49,9 +49,9 @@ export const ForgotPasswordForm = ({
         onSubmit: (values) => {
             mutationWrapper({
                 mutation: requestPasswordChange,
-                data: { variables: values },
+                inputs: { values },
                 successCondition: (response) => response.data.requestPasswordChange,
-                onSuccess: () => onRedirect(LINKS.Home),
+                onSuccess: () => onRedirect(APP_LINKS.Home),
                 successMessage: () => 'Request sent. Please check email.',
             })
         },
@@ -86,14 +86,14 @@ export const ForgotPasswordForm = ({
             </Button>
             <Grid container spacing={2}>
                 <Grid item xs={6}>
-                    <Link onClick={() => history.push(LINKS.LogIn)}>
+                    <Link onClick={() => history.push(APP_LINKS.LogIn)}>
                         <Typography className={classes.clickSize}>
                             Remember? Back to Log In
                         </Typography>
                     </Link>
                 </Grid>
                 <Grid item xs={6}>
-                    <Link onClick={() => history.push(LINKS.Register)}>
+                    <Link onClick={() => history.push(APP_LINKS.Register)}>
                         <Typography className={`${classes.clickSize} ${classes.linkRight}`}>
                             Don't have an account? Sign up
                         </Typography>

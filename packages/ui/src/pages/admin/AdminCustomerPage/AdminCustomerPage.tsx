@@ -5,9 +5,10 @@ import { PubSub } from 'utils';
 import {
     AdminBreadcrumbs,
     CustomerCard,
+    PageContainer,
     SnackSeverity
 } from 'components';
-import { Button, Typography, useTheme } from '@mui/material';
+import { Box, Button, Typography, useTheme } from '@mui/material';
 import { CustomerDialog } from 'components/dialogs/CustomerDialog/CustomerDialog';
 import { NewCustomerDialog } from 'components/dialogs/NewCustomerDialog/NewCustomerDialog';
 
@@ -37,7 +38,7 @@ export const AdminCustomerPage = () => {
     }, [data])
 
     return (
-        <Box id="page">
+        <PageContainer>
             <CustomerDialog
                 customer={selectedCustomer}
                 open={selectedCustomer !== null}
@@ -58,6 +59,6 @@ export const AdminCustomerPage = () => {
                     customer={c}
                 />)}
             </Box>
-        </Box >
+        </PageContainer>
     );
 }

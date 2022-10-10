@@ -5,10 +5,12 @@ import { useFormik } from 'formik';
 import {
     Button,
     Grid,
-    TextField
+    TextField,
+    useTheme
 } from '@mui/material';
-import { LINKS } from 'utils';
 import { useParams } from 'react-router-dom';
+import { APP_LINKS } from '@shared/consts';
+import { resetPasswordSchema } from '@shared/validation';
 
 makeStyles((theme) => ({
     form: {
@@ -38,8 +40,8 @@ export const ResetPasswordForm = ({
         onSubmit: (values) => {
             mutationWrapper({
                 mutation: resetPassword,
-                data: { variables: { id: urlParams.id, code: urlParams.code, newPassword: values.newPassword } },
-                onSuccess: (response) => { onSessionUpdate(response.data.resetPassword); onRedirect(LINKS.Shopping) },
+                input: { id: urlParams.id, code: urlParams.code, newPassword: values.newPassword },
+                onSuccess: (response) => { onSessionUpdate(response.data.resetPassword); onRedirect(APP_LINKS.Shopping) },
                 successMessage: () => 'Password reset.',
             })
         },

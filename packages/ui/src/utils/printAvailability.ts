@@ -16,7 +16,7 @@ const centeredText = (text, doc, y) => {
     doc.text(textOffset, y, text);
 }
 
-const skusToTable = (skus, priceVisible) => {
+const skusToTable = (skus, priceVisible: boolean) => {
     return skus.map(sku => {
         const displayName = sku.plant?.latinName ?? getPlantTrait('commonName', sku.plant) ?? sku.sku;
         const size = isNaN(sku.size) ? sku.size : `#${sku.size}`;
@@ -31,7 +31,7 @@ export const printAvailability = (session, title) => {
     const client = initializeApollo();
     client.query({
         query: skusQuery,
-        variables: { sortBy: SKU_SORT_OPTIONS.AZ }
+        variables: { input: { sortBy: SKU_SORT_OPTIONS.AZ } }
     }).then(response => {
         const data = response.data.skus;
         const priceVisible = session !== null;

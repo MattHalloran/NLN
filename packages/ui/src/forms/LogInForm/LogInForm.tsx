@@ -2,16 +2,17 @@ import React from 'react';
 import { useHistory, useParams } from 'react-router-dom';
 import { loginMutation } from 'graphql/mutation';
 import { useMutation } from '@apollo/client';
-import { CODE } from '@shared/consts';
+import { APP_LINKS, CODE } from '@shared/consts';
 import { useFormik } from 'formik';
 import {
     Button,
     Grid,
     Link,
     TextField,
-    Typography
+    Typography,
+    useTheme
 } from '@mui/material';
-import { LINKS, PubSub } from 'utils';
+import { PubSub } from 'utils';
 
 makeStyles((theme) => ({
     form: {
@@ -52,14 +53,14 @@ export const LogInForm = ({
                 mutation: login,
                 input: { ...values, verificationCode: urlParams.code },
                 successCondition: (response) => response.data.login !== null,
-                onSuccess: (response) => { onSessionUpdate(response.data.login); onRedirect(LINKS.Shopping) },
+                onSuccess: (response) => { onSessionUpdate(response.data.login); onRedirect(APP_LINKS.Shopping) },
                 onError: (response) => {
                     if (Array.isArray(response.graphQLErrors) && response.graphQLErrors.some(e => e.extensions.code === CODE.MustResetPassword.code)) {
                         PubSub.get().publishAlertDialog({
                             message: 'Before signing in, please follow the link sent to your email to change your password.',
                             buttons: [{
                                 text: 'OK',
-                                onClock: () => history.push(LINKS.Home),
+                                onClock: () => history.push(APP_LINKS.Home),
                             }]
                         });
                     }
@@ -110,14 +111,14 @@ export const LogInForm = ({
             </Button>
             <Grid container spacing={2}>
                 <Grid item xs={6}>
-                    <Link onClick={() => history.push(LINKS.ForgotPassword)}>
+                    <Link onClick={() => history.push(APP_LINKS.ForgotPassword)}>
                         <Typography className={classes.clickSize}>
                             Forgot Password?
                         </Typography>
                     </Link>
                 </Grid>
                 <Grid item xs={6}>
-                    <Link onClick={() => history.push(LINKS.Register)}>
+                    <Link onClick={() => history.push(APP_LINKS.Register)}>
                         <Typography className={`${classes.clickSize} ${classes.linkRight}`}>
                             Don't have an account? Sign up
                         </Typography>

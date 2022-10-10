@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Logo from 'assets/img/nln-logo-colorized.png';
-import { hexToRGB, LINKS } from 'utils';
-import { AppBar, Toolbar, Typography, Slide, useScrollTrigger } from '@mui/material';
+import { hexToRGB } from 'utils';
+import { AppBar, Toolbar, Typography, Slide, useScrollTrigger, useTheme, Box } from '@mui/material';
 import { Hamburger } from './Hamburger';
 import { NavList } from './NavList';
 import { logoutMutation } from 'graphql/mutation';
@@ -10,9 +10,6 @@ import { useMutation } from '@apollo/client';
 const SHOW_HAMBURGER_AT = 1000;
 
 makeStyles((theme) => ({
-    root: {
-        background: palette.primary.main,
-    },
     toRight: {
         marginLeft: 'auto',
     },
@@ -97,16 +94,16 @@ export const Navbar = ({
     const logoutCustomer = () => {
         logout().then(() => {
             onSessionUpdate();
-            onRedirect(LINKS.Home);
-        }).catch(() => {})
+            onRedirect(APP_LINKS.Home);
+        }).catch(() => { })
     }
 
-    let child_props = { 
-        session: session, 
+    let child_props = {
+        session: session,
         business: business,
         onSessionUpdate: onSessionUpdate,
         logout: logoutCustomer,
-        roles: roles, 
+        roles: roles,
         cart: cart,
         onRedirect: onRedirect
     }
@@ -123,8 +120,8 @@ export const Navbar = ({
     return (
         <HideOnScroll>
             <AppBar>
-                <Toolbar className={classes.root}>
-                    <Box className={classes.navLogoContainer} onClick={() => onRedirect(LINKS.Home)}>
+                <Toolbar sx={{ background: palette.primary.main, }}>
+                    <Box className={classes.navLogoContainer} onClick={() => onRedirect(APP_LINKS.Home)}>
                         <Box className={classes.navLogoBox}>
                             <img src={Logo} alt={`${business?.BUSINESS_NAME?.Short} Logo`} className={classes.navLogo} />
                         </Box>

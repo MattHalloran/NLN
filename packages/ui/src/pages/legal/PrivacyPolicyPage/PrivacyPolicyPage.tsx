@@ -2,8 +2,9 @@ import React, { useState, useEffect } from "react";
 import { useQuery } from '@apollo/client';
 import { readAssetsQuery } from 'graphql/query/readAssets';
 import ReactMarkdown from 'react-markdown';
-import { PolicyBreadcrumbs } from 'components';
+import { PageContainer, PolicyBreadcrumbs } from 'components';
 import { convertToDot, valueFromDot } from "utils";
+import { useTheme } from "@mui/material";
 
 makeStyles((theme) => ({
     root: {
@@ -19,7 +20,7 @@ export const PrivacyPolicyPage = ({
     const { palette } = useTheme();
 
     const [privacy, setPrivacy] = useState(null);
-    const { data: privacyData } = useQuery(readAssetsQuery, { variables: { files: ['privacy.md'] } });
+    const { data: privacyData } = useQuery(readAssetsQuery, { variables: { input: { files: ['privacy.md'] } } });
 
     useEffect(() => {
         if (privacyData === undefined) return;
@@ -31,9 +32,9 @@ export const PrivacyPolicyPage = ({
     }, [privacyData, business])
 
     return (
-        <Box id="page" className={classes.root}>
+        <PageContainer>
             <PolicyBreadcrumbs textColor={palette.secondary.dark} />
             <ReactMarkdown>{ privacy }</ReactMarkdown>
-        </Box>
+        </PageContainer>
     );
 }

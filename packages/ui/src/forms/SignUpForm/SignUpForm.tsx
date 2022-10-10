@@ -1,7 +1,7 @@
 import React from 'react';
 import { signUpMutation } from 'graphql/mutation';
 import { useMutation } from '@apollo/client';
-import { CODE, DEFAULT_PRONOUNS } from '@shared/consts';
+import { APP_LINKS, CODE, DEFAULT_PRONOUNS } from '@shared/consts';
 import { useFormik } from 'formik';
 import {
     Button,
@@ -17,8 +17,8 @@ import {
     Typography,
     useTheme
 } from '@mui/material';
-import { Autocomplete } from '@material-ui/lab';
-import { LINKS, PubSub } from 'utils';
+import { Autocomplete } from '@mui/lab';
+import { PubSub } from 'utils';
 import { useHistory } from 'react-router-dom';
 import { signUpSchema } from '@shared/validation';
 
@@ -71,12 +71,12 @@ export const SignUpForm = ({
         onSubmit: (values) => {
             mutationWrapper({
                 mutation: signUp,
-                data: { variables: { 
+                input: { 
                     ...values, 
                     accountApproved: Boolean(values.accountApproved),
                     marketingEmails: Boolean(values.marketingEmails),
                     theme: palette.mode ?? 'light',
-                } },
+                },
                 onSuccess: (response) => {
                     onSessionUpdate(response.data.signUp);
                     if (response.data.signUp?.accountApproved) {
@@ -84,7 +84,7 @@ export const SignUpForm = ({
                             message: `Welcome to ${business?.BUSINESS_NAME?.Short}. You may now begin shopping. Please verify your email within 48 hours.`,
                             buttons: [{
                                 text: 'OK',
-                                onClick: () => history.push(LINKS.Shopping),
+                                onClick: () => history.push(APP_LINKS.Shopping),
                             }]
                         });
                     } else {
@@ -92,7 +92,7 @@ export const SignUpForm = ({
                             message: `Welcome to ${business?.BUSINESS_NAME?.Short}. Please verify your email within 48 hours. Since you have never ordered from us before, we must approve your account before you can order. If this was a mistake, you can edit this in the /profile page.`,
                             buttons: [{
                                 text: 'OK',
-                                onClick: () => history.push(LINKS.Profile),
+                                onClick: () => history.push(APP_LINKS.Profile),
                             }]
                         });
                     }
@@ -103,7 +103,7 @@ export const SignUpForm = ({
                             message: `${response.message}. Press OK if you would like to be redirected to the forgot password form.`,
                             buttons: [{
                                 text: 'OK',
-                                onClick: () => history.push(LINKS.ForgotPassword),
+                                onClick: () => history.push(APP_LINKS.ForgotPassword),
                             }]
                         });
                     }
@@ -272,14 +272,14 @@ export const SignUpForm = ({
             </Button>
             <Grid container spacing={2}>
                 <Grid item xs={6}>
-                    <Link onClick={() => history.push(LINKS.LogIn)}>
+                    <Link onClick={() => history.push(APP_LINKS.LogIn)}>
                         <Typography className={classes.clickSize}>
                             Already have an account? Log in
                         </Typography>
                     </Link>
                 </Grid>
                 <Grid item xs={6}>
-                    <Link onClick={() => history.push(LINKS.ForgotPassword)}>
+                    <Link onClick={() => history.push(APP_LINKS.ForgotPassword)}>
                         <Typography className={`${classes.clickSize} ${classes.linkRight}`}>
                             Forgot Password?
                         </Typography>

@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { 
+import {
     ContactInfo,
 } from 'components';
-import { getUserActions, LINKS, PubSub } from 'utils';
+import { getUserActions, PubSub } from 'utils';
 import { IconButton, SwipeableDrawer, List, ListItem, ListItemIcon, Badge, Collapse, Divider, ListItemText, useTheme } from '@mui/material';
 import { CopyrightBreadcrumbs } from 'components';
 import _ from 'lodash';
@@ -24,22 +24,6 @@ makeStyles((theme) => ({
         justifyContent: 'end',
         direction: 'rtl',
     },
-    menuIcon: {
-        color: palette.primary.contrastText,
-    },
-    facebook: {
-        fill: '#ffffff', //'#43609C', // UCLA blue
-    },
-    instagram: {
-        fill: '#ffffff', // '#F77737',
-    },
-    copyright: {
-        color: palette.primary.contrastText,
-        padding: 5,
-        display: 'block',
-        marginLeft: 'auto',
-        marginRight: 'auto',
-    },
 }));
 
 export const Hamburger = ({
@@ -58,7 +42,7 @@ export const Hamburger = ({
 
     useEffect(() => {
         let openSub = PubSub.get().subscribeBurgerMenu((data) => {
-            setOpen(open => b === 'toggle' ? !open : b);
+            setOpen(open => data === 'toggle' ? !open : data);
         });
         return (() => {
             PubSub.get().unsubscribe(openSub);
@@ -82,12 +66,12 @@ export const Hamburger = ({
 
     const optionsToList = (options) => {
         return options.map(([label, value, link, onClick, Icon, badgeNum], index) => (
-            <ListItem 
+            <ListItem
                 key={index}
                 className={classes.menuItem}
                 button
-                onClick={() => { 
-                    onRedirect(link); 
+                onClick={() => {
+                    onRedirect(link);
                     if (onClick) onClick();
                     closeMenu();
                 }}>
@@ -118,14 +102,14 @@ export const Hamburger = ({
             <IconButton edge="start" color="inherit" aria-label="menu" onClick={toggleOpen}>
                 <MenuIcon />
             </IconButton>
-            <SwipeableDrawer classes={{ paper: classes.drawerPaper }} anchor="right" open={open} onOpen={()=>{}} onClose={closeMenu}>
+            <SwipeableDrawer classes={{ paper: classes.drawerPaper }} anchor="right" open={open} onOpen={() => { }} onClose={closeMenu}>
                 <IconButton className={classes.close} onClick={closeMenu}>
                     <CloseIcon fontSize="large" />
                 </IconButton>
                 <List>
                     {/* Collapsible contact information */}
                     <ListItem className={classes.menuItem} button onClick={handleContactClick}>
-                        <ListItemIcon><ContactSupportIcon className={classes.menuIcon} /></ListItemIcon>
+                        <ListItemIcon><ContactSupportIcon fill={palette.primary.contrastText} /></ListItemIcon>
                         <ListItemText primary="Contact Us" />
                         {contactOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                     </ListItem>
@@ -141,13 +125,13 @@ export const Hamburger = ({
                     <Collapse in={socialOpen} timeout="auto" unmountOnExit>
                         <ListItem className={classes.menuItem} button onClick={() => newTab(business?.SOCIAL?.Facebook)}>
                             <ListItemIcon>
-                                <FacebookIcon className={classes.facebook} />
+                                <FacebookIcon fill={'#ffffff'} />
                             </ListItemIcon>
                             <ListItemText primary="Facebook" />
                         </ListItem>
                         <ListItem className={classes.menuItem} button onClick={() => newTab(business?.SOCIAL?.Instagram)}>
                             <ListItemIcon>
-                                <InstagramIcon className={classes.instagram} />
+                                <InstagramIcon fill={'#ffffff'} />
                             </ListItemIcon>
                             <ListItemText primary="Instagram" />
                         </ListItem>
@@ -156,7 +140,16 @@ export const Hamburger = ({
                     <Divider />
                     {optionsToList(customer_actions)}
                 </List>
-                <CopyrightBreadcrumbs className={classes.copyright} business={business} textColor={palette.primary.contrastText} />
+                <CopyrightBreadcrumbs
+                    business={business}
+                    sx={{
+                        color: palette.primary.contrastText,
+                        padding: 5,
+                        display: 'block',
+                        marginLeft: 'auto',
+                        marginRight: 'auto',
+                    }}
+                />
             </SwipeableDrawer>
         </React.Fragment>
     );

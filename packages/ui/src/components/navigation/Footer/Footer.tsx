@@ -2,19 +2,14 @@ import React from 'react';
 import ProvenWinners from 'assets/img/proven-winners.png';
 import AmericanHort from 'assets/img/american-hort.png';
 import NJNLA from 'assets/img/njnla_logo.jpg';
-import { LINKS, printAvailability } from 'utils';
-import { List, ListItem, ListItemIcon, ListItemText, Grid, ButtonBase, Tooltip } from '@mui/material';
+import { printAvailability } from 'utils';
+import { List, ListItem, ListItemIcon, ListItemText, Grid, ButtonBase, Tooltip, Box, useTheme } from '@mui/material';
 import { CopyrightBreadcrumbs } from 'components';
 import { useHistory } from 'react-router';
+import { EmailIcon, PhoneIcon, SvgComponent } from '@shared/icons';
+import { APP_LINKS } from '@shared/consts';
 
 makeStyles((theme) => ({
-    root: {
-        overflow: 'hidden',
-        backgroundColor: palette.primary.dark,
-        color: palette.primary.contrastText,
-        position: 'relative',
-        paddingBottom: '7vh',
-    },
     upper: {
         textTransform: 'uppercase',
     },
@@ -42,28 +37,34 @@ export const Footer = ({
     const history = useHistory();
     const { palette } = useTheme();
 
-    const contactLinks = [
+    const contactAPP_LINKS: [string, string, string | null, string | null, SvgComponent][] = [
         ['address', 'View in Google Maps', business?.ADDRESS?.Link, business?.ADDRESS?.Label, BusinessIcon],
         ['contact-phone', 'Call Us', business?.PHONE?.Link, business?.PHONE?.Label, PhoneIcon],
         ['contact-fax', 'Fax Us', business?.FAX?.Link, business?.FAX?.Label, PrintIcon],
         ['contact-email', 'Email Us', business?.EMAIL?.Link, business?.EMAIL?.Label, EmailIcon],
     ]
 
-    const bottomImages = [
+    const bottomImages: [string, string, any][] = [
         ["https://www.provenwinners.com/", "We Sell Proven Winners - The #1 Plant Brand", ProvenWinners],
         ["https://www.americanhort.org/", "Proud member of the AmericanHort", AmericanHort],
         ["https://www.njnla.org/", "Proud member of the New Jersey Nursery and Landscape Association", NJNLA],
     ]
 
     return (
-        <Box className={classes.root}>
+        <Box sx={{
+            overflow: 'hidden',
+            backgroundColor: palette.primary.dark,
+            color: palette.primary.contrastText,
+            position: 'relative',
+            paddingBottom: '7vh',
+        }}>
             <Grid container justifyContent='center' spacing={1}>
                 <Grid item xs={12} sm={6}>
                     <List component="nav">
                         <ListItem variant="h5" component="h3" >
                             <ListItemText className={classes.upper} primary="Resources" />
                         </ListItem>
-                        <ListItem button component="a" onClick={() => history.push(LINKS.About)} >
+                        <ListItem button component="a" onClick={() => history.push(APP_LINKS.About)} >
                             <ListItemText primary="About Us" />
                         </ListItem>
                         <ListItem
@@ -79,7 +80,7 @@ export const Footer = ({
                         <ListItem button component="a" onClick={() => printAvailability(session, business?.BUSINESS_NAME?.Long)} >
                             <ListItemText primary="Print Availability" />
                         </ListItem>
-                        <ListItem button component="a" onClick={() => history.push(LINKS.Gallery)} >
+                        <ListItem button component="a" onClick={() => history.push(APP_LINKS.Gallery)} >
                             <ListItemText primary="Gallery" />
                         </ListItem>
                     </List>
@@ -89,7 +90,7 @@ export const Footer = ({
                         <ListItem variant="h5" component="h3" >
                             <ListItemText className={classes.upper} primary="Contact" />
                         </ListItem>
-                        {contactLinks.map(([label, tooltip, src, text, Icon], key) => (
+                        {contactAPP_LINKS.map(([label, tooltip, src, text, Icon], key) => (
                             <Tooltip key={key} title={tooltip} placement="left">
                                 <ListItem button component="a" aria-label={label} href={src}>
                                     <ListItemIcon>

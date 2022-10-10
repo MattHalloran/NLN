@@ -1,10 +1,9 @@
-import React from 'react';
-import { LINKS } from 'utils';
+import { APP_LINKS } from '@shared/consts';
 import { BreadcrumbsBase } from '../BreadcrumbsBase/BreadcrumbsBase';
 
 const paths = [
-    ['Privacy', LINKS.PrivacyPolicy],
-    ['Terms', LINKS.Terms]
+    ['Privacy', APP_LINKS.PrivacyPolicy],
+    ['Terms', APP_LINKS.Terms]
 ]
 
 export const PolicyBreadcrumbs = ({...props}) => BreadcrumbsBase({

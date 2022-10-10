@@ -3,18 +3,12 @@ import {
     ContactInfo,
     PopupMenu
 } from 'components';
-import { getUserActions, LINKS, updateArray } from 'utils';
-import { Container, Button, IconButton, Badge, List, ListItem, ListItemIcon, ListItemText } from '@mui/material';
+import { getUserActions, updateArray } from 'utils';
+import { Container, Button, IconButton, Badge, List, ListItem, ListItemIcon, ListItemText, useTheme, useTheme } from '@mui/material';
 import _ from 'lodash';
+import { APP_LINKS } from '@shared/consts';
 
 makeStyles((theme) => ({
-    root: {
-        display: 'flex',
-        marginTop: '0px',
-        marginBottom: '0px',
-        right: '0px',
-        padding: '0px',
-    },
     navItem: {
         background: 'transparent',
         color: palette.primary.contrastText,
@@ -41,31 +35,31 @@ export const NavList = ({
     onRedirect
 }) => {
     const { palette } = useTheme();
-    
+
     let nav_options = getUserActions(session, roles, cart);
 
     let cart_button;
-    // If someone is not logged in, display sign up/log in links
+    // If someone is not logged in, display sign up/log in APP_LINKS
     if (!_.isObject(session) || Object.keys(session).length === 0) {
-        nav_options.push(['Sign Up', 'signup', LINKS.Register]);
+        nav_options.push(['Sign Up', 'signup', APP_LINKS.Register]);
     } else {
         // Cart option is rendered differently, so we must take it out of the array
         let cart_index = nav_options.length - 1;
         let cart_option = nav_options[cart_index];
         // Replace cart option with log out option
-        nav_options = updateArray(nav_options, cart_index, ['Log Out', 'logout', LINKS.Home, logout]);
+        nav_options = updateArray(nav_options, cart_index, ['Log Out', 'logout', APP_LINKS.Home, logout]);
         cart_button = (
-            <IconButton edge="start" color="inherit" aria-label={cart_option[1]} onClick={() => onRedirect(LINKS.Cart)}>
+            <IconButton edge="start" color="inherit" aria-label={cart_option[1]} onClick={() => onRedirect(APP_LINKS.Cart)}>
                 <Badge badgeContent={cart_option[5]} color="error">
-                    <ShoppingCartIcon/>
+                    <ShoppingCartIcon />
                 </Badge>
             </IconButton>
         );
     }
 
     let about_options = [
-        ['About Us', 'about', LINKS.About, null, InfoIcon],
-        ['Gallery', 'gallery', LINKS.Gallery, null, PhotoLibraryIcon]
+        ['About Us', 'about', APP_LINKS.About, null, InfoIcon],
+        ['Gallery', 'gallery', APP_LINKS.Gallery, null, PhotoLibraryIcon]
     ]
 
     const optionsToList = (options) => {
@@ -73,7 +67,7 @@ export const NavList = ({
             <ListItem className={classes.menuItem} button key={index} onClick={() => { onRedirect(link); if (onClick) onClick() }}>
                 {Icon ?
                     (<ListItemIcon>
-                            <Icon className={classes.menuIcon} />
+                        <Icon className={classes.menuIcon} />
                     </ListItemIcon>) : null}
                 <ListItemText primary={label} />
             </ListItem>
@@ -87,7 +81,7 @@ export const NavList = ({
                 variant="text"
                 size="large"
                 className={classes.navItem}
-                onClick={() => { onRedirect(link); if(onClick) onClick()}}
+                onClick={() => { onRedirect(link); if (onClick) onClick() }}
             >
                 {label}
             </Button>
@@ -95,8 +89,14 @@ export const NavList = ({
     }
 
     return (
-        <Container className={classes.root}>
-            <PopupMenu 
+        <Container sx={{
+            display: 'flex',
+            marginTop: '0px',
+            marginBottom: '0px',
+            right: '0px',
+            padding: '0px',
+        }}>
+            <PopupMenu
                 text="Contact"
                 variant="text"
                 size="large"
