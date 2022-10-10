@@ -1,5 +1,6 @@
 import React from 'react';
-import { Box, Container, Typography } from '@mui/material';
+import { Box, Container, Typography, useTheme } from '@mui/material';
+import { PageContainer, PageTitle } from 'components';
 
 export const FormPage = ({
     title,
@@ -25,9 +26,7 @@ export const FormPage = ({
                 marginBottom: '20px'
                 maxWidth,
             }}>
-                <Container className={classes.header}>
-                    <Typography variant="h3" >{title}</Typography>
-                </Container>
+                <PageTitle>{title}</PageTitle>
                 <Container>
                     {children}
                 </Container>

@@ -1,14 +1,13 @@
-import React from 'react';
-import { LINKS } from 'utils';
+import { APP_LINKS } from '@shared/consts';
 import { BreadcrumbsBase } from '../BreadcrumbsBase/BreadcrumbsBase';
 
 const paths = [
-    ['Orders', LINKS.AdminOrders],
-    ['Customers', LINKS.AdminCustomers],
-    ['Inventory', LINKS.AdminInventory],
-    ['Hero', LINKS.AdminHero],
-    ['Gallery', LINKS.AdminGallery],
-    ['Contact Info', LINKS.AdminContactInfo]
+    ['Orders', APP_LINKS.AdminOrders],
+    ['Customers', APP_LINKS.AdminCustomers],
+    ['Inventory', APP_LINKS.AdminInventory],
+    ['Hero', APP_LINKS.AdminHero],
+    ['Gallery', APP_LINKS.AdminGallery],
+    ['Contact Info', APP_LINKS.AdminContactInfo]
 ]
 
 export const AdminBreadcrumbs = ({...props}) => BreadcrumbsBase({

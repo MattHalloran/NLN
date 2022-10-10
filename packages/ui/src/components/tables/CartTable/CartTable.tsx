@@ -8,9 +8,9 @@ import { deleteArrayIndex, showPrice, updateObject, PubSub, getImageSrc, getPlan
 import { NoImageIcon } from 'assets/img';
 import { IconButton, useTheme } from '@mui/material';
 import { Box, Paper, Grid, TableContainer, Table, TableHead, TableRow, TableCell, TableBody, TextField } from '@mui/material';
-import AdapterDateFns from '@material-ui/lab/AdapterDateFns';
-import LocalizationProvider from '@material-ui/lab/LocalizationProvider';
-import DatePicker from '@material-ui/lab/DatePicker';
+import AdapterDateFns from '@mui/lab/AdapterDateFns';
+import LocalizationProvider from '@mui/lab/LocalizationProvider';
+import DatePicker from '@mui/lab/DatePicker';
 import { IMAGE_USE } from '@shared/consts';
 import { CloseIcon } from '@shared/icons';
 

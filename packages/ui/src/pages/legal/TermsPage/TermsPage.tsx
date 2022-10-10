@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useQuery } from '@apollo/client';
 import { readAssetsQuery } from 'graphql/query/readAssets';
 import ReactMarkdown from 'react-markdown';
-import { PolicyBreadcrumbs } from 'components';
+import { PageContainer, PolicyBreadcrumbs } from 'components';
 import { convertToDot, valueFromDot } from "utils";
 import { useTheme } from "@mui/material";
 
@@ -20,7 +20,7 @@ export const TermsPage = ({
     const { palette } = useTheme();
 
     const [terms, setTerms] = useState(null);
-    const { data: termsData } = useQuery(readAssetsQuery, { variables: { files: ['terms.md'] } });
+    const { data: termsData } = useQuery(readAssetsQuery, { variables: { input: { files: ['terms.md'] } } });
 
     useEffect(() => {
         if (termsData === undefined) return;
@@ -32,9 +32,9 @@ export const TermsPage = ({
     }, [termsData, business])
 
     return (
-        <Box id="page" className={classes.root}>
+        <PageContainer>
             <PolicyBreadcrumbs textColor={theme.palette.secondary.dark} />
             <ReactMarkdown>{ terms }</ReactMarkdown>
-        </Box>
+        </PageContainer>
     );
 }

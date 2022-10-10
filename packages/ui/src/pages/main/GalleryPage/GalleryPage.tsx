@@ -37,7 +37,7 @@ export const GalleryPage = () => {
     const { palette } = useTheme();
 
     const [images, setImages] = useState([]);
-    const { data: imageData, error } = useQuery(imagesByLabelQuery, { variables: { label: 'gallery' } });
+    const { data: imageData, error } = useQuery(imagesByLabelQuery, { variables: { input: { label: 'gallery' } } });
 
     if (error) PubSub.get().publishSnack({ message: error.message ?? 'Unknown error occurred', severity: SnackSeverity.Error, data: error });
 

@@ -10,9 +10,6 @@ import Facebook from 'assets/img/Facebook.png';
 import Instagram from 'assets/img/Instagram.png';
 
 makeStyles((theme) => ({
-    header: {
-        textAlign: 'center',
-    },
     social: {
         width: '80px',
         height: '80px',
@@ -35,7 +32,7 @@ export const AboutPage = ({
             <br />
             <Grid container spacing={2}>
                 <Grid item md={12} lg={8}>
-                    <Box className={classes.header}>
+                    <Box sx={{ textAlign: 'center' }}>
                         <Typography variant="h3" component="h1">Our Story</Typography>
                     </Box>
                     <p>For  40 years, New Life Nursery, Inc has been striving to grow the most beautiful, healthy and consistent plant material at competitive prices. Family owned and operated by the Gianaris Family, we continue to hold to our original motto: "Growing top quality material for buyers who are interested in the best".</p>
@@ -45,7 +42,7 @@ export const AboutPage = ({
                     <h2 style={{ fontFamily: 'fantasy' }}>The Gianaris Family</h2>
                 </Grid>
                 <Grid item md={12} lg={4}>
-                    <Box className={classes.header}>
+                    <Box sx={{ textAlign: 'center'}}>
                         <Typography variant="h4" component="h2">Check out our socials</Typography>
                     </Box>
                     {socials.map(s => (

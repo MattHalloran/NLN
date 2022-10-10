@@ -3,11 +3,12 @@ import { useParams, useHistory } from "react-router-dom";
 import { plantsQuery } from 'graphql/query';
 import { upsertOrderItemMutation } from 'graphql/mutation';
 import { useQuery, useMutation } from '@apollo/client';
-import { getPlantTrait, LINKS, SORT_OPTIONS } from "utils";
+import { getPlantTrait, SORT_OPTIONS } from "utils";
 import {
     PlantCard,
     PlantDialog
 } from 'components';
+import { Box, useTheme } from "@mui/material";
 
  makeStyles(() => ({
     root: {
@@ -36,7 +37,7 @@ export const ShoppingList = ({
     // Find current plant and current sku
     const currPlant = Array.isArray(plants) ? plants.find(p => p.skus.some(s => s.sku === urlParams.sku)) : null;
     const currSku = currPlant?.skus ? currPlant.skus.find(s => s.sku === urlParams.sku) : null;
-    const { data: plantData } = useQuery(plantsQuery,  { variables: { sortBy, searchString, active: true, hideOutOfStock } });
+    const { data: plantData } = useQuery(plantsQuery,  { variables: { input: { sortBy, searchString, active: true, hideOutOfStock } } });
     const [upsertOrderItem] = useMutation(upsertOrderItemMutation);
 
     // useHotkeys('Escape', () => setCurrSku([null, null, null]));
@@ -88,7 +89,7 @@ export const ShoppingList = ({
         }
         mutationWrapper({
             mutation: upsertOrderItem,
-            data: { variables: { quantity, orderId: cart?.id, skuId: sku.id } },
+            input: { quantity, orderId: cart?.id, skuId: sku.id },
             successCondition: (response) => response.data.upsertOrderItem,
             onSuccess: () => onSessionUpdate(),
             successMessage: () => `${quantity} ${name}(s) added to cart.`,
@@ -97,7 +98,7 @@ export const ShoppingList = ({
     }
 
     return (
-        <div className={classes.root} id={track_scrolling_id}>
+        <Box className={classes.root} id={track_scrolling_id}>
             {(currPlant) ? <PlantDialog
                 onSessionUpdate
                 plant={currPlant}
@@ -110,6 +111,6 @@ export const ShoppingList = ({
                 <PlantCard key={index}
                     onClick={(data) => expandSku(data.selectedSku?.sku)}
                     plant={item} />)}
-        </div>
+        </Box>
     );
 }

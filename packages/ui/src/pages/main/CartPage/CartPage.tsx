@@ -1,8 +1,8 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useHistory } from 'react-router';
-import { LINKS, PubSub } from 'utils';
-import { Button, useTheme } from '@mui/material';
-import { CartTable } from 'components';
+import { PubSub } from 'utils';
+import { Box, Button, useTheme } from '@mui/material';
+import { CartTable, PageContainer } from 'components';
 import { updateOrderMutation, submitOrderMutation } from 'graphql/mutation';
 import { useMutation } from '@apollo/client';
 import { Typography, Grid } from '@mui/material';
@@ -70,22 +70,22 @@ export const CartPage = ({
             mutation: submitOrder,
             input: { id: cart.id },
             onSuccess: () => { PubSub.get().publishAlertDialog({ message: 'Order submitted! We will be in touch with you soon😊', buttons: [{ 'text': 'Ok' }] }); onSessionUpdate() },
-            onError: () => PubSub.publishAlertDialog({ message: `Failed to submit order. Please contact ${business?.BUSINESS_NAME?.Short}`, buttons: [{ 'text': 'Ok' }] }) //TODO add contact info
+            onError: () => PubSub.get().publishAlertDialog({ message: `Failed to submit order. Please contact ${business?.BUSINESS_NAME?.Short}`, buttons: [{ 'text': 'Ok' }] }) //TODO add contact info
         })
     }, [submitOrder, cart, onSessionUpdate, business])
 
     const finalizeOrder = useCallback(() => {
         // Make sure order is updated
         if (!_.isEqual(cart, changedCart)) {
-            PubSub.publishSnack({ message: 'Please click "UPDATE ORDER" before submitting.', severity: SnackSeverity.Error });
+            PubSub.get().publishSnack({ message: 'Please click "UPDATE ORDER" before submitting.', severity: SnackSeverity.Error });
             return;
         }
         // Disallow empty orders
         if (cart.items.length <= 0) {
-            PubSub.publishSnack({ message: 'Cannot finalize order - cart is empty.', severity: SnackSeverity.Error });
+            PubSub.get().publishSnack({ message: 'Cannot finalize order - cart is empty.', severity: SnackSeverity.Error });
             return;
         }
-        PubSub.publishAlertDialog({
+        PubSub.get().publishAlertDialog({
             message: `This will submit the order to ${business?.BUSINESS_NAME?.Short}. We will contact you for further information. Are you sure you want to continue?`,
             buttons: [{
                 text: 'Yes',

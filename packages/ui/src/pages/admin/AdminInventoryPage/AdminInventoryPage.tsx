@@ -3,7 +3,7 @@
 // 2) Edit existing SKU data, including general plant info, availability, etc.
 // 3) Create a new SKU, either from scratch or by using plant species info
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { uploadAvailabilityMutation } from 'graphql/mutation';
 import { plantsQuery, traitOptionsQuery } from 'graphql/query';
 import { useQuery, useMutation } from '@apollo/client';
@@ -14,14 +14,16 @@ import {
     Dropzone,
     PlantCard,
     Selector,
-    SearchBar
+    SearchBar,
+    PageContainer,
+    PageTitle
 } from 'components';
 import {
     Box,
     FormControlLabel,
     Grid,
     Switch,
-    Typography
+    useTheme,
 } from '@mui/material';
 
 makeStyles((theme) => ({
@@ -48,7 +50,7 @@ export const AdminInventoryPage = () => {
 
     const [sortBy, setSortBy] = useState(SORT_OPTIONS[0].value);
     const { data: traitOptions } = useQuery(traitOptionsQuery);
-    const { data: plantData } = useQuery(plantsQuery, { variables: { sortBy, searchString, active: showActive }, pollInterval: 5000 });
+    const { data: plantData } = useQuery(plantsQuery, { variables: { input: { sortBy, searchString, active: showActive } }, pollInterval: 5000 });
     const [uploadAvailability, { loading }] = useMutation(uploadAvailabilityMutation);
 
     const availabilityUpload = (acceptedFiles) => {
@@ -65,7 +67,7 @@ export const AdminInventoryPage = () => {
     }
 
     return (
-        <Box id="page">
+        <PageContainer>
             <EditPlantDialog
                 plant={selected?.plant}
                 selectedSku={selected?.selectedSku}
@@ -73,9 +75,7 @@ export const AdminInventoryPage = () => {
                 open={selected !== null}
                 onClose={() => setSelected(null)} />
             <AdminBreadcrumbs textColor={palette.secondary.dark} />
-            <Box className={classes.header}>
-                <Typography variant="h3" component="h1">Manage Inventory</Typography>
-            </Box>
+            <PageTitle>Manage Inventory</PageTitle>
             <h3>This page has the following features:</h3>
             <p>👉 Upload availability from a spreadsheet</p>
             <p>👉 Edit/Delete an existing plant</p>
@@ -124,6 +124,6 @@ export const AdminInventoryPage = () => {
                     plant={plant}
                     onClick={setSelected} />)}
             </Box>
-        </Box >
+        </PageContainer>
     );
 }

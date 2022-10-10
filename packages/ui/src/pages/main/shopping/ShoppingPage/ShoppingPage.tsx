@@ -8,7 +8,7 @@ import { ShoppingList } from '../ShoppingList/ShoppingList';
 import { SORT_OPTIONS, PubSub } from 'utils';
 import { traitOptionsQuery } from 'graphql/query';
 import { useQuery } from '@apollo/client';
-import { Switch, Grid, Button, SwipeableDrawer, FormControlLabel, Box } from '@mui/material';
+import { Switch, Grid, Button, SwipeableDrawer, FormControlLabel, Box, useTheme } from '@mui/material';
 import { printAvailability } from 'utils';
 import { CloseIcon } from '@shared/icons';
 

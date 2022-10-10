@@ -1,16 +1,10 @@
-import React from 'react';
+import { PageContainer } from 'components';
 
-function ProfilePage() {
+export const ProfilePage = () => {
 
     return (
-        <div id="page">
-
-        </div>
+        <PageContainer>
+            {/* TODO */}
+        </PageContainer>
     );
 }
-
-ProfilePage.propTypes = {
-    
-}
-
-export { ProfilePage };

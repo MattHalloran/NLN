@@ -1,13 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { AdminBreadcrumbs } from 'components';
+import { useState, useEffect } from 'react';
+import { AdminBreadcrumbs, PageContainer, PageTitle } from 'components';
 import ReactMarkdown from 'react-markdown';
 import gfm from 'remark-gfm';
 import {
-    Box,
     Button,
     Grid,
     TextField,
-    Typography
+    useTheme
 } from '@mui/material';
 import { useMutation } from '@apollo/client';
 import { writeAssetsMutation } from 'graphql/mutation';
@@ -52,8 +51,8 @@ export const AdminContactPage = ({
         const file = new File([blob], 'hours.md', { type: blob.type });
         mutationWrapper({
             mutation: updateHours,
-            data: { variables: { files: [file] } },
-            successCondition: (response) => response.data.writeAssets,
+            input: { files: [file] },
+            successCondition: (data) => data !== null,
             successMessage: () => 'Hours updated.',
             errorMessage: () => 'Failed to update hours.',
         })
@@ -65,21 +64,19 @@ export const AdminContactPage = ({
 
     let options = (
         <Grid classes={{ container: classes.pad }} container spacing={2}>
-            <Grid className={classes.gridItem} justify="center" item xs={12} sm={6}>
+            <Grid className={classes.gridItem} justifyContent="center" item xs={12} sm={6}>
                 <Button fullWidth disabled={business?.hours === hours} onClick={applyHours}>Apply Changes</Button>
             </Grid>
-            <Grid className={classes.gridItem} justify="center" item xs={12} sm={6}>
+            <Grid className={classes.gridItem} justifyContent="center" item xs={12} sm={6}>
                 <Button fullWidth disabled={business?.hours === hours} onClick={revertHours}>Revert Changes</Button>
             </Grid>
         </Grid>
     )
 
     return (
-        <Box id="page" className={classes.root}>
+        <PageContainer>
             <AdminBreadcrumbs textColor={palette.secondary.dark} />
-            <Box className={classes.header}>
-                <Typography variant="h3" component="h1">Manage Contact Info</Typography>
-            </Box>
+            <PageTitle>Manage Contact Info</PageTitle>
             { options }
             <Grid container spacing={2} direction="row">
                 <Grid item sm={12} md={6}>
@@ -105,6 +102,6 @@ export const AdminContactPage = ({
                 
             </Grid>
             { options }
-        </Box>
+        </PageContainer>
     );
 }

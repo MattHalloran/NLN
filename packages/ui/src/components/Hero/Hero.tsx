@@ -1,33 +1,13 @@
 // Code inspired by https://github.com/rmolinamir/hero-slider
 import React, { useEffect, useState } from 'react';
 import { useHistory } from 'react-router-dom';
-import { Typography, Button } from '@mui/material';
-import { LINKS } from 'utils';
+import { Typography, Button, Box, useTheme } from '@mui/material';
 import { Slider } from './Slider.js'
 import { imagesByLabelQuery } from 'graphql/query';
 import { useQuery } from '@apollo/client';
+import { APP_LINKS } from '@shared/consts';
 
 makeStyles(() => ({
-    hero: {
-        position: 'relative',
-        overflow: 'hidden',
-        pointerEvents: 'none',
-    },
-    contentWrapper: {
-        position: 'absolute',
-        top: '0',
-        left: '0',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        flexFlow: 'column',
-        width: '100%',
-        height: '100%',
-        margin: '0',
-        padding: '0',
-        pointerEvents: 'none',
-        backgroundColor: 'rgba(0, 0, 0, 0.1)'
-    },
     textPop: {
         padding: '0',
         color: 'white',
@@ -60,26 +40,44 @@ export const Hero = ({
     const { palette } = useTheme();
 
     const [images, setImages] = useState([]);
-    const { data } = useQuery(imagesByLabelQuery, { variables: { label: 'hero' } });
+    const { data } = useQuery(imagesByLabelQuery, { variables: { input: { label: 'hero' } } });
     useEffect(() => {
         setImages(data?.imagesByLabel);
     }, [data])
 
     return (
-        <div className={classes.hero}>
+        <Box sx={{
+            position: 'relative',
+            overflow: 'hidden',
+            pointerEvents: 'none',
+        }}>
             <Slider images={images} autoPlay={true} />
-            <div className={classes.contentWrapper}>
+            <Box sx={{
+                position: 'absolute',
+                top: '0',
+                left: '0',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                flexFlow: 'column',
+                width: '100%',
+                height: '100%',
+                margin: '0',
+                padding: '0',
+                pointerEvents: 'none',
+                backgroundColor: 'rgba(0, 0, 0, 0.1)'
+            }}>
                 <Typography variant='h2' component='h1' className={classes.title + ' ' + classes.textPop}>{text}</Typography>
                 <Typography variant='h4' component='h2' className={classes.subtitle + ' ' + classes.textPop}>{subtext}</Typography>
                 <Button
                     type="submit"
                     color="secondary"
                     className={classes.mainButton}
-                    onClick={() => history.push(LINKS.Shopping)}
+                    onClick={() => history.push(APP_LINKS.Shopping)}
                 >
                     Request Quote
                 </Button>
-            </div>
-        </div>
+            </Box>
+        </Box>
     );
 };
