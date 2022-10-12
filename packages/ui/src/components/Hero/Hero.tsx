@@ -27,9 +27,6 @@ makeStyles(() => ({
         margin: '24px auto 0',
         width: '80%'
     },
-    mainButton: {
-        pointerEvents: 'auto'
-    }
 }));
 
 export const Hero = ({
@@ -72,8 +69,8 @@ export const Hero = ({
                 <Button
                     type="submit"
                     color="secondary"
-                    className={classes.mainButton}
                     onClick={() => history.push(APP_LINKS.Shopping)}
+                    sx={{ pointerEvents: 'auto' }}
                 >
                     Request Quote
                 </Button>

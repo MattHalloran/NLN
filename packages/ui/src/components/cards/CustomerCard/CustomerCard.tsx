@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
     Card,
     CardActions,
@@ -13,12 +13,12 @@ import { useMutation } from '@apollo/client';
 import { ACCOUNT_STATUS } from '@shared/consts';
 import { emailLink, mapIfExists, phoneLink, PubSub, showPhone } from 'utils';
 import { ListDialog } from 'components/dialogs';
-import { DeleteForeverIcon, DeleteIcon, EditIcon, EmailIcon, LockIcon } from '@shared/icons';
+import { DeleteForeverIcon, DeleteIcon, EditIcon, EmailIcon, LockIcon, LockOpenIcon, PhoneIcon, ThumbUpIcon } from '@shared/icons';
 import { mutationWrapper } from 'graphql/utils';
 import { deleteCustomerVariables } from 'graphql/generated/deleteCustomer';
 import { changeCustomerStatusVariables } from 'graphql/generated/changeCustomerStatus';
 
-export const  CustomerCard = ({
+export const CustomerCard = ({
     customer,
     status = ACCOUNT_STATUS.Deleted,
     onEdit,
@@ -167,20 +167,20 @@ export const  CustomerCard = ({
                         </IconButton>
                     </Tooltip>
                 )}
-                {(phoneList?.length > 0) ?
+                {(phoneList && phoneList.length > 0) &&
                     (<Tooltip title="View phone numbers" placement="bottom">
                         <IconButton onClick={() => setPhoneDialogOpen(true)}>
                             <PhoneIcon fill={palette.secondary.light} />
                         </IconButton>
                     </Tooltip>)
-                    : null}
-                {(emailList?.length > 0) ?
+                }
+                {(emailList && emailList.length > 0) &&
                     (<Tooltip title="View emails" placement="bottom">
                         <IconButton onClick={() => setEmailDialogOpen(true)}>
                             <EmailIcon fill={palette.secondary.light} />
                         </IconButton>
                     </Tooltip>)
-                    : null}
+                }
             </CardActions>
         </Card>
     );

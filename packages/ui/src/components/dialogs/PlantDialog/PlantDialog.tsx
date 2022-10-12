@@ -17,7 +17,7 @@ import {
     Typography,
     useTheme
 } from '@mui/material';
-import { showPrice, getImageSrc, getPlantTrait } from 'utils';
+import { showPrice, getImageSrc, getPlantTrait, getServerUrl } from 'utils';
 import {
     BeeIcon,
     CalendarIcon,

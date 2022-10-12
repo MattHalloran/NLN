@@ -3009,6 +3009,13 @@
   dependencies:
     "@types/react" "*"
 
+"@types/react-gallery-carousel@^0.2.2":
+  version "0.2.2"
+  resolved "https://registry.yarnpkg.com/@types/react-gallery-carousel/-/react-gallery-carousel-0.2.2.tgz#98be8ba5f2f4c7e7b846a7dc6a6e58488844eed5"
+  integrity sha512-BuFbJ4Ufip2Odgjvi/ESLTSpMpmmcf2eF/vTb3Qr2We2zROZLzx4/KZM7jLEg40cb7sUy+yszAuTIHBEuAz04g==
+  dependencies:
+    "@types/react" "*"
+
 "@types/react-is@^16.7.1 || ^17.0.0":
   version "17.0.3"
   resolved "https://registry.yarnpkg.com/@types/react-is/-/react-is-17.0.3.tgz#2d855ba575f2fc8d17ef9861f084acc4b90a137a"

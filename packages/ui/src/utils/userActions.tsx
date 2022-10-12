@@ -1,6 +1,9 @@
 import { APP_LINKS, ROLES } from '@shared/consts';
-import { CreateAccountIcon, ProfileIcon, SettingsIcon, SvgComponent } from '@shared/icons';
+import { CreateAccountIcon, ProfileIcon, SettingsIcon, ShopIcon, ShoppingCartIcon, SvgComponent } from '@shared/icons';
 import _ from 'lodash';
+import { Session } from 'types';
+
+export type UserActions = [string, string, string, (() => any) | null, SvgComponent, number][]
 
 // Returns user actions, in a list of this format:
 //  [
@@ -11,7 +14,7 @@ import _ from 'lodash';
 //      icon: Material-UI Icon,
 //      number of notifications: int,
 //  ]
-export function getUserActions(session, userRoles, cart) {
+export function getUserActions(session: Session, userRoles, cart): UserActions {
     let actions: [string, string, string, (() => any) | null, SvgComponent, number][] = [];
 
     // If someone is not logged in, display sign up/log in APP_LINKS

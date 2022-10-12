@@ -25,6 +25,8 @@ import {
     Switch,
     useTheme,
 } from '@mui/material';
+import { mutationWrapper } from 'graphql/utils';
+import { uploadAvailabilityVariables } from 'graphql/generated/uploadAvailability';
 
 makeStyles((theme) => ({
     header: {
@@ -54,9 +56,10 @@ export const AdminInventoryPage = () => {
     const [uploadAvailability, { loading }] = useMutation(uploadAvailabilityMutation);
 
     const availabilityUpload = (acceptedFiles) => {
-        mutationWrapper({
+        mutationWrapper<any, uploadAvailabilityVariables>({
             mutation: uploadAvailability,
             input: { file: acceptedFiles[0] },
+            successCondition: (success) => success === true,
             onSuccess: () => PubSub.get().publishAlertDialog({
                 message: 'Availability uploaded. This process can take up to 30 seconds. The page will update automatically. Please be patient💚',
                 buttons: [{
@@ -75,7 +78,7 @@ export const AdminInventoryPage = () => {
                 open={selected !== null}
                 onClose={() => setSelected(null)} />
             <AdminBreadcrumbs textColor={palette.secondary.dark} />
-            <PageTitle>Manage Inventory</PageTitle>
+            <PageTitle title="Manage Inventory" />
             <h3>This page has the following features:</h3>
             <p>👉 Upload availability from a spreadsheet</p>
             <p>👉 Edit/Delete an existing plant</p>

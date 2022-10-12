@@ -1,9 +1,5 @@
 import { SxProps } from "@mui/material"
 
-export const clickSize: SxProps = {
-    minHeight: '48px',
-};
-
 /**
  * Disables text highlighting
  */

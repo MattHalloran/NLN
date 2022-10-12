@@ -1,21 +1,14 @@
-import React from 'react';
-import Popover from '@mui/material/Popover';
-import { Button } from '@mui/material';
+import { useState } from 'react';
+import { Button, Popover, useTheme } from '@mui/material';
 
-makeStyles((theme) => ({
-    paper: {
-        background: palette.primary.light,
-    },
-}));
-
-export const PopupMenu = ({
+export function PopupMenu({
     text = 'Menu',
     children,
     ...props
-}) => {
+}) {
     const { palette } = useTheme();
 
-    const [anchorEl, setAnchorEl] = React.useState(null);
+    const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
     const handleClick = (event) => {
         setAnchorEl(event.currentTarget);
@@ -28,7 +21,7 @@ export const PopupMenu = ({
     const open = Boolean(anchorEl);
     const id = open ? 'simple-popover' : undefined;
     return (
-        <Box>
+        <>
             <Button aria-describedby={id} {...props} onClick={handleClick}>
                 {text}
             </Button>
@@ -37,9 +30,7 @@ export const PopupMenu = ({
                 open={open}
                 anchorEl={anchorEl}
                 onClose={handleClose}
-                classes={{
-                    paper: classes.paper
-                }}
+                disableScrollLock={true}
                 anchorOrigin={{
                     vertical: 'bottom',
                     horizontal: 'center',
@@ -48,9 +39,15 @@ export const PopupMenu = ({
                     vertical: 'top',
                     horizontal: 'center',
                 }}
+                sx={{
+                    '& .MuiPopover-paper': {
+                        background: palette.primary.light,
+                        borderRadius: '24px',
+                    }
+                }}
             >
                 {children}
             </Popover>
-        </Box>
+        </>
     )
 }

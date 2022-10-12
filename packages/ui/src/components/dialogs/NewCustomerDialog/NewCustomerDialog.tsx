@@ -10,6 +10,7 @@ import {
     TextField,
     Toolbar,
     Typography,
+    useTheme,
 } from '@mui/material';
 import _ from 'lodash';
 import { DEFAULT_PRONOUNS } from '@shared/consts';
@@ -18,6 +19,8 @@ import { useFormik } from 'formik';
 import { useMutation } from '@apollo/client';
 import { addCustomerVariables, addCustomer_addCustomer } from 'graphql/generated/addCustomer';
 import { CancelIcon, CloseIcon, CreateIcon } from '@shared/icons';
+import { addCustomerSchema } from '@shared/validation';
+import { mutationWrapper } from 'graphql/utils';
 
  makeStyles((theme) => ({
     appBar: {

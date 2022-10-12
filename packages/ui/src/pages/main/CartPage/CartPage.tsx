@@ -2,31 +2,15 @@ import { useState, useCallback, useEffect } from 'react';
 import { useHistory } from 'react-router';
 import { PubSub } from 'utils';
 import { Box, Button, useTheme } from '@mui/material';
-import { CartTable, PageContainer } from 'components';
+import { CartTable, PageContainer, SnackSeverity } from 'components';
 import { updateOrderMutation, submitOrderMutation } from 'graphql/mutation';
 import { useMutation } from '@apollo/client';
 import { Typography, Grid } from '@mui/material';
 import _ from 'lodash';
 import { ArrowLeftIcon, ArrowRightIcon, SaveIcon } from '@shared/icons';
-
-makeStyles((theme) => ({
-    header: {
-        textAlign: 'center',
-    },
-    padTop: {
-        paddingTop: spacing(2),
-    },
-    gridItem: {
-        display: 'flex',
-    },
-    optionsContainer: {
-        width: 'fit-content',
-        justifyContent: 'center',
-        '& > *': {
-            margin: spacing(1),
-        },
-    },
-}));
+import { mutationWrapper } from 'graphql/utils';
+import { updateOrderVariables, updateOrder_updateOrder } from 'graphql/generated/updateOrder';
+import { submitOrderVariables } from 'graphql/generated/submitOrder';
 
 export const CartPage = ({
     business,
@@ -46,11 +30,11 @@ export const CartPage = ({
     }, [cart])
 
     const orderUpdate = () => {
-        if (!cart?.customer?.id) {
+        if (!changedCart || !cart?.customer?.id) {
             PubSub.get().publishSnack({ message: 'Failed to update order.', severity: SnackSeverity.Error });
             return;
         }
-        mutationWrapper({
+        mutationWrapper<updateOrder_updateOrder, updateOrderVariables>({
             mutation: updateOrder,
             input: {
                 id: changedCart.id,
@@ -59,16 +43,17 @@ export const CartPage = ({
                 specialInstructions: changedCart.specialInstructions,
                 items: changedCart.items.map(i => ({ id: i.id, quantity: i.quantity }))
             }
-            successCondition: (response) => response.data.updateOrder,
+            successCondition: (data) => data !== null,
             onSuccess: () => onSessionUpdate(),
             successMessage: () => 'Order successfully updated.',
         })
     }
 
     const requestQuote = useCallback(() => {
-        mutationWrapper({
+        mutationWrapper<any, submitOrderVariables>({
             mutation: submitOrder,
             input: { id: cart.id },
+            successCondition: (success) => success === true,
             onSuccess: () => { PubSub.get().publishAlertDialog({ message: 'Order submitted! We will be in touch with you soon😊', buttons: [{ 'text': 'Ok' }] }); onSessionUpdate() },
             onError: () => PubSub.get().publishAlertDialog({ message: `Failed to submit order. Please contact ${business?.BUSINESS_NAME?.Short}`, buttons: [{ 'text': 'Ok' }] }) //TODO add contact info
         })
@@ -97,8 +82,8 @@ export const CartPage = ({
     }, [changedCart, cart, requestQuote, business]);
 
     let options = (
-        <Grid className={classes.padTop} container spacing={2}>
-            <Grid className={classes.gridItem} justify="center" item xs={12} sm={4}>
+        <Grid container spacing={2} sx={{ paddingTop: spacing(2) }}>
+            <Grid display="flex" justifyContent="center" item xs={12} sm={4}>
                 <Button
                     fullWidth
                     startIcon={<ArrowLeftIcon />}
@@ -106,7 +91,7 @@ export const CartPage = ({
                     disabled={loading || (changedCart !== null && !_.isEqual(cart, changedCart))}
                 >Continue Shopping</Button>
             </Grid>
-            <Grid className={classes.gridItem} justify="center" item xs={12} sm={4}>
+            <Grid display="flex" justifyContent="center" item xs={12} sm={4}>
                 <Button
                     fullWidth
                     startIcon={<SaveIcon />}
@@ -114,7 +99,7 @@ export const CartPage = ({
                     disabled={loading || (changedCart === null || _.isEqual(cart, changedCart))}
                 >Update Order</Button>
             </Grid>
-            <Grid className={classes.gridItem} justify="center" item xs={12} sm={4}>
+            <Grid display="flex" justifyContent="center" item xs={12} sm={4}>
                 <Button
                     fullWidth
                     endIcon={<ArrowRightIcon />}
@@ -127,11 +112,11 @@ export const CartPage = ({
 
     return (
         <PageContainer>
-            <Box className={classes.header}>
+            <Box sx={{ textAlign: 'center' }}>
                 <Typography variant="h3" component="h1">Cart</Typography>
             </Box>
             {options}
-            <CartTable className={classes.padTop} cart={changedCart} onUpdate={(d) => setChangedCart(d)} />
+            <CartTable cart={changedCart} onUpdate={(d) => setChangedCart(d)} sx={{ paddingTop: spacing(2) }} />
             {options}
         </PageContainer>
     );

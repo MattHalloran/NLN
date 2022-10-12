@@ -1,19 +1,16 @@
-import React from 'react';
+import { Box } from '@mui/material';
 import { memo } from 'react'
-import { getImageSrc } from 'utils';
-
-makeStyles({
-    slide: props => ({
-        height: '100%',
-        width: `${props.width}px`,
-        objectFit: 'cover',
-        overflow: 'hidden',
-    }),
-});
+import { getImageSrc, getServerUrl } from 'utils';
 
 export const Slide = memo(({ image, width }) => {
-    const classes = useStyles({ width });
     return (
-        <img className={classes.slide} src={image ? `${getServerUrl()}/${getImageSrc(image, width)}` : ''} alt={image?.alt ?? ''} />
+        <Box sx={{
+            height: '100%',
+            width: `${width}px`,
+            objectFit: 'cover',
+            overflow: 'hidden',
+        }}>
+            <img src={image ? `${getServerUrl()}/${getImageSrc(image, width)}` : ''} alt={image?.alt ?? ''} />
+        </Box>
     )
 })

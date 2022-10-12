@@ -14,4 +14,5 @@ export * from './PopupMenu/PopupMenu';
 export * from './ScrollToTop/ScrollToTop';
 export * from './tables';
 export * from './TabPanel/TabPanel';
+export * from './text';
 export * from './wrappers';

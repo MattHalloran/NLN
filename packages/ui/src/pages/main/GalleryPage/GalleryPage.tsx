@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Carousel from 'react-gallery-carousel';
 import 'react-gallery-carousel/dist/index.css';
 import { InformationalBreadcrumbs, PageContainer, SnackSeverity } from 'components';
@@ -9,24 +9,6 @@ import { IMAGE_SIZE } from '@shared/consts';
 import { useTheme } from '@mui/material';
 
  makeStyles(() => ({
-    imageList: {
-        spacing: 0,
-    },
-    tileImg: {
-
-    },
-    popupMain: {
-        display: 'flex',
-        width: '100%',
-        height: '100%',
-    },
-    popupImg: {
-        maxHeight: '90vh',
-        maxWidth: '100%',
-        display: 'block',
-        borderRadius: '10px',
-        objectFit: 'contain',
-    },
     carousel: {
         width: '100%',
         height: 'calc(100vw * 0.8)'

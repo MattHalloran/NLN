@@ -3,28 +3,16 @@ import {
     ContactInfo,
 } from 'components';
 import { getUserActions, PubSub } from 'utils';
-import { IconButton, SwipeableDrawer, List, ListItem, ListItemIcon, Badge, Collapse, Divider, ListItemText, useTheme } from '@mui/material';
+import { IconButton, SwipeableDrawer, List, ListItem, ListItemIcon, Badge, Collapse, Divider, ListItemText, useTheme, Palette } from '@mui/material';
 import { CopyrightBreadcrumbs } from 'components';
 import _ from 'lodash';
-import { CloseIcon, ExpandLessIcon, ExpandMoreIcon, FacebookIcon, HomeIcon, InfoIcon, InstagramIcon, ShareIcon } from '@shared/icons';
+import { CloseIcon, ContactSupportIcon, ExpandLessIcon, ExpandMoreIcon, FacebookIcon, HomeIcon, InfoIcon, InstagramIcon, LogOutIcon, MenuIcon, PhotoLibraryIcon, ShareIcon } from '@shared/icons';
+import { APP_LINKS } from '@shared/consts';
 
-makeStyles((theme) => ({
-    drawerPaper: {
-        background: palette.primary.light,
-        borderLeft: `1px solid ${palette.text.primary}`,
-    },
-    menuItem: {
-        color: palette.primary.contrastText,
+const menuItemStyle = (palette: Palette) => ({
+    color: palette.primary.contrastText,
         borderBottom: `1px solid ${palette.primary.dark}`,
-    },
-    close: {
-        color: palette.primary.contrastText,
-        borderRadius: 0,
-        borderBottom: `1px solid ${palette.primary.dark}`,
-        justifyContent: 'end',
-        direction: 'rtl',
-    },
-}));
+})
 
 export const Hamburger = ({
     session,
@@ -65,11 +53,11 @@ export const Hamburger = ({
     }
 
     const optionsToList = (options) => {
-        return options.map(([label, value, link, onClick, Icon, badgeNum], index) => (
+        return options.map(([label, _value, link, onClick, Icon, badgeNum], index) => (
             <ListItem
                 key={index}
-                className={classes.menuItem}
                 button
+                sx={menuItemStyle(palette)}
                 onClick={() => {
                     onRedirect(link);
                     if (onClick) onClick();
@@ -78,7 +66,7 @@ export const Hamburger = ({
                 {Icon ?
                     (<ListItemIcon>
                         <Badge badgeContent={badgeNum ?? 0} color="error">
-                            <Icon className={classes.menuIcon} />
+                            <Icon fill={palette.primary.contrastText}/>
                         </Badge>
                     </ListItemIcon>) : null}
                 <ListItemText primary={label} />
@@ -87,14 +75,14 @@ export const Hamburger = ({
     }
 
     let nav_options = [
-        ['Home', 'home', LINKS.Home, null, HomeIcon],
-        ['About Us', 'about', LINKS.About, null, InfoIcon],
-        ['Gallery', 'gallery', LINKS.Gallery, null, PhotoLibraryIcon]
+        ['Home', 'home', APP_LINKS.Home, null, HomeIcon],
+        ['About Us', 'about', APP_LINKS.About, null, InfoIcon],
+        ['Gallery', 'gallery', APP_LINKS.Gallery, null, PhotoLibraryIcon]
     ]
 
     let customer_actions = getUserActions(session, roles, cart);
     if (_.isObject(session) && Object.entries(session).length > 0) {
-        customer_actions.push(['Log Out', 'logout', LINKS.Home, logout, ExitToAppIcon]);
+        customer_actions.push(['Log Out', 'logout', APP_LINKS.Home, logout, LogOutIcon, 0]);
     }
 
     return (
@@ -102,34 +90,53 @@ export const Hamburger = ({
             <IconButton edge="start" color="inherit" aria-label="menu" onClick={toggleOpen}>
                 <MenuIcon />
             </IconButton>
-            <SwipeableDrawer classes={{ paper: classes.drawerPaper }} anchor="right" open={open} onOpen={() => { }} onClose={closeMenu}>
-                <IconButton className={classes.close} onClick={closeMenu}>
-                    <CloseIcon fontSize="large" />
+            <SwipeableDrawer
+                anchor="right" open={open}
+                onOpen={() => { }}
+                onClose={closeMenu}
+                sx={{
+                    '& .MuiDrawer-paper': {
+                        background: palette.primary.light,
+                        borderLeft: `1px solid ${palette.text.primary}`,
+                    }
+                }}
+            >
+                <IconButton
+                    onClick={closeMenu}
+                    sx={{
+                        color: palette.primary.contrastText,
+                        borderRadius: 0,
+                        borderBottom: `1px solid ${palette.primary.dark}`,
+                        justifyContent: 'end',
+                        direction: 'rtl',
+                    }}
+                >
+                    <CloseIcon />
                 </IconButton>
                 <List>
                     {/* Collapsible contact information */}
-                    <ListItem className={classes.menuItem} button onClick={handleContactClick}>
+                    <ListItem button onClick={handleContactClick} sx={menuItemStyle(palette)}>
                         <ListItemIcon><ContactSupportIcon fill={palette.primary.contrastText} /></ListItemIcon>
                         <ListItemText primary="Contact Us" />
                         {contactOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                     </ListItem>
-                    <Collapse className={classes.menuItem} in={contactOpen} timeout="auto" unmountOnExit>
+                    <Collapse in={contactOpen} timeout="auto" unmountOnExit sx={menuItemStyle(palette)}>
                         <ContactInfo business={business} />
                     </Collapse>
-                    {/* Collapsible social media links */}
-                    <ListItem className={classes.menuItem} button onClick={handleSocialClick}>
-                        <ListItemIcon><ShareIcon className={classes.menuIcon} /></ListItemIcon>
+                    {/* Collapsible social media APP_LINKS */}
+                    <ListItem button onClick={handleSocialClick} sx={menuItemStyle(palette)}>
+                        <ListItemIcon><ShareIcon /></ListItemIcon>
                         <ListItemText primary="Socials" />
                         {socialOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                     </ListItem>
                     <Collapse in={socialOpen} timeout="auto" unmountOnExit>
-                        <ListItem className={classes.menuItem} button onClick={() => newTab(business?.SOCIAL?.Facebook)}>
+                        <ListItem button onClick={() => newTab(business?.SOCIAL?.Facebook)} sx={menuItemStyle(palette)}>
                             <ListItemIcon>
                                 <FacebookIcon fill={'#ffffff'} />
                             </ListItemIcon>
                             <ListItemText primary="Facebook" />
                         </ListItem>
-                        <ListItem className={classes.menuItem} button onClick={() => newTab(business?.SOCIAL?.Instagram)}>
+                        <ListItem button onClick={() => newTab(business?.SOCIAL?.Instagram)} sx={menuItemStyle(palette)}>
                             <ListItemIcon>
                                 <InstagramIcon fill={'#ffffff'} />
                             </ListItemIcon>

@@ -10,6 +10,8 @@ import {
 } from '@mui/material';
 import { useMutation } from '@apollo/client';
 import { writeAssetsMutation } from 'graphql/mutation';
+import { mutationWrapper } from 'graphql/utils';
+import { writeAssetsVariables } from 'graphql/generated/writeAssets';
 
 makeStyles((theme) => ({
     header: {
@@ -49,10 +51,10 @@ export const AdminContactPage = ({
         // Data must be sent as a file to use writeAssets
         const blob = new Blob([hours], { type: 'text/plain' });
         const file = new File([blob], 'hours.md', { type: blob.type });
-        mutationWrapper({
+        mutationWrapper<any, writeAssetsVariables>({
             mutation: updateHours,
             input: { files: [file] },
-            successCondition: (data) => data !== null,
+            successCondition: (success) => success === true,
             successMessage: () => 'Hours updated.',
             errorMessage: () => 'Failed to update hours.',
         })
@@ -76,8 +78,8 @@ export const AdminContactPage = ({
     return (
         <PageContainer>
             <AdminBreadcrumbs textColor={palette.secondary.dark} />
-            <PageTitle>Manage Contact Info</PageTitle>
-            { options }
+            <PageTitle title="Manage Contact Info" />
+            {options}
             <Grid container spacing={2} direction="row">
                 <Grid item sm={12} md={6}>
                     <TextField
@@ -99,9 +101,9 @@ export const AdminContactPage = ({
                 </Grid>
             </Grid>
             <Grid container spacing={2}>
-                
+
             </Grid>
-            { options }
+            {options}
         </PageContainer>
     );
 }

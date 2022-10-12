@@ -14,3 +14,15 @@ export interface CommonProps {
     session: Session;
     sessionChecked: SessionChecked;
 }
+
+// Apollo GraphQL
+export type ApolloResponse = FetchResult<any, Record<string, any>, Record<string, any>>;
+export type ApolloError = {
+    message?: string;
+    graphQLErrors?: {
+        message: string;
+        extensions?: {
+            code: string;
+        };
+    }[];
+}

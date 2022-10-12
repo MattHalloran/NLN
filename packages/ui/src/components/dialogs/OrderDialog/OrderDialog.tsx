@@ -8,6 +8,7 @@ import {
     Slide,
     Toolbar,
     Typography,
+    useTheme,
 } from '@mui/material';
 import { CartTable } from 'components';
 import { updateOrderMutation } from 'graphql/mutation';
@@ -16,22 +17,10 @@ import { findWithAttr, ORDER_FILTERS } from 'utils';
 import { ORDER_STATUS, ROLES } from '@shared/consts';
 import _ from 'lodash';
 import { CancelIcon, CloseIcon, CompleteIcon, EditIcon, SaveIcon, ScheduleIcon, SuccessIcon } from '@shared/icons';
+import { mutationWrapper } from 'graphql/utils';
+import { updateOrderVariables, updateOrder_updateOrder } from 'graphql/generated/updateOrder';
 
 makeStyles((theme) => ({
-    appBar: {
-        position: 'relative',
-    },
-    title: {
-        textAlign: 'center',
-    },
-    optionsContainer: {
-        padding: spacing(2),
-    },
-    container: {
-        background: palette.background.default,
-        flex: 'auto',
-        paddingBottom: '15vh',
-    },
     pad: {
         padding: spacing(1),
     },
@@ -67,26 +56,22 @@ export const OrderDialog = ({
     }, [order])
 
     const orderUpdate = () => {
-        mutationWrapper({
+        mutationWrapper<updateOrder_updateOrder, updateOrderVariables>({
             mutation: updateOrder,
-            data: {
-                variables: {
-                    input: {
-                        id: changedOrder.id,
-                        desiredDeliveryDate: changedOrder.desiredDeliveryDate,
-                        isDelivery: changedOrder.isDelivery,
-                        items: changedOrder.items.map(i => ({ id: i.id, quantity: i.quantity }))
-                    }
-                }
-            },
-            successCondition: (response) => response.data.updateOrder !== null,
+            input: {
+                id: changedOrder.id,
+                desiredDeliveryDate: changedOrder.desiredDeliveryDate,
+                isDelivery: changedOrder.isDelivery,
+                items: changedOrder.items.map(i => ({ id: i.id, quantity: i.quantity }))
+            }
+            successCondition: (data) => data !== null,
             successMessage: () => 'Order successfully updated.',
-            onSuccess: (response) => setChangedOrder(response.data.updateOrder),
+            onSuccess: (data) => setChangedOrder(data),
         })
     }
 
     const setOrderStatus = useCallback((status, successMessage, errorMessage) => {
-        mutationWrapper({
+        mutationWrapper<updateOrder_updateOrder, updateOrderVariables>({
             mutation: updateOrder,
             input: { id: order.id, status: status },
             successMessage: () => successMessage,
@@ -163,7 +148,7 @@ export const OrderDialog = ({
     }
 
     let options = (
-        <Grid className={classes.optionsContainer} container spacing={1}>
+        <Grid container spacing={1} sx={{ padding: spacing(2) }}>
             <Grid item xs={12} sm={4}>
                 <Button
                     fullWidth
@@ -187,13 +172,13 @@ export const OrderDialog = ({
 
     return (
         <Dialog fullScreen open={open} onClose={onClose} TransitionComponent={Transition}>
-            <AppBar className={classes.appBar}>
+            <AppBar sx={{ position: 'relative' }}>
                 <Toolbar>
                     <IconButton edge="start" color="inherit" onClick={onClose} aria-label="close">
                         <CloseIcon />
                     </IconButton>
                     <Grid container spacing={0}>
-                        <Grid className={classes.title} item xs={12}>
+                        <Grid item xs={12} sx={{ textAlign: 'center' }}>
                             <Typography variant="h5">
                                 {order?.customer?.fullName}'s order
                             </Typography>
@@ -204,7 +189,11 @@ export const OrderDialog = ({
                     </Grid>
                 </Toolbar>
             </AppBar>
-            <Box className={classes.container}>
+            <Box sx={{
+                background: palette.background.default,
+                flex: 'auto',
+                paddingBottom: '15vh',
+            }}>
                 <Box className={classes.pad}>
                     <Typography variant="body1" gutterBottom>{status_string}</Typography>
                     <CartTable cart={order} editable={editableStatuses.includes(order?.status)} onUpdate={(data) => setChangedOrder(data)} />
