@@ -8,6 +8,7 @@ import {
     Slide,
     Toolbar,
     Typography,
+    useTheme,
 } from '@mui/material';
 import _ from 'lodash';
 import { ACCOUNT_STATUS } from '@shared/consts';

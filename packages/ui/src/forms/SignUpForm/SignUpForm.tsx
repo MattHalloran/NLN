@@ -4,6 +4,7 @@ import { useMutation } from '@apollo/client';
 import { APP_LINKS, CODE, DEFAULT_PRONOUNS } from '@shared/consts';
 import { useFormik } from 'formik';
 import {
+    Box,
     Button,
     Checkbox,
     FormControl,
@@ -11,6 +12,7 @@ import {
     FormHelperText,
     Grid,
     Link,
+    Palette,
     Radio,
     RadioGroup,
     TextField,
@@ -21,36 +23,22 @@ import { Autocomplete } from '@mui/lab';
 import { PubSub } from 'utils';
 import { useHistory } from 'react-router-dom';
 import { signUpSchema } from '@shared/validation';
+import { mutationWrapper } from 'graphql/utils';
+import { signUpVariables } from 'graphql/generated/signUp';
 
-makeStyles((theme) => ({
-    form: {
-        width: '100%',
-        marginTop: spacing(3),
-    },
-    submit: {
-        margin: spacing(3, 0, 2),
-    },
-    phoneInput: {
-        width: '100%',
-    },
-    linkRight: {
-        flexDirection: 'row-reverse',
-    },
-    clickSize: {
-        color: palette.secondary.light,
-        cursor: 'pointer',
-        minHeight: '48px', // Lighthouse recommends this for SEO, as it is more clickable
-        display: 'flex',
-        alignItems: 'center',
-    },
-}));
+const clickSizeStyle = (palette: Palette) => ({
+    color: palette.secondary.light,
+    minHeight: '48px', // Lighthouse recommends this for SEO, as it is more clickable
+    display: 'flex',
+    alignItems: 'center',
+})
 
 export const SignUpForm = ({
     business,
     onSessionUpdate
 }) => {
     const { palette, spacing } = useTheme();
-    
+
     const history = useHistory();
     const [signUp, { loading }] = useMutation(signUpMutation);
 
@@ -69,17 +57,17 @@ export const SignUpForm = ({
         },
         validationSchema: signUpSchema,
         onSubmit: (values) => {
-            mutationWrapper({
+            mutationWrapper<signUp_signUp, signUpVariables>({
                 mutation: signUp,
-                input: { 
-                    ...values, 
+                input: {
+                    ...values,
                     accountApproved: Boolean(values.accountApproved),
                     marketingEmails: Boolean(values.marketingEmails),
                     theme: palette.mode ?? 'light',
                 },
-                onSuccess: (response) => {
-                    onSessionUpdate(response.data.signUp);
-                    if (response.data.signUp?.accountApproved) {
+                onSuccess: (data) => {
+                    onSessionUpdate(data);
+                    if (data.accountApproved) {
                         PubSub.get().publishAlertDialog({
                             message: `Welcome to ${business?.BUSINESS_NAME?.Short}. You may now begin shopping. Please verify your email within 48 hours.`,
                             buttons: [{
@@ -113,179 +101,184 @@ export const SignUpForm = ({
     });
 
     return (
-        <form className={classes.form} onSubmit={formik.handleSubmit}>
-            <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
-                    <TextField
-                        fullWidth
-                        autoFocus
-                        id="firstName"
-                        name="firstName"
-                        autoComplete="fname"
-                        label="First Name"
-                        value={formik.values.firstName}
-                        onChange={formik.handleChange}
-                        error={formik.touched.firstName && Boolean(formik.errors.firstName)}
-                        helperText={formik.touched.firstName && formik.errors.firstName}
-                    />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                    <TextField
-                        fullWidth
-                        id="lastName"
-                        name="lastName"
-                        autoComplete="lname"
-                        label="Last Name"
-                        value={formik.values.lastName}
-                        onChange={formik.handleChange}
-                        error={formik.touched.lastName && Boolean(formik.errors.lastName)}
-                        helperText={formik.touched.lastName && formik.errors.lastName}
-                    />
-                </Grid>
-                <Grid item xs={12}>
-                    <Autocomplete
-                        fullWidth
-                        freeSolo
-                        id="pronouns"
-                        name="pronouns"
-                        options={DEFAULT_PRONOUNS}
-                        value={formik.values.pronouns}
-                        onChange={(_, value) => formik.setFieldValue('pronouns', value)}
-                        renderInput={(params) => (
-                            <TextField
-                                {...params}
-                                label="Pronouns"
-                                value={formik.values.pronouns}
-                                onChange={formik.handleChange}
-                                error={formik.touched.pronouns && Boolean(formik.errors.pronouns)}
-                                helperText={formik.touched.pronouns && formik.errors.pronouns}
-                            />
-                        )}
-                    />
-                </Grid>
-                <Grid item xs={12}>
-                    <TextField
-                        fullWidth
-                        id="business"
-                        name="business"
-                        autoComplete="business"
-                        label="Business"
-                        value={formik.values.business}
-                        onChange={formik.handleChange}
-                        error={formik.touched.business && Boolean(formik.errors.business)}
-                        helperText={formik.touched.business && formik.errors.business}
-                    />
-                </Grid>
-                <Grid item xs={12}>
-                    <TextField
-                        fullWidth
-                        id="email"
-                        name="email"
-                        autoComplete="email"
-                        label="Email Address"
-                        value={formik.values.email}
-                        onChange={formik.handleChange}
-                        error={formik.touched.email && Boolean(formik.errors.email)}
-                        helperText={formik.touched.email && formik.errors.email}
-                    />
-                </Grid>
-                <Grid item xs={12}>
-                    <TextField
-                        fullWidth
-                        id="phone"
-                        name="phone"
-                        autoComplete="tel"
-                        label="Phone Number"
-                        value={formik.values.phone}
-                        onChange={formik.handleChange}
-                        error={formik.touched.phone && Boolean(formik.errors.phone)}
-                        helperText={formik.touched.phone && formik.errors.phone}
-                    />
-                </Grid>
-                <Grid item xs={12}>
-                    <TextField
-                        fullWidth
-                        id="password"
-                        name="password"
-                        type="password"
-                        autoComplete="new-password"
-                        label="Password"
-                        value={formik.values.password}
-                        onChange={formik.handleChange}
-                        error={formik.touched.password && Boolean(formik.errors.password)}
-                        helperText={formik.touched.password && formik.errors.password}
-                    />
-                </Grid>
-                <Grid item xs={12}>
-                    <TextField
-                        fullWidth
-                        id="confirmPassword"
-                        name="confirmPassword"
-                        type="password"
-                        autoComplete="new-password"
-                        label="Confirm Password"
-                        value={formik.values.confirmPassword}
-                        onChange={formik.handleChange}
-                        error={formik.touched.confirmPassword && Boolean(formik.errors.confirmPassword)}
-                        helperText={formik.touched.confirmPassword && formik.errors.confirmPassword}
-                    />
-                </Grid>
-                <Grid item xs={12}>
-                    <FormControl component="fieldset">
-                        <RadioGroup
-                            id="accountApproved"
-                            name="accountApproved"
-                            aria-label="existing-customer-check"
-                            value={formik.values.accountApproved}
+        <Box sx={{
+            width: '100%',
+            marginTop: spacing(3),
+        }}>
+            <form className={classes.form} onSubmit={formik.handleSubmit}>
+                <Grid container spacing={2}>
+                    <Grid item xs={12} sm={6}>
+                        <TextField
+                            fullWidth
+                            autoFocus
+                            id="firstName"
+                            name="firstName"
+                            autoComplete="fname"
+                            label="First Name"
+                            value={formik.values.firstName}
                             onChange={formik.handleChange}
-                        >
-                            <FormControlLabel value="true" control={<Radio />} label="I have ordered from New Life Nursery before" />
-                            <FormControlLabel value="false" control={<Radio />} label="I have never ordered from New Life Nursery" />
-                        </RadioGroup>
-                        <FormHelperText>{formik.touched.accountApproved && formik.errors.accountApproved}</FormHelperText>
-                    </FormControl>
-                </Grid>
-                <Grid item xs={12}>
-                    <FormControlLabel
-                        control={
-                            <Checkbox
-                                id="marketingEmails"
-                                name="marketingEmails"
-                                value="marketingEmails"
-                                color="secondary"
-                                checked={formik.values.marketingEmails}
+                            error={formik.touched.firstName && Boolean(formik.errors.firstName)}
+                            helperText={formik.touched.firstName && formik.errors.firstName}
+                        />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                        <TextField
+                            fullWidth
+                            id="lastName"
+                            name="lastName"
+                            autoComplete="lname"
+                            label="Last Name"
+                            value={formik.values.lastName}
+                            onChange={formik.handleChange}
+                            error={formik.touched.lastName && Boolean(formik.errors.lastName)}
+                            helperText={formik.touched.lastName && formik.errors.lastName}
+                        />
+                    </Grid>
+                    <Grid item xs={12}>
+                        <Autocomplete
+                            fullWidth
+                            freeSolo
+                            id="pronouns"
+                            name="pronouns"
+                            options={DEFAULT_PRONOUNS}
+                            value={formik.values.pronouns}
+                            onChange={(_, value) => formik.setFieldValue('pronouns', value)}
+                            renderInput={(params) => (
+                                <TextField
+                                    {...params}
+                                    label="Pronouns"
+                                    value={formik.values.pronouns}
+                                    onChange={formik.handleChange}
+                                    error={formik.touched.pronouns && Boolean(formik.errors.pronouns)}
+                                    helperText={formik.touched.pronouns && formik.errors.pronouns}
+                                />
+                            )}
+                        />
+                    </Grid>
+                    <Grid item xs={12}>
+                        <TextField
+                            fullWidth
+                            id="business"
+                            name="business"
+                            autoComplete="business"
+                            label="Business"
+                            value={formik.values.business}
+                            onChange={formik.handleChange}
+                            error={formik.touched.business && Boolean(formik.errors.business)}
+                            helperText={formik.touched.business && formik.errors.business}
+                        />
+                    </Grid>
+                    <Grid item xs={12}>
+                        <TextField
+                            fullWidth
+                            id="email"
+                            name="email"
+                            autoComplete="email"
+                            label="Email Address"
+                            value={formik.values.email}
+                            onChange={formik.handleChange}
+                            error={formik.touched.email && Boolean(formik.errors.email)}
+                            helperText={formik.touched.email && formik.errors.email}
+                        />
+                    </Grid>
+                    <Grid item xs={12}>
+                        <TextField
+                            fullWidth
+                            id="phone"
+                            name="phone"
+                            autoComplete="tel"
+                            label="Phone Number"
+                            value={formik.values.phone}
+                            onChange={formik.handleChange}
+                            error={formik.touched.phone && Boolean(formik.errors.phone)}
+                            helperText={formik.touched.phone && formik.errors.phone}
+                        />
+                    </Grid>
+                    <Grid item xs={12}>
+                        <TextField
+                            fullWidth
+                            id="password"
+                            name="password"
+                            type="password"
+                            autoComplete="new-password"
+                            label="Password"
+                            value={formik.values.password}
+                            onChange={formik.handleChange}
+                            error={formik.touched.password && Boolean(formik.errors.password)}
+                            helperText={formik.touched.password && formik.errors.password}
+                        />
+                    </Grid>
+                    <Grid item xs={12}>
+                        <TextField
+                            fullWidth
+                            id="confirmPassword"
+                            name="confirmPassword"
+                            type="password"
+                            autoComplete="new-password"
+                            label="Confirm Password"
+                            value={formik.values.confirmPassword}
+                            onChange={formik.handleChange}
+                            error={formik.touched.confirmPassword && Boolean(formik.errors.confirmPassword)}
+                            helperText={formik.touched.confirmPassword && formik.errors.confirmPassword}
+                        />
+                    </Grid>
+                    <Grid item xs={12}>
+                        <FormControl component="fieldset">
+                            <RadioGroup
+                                id="accountApproved"
+                                name="accountApproved"
+                                aria-label="existing-customer-check"
+                                value={formik.values.accountApproved}
                                 onChange={formik.handleChange}
-                            />
-                        }
-                        label="I want to receive marketing promotions and updates via email."
-                    />
+                            >
+                                <FormControlLabel value="true" control={<Radio />} label="I have ordered from New Life Nursery before" />
+                                <FormControlLabel value="false" control={<Radio />} label="I have never ordered from New Life Nursery" />
+                            </RadioGroup>
+                            <FormHelperText>{formik.touched.accountApproved && formik.errors.accountApproved}</FormHelperText>
+                        </FormControl>
+                    </Grid>
+                    <Grid item xs={12}>
+                        <FormControlLabel
+                            control={
+                                <Checkbox
+                                    id="marketingEmails"
+                                    name="marketingEmails"
+                                    value="marketingEmails"
+                                    color="secondary"
+                                    checked={formik.values.marketingEmails}
+                                    onChange={formik.handleChange}
+                                />
+                            }
+                            label="I want to receive marketing promotions and updates via email."
+                        />
+                    </Grid>
                 </Grid>
-            </Grid>
-            <Button
-                fullWidth
-                disabled={loading}
-                type="submit"
-                color="secondary"
-                className={classes.submit}
-            >
-                Sign Up
-            </Button>
-            <Grid container spacing={2}>
-                <Grid item xs={6}>
-                    <Link onClick={() => history.push(APP_LINKS.LogIn)}>
-                        <Typography className={classes.clickSize}>
-                            Already have an account? Log in
-                        </Typography>
-                    </Link>
+                <Button
+                    fullWidth
+                    disabled={loading}
+                    type="submit"
+                    color="secondary"
+                    sx={{ margin: spacing(3, 0, 2) }}
+                >
+                    Sign Up
+                </Button>
+                <Grid container spacing={2}>
+                    <Grid item xs={6}>
+                        <Link onClick={() => history.push(APP_LINKS.LogIn)}>
+                            <Typography sx={clickSizeStyle(palette)}>
+                                Already have an account? Log in
+                            </Typography>
+                        </Link>
+                    </Grid>
+                    <Grid item xs={6}>
+                        <Link onClick={() => history.push(APP_LINKS.ForgotPassword)}>
+                            <Typography sx={{ ...clickSizeStyle(palette), flexDirection: 'row-reverse' }}>
+                                Forgot Password?
+                            </Typography>
+                        </Link>
+                    </Grid>
                 </Grid>
-                <Grid item xs={6}>
-                    <Link onClick={() => history.push(APP_LINKS.ForgotPassword)}>
-                        <Typography className={`${classes.clickSize} ${classes.linkRight}`}>
-                            Forgot Password?
-                        </Typography>
-                    </Link>
-                </Grid>
-            </Grid>
-        </form>
+            </form>
+        </Box>
     );
 }

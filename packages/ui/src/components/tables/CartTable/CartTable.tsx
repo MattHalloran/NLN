@@ -1,10 +1,10 @@
-import React, { useCallback } from 'react';
+import { useCallback } from 'react';
 import {
     QuantityBox,
     Selector,
     SnackSeverity
 } from 'components';
-import { deleteArrayIndex, showPrice, updateObject, PubSub, getImageSrc, getPlantTrait, updateArray } from 'utils';
+import { deleteArrayIndex, showPrice, updateObject, PubSub, getImageSrc, getPlantTrait, updateArray, getServerUrl } from 'utils';
 import { NoImageIcon } from 'assets/img';
 import { IconButton, useTheme } from '@mui/material';
 import { Box, Paper, Grid, TableContainer, Table, TableHead, TableRow, TableCell, TableBody, TextField } from '@mui/material';

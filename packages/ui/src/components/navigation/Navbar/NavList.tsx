@@ -1,30 +1,18 @@
-import React from 'react';
 import {
     ContactInfo,
     PopupMenu
 } from 'components';
-import { getUserActions, updateArray } from 'utils';
-import { Container, Button, IconButton, Badge, List, ListItem, ListItemIcon, ListItemText, useTheme, useTheme } from '@mui/material';
+import { getUserActions, updateArray, UserActions } from 'utils';
+import { Container, Button, IconButton, Badge, List, ListItem, ListItemIcon, ListItemText, useTheme, Palette } from '@mui/material';
 import _ from 'lodash';
 import { APP_LINKS } from '@shared/consts';
+import { CreateAccountIcon, InfoIcon, PhotoLibraryIcon, ShoppingCartIcon } from '@shared/icons';
 
-makeStyles((theme) => ({
-    navItem: {
-        background: 'transparent',
-        color: palette.primary.contrastText,
-        textTransform: 'none',
-    },
-    menuItem: {
-        color: palette.primary.contrastText,
-    },
-    menuIcon: {
-        fill: palette.primary.contrastText,
-    },
-    contact: {
-        width: 'calc(min(100vw, 400px))',
-        height: '300px',
-    },
-}));
+const navItemStyle = (palette: Palette) => ({
+    background: 'transparent',
+    color: palette.primary.contrastText,
+    textTransform: 'none',
+})
 
 export const NavList = ({
     session,
@@ -41,7 +29,7 @@ export const NavList = ({
     let cart_button;
     // If someone is not logged in, display sign up/log in APP_LINKS
     if (!_.isObject(session) || Object.keys(session).length === 0) {
-        nav_options.push(['Sign Up', 'signup', APP_LINKS.Register]);
+        nav_options.push(['Sign Up', 'signup', APP_LINKS.Register, null, CreateAccountIcon, 0]);
     } else {
         // Cart option is rendered differently, so we must take it out of the array
         let cart_index = nav_options.length - 1;
@@ -57,17 +45,22 @@ export const NavList = ({
         );
     }
 
-    let about_options = [
-        ['About Us', 'about', APP_LINKS.About, null, InfoIcon],
-        ['Gallery', 'gallery', APP_LINKS.Gallery, null, PhotoLibraryIcon]
+    let about_options: UserActions = [
+        ['About Us', 'about', APP_LINKS.About, null, InfoIcon, 0],
+        ['Gallery', 'gallery', APP_LINKS.Gallery, null, PhotoLibraryIcon, 0]
     ]
 
     const optionsToList = (options) => {
         return options.map(([label, value, link, onClick, Icon], index) => (
-            <ListItem className={classes.menuItem} button key={index} onClick={() => { onRedirect(link); if (onClick) onClick() }}>
+            <ListItem
+                button
+                key={index}
+                onClick={() => { onRedirect(link); if (onClick) onClick() }}
+                sx={{ color: palette.primary.contrastText }}
+            >
                 {Icon ?
                     (<ListItemIcon>
-                        <Icon className={classes.menuIcon} />
+                        <Icon fill={palette.primary.contrastText} />
                     </ListItemIcon>) : null}
                 <ListItemText primary={label} />
             </ListItem>
@@ -80,8 +73,8 @@ export const NavList = ({
                 key={index}
                 variant="text"
                 size="large"
-                className={classes.navItem}
                 onClick={() => { onRedirect(link); if (onClick) onClick() }}
+                sx={navItemStyle(palette)}
             >
                 {label}
             </Button>
@@ -100,15 +93,18 @@ export const NavList = ({
                 text="Contact"
                 variant="text"
                 size="large"
-                className={classes.navItem}
+                sx={navItemStyle(palette)}
             >
-                <ContactInfo className={classes.contact} business={business} />
+                <ContactInfo business={business} sx={{
+                    width: 'calc(min(100vw, 400px))',
+                    height: '300px'
+                }} />
             </PopupMenu>
             <PopupMenu
                 text="About"
                 variant="text"
                 size="large"
-                className={classes.navItem}
+                sx={navItemStyle(palette)}
             >
                 <List>
                     {optionsToList(about_options)}

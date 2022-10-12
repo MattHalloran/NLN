@@ -1,21 +1,11 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { SliderContent } from './SliderContent';
 import { Slide } from './Slide';
 import { Dots } from './Dots';
+import { Box } from '@mui/material';
 
 const DEFAULT_DELAY = 3000;
 const DEFAULT_DURATION = 1000;
-
-makeStyles({
-    slider: {
-        position: 'relative',
-        height: '100vh',
-        width: '100vw',
-        margin: '0 auto',
-        overflow: 'hidden',
-        whiteSpace: 'nowrap',
-    },
-});
 
 export const Slider = ({
     images = [],
@@ -23,8 +13,6 @@ export const Slider = ({
     slidingDelay = DEFAULT_DELAY,
     slidingDuration = DEFAULT_DURATION,
 }) => {
-    const { palette } = useTheme();
-
     const [width, setWidth] = useState(window.innerWidth);
     const [slideIndex, setSlideIndex] = useState(0);
     const [translate, setTranslate] = useState(0);
@@ -62,7 +50,7 @@ export const Slider = ({
         if (images?.length > 0) {
             let copy = [...images, images[0]];
             return copy.map((s, i) => (
-                <Slide width={width} key={'slide-'+i} image={s} />
+                <Slide width={width} key={'slide-' + i} image={s} />
             ));
         } else {
             return [];
@@ -70,7 +58,17 @@ export const Slider = ({
     }, [width, images])
 
     return (
-        <Box className={classes.slider} ref={sliderRef}>
+        <Box
+            ref={sliderRef}
+            sx={{
+                position: 'relative',
+                height: '100vh',
+                width: '100vw',
+                margin: '0 auto',
+                overflow: 'hidden',
+                whiteSpace: 'nowrap',
+            }}
+        >
             <SliderContent
                 translate={translate}
                 transition={transition}

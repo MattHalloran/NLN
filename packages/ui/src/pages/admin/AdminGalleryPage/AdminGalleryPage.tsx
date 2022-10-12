@@ -1,13 +1,17 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { Box, Typography, useTheme } from '@mui/material';
+import { useCallback, useEffect, useState } from 'react';
+import { useTheme } from '@mui/material';
 import { imagesByLabelQuery } from 'graphql/query';
 import { addImagesMutation, updateImagesMutation } from 'graphql/mutation';
 import { useQuery, useMutation } from '@apollo/client';
 import {
     AdminBreadcrumbs,
     Dropzone,
+    PageContainer,
+    PageTitle,
     WrappedImageList
 } from 'components';
+import { mutationWrapper } from 'graphql/utils';
+import { addImagesVariables, addImages_addImages } from 'graphql/generated/addImages';
 
 export const AdminGalleryPage = () => {
     const { palette } = useTheme();
@@ -18,7 +22,7 @@ export const AdminGalleryPage = () => {
     const [updateImages] = useMutation(updateImagesMutation);
 
     const uploadImages = (acceptedFiles) => {
-        mutationWrapper({
+        mutationWrapper<addImages_addImages[], addImagesVariables>({
             mutation: addImages,
             input: { files: acceptedFiles, labels: ['gallery'] },
             successMessage: () => `Successfully uploaded ${acceptedFiles.length} image(s).`,
@@ -46,7 +50,7 @@ export const AdminGalleryPage = () => {
         const finals = changed.map(d => d.hash);
         const deleting = originals.filter(s => !finals.includes(s));
         // Perform update
-        mutationWrapper({
+        mutationWrapper<any, updateImagesVariables>({
             mutation: updateImages,
             input: { data, deleting, label: 'gallery' },
             successMessage: () => 'Successfully updated image(s).',
@@ -56,9 +60,7 @@ export const AdminGalleryPage = () => {
     return (
         <PageContainer>
             <AdminBreadcrumbs textColor={palette.secondary.dark} />
-            <Box className={classes.header}>
-                <Typography variant="h3" component="h1">Manage Gallery</Typography>
-            </Box>
+            <PageTitle title="Manage Gallery" />
             <Dropzone
                 dropzoneText={'Drag \'n\' drop new images here or click'}
                 onUpload={uploadImages}

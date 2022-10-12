@@ -56,7 +56,7 @@ export function App() {
     const [loading, setLoading] = useState(false);
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
     const [business, setBusiness] = useState(null)
-    const { data: businessData } = useQuery(readAssetsQuery, { variables: { files: ['hours.md', 'business.json'] } });
+    const { data: businessData } = useQuery(readAssetsQuery, { variables: { input: { files: ['hours.md', 'business.json'] } }  });
     const [login] = useMutation(loginMutation);
     let history = useHistory();
 

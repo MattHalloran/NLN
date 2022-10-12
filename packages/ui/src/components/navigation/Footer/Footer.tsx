@@ -2,7 +2,7 @@ import React from 'react';
 import ProvenWinners from 'assets/img/proven-winners.png';
 import AmericanHort from 'assets/img/american-hort.png';
 import NJNLA from 'assets/img/njnla_logo.jpg';
-import { printAvailability } from 'utils';
+import { getServerUrl, printAvailability } from 'utils';
 import { List, ListItem, ListItemIcon, ListItemText, Grid, ButtonBase, Tooltip, Box, useTheme } from '@mui/material';
 import { CopyrightBreadcrumbs } from 'components';
 import { useHistory } from 'react-router';
@@ -26,7 +26,7 @@ makeStyles((theme) => ({
         fill: palette.primary.contrastText,
     },
     copyright: {
-        color: palette.primary.contrastText,
+        ,
     },
 }));
 
@@ -61,7 +61,7 @@ export const Footer = ({
             <Grid container justifyContent='center' spacing={1}>
                 <Grid item xs={12} sm={6}>
                     <List component="nav">
-                        <ListItem variant="h5" component="h3" >
+                        <ListItem component="h3" >
                             <ListItemText className={classes.upper} primary="Resources" />
                         </ListItem>
                         <ListItem button component="a" onClick={() => history.push(APP_LINKS.About)} >
@@ -87,7 +87,7 @@ export const Footer = ({
                 </Grid>
                 <Grid item xs={12} sm={6}>
                     <List component="nav">
-                        <ListItem variant="h5" component="h3" >
+                        <ListItem component="h3" >
                             <ListItemText className={classes.upper} primary="Contact" />
                         </ListItem>
                         {contactAPP_LINKS.map(([label, tooltip, src, text, Icon], key) => (
@@ -114,7 +114,7 @@ export const Footer = ({
                     </Grid>
                 ))}
             </Grid>
-            <CopyrightBreadcrumbs className={classes.copyright} business={business} textColor={palette.primary.contrastText} />
+            <CopyrightBreadcrumbs business={business} textColor={palette.primary.contrastText} sx={{ color: palette.primary.contrastText }} />
         </Box>
     );
 }

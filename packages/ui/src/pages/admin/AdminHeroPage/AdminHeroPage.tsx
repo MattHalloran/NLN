@@ -1,24 +1,29 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { Box, Typography } from '@mui/material';
+import { useCallback, useEffect, useState } from 'react';
 import { imagesByLabelQuery } from 'graphql/query';
 import { addImagesMutation, updateImagesMutation } from 'graphql/mutation';
 import { useQuery, useMutation } from '@apollo/client';
 import {
     AdminBreadcrumbs,
     Dropzone,
+    PageContainer,
+    PageTitle,
     WrappedImageList
 } from 'components';
+import { useTheme } from '@mui/material';
+import { mutationWrapper } from 'graphql/utils';
+import { addImagesVariables, addImages_addImages } from 'graphql/generated/addImages';
+import { updateImagesVariables } from 'graphql/generated/updateImages';
 
 export const AdminHeroPage = () => {
     const { palette } = useTheme();
 
     const [imageData, setImageData] = useState([]);
-    const { data: currImages, refetch: refetchImages } = useQuery(imagesByLabelQuery, { variables: { label: 'hero' } });
+    const { data: currImages, refetch: refetchImages } = useQuery(imagesByLabelQuery, { variables: { input: { label: 'hero' } } });
     const [addImages] = useMutation(addImagesMutation);
     const [updateImages] = useMutation(updateImagesMutation);
 
     const uploadImages = (acceptedFiles) => {
-        mutationWrapper({
+        mutationWrapper<addImages_addImages, addImagesVariables>({
             mutation: addImages,
             input: { files: acceptedFiles, labels: ['hero'] },
             successMessage: () => `Successfully uploaded ${acceptedFiles.length} image(s).`,
@@ -46,9 +51,9 @@ export const AdminHeroPage = () => {
         const finals = changed.map(d => d.hash);
         const deleting = originals.filter(s => !finals.includes(s));
         // Perform update
-        mutationWrapper({
+        mutationWrapper<any, updateImagesVariables>({
             mutation: updateImages,
-            data: { variables: { data, deleting, label: 'hero' } },
+            input: { data, deleting, label: 'hero' },
             successMessage: () => 'Successfully updated image(s).',
         })
     }, [imageData, updateImages])
@@ -56,9 +61,7 @@ export const AdminHeroPage = () => {
     return (
         <PageContainer>
             <AdminBreadcrumbs textColor={palette.secondary.dark} />
-            <Box className={classes.header}>
-                <Typography variant="h3" component="h1">Manage Hero</Typography>
-            </Box>
+            <PageTitle title="Manage Hero" />
             <Dropzone
                 dropzoneText={'Drag \'n\' drop new images here or click'}
                 onUpload={uploadImages}

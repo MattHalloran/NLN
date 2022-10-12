@@ -1,29 +1,4 @@
-import React from 'react';
 import { TableCell, TableHead, TableRow, Checkbox, useTheme } from '@mui/material';
-
-makeStyles((theme) => ({
-    root: {
-        background: palette.primary.main,
-        color: palette.primary.contrastText,
-    },
-    check: {
-        color: palette.primary.contrastText,
-    },
-    cell: {
-        color: palette.primary.contrastText,
-    },
-    visuallyHidden: {
-        border: 0,
-        clip: 'rect(0 0 0 0)',
-        height: 1,
-        margin: -1,
-        overflow: 'hidden',
-        padding: 0,
-        position: 'absolute',
-        top: 20,
-        width: 1,
-    },
-}));
 
 const exampleCells = [
     { id: 'name', align: 'left', disablePadding: true, label: 'Dessert (100g serving)' },
@@ -42,23 +17,26 @@ export const EnhancedTableHead = ({
     const { palette } = useTheme();
 
     return (
-        <TableHead className={classes.root}>
+        <TableHead sx={{
+            background: palette.primary.main,
+            color: palette.primary.contrastText,
+        }}>
             <TableRow>
                 <TableCell padding="checkbox">
                     <Checkbox
-                        className={classes.check}
                         indeterminate={numSelected > 0 && numSelected < rowCount}
                         checked={rowCount > 0 && numSelected === rowCount}
                         onChange={onSelectAllClick}
                         inputProps={{ 'aria-label': 'select all desserts' }}
+                        sx={{ color: palette.primary.contrastText }}
                     />
                 </TableCell>
                 {headCells.map((headCell) => (
                     <TableCell
                         key={headCell.id}
                         align={headCell.align ?? 'left'}
-                        className={classes.cell}
                         padding={headCell.disablePadding ? 'none' : 'default'}
+                        sx={{ color: palette.primary.contrastText }}
                     >
                         {headCell.label}
                     </TableCell>

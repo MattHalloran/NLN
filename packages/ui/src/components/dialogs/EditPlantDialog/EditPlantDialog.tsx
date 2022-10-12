@@ -35,6 +35,10 @@ import {
 // import { DropzoneAreaBase } from 'material-ui-dropzone';
 import _ from 'lodash';
 import { CancelIcon, CloseIcon, CreateIcon, DeleteIcon, SaveIcon } from '@shared/icons';
+import { mutationWrapper } from 'graphql/utils';
+import { addImagesVariables, addImages_addImages } from 'graphql/generated/addImages';
+import { updatePlantVariables, updatePlant_updatePlant } from 'graphql/generated/updatePlant';
+import { deletePlantsVariables, deletePlants_deletePlants } from 'graphql/generated/deletePlants';
 
 // Common plant traits, and their corresponding field names
 const PLANT_TRAITS = {
@@ -59,14 +63,14 @@ makeStyles((theme) => ({
         position: 'relative',
     },
     container: {
-        background: background.default,
+        background: palette.background.default,
         flex: 'auto',
     },
     sideNav: {
         width: '25%',
         height: '100%',
         float: 'left',
-        borderRight: `2px solid ${text.primary}`,
+        borderRight: `2px solid ${palette.text.primary}`,
     },
     title: {
         paddingBottom: '1vh',
@@ -77,10 +81,6 @@ makeStyles((theme) => ({
     },
     gridContainer: {
         paddingBottom: '3vh',
-    },
-    optionsContainer: {
-        padding: spacing(2),
-        background: primary.main,
     },
     displayImage: {
         border: '1px solid black',
@@ -126,7 +126,7 @@ export const EditPlantDialog = ({
     onClose,
 }) => {
     const { palette, spacing } = useTheme();
-    
+
     const [changedPlant, setChangedPlant] = useState(plant);
     const [updatePlant] = useMutation(updatePlantMutation);
     const [deletePlant] = useMutation(deletePlantsMutation);
@@ -139,12 +139,12 @@ export const EditPlantDialog = ({
     const toggleCompactView = () => setCompactView(view => !view);
 
     const uploadImages = (acceptedFiles) => {
-        mutationWrapper({
+        mutationWrapper<addImages_addImages[], addImagesVariables>({
             mutation: addImages,
             input: { files: acceptedFiles, },
             successMessage: () => `Successfully uploaded ${acceptedFiles.length} image(s)`,
-            onSuccess: (response) => {
-                setImageData([...imageData, ...response.data.addImages.filter(d => d.success).map(d => {
+            onSuccess: (data) => {
+                setImageData([...(imageData ?? []), ...data.filter(d => d.success).map(d => {
                     return {
                         hash: d.hash,
                         files: [{ src: d.src }]
@@ -189,12 +189,12 @@ export const EditPlantDialog = ({
             message: `Are you sure you want to delete this plant, along with its SKUs? This cannot be undone.`,
             buttons: [{
                 text: 'Yes',
-                onClick: () => mutationWrapper({
+                onClick: () => mutationWrapper<deletePlants_deletePlants, deletePlantsVariables>({
                     mutation: deletePlant,
-                    data: { variables: { ids: [changedPlant.id] } },
+                    input: { ids: [changedPlant.id] },
                     successMessage: () => 'Plant deleted.',
                     onSuccess: () => onClose(),
-                    errorMesage: () => 'Failed to delete plant.',
+                    errorMessage: () => 'Failed to delete plant.',
                 }),
             }, {
                 text: 'No',
@@ -216,9 +216,9 @@ export const EditPlantDialog = ({
                 return { hash: d.hash, isDisplay: d.isDisplay ?? false }
             })
         }
-        mutationWrapper({
+        mutationWrapper<updatePlant_updatePlant, updatePlantVariables>({
             mutation: updatePlant,
-            data: { variables: { input: plant_data } },
+            input: { ...plant_data },
             successMessage: () => 'Plant updated.',
             onSuccess: () => setImagesChanged(false),
             errorMessage: () => 'Failed to delete plant.'
@@ -257,7 +257,14 @@ export const EditPlantDialog = ({
 
     let changes_made = !_.isEqual(plant, changedPlant) || imagesChanged;
     let options = (
-        <Grid className={classes.optionsContainer} container spacing={2}>
+        <Grid
+            container
+            spacing={2}
+            sx={{
+                padding: spacing(2),
+                background: palette.primary.main,
+            }}
+        >
             <Grid item xs={12} sm={4}>
                 <Button
                     fullWidth

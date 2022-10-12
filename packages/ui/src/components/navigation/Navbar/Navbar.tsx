@@ -10,28 +10,6 @@ import { useMutation } from '@apollo/client';
 const SHOW_HAMBURGER_AT = 1000;
 
 makeStyles((theme) => ({
-    toRight: {
-        marginLeft: 'auto',
-    },
-    navLogoContainer: {
-        padding: 0,
-        display: 'flex',
-        alignItems: 'center',
-    },
-    navLogoDiv: {
-        display: 'flex',
-        padding: 0,
-        cursor: 'pointer',
-        marginTop: '5px',
-        marginBottom: '5px',
-        marginRight: 'auto',
-        background: palette.mode === 'light' ? '#0c3a0b' : 'radial-gradient(circle at center, #757565 0, #757565, white 100%)',
-        borderRadius: '500px',
-        minHeight: '50px',
-        minWidth: '50px',
-        height: '12vh',
-        width: '12vh',
-    },
     navLogo: {
         '-webkit-filter': `drop-shadow(0.5px 0.5px 0 ${hexToRGB(palette.primary.dark, 0.9)})
                         drop-shadow(-0.5px -0.5px 0 ${hexToRGB(palette.primary.dark, 0.9)})`,
@@ -121,13 +99,17 @@ export const Navbar = ({
         <HideOnScroll>
             <AppBar>
                 <Toolbar sx={{ background: palette.primary.main, }}>
-                    <Box className={classes.navLogoContainer} onClick={() => onRedirect(APP_LINKS.Home)}>
+                    <Box onClick={() => onRedirect(APP_LINKS.Home)} sx={{
+                        padding: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                    }}>
                         <Box className={classes.navLogoBox}>
                             <img src={Logo} alt={`${business?.BUSINESS_NAME?.Short} Logo`} className={classes.navLogo} />
                         </Box>
                         <Typography className={classes.navName} variant="h6" noWrap>{business?.BUSINESS_NAME?.Short}</Typography>
                     </Box>
-                    <Box className={classes.toRight}>
+                    <Box sx={{ marginLeft: 'auto' }}>
                         {show_hamburger ? <Hamburger {...child_props} /> : <NavList {...child_props} />}
                     </Box>
                 </Toolbar>

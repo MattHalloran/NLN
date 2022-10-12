@@ -2,6 +2,7 @@ import React, { useCallback, useState } from 'react';
 import update from 'immutability-helper';
 import { ImageCard } from 'components';
 import { EditImageDialog } from 'components';
+import { useTheme } from '@mui/material';
 
 makeStyles((theme) => ({
     flexed: {

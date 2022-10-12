@@ -2,7 +2,7 @@ import { useRef } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
 import { getImageSrc, getServerUrl } from 'utils';
 import { IMAGE_SIZE } from '@shared/consts';
-import { Card, CardActions, CardContent, CardMedia, IconButton } from '@mui/material';
+import { Card, CardActions, CardContent, CardMedia, IconButton, useTheme } from '@mui/material';
 import { DeleteIcon, EditIcon } from '@shared/icons';
 
 export const ImageCard = ({
