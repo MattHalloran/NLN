@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
     AppBar,
+    Box,
     Button,
     Dialog,
     Grid,
     IconButton,
-    Slide,
     Toolbar,
     Typography,
     useTheme,
@@ -19,40 +19,12 @@ import { documentNodeWrapper } from 'graphql/utils';
 import { updateCustomerVariables } from 'graphql/generated/updateCustomer';
 import { deleteCustomerVariables } from 'graphql/generated/deleteCustomer';
 import { AccountStatus } from 'graphql/generated/globalTypes';
-
-makeStyles((theme) => ({
-    appBar: {
-        position: 'relative',
-    },
-    title: {
-        textAlign: 'center',
-    },
-    optionsContainer: {
-        padding: spacing(2),
-        background: palette.primary.main,
-    },
-    container: {
-        background: palette.background.default,
-        flex: 'auto',
-        padding: spacing(1),
-        paddingBottom: '15vh',
-    },
-    bottom: {
-        background: palette.primary.main,
-        position: 'fixed',
-        bottom: '0',
-        width: '-webkit-fill-available',
-        zIndex: 1,
-    },
-}));
-
-const Transition = React.forwardRef(function Transition(props, ref) {
-    return <Slide direction="up" ref={ref} {...props} />;
-});
+import { Transition } from '../UpTransition/UpTransition';
+import { customers_customers } from 'graphql/generated/customers';
 
 // Associates account states with a dynamic action button
 // curr_account_value: [curr_account_label, toggled_account_label, toggled_account_value, toggle_icon]
-const statusToggle: { [key in AccountStatus]: [string, string, AccountStatus, SvgComponent] } = {
+const statusToggle: { [key in AccountStatus]?: [string, string, AccountStatus, SvgComponent] } = {
     [ACCOUNT_STATUS.Deleted]: ['Deleted', 'Undelete', ACCOUNT_STATUS.Unlocked, (<CreateIcon />)],
     [ACCOUNT_STATUS.Unlocked]: ['Unlocked', 'Lock', ACCOUNT_STATUS.HardLock, (<LockIcon />)],
     [ACCOUNT_STATUS.SoftLock]: ['Soft Locked (password timeout)', 'Unlock', ACCOUNT_STATUS.Unlocked, (<LockOpenIcon />)],
@@ -67,7 +39,7 @@ export const CustomerDialog = ({
     const { palette, spacing } = useTheme();
 
     // Stores the modified customer data before updating
-    const [currCustomer, setCurrCustomer] = useState(customer);
+    const [currCustomer, setCurrCustomer] = useState<customers_customers>(customer);
 
     useEffect(() => {
         setCurrCustomer(customer);
@@ -75,9 +47,8 @@ export const CustomerDialog = ({
 
     const revert = () => setCurrCustomer(customer);
 
-    const statusToggleData = useMemo(() => {
-        if (!(currCustomer?.status in statusToggle)) return ['', '', null, null];
-        return statusToggle[currCustomer.status];
+    const statusToggleData = useMemo<[string, string, AccountStatus | null, SvgComponent | null]>(() => {
+        return currCustomer?.status in statusToggle ? statusToggle[currCustomer.status] : ['', '', null, null] as [string, string, AccountStatus | null, SvgComponent | null];
     }, [currCustomer])
 
     // Locks/unlocks/undeletes a user
@@ -114,14 +85,17 @@ export const CustomerDialog = ({
     const updateCustomer = useCallback(() => {
         documentNodeWrapper<any, updateCustomerVariables>({
             node: updateCustomerMutation,
-            input: { ...currCustomer },
+            input: { input: ...currCustomer },
             successMessage: () => 'Customer updated.',
         })
     }, [currCustomer])
 
     let changes_made = !_.isEqual(customer, currCustomer);
     let options = (
-        <Grid className={classes.optionsContainer} container spacing={2}>
+        <Grid container spacing={2} sx={{
+            padding: spacing(2),
+            background: palette.primary.main,
+        }}>
             <Grid item xs={12} sm={6} md={3}>
                 <Button
                     fullWidth
@@ -159,13 +133,13 @@ export const CustomerDialog = ({
 
     return (
         <Dialog fullScreen open={open} onClose={onClose} TransitionComponent={Transition}>
-            <AppBar className={classes.appBar}>
+            <AppBar sx={{ position: 'relative' }}>
                 <Toolbar>
                     <IconButton edge="start" color="inherit" onClick={onClose} aria-label="close">
                         <CloseIcon />
                     </IconButton>
                     <Grid container spacing={0}>
-                        <Grid className={classes.title} item xs={12}>
+                        <Grid sx={{ textAlign: 'center' }} item xs={12}>
                             <Typography variant="h5">
                                 {customer?.fullName}
                             </Typography>
@@ -176,12 +150,23 @@ export const CustomerDialog = ({
                     </Grid>
                 </Toolbar>
             </AppBar>
-            <div className={classes.container}>
+            <Box sx={{
+                background: palette.background.default,
+                flex: 'auto',
+                padding: spacing(1),
+                paddingBottom: '15vh',
+            }}>
 
-                <div className={classes.bottom}>
+                <Box sx={{
+                    background: palette.primary.main,
+                    position: 'fixed',
+                    bottom: '0',
+                    width: '-webkit-fill-available',
+                    zIndex: 1,
+                }}>
                     {options}
-                </div>
-            </div>
+                </Box>
+            </Box>
         </Dialog>
     );
 }

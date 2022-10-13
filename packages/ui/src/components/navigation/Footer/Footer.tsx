@@ -62,7 +62,7 @@ export const Footer = ({
                 <Grid item xs={12} sm={6}>
                     <List component="nav">
                         <ListItem component="h3" >
-                            <ListItemText className={classes.upper} primary="Resources" />
+                            <ListItemText sx={{ textTransform: 'uppercase' }} primary="Resources" />
                         </ListItem>
                         <ListItem button component="a" onClick={() => history.push(APP_LINKS.About)} >
                             <ListItemText primary="About Us" />
@@ -88,13 +88,13 @@ export const Footer = ({
                 <Grid item xs={12} sm={6}>
                     <List component="nav">
                         <ListItem component="h3" >
-                            <ListItemText className={classes.upper} primary="Contact" />
+                            <ListItemText sx={{ textTransform: 'uppercase' }} primary="Contact" />
                         </ListItem>
                         {contactAPP_LINKS.map(([label, tooltip, src, text, Icon], key) => (
                             <Tooltip key={key} title={tooltip} placement="left">
                                 <ListItem button component="a" aria-label={label} href={src}>
                                     <ListItemIcon>
-                                        <Icon className={classes.icon} ></Icon>
+                                        <Icon fill={palette.primary.contrastText} ></Icon>
                                     </ListItemIcon>
                                     <ListItemText primary={text} />
                                 </ListItem>
@@ -105,7 +105,10 @@ export const Footer = ({
                 {bottomImages.map(([src, alt, img], key) => (
                     <Grid key={key} item xs={4}>
                         <Tooltip title={alt} placement="bottom">
-                            <ButtonBase className={classes.imageContainer}>
+                            <ButtonBase sx={{
+                                maxWidth: '33vw',
+                                padding: 10,
+                            }}>
                                 <a href={src} target="_blank" rel="noopener noreferrer">
                                     <img className={classes.image} alt={alt} src={img} />
                                 </a>

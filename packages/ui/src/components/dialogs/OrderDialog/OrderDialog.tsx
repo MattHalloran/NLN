@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import {
     AppBar,
+    Box,
     Button,
     Dialog,
     Grid,
@@ -10,13 +11,13 @@ import {
     Typography,
     useTheme,
 } from '@mui/material';
-import { CartTable } from 'components';
+import { CartTable, Transition } from 'components';
 import { updateOrderMutation } from 'graphql/mutation';
 import { useMutation } from '@apollo/client';
 import { findWithAttr, ORDER_FILTERS } from 'utils';
 import { ORDER_STATUS, ROLES } from '@shared/consts';
 import _ from 'lodash';
-import { CancelIcon, CloseIcon, CompleteIcon, EditIcon, SaveIcon, ScheduleIcon, SuccessIcon } from '@shared/icons';
+import { CancelIcon, CloseIcon, CompleteIcon, EditIcon, SaveIcon, ScheduleIcon, SuccessIcon, ThumbDownIcon, ThumbUpIcon } from '@shared/icons';
 import { mutationWrapper } from 'graphql/utils';
 import { updateOrderVariables, updateOrder_updateOrder } from 'graphql/generated/updateOrder';
 
@@ -34,10 +35,6 @@ makeStyles((theme) => ({
 }));
 
 const editableStatuses = [ORDER_STATUS.PendingCancel, ORDER_STATUS.Pending, ORDER_STATUS.Approved, ORDER_STATUS.Scheduled]
-
-const Transition = React.forwardRef(function Transition(props, ref) {
-    return <Slide direction="up" ref={ref} {...props} />;
-});
 
 export const OrderDialog = ({
     order,

@@ -216,7 +216,7 @@ export interface SkusInput {
 
 export interface UpdateCustomerInput {
   input: CustomerInput;
-  currentPassword: string;
+  currentPassword?: string | null;
   newPassword?: string | null;
 }
 

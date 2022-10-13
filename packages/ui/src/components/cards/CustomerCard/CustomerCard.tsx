@@ -18,6 +18,8 @@ import { mutationWrapper } from 'graphql/utils';
 import { deleteCustomerVariables } from 'graphql/generated/deleteCustomer';
 import { changeCustomerStatusVariables } from 'graphql/generated/changeCustomerStatus';
 
+type ActionArray = [(() => any), JSX.Element, string];
+
 export const CustomerCard = ({
     customer,
     status = ACCOUNT_STATUS.Deleted,
@@ -92,15 +94,15 @@ export const CustomerCard = ({
         });
     }, [customer, modifyCustomer])
 
-    let edit_action = [edit, <EditIcon fill={palette.secondary.light} />, 'Edit customer']
-    let approve_action = [() => modifyCustomer(ACCOUNT_STATUS.Unlocked, 'Customer account approved.'), <ThumbUpIcon fill={palette.secondary.light} />, 'Approve customer account'];
-    let unlock_action = [() => modifyCustomer(ACCOUNT_STATUS.Unlocked, 'Customer account unlocked.'), <LockOpenIcon fill={palette.secondary.light} />, 'Unlock customer account'];
-    let lock_action = [() => modifyCustomer(ACCOUNT_STATUS.HardLock, 'Customer account locked.'), <LockIcon fill={palette.secondary.light} />, 'Lock customer account'];
-    let undelete_action = [() => modifyCustomer(ACCOUNT_STATUS.Unlocked, 'Customer account restored.'), <LockOpenIcon fill={palette.secondary.light} />, 'Restore deleted account'];
-    let delete_action = [confirmDelete, <DeleteIcon fill={palette.secondary.light} />, 'Delete user'];
-    let permanent_delete_action = [confirmPermanentDelete, <DeleteForeverIcon fill={palette.secondary.light} />, 'Permanently delete user']
+    let edit_action: ActionArray = [edit, <EditIcon fill={palette.secondary.light} />, 'Edit customer']
+    let approve_action: ActionArray = [() => modifyCustomer(ACCOUNT_STATUS.Unlocked, 'Customer account approved.'), <ThumbUpIcon fill={palette.secondary.light} />, 'Approve customer account'];
+    let unlock_action: ActionArray = [() => modifyCustomer(ACCOUNT_STATUS.Unlocked, 'Customer account unlocked.'), <LockOpenIcon fill={palette.secondary.light} />, 'Unlock customer account'];
+    let lock_action: ActionArray = [() => modifyCustomer(ACCOUNT_STATUS.HardLock, 'Customer account locked.'), <LockIcon fill={palette.secondary.light} />, 'Lock customer account'];
+    let undelete_action: ActionArray = [() => modifyCustomer(ACCOUNT_STATUS.Unlocked, 'Customer account restored.'), <LockOpenIcon fill={palette.secondary.light} />, 'Restore deleted account'];
+    let delete_action: ActionArray = [confirmDelete, <DeleteIcon fill={palette.secondary.light} />, 'Delete user'];
+    let permanent_delete_action: ActionArray = [confirmPermanentDelete, <DeleteForeverIcon fill={palette.secondary.light} />, 'Permanently delete user']
 
-    let actions: [(() => any), JSX.Element, string][] = [edit_action];
+    let actions: ActionArray[] = [edit_action];
     // Actions for customer accounts
     if (!Array.isArray(customer?.roles) || !customer.roles.some(r => ['Owner', 'Admin'].includes(r.role.title))) {
         switch (customer?.status) {

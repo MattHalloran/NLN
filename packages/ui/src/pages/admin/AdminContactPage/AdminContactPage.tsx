@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { AdminBreadcrumbs, PageContainer, PageTitle } from 'components';
-import ReactMarkdown from 'react-markdown';
-import gfm from 'remark-gfm';
 import {
+    Box,
     Button,
     Grid,
     TextField,
@@ -12,28 +11,7 @@ import { useMutation } from '@apollo/client';
 import { writeAssetsMutation } from 'graphql/mutation';
 import { mutationWrapper } from 'graphql/utils';
 import { writeAssetsVariables } from 'graphql/generated/writeAssets';
-
-makeStyles((theme) => ({
-    header: {
-        textAlign: 'center',
-    },
-    tall: {
-        height: '100%',
-    },
-    hoursPreview: {
-        border: '1px solid gray',
-        borderRadius: '2px',
-        width: '100%',
-        height: '100%',
-    },
-    pad: {
-        marginBottom: spacing(2),
-        marginTop: spacing(2)
-    },
-    gridItem: {
-        display: 'flex',
-    },
-}));
+import Markdown from 'markdown-to-jsx';
 
 export const AdminContactPage = ({
     business
@@ -65,11 +43,14 @@ export const AdminContactPage = ({
     }
 
     let options = (
-        <Grid classes={{ container: classes.pad }} container spacing={2}>
-            <Grid className={classes.gridItem} justifyContent="center" item xs={12} sm={6}>
+        <Grid container spacing={2} sx={{
+            marginBottom: spacing(2),
+            marginTop: spacing(2)
+        }}>
+            <Grid display="flex" justifyContent="center" item xs={12} sm={6}>
                 <Button fullWidth disabled={business?.hours === hours} onClick={applyHours}>Apply Changes</Button>
             </Grid>
-            <Grid className={classes.gridItem} justifyContent="center" item xs={12} sm={6}>
+            <Grid display="flex" justifyContent="center" item xs={12} sm={6}>
                 <Button fullWidth disabled={business?.hours === hours} onClick={revertHours}>Revert Changes</Button>
             </Grid>
         </Grid>
@@ -85,23 +66,24 @@ export const AdminContactPage = ({
                     <TextField
                         id="filled-multiline-static"
                         label="Hours edit"
-                        className={classes.tall}
-                        InputProps={{ classes: { input: classes.tall, root: classes.tall } }}
                         fullWidth
                         multiline
-                        rows={4}
+                        rows={14}
+                        minRows={4}
                         value={hours}
                         onChange={(e) => setHours(e.target.value)}
                     />
                 </Grid>
                 <Grid item sm={12} md={6}>
-                    <ReactMarkdown plugins={[gfm]} className={classes.hoursPreview}>
-                        {hours}
-                    </ReactMarkdown>
+                    <Box sx={{
+                        border: '1px solid gray',
+                        borderRadius: '2px',
+                        width: '100%',
+                        height: '100%'
+                    }}>
+                        <Markdown>{hours}</Markdown>
+                    </Box>
                 </Grid>
-            </Grid>
-            <Grid container spacing={2}>
-
             </Grid>
             {options}
         </PageContainer>

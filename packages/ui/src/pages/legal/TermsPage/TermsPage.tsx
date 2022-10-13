@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useQuery } from '@apollo/client';
 import { readAssetsQuery } from 'graphql/query/readAssets';
-import ReactMarkdown from 'react-markdown';
+import MarkdownInput from 'markdown-to-jsx';
 import { PageContainer, PolicyBreadcrumbs } from 'components';
 import { convertToDot, valueFromDot } from "utils";
 import { useTheme } from "@mui/material";
@@ -34,7 +34,7 @@ export const TermsPage = ({
     return (
         <PageContainer>
             <PolicyBreadcrumbs textColor={theme.palette.secondary.dark} />
-            <ReactMarkdown>{ terms }</ReactMarkdown>
+            <MarkdownInput>{ terms }</MarkdownInput>
         </PageContainer>
     );
 }

@@ -869,7 +869,7 @@ export type TraitValuesInput = {
 
 export type UpdateCustomerInput = {
   currentPassword: Scalars['String'];
-  input: CustomerInput;
+  input?: InputMaybe<CustomerInput>;
   newPassword?: InputMaybe<Scalars['String']>;
 };
 

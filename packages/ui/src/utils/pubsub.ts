@@ -69,7 +69,7 @@ export class PubSub {
     publishSnack(data: SnackPub) {
         this.publish(Pubs.Snack, data);
     }
-    publishArrowMenuOpen(data: boolean) {
+    publishArrowMenuOpen(data: boolean | 'toggle') {
         this.publish(Pubs.ArrowMenuOpen, data);
     }
     publishTheme(theme: 'light' | 'dark') {
@@ -106,7 +106,7 @@ export class PubSub {
     subscribeSnack(subscriber: (data: SnackPub) => void) {
         return this.subscribe(Pubs.Snack, subscriber);
     }
-    subscribeArrowMenuOpen(subscriber: (data: boolean) => void) {
+    subscribeArrowMenuOpen(subscriber: (data: boolean | 'toggle') => void) {
         return this.subscribe(Pubs.ArrowMenuOpen, subscriber);
     }
     subscribeTheme(subscriber: (theme: 'light' | 'dark') => void) {

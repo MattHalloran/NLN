@@ -1,20 +1,13 @@
-import React from 'react';
 import { useEffect, useState } from 'react';
 import {
     Button,
     Dialog,
     DialogActions,
     DialogContent,
-    DialogTitle,
     TextField,
     useTheme
 } from '@mui/material';
-
-makeStyles((theme) => ({
-    button: {
-        color: palette.primary.main,
-    }
-}));
+import { DialogTitle } from '../DialogTitle/DialogTitle';
 
 export const EditImageDialog = ({
     open,
@@ -34,7 +27,7 @@ export const EditImageDialog = ({
 
     return (
         <Dialog open={open} onClose={onClose} aria-labelledby="form-dialog-title">
-            <DialogTitle id="form-dialog-title">Edit Image Data</DialogTitle>
+            <DialogTitle id="form-dialog-title" title="Edit Image Data" />
             <DialogContent>
                 <TextField
                     fullWidth
@@ -52,10 +45,10 @@ export const EditImageDialog = ({
                 />
             </DialogContent>
             <DialogActions>
-                <Button className={classes.button} onClick={onClose} variant="text">
+                <Button onClick={onClose} variant="text" sx={{ color: palette.primary.main }}>
                     Cancel
                 </Button>
-                <Button className={classes.button} onClick={() => onSave({ alt: alt, description: description })} variant="text">
+                <Button onClick={() => onSave({ alt: alt, description: description })} variant="text" sx={{ color: palette.primary.main }}>
                     Save
                 </Button>
             </DialogActions>

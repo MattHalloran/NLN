@@ -89,7 +89,7 @@ export const ShoppingPage = ({
                 inputAriaLabel={`${field}-selector-label`}
                 label={title} />
         )
-    }, [classes.padBottom, classes.selector, traitOptions, filters, handleFiltersChange])
+    }, [traitOptions, filters, handleFiltersChange])
 
     const resetSearchConstraints = () => {
         setSortBy(SORT_OPTIONS[0].value)

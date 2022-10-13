@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useHistory } from 'react-router';
+import { APP_LINKS } from '@shared/consts';
 
 export const Page = ({
     title,

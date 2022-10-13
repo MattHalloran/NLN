@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { useQuery } from '@apollo/client';
 import { readAssetsQuery } from 'graphql/query/readAssets';
-import ReactMarkdown from 'react-markdown';
 import { PageContainer, PolicyBreadcrumbs } from 'components';
 import { convertToDot, valueFromDot } from "utils";
 import { useTheme } from "@mui/material";
+import MarkdownInput from 'markdown-to-jsx';
 
 export const PrivacyPolicyPage = ({
     business
@@ -26,7 +26,7 @@ export const PrivacyPolicyPage = ({
     return (
         <PageContainer>
             <PolicyBreadcrumbs textColor={palette.secondary.dark} />
-            <ReactMarkdown>{ privacy ?? '' }</ReactMarkdown>
+            <MarkdownInput>{privacy ?? ''}</MarkdownInput>
         </PageContainer>
     );
 }

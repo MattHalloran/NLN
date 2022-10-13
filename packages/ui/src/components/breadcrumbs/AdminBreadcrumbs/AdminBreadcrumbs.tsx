@@ -11,7 +11,10 @@ const paths = [
 ]
 
 export const AdminBreadcrumbs = ({...props}) => BreadcrumbsBase({
-    paths: paths,
+    paths: paths.map((path) => ({
+        text: path[0],
+        link: path[1]
+    })),
     ariaLabel: 'Admin breadcrumb',
     ...props
 })
