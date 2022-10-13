@@ -14,6 +14,8 @@ import { APP_LINKS } from '@shared/consts';
 import { resetPasswordSchema } from '@shared/validation';
 import { mutationWrapper } from 'graphql/utils';
 import { resetPasswordVariables, resetPassword_resetPassword } from 'graphql/generated/resetPassword';
+import { PubSub } from 'utils';
+import { SnackSeverity } from 'components';
 
 export const ResetPasswordForm = ({
     onSessionUpdate,
@@ -21,7 +23,7 @@ export const ResetPasswordForm = ({
 }) => {
     const { spacing } = useTheme();
 
-    const urlParams = useParams();
+    const urlParams = useParams<{ id: string | undefined, code: string | undefined }>();
     const [resetPassword, { loading }] = useMutation(resetPasswordMutation);
 
     const formik = useFormik({
@@ -31,6 +33,10 @@ export const ResetPasswordForm = ({
         },
         validationSchema: resetPasswordSchema,
         onSubmit: (values) => {
+            if (!urlParams.id || !urlParams.code) {
+                PubSub.get().publishSnack({ message: 'Could not parse URL', severity: SnackSeverity.Error });
+                return;
+            }
             mutationWrapper<resetPassword_resetPassword, resetPasswordVariables>({
                 mutation: resetPassword,
                 input: { id: urlParams.id, code: urlParams.code, newPassword: values.newPassword },

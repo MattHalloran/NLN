@@ -8,3 +8,4 @@ export * from './OrderDialog/OrderDialog';
 export * from './PlantDialog/PlantDialog';
 export * from './Snack/Snack';
 export * from './SnackStack/SnackStack';
+export * from './UpTransition/UpTransition';

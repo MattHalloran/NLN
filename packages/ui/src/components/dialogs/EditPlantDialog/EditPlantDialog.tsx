@@ -12,7 +12,6 @@ import {
     ListItem,
     ListItemText,
     ListSubheader,
-    Slide,
     Switch,
     TextField,
     Toolbar,
@@ -22,7 +21,7 @@ import {
 } from '@mui/material';
 import { addImagesMutation, deletePlantsMutation, updatePlantMutation } from 'graphql/mutation';
 import { useMutation } from '@apollo/client';
-import { Dropzone, ImageList } from 'components';
+import { Dropzone, ImageList, Transition } from 'components';
 import {
     addToArray,
     deleteArrayIndex,
@@ -57,66 +56,6 @@ const PLANT_TRAITS = {
     'Soil PHs': 'soilPhs',
     'Soil Types': 'soilTypes',
 }
-
-makeStyles((theme) => ({
-    appBar: {
-        position: 'relative',
-    },
-    container: {
-        background: palette.background.default,
-        flex: 'auto',
-    },
-    sideNav: {
-        width: '25%',
-        height: '100%',
-        float: 'left',
-        borderRight: `2px solid ${palette.text.primary}`,
-    },
-    title: {
-        paddingBottom: '1vh',
-    },
-    toggle: {
-        position: 'absolute',
-        right: 0,
-    },
-    gridContainer: {
-        paddingBottom: '3vh',
-    },
-    displayImage: {
-        border: '1px solid black',
-        maxWidth: '100%',
-        maxHeight: '100%',
-        bottom: 0,
-    },
-    content: {
-        width: '75%',
-        height: '100%',
-        float: 'right',
-        padding: spacing(1),
-        paddingBottom: '20vh',
-    },
-    imageRow: {
-        minHeight: '100px',
-    },
-    selected: {
-        background: primary.dark,
-        color: primary.contrastText,
-    },
-    skuHeader: {
-        background: primary.light,
-        color: primary.contrastText,
-    },
-    bottom: {
-        position: 'fixed',
-        bottom: '0',
-        width: '-webkit-fill-available',
-        zIndex: 1,
-    },
-}));
-
-const Transition = React.forwardRef(function Transition(props, ref) {
-    return <Slide direction="up" ref={ref} {...props} />;
-});
 
 export const EditPlantDialog = ({
     plant,
@@ -212,9 +151,9 @@ export const EditPlantDialog = ({
             skus: changedPlant.skus.map(s => {
                 return { sku: s.sku, isDiscountable: s.isDiscountable, size: s.size, note: s.note, availability: parseInt(s.availability) || 0, price: s.price, status: s.status }
             }),
-            images: imageData.map(d => {
+            images: imageData?.map(d => {
                 return { hash: d.hash, isDisplay: d.isDisplay ?? false }
-            })
+            }) ?? []
         }
         mutationWrapper<updatePlant_updatePlant, updatePlantVariables>({
             mutation: updatePlant,
@@ -294,13 +233,12 @@ export const EditPlantDialog = ({
 
     return (
         <Dialog fullScreen open={open} onClose={onClose} TransitionComponent={Transition}>
-            <AppBar className={classes.appBar}>
+            <AppBar sx={{ position: 'relative' }}>
                 <Toolbar>
                     <IconButton edge="start" color="inherit" onClick={onClose} aria-label="close">
                         <CloseIcon />
                     </IconButton>
                     <FormControlLabel
-                        className={classes.toggle}
                         control={
                             <Switch
                                 checked={compactView}
@@ -309,24 +247,43 @@ export const EditPlantDialog = ({
                             />
                         }
                         label="Compact View"
+                        sx={{
+                            position: 'absolute',
+                            right: 0,
+                        }}
                     />
                 </Toolbar>
             </AppBar>
-            <Box className={classes.container}>
-                <Box className={classes.sideNav}>
+            <Box sx={{
+                background: palette.background.default,
+                flex: 'auto',
+            }}>
+                <Box sx={{
+                    width: '25%',
+                    height: '100%',
+                    float: 'left',
+                    borderRight: `2px solid ${palette.text.primary}`,
+                }}>
                     <List
                         style={{ paddingTop: '0' }}
                         aria-label="sku select"
                         aria-labelledby="sku-select-subheader">
-                        <ListSubheader className={classes.skuHeader} component="div" id="sku-select-subheader">
-                            <Typography className={classes.title} variant="h5" component="h3">SKUs</Typography>
+                        <ListSubheader component="div" id="sku-select-subheader" sx={{
+                            background: palette.primary.light,
+                            color: palette.primary.contrastText,
+                        }}>
+                            <Typography variant="h5" component="h3" sx={{ paddingBottom: '1vh' }}>SKUs</Typography>
                         </ListSubheader>
                         {changedPlant?.skus?.map((s, i) => (
                             <ListItem
                                 key={s.sku}
                                 button
-                                className={`sku-option ${i === currSkuIndex ? classes.selected : ''}`}
-                                onClick={() => setCurrSkuIndex(i)}>
+                                onClick={() => setCurrSkuIndex(i)}
+                                sx={{
+                                    background: i === currSkuIndex ? palette.primary.dark : 'inherit',
+                                    color: i === currSkuIndex ? palette.primary.contrastText : 'inherit',
+                                }}
+                            >
                                 <ListItemText primary={s.sku} />
                             </ListItem>
                         ))}
@@ -346,9 +303,15 @@ export const EditPlantDialog = ({
                         </Tooltip>
                     </Box>
                 </Box>
-                <Box className={classes.content}>
-                    <Typography className={classes.title} variant="h5" component="h3">Edit plant info</Typography>
-                    <Grid className={classes.gridContainer} container spacing={2}>
+                <Box sx={{
+                    width: '75%',
+                    height: '100%',
+                    float: 'right',
+                    padding: spacing(1),
+                    paddingBottom: '20vh',
+                }}>
+                    <Typography variant="h5" component="h3" sx={{ paddingBottom: '1vh' }}>Edit plant info</Typography>
+                    <Grid container spacing={2} sx={{ paddingBottom: '3vh' }}>
                         <Grid item xs={12} sm={6}>
                             <TextField
                                 fullWidth
@@ -386,7 +349,6 @@ export const EditPlantDialog = ({
                                         fullWidth
                                         freeSolo
                                         id="setTraitField"
-                                        name="setTraitField"
                                         options={Object.keys(PLANT_TRAITS)}
                                         onChange={(_, value) => setSelectedTrait(PLANT_TRAITS[value])}
                                         renderInput={(params) => (
@@ -425,8 +387,8 @@ export const EditPlantDialog = ({
                         }
 
                     </Grid>
-                    <Typography className={classes.title} variant="h5" component="h3">Edit images</Typography>
-                    <Grid className={classes.gridContainer} container spacing={2}>
+                    <Typography variant="h5" component="h3" sx={{ paddingBottom: '1vh' }}>Edit images</Typography>
+                    <Grid container spacing={2} sx={{ paddingBottom: '3vh' }}>
                         {/* Upload new images */}
                         <Grid item xs={12}>
                             <Dropzone
@@ -441,8 +403,8 @@ export const EditPlantDialog = ({
                             <ImageList data={imageData} onUpdate={(d) => { setImageData(d); setImagesChanged(true) }} />
                         </Grid>
                     </Grid>
-                    <Typography className={classes.title} variant="h5" component="h3">Edit SKU info</Typography>
-                    <Grid className={classes.gridContainer} container spacing={2}>
+                    <Typography variant="h5" component="h3" sx={{ paddingBottom: '1vh' }}>Edit SKU info</Typography>
+                    <Grid container spacing={2} sx={{ paddingBottom: '3vh' }}>
                         <Grid item xs={12} sm={6}>
                             <TextField
                                 fullWidth
@@ -481,7 +443,12 @@ export const EditPlantDialog = ({
                         </Grid>
                     </Grid>
                 </Box>
-                <Box className={classes.bottom}>
+                <Box sx={{
+                    position: 'fixed',
+                    bottom: '0',
+                    width: '-webkit-fill-available',
+                    zIndex: 1,
+                }}>
                     {options}
                 </Box>
             </Box>

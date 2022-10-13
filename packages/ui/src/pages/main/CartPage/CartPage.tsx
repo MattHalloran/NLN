@@ -11,6 +11,7 @@ import { ArrowLeftIcon, ArrowRightIcon, SaveIcon } from '@shared/icons';
 import { mutationWrapper } from 'graphql/utils';
 import { updateOrderVariables, updateOrder_updateOrder } from 'graphql/generated/updateOrder';
 import { submitOrderVariables } from 'graphql/generated/submitOrder';
+import { APP_LINKS } from '@shared/consts';
 
 export const CartPage = ({
     business,
@@ -87,7 +88,7 @@ export const CartPage = ({
                 <Button
                     fullWidth
                     startIcon={<ArrowLeftIcon />}
-                    onClick={() => history.push(LINKS.Shopping)}
+                    onClick={() => history.push(APP_LINKS.Shopping)}
                     disabled={loading || (changedCart !== null && !_.isEqual(cart, changedCart))}
                 >Continue Shopping</Button>
             </Grid>

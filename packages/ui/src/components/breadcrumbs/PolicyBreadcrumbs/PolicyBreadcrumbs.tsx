@@ -7,7 +7,10 @@ const paths = [
 ]
 
 export const PolicyBreadcrumbs = ({...props}) => BreadcrumbsBase({
-    paths: paths,
+    paths: paths.map((path) => ({
+        text: path[0],
+        link: path[1]
+    })),
     ariaLabel: 'Policies breadcrumb',
     ...props
 })

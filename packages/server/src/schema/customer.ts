@@ -60,7 +60,7 @@ export const typeDef = gql`
 
     input UpdateCustomerInput {
         input: CustomerInput!
-        currentPassword: String!
+        currentPassword: String
         newPassword: String
     }
 
@@ -313,16 +313,18 @@ export const resolvers = {
         updateCustomer: async (_parent: undefined, { input }: IWrap<UpdateCustomerInput>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<Customer>> => {
             // Must be admin, or updating your own
             if (!req.isAdmin && (req.customerId !== input.input.id as string)) throw new CustomError(CODE.Unauthorized);
-            // Check for correct password
-            let customer = await prisma.customer.findUnique({
-                where: { id: input.input.id as string },
-                select: {
-                    id: true,
-                    password: true,
-                    business: { select: { id: true } }
-                }
-            });
-            if (!customer?.password || !bcrypt.compareSync(input.currentPassword, customer.password)) throw new CustomError(CODE.BadCredentials);
+            if (!req.isAdmin) {
+                // Check for correct password
+                let customer = await prisma.customer.findUnique({
+                    where: { id: input.input.id as string },
+                    select: {
+                        id: true,
+                        password: true,
+                        business: { select: { id: true } }
+                    }
+                });
+                if (!customer?.password || !bcrypt.compareSync(input.currentPassword, customer.password)) throw new CustomError(CODE.BadCredentials);
+            }
             const user = await upsertCustomer({
                 prisma: prisma,
                 info,

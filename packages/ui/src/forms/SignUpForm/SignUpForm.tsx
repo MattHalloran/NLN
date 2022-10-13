@@ -24,7 +24,7 @@ import { PubSub } from 'utils';
 import { useHistory } from 'react-router-dom';
 import { signUpSchema } from '@shared/validation';
 import { mutationWrapper } from 'graphql/utils';
-import { signUpVariables } from 'graphql/generated/signUp';
+import { signUpVariables, signUp_signUp } from 'graphql/generated/signUp';
 
 const clickSizeStyle = (palette: Palette) => ({
     color: palette.secondary.light,
@@ -44,8 +44,8 @@ export const SignUpForm = ({
 
     const formik = useFormik({
         initialValues: {
-            accountApproved: "true",
-            marketingEmails: "true",
+            accountApproved: true,
+            marketingEmails: true,
             firstName: '',
             lastName: '',
             pronouns: '',
@@ -61,8 +61,8 @@ export const SignUpForm = ({
                 mutation: signUp,
                 input: {
                     ...values,
-                    accountApproved: Boolean(values.accountApproved),
-                    marketingEmails: Boolean(values.marketingEmails),
+                    accountApproved: values.accountApproved,
+                    marketingEmails: values.marketingEmails,
                     theme: palette.mode ?? 'light',
                 },
                 onSuccess: (data) => {
@@ -105,7 +105,7 @@ export const SignUpForm = ({
             width: '100%',
             marginTop: spacing(3),
         }}>
-            <form className={classes.form} onSubmit={formik.handleSubmit}>
+            <form onSubmit={formik.handleSubmit}>
                 <Grid container spacing={2}>
                     <Grid item xs={12} sm={6}>
                         <TextField
@@ -139,7 +139,6 @@ export const SignUpForm = ({
                             fullWidth
                             freeSolo
                             id="pronouns"
-                            name="pronouns"
                             options={DEFAULT_PRONOUNS}
                             value={formik.values.pronouns}
                             onChange={(_, value) => formik.setFieldValue('pronouns', value)}
@@ -245,7 +244,7 @@ export const SignUpForm = ({
                                     name="marketingEmails"
                                     value="marketingEmails"
                                     color="secondary"
-                                    checked={formik.values.marketingEmails}
+                                    checked={formik.values.marketingEmails ?? false}
                                     onChange={formik.handleChange}
                                 />
                             }

@@ -1,20 +1,15 @@
-import React from 'react';
 import {
     Dialog,
-    DialogTitle,
     List,
     ListItem,
     ListItemText,
     useTheme
 } from '@mui/material';
+import { DialogTitle } from '../DialogTitle/DialogTitle';
 
  makeStyles((theme) => ({
     root: {
         background: palette.background.paper,
-    },
-    title: {
-        background: palette.primary.dark,
-        color: palette.primary.contrastText,
     },
 }));
 
@@ -36,7 +31,7 @@ export const ListDialog = ({
             aria-labelledby="simple-dialog-title"
             open={open}
             {...props}>
-            <DialogTitle className={classes.title} id="simple-dialog-title">{title}</DialogTitle>
+            <DialogTitle id="simple-dialog-title" title={title} />
             <List>
                 {data?.map(([label, value], index) => (
                     <ListItem button onClick={() => onClose(value)} key={index}>

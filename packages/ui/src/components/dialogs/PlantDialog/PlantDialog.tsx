@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
     AppBar,
     Avatar,
+    Box,
     Button,
     Collapse,
     Dialog,
@@ -12,65 +13,28 @@ import {
     ListItemAvatar,
     ListItemIcon,
     ListItemText,
-    Slide,
     Toolbar,
     Typography,
     useTheme
 } from '@mui/material';
 import { showPrice, getImageSrc, getPlantTrait, getServerUrl } from 'utils';
 import {
-    BeeIcon,
-    CalendarIcon,
-    ColorWheelIcon,
-    HeightIcon,
-    LampIcon,
-    MapIcon,
-    MoistureIcon,
-    NoImageWithTextIcon,
-    NoWaterIcon,
-    PHIcon,
-    SaltIcon,
-    SoilTypeIcon,
-    SpeedometerIcon,
-    SunIcon,
-    WidthIcon
-} from 'assets/img';
-import {
     QuantityBox,
-    Selector
+    Selector,
+    Transition
 } from 'components';
 import { IMAGE_SIZE } from '@shared/consts';
 import _ from 'lodash';
 import Carousel from 'react-gallery-carousel';
 import 'react-gallery-carousel/dist/index.css';
+import { BeeIcon, CloseIcon, ExpandLessIcon, ExpandMoreIcon, InfoIcon, LightModeIcon, MapIcon, MoveLeftRightIcon, MoveUpDownIcon, ScheduleIcon, SoilTypeIcon, SpeedIcon, SvgComponent } from '@shared/icons';
 
 makeStyles((theme) => ({
-    appBar: {
-        position: 'relative',
-    },
-    vertical: {
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "flex-start",
-        justifyContent: "center"
-    },
-    title: {
-        textAlign: 'center',
-    },
-    container: {
-        background: palette.background.default,
-        flex: 'auto',
-        paddingBottom: '15vh',
-    },
     displayImage: {
         maxHeight: '75vh',
     },
-    avatar: {
-        background: 'transparent',
-        borderRadius: 0,
-    },
     icon: {
-        fill: palette.mode === 'light' ? 'black' : 'white',
+        ,
     },
     optionsContainer: {
         padding: spacing(2),
@@ -82,10 +46,6 @@ makeStyles((theme) => ({
         width: '-webkit-fill-available',
     },
 }));
-
-const Transition = React.forwardRef(function Transition(props, ref) {
-    return <Slide direction="up" ref={ref} {...props} />;
-});
 
 export const PlantDialog = ({
     plant,
@@ -133,7 +93,7 @@ export const PlantDialog = ({
         thumbnail: `${getServerUrl()}/${getImageSrc(d.image, IMAGE_SIZE.M)}`
     })) : [];
 
-    const traitIconList = (traitName, Icon, title, alt) => {
+    const traitIconList = (traitName: string, Icon: SvgComponent, title: string, alt: string | undefined) => {
         if (!alt) alt = title;
         const traitValue = getPlantTrait(traitName, plant);
         if (!traitValue) return null;
@@ -141,8 +101,11 @@ export const PlantDialog = ({
             <div>
                 <ListItem>
                     <ListItemAvatar>
-                        <Avatar className={classes.avatar}>
-                            <Icon alt={alt} className={classes.icon} />
+                        <Avatar sx={{
+                            background: 'transparent',
+                            borderRadius: 0,
+                        }}>
+                            <Icon alt={alt} fill={palette.mode === 'light' ? 'black' : 'white'} />
                         </Avatar>
                     </ListItemAvatar>
                     <ListItemText primary={title} secondary={traitValue} />
@@ -171,11 +134,11 @@ export const PlantDialog = ({
             <Grid item xs={6} sm={4}>
                 <QuantityBox
                     style={{ height: '100%' }}
-                    min_value={0}
-                    max_value={Math.max.apply(Math, plant.skus.map(s => s.availability))}
-                    initial_value={1}
+                    min={0}
+                    max={Math.max.apply(Math, plant.skus.map(s => s.availability))}
+                    initial={1}
                     value={quantity}
-                    valueFunc={setQuantity} />
+                    handleChange={setQuantity} />
             </Grid>
             <Grid item xs={12} sm={4}>
                 <Button
@@ -190,33 +153,33 @@ export const PlantDialog = ({
         </Grid>
     );
 
-    const displayedTraitData = [
+    const displayedTraitData: JSX.Element[] = [
         ['zone', MapIcon, 'Hardiness zones'],
         ['physiographicRegions', MapIcon, 'Physiographic Region'],
         ['attractsPollinatorsAndWildlife', BeeIcon, 'Attracted Pollinators and Wildlife'],
         ['droughtTolerance', NoWaterIcon, 'Drought Tolerance'],
         ['saltTolerance', SaltIcon, 'Salt Tolerance'],
-        ['grownHeight', HeightIcon, 'Grown Height'],
-        ['grownSpread', WidthIcon, 'Grown Spread'],
-        ['growthRate', SpeedometerIcon, 'Growth Rate'],
+        ['grownHeight', MoveUpDownIcon, 'Grown Height'],
+        ['grownSpread', MoveLeftRightIcon, 'Grown Spread'],
+        ['growthRate', SpeedIcon, 'Growth Rate'],
         ['bloomColors', ColorWheelIcon, 'Bloom Colors'],
-        ['bloomTimes', CalendarIcon, 'Bloom Times'],
+        ['bloomTimes', ScheduleIcon, 'Bloom Times'],
         ['lightRanges', LampIcon, 'Light Range'],
-        ['optimalLight', SunIcon, 'Optimal Light'],
+        ['optimalLight', LightModeIcon, 'Optimal Light'],
         ['soilMoistures', MoistureIcon, 'Soil Moisture'],
         ['soilPhs', PHIcon, 'Soil PH'],
         ['soilTypes', SoilTypeIcon, 'Soil Type']
-    ].map(d => traitIconList(...d)).filter(d => d !== null);
+    ].map(d => traitIconList(...d)).filter(d => d !== null) as JSX.Element[];
 
     return (
         <Dialog aria-describedby="modal-title" fullScreen open={open} onClose={onClose} TransitionComponent={Transition}>
-            <AppBar className={classes.appBar}>
+            <AppBar sx={{ position: 'relative' }}>
                 <Toolbar>
                     <IconButton edge="start" color="inherit" onClick={onClose} aria-label="close">
                         <CloseIcon />
                     </IconButton>
                     <Grid container spacing={0}>
-                        <Grid className={classes.title} item xs={12}>
+                        <Grid item xs={12} sx={{ textAlign: 'center' }}>
                             <Typography id="modal-title" variant="h5">
                                 {plant.latinName}
                             </Typography>
@@ -227,7 +190,11 @@ export const PlantDialog = ({
                     </Grid>
                 </Toolbar>
             </AppBar>
-            <div className={classes.container}>
+            <Box sx={{
+                background: palette.background.default,
+                flex: 'auto',
+                paddingBottom: '15vh',
+            }}>
                 <Grid container spacing={0}>
                     <Grid item lg={6} xs={12}>
                         {
@@ -245,17 +212,17 @@ export const PlantDialog = ({
                                     {detailsOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                                 </ListItem>
                                 <Collapse in={detailsOpen} timeout='auto' unmountOnExit>
-                                    {getPlantTrait('description', plant) ? <p style={{padding: spacing(2)}}>{getPlantTrait('description', plant)}</p> : null}
+                                    {getPlantTrait('description', plant) ? <p style={{ padding: spacing(2) }}>{getPlantTrait('description', plant)}</p> : null}
                                     <List>{displayedTraitData}</List>
                                 </Collapse>
                             </React.Fragment>
                         ) : null}
                     </Grid>
                 </Grid>
-                <div className={classes.bottom}>
+                <Box className={classes.bottom}>
                     {options}
-                </div>
-            </div>
+                </Box>
+            </Box>
         </Dialog>
     );
 }

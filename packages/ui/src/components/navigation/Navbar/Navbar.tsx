@@ -6,6 +6,7 @@ import { Hamburger } from './Hamburger';
 import { NavList } from './NavList';
 import { logoutMutation } from 'graphql/mutation';
 import { useMutation } from '@apollo/client';
+import { APP_LINKS } from '@shared/consts';
 
 const SHOW_HAMBURGER_AT = 1000;
 

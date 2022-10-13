@@ -1,12 +1,11 @@
-import React from 'react';
 import {
     AppBar,
     Autocomplete,
+    Box,
     Button,
     Dialog,
     Grid,
     IconButton,
-    Slide,
     TextField,
     Toolbar,
     Typography,
@@ -21,13 +20,11 @@ import { addCustomerVariables, addCustomer_addCustomer } from 'graphql/generated
 import { CancelIcon, CloseIcon, CreateIcon } from '@shared/icons';
 import { addCustomerSchema } from '@shared/validation';
 import { mutationWrapper } from 'graphql/utils';
+import { Transition } from '../UpTransition/UpTransition';
 
- makeStyles((theme) => ({
-    appBar: {
-        position: 'relative',
-    },
+makeStyles((theme) => ({
     title: {
-        textAlign: 'center',
+        ,
     },
     optionsContainer: {
         padding: spacing(2),
@@ -55,10 +52,6 @@ import { mutationWrapper } from 'graphql/utils';
     },
 }));
 
-const Transition = React.forwardRef(function Transition(props, ref) {
-    return <Slide direction="up" ref={ref} {...props} />;
-});
-
 export const NewCustomerDialog = ({
     open = true,
     onClose,
@@ -85,7 +78,7 @@ export const NewCustomerDialog = ({
                     firstName: values.firstName,
                     lastName: values.lastName,
                     pronouns: values.pronouns,
-                    business: {name: values.business},
+                    business: { name: values.business },
                     emails: [{ emailAddress: values.email }],
                     phones: [{ number: values.phone }],
                 },
@@ -117,13 +110,13 @@ export const NewCustomerDialog = ({
 
     return (
         <Dialog fullScreen open={open} onClose={onClose} TransitionComponent={Transition}>
-            <AppBar className={classes.appBar}>
+            <AppBar sx={{ position: 'relative' }}>
                 <Toolbar>
                     <IconButton edge="start" color="inherit" onClick={onClose} aria-label="close">
                         <CloseIcon />
                     </IconButton>
                     <Grid container spacing={0}>
-                        <Grid className={classes.title} item xs={12}>
+                        <Grid item xs={12} sx={{ textAlign: 'center' }}>
                             <Typography variant="h5">
                                 Create New Customer
                             </Typography>
