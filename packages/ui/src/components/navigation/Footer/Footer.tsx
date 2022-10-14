@@ -71,7 +71,7 @@ export const Footer = ({
                         </ListItem>
                         {contactAPP_LINKS.map(([label, tooltip, src, text, Icon], key) => (
                             <Tooltip key={key} title={tooltip} placement="left">
-                                <ListItem button component="a" aria-label={label} href={src}>
+                                <ListItem button component="a" aria-label={label} href={src ?? ''}>
                                     <ListItemIcon>
                                         <Icon fill={palette.primary.contrastText} ></Icon>
                                     </ListItemIcon>

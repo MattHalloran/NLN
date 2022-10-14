@@ -6,6 +6,6 @@ export interface BreadcrumbsBaseProps {
     sx?: any;
 }
 
-export type CopyrightBreadcrumbsProps = Omit<BreadcrumbsBaseProps, 'paths' | 'ariaLabel'>
+export type CopyrightBreadcrumbsProps = Omit<BreadcrumbsBaseProps, 'paths' | 'ariaLabel'> & { business: { [key: string]: any; }; };
 
 export type PolicyBreadcrumbsProps = Omit<BreadcrumbsBaseProps, 'paths' | 'ariaLabel'>

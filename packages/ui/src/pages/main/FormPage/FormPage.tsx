@@ -1,12 +1,10 @@
-import React from 'react';
-import { Box, Container, Typography, useTheme } from '@mui/material';
+import { Box, Container, useTheme } from '@mui/material';
 import { PageContainer, PageTitle } from 'components';
 
 export const FormPage = ({
     title,
     autocomplete = 'on',
     children,
-    maxWidth = '90%',
 }) => {
     const { palette } = useTheme();
 
@@ -23,10 +21,9 @@ export const FormPage = ({
                 overflow: 'hidden',
                 left: '50%',
                 transform: 'translateX(-50%)',
-                marginBottom: '20px'
-                maxWidth,
+                marginBottom: '20px',
             }}>
-                <PageTitle>{title}</PageTitle>
+                <PageTitle title={title} />
                 <Container>
                     {children}
                 </Container>

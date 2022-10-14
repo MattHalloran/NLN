@@ -48,7 +48,7 @@ export const LogInForm = ({
                 successCondition: (data) => data !== null,
                 onSuccess: (data) => { onSessionUpdate(data); onRedirect(APP_LINKS.Shopping) },
                 onError: (response) => {
-                    if (Array.isArray(response.graphQLErrors) && response.graphQLErrors.some(e => e.extensions.code === CODE.MustResetPassword.code)) {
+                    if (Array.isArray(response.graphQLErrors) && response.graphQLErrors.some(e => e.extensions?.code === CODE.MustResetPassword.code)) {
                         PubSub.get().publishAlertDialog({
                             message: 'Before signing in, please follow the link sent to your email to change your password.',
                             buttons: [{

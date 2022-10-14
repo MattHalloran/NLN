@@ -86,7 +86,7 @@ export const SignUpForm = ({
                     }
                 },
                 onError: (response) => {
-                    if (Array.isArray(response.graphQLErrors) && response.graphQLErrors.some(e => e.extensions.code === CODE.EmailInUse.code)) {
+                    if (Array.isArray(response.graphQLErrors) && response.graphQLErrors.some(e => e.extensions?.code === CODE.EmailInUse.code)) {
                         PubSub.get().publishAlertDialog({
                             message: `${response.message}. Press OK if you would like to be redirected to the forgot password form.`,
                             buttons: [{

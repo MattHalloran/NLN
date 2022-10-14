@@ -11,7 +11,7 @@ export const TermsPage = ({
 }) => {
     const { palette } = useTheme();
 
-    const [terms, setTerms] = useState(null);
+    const [terms, setTerms] = useState<string>('');
     const { data: termsData } = useQuery(readAssetsQuery, { variables: { input: { files: ['terms.md'] } } });
 
     useEffect(() => {

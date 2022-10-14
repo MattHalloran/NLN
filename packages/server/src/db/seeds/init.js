@@ -1,9 +1,9 @@
-import { ACCOUNT_STATUS } from '@shared/consts';
 import bcrypt from 'bcrypt';
 import { HASHING_ROUNDS } from '../../consts';
 import { PrismaType } from '../../types';
 import pkg from '@prisma/client';
 import { v4 as uuid } from 'uuid';
+import { AccountStatus } from '../../schema/types';
 
 export async function init() {
     console.info('🌱 Starting database intial seed...');
@@ -49,7 +49,7 @@ export async function init() {
             password: bcrypt.hashSync(process.env.ADMIN_PASSWORD, HASHING_ROUNDS),
             accountApproved: true,
             emailVerified: true,
-            status: ACCOUNT_STATUS.Unlocked,
+            status: AccountStatus.Unlocked,
             business: {
                 create: {
                     name: 'Admin'

@@ -27,7 +27,7 @@ import { IMAGE_SIZE } from '@shared/consts';
 import _ from 'lodash';
 import Carousel from 'react-gallery-carousel';
 import 'react-gallery-carousel/dist/index.css';
-import { BeeIcon, CloseIcon, DroughtIcon, ExpandLessIcon, ExpandMoreIcon, InfoIcon, LampIcon, LightModeIcon, MapIcon, MoveLeftRightIcon, MoveUpDownIcon, PaletteIcon, ScheduleIcon, ShoppingCartAddIcon, SoilTypeIcon, SpeedIcon, SvgComponent } from '@shared/icons';
+import { BeeIcon, CloseIcon, DroughtIcon, ExpandLessIcon, ExpandMoreIcon, InfoIcon, LampIcon, LightModeIcon, MapIcon, MoveLeftRightIcon, MoveUpDownIcon, PaletteIcon, PHIcon, SaltIcon, ScheduleIcon, ShoppingCartAddIcon, SoilTypeIcon, SpeedIcon, SvgComponent } from '@shared/icons';
 import { MoistureIcon } from 'assets/img';
 
 makeStyles((theme) => ({

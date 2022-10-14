@@ -10,21 +10,29 @@ import {
 } from '@mui/material';
 import { changeCustomerStatusMutation, deleteCustomerMutation } from 'graphql/mutation';
 import { useMutation } from '@apollo/client';
-import { ACCOUNT_STATUS } from '@shared/consts';
 import { emailLink, mapIfExists, phoneLink, PubSub, showPhone } from 'utils';
 import { ListDialog } from 'components/dialogs';
 import { DeleteForeverIcon, DeleteIcon, EditIcon, EmailIcon, LockIcon, LockOpenIcon, PhoneIcon, ThumbUpIcon } from '@shared/icons';
 import { mutationWrapper } from 'graphql/utils';
 import { deleteCustomerVariables } from 'graphql/generated/deleteCustomer';
 import { changeCustomerStatusVariables } from 'graphql/generated/changeCustomerStatus';
+import { CustomerCardProps } from '../types';
+import { AccountStatus } from 'graphql/generated/globalTypes';
 
 type ActionArray = [(() => any), JSX.Element, string];
 
+enum CustomerStatus {
+    Deleted = 'Deleted',
+    Unlocked = 'Unlocked',
+    WaitingApproval = 'WaitingApproval',
+    SoftLock = 'SoftLock',
+    HardLock = 'HardLock'
+}
+
 export const CustomerCard = ({
     customer,
-    status = ACCOUNT_STATUS.Deleted,
     onEdit,
-}) => {
+}: CustomerCardProps) => {
     const { palette } = useTheme();
 
     const [changeCustomerStatus] = useMutation(changeCustomerStatusMutation);
@@ -42,12 +50,12 @@ export const CustomerCard = ({
         if (emailLink) window.open(emailLink, '_blank', 'noopener,noreferrer')
     }
 
-    const status_map = useMemo(() => ({
-        [ACCOUNT_STATUS.Deleted]: 'Deleted',
-        [ACCOUNT_STATUS.Unlocked]: 'Unlocked',
-        [ACCOUNT_STATUS.WaitingApproval]: 'Waiting Approval',
-        [ACCOUNT_STATUS.SoftLock]: 'Soft Locked',
-        [ACCOUNT_STATUS.HardLock]: 'Hard Locked',
+    const status_map = useMemo<{ [key in CustomerStatus]: string }>(() => ({
+        [CustomerStatus.Deleted]: 'Deleted',
+        [CustomerStatus.Unlocked]: 'Unlocked',
+        [CustomerStatus.WaitingApproval]: 'Waiting Approval',
+        [CustomerStatus.SoftLock]: 'Soft Locked',
+        [CustomerStatus.HardLock]: 'Hard Locked',
     }), [])
 
     const edit = () => {
@@ -87,7 +95,7 @@ export const CustomerCard = ({
             message: `Are you sure you want to delete the account for ${customer.firstName} ${customer.lastName}?`,
             buttons: [{
                 text: 'Yes',
-                onClick: () => { modifyCustomer(ACCOUNT_STATUS.Deleted, 'Customer deleted.') },
+                onClick: () => { modifyCustomer(AccountStatus.Deleted, 'Customer deleted.') },
             }, {
                 text: 'No',
             }]
@@ -95,10 +103,10 @@ export const CustomerCard = ({
     }, [customer, modifyCustomer])
 
     let edit_action: ActionArray = [edit, <EditIcon fill={palette.secondary.light} />, 'Edit customer']
-    let approve_action: ActionArray = [() => modifyCustomer(ACCOUNT_STATUS.Unlocked, 'Customer account approved.'), <ThumbUpIcon fill={palette.secondary.light} />, 'Approve customer account'];
-    let unlock_action: ActionArray = [() => modifyCustomer(ACCOUNT_STATUS.Unlocked, 'Customer account unlocked.'), <LockOpenIcon fill={palette.secondary.light} />, 'Unlock customer account'];
-    let lock_action: ActionArray = [() => modifyCustomer(ACCOUNT_STATUS.HardLock, 'Customer account locked.'), <LockIcon fill={palette.secondary.light} />, 'Lock customer account'];
-    let undelete_action: ActionArray = [() => modifyCustomer(ACCOUNT_STATUS.Unlocked, 'Customer account restored.'), <LockOpenIcon fill={palette.secondary.light} />, 'Restore deleted account'];
+    let approve_action: ActionArray = [() => modifyCustomer(AccountStatus.Unlocked, 'Customer account approved.'), <ThumbUpIcon fill={palette.secondary.light} />, 'Approve customer account'];
+    let unlock_action: ActionArray = [() => modifyCustomer(AccountStatus.Unlocked, 'Customer account unlocked.'), <LockOpenIcon fill={palette.secondary.light} />, 'Unlock customer account'];
+    let lock_action: ActionArray = [() => modifyCustomer(AccountStatus.HardLock, 'Customer account locked.'), <LockIcon fill={palette.secondary.light} />, 'Lock customer account'];
+    let undelete_action: ActionArray = [() => modifyCustomer(AccountStatus.Unlocked, 'Customer account restored.'), <LockOpenIcon fill={palette.secondary.light} />, 'Restore deleted account'];
     let delete_action: ActionArray = [confirmDelete, <DeleteIcon fill={palette.secondary.light} />, 'Delete user'];
     let permanent_delete_action: ActionArray = [confirmPermanentDelete, <DeleteForeverIcon fill={palette.secondary.light} />, 'Permanently delete user']
 
@@ -106,16 +114,16 @@ export const CustomerCard = ({
     // Actions for customer accounts
     if (!Array.isArray(customer?.roles) || !customer.roles.some(r => ['Owner', 'Admin'].includes(r.role.title))) {
         switch (customer?.status) {
-            case ACCOUNT_STATUS.Unlocked:
+            case AccountStatus.Unlocked:
                 actions.push(lock_action);
                 actions.push(delete_action)
                 break;
-            case ACCOUNT_STATUS.SoftLock:
-            case ACCOUNT_STATUS.HardLock:
+            case AccountStatus.SoftLock:
+            case AccountStatus.HardLock:
                 actions.push(unlock_action);
                 actions.push(delete_action)
                 break;
-            case ACCOUNT_STATUS.Deleted:
+            case AccountStatus.Deleted:
                 actions.push(undelete_action);
                 actions.push(permanent_delete_action);
                 break;
@@ -157,7 +165,7 @@ export const CustomerCard = ({
                 <Typography gutterBottom variant="h6" component="h2">
                     {customer?.firstName} {customer?.lastName}
                 </Typography>
-                <p>Status: {status_map[customer?.status]}</p>
+                <p>Status: {status_map[customer?.accountApproved === false ? CustomerStatus.WaitingApproval : customer?.status as unknown as CustomerStatus]}</p>
                 <p>Business: {customer?.business?.name}</p>
                 <p>Pronouns: {customer?.pronouns ?? 'Unset'}</p>
             </CardContent>

@@ -37,13 +37,13 @@ export const printAvailability = (session, title) => {
         const priceVisible = session !== null;
         const table_data = skusToTable(data, priceVisible);
         // Default export is a4 paper, portrait, using millimeters for units
-        const doc = new jsPDF();
+        const doc: any = new jsPDF();
         doc.setFontSize(TITLE_FONT_SIZE);
         centeredText(title, doc, 10);
         let date = new Date();
         centeredText(`Availability: ${date.toDateString()}`, doc, 20);
         doc.setFontSize(LIST_FONT_SIZE);
-        let header = showPrice ? [['Plant', 'Size', 'Availability', 'Price']] : [['Plant', 'Size', 'Availability']]
+        let header = priceVisible ? [['Plant', 'Size', 'Availability', 'Price']] : [['Plant', 'Size', 'Availability']]
         doc.autoTable({
             margin: { top: 30 },
             head: header,
@@ -51,7 +51,7 @@ export const printAvailability = (session, title) => {
         })
         let windowReference = window.open();
         let blob = doc.output('blob', { filename: `availability_${date.getDay()}-${date.getMonth()}-${date.getFullYear()}.pdf` });
-        windowReference.location = URL.createObjectURL(blob);
+        (windowReference as any).location = URL.createObjectURL(blob);
     }).catch(error => {
         PubSub.get().publishSnack({ message: 'Failed to load inventory.', severity: SnackSeverity.Error, data: error });
     });
