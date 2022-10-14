@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useHistory } from 'react-router';
 import { APP_LINKS } from '@shared/consts';
+import { PageProps } from 'pages/types';
 
 export const Page = ({
     title,
@@ -10,7 +11,7 @@ export const Page = ({
     userRoles,
     restrictedToRoles = [],
     children
-}) => {
+}: PageProps) => {
     const location = useLocation();
     const history = useHistory();
 

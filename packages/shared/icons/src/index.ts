@@ -69,6 +69,7 @@ export * from './OpenInNewIcon';
 export * from './OpenThreadIcon';
 export * from './PaletteIcon';
 export * from './PauseIcon';
+export * from './PHIcon';
 export * from './PhoneIcon';
 export * from './PhotoLibrary';
 export * from './PinIcon';
@@ -82,6 +83,7 @@ export * from './RefreshIcon';
 export * from './ReplyIcon'
 export * from './ReorderIcon';
 export * from './ReportIcon';
+export * from './SaltIcon';
 export * from './SaveIcon';
 export * from './ScheduleIcon';
 export * from './SearchIcon';

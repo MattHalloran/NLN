@@ -128,7 +128,7 @@ export const Routes = ({
                     priority={0.9}>
                     <Suspense fallback={Fallback}>
                         <Page title={title('Sign Up')} {...common}>
-                            <FormPage title="Sign Up" maxWidth="700px">
+                            <FormPage title="Sign Up">
                                 <SignUpForm {...common} />
                             </FormPage>
                         </Page>
@@ -137,123 +137,133 @@ export const Routes = ({
                 <Route
                     path={`${APP_LINKS.LogIn}/:params*`}
                     sitemapIndex
-                    priority={0.8}
-                    render={() => (
+                    priority={0.8}>
+                    <Suspense fallback={Fallback}>
                         <Page title={title('Log In')} {...common}>
-                            <FormPage title="Log In" maxWidth="700px">
+                            <FormPage title="Log In">
                                 <LogInForm {...common} />
                             </FormPage>
                         </Page>
-                    )}
-                />
+                    </Suspense>
+                </Route>
                 <Route
                     path={`${APP_LINKS.ForgotPassword}/:params*`}
                     sitemapIndex
-                    priority={0.1}
-                    render={() => (
+                    priority={0.1}>
+                    <Suspense fallback={Fallback}>
                         <Page title={title('Forgot Password')} {...common}>
-                            <FormPage title="Forgot Password" maxWidth="700px">
+                            <FormPage title="Forgot Password">
                                 <ForgotPasswordForm {...common} />
                             </FormPage>
                         </Page>
-                    )}
-                />
+                    </Suspense>
+                </Route>
                 <Route
                     path={`${APP_LINKS.ResetPassword}/:params*`}
                     sitemapIndex
-                    priority={0.1}
-                    render={() => (
+                    priority={0.1}>
+                    <Suspense fallback={Fallback}>
                         <Page title={title('Reset Password')} {...common}>
-                            <FormPage title="Reset Password" maxWidth="700px">
+                            <FormPage title="Reset Password">
                                 <ResetPasswordForm {...common} />
                             </FormPage>
                         </Page>
-                    )}
-                />
+                    </Suspense>
+                </Route>
                 {/* END PUBLIC PAGES */}
                 {/* START CUSTOMER PAGES */}
                 <Route
                     path={APP_LINKS.Profile}
                     sitemapIndex
-                    priority={0.4}
-                    render={() => (
+                    priority={0.4}>
+                    <Suspense fallback={Fallback}>
                         <Page title={title('Profile')} {...common} restrictedToRoles={Object.values(ROLES)}>
                             <FormPage title="Profile">
                                 <ProfileForm {...common} />
                             </FormPage>
                         </Page>
-                    )}
-                />
+                    </Suspense>
+                </Route>
                 <Route
                     path={`${APP_LINKS.Shopping}/:params*`}
                     sitemapIndex
-                    priority={0.9}
-                    render={() => (
+                    priority={0.9}>
+                    <Suspense fallback={Fallback}>
                         <Page title={title('Shop')} {...common} restrictedToRoles={Object.values(ROLES)} redirect={APP_LINKS.LogIn}>
                             <ShoppingPage {...common} session={session} cart={cart} />
                         </Page>
-                    )}
-                />
+                    </Suspense>
+                </Route>
                 <Route
-                    path={APP_LINKS.Cart}
-                    render={() => (
+                    path={APP_LINKS.Cart}>
+                    <Suspense fallback={Fallback}>
                         <Page title={title('Cart')} {...common} restrictedToRoles={Object.values(ROLES)} redirect={APP_LINKS.LogIn}>
                             <CartPage {...common} cart={cart} />
                         </Page>
-                    )}
-                />
+                    </Suspense>
+                </Route>
                 {/* END CUSTOMER PAGES */}
                 {/* START ADMIN PAGES */}
                 <Route
-                    path={APP_LINKS.Admin}
-                    render={() => (
+                    path={APP_LINKS.Admin}>
+                    <Suspense fallback={Fallback}>
                         <Page title={title('Manage Site')} {...common} restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
                             <AdminMainPage />
                         </Page>
-                    )}
-                />
+                    </Suspense>
+                </Route>
                 <Route
-                    path={APP_LINKS.AdminContactInfo}
-                    render={() => (
+                    path={APP_LINKS.AdminContactInfo}>
+                    <Suspense fallback={Fallback}>
                         <Page title={"Edit Contact Info"} {...common} restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
                             <AdminContactPage business={business} />
                         </Page>
-                    )}
-                />
-                <Route path={APP_LINKS.AdminCustomers} render={() => (
-                    <Page title={"Customer Page"} {...common} restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
-                        <AdminCustomerPage />
-                    </Page>
-                )} />
-                <Route path={APP_LINKS.AdminGallery} render={() => (
-                    <Page title={"Edit Gallery"} {...common} restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
-                        <AdminGalleryPage />
-                    </Page>
-                )} />
-                <Route path={APP_LINKS.AdminHero} render={() => (
-                    <Page title={"Edit Hero"} {...common} restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
-                        <AdminHeroPage />
-                    </Page>
-                )} />
-                <Route path={APP_LINKS.AdminInventory} render={() => (
-                    <Page title={"Edit Inventory Info"} {...common} restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
-                        <AdminInventoryPage />
-                    </Page>
-                )} />
-                <Route path={APP_LINKS.AdminOrders} render={() => (
-                    <Page title={"Order Page"} {...common} restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
-                        <AdminOrderPage userRoles={userRoles} />
-                    </Page>
-                )} />
+                    </Suspense>
+                </Route>
+                <Route path={APP_LINKS.AdminCustomers}>
+                    <Suspense fallback={Fallback}>
+                        <Page title={"Customer Page"} {...common} restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
+                            <AdminCustomerPage />
+                        </Page>
+                    </Suspense>
+                </Route>
+                <Route path={APP_LINKS.AdminGallery}>
+                    <Suspense fallback={Fallback}>
+                        <Page title={"Edit Gallery"} {...common} restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
+                            <AdminGalleryPage />
+                        </Page>
+                    </Suspense>
+                </Route>
+                <Route path={APP_LINKS.AdminHero}>
+                    <Suspense fallback={Fallback}>
+                        <Page title={"Edit Hero"} {...common} restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
+                            <AdminHeroPage />
+                        </Page>
+                    </Suspense>
+                </Route>
+                <Route path={APP_LINKS.AdminInventory}>
+                    <Suspense fallback={Fallback}>
+                        <Page title={"Edit Inventory Info"} {...common} restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
+                            <AdminInventoryPage />
+                        </Page>
+                    </Suspense>
+                </Route>
+                <Route path={APP_LINKS.AdminOrders}>
+                    <Suspense fallback={Fallback}>
+                        <Page title={"Order Page"} {...common} restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
+                            <AdminOrderPage userRoles={userRoles} />
+                        </Page>
+                    </Suspense>
+                </Route>
                 {/* END ADMIN PAGES */}
                 {/* 404 page */}
-                <Route
-                    render={() => (
+                <Route>
+                    <Suspense fallback={Fallback}>
                         <Page title={title('404')} {...common}>
                             <NotFoundPage />
                         </Page>
-                    )}
-                />
+                    </Suspense>
+                </Route>
             </Switch>
         </Suspense>
     );

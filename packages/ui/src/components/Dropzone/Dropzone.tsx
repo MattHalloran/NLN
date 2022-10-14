@@ -4,31 +4,6 @@ import { PubSub } from 'utils';
 import { Box, Button, Grid, useTheme } from '@mui/material';
 import { SnackSeverity } from 'components/dialogs';
 
-makeStyles((theme) => ({
-    itemPad: {
-        marginTop: spacing(1),
-        marginBottom: spacing(1),
-    },
-    dropContainer: {
-        background: 'white',
-        color: 'black',
-        border: '3px dashed gray',
-        borderRadius: '5px'
-    },
-    thumbsContainer: {
-        display: 'flex',
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        marginTop: 16
-    },
-    img: {
-        display: 'block',
-        width: 'auto',
-        height: '100%'
-    },
-}));
-
-
 export const Dropzone = ({
     acceptedFileTypes = ['image/*', '.heic', '.heif'],
     dropzoneText = 'Drag \'n\' drop files here or click',
@@ -39,9 +14,9 @@ export const Dropzone = ({
     cancelText = 'Cancel upload',
     disabled = false
 }) => {
-    const { palette, spacing } = useTheme();
+    const { spacing } = useTheme();
 
-    const [files, setFiles] = useState([]);
+    const [files, setFiles] = useState<any[]>([]);
     const { getRootProps, getInputProps } = useDropzone({
         accept: acceptedFileTypes,
         maxFiles: maxFiles,
@@ -88,11 +63,15 @@ export const Dropzone = ({
                 minWidth: 0,
                 overflow: 'hidden'
             }}>
-                <img
+                <Box
+                    component="img"
                     src={file.preview}
-                    className={classes.img}
                     alt="Dropzone preview"
-                />
+                    sx={{
+                        display: 'block',
+                        width: 'auto',
+                        height: '100%'
+                    }} />
             </Box>
         </Box>
     ));
@@ -103,26 +82,52 @@ export const Dropzone = ({
     }, [files]);
 
     return (
-        <section className={classes.dropContainer}>
+        <Box component="section" sx={{
+            background: 'white',
+            color: 'black',
+            border: '3px dashed gray',
+            borderRadius: '5px'
+        }}>
             <Box sx={{ textAlign: 'center' }} {...getRootProps({ className: 'dropzone' })}>
                 <input {...getInputProps()} />
                 <p>{dropzoneText}</p>
                 {showThumbs &&
-                    <aside className={classes.thumbsContainer}>
+                    <Box component="aside" sx={{
+                        display: 'flex',
+                        flexDirection: 'row',
+                        flexWrap: 'wrap',
+                        marginTop: 16
+                    }}>
                         {thumbs}
-                    </aside>}
+                    </Box>}
                 <Grid container spacing={2} sx={{
                     paddingLeft: spacing(1),
                     paddingRight: spacing(1),
                 }}>
                     <Grid item xs={12} sm={6}>
-                        <Button className={classes.itemPad} disabled={disabled || files.length === 0} fullWidth onClick={upload}>{uploadText}</Button>
+                        <Button
+                            disabled={disabled || files.length === 0}
+                            fullWidth
+                            onClick={upload}
+                            sx={{
+                                marginTop: spacing(1),
+                                marginBottom: spacing(1),
+                            }}
+                        >{uploadText}</Button>
                     </Grid>
                     <Grid item xs={12} sm={6}>
-                        <Button className={classes.itemPad} disabled={disabled || files.length === 0} fullWidth onClick={cancel}>{cancelText}</Button>
+                        <Button
+                            disabled={disabled || files.length === 0}
+                            fullWidth
+                            onClick={cancel}
+                            sx={{
+                                marginTop: spacing(1),
+                                marginBottom: spacing(1),
+                            }}
+                        >{cancelText}</Button>
                     </Grid>
                 </Grid>
             </Box>
-        </section>
+        </Box>
     );
 }

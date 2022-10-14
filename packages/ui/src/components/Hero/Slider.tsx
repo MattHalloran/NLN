@@ -37,12 +37,13 @@ export const Slider = ({
     }, [timeoutRef, images, slidingDelay, slidingDuration, width])
 
     useEffect(() => {
-        const onResize = window.addEventListener('resize', () => setWidth(window.innerWidth))
+        const onResize = () => setWidth(window.innerWidth);
+        window.addEventListener('resize', onResize);
         if (autoPlay) wait(0);
 
         return () => {
-            window.removeEventListener('resize', onResize)
-            clearTimeout(timeoutRef.current);
+            window.removeEventListener('resize', onResize);
+            if (timeoutRef.current) clearTimeout(timeoutRef.current);
         }
     }, [autoPlay, wait])
 

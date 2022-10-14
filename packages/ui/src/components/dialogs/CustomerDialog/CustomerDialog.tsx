@@ -11,7 +11,6 @@ import {
     useTheme,
 } from '@mui/material';
 import _ from 'lodash';
-import { ACCOUNT_STATUS } from '@shared/consts';
 import { deleteCustomerMutation, updateCustomerMutation } from 'graphql/mutation';
 import { PubSub } from 'utils';
 import { CancelIcon, CloseIcon, CreateIcon, DeleteIcon, ErrorIcon, LockIcon, LockOpenIcon, SaveIcon, SvgComponent } from '@shared/icons';
@@ -25,10 +24,10 @@ import { customers_customers } from 'graphql/generated/customers';
 // Associates account states with a dynamic action button
 // curr_account_value: [curr_account_label, toggled_account_label, toggled_account_value, toggle_icon]
 const statusToggle: { [key in AccountStatus]?: [string, string, AccountStatus, SvgComponent] } = {
-    [ACCOUNT_STATUS.Deleted]: ['Deleted', 'Undelete', ACCOUNT_STATUS.Unlocked, CreateIcon],
-    [ACCOUNT_STATUS.Unlocked]: ['Unlocked', 'Lock', ACCOUNT_STATUS.HardLock, LockIcon],
-    [ACCOUNT_STATUS.SoftLock]: ['Soft Locked (password timeout)', 'Unlock', ACCOUNT_STATUS.Unlocked, LockOpenIcon ],
-    [ACCOUNT_STATUS.HardLock]: ['Hard Locked', 'Unlock', ACCOUNT_STATUS.Unlocked, LockOpenIcon]
+    [AccountStatus.Deleted]: ['Deleted', 'Undelete', AccountStatus.Unlocked, CreateIcon],
+    [AccountStatus.Unlocked]: ['Unlocked', 'Lock', AccountStatus.HardLock, LockIcon],
+    [AccountStatus.SoftLock]: ['Soft Locked (password timeout)', 'Unlock', AccountStatus.Unlocked, LockOpenIcon ],
+    [AccountStatus.HardLock]: ['Hard Locked', 'Unlock', AccountStatus.Unlocked, LockOpenIcon]
 }
 
 export const CustomerDialog = ({
@@ -55,7 +54,7 @@ export const CustomerDialog = ({
     const toggleLock = useCallback(() => {
         documentNodeWrapper<any, updateCustomerVariables>({
             node: updateCustomerMutation,
-            input: { id: currCustomer.id, status: toggleValue },
+            input: { input: { id: currCustomer.id, status: toggleValue } },
             successMessage: () => 'Customer updated.',
             errorMessage: () => 'Failed to update customer.'
         })

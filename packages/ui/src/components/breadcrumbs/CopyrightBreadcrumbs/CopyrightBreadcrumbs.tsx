@@ -3,6 +3,7 @@ import { APP_LINKS } from '@shared/consts';
 import { CopyrightBreadcrumbsProps } from '../types';
 
 export const CopyrightBreadcrumbs = ({ 
+    business,
     sx,
     ...props 
 }: CopyrightBreadcrumbsProps) => {

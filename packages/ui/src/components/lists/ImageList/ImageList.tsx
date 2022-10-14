@@ -1,23 +1,13 @@
-import React, { useCallback, useState } from 'react';
+import { useCallback, useState } from 'react';
 import update from 'immutability-helper';
 import { ImageCard } from 'components';
 import { EditImageDialog } from 'components';
-import { useTheme } from '@mui/material';
-
-makeStyles((theme) => ({
-    flexed: {
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-        alignItems: 'stretch',
-    },
-}));
+import { Box } from '@mui/material';
 
 export const ImageList = ({
     data,
     onUpdate
 }) => {
-    const { palette } = useTheme();
-
     const [selected, setSelected] = useState(-1);
 
     const moveCard = useCallback((dragIndex, hoverIndex) => {
@@ -47,7 +37,11 @@ export const ImageList = ({
     }
 
     return (
-        <div className={classes.flexed}>
+        <Box sx={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+            alignItems: 'stretch',
+        }}>
             <EditImageDialog
                 open={selected >= 0}
                 data={selected >= 0 ? data[selected] : null}
@@ -64,6 +58,6 @@ export const ImageList = ({
                     moveCard={moveCard}
                 />
             ))}
-        </div>
+        </Box>
     );
 }

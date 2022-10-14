@@ -1,9 +1,9 @@
-import { ACCOUNT_STATUS } from '@shared/consts';
 import bcrypt from 'bcrypt';
 import { HASHING_ROUNDS } from '../../consts';
 import { db } from '../db';
 import { PrismaType } from '../../types';
 import pkg from '@prisma/client';
+import { AccountStatus } from '../../schema/types';
 
 export async function seed() {
     console.info('🎭 Creating mock data...');
@@ -29,7 +29,7 @@ export async function seed() {
             password: bcrypt.hashSync('Elon', HASHING_ROUNDS),
             accountApproved: true,
             emailVerified: true,
-            status: ACCOUNT_STATUS.Unlocked,
+            status: AccountStatus.Unlocked,
             business: {
                 create: {
                     name: 'SpaceX'
@@ -69,7 +69,7 @@ export async function seed() {
             password: bcrypt.hashSync('John', HASHING_ROUNDS),
             accountApproved: true,
             emailVerified: true,
-            status: ACCOUNT_STATUS.Unlocked,
+            status: AccountStatus.Unlocked,
             business: {
                 create: {
                     name: 'Rocket supplier A'
@@ -100,7 +100,7 @@ export async function seed() {
             password: bcrypt.hashSync('Spongebob', HASHING_ROUNDS),
             accountApproved: true,
             emailVerified: true,
-            status: ACCOUNT_STATUS.Unlocked,
+            status: AccountStatus.Unlocked,
             business: {
                 create: {
                     name: '🤘🏻A Steel Company'

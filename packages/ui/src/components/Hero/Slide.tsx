@@ -2,7 +2,7 @@ import { Box } from '@mui/material';
 import { memo } from 'react'
 import { getImageSrc, getServerUrl } from 'utils';
 
-export const Slide = memo(({ image, width }) => {
+export const Slide = memo<any>(({ image, width }) => {
     return (
         <Box sx={{
             height: '100%',
