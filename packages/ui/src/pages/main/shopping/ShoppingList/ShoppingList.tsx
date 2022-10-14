@@ -28,9 +28,9 @@ export const ShoppingList = ({
     const [plants, setPlants] = useState([]);
     const track_scrolling_id = 'scroll-tracked';
     let history = useHistory();
-    const urlParams = useParams();
+    const urlParams = useParams<{ sku: string | undefined }>();
     // Find current plant and current sku
-    const currPlant = Array.isArray(plants) ? plants.find(p => p.skus.some(s => s.sku === urlParams.sku)) : null;
+    const currPlant: any | null = Array.isArray(plants) ? plants.find((p: any) => p.skus.some(s => s.sku === urlParams.sku)) : null;
     const currSku = currPlant?.skus ? currPlant.skus.find(s => s.sku === urlParams.sku) : null;
     const { data: plantData } = useQuery(plantsQuery, { variables: { input: { sortBy, searchString, active: true, hideOutOfStock } } });
     const [upsertOrderItem] = useMutation(upsertOrderItemMutation);
@@ -43,7 +43,7 @@ export const ShoppingList = ({
             setPlants(plantData?.plants);
             return;
         }
-        let filtered_plants = [];
+        let filtered_plants: any[] = [];
         for (const plant of plantData?.plants) {
             let found = false;
             for (const [key, value] of Object.entries(filters)) {

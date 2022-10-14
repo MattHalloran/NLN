@@ -16,3 +16,16 @@ export interface QuantityBoxProps extends BoxProps {
     tooltip?: string;
     value: number;
 }
+
+export interface SelectorProps extends SelectProps {
+    options: any[];
+    selected: any;
+    handleChange: (change: any) => any;
+    fullWidth?: boolean;
+    multiple?: boolean;
+    inputAriaLabel?: string;
+    noneOption?: boolean;
+    label?: string;
+    color?: string;
+    sx?: { [key: string]: any };
+}

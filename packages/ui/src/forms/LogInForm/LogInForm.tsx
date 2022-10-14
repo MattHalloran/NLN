@@ -32,7 +32,7 @@ export const LogInForm = ({
 }) => {
     const { palette, spacing } = useTheme();
     const history = useHistory();
-    const urlParams = useParams();
+    const urlParams = useParams<{ code: string | undefined }>();
     const [login, { loading }] = useMutation(loginMutation);
 
     const formik = useFormik({

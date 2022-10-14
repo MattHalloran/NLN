@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import {
     AppBar,
     Box,
@@ -6,7 +6,6 @@ import {
     Dialog,
     Grid,
     IconButton,
-    Slide,
     Toolbar,
     Typography,
     useTheme,
@@ -17,22 +16,9 @@ import { useMutation } from '@apollo/client';
 import { findWithAttr, ORDER_FILTERS } from 'utils';
 import { ORDER_STATUS, ROLES } from '@shared/consts';
 import _ from 'lodash';
-import { CancelIcon, CloseIcon, CompleteIcon, EditIcon, SaveIcon, ScheduleIcon, SuccessIcon, ThumbDownIcon, ThumbUpIcon } from '@shared/icons';
+import { CancelIcon, CloseIcon, CompleteIcon, DeliveryTruckIcon, EditIcon, SaveIcon, ScheduleIcon, SuccessIcon, ThumbDownIcon, ThumbUpIcon } from '@shared/icons';
 import { mutationWrapper } from 'graphql/utils';
 import { updateOrderVariables, updateOrder_updateOrder } from 'graphql/generated/updateOrder';
-
-makeStyles((theme) => ({
-    pad: {
-        padding: spacing(1),
-    },
-    bottom: {
-        background: palette.primary.main,
-        position: 'fixed',
-        bottom: '0',
-        width: '-webkit-fill-available',
-        zIndex: 1,
-    },
-}));
 
 const editableStatuses = [ORDER_STATUS.PendingCancel, ORDER_STATUS.Pending, ORDER_STATUS.Approved, ORDER_STATUS.Scheduled]
 
@@ -60,7 +46,7 @@ export const OrderDialog = ({
                 desiredDeliveryDate: changedOrder.desiredDeliveryDate,
                 isDelivery: changedOrder.isDelivery,
                 items: changedOrder.items.map(i => ({ id: i.id, quantity: i.quantity }))
-            }
+            },
             successCondition: (data) => data !== null,
             successMessage: () => 'Order successfully updated.',
             onSuccess: (data) => setChangedOrder(data),
@@ -120,7 +106,7 @@ export const OrderDialog = ({
             ],
             [ORDER_STATUS.InTransit]: [
                 isOwner && [ORDER_STATUS.Scheduled, ORDER_STATUS.Delivered].includes(order?.status),
-                'Set order status to "in transit"', <LocalShippingIcon />, 'Order status set to "in transit".', 'Failed to update order status.'
+                'Set order status to "in transit"', <DeliveryTruckIcon />, 'Order status set to "in transit".', 'Failed to update order status.'
             ],
             [ORDER_STATUS.Delivered]: [
                 isOwner && order?.status === ORDER_STATUS.InTransit,
@@ -191,11 +177,17 @@ export const OrderDialog = ({
                 flex: 'auto',
                 paddingBottom: '15vh',
             }}>
-                <Box className={classes.pad}>
+                <Box sx={{ padding: spacing(1) }}>
                     <Typography variant="body1" gutterBottom>{status_string}</Typography>
                     <CartTable cart={order} editable={editableStatuses.includes(order?.status)} onUpdate={(data) => setChangedOrder(data)} />
                 </Box>
-                <Box className={classes.bottom}>
+                <Box sx={{
+                    background: palette.primary.main,
+                    position: 'fixed',
+                    bottom: '0',
+                    width: '-webkit-fill-available',
+                    zIndex: 1,
+                }}>
                     {options}
                 </Box>
             </Box>

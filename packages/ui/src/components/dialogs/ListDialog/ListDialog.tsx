@@ -7,12 +7,6 @@ import {
 } from '@mui/material';
 import { DialogTitle } from '../DialogTitle/DialogTitle';
 
- makeStyles((theme) => ({
-    root: {
-        background: palette.background.paper,
-    },
-}));
-
 export const ListDialog = ({
     open = true,
     onClose,
@@ -24,14 +18,17 @@ export const ListDialog = ({
 
     return (
         <Dialog
-            PaperProps={{
-                className: classes.root,
-            }}
             onClose={() => onClose()}
             aria-labelledby="simple-dialog-title"
             open={open}
-            {...props}>
-            <DialogTitle id="simple-dialog-title" title={title} />
+            {...props}
+            sx={{
+                '& .MuiDialogContent-root': {
+                    background: palette.background.paper,
+                },
+            }}
+        >
+            <DialogTitle ariaLabel="simple-dialog-title" title={title} onClose={onClose} />
             <List>
                 {data?.map(([label, value], index) => (
                     <ListItem button onClick={() => onClose(value)} key={index}>

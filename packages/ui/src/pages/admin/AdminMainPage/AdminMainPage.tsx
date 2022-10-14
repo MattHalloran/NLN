@@ -1,29 +1,8 @@
-import React from 'react';
 import { useHistory } from 'react-router-dom';
 import { Box, Typography, Card, CardContent, CardActions, Tooltip, IconButton, useTheme } from '@mui/material';
 import { OpenInNewIcon } from '@shared/icons';
 import { APP_LINKS } from '@shared/consts';
 import { PageContainer, PageTitle } from 'components';
-
-makeStyles((theme) => ({
-    header: {
-        textAlign: 'center',
-    },
-    card: {
-        background: palette.primary.main,
-        color: palette.primary.contrastText,
-        cursor: 'pointer',
-    },
-    flexed: {
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-        gridGap: '20px',
-        alignItems: 'stretch',
-    },
-    icon: {
-        color: palette.secondary.light,
-    },
-}));
 
 export const AdminMainPage = () => {
     let history = useHistory();
@@ -40,10 +19,19 @@ export const AdminMainPage = () => {
 
     return (
         <PageContainer>
-            <PageTitle>Manage Site</PageTitle>
-            <Box className={classes.flexed}>
+            <PageTitle title="Manage Site" />
+            <Box sx={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+                gridGap: '20px',
+                alignItems: 'stretch',
+            }}>
                 {card_data.map(([title, description, link]) => (
-                    <Card className={classes.card} onClick={() => history.push(link)}>
+                    <Card onClick={() => history.push(link)} sx={{
+                        background: palette.primary.main,
+                        color: palette.primary.contrastText,
+                        cursor: 'pointer',
+                    }}>
                         <CardContent>
                             <Typography variant="h5" component="h2">
                                 {title}
@@ -55,7 +43,7 @@ export const AdminMainPage = () => {
                         <CardActions>
                             <Tooltip title="Open" placement="bottom">
                                 <IconButton onClick={() => history.push(link)}>
-                                    <OpenInNewIcon className={classes.icon} />
+                                    <OpenInNewIcon fill={palette.secondary.light} />
                                 </IconButton>
                             </Tooltip>
                         </CardActions>

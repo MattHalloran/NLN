@@ -17,7 +17,7 @@ import { updateImagesVariables } from 'graphql/generated/updateImages';
 export const AdminHeroPage = () => {
     const { palette } = useTheme();
 
-    const [imageData, setImageData] = useState([]);
+    const [imageData, setImageData] = useState<any[]>([]);
     const { data: currImages, refetch: refetchImages } = useQuery(imagesByLabelQuery, { variables: { input: { label: 'hero' } } });
     const [addImages] = useMutation(addImagesMutation);
     const [updateImages] = useMutation(updateImagesMutation);

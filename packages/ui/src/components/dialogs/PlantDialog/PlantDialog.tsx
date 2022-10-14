@@ -27,23 +27,12 @@ import { IMAGE_SIZE } from '@shared/consts';
 import _ from 'lodash';
 import Carousel from 'react-gallery-carousel';
 import 'react-gallery-carousel/dist/index.css';
-import { BeeIcon, CloseIcon, ExpandLessIcon, ExpandMoreIcon, InfoIcon, LightModeIcon, MapIcon, MoveLeftRightIcon, MoveUpDownIcon, ScheduleIcon, SoilTypeIcon, SpeedIcon, SvgComponent } from '@shared/icons';
+import { BeeIcon, CloseIcon, DroughtIcon, ExpandLessIcon, ExpandMoreIcon, InfoIcon, LampIcon, LightModeIcon, MapIcon, MoveLeftRightIcon, MoveUpDownIcon, PaletteIcon, ScheduleIcon, ShoppingCartAddIcon, SoilTypeIcon, SpeedIcon, SvgComponent } from '@shared/icons';
+import { MoistureIcon } from 'assets/img';
 
 makeStyles((theme) => ({
     displayImage: {
         maxHeight: '75vh',
-    },
-    icon: {
-        ,
-    },
-    optionsContainer: {
-        padding: spacing(2),
-    },
-    bottom: {
-        background: palette.primary.main,
-        position: 'fixed',
-        bottom: '0',
-        width: '-webkit-fill-available',
     },
 }));
 
@@ -64,7 +53,7 @@ export const PlantDialog = ({
     const { palette, spacing } = useTheme();
 
     const [quantity, setQuantity] = useState(1);
-    const [orderOptions, setOrderOptions] = useState([]);
+    const [orderOptions, setOrderOptions] = useState<any[]>([]);
     const [detailsOpen, setDetailsOpen] = useState(true);
     // Stores the id of the selected sku
     const [currSku, setCurrSku] = useState(selectedSku);
@@ -93,7 +82,7 @@ export const PlantDialog = ({
         thumbnail: `${getServerUrl()}/${getImageSrc(d.image, IMAGE_SIZE.M)}`
     })) : [];
 
-    const traitIconList = (traitName: string, Icon: SvgComponent, title: string, alt: string | undefined) => {
+    const traitIconList = (traitName: string, Icon: SvgComponent, title: string, alt?: string) => {
         if (!alt) alt = title;
         const traitValue = getPlantTrait(traitName, plant);
         if (!traitValue) return null;
@@ -105,7 +94,7 @@ export const PlantDialog = ({
                             background: 'transparent',
                             borderRadius: 0,
                         }}>
-                            <Icon alt={alt} fill={palette.mode === 'light' ? 'black' : 'white'} />
+                            <Icon fill={palette.mode === 'light' ? 'black' : 'white'} />
                         </Avatar>
                     </ListItemAvatar>
                     <ListItemText primary={title} secondary={traitValue} />
@@ -119,7 +108,9 @@ export const PlantDialog = ({
     };
 
     let options = (
-        <Grid className={classes.optionsContainer} container spacing={2}>
+        <Grid container spacing={2} sx={{
+            padding: spacing(2),
+        }}>
             <Grid item xs={6} sm={4}>
                 <Selector
                     fullWidth
@@ -133,12 +124,14 @@ export const PlantDialog = ({
             </Grid>
             <Grid item xs={6} sm={4}>
                 <QuantityBox
-                    style={{ height: '100%' }}
+                    id="plant-quantity"
                     min={0}
                     max={Math.max.apply(Math, plant.skus.map(s => s.availability))}
                     initial={1}
                     value={quantity}
-                    handleChange={setQuantity} />
+                    handleChange={setQuantity}
+                    sx={{ height: '100%' }}
+                />
             </Grid>
             <Grid item xs={12} sm={4}>
                 <Button
@@ -146,7 +139,7 @@ export const PlantDialog = ({
                     fullWidth
                     style={{ height: '100%' }}
                     color="secondary"
-                    startIcon={<AddShoppingCartIcon />}
+                    startIcon={<ShoppingCartAddIcon />}
                     onClick={() => onAddToCart(getPlantTrait('commonName', plant) ?? plant.latinName, currSku, quantity)}
                 >Order</Button>
             </Grid>
@@ -157,12 +150,12 @@ export const PlantDialog = ({
         ['zone', MapIcon, 'Hardiness zones'],
         ['physiographicRegions', MapIcon, 'Physiographic Region'],
         ['attractsPollinatorsAndWildlife', BeeIcon, 'Attracted Pollinators and Wildlife'],
-        ['droughtTolerance', NoWaterIcon, 'Drought Tolerance'],
+        ['droughtTolerance', DroughtIcon, 'Drought Tolerance'],
         ['saltTolerance', SaltIcon, 'Salt Tolerance'],
         ['grownHeight', MoveUpDownIcon, 'Grown Height'],
-        ['grownSpread', MoveLeftRightIcon, 'Grown Spread'],
+        ['grojwnSpread', MoveLeftRightIcon, 'Grown Spread'],
         ['growthRate', SpeedIcon, 'Growth Rate'],
-        ['bloomColors', ColorWheelIcon, 'Bloom Colors'],
+        ['bloomColors', PaletteIcon, 'Bloom Colors'],
         ['bloomTimes', ScheduleIcon, 'Bloom Times'],
         ['lightRanges', LampIcon, 'Light Range'],
         ['optimalLight', LightModeIcon, 'Optimal Light'],
@@ -206,7 +199,7 @@ export const PlantDialog = ({
                     <Grid item lg={6} xs={12}>
                         {displayedTraitData.length > 0 ? (
                             <React.Fragment>
-                                <ListItem className={classes.menuItem} button onClick={handleDetailsClick}>
+                                <ListItem button onClick={handleDetailsClick}>
                                     <ListItemIcon><InfoIcon /></ListItemIcon>
                                     <ListItemText primary="Details" />
                                     {detailsOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
@@ -219,7 +212,12 @@ export const PlantDialog = ({
                         ) : null}
                     </Grid>
                 </Grid>
-                <Box className={classes.bottom}>
+                <Box sx={{
+                    background: palette.primary.main,
+                    position: 'fixed',
+                    bottom: '0',
+                    width: '-webkit-fill-available',
+                }}>
                     {options}
                 </Box>
             </Box>

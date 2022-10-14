@@ -6,7 +6,7 @@ import {
 } from 'components';
 import { deleteArrayIndex, showPrice, updateObject, PubSub, getImageSrc, getPlantTrait, updateArray, getServerUrl } from 'utils';
 import { NoImageIcon } from 'assets/img';
-import { IconButton, useTheme } from '@mui/material';
+import { IconButton, Palette, useTheme } from '@mui/material';
 import { Box, Paper, Grid, TableContainer, Table, TableHead, TableRow, TableCell, TableBody, TextField } from '@mui/material';
 import AdapterDateFns from '@mui/lab/AdapterDateFns';
 import LocalizationProvider from '@mui/lab/LocalizationProvider';
@@ -15,26 +15,18 @@ import { IMAGE_USE } from '@shared/consts';
 import { CloseIcon } from '@shared/icons';
 
 makeStyles((theme) => ({
-    tablePaper: {
-        background: palette.background.paper,
-    },
-    tableIcon: {
-        color: palette.primary.contrastText,
-    },
-    tableHead: {
-        background: palette.primary.main,
-    },
     displayImage: {
         maxHeight: '8vh',
     },
-    tableCol: {
-        verticalAlign: 'middle',
-        '& > *': {
-            height: 'fit-content',
-            color: palette.primary.contrastText
-        }
-    }
 }));
+
+const tableColumnStyle = (palette: Palette) => ({
+    verticalAlign: 'middle',
+    '& > *': {
+        height: 'fit-content',
+        color: palette.primary.contrastText
+    }
+})
 
 const DELIVERY_OPTIONS = [
     {
@@ -55,7 +47,7 @@ export const CartTable = ({
 }) => {
     const { palette } = useTheme();
 
-    let all_total = Array.isArray(cart?.items) ? cart.items.map(i => (+i.sku.price)*(+i.quantity)).reduce((a, b) => (+a)+(+b), 0) : -1;
+    let all_total = Array.isArray(cart?.items) ? cart.items.map(i => (+i.sku.price) * (+i.quantity)).reduce((a, b) => (+a) + (+b), 0) : -1;
 
     const updateCartField = useCallback((fieldName, value) => {
         onUpdate(updateObject(cart, fieldName, value));
@@ -113,22 +105,22 @@ export const CartTable = ({
                         <CloseIcon />
                     </IconButton>
                 </TableCell>) : null}
-                <TableCell className={classes.tableCol} padding="none" component="th" scope="row" align="center">
+                <TableCell padding="none" component="th" scope="row" align="center" sx={tableColumnStyle(palette)}>
                     {display}
                 </TableCell>
-                <TableCell className={classes.tableCol} align="left">{getPlantTrait('commonName', data.sku.plant)}</TableCell>
-                <TableCell className={classes.tableCol} align="right">{price}</TableCell>
-                <TableCell className={classes.tableCol} align="right">
+                <TableCell align="left" sx={tableColumnStyle(palette)}>{getPlantTrait('commonName', data.sku.plant)}</TableCell>
+                <TableCell align="right" sx={tableColumnStyle(palette)}>{price}</TableCell>
+                <TableCell align="right" sx={tableColumnStyle(palette)}>
                     {editable ? (<QuantityBox
                         min={0}
                         max={data.sku?.availability ?? 100}
-                        initial_value={quantity}
-                        valueFunc={(q) => updateItemQuantity(data.sku.sku, q)} />) : quantity}
+                        initial={quantity}
+                        handleChange={(q) => updateItemQuantity(data.sku.sku, q)} />) : quantity}
                 </TableCell>
-                <TableCell className={classes.tableCol} align="right">{total}</TableCell>
+                <TableCell align="right" sx={tableColumnStyle(palette)}>{total}</TableCell>
             </TableRow>
         );
-    }, [deleteCartItem, editable, updateItemQuantity])
+    }, [deleteCartItem, editable, palette, updateItemQuantity])
 
     let headCells = [
         { id: 'productImage', align: 'left', disablePadding: true, label: 'Product' },
@@ -142,9 +134,9 @@ export const CartTable = ({
 
     return (
         <Box {...props} >
-            <TableContainer className={classes.tablePaper} component={Paper}>
+            <TableContainer component={Paper} sx={{ background: palette.background.paper }}>
                 <Table aria-label="cart table">
-                    <TableHead className={classes.tableHead}>
+                    <TableHead sx={{ background: palette.primary.main }}>
                         <TableRow>
                             {headCells.map(({ id, align, disablePadding, label }, index) => (
                                 <TableCell
@@ -165,6 +157,7 @@ export const CartTable = ({
             <Grid container spacing={2}>
                 <Grid item xs={12} sm={4}>
                     <Selector
+                        color={undefined}
                         fullWidth
                         disabled={!editable}
                         required

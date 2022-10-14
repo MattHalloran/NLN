@@ -11,7 +11,6 @@ import {
     Typography,
     useTheme,
 } from '@mui/material';
-import _ from 'lodash';
 import { DEFAULT_PRONOUNS } from '@shared/consts';
 import { addCustomerMutation } from 'graphql/mutation';
 import { useFormik } from 'formik';
@@ -21,36 +20,6 @@ import { CancelIcon, CloseIcon, CreateIcon } from '@shared/icons';
 import { addCustomerSchema } from '@shared/validation';
 import { mutationWrapper } from 'graphql/utils';
 import { Transition } from '../UpTransition/UpTransition';
-
-makeStyles((theme) => ({
-    title: {
-        ,
-    },
-    optionsContainer: {
-        padding: spacing(2),
-        background: palette.primary.main,
-    },
-    container: {
-        background: palette.background.default,
-        flex: 'auto',
-        padding: spacing(1),
-        paddingBottom: '15vh',
-    },
-    bottom: {
-        background: palette.primary.main,
-        position: 'fixed',
-        bottom: '0',
-        width: '-webkit-fill-available',
-        zIndex: 1,
-    },
-    form: {
-        width: '100%',
-        marginTop: spacing(3),
-    },
-    phoneInput: {
-        width: '100%',
-    },
-}));
 
 export const NewCustomerDialog = ({
     open = true,
@@ -90,7 +59,10 @@ export const NewCustomerDialog = ({
 
 
     let options = (
-        <Grid className={classes.optionsContainer} container spacing={2}>
+        <Grid container spacing={2} sx={{
+            padding: spacing(2),
+            background: palette.primary.main,
+        }}>
             <Grid item xs={12} sm={6}>
                 <Button
                     fullWidth
@@ -124,8 +96,15 @@ export const NewCustomerDialog = ({
                     </Grid>
                 </Toolbar>
             </AppBar>
-            <Box className={classes.container}>
-                <form className={classes.form}>
+            <Box sx={{
+                background: palette.background.default,
+                flex: 'auto',
+                padding: spacing(1),
+                paddingBottom: '15vh',
+                width: '100%',
+                marginTop: spacing(3),
+            }}>
+                <form>
                     <Grid container spacing={2}>
                         <Grid item xs={12} sm={6}>
                             <TextField
@@ -159,7 +138,6 @@ export const NewCustomerDialog = ({
                                 fullWidth
                                 freeSolo
                                 id="pronouns"
-                                name="pronouns"
                                 options={DEFAULT_PRONOUNS}
                                 value={formik.values.pronouns}
                                 onChange={(_, value) => formik.setFieldValue('pronouns', value)}
@@ -216,7 +194,13 @@ export const NewCustomerDialog = ({
                         </Grid>
                     </Grid>
                 </form>
-                <Box className={classes.bottom}>
+                <Box sx={{
+                    background: palette.primary.main,
+                    position: 'fixed',
+                    bottom: '0',
+                    width: '-webkit-fill-available',
+                    zIndex: 1,
+                }}>
                     {options}
                 </Box>
             </Box>

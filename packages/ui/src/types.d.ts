@@ -26,3 +26,6 @@ export type ApolloError = {
         };
     }[];
 }
+
+// Miscellaneous types
+export type SetLocation = (to: Path, options?: { replace?: boolean }) => void;

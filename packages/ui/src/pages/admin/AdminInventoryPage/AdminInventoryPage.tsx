@@ -28,27 +28,13 @@ import {
 import { mutationWrapper } from 'graphql/utils';
 import { uploadAvailabilityVariables } from 'graphql/generated/uploadAvailability';
 
-makeStyles((theme) => ({
-    header: {
-        textAlign: 'center',
-    },
-    cardFlex: {
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-        alignItems: 'stretch',
-    },
-    plantSelector: {
-        marginBottom: '1em',
-    },
-}));
-
 export const AdminInventoryPage = () => {
     const { palette } = useTheme();
 
     const [showActive, setShowActive] = useState(true);
     const [searchString, setSearchString] = useState('');
     // Selected plant data. Used for popup. { plant, selectedSku }
-    const [selected, setSelected] = useState(null);
+    const [selected, setSelected] = useState<any | null>(null);
 
     const [sortBy, setSortBy] = useState(SORT_OPTIONS[0].value);
     const { data: traitOptions } = useQuery(traitOptionsQuery);
@@ -95,16 +81,18 @@ export const AdminInventoryPage = () => {
                 disabled={loading}
             />
             <h2>Filter</h2>
-            <Grid className={classes.padBottom} container spacing={2}>
+            <Grid container spacing={2}>
                 <Grid item xs={12} sm={4}>
                     <Selector
-                        className={classes.plantSelector}
+                        color={undefined}
                         fullWidth
                         options={SORT_OPTIONS}
                         selected={sortBy}
                         handleChange={(e) => setSortBy(e.target.value)}
                         inputAriaLabel='sort-plants-selector-label'
-                        label="Sort" />
+                        label="Sort"
+                        sx={{ marginBottom: '1em' }}
+                    />
                 </Grid>
                 <Grid item xs={12} sm={4}>
                     <FormControlLabel
@@ -119,10 +107,14 @@ export const AdminInventoryPage = () => {
                     />
                 </Grid>
                 <Grid item xs={12} sm={4}>
-                    <SearchBar fullWidth onChange={(e) => setSearchString(e.target.value)} />
+                    <SearchBar fullWidth value={searchString} onChange={(e) => setSearchString(e.target.value)} />
                 </Grid>
             </Grid>
-            <Box className={classes.cardFlex}>
+            <Box sx={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+                alignItems: 'stretch',
+            }}>
                 {plantData?.plants?.map((plant, index) => <PlantCard key={index}
                     plant={plant}
                     onClick={setSelected} />)}

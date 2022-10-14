@@ -5,6 +5,7 @@ import {
 import { BreadcrumbsBaseProps } from '../types';
 import { useMemo } from 'react';
 import { useLocation } from '@shared/route';
+import { openLink } from 'utils';
 
 export const BreadcrumbsBase = ({
     paths,
