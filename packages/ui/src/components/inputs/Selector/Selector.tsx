@@ -1,18 +1,7 @@
-import React, { useCallback } from 'react';
-import { FormControl, InputLabel, Select, MenuItem, Chip, useTheme } from '@mui/material';
+import { useCallback } from 'react';
+import { FormControl, InputLabel, Select, MenuItem, Chip, useTheme, Box } from '@mui/material';
 import _ from 'lodash';
-
-makeStyles((theme) => ({
-    root: {
-    },
-    fullWidth: {
-        width: '-webkit-fill-available',
-    },
-    chips: {
-        display: 'flex',
-        flexWrap: 'wrap',
-    },
-}));
+import { SelectorProps } from '../types';
 
 export const Selector = ({
     options,
@@ -24,18 +13,19 @@ export const Selector = ({
     noneOption = false,
     label = 'Select',
     color,
+    sx = {},
     ...props
-}) => {
+}: SelectorProps) => {
     const { palette } = useTheme();
 
-    const displayColor = color ?? palette.background.contrastText;
+    const displayColor = color ?? palette.background.textPrimary;
 
     // Formats selected into label/value object array.
     // options - Formatted options (array of label/value pairs)
     const formatSelected = useCallback((options) => {
         const select_arr = _.isArray(selected) ? selected : [selected];
         if (!Array.isArray(options)) return select_arr;
-        let formatted_select = [];
+        let formatted_select: { label: string, value: any }[] = [];
         for (const curr_select of select_arr) {
             for (const curr_option of options) {
                 if (_.isEqual(curr_option.value, curr_select)) {
@@ -62,30 +52,36 @@ export const Selector = ({
         return {
             fontWeight:
                 options_formatted.find(o => o.label === label)
-                    ? typography.fontWeightRegular
-                    : typography.fontWeightMedium,
+                    ? 'bold'
+                    : 'normal',
         };
     }
 
     return (
-        <FormControl 
-            variant="outlined" 
-            className={`${classes.root} ${fullWidth ? classes.fullWidth : ''}`}
+        <FormControl
+            variant="outlined"
+            sx={{
+                width: fullWidth ? '-webkit-fill-available' : 'auto',
+                ...sx,
+            }}
         >
-            <InputLabel id={inputAriaLabel} shrink={selected_formatted?.length > 0} style={{color: displayColor}}>{label}</InputLabel>
+            <InputLabel id={inputAriaLabel} shrink={selected_formatted?.length > 0} style={{ color: displayColor }}>{label}</InputLabel>
             <Select
-                style={{color: displayColor}}
+                style={{ color: displayColor }}
                 labelId={inputAriaLabel}
                 value={selected}
                 onChange={handleChange}
                 label={label}
                 renderValue={() => {
                     return multiple ? (
-                        <div className={classes.chips}>
+                        <Box sx={{
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                        }}>
                             {selected_formatted.map((o) => (
-                                <Chip label={o.label} key={o.value} className={classes.chip} />
+                                <Chip label={o.label} key={o.value} />
                             ))}
-                        </div>
+                        </Box>
                     ) : selected_formatted ? selected_formatted[0].label : ''
                 }}
                 {...props}

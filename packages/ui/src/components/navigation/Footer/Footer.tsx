@@ -6,29 +6,8 @@ import { getServerUrl, printAvailability } from 'utils';
 import { List, ListItem, ListItemIcon, ListItemText, Grid, ButtonBase, Tooltip, Box, useTheme } from '@mui/material';
 import { CopyrightBreadcrumbs } from 'components';
 import { useHistory } from 'react-router';
-import { EmailIcon, PhoneIcon, SvgComponent } from '@shared/icons';
+import { BusinessIcon, EmailIcon, PhoneIcon, PrintIcon, SvgComponent } from '@shared/icons';
 import { APP_LINKS } from '@shared/consts';
-
-makeStyles((theme) => ({
-    upper: {
-        textTransform: 'uppercase',
-    },
-    imageContainer: {
-        maxWidth: '33vw',
-        padding: 10,
-    },
-    image: {
-        maxWidth: '100%',
-        maxHeight: 200,
-        background: palette.primary.contrastText,
-    },
-    icon: {
-        fill: palette.primary.contrastText,
-    },
-    copyright: {
-        ,
-    },
-}));
 
 export const Footer = ({
     session,
@@ -110,7 +89,16 @@ export const Footer = ({
                                 padding: 10,
                             }}>
                                 <a href={src} target="_blank" rel="noopener noreferrer">
-                                    <img className={classes.image} alt={alt} src={img} />
+                                    <Box
+                                        component="img"
+                                        alt={alt}
+                                        src={img}
+                                        sx={{
+                                            maxWidth: '100%',
+                                            maxHeight: 200,
+                                            background: palette.primary.contrastText,
+                                        }}
+                                    />
                                 </a>
                             </ButtonBase>
                         </Tooltip>

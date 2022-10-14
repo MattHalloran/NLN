@@ -11,5 +11,6 @@ export * from './pubsub';
 export * from './serverUrl';
 export * from './stringTools';
 export * from './theme';
+export * from './urlTools';
 export * from './useHistoryState';
 export * from './userActions';

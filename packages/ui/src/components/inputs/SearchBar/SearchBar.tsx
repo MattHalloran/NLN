@@ -7,7 +7,7 @@ export const SearchBar = ({
     label = 'Search...',
     value,
     onChange,
-    debounce,
+    debounce = 0,
     ...props
 }) => {
 
@@ -23,7 +23,7 @@ export const SearchBar = ({
             onChange={onChangeDebounced}
             InputProps={{
                 endAdornment: (
-                    <InputAdornment>
+                    <InputAdornment position="end">
                         <IconButton>
                             <SearchIcon />
                         </IconButton>

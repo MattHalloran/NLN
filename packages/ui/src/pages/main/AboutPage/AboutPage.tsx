@@ -8,13 +8,6 @@ import {
 import Facebook from 'assets/img/Facebook.png';
 import Instagram from 'assets/img/Instagram.png';
 
-makeStyles((theme) => ({
-    social: {
-        width: '80px',
-        height: '80px',
-    }
-}));
-
 export const AboutPage = ({
     business,
 }) => {
@@ -41,12 +34,20 @@ export const AboutPage = ({
                     <h2 style={{ fontFamily: 'fantasy' }}>The Gianaris Family</h2>
                 </Grid>
                 <Grid item md={12} lg={4}>
-                    <Box sx={{ textAlign: 'center'}}>
+                    <Box sx={{ textAlign: 'center' }}>
                         <Typography variant="h4" component="h2">Check out our socials</Typography>
                     </Box>
                     {socials.map(s => (
                         <a href={s[2]} target="_blank" rel="noopener noreferrer">
-                            <img className={classes.social} alt={s[1]} src={s[0]} />
+                            <Box
+                                component="img"
+                                alt={s[1]}
+                                src={s[0]}
+                                sx={{
+                                    width: '80px',
+                                    height: '80px',
+                                }}
+                            />
                         </a>
                     ))}
                 </Grid>

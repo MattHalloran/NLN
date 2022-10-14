@@ -1,40 +1,29 @@
 // Code inspired by https://github.com/rmolinamir/hero-slider
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useHistory } from 'react-router-dom';
-import { Typography, Button, Box, useTheme } from '@mui/material';
+import { Typography, Button, Box } from '@mui/material';
 import { Slider } from './Slider.js'
 import { imagesByLabelQuery } from 'graphql/query';
 import { useQuery } from '@apollo/client';
 import { APP_LINKS } from '@shared/consts';
 
-makeStyles(() => ({
-    textPop: {
-        padding: '0',
-        color: 'white',
-        textAlign: 'center',
-        fontWeight: '600',
-        textShadow:
-            `-1px -1px 0 black,  
+const textPopStyle = ({
+    padding: '0',
+    color: 'white',
+    textAlign: 'center',
+    fontWeight: '600',
+    textShadow:
+        `-1px -1px 0 black,  
             1px -1px 0 black,
             -1px 1px 0 black,
             1px 1px 0 black`
-    },
-    title: {
-        margin: '0 auto',
-        width: '90%'
-    },
-    subtitle: {
-        margin: '24px auto 0',
-        width: '80%'
-    },
-}));
+})
 
 export const Hero = ({
     text,
     subtext,
 }) => {
     let history = useHistory();
-    const { palette } = useTheme();
 
     const [images, setImages] = useState([]);
     const { data } = useQuery(imagesByLabelQuery, { variables: { input: { label: 'hero' } } });
@@ -64,8 +53,16 @@ export const Hero = ({
                 pointerEvents: 'none',
                 backgroundColor: 'rgba(0, 0, 0, 0.1)'
             }}>
-                <Typography variant='h2' component='h1' className={classes.title + ' ' + classes.textPop}>{text}</Typography>
-                <Typography variant='h4' component='h2' className={classes.subtitle + ' ' + classes.textPop}>{subtext}</Typography>
+                <Typography variant='h2' component='h1' sx={{
+                    margin: '0 auto',
+                    width: '90%',
+                    ...textPopStyle
+                }}>{text}</Typography>
+                <Typography variant='h4' component='h2' sx={{
+                    margin: '24px auto 0',
+                    width: '80%',
+                    ...textPopStyle
+                }}>{subtext}</Typography>
                 <Button
                     type="submit"
                     color="secondary"

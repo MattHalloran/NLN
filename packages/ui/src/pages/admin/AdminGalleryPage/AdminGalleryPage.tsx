@@ -12,11 +12,12 @@ import {
 } from 'components';
 import { mutationWrapper } from 'graphql/utils';
 import { addImagesVariables, addImages_addImages } from 'graphql/generated/addImages';
+import { updateImagesVariables } from 'graphql/generated/updateImages';
 
 export const AdminGalleryPage = () => {
     const { palette } = useTheme();
 
-    const [imageData, setImageData] = useState([]);
+    const [imageData, setImageData] = useState<any[]>([]);
     const { data: currImages, refetch: refetchImages } = useQuery(imagesByLabelQuery, { variables: { label: 'gallery' } });
     const [addImages] = useMutation(addImagesMutation);
     const [updateImages] = useMutation(updateImagesMutation);

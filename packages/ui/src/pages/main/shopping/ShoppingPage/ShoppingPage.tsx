@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
     PageContainer,
     SearchBar,
@@ -10,26 +10,7 @@ import { traitOptionsQuery } from 'graphql/query';
 import { useQuery } from '@apollo/client';
 import { Switch, Grid, Button, SwipeableDrawer, FormControlLabel, Box, useTheme } from '@mui/material';
 import { printAvailability } from 'utils';
-import { CloseIcon } from '@shared/icons';
-
-makeStyles((theme) => ({
-    drawerPaper: {
-        background: palette.primary.light,
-        color: palette.primary.contrastText,
-        borderRight: `2px solid ${palette.text.primary}`,
-        padding: spacing(1),
-    },
-    formControl: {
-        display: 'flex',
-        justifyContent: 'center',
-        '& > *': {
-            margin: spacing(1),
-        },
-    },
-    padBottom: {
-        marginBottom: spacing(2),
-    },
-}));
+import { CloseIcon, DeleteIcon, FilterIcon, PrintIcon } from '@shared/icons';
 
 export const ShoppingPage = ({
     session,
@@ -42,7 +23,7 @@ export const ShoppingPage = ({
     const [open, setOpen] = useState(false);
     const { data: traitOptionsData } = useQuery(traitOptionsQuery);
     const [traitOptions, setTraitOptions] = useState({});
-    const [filters, setFilters] = useState(null);
+    const [filters, setFilters] = useState<{ [x: string]: any }>({});
     const [sortBy, setSortBy] = useState(SORT_OPTIONS[0].value);
     const [searchString, setSearchString] = useState('');
     const [hideOutOfStock, setHideOutOfStock] = useState(false);
@@ -81,15 +62,17 @@ export const ShoppingPage = ({
         let selected = filters ? filters[field] : '';
         return (
             <Selector
-                className={`${classes.padBottom} ${classes.selector}`}
+                color={undefined}
                 fullWidth
                 options={options}
                 selected={selected || ''}
                 handleChange={(e) => handleFiltersChange(field, e.target.value)}
                 inputAriaLabel={`${field}-selector-label`}
-                label={title} />
+                label={title}
+                sx={{ marginBottom: spacing(2) }}
+            />
         )
-    }, [traitOptions, filters, handleFiltersChange])
+    }, [traitOptions, filters, spacing, handleFiltersChange])
 
     const resetSearchConstraints = () => {
         setSortBy(SORT_OPTIONS[0].value)
@@ -98,12 +81,12 @@ export const ShoppingPage = ({
     }
 
     let optionsContainer = (
-        <Grid className={classes.padBottom} container spacing={2}>
+        <Grid mb={2} container spacing={2}>
             <Grid item xs={12} sm={6}>
                 <Button
                     fullWidth
                     color="secondary"
-                    startIcon={<RestoreIcon />}
+                    startIcon={<DeleteIcon />}
                     onClick={resetSearchConstraints}
                 >Reset</Button>
             </Grid>
@@ -138,7 +121,20 @@ export const ShoppingPage = ({
 
     return (
         <PageContainer>
-            <SwipeableDrawer classes={{ paper: classes.drawerPaper }} anchor="left" open={open} onOpen={()=>{}} onClose={() => PubSub.get().publishArrowMenuOpen(false)}>
+            <SwipeableDrawer
+                anchor="left"
+                open={open}
+                onOpen={() => { }}
+                onClose={() => PubSub.get().publishArrowMenuOpen(false)}
+                sx={{
+                    '& .MuiDrawer-paper': {
+                        background: palette.primary.light,
+                        color: palette.primary.contrastText,
+                        borderRight: `2px solid ${palette.text.primary}`,
+                        padding: spacing(1),
+                    }
+                }}
+            >
                 {optionsContainer}
                 <Box>
                     <Selector
@@ -149,7 +145,7 @@ export const ShoppingPage = ({
                         inputAriaLabel='sort-selector-label'
                         label="Sort" />
                     <h2>Search</h2>
-                    <SearchBar className={classes.padBottom} fullWidth debounce={300} onChange={(e) => setSearchString(e.target.value)} />
+                    <SearchBar sx={{ marginBottom: spacing(2) }} fullWidth debounce={300} value={searchString} onChange={(e) => setSearchString(e.target.value)} />
                     <h2>Filters</h2>
                     {traitList.map(d => traitOptionsToSelector(...d))}
                     {/* {filters_to_checkbox(['Yes', 'No'], 'Jersey Native')}
@@ -157,7 +153,13 @@ export const ShoppingPage = ({
                 </Box>
                 {optionsContainer}
             </SwipeableDrawer>
-            <Box className={classes.formControl}>
+            <Box sx={{
+                display: 'flex',
+                justifyContent: 'center',
+                '& > *': {
+                    margin: spacing(1),
+                },
+            }}>
                 <FormControlLabel
                     control={
                         <Switch
@@ -170,7 +172,7 @@ export const ShoppingPage = ({
                 />
                 <Button
                     color="secondary"
-                    startIcon={<FilterListIcon />}
+                    startIcon={<FilterIcon />}
                     onClick={() => PubSub.get().publishArrowMenuOpen('toggle')}
                 >Filter</Button>
                 <Button
@@ -188,6 +190,6 @@ export const ShoppingPage = ({
                 searchString={searchString}
                 hideOutOfStock={hideOutOfStock}
             />
-        </PageContainer>
+        </PageContainer >
     );
 }

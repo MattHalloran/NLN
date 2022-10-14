@@ -1,14 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { PubSub } from 'utils';
-import { Button, Grid, useTheme } from '@mui/material';
+import { Box, Button, Grid, useTheme } from '@mui/material';
 import { SnackSeverity } from 'components/dialogs';
 
 makeStyles((theme) => ({
-    gridPad: {
-        paddingLeft: spacing(1),
-        paddingRight: spacing(1),
-    },
     itemPad: {
         marginTop: spacing(1),
         marginBottom: spacing(1),
@@ -24,22 +20,6 @@ makeStyles((theme) => ({
         flexDirection: 'row',
         flexWrap: 'wrap',
         marginTop: 16
-    },
-    thumb: {
-        display: 'inline-flex',
-        borderRadius: 2,
-        border: '1px solid #eaeaea',
-        marginBottom: 8,
-        marginRight: 8,
-        width: 100,
-        height: 100,
-        padding: 4,
-        boxSizing: 'border-box'
-    },
-    thumbInner: {
-        display: 'flex',
-        minWidth: 0,
-        overflow: 'hidden'
     },
     img: {
         display: 'block',
@@ -92,15 +72,29 @@ export const Dropzone = ({
     }
 
     const thumbs = files.map(file => (
-        <div className={classes.thumb} key={file.name}>
-            <div className={classes.thumbInner}>
+        <Box key={file.name} sx={{
+            display: 'inline-flex',
+            borderRadius: 2,
+            border: '1px solid #eaeaea',
+            marginBottom: 8,
+            marginRight: 8,
+            width: 100,
+            height: 100,
+            padding: 4,
+            boxSizing: 'border-box'
+        }}>
+            <Box sx={{
+                display: 'flex',
+                minWidth: 0,
+                overflow: 'hidden'
+            }}>
                 <img
                     src={file.preview}
                     className={classes.img}
                     alt="Dropzone preview"
                 />
-            </div>
-        </div>
+            </Box>
+        </Box>
     ));
 
     useEffect(() => () => {
@@ -110,14 +104,17 @@ export const Dropzone = ({
 
     return (
         <section className={classes.dropContainer}>
-            <div style={{ textAlign: 'center' }} {...getRootProps({ className: 'dropzone' })}>
+            <Box sx={{ textAlign: 'center' }} {...getRootProps({ className: 'dropzone' })}>
                 <input {...getInputProps()} />
                 <p>{dropzoneText}</p>
                 {showThumbs &&
                     <aside className={classes.thumbsContainer}>
                         {thumbs}
                     </aside>}
-                <Grid className={classes.gridPad} container spacing={2}>
+                <Grid container spacing={2} sx={{
+                    paddingLeft: spacing(1),
+                    paddingRight: spacing(1),
+                }}>
                     <Grid item xs={12} sm={6}>
                         <Button className={classes.itemPad} disabled={disabled || files.length === 0} fullWidth onClick={upload}>{uploadText}</Button>
                     </Grid>
@@ -125,7 +122,7 @@ export const Dropzone = ({
                         <Button className={classes.itemPad} disabled={disabled || files.length === 0} fullWidth onClick={cancel}>{cancelText}</Button>
                     </Grid>
                 </Grid>
-            </div>
+            </Box>
         </section>
     );
 }

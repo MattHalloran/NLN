@@ -350,7 +350,7 @@ export const EditPlantDialog = ({
                                         freeSolo
                                         id="setTraitField"
                                         options={Object.keys(PLANT_TRAITS)}
-                                        onChange={(_, value) => setSelectedTrait(PLANT_TRAITS[value])}
+                                        onChange={(_, value) => setSelectedTrait(PLANT_TRAITS[value ?? Object.keys(PLANT_TRAITS)[0]])}
                                         renderInput={(params) => (
                                             <TextField
                                                 {...params}

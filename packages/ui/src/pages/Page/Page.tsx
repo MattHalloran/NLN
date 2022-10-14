@@ -8,7 +8,7 @@ export const Page = ({
     sessionChecked,
     redirect = APP_LINKS.Home,
     userRoles,
-    restrictedToRoles,
+    restrictedToRoles = [],
     children
 }) => {
     const location = useLocation();
@@ -20,10 +20,10 @@ export const Page = ({
 
     // If this page has restricted access
     if (restrictedToRoles) {
-        if (Array.isArray(userRoles)) {
-            const haveArray = Array.isArray(userRoles) ? userRoles : [userRoles];
-            const needArray = Array.isArray(restrictedToRoles) ? restrictedToRoles : [restrictedToRoles];
-            if (haveArray.some(r => needArray.includes(r?.role?.title))) return children;
+        if (Array.isArray(userRoles) && userRoles.length > 0) {
+            const haveArray: any[] = Array.isArray(userRoles) ? userRoles : [userRoles];
+            const needArray: any[] = Array.isArray(restrictedToRoles) ? restrictedToRoles : [restrictedToRoles];
+            if (haveArray.some((r: any) => needArray.includes(r?.role?.title))) return children;
         }
         if (sessionChecked && location.pathname !== redirect) history.replace(redirect);
         return null;

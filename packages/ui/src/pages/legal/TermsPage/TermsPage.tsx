@@ -1,18 +1,10 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from '@apollo/client';
 import { readAssetsQuery } from 'graphql/query/readAssets';
 import MarkdownInput from 'markdown-to-jsx';
 import { PageContainer, PolicyBreadcrumbs } from 'components';
 import { convertToDot, valueFromDot } from "utils";
 import { useTheme } from "@mui/material";
-
-makeStyles((theme) => ({
-    root: {
-        '& a': {
-            color: palette.secondary.light,
-        },
-    },
-}));
 
 export const TermsPage = ({
     business
@@ -33,7 +25,7 @@ export const TermsPage = ({
 
     return (
         <PageContainer>
-            <PolicyBreadcrumbs textColor={theme.palette.secondary.dark} />
+            <PolicyBreadcrumbs textColor={palette.secondary.dark} />
             <MarkdownInput>{ terms }</MarkdownInput>
         </PageContainer>
     );
