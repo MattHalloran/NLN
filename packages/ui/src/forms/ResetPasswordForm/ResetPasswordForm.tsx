@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { resetPasswordMutation } from 'graphql/mutation';
 import { useMutation } from '@apollo/client';
 import { useFormik } from 'formik';
@@ -9,12 +9,11 @@ import {
     TextField,
     useTheme
 } from '@mui/material';
-import { useParams } from 'react-router-dom';
 import { APP_LINKS } from '@shared/consts';
 import { resetPasswordSchema } from '@shared/validation';
 import { mutationWrapper } from 'graphql/utils';
 import { resetPasswordVariables, resetPassword_resetPassword } from 'graphql/generated/resetPassword';
-import { PubSub } from 'utils';
+import { parseSearchParams, PubSub } from 'utils';
 import { SnackSeverity } from 'components';
 
 export const ResetPasswordForm = ({
@@ -23,7 +22,13 @@ export const ResetPasswordForm = ({
 }) => {
     const { spacing } = useTheme();
 
-    const urlParams = useParams<{ id: string | undefined, code: string | undefined }>();
+    const { id, code } = useMemo<{ id: string | undefined, code: string | undefined }>(() => {
+        const searchParams = parseSearchParams();
+        return {
+            id: searchParams.id === 'string' ? searchParams.id : undefined,
+            code: searchParams.code === 'string' ? searchParams.code : undefined
+        }
+    }, []);
     const [resetPassword, { loading }] = useMutation(resetPasswordMutation);
 
     const formik = useFormik({
@@ -33,13 +38,13 @@ export const ResetPasswordForm = ({
         },
         validationSchema: resetPasswordSchema,
         onSubmit: (values) => {
-            if (!urlParams.id || !urlParams.code) {
+            if (!id || !code) {
                 PubSub.get().publishSnack({ message: 'Could not parse URL', severity: SnackSeverity.Error });
                 return;
             }
             mutationWrapper<resetPassword_resetPassword, resetPasswordVariables>({
                 mutation: resetPassword,
-                input: { id: urlParams.id, code: urlParams.code, newPassword: values.newPassword },
+                input: { id, code, newPassword: values.newPassword },
                 onSuccess: (data) => { onSessionUpdate(data); onRedirect(APP_LINKS.Shopping) },
                 successMessage: () => 'Password reset.',
             })

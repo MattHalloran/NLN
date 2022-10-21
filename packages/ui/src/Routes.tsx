@@ -179,7 +179,7 @@ export const Routes = ({
                     <Suspense fallback={Fallback}>
                         <Page title={title('Profile')} {...common} restrictedToRoles={Object.values(ROLES)}>
                             <FormPage title="Profile">
-                                <ProfileForm {...common} />
+                                <ProfileForm />
                             </FormPage>
                         </Page>
                     </Suspense>

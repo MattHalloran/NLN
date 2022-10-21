@@ -62,6 +62,8 @@ export * from './MoveLeftRightIcon';
 export * from './MoveRightIcon';
 export * from './MoveUpDownIcon';
 export * from './MoveUpIcon';
+export * from './NoImageIcon';
+export * from './NoImageWithTextIcon';
 export * from './NotificationsAllIcon';
 export * from './NotificationsCustomizedIcon';
 export * from './NotificationsOffIcon';

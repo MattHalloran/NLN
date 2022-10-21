@@ -19,13 +19,13 @@ export const AdminOrderPage = ({ userRoles }) => {
     const [filter, setFilter] = useState(ORDER_FILTERS[0].value);
     // Selected order data. Used for popup
     const [currOrder, setCurrOrder] = useState(null);
-    const [orders, setOrders] = useState(null);
+    const [orders, setOrders] = useState<any[]>([]);
     const { error, data, refetch } = useQuery(ordersQuery, { variables: { input: { status: filter !== 'All' ? filter : undefined } }, pollInterval: 5000 });
     if (error) {
         PubSub.get().publishSnack({ message: error.message, severity: SnackSeverity.Error, data: error });
     }
     useEffect(() => {
-        setOrders(data?.orders);
+        setOrders(data?.orders ?? []);
     }, [data])
 
     useEffect(() => {
@@ -49,7 +49,7 @@ export const AdminOrderPage = ({ userRoles }) => {
                 handleChange={(e) => setFilter(e.target.value)}
                 inputAriaLabel='order-type-selector-label'
                 label="Sort By" />
-            <h3>Count: {orders?.length ?? 0}</h3>
+            <h3>Count: {orders.length}</h3>
             <Box sx={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',

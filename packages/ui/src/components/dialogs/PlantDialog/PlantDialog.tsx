@@ -27,14 +27,7 @@ import { IMAGE_SIZE } from '@shared/consts';
 import _ from 'lodash';
 import Carousel from 'react-gallery-carousel';
 import 'react-gallery-carousel/dist/index.css';
-import { BeeIcon, CloseIcon, DroughtIcon, ExpandLessIcon, ExpandMoreIcon, InfoIcon, LampIcon, LightModeIcon, MapIcon, MoveLeftRightIcon, MoveUpDownIcon, PaletteIcon, PHIcon, SaltIcon, ScheduleIcon, ShoppingCartAddIcon, SoilTypeIcon, SpeedIcon, SvgComponent } from '@shared/icons';
-import { MoistureIcon } from 'assets/img';
-
-makeStyles((theme) => ({
-    displayImage: {
-        maxHeight: '75vh',
-    },
-}));
+import { BeeIcon, CloseIcon, DroughtIcon, ExpandLessIcon, ExpandMoreIcon, InfoIcon, LampIcon, LightModeIcon, MapIcon, MoistureIcon, MoveLeftRightIcon, MoveUpDownIcon, NoImageWithTextIcon, PaletteIcon, PHIcon, SaltIcon, ScheduleIcon, ShoppingCartAddIcon, SoilTypeIcon, SpeedIcon, SvgComponent } from '@shared/icons';
 
 export const PlantDialog = ({
     plant,
@@ -146,7 +139,7 @@ export const PlantDialog = ({
         </Grid>
     );
 
-    const displayedTraitData: JSX.Element[] = [
+    const displayedTraitData: [string, SvgComponent, string][] = [
         ['zone', MapIcon, 'Hardiness zones'],
         ['physiographicRegions', MapIcon, 'Physiographic Region'],
         ['attractsPollinatorsAndWildlife', BeeIcon, 'Attracted Pollinators and Wildlife'],
@@ -162,7 +155,8 @@ export const PlantDialog = ({
         ['soilMoistures', MoistureIcon, 'Soil Moisture'],
         ['soilPhs', PHIcon, 'Soil PH'],
         ['soilTypes', SoilTypeIcon, 'Soil Type']
-    ].map(d => traitIconList(...d)).filter(d => d !== null) as JSX.Element[];
+    ]
+    const displayedTraitList: JSX.Element[] = displayedTraitData.map(([traitName, Icon, title]) => traitIconList(traitName, Icon, title)).filter(e => e !== null) as JSX.Element[];
 
     return (
         <Dialog aria-describedby="modal-title" fullScreen open={open} onClose={onClose} TransitionComponent={Transition}>
@@ -190,14 +184,16 @@ export const PlantDialog = ({
             }}>
                 <Grid container spacing={0}>
                     <Grid item lg={6} xs={12}>
-                        {
-                            images.length > 0 ?
-                                <Carousel className={classes.displayImage} canAutoPlay={false} images={images} /> :
-                                <NoImageWithTextIcon className={classes.displayImage} />
-                        }
+                        <Box sx={{ maxHeight: '75vh' }}>
+                            {
+                                images.length > 0 ?
+                                    <Carousel canAutoPlay={false} images={images} /> :
+                                    <NoImageWithTextIcon width="unset" height="unset" />
+                            }
+                        </Box>
                     </Grid>
                     <Grid item lg={6} xs={12}>
-                        {displayedTraitData.length > 0 ? (
+                        {displayedTraitList.length > 0 ? (
                             <React.Fragment>
                                 <ListItem button onClick={handleDetailsClick}>
                                     <ListItemIcon><InfoIcon /></ListItemIcon>
@@ -206,7 +202,7 @@ export const PlantDialog = ({
                                 </ListItem>
                                 <Collapse in={detailsOpen} timeout='auto' unmountOnExit>
                                     {getPlantTrait('description', plant) ? <p style={{ padding: spacing(2) }}>{getPlantTrait('description', plant)}</p> : null}
-                                    <List>{displayedTraitData}</List>
+                                    <List>{displayedTraitList}</List>
                                 </Collapse>
                             </React.Fragment>
                         ) : null}

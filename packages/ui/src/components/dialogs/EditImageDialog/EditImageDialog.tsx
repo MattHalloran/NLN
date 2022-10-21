@@ -9,6 +9,8 @@ import {
 } from '@mui/material';
 import { DialogTitle } from '../DialogTitle/DialogTitle';
 
+const titleAria = 'edit-image-dialog-title';
+
 export const EditImageDialog = ({
     open,
     data,
@@ -26,8 +28,8 @@ export const EditImageDialog = ({
     }, [data])
 
     return (
-        <Dialog open={open} onClose={onClose} aria-labelledby="form-dialog-title">
-            <DialogTitle id="form-dialog-title" title="Edit Image Data" />
+        <Dialog open={open} onClose={onClose} aria-labelledby={titleAria}>
+            <DialogTitle ariaLabel={titleAria} title="Edit Image Data" onClose={onClose} />
             <DialogContent>
                 <TextField
                     fullWidth

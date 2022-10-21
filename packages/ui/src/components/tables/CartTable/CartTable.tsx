@@ -5,20 +5,13 @@ import {
     SnackSeverity
 } from 'components';
 import { deleteArrayIndex, showPrice, updateObject, PubSub, getImageSrc, getPlantTrait, updateArray, getServerUrl } from 'utils';
-import { NoImageIcon } from 'assets/img';
 import { IconButton, Palette, useTheme } from '@mui/material';
 import { Box, Paper, Grid, TableContainer, Table, TableHead, TableRow, TableCell, TableBody, TextField } from '@mui/material';
 import AdapterDateFns from '@mui/lab/AdapterDateFns';
 import LocalizationProvider from '@mui/lab/LocalizationProvider';
 import DatePicker from '@mui/lab/DatePicker';
 import { IMAGE_USE } from '@shared/consts';
-import { CloseIcon } from '@shared/icons';
-
-makeStyles((theme) => ({
-    displayImage: {
-        maxHeight: '8vh',
-    },
-}));
+import { CloseIcon, NoImageIcon } from '@shared/icons';
 
 const tableColumnStyle = (palette: Palette) => ({
     verticalAlign: 'middle',
@@ -76,10 +69,10 @@ export const CartTable = ({
         updateCartField('items', changed_item_list);
     }, [cart, updateCartField])
 
-    const cart_item_to_row = useCallback((data, key) => {
+    const cart_item_to_row = useCallback((data, key: string) => {
         const commonName = getPlantTrait('commonName', data.sku.plant);
         const quantity = data.quantity;
-        let price = +data.sku.price;
+        let price: string | number = +data.sku.price;
         let total;
         if (isNaN(price)) {
             total = 'TBD';
@@ -93,9 +86,9 @@ export const CartTable = ({
         let display_data = data.sku.plant.images.find(image => image.usedFor === IMAGE_USE.PlantDisplay)?.image;
         if (!display_data && data.sku.plant.images.length > 0) display_data = data.sku.plant.images[0].image;
         if (display_data) {
-            display = <img src={`${getServerUrl()}/${getImageSrc(display_data)}`} className={classes.displayImage} alt={display_data.alt} title={commonName} />
+            display = <img src={`${getServerUrl()}/${getImageSrc(display_data)}`} alt={display_data.alt} title={commonName} />
         } else {
-            display = <NoImageIcon className={classes.displayImage} />
+            display = <NoImageIcon />
         }
 
         return (
@@ -106,15 +99,18 @@ export const CartTable = ({
                     </IconButton>
                 </TableCell>) : null}
                 <TableCell padding="none" component="th" scope="row" align="center" sx={tableColumnStyle(palette)}>
-                    {display}
+                    <Box sx={{ maxHeight: '8vh' }}>
+                        {display}
+                    </Box>
                 </TableCell>
                 <TableCell align="left" sx={tableColumnStyle(palette)}>{getPlantTrait('commonName', data.sku.plant)}</TableCell>
                 <TableCell align="right" sx={tableColumnStyle(palette)}>{price}</TableCell>
                 <TableCell align="right" sx={tableColumnStyle(palette)}>
                     {editable ? (<QuantityBox
+                        id={`cart-item-quantity-${data.sku.sku}`}
                         min={0}
                         max={data.sku?.availability ?? 100}
-                        initial={quantity}
+                        value={quantity}
                         handleChange={(q) => updateItemQuantity(data.sku.sku, q)} />) : quantity}
                 </TableCell>
                 <TableCell align="right" sx={tableColumnStyle(palette)}>{total}</TableCell>
@@ -142,8 +138,8 @@ export const CartTable = ({
                                 <TableCell
                                     key={id}
                                     id={id}
-                                    align={align}
-                                    disablePadding={disablePadding}
+                                    align={align as any}
+                                    padding={disablePadding ? 'none' : 'normal'}
                                 >{label}</TableCell>
                             ))}
                         </TableRow>

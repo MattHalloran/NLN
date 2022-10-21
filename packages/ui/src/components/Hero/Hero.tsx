@@ -1,11 +1,11 @@
 // Code inspired by https://github.com/rmolinamir/hero-slider
 import { useEffect, useState } from 'react';
-import { useHistory } from 'react-router-dom';
 import { Typography, Button, Box } from '@mui/material';
-import { Slider } from './Slider.js'
+import { Slider } from './Slider'
 import { imagesByLabelQuery } from 'graphql/query';
 import { useQuery } from '@apollo/client';
 import { APP_LINKS } from '@shared/consts';
+import { useLocation } from '@shared/route';
 
 const textPopStyle = ({
     padding: '0',
@@ -23,7 +23,7 @@ export const Hero = ({
     text,
     subtext,
 }) => {
-    let history = useHistory();
+    const [, setLocation] = useLocation();
 
     const [images, setImages] = useState([]);
     const { data } = useQuery(imagesByLabelQuery, { variables: { input: { label: 'hero' } } });
@@ -66,7 +66,7 @@ export const Hero = ({
                 <Button
                     type="submit"
                     color="secondary"
-                    onClick={() => history.push(APP_LINKS.Shopping)}
+                    onClick={() => setLocation(APP_LINKS.Shopping)}
                     sx={{ pointerEvents: 'auto' }}
                 >
                     Request Quote

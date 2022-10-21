@@ -14,9 +14,8 @@ import {
     useTheme
 } from '@mui/material';
 import { showPrice, getImageSrc, getPlantTrait, getServerUrl } from 'utils';
-import { NoImageWithTextIcon } from 'assets/img';
 import { IMAGE_USE, SKU_STATUS } from '@shared/consts';
-import { OpenInNewIcon } from '@shared/icons';
+import { NoImageWithTextIcon, OpenInNewIcon } from '@shared/icons';
 
 const displayImage: SxProps<Theme> = {
     minHeight: 200,

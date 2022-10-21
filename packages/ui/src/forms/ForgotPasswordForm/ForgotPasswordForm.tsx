@@ -12,10 +12,10 @@ import {
     Typography,
     useTheme
 } from '@mui/material';
-import { useHistory } from 'react-router-dom';
 import { requestPasswordChangeSchema } from '@shared/validation';
 import { mutationWrapper } from 'graphql/utils';
 import { requestPasswordChangeVariables } from 'graphql/generated/requestPasswordChange';
+import { useLocation } from '@shared/route';
 
 const clickSizeStyle = (palette: Palette) => ({
     color: palette.secondary.light,
@@ -28,8 +28,8 @@ export const ForgotPasswordForm = ({
     onRedirect
 }) => {
     const { palette, spacing } = useTheme();
+    const [, setLocation] = useLocation();
 
-    const history = useHistory();
     const [requestPasswordChange, { loading }] = useMutation(requestPasswordChangeMutation);
 
     const formik = useFormik({
@@ -81,14 +81,14 @@ export const ForgotPasswordForm = ({
                 </Button>
                 <Grid container spacing={2}>
                     <Grid item xs={6}>
-                        <Link onClick={() => history.push(APP_LINKS.LogIn)}>
+                        <Link onClick={() => setLocation(APP_LINKS.LogIn)}>
                             <Typography sx={clickSizeStyle(palette)}>
                                 Remember? Back to Log In
                             </Typography>
                         </Link>
                     </Grid>
                     <Grid item xs={6}>
-                        <Link onClick={() => history.push(APP_LINKS.Register)}>
+                        <Link onClick={() => setLocation(APP_LINKS.Register)}>
                             <Typography sx={{ ...clickSizeStyle(palette), flexDirection: 'row-reverse' }}>
                                 Don't have an account? Sign up
                             </Typography>

@@ -12,6 +12,24 @@ import { Switch, Grid, Button, SwipeableDrawer, FormControlLabel, Box, useTheme 
 import { printAvailability } from 'utils';
 import { CloseIcon, DeleteIcon, FilterIcon, PrintIcon } from '@shared/icons';
 
+const traitList: [string, string][] = [
+    // ['size', 'Sizes'], TODO this is a sku field, and must be treated as such
+    ['Attracts Pollinators & Wildlife', 'attractsPollinatorsAndWildlife'],
+    ['Bloom Colors', 'bloomColors'],
+    ['Bloom Times', 'bloomTimes'],
+    ['Drought Tolerance', 'droughtTolerance'],
+    ['Grown Height', 'grownHeight'],
+    ['Grown Spread', 'grownSpread'],
+    ['Growth Rate', 'growthRate'],
+    ['Hardiness Zones', 'zone'],
+    ['Light Ranges', 'lightRanges'],
+    ['Optimal Light', 'optimalLight'],
+    ['Salt Tolerance', 'saltTolerance'],
+    ['Soil Moistures', 'soilMoistures'],
+    ['Soil PHs', 'soilPhs'],
+    ['Soil Types', 'soilTypes'],
+]
+
 export const ShoppingPage = ({
     session,
     onSessionUpdate,
@@ -101,24 +119,6 @@ export const ShoppingPage = ({
         </Grid>
     );
 
-    let traitList = [
-        // ['size', 'Sizes'], TODO this is a sku field, and must be treated as such
-        ['Attracts Pollinators & Wildlife', 'attractsPollinatorsAndWildlife'],
-        ['Bloom Colors', 'bloomColors'],
-        ['Bloom Times', 'bloomTimes'],
-        ['Drought Tolerance', 'droughtTolerance'],
-        ['Grown Height', 'grownHeight'],
-        ['Grown Spread', 'grownSpread'],
-        ['Growth Rate', 'growthRate'],
-        ['Hardiness Zones', 'zone'],
-        ['Light Ranges', 'lightRanges'],
-        ['Optimal Light', 'optimalLight'],
-        ['Salt Tolerance', 'saltTolerance'],
-        ['Soil Moistures', 'soilMoistures'],
-        ['Soil PHs', 'soilPhs'],
-        ['Soil Types', 'soilTypes'],
-    ]
-
     return (
         <PageContainer>
             <SwipeableDrawer
@@ -185,7 +185,7 @@ export const ShoppingPage = ({
                 session={session}
                 onSessionUpdate={onSessionUpdate}
                 cart={cart}
-                sort={sortBy}
+                sortBy={sortBy}
                 filters={filters}
                 searchString={searchString}
                 hideOutOfStock={hideOutOfStock}

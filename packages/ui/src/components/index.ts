@@ -4,6 +4,7 @@ export * from './cards';
 export * from './ContactInfo/ContactInfo';
 export * from './dialogs';
 export * from './Dropzone/Dropzone';
+export * from './ErrorBoundary/ErrorBoundary';
 export * from './FeaturedPlants/FeaturedPlants';
 export * from './Hero/Hero';
 export * from './inputs';

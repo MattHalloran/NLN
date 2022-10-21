@@ -1,6 +1,6 @@
-import { Link } from 'react-router-dom';
 import { Box, Button } from '@mui/material';
 import { APP_LINKS } from '@shared/consts';
+import { Link } from '@shared/route';
 import { PageContainer } from 'components';
 
 export const NotFoundPage = () => {

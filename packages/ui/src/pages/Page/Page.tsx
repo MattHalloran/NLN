@@ -1,8 +1,7 @@
 import { useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
-import { useHistory } from 'react-router';
 import { APP_LINKS } from '@shared/consts';
 import { PageProps } from 'pages/types';
+import { Redirect, useLocation } from '@shared/route';
 
 export const Page = ({
     title,
@@ -12,8 +11,7 @@ export const Page = ({
     restrictedToRoles = [],
     children
 }: PageProps) => {
-    const location = useLocation();
-    const history = useHistory();
+    const [location] = useLocation();
 
     useEffect(() => {
         document.title = title || "";
@@ -26,8 +24,7 @@ export const Page = ({
             const needArray: any[] = Array.isArray(restrictedToRoles) ? restrictedToRoles : [restrictedToRoles];
             if (haveArray.some((r: any) => needArray.includes(r?.role?.title))) return children;
         }
-        if (sessionChecked && location.pathname !== redirect) history.replace(redirect);
-        return null;
+        if (sessionChecked && location.pathname !== redirect) return <Redirect to={redirect} />;
     }
 
     return children;

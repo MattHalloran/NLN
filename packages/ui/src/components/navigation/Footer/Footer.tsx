@@ -5,15 +5,15 @@ import NJNLA from 'assets/img/njnla_logo.jpg';
 import { getServerUrl, printAvailability } from 'utils';
 import { List, ListItem, ListItemIcon, ListItemText, Grid, ButtonBase, Tooltip, Box, useTheme } from '@mui/material';
 import { CopyrightBreadcrumbs } from 'components';
-import { useHistory } from 'react-router';
 import { BusinessIcon, EmailIcon, PhoneIcon, PrintIcon, SvgComponent } from '@shared/icons';
 import { APP_LINKS } from '@shared/consts';
+import { useLocation } from '@shared/route';
 
 export const Footer = ({
     session,
     business
 }) => {
-    const history = useHistory();
+    const [, setLocation] = useLocation();
     const { palette } = useTheme();
 
     const contactAPP_LINKS: [string, string, string | null, string | null, SvgComponent][] = [
@@ -43,7 +43,7 @@ export const Footer = ({
                         <ListItem component="h3" >
                             <ListItemText sx={{ textTransform: 'uppercase' }} primary="Resources" />
                         </ListItem>
-                        <ListItem button component="a" onClick={() => history.push(APP_LINKS.About)} >
+                        <ListItem button component="a" onClick={() => setLocation(APP_LINKS.About)} >
                             <ListItemText primary="About Us" />
                         </ListItem>
                         <ListItem
@@ -59,7 +59,7 @@ export const Footer = ({
                         <ListItem button component="a" onClick={() => printAvailability(session, business?.BUSINESS_NAME?.Long)} >
                             <ListItemText primary="Print Availability" />
                         </ListItem>
-                        <ListItem button component="a" onClick={() => history.push(APP_LINKS.Gallery)} >
+                        <ListItem button component="a" onClick={() => setLocation(APP_LINKS.Gallery)} >
                             <ListItemText primary="Gallery" />
                         </ListItem>
                     </List>

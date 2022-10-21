@@ -1,5 +1,4 @@
 import { useState, useCallback, useEffect } from 'react';
-import { useHistory } from 'react-router';
 import { PubSub } from 'utils';
 import { Box, Button, useTheme } from '@mui/material';
 import { CartTable, PageContainer, SnackSeverity } from 'components';
@@ -12,17 +11,18 @@ import { mutationWrapper } from 'graphql/utils';
 import { updateOrderVariables, updateOrder_updateOrder } from 'graphql/generated/updateOrder';
 import { submitOrderVariables } from 'graphql/generated/submitOrder';
 import { APP_LINKS } from '@shared/consts';
+import { useLocation } from '@shared/route';
 
 export const CartPage = ({
     business,
     cart,
     onSessionUpdate
 }) => {
-    const { palette, spacing } = useTheme();
-
-    let history = useHistory();
+    const { spacing } = useTheme();
+    const [, setLocation] = useLocation();
+    
     // Holds cart changes before update is final
-    const [changedCart, setChangedCart] = useState(null);
+    const [changedCart, setChangedCart] = useState<any | null>(null);
     const [updateOrder, { loading }] = useMutation(updateOrderMutation);
     const [submitOrder] = useMutation(submitOrderMutation);
 
@@ -43,7 +43,7 @@ export const CartPage = ({
                 isDelivery: changedCart.isDelivery,
                 specialInstructions: changedCart.specialInstructions,
                 items: changedCart.items.map(i => ({ id: i.id, quantity: i.quantity }))
-            }
+            },
             successCondition: (data) => data !== null,
             onSuccess: () => onSessionUpdate(),
             successMessage: () => 'Order successfully updated.',
@@ -88,7 +88,7 @@ export const CartPage = ({
                 <Button
                     fullWidth
                     startIcon={<ArrowLeftIcon />}
-                    onClick={() => history.push(APP_LINKS.Shopping)}
+                    onClick={() => setLocation(APP_LINKS.Shopping)}
                     disabled={loading || (changedCart !== null && !_.isEqual(cart, changedCart))}
                 >Continue Shopping</Button>
             </Grid>
