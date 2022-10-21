@@ -9,7 +9,6 @@ import {
 import { PubSub, themes } from 'utils';
 import { GlobalHotKeys } from "react-hotkeys";
 import { Routes } from 'Routes';
-import { useHistory } from 'react-router';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { DndProvider } from 'react-dnd';
 import { useMutation, useQuery } from '@apollo/client';
@@ -18,6 +17,7 @@ import { loginMutation } from 'graphql/mutation';
 import { Box, CircularProgress, CssBaseline, StyledEngineProvider, ThemeProvider } from '@mui/material';
 import { Session } from 'types';
 import { makeStyles } from '@mui/styles';
+import { useLocation } from '@shared/route';
 
 const useStyles = makeStyles(() => ({
     "@global": {
@@ -58,7 +58,7 @@ export function App() {
     const [business, setBusiness] = useState(null)
     const { data: businessData } = useQuery(readAssetsQuery, { variables: { input: { files: ['hours.md', 'business.json'] } }  });
     const [login] = useMutation(loginMutation);
-    let history = useHistory();
+    const [, setLocation] = useLocation();
 
     useEffect(() => () => {
         if(timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -123,7 +123,7 @@ export function App() {
         })
     }, [checkLogin])
 
-    const redirect = (link) => history.push(link);
+    const redirect = (link) => setLocation(link);
 
     return (
         <StyledEngineProvider injectFirst>

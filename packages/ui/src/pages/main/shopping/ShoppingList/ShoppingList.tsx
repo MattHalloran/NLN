@@ -1,9 +1,8 @@
-import { useState, useEffect } from "react";
-import { useParams, useHistory } from "react-router-dom";
+import { useState, useEffect, useMemo } from "react";
 import { plantsQuery } from 'graphql/query';
 import { upsertOrderItemMutation } from 'graphql/mutation';
 import { useQuery, useMutation } from '@apollo/client';
-import { getPlantTrait, PubSub, SORT_OPTIONS } from "utils";
+import { getPlantTrait, parseSearchParams, PubSub, SORT_OPTIONS } from "utils";
 import {
     PlantCard,
     PlantDialog,
@@ -13,6 +12,7 @@ import { Box } from "@mui/material";
 import { APP_LINKS } from "@shared/consts";
 import { mutationWrapper } from "graphql/utils";
 import { upsertOrderItemVariables, upsertOrderItem_upsertOrderItem } from "graphql/generated/upsertOrderItem";
+import { useLocation } from "@shared/route";
 
 export const ShoppingList = ({
     session,
@@ -25,13 +25,18 @@ export const ShoppingList = ({
 }) => {
 
     // Plant data for all visible plants (i.e. not filtered)
-    const [plants, setPlants] = useState([]);
+    const [plants, setPlants] = useState<any[]>([]);
     const track_scrolling_id = 'scroll-tracked';
-    let history = useHistory();
-    const urlParams = useParams<{ sku: string | undefined }>();
+    const [, setLocation] = useLocation();
+    const { sku } = useMemo<{ sku: string | undefined }>(() => {
+        const searchParams = parseSearchParams();
+        return {
+            sku: searchParams.sku === 'string' ? searchParams.sku : undefined
+        }
+    }, []);
     // Find current plant and current sku
-    const currPlant: any | null = Array.isArray(plants) ? plants.find((p: any) => p.skus.some(s => s.sku === urlParams.sku)) : null;
-    const currSku = currPlant?.skus ? currPlant.skus.find(s => s.sku === urlParams.sku) : null;
+    const currPlant: any | null = Array.isArray(plants) ? plants.find((p: any) => p.skus.some(s => s.sku === sku)) : null;
+    const currSku = currPlant?.skus ? currPlant.skus.find(s => s.sku === sku) : null;
     const { data: plantData } = useQuery(plantsQuery, { variables: { input: { sortBy, searchString, active: true, hideOutOfStock } } });
     const [upsertOrderItem] = useMutation(upsertOrderItemMutation);
 
@@ -68,11 +73,11 @@ export const ShoppingList = ({
     }, [plantData, filters, searchString, hideOutOfStock])
 
     const expandSku = (sku) => {
-        history.push(APP_LINKS.Shopping + "/" + sku);
+        setLocation(APP_LINKS.Shopping + "/" + sku);
     };
 
     const toCart = () => {
-        history.push(APP_LINKS.Cart);
+        setLocation(APP_LINKS.Cart);
     }
 
     const addToCart = (name, sku, quantity) => {
@@ -108,8 +113,8 @@ export const ShoppingList = ({
                 selectedSku={currSku}
                 onAddToCart={addToCart}
                 open={currPlant !== null}
-                onClose={() => history.goBack()} /> : null}
-
+                // navigate back on close
+                onClose={() => setLocation(APP_LINKS.Shopping, { replace: true })} /> : null}
             {plants?.map((item, index) =>
                 <PlantCard key={index}
                     onClick={(data) => expandSku(data.selectedSku?.sku)}

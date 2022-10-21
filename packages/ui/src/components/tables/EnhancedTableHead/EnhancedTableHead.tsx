@@ -34,8 +34,8 @@ export const EnhancedTableHead = ({
                 {headCells.map((headCell) => (
                     <TableCell
                         key={headCell.id}
-                        align={headCell.align ?? 'left'}
-                        padding={headCell.disablePadding ? 'none' : 'default'}
+                        align={(headCell.align ?? 'left') as any}
+                        padding={headCell.disablePadding ? 'none' : 'default' as any}
                         sx={{ color: palette.primary.contrastText }}
                     >
                         {headCell.label}

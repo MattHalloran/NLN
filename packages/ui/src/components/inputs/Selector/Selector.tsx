@@ -1,10 +1,10 @@
-import { useCallback } from 'react';
-import { FormControl, InputLabel, Select, MenuItem, Chip, useTheme, Box } from '@mui/material';
-import _ from 'lodash';
+import { useCallback, useMemo } from 'react';
+import { Box, Chip, FormControl, InputLabel, MenuItem, Select, Theme, useTheme } from '@mui/material';
 import { SelectorProps } from '../types';
 
 export const Selector = ({
     options,
+    getOptionLabel,
     selected,
     handleChange,
     fullWidth = false,
@@ -12,88 +12,101 @@ export const Selector = ({
     inputAriaLabel = 'select-label',
     noneOption = false,
     label = 'Select',
+    required = true,
+    disabled = false,
     color,
-    sx = {},
+    sx,
     ...props
 }: SelectorProps) => {
     const { palette } = useTheme();
 
-    const displayColor = color ?? palette.background.textPrimary;
-
-    // Formats selected into label/value object array.
-    // options - Formatted options (array of label/value pairs)
-    const formatSelected = useCallback((options) => {
-        const select_arr = _.isArray(selected) ? selected : [selected];
-        if (!Array.isArray(options)) return select_arr;
-        let formatted_select: { label: string, value: any }[] = [];
-        for (const curr_select of select_arr) {
-            for (const curr_option of options) {
-                if (_.isEqual(curr_option.value, curr_select)) {
-                    formatted_select.push({
-                        label: curr_option.label,
-                        value: curr_select
-                    })
-                }
-            }
-        }
-        return formatted_select;
-    }, [selected])
-
-    let options_formatted = options?.map(o => (
-        (o && o.label) ? o :
-            {
-                label: o,
-                value: o
-            }
-    )) || [];
-    let selected_formatted = formatSelected(options_formatted);
-
-    function getOptionStyle(label) {
+    const getOptionStyle = useCallback((theme: Theme, option: any) => {
+        const label = getOptionLabel ? getOptionLabel(option) : option;
         return {
             fontWeight:
-                options_formatted.find(o => o.label === label)
-                    ? 'bold'
-                    : 'normal',
+                options.find(o => (getOptionLabel ? getOptionLabel(o) : o) === label)
+                    ? theme.typography.fontWeightRegular
+                    : theme.typography.fontWeightMedium,
         };
-    }
+    }, [options, getOptionLabel]);
+
+    /**
+     * Determines if label should be shrunk
+     */
+    const shrinkLabel = useMemo(() => {
+        if (!selected) return false;
+        if (typeof selected === 'string') return selected.length > 0;
+        if (getOptionLabel && selected) return getOptionLabel(selected).length > 0;
+        return false; 
+    }, [selected, getOptionLabel]);
 
     return (
         <FormControl
             variant="outlined"
-            sx={{
-                width: fullWidth ? '-webkit-fill-available' : 'auto',
-                ...sx,
-            }}
+            sx={{ width: fullWidth ? '-webkit-fill-available' : '' }}
         >
-            <InputLabel id={inputAriaLabel} shrink={selected_formatted?.length > 0} style={{ color: displayColor }}>{label}</InputLabel>
+            <InputLabel
+                id={inputAriaLabel}
+                shrink={shrinkLabel}
+                sx={{ color: palette.background.textPrimary }}
+            >
+                {label}
+            </InputLabel>
             <Select
-                style={{ color: displayColor }}
                 labelId={inputAriaLabel}
                 value={selected}
                 onChange={handleChange}
                 label={label}
+                required={required}
+                disabled={disabled}
+                multiple={multiple}
                 renderValue={() => {
-                    return multiple ? (
-                        <Box sx={{
-                            display: 'flex',
-                            flexWrap: 'wrap',
-                        }}>
-                            {selected_formatted.map((o) => (
-                                <Chip label={o.label} key={o.value} />
+                    // If nothing is selected, don't display anything
+                    if (!selected || (Array.isArray(selected) && selected.length === 0)) {
+                        return '';
+                    }
+                    // If not multiple, just display the selected option
+                    if (!multiple) {
+                        return getOptionLabel ? getOptionLabel(selected) : selected;
+                    }
+                    // If multiple, display all selected options as chips
+                    return (
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                flexWrap: 'wrap',
+                            }}
+                        >
+                            {selected.map((o) => (
+                                <Chip label={getOptionLabel ? getOptionLabel(o) : o} key={o} />
                             ))}
                         </Box>
-                    ) : selected_formatted ? selected_formatted[0].label : ''
+                    )
                 }}
                 {...props}
+                sx={{
+                    ...sx,
+                    color: palette.background.textPrimary
+                }}
             >
-                {noneOption ? <MenuItem value="">
-                    <em>None</em>
-                </MenuItem> : null}
-                {options_formatted.map((o) => (
-                    <MenuItem key={o.label} value={o.value} style={getOptionStyle(o.label)}>
-                        {o.label}
-                    </MenuItem>
-                ))}
+                {
+                    noneOption ? (
+                        <MenuItem value="">
+                            <em>None</em>
+                        </MenuItem>
+                    ) : null
+                }
+                {
+                    options.map((o, index) => (
+                        <MenuItem
+                            key={`select-option-${index}`}
+                            value={o}
+                            sx={(t) => getOptionStyle(t, o)}
+                        >
+                            {getOptionLabel ? getOptionLabel(o) : o}
+                        </MenuItem>
+                    ))
+                }
             </Select>
         </FormControl>
     );

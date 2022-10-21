@@ -21,10 +21,10 @@ import {
 } from '@mui/material';
 import { Autocomplete } from '@mui/lab';
 import { PubSub } from 'utils';
-import { useHistory } from 'react-router-dom';
 import { signUpSchema } from '@shared/validation';
 import { mutationWrapper } from 'graphql/utils';
 import { signUpVariables, signUp_signUp } from 'graphql/generated/signUp';
+import { useLocation } from '@shared/route';
 
 const clickSizeStyle = (palette: Palette) => ({
     color: palette.secondary.light,
@@ -38,8 +38,8 @@ export const SignUpForm = ({
     onSessionUpdate
 }) => {
     const { palette, spacing } = useTheme();
+    const [, setLocation] = useLocation();
 
-    const history = useHistory();
     const [signUp, { loading }] = useMutation(signUpMutation);
 
     const formik = useFormik({
@@ -72,7 +72,7 @@ export const SignUpForm = ({
                             message: `Welcome to ${business?.BUSINESS_NAME?.Short}. You may now begin shopping. Please verify your email within 48 hours.`,
                             buttons: [{
                                 text: 'OK',
-                                onClick: () => history.push(APP_LINKS.Shopping),
+                                onClick: () => setLocation(APP_LINKS.Shopping),
                             }]
                         });
                     } else {
@@ -80,7 +80,7 @@ export const SignUpForm = ({
                             message: `Welcome to ${business?.BUSINESS_NAME?.Short}. Please verify your email within 48 hours. Since you have never ordered from us before, we must approve your account before you can order. If this was a mistake, you can edit this in the /profile page.`,
                             buttons: [{
                                 text: 'OK',
-                                onClick: () => history.push(APP_LINKS.Profile),
+                                onClick: () => setLocation(APP_LINKS.Profile),
                             }]
                         });
                     }
@@ -91,7 +91,7 @@ export const SignUpForm = ({
                             message: `${response.message}. Press OK if you would like to be redirected to the forgot password form.`,
                             buttons: [{
                                 text: 'OK',
-                                onClick: () => history.push(APP_LINKS.ForgotPassword),
+                                onClick: () => setLocation(APP_LINKS.ForgotPassword),
                             }]
                         });
                     }
@@ -263,14 +263,14 @@ export const SignUpForm = ({
                 </Button>
                 <Grid container spacing={2}>
                     <Grid item xs={6}>
-                        <Link onClick={() => history.push(APP_LINKS.LogIn)}>
+                        <Link onClick={() => setLocation(APP_LINKS.LogIn)}>
                             <Typography sx={clickSizeStyle(palette)}>
                                 Already have an account? Log in
                             </Typography>
                         </Link>
                     </Grid>
                     <Grid item xs={6}>
-                        <Link onClick={() => history.push(APP_LINKS.ForgotPassword)}>
+                        <Link onClick={() => setLocation(APP_LINKS.ForgotPassword)}>
                             <Typography sx={{ ...clickSizeStyle(palette), flexDirection: 'row-reverse' }}>
                                 Forgot Password?
                             </Typography>

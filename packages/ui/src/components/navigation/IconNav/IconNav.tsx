@@ -1,5 +1,5 @@
-import { useHistory } from 'react-router-dom';
 import { BottomNavigation, BottomNavigationAction, Badge, useTheme } from '@mui/material';
+import { useLocation } from '@shared/route';
 import { getUserActions } from 'utils';
 
 export const IconNav = ({
@@ -8,7 +8,7 @@ export const IconNav = ({
     cart,
     ...props
 }) => {
-    let history = useHistory();
+    const [, setLocation] = useLocation();
     const { palette } = useTheme();
 
     let actions = getUserActions(session, userRoles, cart);
@@ -34,7 +34,7 @@ export const IconNav = ({
                     key={index}
                     label={label}
                     value={value}
-                    onClick={() => { history.push(link); if (onClick) onClick() }}
+                    onClick={() => { setLocation(link); if (onClick) onClick() }}
                     icon={<Badge badgeContent={badgeNum} color="error"><Icon /></Badge>} />
             ))}
         </BottomNavigation>

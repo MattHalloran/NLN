@@ -1,11 +1,11 @@
-import { useHistory } from 'react-router-dom';
 import { Box, Typography, Card, CardContent, CardActions, Tooltip, IconButton, useTheme } from '@mui/material';
 import { OpenInNewIcon } from '@shared/icons';
 import { APP_LINKS } from '@shared/consts';
 import { PageContainer, PageTitle } from 'components';
+import { useLocation } from '@shared/route';
 
 export const AdminMainPage = () => {
-    let history = useHistory();
+    const [, setLocation] = useLocation();
     const { palette } = useTheme();
 
     const card_data: [string, string, string][] = [
@@ -27,7 +27,7 @@ export const AdminMainPage = () => {
                 alignItems: 'stretch',
             }}>
                 {card_data.map(([title, description, link]) => (
-                    <Card onClick={() => history.push(link)} sx={{
+                    <Card onClick={() => setLocation(link)} sx={{
                         background: palette.primary.main,
                         color: palette.primary.contrastText,
                         cursor: 'pointer',
@@ -42,7 +42,7 @@ export const AdminMainPage = () => {
                         </CardContent>
                         <CardActions>
                             <Tooltip title="Open" placement="bottom">
-                                <IconButton onClick={() => history.push(link)}>
+                                <IconButton onClick={() => setLocation(link)}>
                                     <OpenInNewIcon fill={palette.secondary.light} />
                                 </IconButton>
                             </Tooltip>

@@ -1,5 +1,3 @@
-import React from 'react';
-import { useHistory, useParams } from 'react-router-dom';
 import { loginMutation } from 'graphql/mutation';
 import { useMutation } from '@apollo/client';
 import { APP_LINKS, CODE } from '@shared/consts';
@@ -14,10 +12,12 @@ import {
     Typography,
     useTheme
 } from '@mui/material';
-import { PubSub } from 'utils';
+import { parseSearchParams, PubSub } from 'utils';
 import { mutationWrapper } from 'graphql/utils';
 import { logInSchema } from '@shared/validation';
 import { loginVariables, login_login } from 'graphql/generated/login';
+import { useLocation } from '@shared/route';
+import { useMemo } from 'react';
 
 const clickSizeStyle = (palette: Palette) => ({
     color: palette.secondary.light,
@@ -31,8 +31,13 @@ export const LogInForm = ({
     onRedirect
 }) => {
     const { palette, spacing } = useTheme();
-    const history = useHistory();
-    const urlParams = useParams<{ code: string | undefined }>();
+    const [, setLocation] = useLocation();
+    const { verificationCode } = useMemo<{ verificationCode: string | undefined }>(() => {
+        const searchParams = parseSearchParams();
+        return {
+            verificationCode: searchParams.code === 'string' ? searchParams.code : undefined
+        }
+    }, []);
     const [login, { loading }] = useMutation(loginMutation);
 
     const formik = useFormik({
@@ -44,7 +49,7 @@ export const LogInForm = ({
         onSubmit: (values) => {
             mutationWrapper<login_login, loginVariables>({
                 mutation: login,
-                input: { ...values, verificationCode: urlParams.code },
+                input: { ...values, verificationCode },
                 successCondition: (data) => data !== null,
                 onSuccess: (data) => { onSessionUpdate(data); onRedirect(APP_LINKS.Shopping) },
                 onError: (response) => {
@@ -53,7 +58,7 @@ export const LogInForm = ({
                             message: 'Before signing in, please follow the link sent to your email to change your password.',
                             buttons: [{
                                 text: 'OK',
-                                onClick: () => history.push(APP_LINKS.Home),
+                                onClick: () => setLocation(APP_LINKS.Home),
                             }]
                         });
                     }
@@ -108,14 +113,14 @@ export const LogInForm = ({
                 </Button>
                 <Grid container spacing={2}>
                     <Grid item xs={6}>
-                        <Link onClick={() => history.push(APP_LINKS.ForgotPassword)}>
+                        <Link onClick={() => setLocation(APP_LINKS.ForgotPassword)}>
                             <Typography sx={clickSizeStyle(palette)}>
                                 Forgot Password?
                             </Typography>
                         </Link>
                     </Grid>
                     <Grid item xs={6}>
-                        <Link onClick={() => history.push(APP_LINKS.Register)}>
+                        <Link onClick={() => setLocation(APP_LINKS.Register)}>
                             <Typography sx={{ ...clickSizeStyle(palette), flexDirection: 'row-reverse' }}>
                                 Don't have an account? Sign up
                             </Typography>

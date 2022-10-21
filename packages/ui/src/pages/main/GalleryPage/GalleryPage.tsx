@@ -6,14 +6,7 @@ import { getImageSrc, getServerUrl, PubSub } from 'utils';
 import { imagesByLabelQuery } from 'graphql/query';
 import { useQuery } from '@apollo/client';
 import { IMAGE_SIZE } from '@shared/consts';
-import { useTheme } from '@mui/material';
-
- makeStyles(() => ({
-    carousel: {
-        width: '100%',
-        height: 'calc(100vw * 0.8)'
-    }
-}));
+import { Box, useTheme } from '@mui/material';
 
 export const GalleryPage = () => {
     const { palette } = useTheme();
@@ -28,9 +21,9 @@ export const GalleryPage = () => {
             setImages([]);
             return;
         }
-        setImages(imageData.imagesByLabel.map((data) => ({ 
-            alt: data.alt, 
-            src: `${getServerUrl()}/${getImageSrc(data)}`, 
+        setImages(imageData.imagesByLabel.map((data) => ({
+            alt: data.alt,
+            src: `${getServerUrl()}/${getImageSrc(data)}`,
             thumbnail: `${getServerUrl()}/${getImageSrc(data, IMAGE_SIZE.M)}`
         })))
     }, [imageData])
@@ -42,7 +35,12 @@ export const GalleryPage = () => {
     return (
         <PageContainer>
             <InformationalBreadcrumbs textColor={palette.secondary.dark} />
-            <Carousel className={classes.carousel} canAutoPlay={false} images={images} />
+            <Box sx={{
+                width: '100%',
+                height: 'calc(100vw * 0.8)'
+            }}>
+                <Carousel canAutoPlay={false} images={images} />
+            </Box>
         </PageContainer>
     );
 }

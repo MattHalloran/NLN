@@ -194,7 +194,7 @@ export const resolvers = {
             }
             // Reset login attempts after 15 minutes
             const unable_to_reset = [AccountStatus.HardLock, AccountStatus.Deleted];
-            if (!unable_to_reset.includes(customer.status) && Date.now() - new Date(customer.lastLoginAttempt).getTime() > SOFT_LOCKOUT_DURATION) {
+            if (!unable_to_reset.includes(customer.status as any) && Date.now() - new Date(customer.lastLoginAttempt).getTime() > SOFT_LOCKOUT_DURATION) {
                 customer = await prisma.customer.update({
                     where: { id: customer.id },
                     data: { loginAttempts: 0 }
@@ -206,7 +206,7 @@ export const resolvers = {
                 [AccountStatus.SoftLock]: CODE.SoftLockout,
                 [AccountStatus.HardLock]: CODE.HardLockout
             }
-            if (customer.status in status_to_code) throw new CustomError(status_to_code[customer.status]);
+            if (customer.status in status_to_code) throw new CustomError((status_to_code as any)[customer.status]);
             // Now we can validate the password
             const validPassword = customer.password && bcrypt.compareSync(input.password, customer.password);
             if (validPassword) {
@@ -312,7 +312,7 @@ export const resolvers = {
         },
         updateCustomer: async (_parent: undefined, { input }: IWrap<UpdateCustomerInput>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<Customer>> => {
             // Must be admin, or updating your own
-            if (!req.isAdmin && (req.customerId !== input.input.id as string)) throw new CustomError(CODE.Unauthorized);
+            if (!req.isAdmin && !input.input.id || (req.customerId !== input.input.id)) throw new CustomError(CODE.Unauthorized);
             if (!req.isAdmin) {
                 // Check for correct password
                 let customer = await prisma.customer.findUnique({

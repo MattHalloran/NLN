@@ -19,6 +19,7 @@ export interface QuantityBoxProps extends BoxProps {
 
 export interface SelectorProps extends SelectProps {
     options: any[];
+    getOptionLabel?: (option: any) => string;
     selected: any;
     handleChange: (change: any) => any;
     fullWidth?: boolean;
@@ -26,6 +27,8 @@ export interface SelectorProps extends SelectProps {
     inputAriaLabel?: string;
     noneOption?: boolean;
     label?: string;
+    required?: boolean;
+    disabled?: boolean;
     color?: string;
-    sx?: { [key: string]: any };
+    sx?: any;
 }
