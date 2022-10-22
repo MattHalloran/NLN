@@ -1,3 +1,19 @@
+export type ApolloErrorCode = {
+    /**
+     * Error code
+     */
+    code: string;
+    /**
+     * Detailed error message
+     */
+    message: string;
+    /**
+     * Short error message
+     */
+    snack?: string;
+}
+
+
 export const CODE = {
     SomeImagesAlreadyUploaded: {
         code: 'SOME_IMAGES_ALREADY_UPLOADED',

@@ -1,5 +1,5 @@
 import { Box } from "@mui/material"
-import { PageContainerProps } from "../types"
+import { PageContainerProps } from "components/types"
 
 /**
  * Container which can be wrapped around most pages to provide a consistent layout.

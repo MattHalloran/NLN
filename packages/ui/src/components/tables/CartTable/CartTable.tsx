@@ -4,7 +4,7 @@ import {
     Selector,
     SnackSeverity
 } from 'components';
-import { deleteArrayIndex, showPrice, updateObject, PubSub, getImageSrc, getPlantTrait, updateArray, getServerUrl } from 'utils';
+import { deleteArrayIndex, showPrice, PubSub, getImageSrc, getPlantTrait, updateArray, getServerUrl } from 'utils';
 import { IconButton, Palette, useTheme } from '@mui/material';
 import { Box, Paper, Grid, TableContainer, Table, TableHead, TableRow, TableCell, TableBody, TextField } from '@mui/material';
 import AdapterDateFns from '@mui/lab/AdapterDateFns';
@@ -42,13 +42,9 @@ export const CartTable = ({
 
     let all_total = Array.isArray(cart?.items) ? cart.items.map(i => (+i.sku.price) * (+i.quantity)).reduce((a, b) => (+a) + (+b), 0) : -1;
 
-    const updateCartField = useCallback((fieldName, value) => {
-        onUpdate(updateObject(cart, fieldName, value));
-    }, [cart, onUpdate])
-
-    const setNotes = (notes) => updateCartField('specialInstructions', notes);
-    const setDeliveryDate = (date) => updateCartField('desiredDeliveryDate', +date);
-    const handleDeliveryChange = (value) => updateCartField('isDelivery', value);
+    const setNotes = (notes) => onUpdate({ ...cart, specialInstructions: notes });
+    const setDeliveryDate = (date) => onUpdate({ ...cart, desiredDeliveryDate: +date });
+    const handleDeliveryChange = (value) => onUpdate({ ...cart, isDelivery: value });
 
     const updateItemQuantity = useCallback((sku, quantity) => {
         let index = cart.items.findIndex(i => i.sku.sku === sku);
@@ -56,7 +52,7 @@ export const CartTable = ({
             PubSub.get().publishSnack({ message: 'Failed to update item quantity', severity: SnackSeverity.Error, data: { index: index } });
             return;
         }
-        onUpdate(updateObject(cart, 'items', updateArray(cart.items, index, updateObject(cart.items[index], 'quantity', quantity))))
+        onUpdate({ ...cart, items: updateArray(cart.items, index, { ...cart.items[index], quantity: quantity }) });
     }, [cart, onUpdate])
 
     const deleteCartItem = useCallback((sku) => {
@@ -66,8 +62,8 @@ export const CartTable = ({
             return;
         }
         let changed_item_list = deleteArrayIndex(cart.items, index);
-        updateCartField('items', changed_item_list);
-    }, [cart, updateCartField])
+        onUpdate({ ...cart, items: changed_item_list });
+    }, [cart, onUpdate])
 
     const cart_item_to_row = useCallback((data, key: string) => {
         const commonName = getPlantTrait('commonName', data.sku.plant);

@@ -17,7 +17,7 @@ export const AdminCustomerPage = () => {
     const { palette } = useTheme();
 
     const [customers, setCustomers] = useState<customers_customers[]>([]);
-    const [selectedCustomer, setSelectedCustomer] = useState(null);
+    const [selectedCustomer, setSelectedCustomer] = useState<customers_customers | null>(null);
     const [newCustomerOpen, setNewCustomerOpen] = useState(false);
     const { error, data } = useQuery<customers>(customersQuery, { pollInterval: 5000 });
     if (error) {

@@ -1,7 +1,5 @@
 
-import { SvgProps } from './types.d';
-
-export const NewLifeLogo = (props: SvgProps) => (
+export const NewLifeLogo = (props: any) => (
     <svg xmlns="http://www.w3.org/2000/svg"
         style={props.style}
         viewBox="0 0 1125 1125"
