@@ -1,7 +1,6 @@
 // Functions for easy manipulation of plant data
 
 import { addToArray, updateArray } from "./arrayTools";
-import { updateObject } from "./objectTools";
 
 export const getPlantTrait = (traitName, plantData) => {
     if (!(typeof traitName === 'string')) return null;
@@ -18,13 +17,13 @@ export const setPlantTrait = (name, value, plantData, createIfNotExists=false) =
     const updatedTraits = traitIndex < 0 ?
         addToArray(plantData.traits, { name, value }):
         updateArray(plantData.traits, traitIndex, { name, value });
-    return updateObject(plantData, 'traits', updatedTraits);
+    return { ...plantData, traits: updatedTraits }
 }
 
 export const setPlantSkuField = (fieldName, index, value, plantData) => {
     if (!Array.isArray(plantData?.skus)) return null;
     if (index < 0 || index >= plantData.skus.length) return null;
-    const updatedSku = updateObject(plantData.skus[index], fieldName, value);
+    const updatedSku = { ...plantData.skus[index], [fieldName]: value };
     const updatedSkus = updateArray(plantData.skus, index, updatedSku);
-    return updateObject(plantData, 'skus', updatedSkus);
+    return { ...plantData, skus: updatedSkus };
 }
