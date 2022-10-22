@@ -96,8 +96,7 @@ export const Hamburger = ({
                 onClose={closeMenu}
                 sx={{
                     '& .MuiDrawer-paper': {
-                        background: palette.primary.light,
-                        borderLeft: `1px solid ${palette.text.primary}`,
+                        background: palette.background.default,
                     }
                 }}
             >
