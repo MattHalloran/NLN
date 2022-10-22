@@ -95,7 +95,7 @@ export function App() {
             setSession(session);
             return;
         }
-        login().then((response) => {
+        login({ variables: { input: {} }}).then((response) => {
             setSession(response.data.login);
         }).catch((response) => {
             if (process.env.NODE_ENV === 'development') console.error('Error: cannot login', response);

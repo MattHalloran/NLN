@@ -53,22 +53,22 @@ const darkTheme = createTheme({
     palette: {
         mode: 'dark',
         primary: {
-            light: '#8e8e8e',
-            main: '#616161',
-            dark: '#373737',
+            light: '#5f6a89',
+            main: '#515774',
+            dark: '#242930',
         },
         secondary: {
-            light: '#80e27e',
-            main: '#4caf50',
-            dark: '#087f23',
+            light: '#5b99da',
+            main: '#4372a3',
+            dark: '#344eb5',
         },
         background: {
-            default: '#000000',
-            paper: '#212121',
+            default: '#181818',
+            paper: '#2e2e2e',
             textPrimary: '#ffffff',
             textSecondary: '#c3c3c3',
         },
-    }
+    },
 })
 
 export const themes = {

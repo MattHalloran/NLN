@@ -18,7 +18,7 @@ export const Page = ({
     }, [title]);
 
     // If this page has restricted access
-    if (restrictedToRoles) {
+    if (restrictedToRoles.length > 0) {
         if (Array.isArray(userRoles) && userRoles.length > 0) {
             const haveArray: any[] = Array.isArray(userRoles) ? userRoles : [userRoles];
             const needArray: any[] = Array.isArray(restrictedToRoles) ? restrictedToRoles : [restrictedToRoles];
