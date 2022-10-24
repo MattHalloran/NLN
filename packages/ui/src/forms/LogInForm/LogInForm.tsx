@@ -18,6 +18,7 @@ import { logInSchema } from '@shared/validation';
 import { loginVariables, login_login } from 'graphql/generated/login';
 import { useLocation } from '@shared/route';
 import { useMemo } from 'react';
+import { PasswordTextField } from 'components/inputs/PasswordTextField/PasswordTextField';
 
 const clickSizeStyle = (palette: Palette) => ({
     color: palette.secondary.light,
@@ -88,17 +89,17 @@ export const LogInForm = ({
                         />
                     </Grid>
                     <Grid item xs={12}>
-                        <TextField
+                        <PasswordTextField
                             fullWidth
                             id="password"
                             name="password"
-                            type="password"
                             autoComplete="current-password"
                             label="Password"
                             value={formik.values.password}
+                            onBlur={formik.handleBlur}
                             onChange={formik.handleChange}
                             error={formik.touched.password && Boolean(formik.errors.password)}
-                            helperText={formik.touched.password && formik.errors.password}
+                            helperText={formik.touched.password ? formik.errors.password : null}
                         />
                     </Grid>
                 </Grid>

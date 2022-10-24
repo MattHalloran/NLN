@@ -1,4 +1,3 @@
-import React from 'react';
 import { signUpMutation } from 'graphql/mutation';
 import { useMutation } from '@apollo/client';
 import { APP_LINKS, CODE, DEFAULT_PRONOUNS } from '@shared/consts';
@@ -25,6 +24,7 @@ import { signUpSchema } from '@shared/validation';
 import { mutationWrapper } from 'graphql/utils';
 import { signUpVariables, signUp_signUp } from 'graphql/generated/signUp';
 import { useLocation } from '@shared/route';
+import { PasswordTextField } from 'components/inputs/PasswordTextField/PasswordTextField';
 
 const clickSizeStyle = (palette: Palette) => ({
     color: palette.secondary.light,
@@ -194,31 +194,31 @@ export const SignUpForm = ({
                         />
                     </Grid>
                     <Grid item xs={12}>
-                        <TextField
+                        <PasswordTextField
                             fullWidth
                             id="password"
                             name="password"
-                            type="password"
                             autoComplete="new-password"
                             label="Password"
                             value={formik.values.password}
+                            onBlur={formik.handleBlur}
                             onChange={formik.handleChange}
                             error={formik.touched.password && Boolean(formik.errors.password)}
-                            helperText={formik.touched.password && formik.errors.password}
+                            helperText={formik.touched.password ? formik.errors.password : null}
                         />
                     </Grid>
                     <Grid item xs={12}>
-                        <TextField
+                        <PasswordTextField
                             fullWidth
                             id="confirmPassword"
                             name="confirmPassword"
-                            type="password"
                             autoComplete="new-password"
                             label="Confirm Password"
                             value={formik.values.confirmPassword}
+                            onBlur={formik.handleBlur}
                             onChange={formik.handleChange}
                             error={formik.touched.confirmPassword && Boolean(formik.errors.confirmPassword)}
-                            helperText={formik.touched.confirmPassword && formik.errors.confirmPassword}
+                            helperText={formik.touched.confirmPassword ? formik.errors.confirmPassword : null}
                         />
                     </Grid>
                     <Grid item xs={12}>

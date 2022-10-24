@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
     AppBar,
     Avatar,
@@ -194,7 +194,7 @@ export const PlantDialog = ({
                     </Grid>
                     <Grid item lg={6} xs={12}>
                         {displayedTraitList.length > 0 ? (
-                            <React.Fragment>
+                            <>
                                 <ListItem button onClick={handleDetailsClick}>
                                     <ListItemIcon><InfoIcon /></ListItemIcon>
                                     <ListItemText primary="Details" />
@@ -204,7 +204,7 @@ export const PlantDialog = ({
                                     {getPlantTrait('description', plant) ? <p style={{ padding: spacing(2) }}>{getPlantTrait('description', plant)}</p> : null}
                                     <List>{displayedTraitList}</List>
                                 </Collapse>
-                            </React.Fragment>
+                            </>
                         ) : null}
                     </Grid>
                 </Grid>
