@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { resetPasswordMutation } from 'graphql/mutation';
 import { useMutation } from '@apollo/client';
 import { useFormik } from 'formik';
@@ -6,7 +6,6 @@ import {
     Box,
     Button,
     Grid,
-    TextField,
     useTheme
 } from '@mui/material';
 import { APP_LINKS } from '@shared/consts';
@@ -15,6 +14,7 @@ import { mutationWrapper } from 'graphql/utils';
 import { resetPasswordVariables, resetPassword_resetPassword } from 'graphql/generated/resetPassword';
 import { parseSearchParams, PubSub } from 'utils';
 import { SnackSeverity } from 'components';
+import { PasswordTextField } from 'components/inputs/PasswordTextField/PasswordTextField';
 
 export const ResetPasswordForm = ({
     onSessionUpdate,
@@ -59,33 +59,31 @@ export const ResetPasswordForm = ({
             <form onSubmit={formik.handleSubmit}>
                 <Grid container spacing={2}>
                     <Grid item xs={12}>
-                        <TextField
+                        <PasswordTextField
                             fullWidth
-                            autoFocus
                             id="newPassword"
                             name="newPassword"
-                            type="password"
                             autoComplete="password"
                             label="New Password"
                             value={formik.values.newPassword}
+                            onBlur={formik.handleBlur}
                             onChange={formik.handleChange}
                             error={formik.touched.newPassword && Boolean(formik.errors.newPassword)}
-                            helperText={formik.touched.newPassword && formik.errors.newPassword}
+                            helperText={formik.touched.newPassword ? formik.errors.newPassword : null}
                         />
                     </Grid>
                     <Grid item xs={12}>
-                        <TextField
+                        <PasswordTextField
                             fullWidth
-                            autoFocus
                             id="confirmNewPassword"
                             name="confirmNewPassword"
-                            type="password"
                             autoComplete="new-password"
                             label="Confirm New Password"
                             value={formik.values.confirmNewPassword}
+                            onBlur={formik.handleBlur}
                             onChange={formik.handleChange}
                             error={formik.touched.confirmNewPassword && Boolean(formik.errors.confirmNewPassword)}
-                            helperText={formik.touched.confirmNewPassword && formik.errors.confirmNewPassword}
+                            helperText={formik.touched.confirmNewPassword ? formik.errors.confirmNewPassword : null}
                         />
                     </Grid>
                 </Grid>

@@ -15,6 +15,7 @@ import { profile, profile_profile } from 'graphql/generated/profile';
 import { uuid } from '@shared/uuid';
 import { mutationWrapper } from 'graphql/utils';
 import { updateCustomerVariables, updateCustomer_updateCustomer } from 'graphql/generated/updateCustomer';
+import { PasswordTextField } from 'components/inputs/PasswordTextField/PasswordTextField';
 
 export const ProfileForm = () => {
     const { spacing } = useTheme();
@@ -233,45 +234,45 @@ export const ProfileForm = () => {
                     <Container>
                         <Grid container spacing={2}>
                             <Grid item xs={12}>
-                                <TextField
+                                <PasswordTextField
                                     fullWidth
                                     id="currentPassword"
                                     name="currentPassword"
-                                    type="password"
-                                    autoComplete="password"
+                                    autoComplete="current-password"
                                     label="Current Password"
                                     value={formik.values.currentPassword}
+                                    onBlur={formik.handleBlur}
                                     onChange={formik.handleChange}
                                     error={formik.touched.currentPassword && Boolean(formik.errors.currentPassword)}
-                                    helperText={formik.touched.currentPassword && formik.errors.currentPassword}
+                                    helperText={formik.touched.currentPassword ? formik.errors.currentPassword : null}
                                 />
                             </Grid>
                             <Grid item xs={12}>
-                                <TextField
+                                <PasswordTextField
                                     fullWidth
                                     id="newPassword"
                                     name="newPassword"
-                                    type="password"
                                     autoComplete="new-password"
                                     label="New Password"
                                     value={formik.values.newPassword}
+                                    onBlur={formik.handleBlur}
                                     onChange={formik.handleChange}
                                     error={formik.touched.newPassword && Boolean(formik.errors.newPassword)}
-                                    helperText={formik.touched.newPassword && formik.errors.newPassword}
+                                    helperText={formik.touched.newPassword ? formik.errors.newPassword : null}
                                 />
                             </Grid>
                             <Grid item xs={12}>
-                                <TextField
+                                <PasswordTextField
                                     fullWidth
                                     id="newPasswordConfirmation"
                                     name="newPasswordConfirmation"
-                                    type="password"
                                     autoComplete="new-password"
                                     label="Confirm New Password"
                                     value={formik.values.newPasswordConfirmation}
+                                    onBlur={formik.handleBlur}
                                     onChange={formik.handleChange}
                                     error={formik.touched.newPasswordConfirmation && Boolean(formik.errors.newPasswordConfirmation)}
-                                    helperText={formik.touched.newPasswordConfirmation && formik.errors.newPasswordConfirmation}
+                                    helperText={formik.touched.newPasswordConfirmation ? formik.errors.newPasswordConfirmation : null}
                                 />
                             </Grid>
                         </Grid>

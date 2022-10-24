@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
     ContactInfo,
 } from 'components';
@@ -86,7 +86,7 @@ export const Hamburger = ({
     }
 
     return (
-        <React.Fragment>
+        <>
             <IconButton edge="start" color="inherit" aria-label="menu" onClick={toggleOpen}>
                 <MenuIcon />
             </IconButton>
@@ -157,6 +157,6 @@ export const Hamburger = ({
                     }}
                 />
             </SwipeableDrawer>
-        </React.Fragment>
+        </>
     );
 }

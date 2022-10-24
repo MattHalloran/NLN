@@ -1,5 +1,19 @@
 import { BoxProps } from '@mui/material';
 
+export interface PasswordTextFieldProps extends TextFieldProps {
+    autoComplete?: string;
+    autoFocus?: boolean;
+    error?: boolean;
+    helperText?: string | null | undefined;
+    fullWidth?: boolean;
+    id?: string;
+    label?: string;
+    name?: string;
+    onBlur?: (event: FocusEventHandler<HTMLInputElement | HTMLTextAreaElement>) => void;
+    onChange: (e: ChangeEvent<any>) => any;
+    value: string;
+}
+
 export interface QuantityBoxProps extends BoxProps {
     autoFocus?: boolean;
     disabled?: boolean;

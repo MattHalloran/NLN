@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
     AppBar,
     Autocomplete,
@@ -342,7 +342,7 @@ export const EditPlantDialog = ({
                             />
                         </Grid>
                         {
-                            compactView ? <React.Fragment>
+                            compactView ? <>
                                 {/* Select which trait you'd like to edit */}
                                 < Grid item xs={12} sm={6}>
                                     <Autocomplete
@@ -370,8 +370,8 @@ export const EditPlantDialog = ({
                                         onChange={e => updateTrait(selectedTrait, e.target.value, true)}
                                     />
                                 </Grid>
-                            </React.Fragment> :
-                                <React.Fragment>
+                            </> :
+                                <>
                                     {Object.entries(PLANT_TRAITS).map(([label, field]) => (
                                         <Grid item xs={12} sm={6}>
                                             <TextField
@@ -383,7 +383,7 @@ export const EditPlantDialog = ({
                                             />
                                         </Grid>
                                     ))}
-                                </React.Fragment>
+                                </>
                         }
 
                     </Grid>

@@ -1,4 +1,3 @@
-import React from 'react';
 import { TextField, InputAdornment, IconButton } from '@mui/material';
 import AwesomeDebouncePromise from 'awesome-debounce-promise';
 import { SearchIcon } from '@shared/icons';
