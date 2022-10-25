@@ -8,7 +8,7 @@ import { ShoppingList } from '../ShoppingList/ShoppingList';
 import { SORT_OPTIONS, PubSub } from 'utils';
 import { traitOptionsQuery } from 'graphql/query';
 import { useQuery } from '@apollo/client';
-import { Switch, Grid, Button, SwipeableDrawer, FormControlLabel, Box, useTheme } from '@mui/material';
+import { Switch, Grid, Button, SwipeableDrawer, FormControlLabel, Box, useTheme, Stack } from '@mui/material';
 import { printAvailability } from 'utils';
 import { CloseIcon, DeleteIcon, FilterIcon, PrintIcon } from '@shared/icons';
 
@@ -153,13 +153,7 @@ export const ShoppingPage = ({
                 </Box>
                 {optionsContainer}
             </SwipeableDrawer>
-            <Box sx={{
-                display: 'flex',
-                justifyContent: 'center',
-                '& > *': {
-                    margin: spacing(1),
-                },
-            }}>
+            <Stack direction="row" spacing={2} justifyContent="center" alignItems="center" mb={2}>
                 <FormControlLabel
                     control={
                         <Switch
@@ -180,7 +174,7 @@ export const ShoppingPage = ({
                     startIcon={<PrintIcon />}
                     onClick={() => printAvailability(session, business?.BUSINESS_NAME?.Long)}
                 >Print</Button>
-            </Box>
+            </Stack>
             <ShoppingList
                 session={session}
                 onSessionUpdate={onSessionUpdate}

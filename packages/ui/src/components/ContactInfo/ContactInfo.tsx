@@ -82,7 +82,7 @@ export const ContactInfo = ({
                             }
                             sx={{
                                 alignItems: 'center',
-                                color: palette.primary.contrastText,
+                                color: palette.background.textPrimary,
                                 overflowWrap: 'anywhere',
                             }}
                         />
