@@ -12,13 +12,7 @@ import {
 } from '@mui/material';
 import { showPrice, getImageSrc, getPlantTrait, getServerUrl } from 'utils';
 import { IMAGE_USE, SKU_STATUS } from '@shared/consts';
-import { NoImageWithTextIcon } from '@shared/icons';
-
-const displayImage: SxProps<Theme> = {
-    minHeight: 200,
-    maxHeight: '50%',
-    position: 'absolute',
-} as const
+import { NoImageIcon } from '@shared/icons';
 
 const deleted: SxProps<Theme> = {
     background: '2px solid red',
@@ -61,7 +55,7 @@ export const PlantCard = ({
             label={`#${s.size} | ${showPrice(s.price)} | Avail: ${s.availability}`}
             color="secondary"
             onClick={(e) => openWithSku(e, s)}
-            sx={{...chip, ...(SkuStatus[s.status + ''] ?? deleted)} as any}
+            sx={{ ...chip, ...(SkuStatus[s.status + ''] ?? deleted) } as any}
         />
     ));
 
@@ -74,10 +68,16 @@ export const PlantCard = ({
             src={`${getServerUrl()}/${getImageSrc(display_data)}`}
             alt={display_data.alt}
             title={plant.latinName}
-            sx={{...displayImage}}
+            sx={{
+                minHeight: 200,
+                maxHeight: 200,
+            }}
         />
     } else {
-        display = <NoImageWithTextIcon style={{...displayImage}} />
+        display = <NoImageIcon style={{
+            width: '100%',
+            height: '100%',
+        }} />
     }
 
     return (
@@ -95,7 +95,6 @@ export const PlantCard = ({
                 {display}
                 <CardContent sx={{
                     padding: 1,
-                    marginTop: 25,
                     position: 'inherit',
                 }}>
                     <Typography gutterBottom variant="h6" component="h3">

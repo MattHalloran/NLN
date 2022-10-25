@@ -111,34 +111,34 @@ export const Hamburger = ({
                         direction: 'rtl',
                     }}
                 >
-                    <CloseIcon />
+                    <CloseIcon fill={palette.background.textPrimary} />
                 </IconButton>
                 <List>
                     {/* Collapsible contact information */}
                     <ListItem button onClick={handleContactClick} sx={menuItemStyle(palette)}>
                         <ListItemIcon><ContactSupportIcon fill={palette.background.textPrimary} /></ListItemIcon>
                         <ListItemText primary="Contact Us" />
-                        {contactOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                        {contactOpen ? <ExpandLessIcon fill={palette.background.textPrimary} /> : <ExpandMoreIcon fill={palette.background.textPrimary} />}
                     </ListItem>
                     <Collapse in={contactOpen} timeout="auto" unmountOnExit sx={menuItemStyle(palette)}>
                         <ContactInfo business={business} />
                     </Collapse>
                     {/* Collapsible social media APP_LINKS */}
                     <ListItem button onClick={handleSocialClick} sx={menuItemStyle(palette)}>
-                        <ListItemIcon><ShareIcon /></ListItemIcon>
+                        <ListItemIcon><ShareIcon fill={palette.background.textPrimary} /></ListItemIcon>
                         <ListItemText primary="Socials" />
-                        {socialOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                        {socialOpen ? <ExpandLessIcon fill={palette.background.textPrimary} /> : <ExpandMoreIcon fill={palette.background.textPrimary} />}
                     </ListItem>
                     <Collapse in={socialOpen} timeout="auto" unmountOnExit>
                         <ListItem button onClick={() => newTab(business?.SOCIAL?.Facebook)} sx={menuItemStyle(palette)}>
                             <ListItemIcon>
-                                <FacebookIcon fill={'#ffffff'} />
+                                <FacebookIcon fill={palette.background.textPrimary} />
                             </ListItemIcon>
                             <ListItemText primary="Facebook" />
                         </ListItem>
                         <ListItem button onClick={() => newTab(business?.SOCIAL?.Instagram)} sx={menuItemStyle(palette)}>
                             <ListItemIcon>
-                                <InstagramIcon fill={'#ffffff'} />
+                                <InstagramIcon fill={palette.background.textPrimary} />
                             </ListItemIcon>
                             <ListItemText primary="Instagram" />
                         </ListItem>

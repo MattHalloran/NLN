@@ -86,7 +86,7 @@ export const Navbar = ({
                             marginTop: { xs: '4px', md: '8px' },
                             marginBottom: { xs: '4px', md: '8px' },
                             marginRight: 'auto',
-                            background: palette.mode === 'light' ? '#0c3a0b' : 'radial-gradient(circle at center, #757565 0, #757565, white 100%)',
+                            background: palette.mode === 'light' ? '#ffffff42' : 'radial-gradient(circle at center, #757565 0, #757565, white 100%)',
                             borderRadius: '100%',
                             height: { xs: '56px', md: '64px' },
                             width: { xs: '56px', md: '64px' },
