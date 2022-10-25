@@ -87,8 +87,8 @@ services:
       POSTGRES_USER: "${DB_USER}"
       POSTGRES_PASSWORD: "${DB_PASSWORD}"
       PROJECT_DIR: "${PROJECT_DIR}"
-    expose:
-      - ${PORT_DB}
+    ports:
+      - ${PORT_DB}:${PORT_DB}
     networks:
       - app
     volumes:

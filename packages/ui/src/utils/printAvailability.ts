@@ -6,11 +6,12 @@ import { initializeApollo } from 'graphql/utils/initialize';
 import { getPlantTrait } from "./plantTools";
 import { SKU_SORT_OPTIONS } from '@shared/consts';
 import { SnackSeverity } from "components";
+import { Session } from "types";
 
 const TITLE_FONT_SIZE = 30;
 const LIST_FONT_SIZE = 24;
 
-const centeredText = (text, doc, y) => {
+const centeredText = (text: string, doc, y) => {
     let textWidth = doc.getStringUnitWidth(text) * doc.internal.getFontSize() / doc.internal.scaleFactor;
     let textOffset = (doc.internal.pageSize.width - textWidth) / 2;
     doc.text(textOffset, y, text);
@@ -27,7 +28,7 @@ const skusToTable = (skus, priceVisible: boolean) => {
     });
 }
 
-export const printAvailability = (session, title) => {
+export const printAvailability = (session: Session, title: string | null) => {
     const client = initializeApollo();
     client.query({
         query: skusQuery,
@@ -38,8 +39,10 @@ export const printAvailability = (session, title) => {
         const table_data = skusToTable(data, priceVisible);
         // Default export is a4 paper, portrait, using millimeters for units
         const doc: any = new jsPDF();
-        doc.setFontSize(TITLE_FONT_SIZE);
-        centeredText(title, doc, 10);
+        if (title) {
+            doc.setFontSize(TITLE_FONT_SIZE);
+            centeredText(title, doc, 10);
+        }
         let date = new Date();
         centeredText(`Availability: ${date.toDateString()}`, doc, 20);
         doc.setFontSize(LIST_FONT_SIZE);

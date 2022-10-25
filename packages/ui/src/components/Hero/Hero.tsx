@@ -1,6 +1,6 @@
 // Code inspired by https://github.com/rmolinamir/hero-slider
 import { useEffect, useState } from 'react';
-import { Typography, Button, Box } from '@mui/material';
+import { Typography, Button, Box, useTheme } from '@mui/material';
 import { Slider } from './Slider'
 import { imagesByLabelQuery } from 'graphql/query';
 import { useQuery } from '@apollo/client';
@@ -23,6 +23,7 @@ export const Hero = ({
     text,
     subtext,
 }) => {
+    const { palette } = useTheme();
     const [, setLocation] = useLocation();
 
     const [images, setImages] = useState([]);
