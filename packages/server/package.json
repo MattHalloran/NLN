@@ -9,7 +9,7 @@
     },
     "prisma": {
         "schema": "./src/db/schema.prisma",
-        "seed": "./src/db/seeds/init.ts"
+        "seed": "./src/db/seeds/init.js"
     },
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",

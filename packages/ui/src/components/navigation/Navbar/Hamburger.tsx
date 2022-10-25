@@ -10,8 +10,8 @@ import { CloseIcon, ContactSupportIcon, ExpandLessIcon, ExpandMoreIcon, Facebook
 import { APP_LINKS } from '@shared/consts';
 
 const menuItemStyle = (palette: Palette) => ({
-    color: palette.primary.contrastText,
-        borderBottom: `1px solid ${palette.primary.dark}`,
+    color: palette.background.textPrimary,
+        borderBottom: `1px solid ${palette.background.textPrimary}`,
 })
 
 export const Hamburger = ({
@@ -66,7 +66,7 @@ export const Hamburger = ({
                 {Icon ?
                     (<ListItemIcon>
                         <Badge badgeContent={badgeNum ?? 0} color="error">
-                            <Icon fill={palette.primary.contrastText}/>
+                            <Icon fill={palette.background.textPrimary}/>
                         </Badge>
                     </ListItemIcon>) : null}
                 <ListItemText primary={label} />
@@ -97,15 +97,16 @@ export const Hamburger = ({
                 sx={{
                     '& .MuiDrawer-paper': {
                         background: palette.background.default,
+                        color: palette.background.textPrimary,
                     }
                 }}
             >
                 <IconButton
                     onClick={closeMenu}
                     sx={{
-                        color: palette.primary.contrastText,
+                        color: palette.background.textPrimary,
                         borderRadius: 0,
-                        borderBottom: `1px solid ${palette.primary.dark}`,
+                        borderBottom: `1px solid ${palette.background.textPrimary}`,
                         justifyContent: 'end',
                         direction: 'rtl',
                     }}
@@ -115,7 +116,7 @@ export const Hamburger = ({
                 <List>
                     {/* Collapsible contact information */}
                     <ListItem button onClick={handleContactClick} sx={menuItemStyle(palette)}>
-                        <ListItemIcon><ContactSupportIcon fill={palette.primary.contrastText} /></ListItemIcon>
+                        <ListItemIcon><ContactSupportIcon fill={palette.background.textPrimary} /></ListItemIcon>
                         <ListItemText primary="Contact Us" />
                         {contactOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                     </ListItem>
@@ -149,7 +150,7 @@ export const Hamburger = ({
                 <CopyrightBreadcrumbs
                     business={business}
                     sx={{
-                        color: palette.primary.contrastText,
+                        color: palette.background.textPrimary,
                         padding: 5,
                         display: 'block',
                         marginLeft: 'auto',

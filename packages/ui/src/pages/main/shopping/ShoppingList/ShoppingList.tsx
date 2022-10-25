@@ -37,7 +37,7 @@ export const ShoppingList = ({
     // Find current plant and current sku
     const currPlant: any | null = Array.isArray(plants) ? plants.find((p: any) => p.skus.some(s => s.sku === sku)) : null;
     const currSku = currPlant?.skus ? currPlant.skus.find(s => s.sku === sku) : null;
-    const { data: plantData } = useQuery(plantsQuery, { variables: { input: { sortBy, searchString, active: true, hideOutOfStock } } });
+    const { data: plantData } = useQuery(plantsQuery, { variables: { input: { sortBy, searchString, active: true, onlyInStock: hideOutOfStock } } });
     const [upsertOrderItem] = useMutation(upsertOrderItemMutation);
 
     // useHotkeys('Escape', () => setCurrSku([null, null, null]));

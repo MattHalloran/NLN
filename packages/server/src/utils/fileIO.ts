@@ -225,9 +225,9 @@ export async function saveImage({ file, alt, description, labels, errorOnDuplica
             }
         })
         if (Array.isArray(labels)) {
-            await prisma.image_label.deleteMany({ where: { hash } });
+            await prisma.image_labels.deleteMany({ where: { hash } });
             for (let i = 0; i < labels.length; i++) {
-                await prisma.image_label.create({
+                await prisma.image_labels.create({
                     data: {
                         hash,
                         label: labels[i],

@@ -89,13 +89,13 @@ export const resolvers = {
         imagesByLabel: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
             // Get all images with label
             let images = await prisma.image.findMany({
-                where: { labels: { some: { label: input.label } } },
-                select: { hash: true, labels: { select: { label: true, index: true } } }
+                where: { image_labels: { some: { label: input.label } } },
+                select: { hash: true, image_labels: { select: { label: true, index: true } } }
             })
             // Sort by position
             images = images.sort((a, b) => {
-                const aIndex = a.labels.find((l) => l.label === input.label);
-                const bIndex = b.labels.find((l) => l.label === input.label);
+                const aIndex = a.image_labels.find((l) => l.label === input.label);
+                const bIndex = b.image_labels.find((l) => l.label === input.label);
                 return (aIndex?.index ?? 0) - (bIndex?.index ?? 0);
             })
             return await prisma.image.findMany({ 
@@ -132,8 +132,8 @@ export const resolvers = {
                 const curr = input.data[i];
                 if (input.label) {
                     // Update position in label
-                    await prisma.image_label.update({
-                        where: { image_label_hash_label_unique: { hash: curr.hash, label: input.label } },
+                    await prisma.image_labels.update({
+                        where: { hash_label: { hash: curr.hash, label: input.label } },
                         data: { index: i }
                     })
                 }
@@ -166,12 +166,12 @@ export const resolvers = {
             // Must be admin
             if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
             const imagesToDelete = await prisma.image.findMany({
-                where: { labels: { every: { label: { in: input.labels } } } },
+                where: { image_labels: { every: { label: { in: input.labels } } } },
                 select: {
                     hash: true
                 }
             });
-            await prisma.image_label.deleteMany({
+            await prisma.image_labels.deleteMany({
                 where: { label: { in: input.labels }}
             });
             let count = 0;

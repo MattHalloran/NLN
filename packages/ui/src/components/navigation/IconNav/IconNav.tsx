@@ -17,15 +17,15 @@ export const IconNav = ({
         <BottomNavigation
             showLabels
             sx={{
-                    background: palette.primary.dark,
-                    position: 'fixed',
-                    zIndex: 5,
-                    bottom: 0,
-                    paddingBottom: 'env(safe-area-inset-bottom)',
-                    // safe-area-inset-bottom is the iOS navigation bar
-                    height: 'calc(56px + env(safe-area-inset-bottom))',
-                    width: '100%',
-                    display: { xs: 'flex', md: 'none' },
+                background: palette.primary.dark,
+                position: 'fixed',
+                zIndex: 5,
+                bottom: 0,
+                paddingBottom: 'env(safe-area-inset-bottom)',
+                // safe-area-inset-bottom is the iOS navigation bar
+                height: 'calc(56px + env(safe-area-inset-bottom))',
+                width: '100%',
+                display: { xs: 'flex', md: 'none' },
             }}
             {...props}
         >
@@ -35,7 +35,9 @@ export const IconNav = ({
                     label={label}
                     value={value}
                     onClick={() => { setLocation(link); if (onClick) onClick() }}
-                    icon={<Badge badgeContent={badgeNum} color="error"><Icon /></Badge>} />
+                    icon={<Badge badgeContent={badgeNum} color="error"><Icon /></Badge>}
+                    sx={{ color: palette.primary.contrastText }}
+                />
             ))}
         </BottomNavigation>
     );

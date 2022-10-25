@@ -15,8 +15,8 @@ export const Dots = ({
                 marginRight: '5px',
                 cursor: 'pointer',
                 borderRadius: '50%',
-                border: '1px solid black',
                 background: activeIndex === i ? palette.primary.main : 'white',
+                transition: 'background 0.2s ease-in-out',
                 opacity: activeIndex === i ? '0.9' : '80%',
             }}
         />)
