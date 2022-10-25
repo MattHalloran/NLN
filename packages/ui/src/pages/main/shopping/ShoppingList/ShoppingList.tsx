@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { plantsQuery } from 'graphql/query';
 import { upsertOrderItemMutation } from 'graphql/mutation';
 import { useQuery, useMutation } from '@apollo/client';
@@ -13,6 +13,7 @@ import { APP_LINKS } from "@shared/consts";
 import { mutationWrapper } from "graphql/utils";
 import { upsertOrderItemVariables, upsertOrderItem_upsertOrderItem } from "graphql/generated/upsertOrderItem";
 import { useLocation } from "@shared/route";
+import { plants_plants, plants_plants_skus } from "graphql/generated/plants";
 
 export const ShoppingList = ({
     session,
@@ -25,18 +26,19 @@ export const ShoppingList = ({
 }) => {
 
     // Plant data for all visible plants (i.e. not filtered)
-    const [plants, setPlants] = useState<any[]>([]);
+    const [plants, setPlants] = useState<plants_plants[]>([]);
     const track_scrolling_id = 'scroll-tracked';
     const [, setLocation] = useLocation();
-    const { sku } = useMemo<{ sku: string | undefined }>(() => {
+    const [sku, setSku] = useState<string | undefined>(undefined);
+    useEffect(() => {
         const searchParams = parseSearchParams();
-        return {
-            sku: searchParams.sku === 'string' ? searchParams.sku : undefined
+        if (typeof searchParams.sku === 'string') {
+            setSku(searchParams.sku);
         }
-    }, []);
+    }, [setLocation])
     // Find current plant and current sku
-    const currPlant: any | null = Array.isArray(plants) ? plants.find((p: any) => p.skus.some(s => s.sku === sku)) : null;
-    const currSku = currPlant?.skus ? currPlant.skus.find(s => s.sku === sku) : null;
+    const currPlant = Array.isArray(plants) ? plants.find((p: any) => p.skus.some(s => s.sku === sku)) : undefined;
+    const currSku = currPlant?.skus ? currPlant.skus.find(s => s.sku === sku) : undefined;
     const { data: plantData } = useQuery(plantsQuery, { variables: { input: { sortBy, searchString, active: true, onlyInStock: hideOutOfStock } } });
     const [upsertOrderItem] = useMutation(upsertOrderItemMutation);
 
@@ -74,15 +76,21 @@ export const ShoppingList = ({
 
     const expandSku = (sku) => {
         setLocation(APP_LINKS.Shopping + "/" + sku);
+        setSku(sku);
+    };
+
+    const closeSku = () => {
+        setLocation(APP_LINKS.Shopping);
+        setSku(undefined);
     };
 
     const toCart = () => {
         setLocation(APP_LINKS.Cart);
     }
 
-    const addToCart = (name, sku, quantity) => {
+    const addToCart = (sku: plants_plants_skus, quantity: number) => {
         if (!session?.id) return;
-        let max_quantity = parseInt(sku.availability);
+        let max_quantity = sku.availability;
         if (Number.isInteger(max_quantity) && quantity > max_quantity) {
             alert(`Error: Cannot add more than ${max_quantity}!`);
             return;
@@ -108,13 +116,12 @@ export const ShoppingList = ({
             }}
         >
             {(currPlant) ? <PlantDialog
-                onSessionUpdate
                 plant={currPlant}
                 selectedSku={currSku}
                 onAddToCart={addToCart}
                 open={currPlant !== null}
                 // navigate back on close
-                onClose={() => setLocation(APP_LINKS.Shopping, { replace: true })} /> : null}
+                onClose={closeSku} /> : null}
             {plants?.map((item, index) =>
                 <PlantCard key={index}
                     onClick={(data) => expandSku(data.selectedSku?.sku)}

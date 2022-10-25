@@ -145,13 +145,13 @@ export const CustomerCard = ({
         }}>
             {phoneDialogOpen ? (
                 <ListDialog
-                    title={`Call ${customer?.fullName}`}
+                    title={`Call ${customer?.firstName} ${customer?.lastName}`}
                     data={phoneList}
                     onClose={callPhone} />
             ) : null}
             {emailDialogOpen ? (
                 <ListDialog
-                    title={`Email ${customer?.fullName}`}
+                    title={`Email ${customer?.firstName} ${customer?.lastName}`}
                     data={emailList}
                     onClose={sendEmail} />
             ) : null}

@@ -29,7 +29,7 @@ export const ContactInfo = ({
     let hours;
     try {
         hours = business?.hours ?
-            business.hours.split('\n').slice(2).map(row => row.split('|').map(r => r.trim()).filter(r => r !== '')) :
+            business.hours.split('\n').slice(2).map(row => row.split('|').map(r => r.trim()).filter(r => r !== '')).filter(r => r.length > 0) :
             [];
         hours = hours.map(row => `${row[0]}: ${row[1]}`)
     } catch (error) {
@@ -68,6 +68,7 @@ export const ContactInfo = ({
                     alignItems: 'baseline',
                     background: 'transparent',
                     height: 'fit-content',
+                    marginTop: 1,
                 }}
             >
                 {contactInfo.map(([tooltip, label, link, Icon]) => (

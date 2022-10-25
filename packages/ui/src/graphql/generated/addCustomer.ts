@@ -146,7 +146,6 @@ export interface addCustomer_addCustomer {
   id: string;
   firstName: string;
   lastName: string;
-  fullName: string | null;
   pronouns: string;
   emails: addCustomer_addCustomer_emails[];
   phones: addCustomer_addCustomer_phones[];

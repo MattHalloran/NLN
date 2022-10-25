@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { DEFAULT_PRONOUNS } from '@shared/consts';
 import { useMutation, useQuery } from '@apollo/client';
 import { updateCustomerMutation } from 'graphql/mutation';
@@ -20,7 +20,6 @@ import { PasswordTextField } from 'components/inputs/PasswordTextField/PasswordT
 export const ProfileForm = () => {
     const { spacing } = useTheme();
 
-    const [editing, setEditing] = useState(false);
     const { data } = useQuery<profile>(profileQuery);
     const profile = useMemo<profile_profile | null>(() => data?.profile || null, [data]);
     const [updateCustomer, { loading }] = useMutation(updateCustomerMutation);
@@ -84,18 +83,12 @@ export const ProfileForm = () => {
         },
     });
 
-    const toggleEdit = (event) => {
-        event.preventDefault();
-        setEditing(edit => !edit);
-    }
-
     return (
         <Box sx={{
             width: '100%',
-            marginTop: spacing(3),
         }}>
             <form onSubmit={formik.handleSubmit}>
-                <fieldset disabled={!editing}>
+                <fieldset style={{ border: 'none' }}>
                     <Container>
                         <Grid container spacing={2}>
                             <Grid item xs={12} sm={6}>
@@ -286,11 +279,6 @@ export const ProfileForm = () => {
                         }}
                     >
                         <Grid item xs={12} sm={6}>
-                            <Button fullWidth onClick={toggleEdit}>
-                                {editing ? "Cancel" : "Edit"}
-                            </Button>
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
                             <Button
                                 fullWidth
                                 disabled={loading}
@@ -298,6 +286,11 @@ export const ProfileForm = () => {
                                 color="secondary"
                             >
                                 Save Changes
+                            </Button>
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                            <Button fullWidth onClick={() => { formik.resetForm() }}>
+                                Cancel
                             </Button>
                         </Grid>
                     </Grid>

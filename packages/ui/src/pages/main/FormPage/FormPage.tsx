@@ -1,4 +1,4 @@
-import { Box, Container, useTheme } from '@mui/material';
+import { Box, useTheme } from '@mui/material';
 import { PageContainer, PageTitle } from 'components';
 
 export const FormPage = ({
@@ -10,23 +10,23 @@ export const FormPage = ({
 
     return (
         <PageContainer>
+            <PageTitle title={title} />
             <Box sx={{
                 backgroundColor: palette.background.paper,
                 display: 'grid',
                 position: 'relative',
-                boxShadow: '0px 2px 4px -1px rgb(0 0 0 / 20%), 0px 4px 5px 0px rgb(0 0 0 / 14%), 0px 1px 10px 0px rgb(0 0 0 / 12%)',
+                boxShadow: 8,
                 minWidth: '300px',
                 maxWidth: 'min(100%, 700px)',
                 borderRadius: '10px',
                 overflow: 'hidden',
                 left: '50%',
                 transform: 'translateX(-50%)',
-                marginBottom: '20px',
+                marginTop: 2,
+                marginBottom: 2,
+                padding: 2,
             }}>
-                <PageTitle title={title} />
-                <Container>
-                    {children}
-                </Container>
+                {children}
             </Box>
         </PageContainer>
     );

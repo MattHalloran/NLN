@@ -57,10 +57,11 @@ export const SignUpForm = ({
         },
         validationSchema: signUpSchema,
         onSubmit: (values) => {
+            const { confirmPassword, ...input } = values;
             mutationWrapper<signUp_signUp, signUpVariables>({
                 mutation: signUp,
                 input: {
-                    ...values,
+                    ...input,
                     accountApproved: values.accountApproved,
                     marketingEmails: values.marketingEmails,
                     theme: palette.mode ?? 'light',

@@ -32,7 +32,6 @@ export interface customerContactFields {
   id: string;
   firstName: string;
   lastName: string;
-  fullName: string | null;
   pronouns: string;
   emails: customerContactFields_emails[];
   phones: customerContactFields_phones[];

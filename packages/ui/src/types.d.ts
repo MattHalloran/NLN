@@ -7,7 +7,6 @@ export type Session = {
     cart?: any;
     firstName?: string | null;
     lastName?: string | null;
-    fullName?: string | null;
     pronouns?: string | null;
 }
 export interface CommonProps {

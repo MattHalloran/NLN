@@ -163,7 +163,7 @@ export const OrderDialog = ({
                     <Grid container spacing={0}>
                         <Grid item xs={12} sx={{ textAlign: 'center' }}>
                             <Typography variant="h5">
-                                {order?.customer?.fullName}'s order
+                                {order?.customer?.firstName} {order?.customer?.lastName}'s order
                             </Typography>
                             <Typography variant="h6">
                                 {order?.customer?.business?.name}

@@ -25,6 +25,7 @@ export const AdminMainPage = () => {
                 gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
                 gridGap: '20px',
                 alignItems: 'stretch',
+                marginTop: 2,
             }}>
                 {card_data.map(([title, description, link]) => (
                     <Card onClick={() => setLocation(link)} sx={{
