@@ -85,7 +85,7 @@ export const Footer = ({
                         <Tooltip title={alt} placement="bottom">
                             <ButtonBase sx={{
                                 maxWidth: '33vw',
-                                padding: 10,
+                                padding: 1,
                             }}>
                                 <a href={src} target="_blank" rel="noopener noreferrer">
                                     <Box
