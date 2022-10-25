@@ -146,7 +146,6 @@ export interface customers_customers {
   id: string;
   firstName: string;
   lastName: string;
-  fullName: string | null;
   pronouns: string;
   emails: customers_customers_emails[];
   phones: customers_customers_phones[];

@@ -98,7 +98,6 @@ export const typeDef = gql`
         id: ID!
         firstName: String!
         lastName: String!
-        fullName: String
         pronouns: String!
         emails: [Email!]!
         phones: [Phone!]!
@@ -140,7 +139,7 @@ export const resolvers = {
             // Must be admin
             if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
             return await prisma.customer.findMany({
-                orderBy: { fullName: 'asc', },
+                orderBy: { lastName: 'asc', },
                 ...(new PrismaSelect(info).value)
             }) as any[];
         },

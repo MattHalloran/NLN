@@ -27,7 +27,7 @@ const active: SxProps<Theme> = {
 } as const
 
 const chip: SxProps<Theme> = {
-    margin: 2,
+    margin: 1,
     boxShadow: 1,
 } as const
 

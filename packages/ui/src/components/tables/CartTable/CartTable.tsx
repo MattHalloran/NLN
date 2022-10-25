@@ -82,9 +82,21 @@ export const CartTable = ({
         let display_data = data.sku.plant.images.find(image => image.usedFor === IMAGE_USE.PlantDisplay)?.image;
         if (!display_data && data.sku.plant.images.length > 0) display_data = data.sku.plant.images[0].image;
         if (display_data) {
-            display = <img src={`${getServerUrl()}/${getImageSrc(display_data)}`} alt={display_data.alt} title={commonName} />
+            display = <Box
+                component="img"
+                src={`${getServerUrl()}/${getImageSrc(display_data)}`}
+                alt={display_data.alt}
+                title={commonName}
+                sx={{
+                    minHeight: 100,
+                    maxHeight: 100,
+                }}
+            />
         } else {
-            display = <NoImageIcon />
+            display = <NoImageIcon style={{
+                width: '100px',
+                height: '100px',
+            }} />
         }
 
         return (
@@ -95,9 +107,7 @@ export const CartTable = ({
                     </IconButton>
                 </TableCell>) : null}
                 <TableCell padding="none" component="th" scope="row" align="center" sx={tableColumnStyle(palette)}>
-                    <Box sx={{ maxHeight: '8vh' }}>
-                        {display}
-                    </Box>
+                    {display}
                 </TableCell>
                 <TableCell align="left" sx={tableColumnStyle(palette)}>{getPlantTrait('commonName', data.sku.plant)}</TableCell>
                 <TableCell align="right" sx={tableColumnStyle(palette)}>{price}</TableCell>

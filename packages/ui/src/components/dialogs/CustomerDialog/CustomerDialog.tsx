@@ -140,7 +140,7 @@ export const CustomerDialog = ({
                     <Grid container spacing={0}>
                         <Grid sx={{ textAlign: 'center' }} item xs={12}>
                             <Typography variant="h5">
-                                {customer?.fullName}
+                                {customer?.firstName} {customer?.lastName}
                             </Typography>
                             <Typography variant="h6">
                                 {customer?.business?.name}

@@ -1,48 +1,21 @@
 import { useState, useEffect } from 'react';
-import {
-    AppBar,
-    Avatar,
-    Box,
-    Button,
-    Collapse,
-    Dialog,
-    Grid,
-    IconButton,
-    List,
-    ListItem,
-    ListItemAvatar,
-    ListItemIcon,
-    ListItemText,
-    Toolbar,
-    Typography,
-    useTheme
-} from '@mui/material';
-import { showPrice, getImageSrc, getPlantTrait, getServerUrl } from 'utils';
-import {
-    QuantityBox,
-    Selector,
-    Transition
-} from 'components';
+import { AppBar, Avatar, Box, Button, Collapse, Dialog, Grid, IconButton, List, ListItem, ListItemAvatar, ListItemIcon, ListItemText, Toolbar, Typography, useTheme } from '@mui/material';
+import { showPrice, getImageSrc, getPlantTrait, getServerUrl, PubSub } from 'utils';
+import { QuantityBox, Selector, SnackSeverity, Transition } from 'components';
 import { IMAGE_SIZE } from '@shared/consts';
 import _ from 'lodash';
 import Carousel from 'react-gallery-carousel';
 import 'react-gallery-carousel/dist/index.css';
-import { BeeIcon, CloseIcon, DroughtIcon, ExpandLessIcon, ExpandMoreIcon, InfoIcon, LampIcon, LightModeIcon, MapIcon, MoistureIcon, MoveLeftRightIcon, MoveUpDownIcon, NoImageWithTextIcon, PaletteIcon, PHIcon, SaltIcon, ScheduleIcon, ShoppingCartAddIcon, SoilTypeIcon, SpeedIcon, SvgComponent } from '@shared/icons';
+import { BeeIcon, CloseIcon, DroughtIcon, ExpandLessIcon, ExpandMoreIcon, InfoIcon, LampIcon, LightModeIcon, MapIcon, MoistureIcon, MoveLeftRightIcon, MoveUpDownIcon, PaletteIcon, PHIcon, SaltIcon, ScheduleIcon, ShoppingCartAddIcon, SoilTypeIcon, SpeedIcon, SvgComponent } from '@shared/icons';
+import { PlantDialogProps } from '../types';
 
 export const PlantDialog = ({
     plant,
     selectedSku,
-    onSessionUpdate,
     onAddToCart,
     open = true,
     onClose,
-}) => {
-    plant = {
-        ...plant,
-        latinName: plant?.latinName,
-        skus: plant?.skus ?? [],
-    }
-
+}: PlantDialogProps) => {
     const { palette, spacing } = useTheme();
 
     const [quantity, setQuantity] = useState(1);
@@ -56,12 +29,12 @@ export const PlantDialog = ({
     }, [selectedSku])
 
     useEffect(() => {
-        let options = plant.skus?.map(s => {
+        let options = plant?.skus?.map(s => {
             return {
                 label: `#${s.size} : ${showPrice(s.price)}`,
                 value: s,
             }
-        })
+        }) ?? [];
         // If options is unchanged, do not set
         let curr_values = orderOptions.map(o => o.value);
         let new_values = options.map(o => o.value);
@@ -69,8 +42,8 @@ export const PlantDialog = ({
         setOrderOptions(options);
     }, [plant, orderOptions])
 
-    const images = Array.isArray(plant.images) ? plant.images.map(d => ({
-        alt: d.image.alt,
+    const images = (plant && Array.isArray(plant.images)) ? plant.images.map(d => ({
+        alt: d.image.alt ?? '',
         src: `${getServerUrl()}/${getImageSrc(d.image)}`,
         thumbnail: `${getServerUrl()}/${getImageSrc(d.image, IMAGE_SIZE.M)}`
     })) : [];
@@ -100,6 +73,14 @@ export const PlantDialog = ({
         setDetailsOpen(!detailsOpen);
     };
 
+    const handleAddToCart = () => {
+        if (!currSku) {
+            PubSub.get().publishSnack({ message: 'Please select a size', severity: SnackSeverity.Error });
+            return;
+        }
+        onAddToCart(currSku, quantity);
+    }
+
     let options = (
         <Grid container spacing={2} sx={{
             padding: spacing(2),
@@ -109,6 +90,7 @@ export const PlantDialog = ({
                     fullWidth
                     options={orderOptions}
                     selected={currSku}
+                    getOptionLabel={(sku) => sku.sku}
                     handleChange={(e) => setCurrSku(e.target.value)}
                     inputAriaLabel='size-selector-label'
                     label="Size"
@@ -119,7 +101,7 @@ export const PlantDialog = ({
                 <QuantityBox
                     id="plant-quantity"
                     min={0}
-                    max={Math.max.apply(Math, plant.skus.map(s => s.availability))}
+                    max={Math.max.apply(Math, plant?.skus?.map(s => s.availability) ?? [])}
                     initial={1}
                     value={quantity}
                     handleChange={setQuantity}
@@ -133,7 +115,7 @@ export const PlantDialog = ({
                     style={{ height: '100%' }}
                     color="secondary"
                     startIcon={<ShoppingCartAddIcon />}
-                    onClick={() => onAddToCart(getPlantTrait('commonName', plant) ?? plant.latinName, currSku, quantity)}
+                    onClick={handleAddToCart}
                 >Order</Button>
             </Grid>
         </Grid>
@@ -168,7 +150,7 @@ export const PlantDialog = ({
                     <Grid container spacing={0}>
                         <Grid item xs={12} sx={{ textAlign: 'center' }}>
                             <Typography id="modal-title" variant="h5">
-                                {plant.latinName}
+                                {plant?.latinName}
                             </Typography>
                             <Typography variant="h6">
                                 {getPlantTrait('commonName', plant)}
@@ -183,15 +165,12 @@ export const PlantDialog = ({
                 paddingBottom: '15vh',
             }}>
                 <Grid container spacing={0}>
-                    <Grid item lg={6} xs={12}>
-                        <Box sx={{ maxHeight: '75vh' }}>
-                            {
-                                images.length > 0 ?
-                                    <Carousel canAutoPlay={false} images={images} /> :
-                                    <NoImageWithTextIcon width="unset" height="unset" />
-                            }
-                        </Box>
-                    </Grid>
+                    {images.length > 0 && <Grid item lg={6} xs={12}>
+                        <Carousel canAutoPlay={false} images={images} style={{
+                            maxHeight: '75vh',
+                            width: '100%',
+                        }} />
+                    </Grid>}
                     <Grid item lg={6} xs={12}>
                         {displayedTraitList.length > 0 ? (
                             <>

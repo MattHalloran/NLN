@@ -88,11 +88,25 @@ export const resolvers = {
             // Maybe in the future, this could also be matched to sku names and such
             let searchQuery;
             if (input.searchString !== undefined && input.searchString.length > 0) {
-                searchQuery = {
-                    OR: [
-                        { customer: { fullName: { contains: input.searchString.trim(), mode: 'insensitive' } } },
-                        { customer: { business: { name: { contains: input.searchString.trim(), mode: 'insensitive' } } } }
-                    ]
+                // If there are two words, assume first is first name, last is last name
+                const words = input.searchString.trim().split(' ');
+                if (words.length === 2) {
+                    searchQuery = {
+                        OR: [
+                            { customer: { firstName: { contains: words[0], mode: 'insensitive' } } },
+                            { customer: { lastName: { contains: words[1], mode: 'insensitive' } } },
+                            { business: { name: { contains: input.searchString.trim(), mode: 'insensitive' } } },
+                        ]
+                    }
+                }
+                else {
+                    searchQuery = {
+                        OR: [
+                            { customer: { firstName: { contains: input.searchString.trim(), mode: 'insensitive' } } },
+                            { customer: { lastName: { contains: input.searchString.trim(), mode: 'insensitive' } } },
+                            { customer: { business: { name: { contains: input.searchString.trim(), mode: 'insensitive' } } } }
+                        ]
+                    }
                 }
             }
             return await prisma.order.findMany({
@@ -117,7 +131,7 @@ export const resolvers = {
             if (!req.isAdmin) {
                 // Customers can only update their own orders in certain states
                 const editable_order_statuses = [ORDER_STATUS.Draft, ORDER_STATUS.Pending];
-                if (!editable_order_statuses.includes(curr.status))throw new CustomError(CODE.Unauthorized);
+                if (!editable_order_statuses.includes(curr.status)) throw new CustomError(CODE.Unauthorized);
                 // Customers cannot edit order status
                 delete input.status;
             }

@@ -114,12 +114,12 @@ export const Navbar = ({
                             sx={{
                                 position: 'relative',
                                 cursor: 'pointer',
-                                fontSize: { xs: '0', sm: '1.5em', md: '2em' },
+                                fontSize: { xs: '1.2em', sm: '1.5em', md: '2em' },
                                 marginLeft: '4px',
                                 fontFamily: `'Kite One', sans-serif`,
                                 color: palette.primary.contrastText,
                             }}
-                        >{business?.BUSINESS_NAME?.Short ?? 'New Life Nursery, Inc.'}</Typography>
+                        >{business?.BUSINESS_NAME?.Short ?? 'New Life Nursery Inc.'}</Typography>
                     </Box>
                     <Box sx={{ marginLeft: 'auto' }}>
                         {show_hamburger ? <Hamburger {...child_props} /> : <NavList {...child_props} />}

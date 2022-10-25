@@ -1,4 +1,5 @@
 import { PopoverProps } from '@mui/material';
+import { plants_plants, plants_plants_skus } from 'graphql/generated/plants';
 import { SnackSeverity } from './Snack/Snack';
 
 export interface DialogTitleProps {
@@ -13,6 +14,14 @@ export interface MenuTitleProps {
     helpText?: string;
     onClose: () => void;
     title?: string;
+}
+
+export interface PlantDialogProps {
+    plant: plants_plants | undefined;
+    selectedSku: plants_plants_skus | undefined;
+    onAddToCart: (sku: plants_plants_skus, quantity: number) => void;
+    open: boolean;
+    onClose: () => void;
 }
 
 export interface PopoverWithArrowProps extends Omit<PopoverProps, 'open' | 'sx'> {

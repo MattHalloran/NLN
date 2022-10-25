@@ -47,7 +47,6 @@ export interface orders_orders_customer {
   id: string;
   firstName: string;
   lastName: string;
-  fullName: string | null;
   pronouns: string;
   emails: orders_orders_customer_emails[];
   phones: orders_orders_customer_phones[];

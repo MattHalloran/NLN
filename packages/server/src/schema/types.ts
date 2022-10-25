@@ -110,7 +110,6 @@ export type Customer = {
   emails: Array<Email>;
   feedback: Array<Feedback>;
   firstName: Scalars['String'];
-  fullName?: Maybe<Scalars['String']>;
   id: Scalars['ID'];
   lastName: Scalars['String'];
   orders: Array<Order>;
