@@ -16,7 +16,7 @@ const MAX_FILE_NAME_ATTEMPTS = 100;
 // Max size of a file buffer (how large of a file are you willing to download?)
 const MAX_BUFFER_SIZE = 1000000000;
 // Location of persistent storage directory
-const UPLOAD_DIR = `${process.env.PROJECT_DIR}/data/uploads`;
+const UPLOAD_DIR = `${process.env.PROJECT_DIR}/assets`;
 
 /**
  * Replaces any invalid characters from a file name

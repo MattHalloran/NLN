@@ -3,14 +3,15 @@ import { memo } from 'react'
 import { getImageSrc, getServerUrl } from 'utils';
 
 export const Slide = memo<any>(({ image, width }) => {
+    if (!image) return null;
     return (
+        // Make sure image fills full height of slider
         <Box sx={{
-            height: '100%',
             width: `${width}px`,
-            objectFit: 'cover',
-            overflow: 'hidden',
-        }}>
-            <img src={image ? `${getServerUrl()}/${getImageSrc(image, width)}` : ''} alt={image?.alt ?? ''} />
-        </Box>
+            height: '100%',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundImage: `url(${getServerUrl()}/${getImageSrc(image, width)})`,
+        }} />
     )
 })

@@ -139,7 +139,7 @@ export const CustomerCard = ({
         <Card sx={{
             background: palette.primary.main,
             color: palette.primary.contrastText,
-            borderRadius: 15,
+            borderRadius: 2,
             margin: 3,
             cursor: 'pointer',
         }}>

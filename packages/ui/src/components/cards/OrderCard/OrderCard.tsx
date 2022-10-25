@@ -40,9 +40,9 @@ export const OrderCard = ({
         <Card sx={{
             backgroundColor: palette.primary.main,
             color: palette.primary.contrastText,
-            borderRadius: 15,
+            borderRadius: 2,
             margin: 3,
-            padding: 10,
+            padding: 1,
             minWidth: 150,
             minHeight: 50,
             cursor: 'pointer',
