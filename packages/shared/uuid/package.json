@@ -2,7 +2,7 @@
     "name": "@shared/uuid",
     "author": "New Life Nursery",
     "license": "MIT",
-    "version": "1.2.0",
+    "version": "2.0.0",
     "private": true,
     "description": "UUID generator and validator",
     "main": "dist/index.js",

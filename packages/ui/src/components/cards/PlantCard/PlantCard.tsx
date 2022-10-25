@@ -1,20 +1,18 @@
 import {
+    Box,
     Card,
     CardActionArea,
-    CardActions,
     CardContent,
     CardMedia,
     Chip,
-    IconButton,
     SxProps,
     Theme,
-    Tooltip,
     Typography,
     useTheme
 } from '@mui/material';
 import { showPrice, getImageSrc, getPlantTrait, getServerUrl } from 'utils';
 import { IMAGE_USE, SKU_STATUS } from '@shared/consts';
-import { NoImageWithTextIcon, OpenInNewIcon } from '@shared/icons';
+import { NoImageWithTextIcon } from '@shared/icons';
 
 const displayImage: SxProps<Theme> = {
     minHeight: 200,
@@ -23,19 +21,20 @@ const displayImage: SxProps<Theme> = {
 } as const
 
 const deleted: SxProps<Theme> = {
-    border: '2px solid red',
+    background: '2px solid red',
 } as const
 
 const inactive: SxProps<Theme> = {
-    border: '2px solid grey',
+    background: '2px solid grey',
 } as const
 
 const active: SxProps<Theme> = {
-    border: (t) => `2px solid ${t.palette.secondary.dark}`,
+    background: (t) => t.palette.secondary.main,
 } as const
 
 const chip: SxProps<Theme> = {
     margin: 2,
+    boxShadow: 1,
 } as const
 
 
@@ -87,7 +86,7 @@ export const PlantCard = ({
             sx={{
                 background: (t) => t.palette.primary.main,
                 color: (t) => t.palette.primary.contrastText,
-                borderRadius: 15,
+                borderRadius: 2,
                 margin: 3,
                 cursor: 'pointer',
             }}
@@ -95,25 +94,18 @@ export const PlantCard = ({
             <CardActionArea>
                 {display}
                 <CardContent sx={{
-                    padding: 8,
-                    marginTop: 200,
+                    padding: 1,
+                    marginTop: 25,
                     position: 'inherit',
                 }}>
                     <Typography gutterBottom variant="h6" component="h3">
                         {plant.latinName ?? getPlantTrait('commonName', plant)}
                     </Typography>
-                    <div className="size-container">
+                    <Box>
                         {sizes}
-                    </div>
+                    </Box>
                 </CardContent>
             </CardActionArea>
-            <CardActions>
-                <Tooltip title="View" placement="bottom">
-                    <IconButton onClick={onClick}>
-                        <OpenInNewIcon fill={palette.secondary.light} />
-                    </IconButton>
-                </Tooltip>
-            </CardActions>
         </Card>
     );
 }

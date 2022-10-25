@@ -101,13 +101,6 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# Use production icons
-mv build/prod/* build/
-if [ $? -ne 0 ]; then
-    error "Failed to move production icons"
-    exit 1
-fi
-
 # Generate sitemap.xml
 ts-node --esm --experimental-specifier-resolution node  ./src/sitemap.ts 
 if [ $? -ne 0 ]; then
