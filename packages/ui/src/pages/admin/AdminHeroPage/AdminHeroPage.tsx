@@ -14,6 +14,8 @@ import { mutationWrapper } from 'graphql/utils';
 import { addImagesVariables, addImages_addImages } from 'graphql/generated/addImages';
 import { updateImagesVariables } from 'graphql/generated/updateImages';
 
+const helpText = `This page allows you to manage the images displayed in the Hero banner (what you see when you first visit the site).`
+
 export const AdminHeroPage = () => {
     const { palette } = useTheme();
 
@@ -61,7 +63,7 @@ export const AdminHeroPage = () => {
     return (
         <PageContainer>
             <AdminBreadcrumbs textColor={palette.secondary.dark} />
-            <PageTitle title="Manage Hero" />
+            <PageTitle title="Manage Hero" helpText={helpText} />
             <Dropzone
                 dropzoneText={'Drag \'n\' drop new images here or click'}
                 onUpload={uploadImages}

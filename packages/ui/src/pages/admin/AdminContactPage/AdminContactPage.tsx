@@ -13,6 +13,12 @@ import { mutationWrapper } from 'graphql/utils';
 import { writeAssetsVariables } from 'graphql/generated/writeAssets';
 import Markdown from 'markdown-to-jsx';
 
+const helpText = `This page allows you to edit the contact info displayed on the site. 
+
+The information is stored in Markdown. You can learn more about how to write Markdown [here](https://www.markdownguide.org/basic-syntax/).
+
+NOTE: This will not update Google My Business information. You must do that manually by logging into your Google My Business account.`;
+
 export const AdminContactPage = ({
     business
 }) => {
@@ -59,7 +65,7 @@ export const AdminContactPage = ({
     return (
         <PageContainer>
             <AdminBreadcrumbs textColor={palette.secondary.dark} />
-            <PageTitle title="Manage Contact Info" />
+            <PageTitle title="Manage Contact Info" helpText={helpText} />
             {options}
             <Grid container spacing={2} direction="row">
                 <Grid item sm={12} md={6}>

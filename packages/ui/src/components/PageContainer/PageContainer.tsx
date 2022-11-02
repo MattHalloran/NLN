@@ -1,5 +1,5 @@
 import { Box } from "@mui/material"
-import { PageContainerProps } from "components/types"
+import { PageContainerProps } from "../types"
 
 /**
  * Container which can be wrapped around most pages to provide a consistent layout.
@@ -16,8 +16,8 @@ export const PageContainer = ({
             margin: 'auto',
             paddingTop: { xs: '64px', md: '80px' },
             paddingBottom: 'calc(56px + env(safe-area-inset-bottom))',
-            paddingLeft: { xs: '16px', sm: 'max(1em, calc(15% - 75px))' },
-            paddingRight: { xs: '16px', sm: 'max(1em, calc(15% - 75px))' },
+            paddingLeft: { xs: 0, sm: 'max(1em, calc(15% - 75px))' },
+            paddingRight: { xs: 0, sm: 'max(1em, calc(15% - 75px))' },
             ...(sx ?? {}),
         }}>
             {children}

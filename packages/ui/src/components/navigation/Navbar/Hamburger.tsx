@@ -109,6 +109,7 @@ export const Hamburger = ({
                         borderBottom: `1px solid ${palette.background.textPrimary}`,
                         justifyContent: 'end',
                         direction: 'rtl',
+                        height: { xs: '64px', md: '80px' },
                     }}
                 >
                     <CloseIcon fill={palette.background.textPrimary} />

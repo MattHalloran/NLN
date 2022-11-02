@@ -41,7 +41,7 @@ export const OrderCard = ({
             backgroundColor: palette.primary.main,
             color: palette.primary.contrastText,
             borderRadius: 2,
-            margin: 3,
+            margin: 1,
             padding: 1,
             minWidth: 150,
             minHeight: 50,

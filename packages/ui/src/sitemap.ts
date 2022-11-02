@@ -87,7 +87,7 @@ fs.readFile(new URL(routesLocation, import.meta.url), 'utf8', (err, data) => {
         return { path, priority, changeFreq };
     }).filter((route) => route.path) as SitemapEntry[];
     // Generate sitemap.xml
-    const sitemap = generateSitemap('https://app.vrooli.com', sitemapData);
+    const sitemap = generateSitemap('https://newlifenurseryinc.com', sitemapData);
     // Write sitemap.xml to public folder
     const sitemapLocation = new URL('../public/sitemap.xml', import.meta.url);
     fs.writeFile(sitemapLocation, sitemap, (err) => {

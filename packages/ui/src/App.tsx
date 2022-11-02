@@ -2,9 +2,10 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import {
     AlertDialog,
     Footer,
-    IconNav,
+    BottomNav,
     Navbar,
     SnackStack,
+    PullToRefresh,
 } from 'components';
 import { PubSub, themes } from 'utils';
 import { GlobalHotKeys } from "react-hotkeys";
@@ -56,12 +57,12 @@ export function App() {
     const [loading, setLoading] = useState(false);
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
     const [business, setBusiness] = useState(null)
-    const { data: businessData } = useQuery(readAssetsQuery, { variables: { input: { files: ['hours.md', 'business.json'] } }  });
+    const { data: businessData } = useQuery(readAssetsQuery, { variables: { input: { files: ['hours.md', 'business.json'] } } });
     const [login] = useMutation(loginMutation);
     const [, setLocation] = useLocation();
 
     useEffect(() => () => {
-        if(timeoutRef.current) clearTimeout(timeoutRef.current);
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
         setLoading(false);
     }, []);
 
@@ -95,7 +96,7 @@ export function App() {
             setSession(session);
             return;
         }
-        login({ variables: { input: {} }}).then((response) => {
+        login({ variables: { input: {} } }).then((response) => {
             setSession(response.data.login);
         }).catch((response) => {
             if (process.env.NODE_ENV === 'development') console.error('Error: cannot login', response);
@@ -139,6 +140,8 @@ export function App() {
                                 color: theme.palette.background.textPrimary,
                             }}
                         >
+                            {/* Pull-to-refresh for PWAs */}
+                            <PullToRefresh />
                             <Box id="content-wrap" sx={{ minHeight: '100vh', }}>
                                 <Navbar
                                     session={session}
@@ -170,7 +173,7 @@ export function App() {
                                     onRedirect={redirect}
                                 />
                             </Box>
-                            <IconNav session={session} userRoles={session?.roles} cart={cart} />
+                            <BottomNav session={session} userRoles={session?.roles} cart={cart} />
                             <Footer session={session} business={business} />
                         </main>
                     </Box>

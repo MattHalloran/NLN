@@ -28,6 +28,14 @@ import {
 import { mutationWrapper } from 'graphql/utils';
 import { uploadAvailabilityVariables } from 'graphql/generated/uploadAvailability';
 
+const helpText = `This page has the following features:  
+
+ - Upload availability from a spreadsheet  
+
+ - Edit/Delete an existing plant  
+
+ - Add/Edit/Delete SKUs`
+
 export const AdminInventoryPage = () => {
     const { palette } = useTheme();
 
@@ -36,9 +44,9 @@ export const AdminInventoryPage = () => {
     // Selected plant data. Used for popup. { plant, selectedSku }
     const [selected, setSelected] = useState<any | null>(null);
 
-    const [sortBy, setSortBy] = useState(SORT_OPTIONS[0].value);
+    const [sortBy, setSortBy] = useState(SORT_OPTIONS[0]);
     const { data: traitOptions } = useQuery(traitOptionsQuery);
-    const { data: plantData } = useQuery(plantsQuery, { variables: { input: { sortBy, searchString, active: showActive } }, pollInterval: 5000 });
+    const { data: plantData } = useQuery(plantsQuery, { variables: { input: { sortBy: sortBy.value, searchString, active: showActive } }, pollInterval: 5000 });
     const [uploadAvailability, { loading }] = useMutation(uploadAvailabilityMutation);
 
     const availabilityUpload = (acceptedFiles) => {
@@ -64,11 +72,7 @@ export const AdminInventoryPage = () => {
                 open={selected !== null}
                 onClose={() => setSelected(null)} />
             <AdminBreadcrumbs textColor={palette.secondary.dark} />
-            <PageTitle title="Manage Inventory" />
-            <h3>This page has the following features:</h3>
-            <p>👉 Upload availability from a spreadsheet</p>
-            <p>👉 Edit/Delete an existing plant</p>
-            <p>👉 Add/Edit/Delete SKUs</p>
+            <PageTitle title="Manage Inventory" helpText={helpText} />
             <Box>
                 {/* <Button onClick={() => editSku({})}>Create new plant</Button> */}
             </Box>
@@ -87,8 +91,9 @@ export const AdminInventoryPage = () => {
                         color={undefined}
                         fullWidth
                         options={SORT_OPTIONS}
+                        getOptionLabel={(o) => o.label}
                         selected={sortBy}
-                        handleChange={(e) => setSortBy(e.target.value)}
+                        handleChange={(c) => setSortBy(c)}
                         inputAriaLabel='sort-plants-selector-label'
                         label="Sort"
                         sx={{ marginBottom: '1em' }}

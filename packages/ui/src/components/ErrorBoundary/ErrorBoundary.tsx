@@ -1,8 +1,5 @@
 import { Component } from "react";
-
-export interface ErrorBoundaryProps {
-    children: React.ReactNode;
-}
+import { ErrorBoundaryProps } from "../types";
 
 export interface ErrorBoundaryState {
     hasError: boolean;
@@ -37,9 +34,10 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                     bottom: 0,
                     paddingLeft: '16px',
                     paddingRight: '16px',
+                    background: 'white',
                 }}
                 >
-                    <div style={{ textAlign: 'center' }}>
+                    <div style={{ textAlign: 'center', color: 'black' }}>
                         <h1>Something went wrong 😔</h1>
                         <p>Try refreshing the page, or closing and reopening the application. If the problem persists,
                             you may contact us at <a href="mailto:info@newlifenurseryinc.com">info@newlifenurseryinc.com</a> and we will try to help you as soon as possible.

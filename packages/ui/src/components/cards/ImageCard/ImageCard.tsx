@@ -57,7 +57,7 @@ export const ImageCard = ({
                 background: (t) => t.palette.primary.main,
                 color: (t) => t.palette.primary.contrastText,
                 borderRadius: 2,
-                margin: 3,
+                margin: 1,
                 cursor: 'pointer',
                 '.MuiMenu-paper': {
                     transitionDuration: '0s !important',

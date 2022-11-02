@@ -8,7 +8,6 @@ import {
     SxProps,
     Theme,
     Typography,
-    useTheme
 } from '@mui/material';
 import { showPrice, getImageSrc, getPlantTrait, getServerUrl } from 'utils';
 import { IMAGE_USE, SKU_STATUS } from '@shared/consts';
@@ -36,8 +35,6 @@ export const PlantCard = ({
     onClick,
     plant,
 }) => {
-    const { palette } = useTheme();
-
     const SkuStatus = {
         [SKU_STATUS.Deleted]: deleted,
         [SKU_STATUS.Inactive]: inactive,
@@ -87,7 +84,7 @@ export const PlantCard = ({
                 background: (t) => t.palette.primary.main,
                 color: (t) => t.palette.primary.contrastText,
                 borderRadius: 2,
-                margin: 3,
+                margin: 2,
                 cursor: 'pointer',
             }}
         >
