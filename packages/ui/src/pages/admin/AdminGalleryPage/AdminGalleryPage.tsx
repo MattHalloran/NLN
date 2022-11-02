@@ -14,11 +14,13 @@ import { mutationWrapper } from 'graphql/utils';
 import { addImagesVariables, addImages_addImages } from 'graphql/generated/addImages';
 import { updateImagesVariables } from 'graphql/generated/updateImages';
 
+const helpText = `This page allows you to manage the images displayed on the gallery page`
+
 export const AdminGalleryPage = () => {
     const { palette } = useTheme();
 
     const [imageData, setImageData] = useState<any[]>([]);
-    const { data: currImages, refetch: refetchImages } = useQuery(imagesByLabelQuery, { variables: { label: 'gallery' } });
+    const { data: currImages, refetch: refetchImages } = useQuery(imagesByLabelQuery, { variables: { input: { label: 'gallery' } } });
     const [addImages] = useMutation(addImagesMutation);
     const [updateImages] = useMutation(updateImagesMutation);
 
@@ -60,8 +62,8 @@ export const AdminGalleryPage = () => {
 
     return (
         <PageContainer>
-            <AdminBreadcrumbs textColor={palette.secondary.dark} />
-            <PageTitle title="Manage Gallery" />
+            <AdminBreadcrumbs textColor={palette.secondary.dark} helpText={helpText} />
+            <PageTitle title="Manage Gallery" helpText={helpText} />
             <Dropzone
                 dropzoneText={'Drag \'n\' drop new images here or click'}
                 onUpload={uploadImages}

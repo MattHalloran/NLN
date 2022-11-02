@@ -68,7 +68,7 @@ export const Hero = ({
                     type="submit"
                     color="secondary"
                     onClick={() => setLocation(APP_LINKS.Shopping)}
-                    sx={{ pointerEvents: 'auto' }}
+                    sx={{ pointerEvents: 'auto', marginTop: 2 }}
                 >
                     Request Quote
                 </Button>

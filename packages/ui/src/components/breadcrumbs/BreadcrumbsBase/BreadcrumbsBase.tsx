@@ -32,7 +32,10 @@ export const BreadcrumbsBase = ({
         <Breadcrumbs
             sx={{
                 ...sx,
-                '& .MuiBreadcrumbs-li > a': {
+                '& .MuiBreadcrumbs-ol': {
+                    justifyContent: 'center',
+                },
+                '& .MuiBreadcrumbs-ol > a': {
                     color: sx?.color || 'inherit',
                     minHeight: '48px', // Lighthouse recommends this for SEO, as it is more clickable
                     display: 'flex',

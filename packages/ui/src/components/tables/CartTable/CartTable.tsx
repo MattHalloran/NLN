@@ -164,8 +164,9 @@ export const CartTable = ({
                         disabled={!editable}
                         required
                         options={DELIVERY_OPTIONS}
-                        selected={cart?.isDelivery ? DELIVERY_OPTIONS[1].value : DELIVERY_OPTIONS[0].value}
-                        handleChange={(e) => handleDeliveryChange(e.target.value)}
+                        getOptionLabel={(o) => o.label}
+                        selected={cart?.isDelivery ? DELIVERY_OPTIONS[1] : DELIVERY_OPTIONS[0]}
+                        handleChange={(c) => handleDeliveryChange(c)}
                         inputAriaLabel='delivery-selector-label'
                         label="Shipping Method" />
                 </Grid>

@@ -1,4 +1,4 @@
-import { BoxProps } from '@mui/material';
+import { BoxProps, SelectChangeEvent, SelectProps } from '@mui/material';
 
 export interface PasswordTextFieldProps extends TextFieldProps {
     autoComplete?: string;
@@ -31,18 +31,18 @@ export interface QuantityBoxProps extends BoxProps {
     value: number;
 }
 
-export interface SelectorProps extends SelectProps {
-    options: any[];
-    getOptionLabel?: (option: any) => string;
-    selected: any;
-    handleChange: (change: any) => any;
-    fullWidth?: boolean;
-    multiple?: boolean;
-    inputAriaLabel?: string;
-    noneOption?: boolean;
-    label?: string;
-    required?: boolean;
-    disabled?: boolean;
+export interface SelectorProps<T extends string | number | { [x: string]: any }> extends SelectProps {
     color?: string;
-    sx?: any;
+    disabled?: boolean;
+    fullWidth?: boolean;
+    getOptionLabel: (option: T) => string;
+    handleChange: (selected: T, event: SelectChangeEvent<any>) => any;
+    inputAriaLabel?: string;
+    label?: string;
+    multiple?: false;
+    noneOption?: boolean;
+    options: T[];
+    required?: boolean;
+    selected: T | null | undefined;
+    sx?: { [x: string]: any };
 }

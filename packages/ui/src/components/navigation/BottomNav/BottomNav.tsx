@@ -2,7 +2,7 @@ import { BottomNavigation, BottomNavigationAction, Badge, useTheme } from '@mui/
 import { useLocation } from '@shared/route';
 import { getUserActions } from 'utils';
 
-export const IconNav = ({
+export const BottomNav = ({
     session,
     userRoles,
     cart,
@@ -22,7 +22,8 @@ export const IconNav = ({
                 zIndex: 5,
                 bottom: 0,
                 paddingBottom: 'env(safe-area-inset-bottom)',
-                // safe-area-inset-bottom is the iOS navigation bar
+                paddingLeft: 'calc(4px + env(safe-area-inset-left))',
+                paddingRight: 'calc(4px + env(safe-area-inset-right))',
                 height: 'calc(56px + env(safe-area-inset-bottom))',
                 width: '100%',
                 display: { xs: 'flex', md: 'none' },
@@ -34,7 +35,8 @@ export const IconNav = ({
                     key={index}
                     label={label}
                     value={value}
-                    onClick={() => { setLocation(link); if (onClick) onClick() }}
+                    href={link}
+                    onClick={(e) => { e.preventDefault(); setLocation(link); if (onClick) onClick() }}
                     icon={<Badge badgeContent={badgeNum} color="error"><Icon /></Badge>}
                     sx={{ color: palette.primary.contrastText }}
                 />

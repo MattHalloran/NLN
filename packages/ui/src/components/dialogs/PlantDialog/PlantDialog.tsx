@@ -3,11 +3,11 @@ import { AppBar, Avatar, Box, Button, Collapse, Dialog, Grid, IconButton, List, 
 import { showPrice, getImageSrc, getPlantTrait, getServerUrl, PubSub } from 'utils';
 import { QuantityBox, Selector, SnackSeverity, Transition } from 'components';
 import { IMAGE_SIZE } from '@shared/consts';
-import _ from 'lodash';
 import Carousel from 'react-gallery-carousel';
 import 'react-gallery-carousel/dist/index.css';
 import { BeeIcon, CloseIcon, DroughtIcon, ExpandLessIcon, ExpandMoreIcon, InfoIcon, LampIcon, LightModeIcon, MapIcon, MoistureIcon, MoveLeftRightIcon, MoveUpDownIcon, PaletteIcon, PHIcon, SaltIcon, ScheduleIcon, ShoppingCartAddIcon, SoilTypeIcon, SpeedIcon, SvgComponent } from '@shared/icons';
 import { PlantDialogProps } from '../types';
+import { plants_plants_skus } from 'graphql/generated/plants';
 
 export const PlantDialog = ({
     plant,
@@ -19,7 +19,7 @@ export const PlantDialog = ({
     const { palette, spacing } = useTheme();
 
     const [quantity, setQuantity] = useState(1);
-    const [orderOptions, setOrderOptions] = useState<any[]>([]);
+    const [orderOptions, setOrderOptions] = useState<plants_plants_skus[]>([]);
     const [detailsOpen, setDetailsOpen] = useState(true);
     // Stores the id of the selected sku
     const [currSku, setCurrSku] = useState(selectedSku);
@@ -29,17 +29,7 @@ export const PlantDialog = ({
     }, [selectedSku])
 
     useEffect(() => {
-        let options = plant?.skus?.map(s => {
-            return {
-                label: `#${s.size} : ${showPrice(s.price)}`,
-                value: s,
-            }
-        }) ?? [];
-        // If options is unchanged, do not set
-        let curr_values = orderOptions.map(o => o.value);
-        let new_values = options.map(o => o.value);
-        if (_.isEqual(curr_values, new_values)) return;
-        setOrderOptions(options);
+        setOrderOptions(plant?.skus ?? []);
     }, [plant, orderOptions])
 
     const images = (plant && Array.isArray(plant.images)) ? plant.images.map(d => ({
@@ -90,8 +80,8 @@ export const PlantDialog = ({
                     fullWidth
                     options={orderOptions}
                     selected={currSku}
-                    getOptionLabel={(sku) => sku.sku}
-                    handleChange={(e) => setCurrSku(e.target.value)}
+                    getOptionLabel={(sku) => `#${sku.size} : ${showPrice(sku.price)}`}
+                    handleChange={(c, e) => {console.log('selector change!', c, e); setCurrSku(c)} }
                     inputAriaLabel='size-selector-label'
                     label="Size"
                     color={palette.primary.contrastText}
@@ -175,7 +165,7 @@ export const PlantDialog = ({
                         {displayedTraitList.length > 0 ? (
                             <>
                                 <ListItem button onClick={handleDetailsClick}>
-                                    <ListItemIcon><InfoIcon /></ListItemIcon>
+                                    <ListItemIcon><InfoIcon fill={palette.background.textPrimary} /></ListItemIcon>
                                     <ListItemText primary="Details" />
                                     {detailsOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                                 </ListItem>

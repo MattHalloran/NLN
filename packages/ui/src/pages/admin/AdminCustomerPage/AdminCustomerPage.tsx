@@ -6,12 +6,15 @@ import {
     AdminBreadcrumbs,
     CustomerCard,
     PageContainer,
+    PageTitle,
     SnackSeverity
 } from 'components';
-import { Box, Button, Typography, useTheme } from '@mui/material';
+import { Box, Button, useTheme } from '@mui/material';
 import { CustomerDialog } from 'components/dialogs/CustomerDialog/CustomerDialog';
 import { NewCustomerDialog } from 'components/dialogs/NewCustomerDialog/NewCustomerDialog';
 import { customers, customers_customers } from 'graphql/generated/customers';
+
+const helpText = `This page allows you to contact you customers, as well as manage their account information. This includes approving and deleting customers.`;
 
 export const AdminCustomerPage = () => {
     const { palette } = useTheme();
@@ -37,10 +40,8 @@ export const AdminCustomerPage = () => {
                 open={newCustomerOpen}
                 onClose={() => setNewCustomerOpen(false)} />
             <AdminBreadcrumbs textColor={palette.secondary.dark} />
-            <Box sx={{ textAlign: 'center' }}>
-                <Typography variant="h3" component="h1">Manage Customers</Typography>
-                <Button color="secondary" onClick={() => setNewCustomerOpen(true)}>Create Customer</Button>
-            </Box>
+            <PageTitle title="Manage Customers" helpText={helpText} />
+            <Button color="secondary" onClick={() => setNewCustomerOpen(true)} sx={{ display: 'block', margin: 'auto' }}>Create Customer</Button>
             <Box sx={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(auto-fill, minmax(300px, .5fr))',

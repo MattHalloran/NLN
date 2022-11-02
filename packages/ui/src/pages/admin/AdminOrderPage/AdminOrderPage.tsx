@@ -16,11 +16,11 @@ import { Box, useTheme } from '@mui/material';
 export const AdminOrderPage = ({ userRoles }) => {
     const { palette, spacing } = useTheme();
 
-    const [filter, setFilter] = useState(ORDER_FILTERS[0].value);
+    const [filter, setFilter] = useState(ORDER_FILTERS[0]);
     // Selected order data. Used for popup
     const [currOrder, setCurrOrder] = useState(null);
     const [orders, setOrders] = useState<any[]>([]);
-    const { error, data, refetch } = useQuery(ordersQuery, { variables: { input: { status: filter !== 'All' ? filter : undefined } }, pollInterval: 5000 });
+    const { error, data, refetch } = useQuery(ordersQuery, { variables: { input: { status: filter.value !== 'All' ? filter.value : undefined } }, pollInterval: 5000 });
     if (error) {
         PubSub.get().publishSnack({ message: error.message, severity: SnackSeverity.Error, data: error });
     }
@@ -46,7 +46,8 @@ export const AdminOrderPage = ({ userRoles }) => {
                 fullWidth
                 options={ORDER_FILTERS}
                 selected={filter}
-                handleChange={(e) => setFilter(e.target.value)}
+                getOptionLabel={(option) => option.label}
+                handleChange={(c) => setFilter(c)}
                 inputAriaLabel='order-type-selector-label'
                 label="Sort By" />
             <h3>Count: {orders.length}</h3>
