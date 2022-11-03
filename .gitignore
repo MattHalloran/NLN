@@ -148,13 +148,17 @@ build/
 #Database
 *.db
 
-#Postgres
-*data/postgres/
-*data/certbot/
+#Persistent data
+data/logs/
+data/postgres/
+data/redis/
+data/stats/
+data/uploads/
 
 #Assets
-*assets/images/
-*server/plant_info/yards/yards*.json
+assets/images/
+packages/server/plant_info/yards/yards*.json
+assets/private/availability-*.*
 
 .eslintcache
 package-lock.json
