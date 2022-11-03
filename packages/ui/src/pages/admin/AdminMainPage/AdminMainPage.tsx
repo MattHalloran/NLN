@@ -22,7 +22,7 @@ export const AdminMainPage = () => {
             <PageTitle title="Manage Site" />
             <Box sx={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(225px, 1fr))',
                 gridGap: '20px',
                 alignItems: 'stretch',
                 marginTop: 2,
