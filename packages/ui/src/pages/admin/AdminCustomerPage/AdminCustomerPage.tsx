@@ -44,8 +44,8 @@ export const AdminCustomerPage = () => {
             <Button color="secondary" onClick={() => setNewCustomerOpen(true)} sx={{ display: 'block', margin: 'auto' }}>Create Customer</Button>
             <Box sx={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(300px, .5fr))',
-                gridGap: '20px',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(225px, .5fr))',
+                gridGap: 0,
             }}>
                 {customers.map((c, index) =>
                     <CustomerCard

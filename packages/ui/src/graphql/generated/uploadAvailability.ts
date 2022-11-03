@@ -3,8 +3,6 @@
 // @generated
 // This file was automatically generated and should not be edited.
 
-import { UploadAvailabilityInput } from "./globalTypes";
-
 // ====================================================
 // GraphQL mutation operation: uploadAvailability
 // ====================================================
@@ -14,5 +12,5 @@ export interface uploadAvailability {
 }
 
 export interface uploadAvailabilityVariables {
-  input: UploadAvailabilityInput;
+  file: any;
 }

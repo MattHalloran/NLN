@@ -76,7 +76,8 @@ const main = async () => {
         introspection: process.env.NODE_ENV === 'development',
         schema: schema,
         context: (c) => context(c), // Allows request and response to be included in the context
-        validationRules: [depthLimit(8)] // Prevents DoS attack from arbitrarily-nested query
+        validationRules: [depthLimit(8)], // Prevents DoS attack from arbitrarily-nested query
+        uploads: false,
     });
     // Start server
     await apollo_options.start();

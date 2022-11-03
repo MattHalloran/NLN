@@ -3,8 +3,6 @@
 // @generated
 // This file was automatically generated and should not be edited.
 
-import { WriteAssetsInput } from "./globalTypes";
-
 // ====================================================
 // GraphQL mutation operation: writeAssets
 // ====================================================
@@ -14,5 +12,5 @@ export interface writeAssets {
 }
 
 export interface writeAssetsVariables {
-  input: WriteAssetsInput;
+  files: any[];
 }

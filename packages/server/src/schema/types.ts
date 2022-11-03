@@ -290,7 +290,7 @@ export type Mutation = {
   deleteSkus: Count;
   login: Customer;
   logout?: Maybe<Scalars['Boolean']>;
-  removeCustomerRole: Boolean;
+  removeCustomerRole?: Maybe<Scalars['Boolean']>;
   requestPasswordChange?: Maybe<Scalars['Boolean']>;
   resetPassword: Customer;
   signUp: Customer;
@@ -538,7 +538,7 @@ export type MutationUpdateSkuArgs = {
 
 
 export type MutationUploadAvailabilityArgs = {
-  input: UploadAvailabilityInput;
+  file: Scalars['Upload'];
 };
 
 
@@ -548,7 +548,7 @@ export type MutationUpsertOrderItemArgs = {
 
 
 export type MutationWriteAssetsArgs = {
-  input: WriteAssetsInput;
+  files: Array<Scalars['Upload']>;
 };
 
 export type Order = {
@@ -867,7 +867,7 @@ export type TraitValuesInput = {
 };
 
 export type UpdateCustomerInput = {
-  currentPassword: Scalars['String'];
+  currentPassword?: InputMaybe<Scalars['String']>;
   input: CustomerInput;
   newPassword?: InputMaybe<Scalars['String']>;
 };
@@ -878,16 +878,8 @@ export type UpdateImagesInput = {
   label?: InputMaybe<Scalars['String']>;
 };
 
-export type UploadAvailabilityInput = {
-  file: Scalars['Upload'];
-};
-
 export type UpsertOrderItemInput = {
   orderId?: InputMaybe<Scalars['ID']>;
   quantity: Scalars['Int'];
   skuId: Scalars['ID'];
-};
-
-export type WriteAssetsInput = {
-  files: Array<Scalars['Upload']>;
 };

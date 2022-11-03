@@ -25,8 +25,7 @@ import {
     Switch,
     useTheme,
 } from '@mui/material';
-import { mutationWrapper } from 'graphql/utils';
-import { uploadAvailabilityVariables } from 'graphql/generated/uploadAvailability';
+import { graphqlWrapperHelper } from 'graphql/utils';
 
 const helpText = `This page has the following features:  
 
@@ -50,10 +49,9 @@ export const AdminInventoryPage = () => {
     const [uploadAvailability, { loading }] = useMutation(uploadAvailabilityMutation);
 
     const availabilityUpload = (acceptedFiles) => {
-        mutationWrapper<any, uploadAvailabilityVariables>({
-            mutation: uploadAvailability,
-            input: { file: acceptedFiles[0] },
-            successCondition: (success) => success === true,
+        graphqlWrapperHelper({
+            call: () => uploadAvailability({ variables: { file: acceptedFiles[0] } }),
+            successCondition: (success: any) => success === true,
             onSuccess: () => PubSub.get().publishAlertDialog({
                 message: 'Availability uploaded. This process can take up to 30 seconds. The page will update automatically. Please be patient💚',
                 buttons: [{
@@ -117,7 +115,7 @@ export const AdminInventoryPage = () => {
             </Grid>
             <Box sx={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(225px, 1fr))',
                 alignItems: 'stretch',
             }}>
                 {plantData?.plants?.map((plant, index) => <PlantCard key={index}

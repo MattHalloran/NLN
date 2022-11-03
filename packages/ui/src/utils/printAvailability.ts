@@ -52,9 +52,11 @@ export const printAvailability = (session: Session, title: string | null) => {
             head: header,
             body: table_data,
         })
-        let windowReference = window.open();
-        let blob = doc.output('blob', { filename: `availability_${date.getDay()}-${date.getMonth()}-${date.getFullYear()}.pdf` });
-        (windowReference as any).location = URL.createObjectURL(blob);
+        // Open in new tab
+        doc.output('dataurlnewwindow');
+        // let windowReference = window.open();
+        // let blob = doc.output('blob', { filename: `availability_${date.getDay()}-${date.getMonth()}-${date.getFullYear()}.pdf` });
+        // (windowReference as any).location = URL.createObjectURL(blob);
     }).catch(error => {
         PubSub.get().publishSnack({ message: 'Failed to load inventory.', severity: SnackSeverity.Error, data: error });
     });

@@ -226,18 +226,10 @@ export interface UpdateImagesInput {
   label?: string | null;
 }
 
-export interface UploadAvailabilityInput {
-  file: any;
-}
-
 export interface UpsertOrderItemInput {
   quantity: number;
   orderId?: string | null;
   skuId: string;
-}
-
-export interface WriteAssetsInput {
-  files: any[];
 }
 
 //==============================================================
