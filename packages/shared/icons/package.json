@@ -2,7 +2,7 @@
     "name": "@shared/icons",
     "author": "New Life Nursery",
     "license": "MIT",
-    "version": "2.0.1",
+    "version": "2.0.2",
     "private": true,
     "description": "Common icons shared between local packages",
     "main": "dist/index.js",

@@ -44,7 +44,7 @@ export const CartTable = ({
 
     const setNotes = (notes) => onUpdate({ ...cart, specialInstructions: notes });
     const setDeliveryDate = (date) => onUpdate({ ...cart, desiredDeliveryDate: +date });
-    const handleDeliveryChange = (value) => onUpdate({ ...cart, isDelivery: value });
+    const handleDeliveryChange = (change: { label: string, value: boolean }) => onUpdate({ ...cart, isDelivery: change.value });
 
     const updateItemQuantity = useCallback((sku, quantity) => {
         let index = cart.items.findIndex(i => i.sku.sku === sku);
@@ -96,6 +96,7 @@ export const CartTable = ({
             display = <NoImageIcon style={{
                 width: '100px',
                 height: '100px',
+                maxHeight: 200,
             }} />
         }
 

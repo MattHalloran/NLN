@@ -59,6 +59,7 @@ export const OrderDialog = ({
             input: { id: order.id, status: status },
             successMessage: () => successMessage,
             errorMessage: () => errorMessage,
+            onSuccess: (data) => setChangedOrder(data),
         })
     }, [order, updateOrder])
 
@@ -69,19 +70,19 @@ export const OrderDialog = ({
     const changeStatus = useMemo(() => {
         const isCustomer = Array.isArray(userRoles) && userRoles.some(r => [ROLES.Customer].includes(r?.role?.title));
         const isOwner = Array.isArray(userRoles) && userRoles.some(r => [ROLES.Owner, ROLES.Admin].includes(r?.role?.title));
-        const isCanceled = [ORDER_STATUS.CanceledByAdmin, ORDER_STATUS.CanceledByCustomer, ORDER_STATUS.Rejected].includes(order?.status);
-        const isOutTheDoor = [ORDER_STATUS.InTransit, ORDER_STATUS.Delivered].includes(order?.status);
+        const isCanceled = [ORDER_STATUS.CanceledByAdmin, ORDER_STATUS.CanceledByCustomer, ORDER_STATUS.Rejected].includes(changedOrder?.status);
+        const isOutTheDoor = [ORDER_STATUS.InTransit, ORDER_STATUS.Delivered].includes(changedOrder?.status);
         return {
             [ORDER_STATUS.CanceledByAdmin]: [
                 isOwner && !isCanceled,
                 'Cancel order', <CancelIcon />, 'Order canceled.', 'Failed to cancel order.'
             ],
             [ORDER_STATUS.CanceledByCustomer]: [
-                isCustomer && !isCanceled && !isOutTheDoor && order?.status !== ORDER_STATUS.Approved,
+                isCustomer && !isCanceled && !isOutTheDoor && changedOrder?.status !== ORDER_STATUS.Approved,
                 'Cancel order', <CancelIcon />, 'Order canceled.', 'Failed to cancel order.'
             ],
             [ORDER_STATUS.PendingCancel]: [
-                isCustomer && order.status === ORDER_STATUS.Approved,
+                isCustomer && changedOrder.status === ORDER_STATUS.Approved,
                 'Request cancellation', <CancelIcon />, 'Order cancellation requested.', 'Failed to request cancellation.'
             ],
             [ORDER_STATUS.Rejected]: [
@@ -89,31 +90,31 @@ export const OrderDialog = ({
                 'Reject order', <ThumbDownIcon />, 'Order reverted back to cart.', 'Failed to change order.'
             ],
             [ORDER_STATUS.Draft]: [
-                isCustomer && order?.status === ORDER_STATUS.Pending,
+                isCustomer && changedOrder?.status === ORDER_STATUS.Pending,
                 'Revoke order submission', <EditIcon />, 'Order reverted back to cart.', 'Failed to change order.'
             ],
             [ORDER_STATUS.Pending]: [
-                isCustomer && [ORDER_STATUS.Draft, ORDER_STATUS.PendingCancel].includes(order?.status),
+                isCustomer && [ORDER_STATUS.Draft, ORDER_STATUS.PendingCancel].includes(changedOrder?.status),
                 'Submit order', <CompleteIcon />, 'Order approved.', 'Failed to approve order.'
             ],
             [ORDER_STATUS.Approved]: [
-                isOwner && (order?.status === ORDER_STATUS.Pending || isCanceled),
+                isOwner && (changedOrder?.status === ORDER_STATUS.Pending || isCanceled),
                 'Approve Order', <ThumbUpIcon />, 'Order approved.', 'Failed to approve order.'
             ],
             [ORDER_STATUS.Scheduled]: [
-                isOwner && [ORDER_STATUS.Approved, ORDER_STATUS.InTransit].includes(order?.status),
+                isOwner && [ORDER_STATUS.Approved, ORDER_STATUS.InTransit].includes(changedOrder?.status),
                 'Set order status to "scheduled"', <ScheduleIcon />, 'Order status set to "scheduled".', 'Failed to update order status.'
             ],
             [ORDER_STATUS.InTransit]: [
-                isOwner && [ORDER_STATUS.Scheduled, ORDER_STATUS.Delivered].includes(order?.status),
+                isOwner && [ORDER_STATUS.Scheduled, ORDER_STATUS.Delivered].includes(changedOrder?.status),
                 'Set order status to "in transit"', <DeliveryTruckIcon />, 'Order status set to "in transit".', 'Failed to update order status.'
             ],
             [ORDER_STATUS.Delivered]: [
-                isOwner && order?.status === ORDER_STATUS.InTransit,
+                isOwner && changedOrder?.status === ORDER_STATUS.InTransit,
                 'Set order status to "Delivered"', <SuccessIcon />, 'Order status set to "delivered".', 'Failed to update order status.'
             ]
         }
-    }, [order, userRoles])
+    }, [changedOrder, userRoles])
 
     // Filter out order mutation actions that are not currently available
     const availableActions = Object.entries(changeStatus).filter(([, value]) => value[0]).map(([status, statusData]) => ({
@@ -125,7 +126,7 @@ export const OrderDialog = ({
     }))
 
     let status_string;
-    let status_index = findWithAttr(ORDER_FILTERS, 'value', order?.status);
+    let status_index = findWithAttr(ORDER_FILTERS, 'value', changedOrder?.status);
     if (status_index >= 0) {
         status_string = `Status: ${ORDER_FILTERS[status_index].label}`
     }
@@ -146,7 +147,7 @@ export const OrderDialog = ({
                         fullWidth
                         startIcon={action.icon}
                         onClick={() => setOrderStatus(action.status, action.successMessage, action.failureMessage)}
-                        disabled={loading || !_.isEqual(order, changedOrder)}
+                        disabled={loading}
                     >{action.displayText}</Button>
                 </Grid>
             ))}
@@ -179,7 +180,7 @@ export const OrderDialog = ({
             }}>
                 <Box sx={{ padding: spacing(1) }}>
                     <Typography variant="body1" gutterBottom>{status_string}</Typography>
-                    <CartTable cart={order} editable={editableStatuses.includes(order?.status)} onUpdate={(data) => setChangedOrder(data)} />
+                    <CartTable cart={changedOrder} editable={editableStatuses.includes(changedOrder?.status)} onUpdate={(data) => setChangedOrder(data)} />
                 </Box>
                 <Box sx={{
                     background: palette.primary.main,
