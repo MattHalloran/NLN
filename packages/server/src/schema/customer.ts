@@ -322,7 +322,7 @@ export const resolvers = {
                         business: { select: { id: true } }
                     }
                 });
-                if (!customer?.password || !bcrypt.compareSync(input.currentPassword, customer.password)) throw new CustomError(CODE.BadCredentials);
+                if (!customer?.password || !input.currentPassword || !bcrypt.compareSync(input.currentPassword, customer.password)) throw new CustomError(CODE.BadCredentials);
             }
             const user = await upsertCustomer({
                 prisma: prisma,

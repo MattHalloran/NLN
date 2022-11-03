@@ -6,6 +6,7 @@ import { BreadcrumbsBaseProps } from '../types';
 import { useMemo } from 'react';
 import { useLocation } from '@shared/route';
 import { openLink } from 'utils';
+import { noSelect } from 'styles';
 
 export const BreadcrumbsBase = ({
     paths,
@@ -21,7 +22,8 @@ export const BreadcrumbsBase = ({
             <Link
                 key={p.text}
                 color={textColor}
-                onClick={() => openLink(setLocation, p.link)}
+                href={p.link}
+                onClick={(e) => { e.preventDefault(); openLink(setLocation, p.link) }}
             >
                 {window.location.pathname === p.link ? <b>{p.text}</b> : p.text}
             </Link>
@@ -35,13 +37,14 @@ export const BreadcrumbsBase = ({
                 '& .MuiBreadcrumbs-ol': {
                     justifyContent: 'center',
                 },
-                '& .MuiBreadcrumbs-ol > a': {
+                '& .MuiBreadcrumbs-la > a': {
                     color: sx?.color || 'inherit',
                     minHeight: '48px', // Lighthouse recommends this for SEO, as it is more clickable
                     display: 'flex',
                     flexDirection: 'row',
                     alignItems: 'center',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    ...noSelect,
                 }
             }}
             separator={separator}

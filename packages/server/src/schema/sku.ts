@@ -38,10 +38,6 @@ export const typeDef = gql`
         discountIds: [ID!]
     }
 
-    input UploadAvailabilityInput {
-        file: Upload!
-    }
-
     input SkusInput {
         ids: [ID!]
         sortBy: SkuSortBy
@@ -71,7 +67,7 @@ export const typeDef = gql`
     }
 
     extend type Mutation {
-        uploadAvailability(input: UploadAvailabilityInput!): Boolean
+        uploadAvailability(file: Upload!): Boolean
         addSku(input: SkuInput!): Sku!
         updateSku(input: SkuInput!): Sku!
         deleteSkus(input: DeleteManyInput!): Count!
@@ -123,7 +119,7 @@ export const resolvers = {
     },
     Mutation: {
         uploadAvailability: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<boolean> => {
-            const { createReadStream, mimetype } = await input.file;
+            const { createReadStream, mimetype } = await input as any;
             const stream = createReadStream();
             const filename = `private/availability-${Date.now()}.xls`;
             const { success, filename: finalFileName } = await saveFile(stream, filename, mimetype, false, ['.csv', '.xls', '.xlsx', 'text/csv', 'application/vnd.ms-excel', 'application/csv', 'text/x-csv', 'application/x-csv', 'text/comma-separated-values', 'text/x-comma-separated-values']);

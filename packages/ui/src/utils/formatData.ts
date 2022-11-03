@@ -4,7 +4,7 @@
 import _ from 'lodash';
 
 // Convert price stored in database to user-friendly version
-export const showPrice = (price) => {
+export const showPrice = (price: string | number | null) => {
     if (!price) return 'N/A';
     let result = Number(price);
     if (result < 0) return 'N/A';
@@ -13,7 +13,7 @@ export const showPrice = (price) => {
 }
 
 // Convert display price to database representation
-export const storePrice = (price) => {
+export const storePrice = (price: string | number) => {
     // Convert to string, if needed
     let priceString = price + '';
     // Remove unit
@@ -25,7 +25,7 @@ export const storePrice = (price) => {
 }
 
 // '15558675309' -> '+1 (555) 867-5309'
-export const showPhone = (phone) => {
+export const showPhone = (phone: string | number) => {
     var cleaned = ('' + phone).replace(/\D/g, '');
     var match = cleaned.match(/^(1|)?(\d{3})(\d{3})(\d{4})$/);
     if (match) {
@@ -36,10 +36,16 @@ export const showPhone = (phone) => {
 }
 
 // '+1 (555) 867-5309' -> '15558675309'
-export const storePhone = (phone) => {
-
+export const storePhone = (phone: string) => {
+    var cleaned = ('' + phone).replace(/\D/g, '');
+    // Remove spaces, and special characters
+    var match = cleaned.match(/^(1|)?(\d{3})(\d{3})(\d{4})$/);  
+    if (match) {
+        return match[2] + match[3] + match[4];
+    }
+    return null;
 }
 
 // '15558675309' -> 'tel:+15558675309'
-export const phoneLink = (phone) => `tel:${phone}`
-export const emailLink = (address, subject = '', body = '') => `mailto:${address}?subject=${subject}&body=${body}`;
+export const phoneLink = (phone: string | number) => `tel:${phone}`
+export const emailLink = (address: string, subject: string = '', body: string = '') => `mailto:${address}?subject=${subject}&body=${body}`;

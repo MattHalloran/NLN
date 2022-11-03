@@ -140,7 +140,7 @@ export const CustomerCard = ({
             background: palette.primary.main,
             color: palette.primary.contrastText,
             borderRadius: 2,
-            margin: 3,
+            margin: 2,
             cursor: 'pointer',
         }}>
             {phoneDialogOpen ? (
@@ -158,7 +158,7 @@ export const CustomerCard = ({
             <CardContent
                 onClick={() => onEdit(customer)}
                 sx={{
-                    padding: 8,
+                    padding: 2,
                     position: 'inherit',
                 }}
             >

@@ -116,15 +116,21 @@ function resizeOptions(width: number, height: number): { [key: string]: number }
  */
 export async function saveFile(stream: any, filename: string, mimetype: any, overwrite?: boolean, acceptedTypes?: string[]) {
     try {
+        console.log('saveFile start', filename, stream)
         const { name, ext, folder } = await (overwrite ? clean(filename, 'public') : findFileName(filename));
+        console.log('saveFile clean', name, ext, folder)
         if (name === null) throw Error('Could not create a valid file name');
         if (acceptedTypes) {
             if (Array.isArray(acceptedTypes) && !acceptedTypes.some(type => mimetype.startsWith(type) || ext === type)) {
+            console.log('not an accepted type')
+
                 throw Error('File type not accepted');
             }
         }
         // Download the file
+        console.log('awaiting download', `${UPLOAD_DIR}/${folder}/${name}${ext}`);
         await stream.pipe(fs.createWriteStream(`${UPLOAD_DIR}/${folder}/${name}${ext}`));
+        console.log('downloaded!')
         return {
             success: true,
             filename: `${folder}/${name}${ext}`
@@ -321,12 +327,17 @@ export async function readFiles(files: string[]) {
  * @param acceptedTypes String or array of accepted file types, in mimetype form (e.g. 'image/png', 'application/vnd.ms-excel')
  * @returns Array of each filename saved, or null if unsuccessful
  */
-export async function saveFiles(files: any, overwrite: boolean = true, acceptedTypes: string[] = []) {
+export async function saveFiles(files: any, overwrite: boolean = true, acceptedTypes?: string[]) {
     let data = [];
+    console.log('in savefiles', files);
     for (const file of files) {
+        console.log('file', file);
         const { createReadStream, filename, mimetype } = await file;
+        console.log('filename', filename, 'mimetype', mimetype);
         const stream = createReadStream();
+        console.log('going to save file');
         const { success, filename: finalFilename } = await saveFile(stream, filename, mimetype, overwrite, acceptedTypes);
+        console.log('saved file', finalFilename, success);
         data.push(success ? finalFilename : null);
     }
     return data;

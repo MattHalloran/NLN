@@ -5,6 +5,7 @@ import { readFiles, saveFiles } from '../utils';
 import _ from 'lodash';
 import { IWrap, RecursivePartial } from '../types';
 import { Context } from '../context';
+import { ReadAssetsInput } from './types';
 
 export const typeDef = gql`
     scalar Date
@@ -36,9 +37,6 @@ export const typeDef = gql`
     input ReadAssetsInput {
         files: [String!]!
     }
-    input WriteAssetsInput {
-        files: [Upload!]!
-    }
     # Base query. Must contain something,
     # which can be as simple as '_empty: String'
     type Query {
@@ -49,7 +47,7 @@ export const typeDef = gql`
     # which can be as simple as '_empty: String'
     type Mutation {
         # _empty: String
-        writeAssets(input: WriteAssetsInput!): Boolean
+        writeAssets(files: [Upload!]!): Boolean
     }
 `
 
@@ -70,12 +68,12 @@ export const resolvers = {
         }
     }),
     Query: {
-        readAssets: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
+        readAssets: async (_parent: undefined, { input }: IWrap<ReadAssetsInput>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
             return await readFiles(input.files);
         },
     },
     Mutation: {
-        writeAssets: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<boolean> => {
+        writeAssets: async (_parent: undefined, input: any, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<boolean> => {
             const data = await saveFiles(input.files);
             // Any failed writes will return null
             return !data.some(d => d === null)

@@ -53,7 +53,7 @@ export const AdminOrderPage = ({ userRoles }) => {
             <h3>Count: {orders.length}</h3>
             <Box sx={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(225px, 1fr))',
                 gridGap: '20px',
             }}>
                 {orders?.map((o) => <OrderCard key={o.id} order={o} onEdit={() => setCurrOrder(o)} />)}
