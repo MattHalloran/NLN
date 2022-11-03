@@ -292,13 +292,13 @@ export const EditPlantDialog = ({
                         {currSkuIndex >= 0 ?
                             <Tooltip title="Delete SKU">
                                 <IconButton onClick={removeSku}>
-                                    <DeleteIcon />
+                                    <DeleteIcon fill={palette.background.textPrimary} />
                                 </IconButton>
                             </Tooltip>
                             : null}
                         <Tooltip title="New SKU">
                             <IconButton onClick={newSku}>
-                                <CreateIcon />
+                                <CreateIcon fill={palette.background.textPrimary} />
                             </IconButton>
                         </Tooltip>
                     </Box>

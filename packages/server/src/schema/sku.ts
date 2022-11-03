@@ -118,8 +118,8 @@ export const resolvers = {
         }
     },
     Mutation: {
-        uploadAvailability: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<boolean> => {
-            const { createReadStream, mimetype } = await input as any;
+        uploadAvailability: async (_parent: undefined, input: any, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<boolean> => {
+            const { createReadStream, mimetype } = await input.file;
             const stream = createReadStream();
             const filename = `private/availability-${Date.now()}.xls`;
             const { success, filename: finalFileName } = await saveFile(stream, filename, mimetype, false, ['.csv', '.xls', '.xlsx', 'text/csv', 'application/vnd.ms-excel', 'application/csv', 'text/x-csv', 'application/x-csv', 'text/comma-separated-values', 'text/x-comma-separated-values']);
