@@ -1,27 +1,28 @@
 {
-  "compilerOptions": {
-    "target": "es5",
-    "baseUrl": "./src",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
+    "compilerOptions": {
+      "target": "es6",
+      "rootDir": "./src",
+      "outDir": "./dist",
+      "lib": [
+        "es6"
+      ],
+      "allowJs": true,
+      "skipLibCheck": true,
+      "esModuleInterop": true,
+      "allowSyntheticDefaultImports": true,
+      "strict": true,
+      "forceConsistentCasingInFileNames": true,
+      "noFallthroughCasesInSwitch": true,
+      "moduleResolution": "node",
+      "resolveJsonModule": true,
+      "isolatedModules": true,
+      "removeComments": true
+    },
+    "include": [
+      "src"
     ],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "strict": true,
-    "forceConsistentCasingInFileNames": true,
-    "noFallthroughCasesInSwitch": true,
-    "module": "esnext",
-    "moduleResolution": "node",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true,
-    "jsx": "react-jsx"
-  },
-  "include": [
-    "src"
-  ]
-}
+    "exclude": [
+      "node_modules"
+    ],
+  }
+  
