@@ -12,6 +12,7 @@ import { IWrap, RecursivePartial } from '../types';
 import { Context } from '../context';
 import { GraphQLResolveInfo } from 'graphql';
 import { AccountStatus, AddCustomerRoleInput, ChangeCustomerStatusInput, Count, Customer, CustomerInput, DeleteCustomerInput, LoginInput, RemoveCustomerRoleInput, RequestPasswordChangeInput, ResetPasswordInput, SignUpInput, UpdateCustomerInput } from './types';
+import { logger, LogLevel } from '../logger';
 
 const LOGIN_ATTEMPTS_TO_SOFT_LOCKOUT = 3;
 const SOFT_LOCKOUT_DURATION = 15 * 60 * 1000;
@@ -152,7 +153,9 @@ export const resolvers = {
     },
     Mutation: {
         login: async (_parent: undefined, { input }: IWrap<LoginInput>, { prisma, req, res }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<Customer>> => {
+            logger.log(LogLevel.info, 'Logging in user a...', input);
             const prismaInfo = getCustomerSelect(info);
+            logger.log(LogLevel.info, 'Logging in user b...');
             // If username and password wasn't passed, then use the session cookie data to validate
             if (!input.email || !input.password) {
                 if (req.customerId && req.roles && req.roles.length > 0) {
@@ -164,6 +167,7 @@ export const resolvers = {
                     }
                     res.clearCookie(COOKIE.Jwt);
                 }
+                logger.log(LogLevel.info, 'Logging in user failed c...');
                 throw new CustomError(CODE.BadCredentials);
             }
             // Validate input format
@@ -182,6 +186,7 @@ export const resolvers = {
                 })
                 // Send new verification email
                 sendResetPasswordLink(input.email, customer.id, requestCode);
+                logger.log(LogLevel.info, 'Logging in user failed d...');
                 throw new CustomError(CODE.MustResetPassword);
             }
             // Validate verification code, if supplied
@@ -205,7 +210,10 @@ export const resolvers = {
                 [AccountStatus.SoftLock]: CODE.SoftLockout,
                 [AccountStatus.HardLock]: CODE.HardLockout
             }
-            if (customer.status in status_to_code) throw new CustomError((status_to_code as any)[customer.status]);
+            if (customer.status in status_to_code) {
+                logger.log(LogLevel.info, 'Logging in user failed e...', customer.status);
+                throw new CustomError((status_to_code as any)[customer.status]);
+            }
             // Now we can validate the password
             const validPassword = customer.password && bcrypt.compareSync(input.password, customer.password);
             if (validPassword) {
@@ -224,6 +232,7 @@ export const resolvers = {
                 const cart = await getCart(prisma, info, customer.id);
                 const userData: any = await prisma.customer.findUnique({ where: { id: customer.id }, ...prismaInfo });
                 if (cart) userData.cart = cart;
+                logger.log(LogLevel.info, 'Logging in user returning data...', userData);
                 return userData;
             } else {
                 let new_status = AccountStatus.Unlocked;
@@ -237,6 +246,7 @@ export const resolvers = {
                     where: { id: customer.id },
                     data: { status: new_status, loginAttempts: login_attempts, lastLoginAttempt: new Date().toISOString() }
                 })
+                logger.log(LogLevel.info, 'Logging in user failed f...');
                 throw new CustomError(CODE.BadCredentials);
             }
         },
