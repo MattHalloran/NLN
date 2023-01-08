@@ -1,5 +1,5 @@
 import { ApolloError } from 'apollo-server-express';
-import { genErrorCode, logger, LogLevel } from './logger';
+import { logger, LogLevel } from './logger';
 
 export class CustomError extends ApolloError {
     constructor(error: any, message?: any, logMeta?: { [key: string]: any }) {
@@ -15,7 +15,7 @@ export async function validateArgs(schema: any, args: any) {
     try {
         await schema.validate(args, { abortEarly: false });
     } catch (err: any) {
-        console.info('Invalid arguments')
+        logger.log(LogLevel.info, 'Failed to validate args', args);
         throw new CustomError({
             code: 'ARGS_VALIDATION_FAILED',
             message: err.errors
