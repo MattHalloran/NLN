@@ -64,18 +64,11 @@
         "analyze": "source-map-explorer build/static/js/*",
         "graphql-generate": "apollo client:codegen --target typescript --endpoint=http://localhost:5329/api/v1 --outputFlat --includes \"src/graphql/**/*.ts\" --excludes \"src/graphql/generated\" src/graphql/generated"
     },
-    "browserslist": {
-        "production": [
-            ">0.2%",
-            "not dead",
-            "not op_mini all"
-        ],
-        "development": [
-            "last 1 chrome version",
-            "last 1 firefox version",
-            "last 1 safari version"
-        ]
-    },
+    "browserslist": [
+        ">0.2%",
+        "not dead",
+        "not op_mini all"
+    ],
     "devDependencies": {
         "@types/apollo-upload-client": "^17.0.0",
         "@types/js-cookie": "^2.2.6",
