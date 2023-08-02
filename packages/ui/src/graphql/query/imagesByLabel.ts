@@ -1,5 +1,5 @@
-import { gql } from 'graphql-tag';
-import { imageFields } from 'graphql/fragment/imageFields';
+import { gql } from "graphql-tag";
+import { imageFields } from "graphql/fragment/imageFields";
 
 export const imagesByLabelQuery = gql`
     ${imageFields}
@@ -8,4 +8,4 @@ export const imagesByLabelQuery = gql`
             ...imageFields
         }
     }
-`
+`;

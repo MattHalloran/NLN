@@ -1,17 +1,17 @@
+import { FormControl, FormHelperText, IconButton, InputAdornment, InputLabel, OutlinedInput, useTheme } from "@mui/material";
+import { InvisibleIcon, VisibleIcon } from "icons";
 import { useCallback, useState } from "react";
-import { FormControl, FormHelperText, IconButton, InputAdornment, InputLabel, OutlinedInput, useTheme } from '@mui/material';
 import { PasswordTextFieldProps } from "../types";
-import { InvisibleIcon, VisibleIcon } from "@shared/icons";
 
 export const PasswordTextField = ({
-    autoComplete = 'current-password',
+    autoComplete = "current-password",
     autoFocus = false,
     error = false,
     fullWidth = true,
     helperText = undefined,
-    id = 'password',
+    id = "password",
     label,
-    name = 'password',
+    name = "password",
     onBlur = () => { },
     onChange,
     value,
@@ -27,11 +27,11 @@ export const PasswordTextField = ({
 
     return (
         <FormControl fullWidth={fullWidth} variant="outlined" {...props}>
-            <InputLabel htmlFor={id}>{label ?? 'Password'}</InputLabel>
+            <InputLabel htmlFor={id}>{label ?? "Password"}</InputLabel>
             <OutlinedInput
                 id={id}
                 name={name}
-                type={showPassword ? 'text' : 'password'}
+                type={showPassword ? "text" : "password"}
                 value={value}
                 onBlur={onBlur}
                 onChange={onChange}
@@ -46,16 +46,16 @@ export const PasswordTextField = ({
                             edge="end"
                         >
                             {
-                            showPassword ? 
-                            <InvisibleIcon fill={palette.background.textSecondary} /> : 
-                            <VisibleIcon fill={palette.background.textSecondary} />
+                                showPassword ?
+                                    <InvisibleIcon fill={palette.background.textSecondary} /> :
+                                    <VisibleIcon fill={palette.background.textSecondary} />
                             }
                         </IconButton>
                     </InputAdornment>
                 }
-                label={label ?? 'Password'}
+                label={label ?? "Password"}
             />
             <FormHelperText id="adornment-password-error-text" sx={{ color: palette.error.main }}>{helperText}</FormHelperText>
         </FormControl>
-    )
-}
+    );
+};

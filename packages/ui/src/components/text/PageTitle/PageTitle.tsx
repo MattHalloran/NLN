@@ -13,13 +13,13 @@ export const PageTitle = ({
                 component="h1"
                 variant="h3"
                 sx={{
-                    textAlign: 'center',
+                    textAlign: "center",
                     sx: { marginTop: 2, marginBottom: 2 },
-                    fontSize: { xs: '2rem', sm: '2.5rem', md: '3rem' },
+                    fontSize: { xs: "2rem", sm: "2.5rem", md: "3rem" },
                     ...(sxs?.text || {}),
                 }}
             >{title}</Typography>
-        )
+        );
     }
     return (
         <Stack
@@ -36,12 +36,12 @@ export const PageTitle = ({
                 component="h1"
                 variant="h3"
                 sx={{
-                    textAlign: 'center',
-                    fontSize: { xs: '2rem', sm: '2.5rem', md: '3rem' },
+                    textAlign: "center",
+                    fontSize: { xs: "2rem", sm: "2.5rem", md: "3rem" },
                     ...(sxs?.text || {}),
                 }}
             >{title}</Typography>
-            <HelpButton markdown={helpText} sx={{ width: '40px', height: '40px' }} />
+            <HelpButton markdown={helpText} sx={{ width: "40px", height: "40px" }} />
         </Stack>
-    )
-}
+    );
+};

@@ -10,45 +10,45 @@
 # -d: Deploy to VPS (y/N)
 # -h: Show this help message
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-source "${HERE}/prettify.sh"
+. "${HERE}/prettify.sh"
 
 # Read arguments
 while getopts ":v:d:h" opt; do
-  case $opt in
+    case $opt in
     v)
-      VERSION=$OPTARG
-      ;;
+        VERSION=$OPTARG
+        ;;
     d)
-      DEPLOY=$OPTARG
-      ;;
+        DEPLOY=$OPTARG
+        ;;
     h)
-      echo "Usage: $0 [-v VERSION] [-d DEPLOY] [-h]"
-      echo "  -v --version: Version number to use (e.g. \"1.0.0\")"
-      echo "  -d --deploy: Deploy to VPS (y/N)"
-      echo "  -h --help: Show this help message"
-      exit 0
-      ;;
+        echo "Usage: $0 [-v VERSION] [-d DEPLOY] [-h]"
+        echo "  -v --version: Version number to use (e.g. \"1.0.0\")"
+        echo "  -d --deploy: Deploy to VPS (y/N)"
+        echo "  -h --help: Show this help message"
+        exit 0
+        ;;
     \?)
-      echo "Invalid option: -$OPTARG" >&2
-      exit 1
-      ;;
+        echo "Invalid option: -$OPTARG" >&2
+        exit 1
+        ;;
     :)
-      echo "Option -$OPTARG requires an argument." >&2
-      exit 1
-      ;;
-  esac
+        echo "Option -$OPTARG requires an argument." >&2
+        exit 1
+        ;;
+    esac
 done
 
 # Load variables from .env file
 if [ -f "${HERE}/../.env" ]; then
-    source "${HERE}/../.env"
+    . "${HERE}/../.env"
 else
     error "Could not find .env file. Exiting..."
     exit 1
 fi
 
 # Check for required variables
-check_var () {
+check_var() {
     if [ -z "${!1}" ]; then
         error "Variable ${1} is not set. Exiting..."
         exit 1
@@ -86,10 +86,10 @@ cd ${HERE}/../packages/ui
 # Create local .env file
 touch .env
 # Set environment variables
-echo "REACT_APP_SERVER_LOCATION=${SERVER_LOCATION}" >> .env
-echo "REACT_APP_PORT_SERVER=${PORT_SERVER}" >> .env
-echo "REACT_APP_SERVER_URL=${SERVER_URL}" >> .env
-echo "REACT_APP_SITE_IP=${SITE_IP}" >> .env
+echo "REACT_APP_SERVER_LOCATION=${SERVER_LOCATION}" >>.env
+echo "REACT_APP_PORT_SERVER=${PORT_SERVER}" >>.env
+echo "REACT_APP_SERVER_URL=${SERVER_URL}" >>.env
+echo "REACT_APP_SITE_IP=${SITE_IP}" >>.env
 # Set trap to remove .env file on exit
 trap "rm .env" EXIT
 
@@ -102,7 +102,7 @@ if [ $? -ne 0 ]; then
 fi
 
 # Generate sitemap.xml
-ts-node --esm --experimental-specifier-resolution node  ./src/sitemap.ts 
+ts-node --esm --experimental-specifier-resolution node ./src/sitemap.ts
 if [ $? -ne 0 ]; then
     error "Failed to generate sitemap.xml"
     echo "${HERE}/../packages/ui/src/sitemap.ts"
@@ -116,9 +116,9 @@ else
     info "Creating build/.well-known/brave-rewards-verification.txt file..."
     mkdir build/.well-known
     cd ${HERE}/../packages/ui/build/.well-known
-    echo "This is a Brave Rewards publisher verification file.\n" > brave-rewards-verification.txt
-    echo "Domain: newlifenurseryinc.com" >> brave-rewards-verification.txt
-    echo "Token: ${BRAVE_REWARDS_TOKEN}" >> brave-rewards-verification.txt
+    echo "This is a Brave Rewards publisher verification file.\n" >brave-rewards-verification.txt
+    echo "Domain: newlifenurseryinc.com" >>brave-rewards-verification.txt
+    echo "Token: ${BRAVE_REWARDS_TOKEN}" >>brave-rewards-verification.txt
     cd ../..
 fi
 

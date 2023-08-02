@@ -1,11 +1,12 @@
-import { gql } from 'apollo-server-express';
-import { CODE, IMAGE_SIZE } from '@shared/consts';
-import { CustomError } from '../error';
-import { deleteImage, saveImage } from '../utils';
-import { PrismaSelect } from '@paljs/plugins';
-import { IWrap, RecursivePartial } from '../types';
-import { Context } from '../context';
-import { GraphQLResolveInfo } from 'graphql';
+import { CODE, IMAGE_SIZE } from "@local/shared";
+import { PrismaSelect } from "@paljs/plugins";
+import { gql } from "apollo-server-express";
+import { GraphQLResolveInfo } from "graphql";
+import { Context } from "../context";
+import { CustomError } from "../error";
+import { IWrap, RecursivePartial } from "../types";
+import { deleteImage, saveImage } from "../utils";
+import { DeleteImagesByLabelInput, DeleteImagesInput, ImagesByLabelInput, UpdateImagesInput } from "./types";
 
 export const typeDef = gql`
     enum ImageSize {
@@ -81,37 +82,37 @@ export const typeDef = gql`
         # Images with labels that are not in this request will be saved
         deleteImagesByLabel(input: DeleteImagesByLabelInput!): Count!
     }
-`
+`;
 
 export const resolvers = {
     ImageSize: IMAGE_SIZE,
     Query: {
-        imagesByLabel: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
+        imagesByLabel: async (_parent: undefined, { input }: IWrap<ImagesByLabelInput>, { prisma }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
             // Get all images with label
             let images = await prisma.image.findMany({
                 where: { image_labels: { some: { label: input.label } } },
-                select: { hash: true, image_labels: { select: { label: true, index: true } } }
-            })
+                select: { hash: true, image_labels: { select: { label: true, index: true } } },
+            });
             // Sort by position
             images = images.sort((a, b) => {
                 const aIndex = a.image_labels.find((l) => l.label === input.label);
                 const bIndex = b.image_labels.find((l) => l.label === input.label);
                 return (aIndex?.index ?? 0) - (bIndex?.index ?? 0);
-            })
-            return await prisma.image.findMany({ 
-                where: { hash: { in: images.map((i) => i.hash) } },
-                ...(new PrismaSelect(info).value)
             });
-        }
+            return await prisma.image.findMany({
+                where: { hash: { in: images.map((i) => i.hash) } },
+                ...(new PrismaSelect(info).value),
+            });
+        },
     },
     Mutation: {
-        addImages: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
+        addImages: async (_parent: undefined, { input }: IWrap<any>, { req }: Context): Promise<RecursivePartial<any> | null> => {
             // Must be admin
             if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
             // Check for valid arguments
             // If alts provided, must match length of files
             if (input.alts && input.alts.length !== input.files.length) throw new CustomError(CODE.InvalidArgs);
-            let results = [];
+            const results: any[] = [];
             // Loop through every image passed in
             for (let i = 0; i < input.files.length; i++) {
                 results.push(await saveImage({
@@ -119,12 +120,12 @@ export const resolvers = {
                     alt: input.alts ? input.alts[i] : undefined,
                     description: input.descriptions ? input.descriptions[i] : undefined,
                     labels: input.labels,
-                    errorOnDuplicate: false
-                }))
+                    errorOnDuplicate: false,
+                }));
             }
             return results;
         },
-        updateImages: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<boolean> => {
+        updateImages: async (_parent: undefined, { input }: IWrap<UpdateImagesInput>, { prisma, req }: Context): Promise<boolean> => {
             // Must be admin
             if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
             // Loop through update data passed in
@@ -134,17 +135,17 @@ export const resolvers = {
                     // Update position in label
                     await prisma.image_labels.update({
                         where: { hash_label: { hash: curr.hash, label: input.label } },
-                        data: { index: i }
-                    })
+                        data: { index: i },
+                    });
                 }
                 // Update alt and description
                 await prisma.image.update({
                     where: { hash: curr.hash },
-                    data: { 
+                    data: {
                         alt: curr.alt,
                         description: curr.description,
-                    }
-                })
+                    },
+                });
             }
             if (!input.deleting) return true;
             // Loop through delete data passed in
@@ -153,7 +154,7 @@ export const resolvers = {
             }
             return true;
         },
-        deleteImages: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<any> => {
+        deleteImages: async (_parent: undefined, { input }: IWrap<DeleteImagesInput>, { req }: Context): Promise<any> => {
             // Must be admin
             if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
             let count = 0;
@@ -162,17 +163,17 @@ export const resolvers = {
             }
             return count;
         },
-        deleteImagesByLabel: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<any> => {
+        deleteImagesByLabel: async (_parent: undefined, { input }: IWrap<DeleteImagesByLabelInput>, { prisma, req }: Context): Promise<any> => {
             // Must be admin
             if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
             const imagesToDelete = await prisma.image.findMany({
                 where: { image_labels: { every: { label: { in: input.labels } } } },
                 select: {
-                    hash: true
-                }
+                    hash: true,
+                },
             });
             await prisma.image_labels.deleteMany({
-                where: { label: { in: input.labels }}
+                where: { label: { in: input.labels } },
             });
             let count = 0;
             for (const image of imagesToDelete) {
@@ -180,5 +181,5 @@ export const resolvers = {
             }
             return count;
         },
-    }
-}
+    },
+};

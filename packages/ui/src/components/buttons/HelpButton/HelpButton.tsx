@@ -1,12 +1,12 @@
-import { useCallback, useState } from 'react';
-import { Box, IconButton, Menu, Tooltip, useTheme } from '@mui/material';
-import Markdown from 'markdown-to-jsx';
-import { HelpButtonProps } from '../types';
-import { MenuTitle } from 'components/dialogs';
-import { HelpIcon } from '@shared/icons';
+import { Box, IconButton, Menu, Tooltip, useTheme } from "@mui/material";
+import { MenuTitle } from "components/dialogs";
+import { HelpIcon } from "icons";
+import Markdown from "markdown-to-jsx";
+import { useCallback, useState } from "react";
+import { HelpButtonProps } from "../types";
 
 export const HelpButton = ({
-    id = 'help-details-menu',
+    id = "help-details-menu",
     markdown,
     onClick,
     sxRoot,
@@ -27,17 +27,17 @@ export const HelpButton = ({
     return (
         <Box
             sx={{
-                display: 'inline',
+                display: "inline",
                 ...sxRoot,
             }}
         >
-            <Tooltip placement='top' title={!open ? "Open Help Menu" : ''}>
+            <Tooltip placement='top' title={!open ? "Open Help Menu" : ""}>
                 <IconButton
                     onClick={openMenu}
                     sx={{
-                        display: 'inline-flex',
-                        bottom: '0',
-                        verticalAlign: 'top',
+                        display: "inline-flex",
+                        bottom: "0",
+                        verticalAlign: "top",
                     }}
                 >
                     <HelpIcon fill={palette.secondary.main} {...sx} />
@@ -48,36 +48,36 @@ export const HelpButton = ({
                         anchorEl={anchorEl}
                         onClose={closeMenu}
                         anchorOrigin={{
-                            vertical: 'bottom',
-                            horizontal: 'right',
+                            vertical: "bottom",
+                            horizontal: "right",
                         }}
                         transformOrigin={{
-                            vertical: 'top',
-                            horizontal: 'left',
+                            vertical: "top",
+                            horizontal: "left",
                         }}
                         sx={{
-                            '& .MuiPopover-paper': {
+                            "& .MuiPopover-paper": {
                                 background: palette.background.default,
-                                maxWidth: 'min(90vw, 400px)',
+                                maxWidth: "min(90vw, 400px)",
                             },
-                            '& .MuiMenu-list': {
+                            "& .MuiMenu-list": {
                                 padding: 0,
                             },
                             // Global link styles do not render correctly for some reason,
                             // so we must set them again
                             a: {
-                                color: palette.mode === 'light' ? '#001cd3' : '#dd86db',
-                                '&:visited': {
-                                    color: palette.mode === 'light' ? '#001cd3' : '#f551ef',
+                                color: palette.mode === "light" ? "#001cd3" : "#dd86db",
+                                "&:visited": {
+                                    color: palette.mode === "light" ? "#001cd3" : "#f551ef",
                                 },
-                                '&:active': {
-                                    color: palette.mode === 'light' ? '#001cd3' : '#f551ef',
+                                "&:active": {
+                                    color: palette.mode === "light" ? "#001cd3" : "#f551ef",
                                 },
-                                '&:hover': {
-                                    color: palette.mode === 'light' ? '#5a6ff6' : '#f3d4f2',
+                                "&:hover": {
+                                    color: palette.mode === "light" ? "#5a6ff6" : "#f3d4f2",
                                 },
                                 // Remove underline on links
-                                textDecoration: 'none',
+                                textDecoration: "none",
                             },
                         }}
                     >
@@ -89,5 +89,5 @@ export const HelpButton = ({
                 </IconButton>
             </Tooltip>
         </Box>
-    )
-}
+    );
+};

@@ -1,7 +1,5 @@
-import { useState, useEffect } from 'react';
-import { ordersQuery } from 'graphql/query';
-import { useQuery } from '@apollo/client';
-import { ORDER_FILTERS, PubSub } from 'utils';
+import { useQuery } from "@apollo/client";
+import { Box, useTheme } from "@mui/material";
 import {
     AdminBreadcrumbs,
     OrderCard,
@@ -10,8 +8,10 @@ import {
     PageTitle,
     Selector,
     SnackSeverity,
-} from 'components';
-import { Box, useTheme } from '@mui/material';
+} from "components";
+import { ordersQuery } from "graphql/query";
+import { useEffect, useState } from "react";
+import { ORDER_FILTERS, PubSub } from "utils";
 
 export const AdminOrderPage = ({ userRoles }) => {
     const { palette, spacing } = useTheme();
@@ -20,17 +20,17 @@ export const AdminOrderPage = ({ userRoles }) => {
     // Selected order data. Used for popup
     const [currOrder, setCurrOrder] = useState(null);
     const [orders, setOrders] = useState<any[]>([]);
-    const { error, data, refetch } = useQuery(ordersQuery, { variables: { input: { status: filter.value !== 'All' ? filter.value : undefined } }, pollInterval: 5000 });
+    const { error, data, refetch } = useQuery(ordersQuery, { variables: { input: { status: filter.value !== "All" ? filter.value : undefined } }, pollInterval: 5000 });
     if (error) {
         PubSub.get().publishSnack({ message: error.message, severity: SnackSeverity.Error, data: error });
     }
     useEffect(() => {
         setOrders(data?.orders ?? []);
-    }, [data])
+    }, [data]);
 
     useEffect(() => {
         refetch();
-    }, [filter, refetch])
+    }, [filter, refetch]);
 
     return (
         <PageContainer>
@@ -52,12 +52,12 @@ export const AdminOrderPage = ({ userRoles }) => {
                 label="Sort By" />
             <h3>Count: {orders.length}</h3>
             <Box sx={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(225px, 1fr))',
-                gridGap: '20px',
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(225px, 1fr))",
+                gridGap: "20px",
             }}>
                 {orders?.map((o) => <OrderCard key={o.id} order={o} onEdit={() => setCurrOrder(o)} />)}
             </Box>
         </PageContainer>
     );
-}
+};

@@ -1,5 +1,5 @@
-import { Modal, IconButton, useTheme, Box } from '@mui/material';
-import { CloseIcon } from '@shared/icons';
+import { Box, IconButton, Modal, useTheme } from "@mui/material";
+import { CloseIcon } from "icons";
 
 // const ESCAPE_KEY = 27;
 
@@ -13,24 +13,24 @@ export const StyledModal = ({
 
     return (
         <Modal
-            sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            sx={{ display: "flex", alignItems: "center", justifyContent: "center" }}
             open={open}
             onClose={onClose}>
             <Box sx={{
-                margin: 'auto',
-                maxWidth: 'calc(100vw - 100px)',
-                maxHeight: 'calc(100vh - 50px)',
+                margin: "auto",
+                maxWidth: "calc(100vw - 100px)",
+                maxHeight: "calc(100vh - 50px)",
                 outline: 0,
-                display: 'flex',
+                display: "flex",
             }}>
                 <Box sx={{
-                    borderRadius: '10px',
+                    borderRadius: "10px",
                     backgroundColor: palette.primary.light,
                     color: palette.primary.contrastText,
                     border: `3px solid ${palette.primary.contrastText}`,
                     ...(scrollable ? {
-                        overflowY: 'scroll',
-                    } : {})
+                        overflowY: "scroll",
+                    } : {}),
                 }}>
                     {children}
                 </Box>
@@ -42,13 +42,13 @@ export const StyledModal = ({
                         width: 50,
                         left: -25,
                         top: -25,
-                        borderRadius: '100%',
-                        background: '#A3333D',
-                        cursor: 'pointer',
+                        borderRadius: "100%",
+                        background: "#A3333D",
+                        cursor: "pointer",
                         zIndex: 2,
-                        '&:hover': {
-                            background: '#A8333D',
-                        }
+                        "&:hover": {
+                            background: "#A8333D",
+                        },
                     }}
                 >
                     <CloseIcon fill={palette.primary.contrastText} />
@@ -56,4 +56,4 @@ export const StyledModal = ({
             </Box>
         </Modal>
     );
-}
+};

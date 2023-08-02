@@ -1,7 +1,6 @@
-import { useEffect } from 'react';
-import { APP_LINKS } from '@shared/consts';
-import { PageProps } from 'pages/types';
-import { Redirect, useLocation } from '@shared/route';
+import { APP_LINKS, Redirect, useLocation } from "@local/shared";
+import { PageProps } from "pages/types";
+import { useEffect } from "react";
 
 export const Page = ({
     title,
@@ -9,7 +8,7 @@ export const Page = ({
     redirect = APP_LINKS.Home,
     userRoles,
     restrictedToRoles = [],
-    children
+    children,
 }: PageProps) => {
     const [location] = useLocation();
 

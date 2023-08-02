@@ -1,8 +1,8 @@
+import { Box } from "@mui/material";
 import {
     FeaturedPlants,
-    Hero
-} from 'components';
-import { Box } from '@mui/material';
+    Hero,
+} from "components";
 
 export const HomePage = () => {
     return (
@@ -11,4 +11,4 @@ export const HomePage = () => {
             <FeaturedPlants />
         </Box>
     );
-}
+};

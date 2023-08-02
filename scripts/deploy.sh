@@ -16,32 +16,32 @@
 # -l: Project location (e.g. "/root/Vrooli")
 # -h: Show this help message
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-source "${HERE}/prettify.sh"
+. "${HERE}/prettify.sh"
 
 # Read arguments
 while getopts ":v:d:h" opt; do
-  case $opt in
+    case $opt in
     v)
-      VERSION=$OPTARG
-      ;;
+        VERSION=$OPTARG
+        ;;
     n)
-      NGINX_LOCATION=$OPTARG
-      ;;
+        NGINX_LOCATION=$OPTARG
+        ;;
     h)
-      echo "Usage: $0 [-v VERSION] [-d DEPLOY] [-h]"
-      echo "  -v --version: Version number to use (e.g. \"1.0.0\")"
-      echo "  -h --help: Show this help message"
-      exit 0
-      ;;
+        echo "Usage: $0 [-v VERSION] [-d DEPLOY] [-h]"
+        echo "  -v --version: Version number to use (e.g. \"1.0.0\")"
+        echo "  -h --help: Show this help message"
+        exit 0
+        ;;
     \?)
-      echo "Invalid option: -$OPTARG" >&2
-      exit 1
-      ;;
+        echo "Invalid option: -$OPTARG" >&2
+        exit 1
+        ;;
     :)
-      echo "Option -$OPTARG requires an argument." >&2
-      exit 1
-      ;;
-  esac
+        echo "Option -$OPTARG requires an argument." >&2
+        exit 1
+        ;;
+    esac
 done
 
 # Ask for version number, if not supplied in arguments
@@ -90,7 +90,7 @@ else
     fi
 fi
 
-# Don't copy build if it already exists in /var/tmp. 
+# Don't copy build if it already exists in /var/tmp.
 # Throw an error if current build doesn't exist
 if [ -d "${BUILD_TMP}" ]; then
     info "Old build already exists at ${BUILD_TMP}, so not moving it"

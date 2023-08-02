@@ -1,6 +1,6 @@
-import { PopoverProps } from '@mui/material';
-import { plants_plants, plants_plants_skus } from 'graphql/generated/plants';
-import { SnackSeverity } from './Snack/Snack';
+import { PopoverProps } from "@mui/material";
+import { plants_plants, plants_plants_skus } from "graphql/generated/plants";
+import { SnackSeverity } from "./Snack/Snack";
 
 export interface DialogTitleProps {
     ariaLabel: string;
@@ -24,7 +24,7 @@ export interface PlantDialogProps {
     onClose: () => void;
 }
 
-export interface PopoverWithArrowProps extends Omit<PopoverProps, 'open' | 'sx'> {
+export interface PopoverWithArrowProps extends Omit<PopoverProps, "open" | "sx"> {
     anchorEl: HTMLElement | null;
     children: React.ReactNode;
     handleClose: () => any;

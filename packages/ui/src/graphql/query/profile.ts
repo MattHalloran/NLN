@@ -1,4 +1,4 @@
-import { gql } from 'graphql-tag';
+import { gql } from "graphql-tag";
 
 export const profileQuery = gql`
     query profile {
@@ -25,4 +25,4 @@ export const profileQuery = gql`
             }
         }
     }
-`
+`;

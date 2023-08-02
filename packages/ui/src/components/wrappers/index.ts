@@ -1,1 +1,1 @@
-export * from './StyledModal/StyledModal';
+export * from "./StyledModal/StyledModal";

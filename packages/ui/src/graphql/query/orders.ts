@@ -1,5 +1,5 @@
-import { gql } from 'graphql-tag';
-import { orderFields, orderItemFields, customerContactFields } from 'graphql/fragment';
+import { gql } from "graphql-tag";
+import { customerContactFields, orderFields, orderItemFields } from "graphql/fragment";
 
 export const ordersQuery = gql`
     ${orderFields}
@@ -16,4 +16,4 @@ export const ordersQuery = gql`
             }
         }
     }
-`
+`;

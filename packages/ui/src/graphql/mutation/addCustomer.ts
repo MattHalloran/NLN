@@ -1,5 +1,5 @@
-import { gql } from 'graphql-tag';
-import { customerContactFields, orderFields, orderItemFields } from 'graphql/fragment';
+import { gql } from "graphql-tag";
+import { customerContactFields, orderFields, orderItemFields } from "graphql/fragment";
 
 export const addCustomerMutation = gql`
     ${customerContactFields}
@@ -23,4 +23,4 @@ export const addCustomerMutation = gql`
             }
         }
     }
-`
+`;

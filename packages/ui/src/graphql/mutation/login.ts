@@ -1,5 +1,5 @@
-import { gql } from 'graphql-tag';
-import { customerSessionFields, orderFields, orderItemFields } from 'graphql/fragment';
+import { gql } from "graphql-tag";
+import { customerSessionFields, orderFields, orderItemFields } from "graphql/fragment";
 
 export const loginMutation = gql`
     ${customerSessionFields}
@@ -16,4 +16,4 @@ export const loginMutation = gql`
             }
         }
     }
-`
+`;

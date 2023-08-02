@@ -1,17 +1,16 @@
-import { Suspense } from 'react';
-import { lazily } from 'react-lazily';
-import { Route, Switch } from '@shared/route';
-import { APP_LINKS, ROLES } from '@shared/consts';
+import { APP_LINKS, ROLES, Route, Switch } from "@local/shared";
+import { Box, CircularProgress } from "@mui/material";
+import { ScrollToTop } from "components";
 import {
     ForgotPasswordForm,
     LogInForm,
     ProfileForm,
     ResetPasswordForm,
-    SignUpForm
-} from 'forms';
-import { ScrollToTop } from 'components';
-import { Page } from './pages';
-import { Box, CircularProgress } from '@mui/material';
+    SignUpForm,
+} from "forms";
+import { Suspense } from "react";
+import { lazily } from "react-lazily";
+import { Page } from "./pages";
 
 // Lazy loading in the Routes component is a recommended way to improve performance. See https://reactjs.org/docs/code-splitting.html#route-based-code-splitting
 const {
@@ -21,8 +20,8 @@ const {
     GalleryPage,
     HomePage,
     NotFoundPage,
-    ShoppingPage
-} = lazily(() => import('./pages/main'));
+    ShoppingPage,
+} = lazily(() => import("./pages/main"));
 const {
     AdminContactPage,
     AdminCustomerPage,
@@ -31,21 +30,21 @@ const {
     AdminMainPage,
     AdminInventoryPage,
     AdminOrderPage,
-} = lazily(() => import('./pages/admin'));
+} = lazily(() => import("./pages/admin"));
 const {
     PrivacyPolicyPage,
     TermsPage,
-} = lazily(() => import('./pages/legal'));
+} = lazily(() => import("./pages/legal"));
 
 const Fallback = <Box sx={{
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    transform: "translate(-50%, -50%)",
     zIndex: 100000,
 }}>
     <CircularProgress size={100} />
-</Box>
+</Box>;
 
 export const Routes = ({
     session,
@@ -53,16 +52,16 @@ export const Routes = ({
     business,
     userRoles,
     cart,
-    onRedirect
+    onRedirect,
 }) => {
 
     const common = {
         sessionChecked: session !== null && session !== undefined,
-        onSessionUpdate: onSessionUpdate,
-        onRedirect: onRedirect,
-        userRoles: userRoles,
-        business: business
-    }
+        onSessionUpdate,
+        onRedirect,
+        userRoles,
+        business,
+    };
 
     const title = (page) => `${page} | ${business?.BUSINESS_NAME?.Short}`;
 
@@ -77,7 +76,7 @@ export const Routes = ({
                     priority={1.0}
                     changeFreq="monthly">
                     <Suspense fallback={Fallback}>
-                        <Page title={title('Home')} {...common}>
+                        <Page title={title("Home")} {...common}>
                             <HomePage />
                         </Page>
                     </Suspense>
@@ -87,7 +86,7 @@ export const Routes = ({
                     sitemapIndex
                     priority={0.7}>
                     <Suspense fallback={Fallback}>
-                        <Page title={title('About')} {...common}>
+                        <Page title={title("About")} {...common}>
                             <AboutPage {...common} />
                         </Page>
                     </Suspense>
@@ -97,7 +96,7 @@ export const Routes = ({
                     sitemapIndex
                     priority={0.1}>
                     <Suspense fallback={Fallback}>
-                        <Page title={title('Privacy Policy')} {...common}>
+                        <Page title={title("Privacy Policy")} {...common}>
                             <PrivacyPolicyPage business={business} />
                         </Page>
                     </Suspense>
@@ -107,7 +106,7 @@ export const Routes = ({
                     sitemapIndex
                     priority={0.1}>
                     <Suspense fallback={Fallback}>
-                        <Page title={title('Terms & Conditions')} {...common}>
+                        <Page title={title("Terms & Conditions")} {...common}>
                             <TermsPage business={business} />
                         </Page>
                     </Suspense>
@@ -117,7 +116,7 @@ export const Routes = ({
                     sitemapIndex
                     priority={0.3}>
                     <Suspense fallback={Fallback}>
-                        <Page title={title('Gallery')} {...common}>
+                        <Page title={title("Gallery")} {...common}>
                             <GalleryPage />
                         </Page>
                     </Suspense>
@@ -127,7 +126,7 @@ export const Routes = ({
                     sitemapIndex
                     priority={0.9}>
                     <Suspense fallback={Fallback}>
-                        <Page title={title('Sign Up')} {...common}>
+                        <Page title={title("Sign Up")} {...common}>
                             <FormPage title="Sign Up">
                                 <SignUpForm {...common} />
                             </FormPage>
@@ -139,7 +138,7 @@ export const Routes = ({
                     sitemapIndex
                     priority={0.8}>
                     <Suspense fallback={Fallback}>
-                        <Page title={title('Log In')} {...common}>
+                        <Page title={title("Log In")} {...common}>
                             <FormPage title="Log In">
                                 <LogInForm {...common} />
                             </FormPage>
@@ -151,7 +150,7 @@ export const Routes = ({
                     sitemapIndex
                     priority={0.1}>
                     <Suspense fallback={Fallback}>
-                        <Page title={title('Forgot Password')} {...common}>
+                        <Page title={title("Forgot Password")} {...common}>
                             <FormPage title="Forgot Password">
                                 <ForgotPasswordForm {...common} />
                             </FormPage>
@@ -163,7 +162,7 @@ export const Routes = ({
                     sitemapIndex
                     priority={0.1}>
                     <Suspense fallback={Fallback}>
-                        <Page title={title('Reset Password')} {...common}>
+                        <Page title={title("Reset Password")} {...common}>
                             <FormPage title="Reset Password">
                                 <ResetPasswordForm {...common} />
                             </FormPage>
@@ -177,7 +176,7 @@ export const Routes = ({
                     sitemapIndex
                     priority={0.4}>
                     <Suspense fallback={Fallback}>
-                        <Page title={title('Profile')} {...common} restrictedToRoles={Object.values(ROLES)}>
+                        <Page title={title("Profile")} {...common} restrictedToRoles={Object.values(ROLES)}>
                             <FormPage title="Profile">
                                 <ProfileForm />
                             </FormPage>
@@ -189,7 +188,7 @@ export const Routes = ({
                     sitemapIndex
                     priority={0.9}>
                     <Suspense fallback={Fallback}>
-                        <Page title={title('Shop')} {...common} restrictedToRoles={Object.values(ROLES)} redirect={APP_LINKS.LogIn}>
+                        <Page title={title("Shop")} {...common} restrictedToRoles={Object.values(ROLES)} redirect={APP_LINKS.LogIn}>
                             <ShoppingPage {...common} session={session} cart={cart} />
                         </Page>
                     </Suspense>
@@ -197,7 +196,7 @@ export const Routes = ({
                 <Route
                     path={APP_LINKS.Cart}>
                     <Suspense fallback={Fallback}>
-                        <Page title={title('Cart')} {...common} restrictedToRoles={Object.values(ROLES)} redirect={APP_LINKS.LogIn}>
+                        <Page title={title("Cart")} {...common} restrictedToRoles={Object.values(ROLES)} redirect={APP_LINKS.LogIn}>
                             <CartPage {...common} cart={cart} />
                         </Page>
                     </Suspense>
@@ -207,7 +206,7 @@ export const Routes = ({
                 <Route
                     path={APP_LINKS.Admin}>
                     <Suspense fallback={Fallback}>
-                        <Page title={title('Manage Site')} {...common} restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
+                        <Page title={title("Manage Site")} {...common} restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
                             <AdminMainPage />
                         </Page>
                     </Suspense>
@@ -259,7 +258,7 @@ export const Routes = ({
                 {/* 404 page */}
                 <Route>
                     <Suspense fallback={Fallback}>
-                        <Page title={title('404')} {...common}>
+                        <Page title={title("404")} {...common}>
                             <NotFoundPage />
                         </Page>
                     </Suspense>
@@ -267,4 +266,4 @@ export const Routes = ({
             </Switch>
         </Suspense>
     );
-}
+};

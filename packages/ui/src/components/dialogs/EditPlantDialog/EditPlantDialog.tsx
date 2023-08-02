@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useMutation } from "@apollo/client";
 import {
     AppBar,
     Autocomplete,
@@ -17,45 +17,45 @@ import {
     Toolbar,
     Tooltip,
     Typography,
-    useTheme
-} from '@mui/material';
-import { addImagesMutation, deletePlantsMutation, updatePlantMutation } from 'graphql/mutation';
-import { useMutation } from '@apollo/client';
-import { Dropzone, ImageList, Transition } from 'components';
+    useTheme,
+} from "@mui/material";
+import { Dropzone, ImageList, Transition } from "components";
+import { addImagesMutation, deletePlantsMutation, updatePlantMutation } from "graphql/mutation";
+import { useCallback, useEffect, useState } from "react";
 import {
+    PubSub,
     addToArray,
     deleteArrayIndex,
     getPlantTrait,
     makeID,
-    PubSub,
     setPlantSkuField,
-    setPlantTrait
-} from 'utils';
+    setPlantTrait,
+} from "utils";
 // import { DropzoneAreaBase } from 'material-ui-dropzone';
-import _ from 'lodash';
-import { CancelIcon, CloseIcon, CreateIcon, DeleteIcon, SaveIcon } from '@shared/icons';
-import { mutationWrapper } from 'graphql/utils';
-import { addImagesVariables, addImages_addImages } from 'graphql/generated/addImages';
-import { updatePlantVariables, updatePlant_updatePlant } from 'graphql/generated/updatePlant';
-import { deletePlantsVariables, deletePlants_deletePlants } from 'graphql/generated/deletePlants';
+import { addImagesVariables, addImages_addImages } from "graphql/generated/addImages";
+import { deletePlantsVariables, deletePlants_deletePlants } from "graphql/generated/deletePlants";
+import { updatePlantVariables, updatePlant_updatePlant } from "graphql/generated/updatePlant";
+import { mutationWrapper } from "graphql/utils";
+import { CancelIcon, CloseIcon, CreateIcon, DeleteIcon, SaveIcon } from "icons";
+import _ from "lodash";
 
 // Common plant traits, and their corresponding field names
 const PLANT_TRAITS = {
-    'Attracts Pollinators & Wildlife': 'attractsPollinatorsAndWildlife',
-    'Bloom Colors': 'bloomColors',
-    'Bloom Times': 'bloomTimes',
-    'Drought Tolerance': 'droughtTolerance',
-    'Grown Height': 'grownHeight',
-    'Grown Spread': 'grownSpread',
-    'Growth Rate': 'growthRate',
-    'Hardiness Zones': 'zone',
-    'Light Ranges': 'lightRanges',
-    'Optimal Light': 'optimalLight',
-    'Salt Tolerance': 'saltTolerance',
-    'Soil Moistures': 'soilMoistures',
-    'Soil PHs': 'soilPhs',
-    'Soil Types': 'soilTypes',
-}
+    "Attracts Pollinators & Wildlife": "attractsPollinatorsAndWildlife",
+    "Bloom Colors": "bloomColors",
+    "Bloom Times": "bloomTimes",
+    "Drought Tolerance": "droughtTolerance",
+    "Grown Height": "grownHeight",
+    "Grown Spread": "grownSpread",
+    "Growth Rate": "growthRate",
+    "Hardiness Zones": "zone",
+    "Light Ranges": "lightRanges",
+    "Optimal Light": "optimalLight",
+    "Salt Tolerance": "saltTolerance",
+    "Soil Moistures": "soilMoistures",
+    "Soil PHs": "soilPhs",
+    "Soil Types": "soilTypes",
+};
 
 export const EditPlantDialog = ({
     plant,
@@ -80,43 +80,43 @@ export const EditPlantDialog = ({
     const uploadImages = (acceptedFiles) => {
         mutationWrapper<addImages_addImages[], addImagesVariables>({
             mutation: addImages,
-            input: { files: acceptedFiles, },
+            input: { files: acceptedFiles },
             successMessage: () => `Successfully uploaded ${acceptedFiles.length} image(s)`,
             onSuccess: (data) => {
                 setImageData([...(imageData ?? []), ...data.filter(d => d.success).map(d => {
                     return {
                         hash: d.hash,
-                        files: [{ src: d.src }]
-                    }
-                })])
+                        files: [{ src: d.src }],
+                    };
+                })]);
                 setImagesChanged(true);
-            }
-        })
-    }
+            },
+        });
+    };
 
     const [currSkuIndex, setCurrSkuIndex] = useState(-1);
     const [selectedTrait, setSelectedTrait] = useState(PLANT_TRAITS[0]);
 
     useEffect(() => {
-        setCurrSkuIndex((selectedSku && plant?.skus) ? plant.skus.findIndex(s => s.sku === selectedSku.sku) : 0)
-    }, [plant, selectedSku])
+        setCurrSkuIndex((selectedSku && plant?.skus) ? plant.skus.findIndex(s => s.sku === selectedSku.sku) : 0);
+    }, [plant, selectedSku]);
 
     const findImageData = useCallback(() => {
         setImagesChanged(false);
         if (Array.isArray(plant?.images)) {
             setImageData(plant.images.map((d, index) => ({
                 ...d.image,
-                pos: index
+                pos: index,
             })));
         } else {
             setImageData(null);
         }
-    }, [plant])
+    }, [plant]);
 
     useEffect(() => {
         setChangedPlant({ ...plant });
         findImageData();
-    }, [findImageData, plant, setImagesChanged])
+    }, [findImageData, plant, setImagesChanged]);
 
     function revertPlant() {
         setChangedPlant(plant);
@@ -125,59 +125,59 @@ export const EditPlantDialog = ({
 
     const confirmDelete = useCallback(() => {
         PubSub.get().publishAlertDialog({
-            message: `Are you sure you want to delete this plant, along with its SKUs? This cannot be undone.`,
+            message: "Are you sure you want to delete this plant, along with its SKUs? This cannot be undone.",
             buttons: [{
-                text: 'Yes',
+                text: "Yes",
                 onClick: () => mutationWrapper<deletePlants_deletePlants, deletePlantsVariables>({
                     mutation: deletePlant,
                     input: { ids: [changedPlant.id] },
-                    successMessage: () => 'Plant deleted.',
+                    successMessage: () => "Plant deleted.",
                     onSuccess: () => onClose(),
-                    errorMessage: () => 'Failed to delete plant.',
+                    errorMessage: () => "Failed to delete plant.",
                 }),
             }, {
-                text: 'No',
-            }]
+                text: "No",
+            }],
         });
-    }, [changedPlant, deletePlant, onClose])
+    }, [changedPlant, deletePlant, onClose]);
 
     const savePlant = useCallback(async () => {
-        let plant_data = {
+        const plant_data = {
             id: changedPlant.id,
             latinName: changedPlant.latinName,
             traits: changedPlant.traits.map(t => {
-                return { name: t.name, value: t.value }
+                return { name: t.name, value: t.value };
             }),
             skus: changedPlant.skus.map(s => {
-                return { sku: s.sku, isDiscountable: s.isDiscountable, size: s.size, note: s.note, availability: parseInt(s.availability) || 0, price: s.price, status: s.status }
+                return { sku: s.sku, isDiscountable: s.isDiscountable, size: s.size, note: s.note, availability: parseInt(s.availability) || 0, price: s.price, status: s.status };
             }),
             images: imageData?.map(d => {
-                return { hash: d.hash, isDisplay: d.isDisplay ?? false }
-            }) ?? []
-        }
+                return { hash: d.hash, isDisplay: d.isDisplay ?? false };
+            }) ?? [],
+        };
         mutationWrapper<updatePlant_updatePlant, updatePlantVariables>({
             mutation: updatePlant,
             input: { ...plant_data },
-            successMessage: () => 'Plant updated.',
+            successMessage: () => "Plant updated.",
             onSuccess: () => setImagesChanged(false),
-            errorMessage: () => 'Failed to delete plant.'
-        })
-    }, [changedPlant, imageData, updatePlant, setImagesChanged])
+            errorMessage: () => "Failed to delete plant.",
+        });
+    }, [changedPlant, imageData, updatePlant, setImagesChanged]);
 
     const updateTrait = useCallback((traitName, value, createIfNotExists) => {
         const updatedPlant = setPlantTrait(traitName, value, changedPlant, createIfNotExists);
         if (updatedPlant) setChangedPlant(updatedPlant);
-    }, [changedPlant])
+    }, [changedPlant]);
 
     const getSkuField = useCallback((fieldName) => {
-        if (!Array.isArray(changedPlant?.skus) || currSkuIndex < 0 || currSkuIndex >= changedPlant.skus.length) return '';
+        if (!Array.isArray(changedPlant?.skus) || currSkuIndex < 0 || currSkuIndex >= changedPlant.skus.length) return "";
         return changedPlant.skus[currSkuIndex][fieldName];
-    }, [changedPlant, currSkuIndex])
+    }, [changedPlant, currSkuIndex]);
 
     const updateSkuField = useCallback((fieldName, value) => {
         const updatedPlant = setPlantSkuField(fieldName, currSkuIndex, value, changedPlant);
-        if (updatedPlant) setChangedPlant(updatedPlant)
-    }, [changedPlant, currSkuIndex])
+        if (updatedPlant) setChangedPlant(updatedPlant);
+    }, [changedPlant, currSkuIndex]);
 
     function newSku() {
         setChangedPlant(p => ({
@@ -194,8 +194,8 @@ export const EditPlantDialog = ({
         }));
     }
 
-    let changes_made = !_.isEqual(plant, changedPlant) || imagesChanged;
-    let options = (
+    const changes_made = !_.isEqual(plant, changedPlant) || imagesChanged;
+    const options = (
         <Grid
             container
             spacing={2}
@@ -233,7 +233,7 @@ export const EditPlantDialog = ({
 
     return (
         <Dialog fullScreen open={open} onClose={onClose} TransitionComponent={Transition}>
-            <AppBar sx={{ position: 'relative' }}>
+            <AppBar sx={{ position: "relative" }}>
                 <Toolbar>
                     <IconButton edge="start" color="inherit" onClick={onClose} aria-label="close">
                         <CloseIcon />
@@ -248,7 +248,7 @@ export const EditPlantDialog = ({
                         }
                         label="Compact View"
                         sx={{
-                            position: 'absolute',
+                            position: "absolute",
                             right: 0,
                         }}
                     />
@@ -256,23 +256,23 @@ export const EditPlantDialog = ({
             </AppBar>
             <Box sx={{
                 background: palette.background.default,
-                flex: 'auto',
+                flex: "auto",
             }}>
                 <Box sx={{
-                    width: '25%',
-                    height: '100%',
-                    float: 'left',
+                    width: "25%",
+                    height: "100%",
+                    float: "left",
                     borderRight: `2px solid ${palette.text.primary}`,
                 }}>
                     <List
-                        style={{ paddingTop: '0' }}
+                        style={{ paddingTop: "0" }}
                         aria-label="sku select"
                         aria-labelledby="sku-select-subheader">
                         <ListSubheader component="div" id="sku-select-subheader" sx={{
                             background: palette.primary.light,
                             color: palette.primary.contrastText,
                         }}>
-                            <Typography variant="h5" component="h3" sx={{ paddingBottom: '1vh' }}>SKUs</Typography>
+                            <Typography variant="h5" component="h3" sx={{ paddingBottom: "1vh" }}>SKUs</Typography>
                         </ListSubheader>
                         {changedPlant?.skus?.map((s, i) => (
                             <ListItem
@@ -280,8 +280,8 @@ export const EditPlantDialog = ({
                                 button
                                 onClick={() => setCurrSkuIndex(i)}
                                 sx={{
-                                    background: i === currSkuIndex ? palette.primary.dark : 'inherit',
-                                    color: i === currSkuIndex ? palette.primary.contrastText : 'inherit',
+                                    background: i === currSkuIndex ? palette.primary.dark : "inherit",
+                                    color: i === currSkuIndex ? palette.primary.contrastText : "inherit",
                                 }}
                             >
                                 <ListItemText primary={s.sku} />
@@ -304,14 +304,14 @@ export const EditPlantDialog = ({
                     </Box>
                 </Box>
                 <Box sx={{
-                    width: '75%',
-                    height: '100%',
-                    float: 'right',
+                    width: "75%",
+                    height: "100%",
+                    float: "right",
                     padding: spacing(1),
-                    paddingBottom: '20vh',
+                    paddingBottom: "20vh",
                 }}>
-                    <Typography variant="h5" component="h3" sx={{ paddingBottom: '1vh' }}>Edit plant info</Typography>
-                    <Grid container spacing={2} sx={{ paddingBottom: '3vh' }}>
+                    <Typography variant="h5" component="h3" sx={{ paddingBottom: "1vh" }}>Edit plant info</Typography>
+                    <Grid container spacing={2} sx={{ paddingBottom: "3vh" }}>
                         <Grid item xs={12} sm={6}>
                             <TextField
                                 fullWidth
@@ -326,8 +326,8 @@ export const EditPlantDialog = ({
                                 fullWidth
                                 size="small"
                                 label="Common Name"
-                                value={getPlantTrait('commonName', changedPlant)}
-                                onChange={e => updateTrait('commonName', e.target.value, true)}
+                                value={getPlantTrait("commonName", changedPlant)}
+                                onChange={e => updateTrait("commonName", e.target.value, true)}
                             />
                         </Grid>
                         <Grid item xs={12}>
@@ -337,8 +337,8 @@ export const EditPlantDialog = ({
                                 maxRows={compactView ? 4 : 10}
                                 size="small"
                                 label="Description"
-                                value={getPlantTrait('description', changedPlant)}
-                                onChange={e => updateTrait('description', e.target.value, true)}
+                                value={getPlantTrait("description", changedPlant)}
+                                onChange={e => updateTrait("description", e.target.value, true)}
                             />
                         </Grid>
                         {
@@ -355,7 +355,7 @@ export const EditPlantDialog = ({
                                             <TextField
                                                 {...params}
                                                 label="Select plant trait"
-                                                value={PLANT_TRAITS[selectedTrait] ?? ''}
+                                                value={PLANT_TRAITS[selectedTrait] ?? ""}
                                             />
                                         )}
                                     />
@@ -366,7 +366,7 @@ export const EditPlantDialog = ({
                                         fullWidth
                                         size="small"
                                         label="Trait value"
-                                        value={getPlantTrait(selectedTrait, changedPlant) ?? ''}
+                                        value={getPlantTrait(selectedTrait, changedPlant) ?? ""}
                                         onChange={e => updateTrait(selectedTrait, e.target.value, true)}
                                     />
                                 </Grid>
@@ -378,7 +378,7 @@ export const EditPlantDialog = ({
                                                 fullWidth
                                                 size="small"
                                                 label={label}
-                                                value={getPlantTrait(field, changedPlant) ?? ''}
+                                                value={getPlantTrait(field, changedPlant) ?? ""}
                                                 onChange={e => updateTrait(field, e.target.value, true)}
                                             />
                                         </Grid>
@@ -387,12 +387,12 @@ export const EditPlantDialog = ({
                         }
 
                     </Grid>
-                    <Typography variant="h5" component="h3" sx={{ paddingBottom: '1vh' }}>Edit images</Typography>
-                    <Grid container spacing={2} sx={{ paddingBottom: '3vh' }}>
+                    <Typography variant="h5" component="h3" sx={{ paddingBottom: "1vh" }}>Edit images</Typography>
+                    <Grid container spacing={2} sx={{ paddingBottom: "3vh" }}>
                         {/* Upload new images */}
                         <Grid item xs={12}>
                             <Dropzone
-                                dropzoneText={'Drag \'n\' drop new images here or click'}
+                                dropzoneText={"Drag 'n' drop new images here or click"}
                                 onUpload={uploadImages}
                                 uploadText='Confirm'
                                 cancelText='Cancel'
@@ -400,18 +400,18 @@ export const EditPlantDialog = ({
                         </Grid>
                         {/* And edit existing images */}
                         <Grid item xs={12}>
-                            <ImageList data={imageData} onUpdate={(d) => { setImageData(d); setImagesChanged(true) }} />
+                            <ImageList data={imageData} onUpdate={(d) => { setImageData(d); setImagesChanged(true); }} />
                         </Grid>
                     </Grid>
-                    <Typography variant="h5" component="h3" sx={{ paddingBottom: '1vh' }}>Edit SKU info</Typography>
-                    <Grid container spacing={2} sx={{ paddingBottom: '3vh' }}>
+                    <Typography variant="h5" component="h3" sx={{ paddingBottom: "1vh" }}>Edit SKU info</Typography>
+                    <Grid container spacing={2} sx={{ paddingBottom: "3vh" }}>
                         <Grid item xs={12} sm={6}>
                             <TextField
                                 fullWidth
                                 size="small"
                                 label="Plant Code"
-                                value={getSkuField('sku')}
-                                onChange={e => updateSkuField('sku', e.target.value)}
+                                value={getSkuField("sku")}
+                                onChange={e => updateSkuField("sku", e.target.value)}
                             />
                         </Grid>
                         <Grid item xs={12} sm={6}>
@@ -419,8 +419,8 @@ export const EditPlantDialog = ({
                                 fullWidth
                                 size="small"
                                 label="SKU Size"
-                                value={getSkuField('size')}
-                                onChange={e => updateSkuField('size', e.target.value)}
+                                value={getSkuField("size")}
+                                onChange={e => updateSkuField("size", e.target.value)}
                             />
                         </Grid>
                         <Grid item xs={12} sm={6}>
@@ -428,8 +428,8 @@ export const EditPlantDialog = ({
                                 fullWidth
                                 size="small"
                                 label="Price"
-                                value={getSkuField('price')}
-                                onChange={e => updateSkuField('price', e.target.value)}
+                                value={getSkuField("price")}
+                                onChange={e => updateSkuField("price", e.target.value)}
                             />
                         </Grid>
                         <Grid item xs={12} sm={6}>
@@ -437,16 +437,16 @@ export const EditPlantDialog = ({
                                 fullWidth
                                 size="small"
                                 label="Availability"
-                                value={getSkuField('availability')}
-                                onChange={e => updateSkuField('availability', e.target.value)}
+                                value={getSkuField("availability")}
+                                onChange={e => updateSkuField("availability", e.target.value)}
                             />
                         </Grid>
                     </Grid>
                 </Box>
                 <Box sx={{
-                    position: 'fixed',
-                    bottom: '0',
-                    width: '-webkit-fill-available',
+                    position: "fixed",
+                    bottom: "0",
+                    width: "-webkit-fill-available",
                     zIndex: 1,
                 }}>
                     {options}
@@ -454,4 +454,4 @@ export const EditPlantDialog = ({
             </Box>
         </Dialog >
     );
-}
+};

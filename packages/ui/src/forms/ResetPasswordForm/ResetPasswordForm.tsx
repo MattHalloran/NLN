@@ -1,59 +1,58 @@
-import { useMemo } from 'react';
-import { resetPasswordMutation } from 'graphql/mutation';
-import { useMutation } from '@apollo/client';
-import { useFormik } from 'formik';
+import { useMutation } from "@apollo/client";
+import { APP_LINKS, resetPasswordSchema } from "@local/shared";
 import {
     Box,
     Button,
     Grid,
-    useTheme
-} from '@mui/material';
-import { APP_LINKS } from '@shared/consts';
-import { resetPasswordSchema } from '@shared/validation';
-import { mutationWrapper } from 'graphql/utils';
-import { resetPasswordVariables, resetPassword_resetPassword } from 'graphql/generated/resetPassword';
-import { parseSearchParams, PubSub } from 'utils';
-import { SnackSeverity } from 'components';
-import { PasswordTextField } from 'components/inputs/PasswordTextField/PasswordTextField';
+    useTheme,
+} from "@mui/material";
+import { SnackSeverity } from "components";
+import { PasswordTextField } from "components/inputs/PasswordTextField/PasswordTextField";
+import { useFormik } from "formik";
+import { resetPasswordVariables, resetPassword_resetPassword } from "graphql/generated/resetPassword";
+import { resetPasswordMutation } from "graphql/mutation";
+import { mutationWrapper } from "graphql/utils";
+import { useMemo } from "react";
+import { PubSub, parseSearchParams } from "utils";
 
 export const ResetPasswordForm = ({
     onSessionUpdate,
-    onRedirect
+    onRedirect,
 }) => {
     const { spacing } = useTheme();
 
     const { id, code } = useMemo<{ id: string | undefined, code: string | undefined }>(() => {
         const searchParams = parseSearchParams();
         return {
-            id: searchParams.id === 'string' ? searchParams.id : undefined,
-            code: searchParams.code === 'string' ? searchParams.code : undefined
-        }
+            id: searchParams.id === "string" ? searchParams.id : undefined,
+            code: searchParams.code === "string" ? searchParams.code : undefined,
+        };
     }, []);
     const [resetPassword, { loading }] = useMutation(resetPasswordMutation);
 
     const formik = useFormik({
         initialValues: {
-            newPassword: '',
-            confirmNewPassword: '',
+            newPassword: "",
+            confirmNewPassword: "",
         },
         validationSchema: resetPasswordSchema,
         onSubmit: (values) => {
             if (!id || !code) {
-                PubSub.get().publishSnack({ message: 'Could not parse URL', severity: SnackSeverity.Error });
+                PubSub.get().publishSnack({ message: "Could not parse URL", severity: SnackSeverity.Error });
                 return;
             }
             mutationWrapper<resetPassword_resetPassword, resetPasswordVariables>({
                 mutation: resetPassword,
                 input: { id, code, newPassword: values.newPassword },
-                onSuccess: (data) => { onSessionUpdate(data); onRedirect(APP_LINKS.Shopping) },
-                successMessage: () => 'Password reset.',
-            })
+                onSuccess: (data) => { onSessionUpdate(data); onRedirect(APP_LINKS.Shopping); },
+                successMessage: () => "Password reset.",
+            });
         },
     });
 
     return (
         <Box sx={{
-            width: '100%',
+            width: "100%",
             marginTop: spacing(3),
         }}>
             <form onSubmit={formik.handleSubmit}>
@@ -93,7 +92,7 @@ export const ResetPasswordForm = ({
                     type="submit"
                     color="secondary"
                     sx={{
-                        margin: spacing(3, 0, 2)
+                        margin: spacing(3, 0, 2),
                     }}
                 >
                     Submit
@@ -101,4 +100,4 @@ export const ResetPasswordForm = ({
             </form>
         </Box>
     );
-}
+};

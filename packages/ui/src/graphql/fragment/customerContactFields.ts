@@ -1,6 +1,6 @@
-import { gql } from 'graphql-tag';
-import { emailFields } from './emailFields';
-import { phoneFields } from './phoneFields';
+import { gql } from "graphql-tag";
+import { emailFields } from "./emailFields";
+import { phoneFields } from "./phoneFields";
 
 export const customerContactFields = gql`
     ${emailFields}
@@ -21,4 +21,4 @@ export const customerContactFields = gql`
             name
         }
     }
-`
+`;

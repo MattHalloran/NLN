@@ -2,7 +2,7 @@
 # Sets up NPM, Yarn, global dependencies, and anything else
 # required to get the project up and running.
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-source "${HERE}/prettify.sh"
+. "${HERE}/prettify.sh"
 
 header "Checking for package updates"
 sudo apt-get update
@@ -14,7 +14,7 @@ chmod +x "${HERE}/"*.sh
 
 header "Installing nvm"
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
-source ~/.nvm/nvm.sh
+. ~/.nvm/nvm.sh
 
 header "Installing Node (includes npm)"
 nvm install 16.16.0

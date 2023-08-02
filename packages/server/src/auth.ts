@@ -1,19 +1,20 @@
-import jwt from 'jsonwebtoken';
-import { CODE, COOKIE } from '@shared/consts';
-import { CustomError } from './error';
-import pkg from '@prisma/client';
-import { NextFunction, Request, Response } from 'express';
+import { CODE, COOKIE } from "@local/shared";
+import pkg from "@prisma/client";
+import { NextFunction, Request, Response } from "express";
+import jwt from "jsonwebtoken";
+import { CustomError } from "./error";
+
 const { PrismaClient } = pkg;
 
-const prisma = new PrismaClient()
-const SESSION_MILLI = 30*86400*1000;
+const prisma = new PrismaClient();
+const SESSION_MILLI = 30 * 86400 * 1000;
 
 // Return array of customer roles (ex: ['admin', 'customer'])
 async function findCustomerRoles(customerId: string) {
     // Query customer's roles
-    const user = await prisma.customer.findUnique({ 
+    const user = await prisma.customer.findUnique({
         where: { id: customerId },
-        select: { roles: { select: { role: { select: { title: true } } } } }
+        select: { roles: { select: { role: { select: { title: true } } } } },
     });
     return user?.roles?.map(r => r.role.title.toLowerCase()) || [];
 }
@@ -28,7 +29,7 @@ export async function authenticate(req: Request, _: Response, next: NextFunction
         return;
     }
     // Second, verify that the session token is valid
-    jwt.verify(token, process.env.JWT_SECRET ?? '', async (error: any, payload: any) => {
+    jwt.verify(token, process.env.JWT_SECRET ?? "", async (error: any, payload: any) => {
         if (error || isNaN(payload.exp) || payload.exp < Date.now()) {
             next();
             return;
@@ -41,7 +42,7 @@ export async function authenticate(req: Request, _: Response, next: NextFunction
         req.isCustomer = payload.isCustomer;
         req.isAdmin = payload.isAdmin;
         next();
-    })
+    });
 }
 
 // Generates a JSON Web Token (JWT)
@@ -50,18 +51,18 @@ export async function generateToken(res: Response, customerId: string, businessI
     const tokenContents = {
         iat: Date.now(),
         iss: `https://${process.env.SITE_NAME}/`,
-        customerId: customerId,
-        businessId: businessId,
+        customerId,
+        businessId,
         roles: customerRoles,
-        isCustomer: customerRoles.includes('customer' || 'admin'),
-        isAdmin: customerRoles.includes('admin'),
+        isCustomer: customerRoles.includes("customer" || "admin"),
+        isAdmin: customerRoles.includes("admin"),
         exp: Date.now() + SESSION_MILLI,
-    }
-    const token = jwt.sign(tokenContents, process.env.JWT_SECRET ?? '');
+    };
+    const token = jwt.sign(tokenContents, process.env.JWT_SECRET ?? "");
     res.cookie(COOKIE.Jwt, token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        maxAge: SESSION_MILLI
+        secure: process.env.NODE_ENV === "production",
+        maxAge: SESSION_MILLI,
     });
 }
 

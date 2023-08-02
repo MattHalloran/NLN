@@ -1,75 +1,75 @@
-import { ORDER_STATUS } from '@shared/consts';
+import { ORDER_STATUS } from "@local/shared";
 
 export const ORDER_FILTERS = [
     {
-        label: 'All',
-        value: 'All',
+        label: "All",
+        value: "All",
     },
     {
-        label: 'Canceled by Admin',
+        label: "Canceled by Admin",
         value: ORDER_STATUS.CanceledByAdmin,
     },
     {
-        label: 'Canceled by Customer',
+        label: "Canceled by Customer",
         value: ORDER_STATUS.CanceledByCustomer,
     },
     {
-        label: 'Pending Cancel',
+        label: "Pending Cancel",
         value: ORDER_STATUS.PendingCancel,
     },
     {
-        label: 'Rejected',
+        label: "Rejected",
         value: ORDER_STATUS.Rejected,
     },
     {
-        label: 'Pending',
+        label: "Pending",
         value: ORDER_STATUS.Pending,
     },
     {
-        label: 'Approved',
+        label: "Approved",
         value: ORDER_STATUS.Approved,
     },
     {
-        label: 'Scheduled',
+        label: "Scheduled",
         value: ORDER_STATUS.Scheduled,
     },
     {
-        label: 'In Transit',
+        label: "In Transit",
         value: ORDER_STATUS.InTransit,
     },
     {
-        label: 'Delivered',
+        label: "Delivered",
         value: ORDER_STATUS.Delivered,
     },
-]
+];
 
 export const SORT_OPTIONS = [
     {
-        label: 'A-Z',
-        value: 'AZ',
+        label: "A-Z",
+        value: "AZ",
     },
     {
-        label: 'Z-A',
-        value: 'ZA',
+        label: "Z-A",
+        value: "ZA",
     },
     {
-        label: 'Price: Low to High',
-        value: 'PriceLowHigh',
+        label: "Price: Low to High",
+        value: "PriceLowHigh",
     },
     {
-        label: 'Price: High to Low',
-        value: 'PriceHighLow',
+        label: "Price: High to Low",
+        value: "PriceHighLow",
     },
     {
-        label: 'Featured',
-        value: 'Featured',
+        label: "Featured",
+        value: "Featured",
     },
     {
-        label: 'Newest',
-        value: 'Newest',
+        label: "Newest",
+        value: "Newest",
     },
     {
-        label: 'Oldest',
-        value: 'Oldest',
-    }
-]
+        label: "Oldest",
+        value: "Oldest",
+    },
+];

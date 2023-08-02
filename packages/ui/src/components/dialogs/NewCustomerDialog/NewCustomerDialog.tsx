@@ -1,3 +1,5 @@
+import { useMutation } from "@apollo/client";
+import { CancelIcon, CloseIcon, CreateIcon, DEFAULT_PRONOUNS, addCustomerSchema } from "@local/shared";
 import {
     AppBar,
     Autocomplete,
@@ -10,16 +12,12 @@ import {
     Toolbar,
     Typography,
     useTheme,
-} from '@mui/material';
-import { DEFAULT_PRONOUNS } from '@shared/consts';
-import { addCustomerMutation } from 'graphql/mutation';
-import { useFormik } from 'formik';
-import { useMutation } from '@apollo/client';
-import { addCustomerVariables, addCustomer_addCustomer } from 'graphql/generated/addCustomer';
-import { CancelIcon, CloseIcon, CreateIcon } from '@shared/icons';
-import { addCustomerSchema } from '@shared/validation';
-import { mutationWrapper } from 'graphql/utils';
-import { Transition } from '../UpTransition/UpTransition';
+} from "@mui/material";
+import { useFormik } from "formik";
+import { addCustomerVariables, addCustomer_addCustomer } from "graphql/generated/addCustomer";
+import { addCustomerMutation } from "graphql/mutation";
+import { mutationWrapper } from "graphql/utils";
+import { Transition } from "../UpTransition/UpTransition";
 
 export const NewCustomerDialog = ({
     open = true,
@@ -32,12 +30,12 @@ export const NewCustomerDialog = ({
 
     const formik = useFormik({
         initialValues: {
-            firstName: '',
-            lastName: '',
-            pronouns: '',
-            business: '',
-            email: '',
-            phone: '',
+            firstName: "",
+            lastName: "",
+            pronouns: "",
+            business: "",
+            email: "",
+            phone: "",
         },
         validationSchema: addCustomerSchema,
         onSubmit: (values) => {
@@ -52,13 +50,13 @@ export const NewCustomerDialog = ({
                     phones: [{ number: values.phone }],
                 },
                 onSuccess: () => onClose(),
-                successMessage: () => 'Customer created.'
-            })
+                successMessage: () => "Customer created.",
+            });
         },
     });
 
 
-    let options = (
+    const options = (
         <Grid container spacing={2} sx={{
             padding: spacing(2),
             background: palette.primary.main,
@@ -82,13 +80,13 @@ export const NewCustomerDialog = ({
 
     return (
         <Dialog fullScreen open={open} onClose={onClose} TransitionComponent={Transition}>
-            <AppBar sx={{ position: 'relative' }}>
+            <AppBar sx={{ position: "relative" }}>
                 <Toolbar>
                     <IconButton edge="start" color="inherit" onClick={onClose} aria-label="close">
                         <CloseIcon />
                     </IconButton>
                     <Grid container spacing={0}>
-                        <Grid item xs={12} sx={{ textAlign: 'center' }}>
+                        <Grid item xs={12} sx={{ textAlign: "center" }}>
                             <Typography variant="h5">
                                 Create New Customer
                             </Typography>
@@ -98,10 +96,10 @@ export const NewCustomerDialog = ({
             </AppBar>
             <Box sx={{
                 background: palette.background.default,
-                flex: 'auto',
+                flex: "auto",
                 padding: spacing(1),
-                paddingBottom: '15vh',
-                width: '100%',
+                paddingBottom: "15vh",
+                width: "100%",
                 marginTop: spacing(3),
             }}>
                 <form>
@@ -140,7 +138,7 @@ export const NewCustomerDialog = ({
                                 id="pronouns"
                                 options={DEFAULT_PRONOUNS}
                                 value={formik.values.pronouns}
-                                onChange={(_, value) => formik.setFieldValue('pronouns', value)}
+                                onChange={(_, value) => formik.setFieldValue("pronouns", value)}
                                 renderInput={(params) => (
                                     <TextField
                                         {...params}
@@ -196,9 +194,9 @@ export const NewCustomerDialog = ({
                 </form>
                 <Box sx={{
                     background: palette.primary.main,
-                    position: 'fixed',
-                    bottom: '0',
-                    width: '-webkit-fill-available',
+                    position: "fixed",
+                    bottom: "0",
+                    width: "-webkit-fill-available",
                     zIndex: 1,
                 }}>
                     {options}
@@ -206,4 +204,4 @@ export const NewCustomerDialog = ({
             </Box>
         </Dialog>
     );
-}
+};

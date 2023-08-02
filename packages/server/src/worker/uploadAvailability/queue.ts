@@ -1,13 +1,12 @@
-import Bull from 'bull';
-import { uploadAvailabilityProcess } from './process';
-import XLSX from 'xlsx';
-import fs from 'fs'
+import Bull from "bull";
+import XLSX from "xlsx";
+import { uploadAvailabilityProcess } from "./process";
 
-const split = (process.env.REDIS_CONN || 'redis:6379').split(':');
+const split = (process.env.REDIS_CONN || "redis:6379").split(":");
 export const HOST = split[0];
 export const PORT = Number(split[1]);
 
-const uploadAvailabilityQueue = new Bull('uploadAvailability', { redis: { port: PORT, host: HOST } });
+const uploadAvailabilityQueue = new Bull("uploadAvailability", { redis: { port: PORT, host: HOST } });
 uploadAvailabilityQueue.process(uploadAvailabilityProcess);
 
 export async function uploadAvailability(filename: string) {
@@ -18,6 +17,6 @@ export async function uploadAvailability(filename: string) {
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
     // Send to queue, with array of row data (array of arrays)
     uploadAvailabilityQueue.add({
-        rows: XLSX.utils.sheet_to_json(sheet, { header: 1 })
+        rows: XLSX.utils.sheet_to_json(sheet, { header: 1 }),
     });
 }

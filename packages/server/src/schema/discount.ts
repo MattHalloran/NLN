@@ -1,11 +1,11 @@
-import { gql } from 'apollo-server-express';
-import { CODE } from '@shared/consts';
-import { CustomError } from '../error';
-import { PrismaSelect } from '@paljs/plugins';
-import { IWrap, RecursivePartial } from '../types';
-import { Context } from '../context';
-import { GraphQLResolveInfo } from 'graphql';
-import { Discount } from './types';
+import { CODE } from "@local/shared";
+import { PrismaSelect } from "@paljs/plugins";
+import { gql } from "apollo-server-express";
+import { GraphQLResolveInfo } from "graphql";
+import { Context } from "../context";
+import { CustomError } from "../error";
+import { IWrap, RecursivePartial } from "../types";
+import { DeleteManyInput, Discount, DiscountInput } from "./types";
 
 export const typeDef = gql`
     input DiscountInput {
@@ -37,35 +37,35 @@ export const typeDef = gql`
         updateDiscount(input: DiscountInput!): Discount!
         deleteDiscounts(input: DeleteManyInput!): Count!
     }
-`
+`;
 
 export const resolvers = {
     Query: {
         discounts: async (_parent: undefined, _input: undefined, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<Discount>[]> => {
             // Must be admin
             if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
-            return await prisma.discount.findMany((new PrismaSelect(info).value)) as any[]
-        }
+            return await prisma.discount.findMany((new PrismaSelect(info).value)) as any[];
+        },
     },
     Mutation: {
-        addDiscount: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
+        addDiscount: async (_parent: undefined, { input }: IWrap<DiscountInput>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
             // Must be admin
             if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
-            return await prisma.discount.create({ data: { ...input }, ...(new PrismaSelect(info).value) })
+            return await prisma.discount.create({ data: { ...input }, ...(new PrismaSelect(info).value) });
         },
-        updateDiscount: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
+        updateDiscount: async (_parent: undefined, { input }: IWrap<DiscountInput>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
             // Must be admin
             if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
             return await prisma.discount.update({
                 where: { id: input.id || undefined },
                 data: { ...input },
-                ...(new PrismaSelect(info).value)
-            })
+                ...(new PrismaSelect(info).value),
+            });
         },
-        deleteDiscounts: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
+        deleteDiscounts: async (_parent: undefined, { input }: IWrap<DeleteManyInput>, { prisma, req }: Context): Promise<RecursivePartial<any> | null> => {
             // Must be admin
             if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
             return await prisma.discount.deleteMany({ where: { id: { in: input.ids } } });
-        }
-    }
-}
+        },
+    },
+};

@@ -1,4 +1,4 @@
-import { gql } from 'graphql-tag';
+import { gql } from "graphql-tag";
 
 export const orderFields = gql`
     fragment orderFields on Order {
@@ -23,4 +23,4 @@ export const orderFields = gql`
             id
         }
     }
-`
+`;

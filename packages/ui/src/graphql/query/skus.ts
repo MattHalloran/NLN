@@ -1,5 +1,5 @@
-import { gql } from 'graphql-tag';
-import { discountFields, plantFields, skuFields } from 'graphql/fragment';
+import { gql } from "graphql-tag";
+import { discountFields, plantFields, skuFields } from "graphql/fragment";
 
 export const skusQuery = gql`
     ${skuFields}
@@ -18,4 +18,4 @@ export const skusQuery = gql`
             }
         }
     }
-`
+`;

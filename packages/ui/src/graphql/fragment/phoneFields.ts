@@ -1,4 +1,4 @@
-import { gql } from 'graphql-tag';
+import { gql } from "graphql-tag";
 
 export const phoneFields = gql`
     fragment phoneFields on Phone {
@@ -6,4 +6,4 @@ export const phoneFields = gql`
         number
         receivesDeliveryUpdates
     }
-`
+`;

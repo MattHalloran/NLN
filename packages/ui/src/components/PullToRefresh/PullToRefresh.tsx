@@ -1,5 +1,5 @@
 import { Box, IconButton, useTheme } from "@mui/material";
-import { RefreshIcon } from "@shared/icons";
+import { RefreshIcon } from "icons";
 import { useEffect, useRef, useState } from "react";
 
 /**
@@ -14,7 +14,7 @@ export const PullToRefresh = () => {
         startX: null,
     });
     // Determine if in standalone (i.e. app is downloaded) mode
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+    const isStandalone = window.matchMedia("(display-mode: standalone)").matches;
 
     // Detect scroll
     useEffect(() => {
@@ -37,9 +37,9 @@ export const PullToRefresh = () => {
                 window.location.reload();
             }
         };
-        window.addEventListener('scroll', handleScroll);
+        window.addEventListener("scroll", handleScroll);
         return () => {
-            window.removeEventListener('scroll', handleScroll);
+            window.removeEventListener("scroll", handleScroll);
         };
     }, []);
 
@@ -48,17 +48,17 @@ export const PullToRefresh = () => {
         <Box
             id='pull-to-refresh'
             sx={{
-                position: 'fixed',
+                position: "fixed",
                 // Must display below the navbar
                 top: 0,
                 left: 0,
                 right: 0,
-                paddingTop: { xs: '96px', md: '112px' },
+                paddingTop: { xs: "96px", md: "112px" },
                 paddingBottom: 40,
-                height: '56px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
+                height: "56px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
                 zIndex: -1,
                 background: palette.background.default,
             }}
@@ -66,8 +66,8 @@ export const PullToRefresh = () => {
             <IconButton sx={{
                 background: palette.background.paper,
                 // Spin when will refresh
-                transform: willRefresh ? 'rotate(360deg)' : 'rotate(0deg)',
-                transition: 'transform 500ms cubic-bezier(0.4, 0, 0.2, 1)',
+                transform: willRefresh ? "rotate(360deg)" : "rotate(0deg)",
+                transition: "transform 500ms cubic-bezier(0.4, 0, 0.2, 1)",
             }}>
                 <RefreshIcon
                     fill={palette.background.textPrimary}
@@ -77,4 +77,4 @@ export const PullToRefresh = () => {
             </IconButton>
         </Box>
     );
-}
+};

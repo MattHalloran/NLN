@@ -7,9 +7,9 @@ import { SetLocation } from "types";
  */
 export const openLink = (setLocation: SetLocation, link: string) => {
     // If link is external, open new tab
-    if (link.includes('http:') || link.includes('https')) {
-        window.open(link, '_blank', 'noopener,noreferrer');
-    } 
+    if (link.includes("http:") || link.includes("https")) {
+        window.open(link, "_blank", "noopener,noreferrer");
+    }
     // Otherwise, push to history
     else {
         setLocation(link);

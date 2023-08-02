@@ -1,29 +1,29 @@
 /**
  * Functions for manipulating state objects
  */
-import { isObject } from "@shared/utils";
+import { isObject } from "@local/shared";
 
 // Grabs data from an object using dot notation (ex: 'parent.child.property')
 export const valueFromDot = (object, notation) => {
-    function index(object, i) { return object[i] }
+    function index(object, i) { return object[i]; }
     if (!object || !notation) return null;
-    return notation.split('.').reduce(index, object);
-}
+    return notation.split(".").reduce(index, object);
+};
 
 export const arrayValueFromDot = (object, notation, index) => {
     const value = valueFromDot(object, notation);
     if (!value || !Array.isArray(value) || index <= 0 || value.length >= index) return null;
     return value[index];
-}
+};
 
 // Maps the keys of an object to dot notation
 export function convertToDot(obj, parent = [], keyValue = {}) {
-    for (let key in obj) {
-        let keyPath: any = [...parent, key];
-        if (obj[key] !== null && typeof obj[key] === 'object') {
+    for (const key in obj) {
+        const keyPath: any = [...parent, key];
+        if (obj[key] !== null && typeof obj[key] === "object") {
             Object.assign(keyValue, convertToDot(obj[key], keyPath, keyValue));
         } else {
-            keyValue[keyPath.join('.')] = obj[key];
+            keyValue[keyPath.join(".")] = obj[key];
         }
     }
     return keyValue;
@@ -35,7 +35,7 @@ export function convertToDot(obj, parent = [], keyValue = {}) {
  * @param notationArray Array of dot notation strings 
  * @returns Array of strings with the first level removed
  */
-export const removeFirstLevel = (notationArray: string[]) => notationArray.map(s => s.split('.').slice(1).join('.')).filter(s => s.length > 0);
+export const removeFirstLevel = (notationArray: string[]) => notationArray.map(s => s.split(".").slice(1).join(".")).filter(s => s.length > 0);
 
 /**
  * Checks if any of the specified fields in an object have been changed. 

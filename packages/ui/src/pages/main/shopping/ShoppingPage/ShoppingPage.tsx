@@ -1,35 +1,34 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useQuery } from "@apollo/client";
+import { Box, Button, FormControlLabel, Grid, Stack, SwipeableDrawer, Switch, useTheme } from "@mui/material";
 import {
     PageContainer,
     SearchBar,
-    Selector
-} from 'components';
-import { ShoppingList } from '../ShoppingList/ShoppingList';
-import { SORT_OPTIONS, PubSub } from 'utils';
-import { traitOptionsQuery } from 'graphql/query';
-import { useQuery } from '@apollo/client';
-import { Switch, Grid, Button, SwipeableDrawer, FormControlLabel, Box, useTheme, Stack } from '@mui/material';
-import { printAvailability } from 'utils';
-import { CloseIcon, DeleteIcon, FilterIcon, PrintIcon } from '@shared/icons';
-import { traitOptions } from 'graphql/generated/traitOptions';
+    Selector,
+} from "components";
+import { traitOptions } from "graphql/generated/traitOptions";
+import { traitOptionsQuery } from "graphql/query";
+import { CloseIcon, DeleteIcon, FilterIcon, PrintIcon } from "icons";
+import { useCallback, useEffect, useState } from "react";
+import { PubSub, SORT_OPTIONS, printAvailability } from "utils";
+import { ShoppingList } from "../ShoppingList/ShoppingList";
 
 const traitList: [string, string][] = [
     // ['size', 'Sizes'], TODO this is a sku field, and must be treated as such
-    ['Attracts Pollinators & Wildlife', 'attractsPollinatorsAndWildlife'],
-    ['Bloom Colors', 'bloomColors'],
-    ['Bloom Times', 'bloomTimes'],
-    ['Drought Tolerance', 'droughtTolerance'],
-    ['Grown Height', 'grownHeight'],
-    ['Grown Spread', 'grownSpread'],
-    ['Growth Rate', 'growthRate'],
-    ['Hardiness Zones', 'zone'],
-    ['Light Ranges', 'lightRanges'],
-    ['Optimal Light', 'optimalLight'],
-    ['Salt Tolerance', 'saltTolerance'],
-    ['Soil Moistures', 'soilMoistures'],
-    ['Soil PHs', 'soilPhs'],
-    ['Soil Types', 'soilTypes'],
-]
+    ["Attracts Pollinators & Wildlife", "attractsPollinatorsAndWildlife"],
+    ["Bloom Colors", "bloomColors"],
+    ["Bloom Times", "bloomTimes"],
+    ["Drought Tolerance", "droughtTolerance"],
+    ["Grown Height", "grownHeight"],
+    ["Grown Spread", "grownSpread"],
+    ["Growth Rate", "growthRate"],
+    ["Hardiness Zones", "zone"],
+    ["Light Ranges", "lightRanges"],
+    ["Optimal Light", "optimalLight"],
+    ["Salt Tolerance", "saltTolerance"],
+    ["Soil Moistures", "soilMoistures"],
+    ["Soil PHs", "soilPhs"],
+    ["Soil Types", "soilTypes"],
+];
 
 export const ShoppingPage = ({
     session,
@@ -44,41 +43,41 @@ export const ShoppingPage = ({
     const [traitOptions, setTraitOptions] = useState<{ [key: string]: string[] }>({});
     const [filters, setFilters] = useState<{ [x: string]: string }>({});
     const [sortBy, setSortBy] = useState(SORT_OPTIONS[0]);
-    const [searchString, setSearchString] = useState('');
+    const [searchString, setSearchString] = useState("");
     const [hideOutOfStock, setHideOutOfStock] = useState(false);
 
     useEffect(() => {
-        let openSub = PubSub.get().subscribeArrowMenuOpen((data) => {
-            setOpen(open => data === 'toggle' ? !open : data);
+        const openSub = PubSub.get().subscribeArrowMenuOpen((data) => {
+            setOpen(open => data === "toggle" ? !open : data);
         });
         return (() => {
             PubSub.get().unsubscribe(openSub);
-        })
-    }, [])
+        });
+    }, []);
 
     useEffect(() => {
-        let traitOptions: { [key: string]: string[] } = {};
+        const traitOptions: { [key: string]: string[] } = {};
         for (const option of traitOptionsData?.traitOptions ?? []) {
             traitOptions[option.name] = option.values;
         }
         setTraitOptions(traitOptions);
-    }, [traitOptionsData])
+    }, [traitOptionsData]);
 
     const handleFiltersChange = useCallback((name: string, value: string) => {
-        let modified_filters = { ...filters };
+        const modified_filters = { ...filters };
         modified_filters[name] = value;
-        setFilters(modified_filters)
-    }, [filters])
+        setFilters(modified_filters);
+    }, [filters]);
 
     const handleHideChange = useCallback((event) => {
         setHideOutOfStock(event.target.checked);
-    }, [])
+    }, []);
 
     const traitOptionsToSelector = useCallback((title: string, field: string) => {
         if (!traitOptions) return;
-        let options = traitOptions[field];
+        const options = traitOptions[field];
         if (!options || !Array.isArray(options) || options.length <= 0) return null;
-        let selected: string = filters ? filters[field] : '';
+        const selected: string = filters ? filters[field] : "";
         return (
             <Selector
                 color={undefined}
@@ -91,16 +90,16 @@ export const ShoppingPage = ({
                 label={title}
                 sx={{ marginBottom: spacing(2) }}
             />
-        )
-    }, [traitOptions, filters, spacing, handleFiltersChange])
+        );
+    }, [traitOptions, filters, spacing, handleFiltersChange]);
 
     const resetSearchConstraints = () => {
-        setSortBy(SORT_OPTIONS[0])
-        setSearchString('')
+        setSortBy(SORT_OPTIONS[0]);
+        setSearchString("");
         setFilters({});
-    }
+    };
 
-    let optionsContainer = (
+    const optionsContainer = (
         <Grid mb={2} container spacing={2}>
             <Grid item xs={12} sm={6}>
                 <Button
@@ -129,11 +128,11 @@ export const ShoppingPage = ({
                 onOpen={() => { }}
                 onClose={() => PubSub.get().publishArrowMenuOpen(false)}
                 sx={{
-                    '& .MuiDrawer-paper': {
+                    "& .MuiDrawer-paper": {
                         background: palette.background.default,
                         color: palette.background.textPrimary,
                         padding: spacing(1),
-                    }
+                    },
                 }}
             >
                 {optionsContainer}
@@ -169,7 +168,7 @@ export const ShoppingPage = ({
                 <Button
                     color="secondary"
                     startIcon={<FilterIcon />}
-                    onClick={() => PubSub.get().publishArrowMenuOpen('toggle')}
+                    onClick={() => PubSub.get().publishArrowMenuOpen("toggle")}
                 >Filter</Button>
                 <Button
                     color="secondary"
@@ -188,4 +187,4 @@ export const ShoppingPage = ({
             />
         </PageContainer >
     );
-}
+};

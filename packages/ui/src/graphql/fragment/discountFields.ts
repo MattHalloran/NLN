@@ -1,4 +1,4 @@
-import { gql } from 'graphql-tag';
+import { gql } from "graphql-tag";
 
 export const discountFields = gql`
     fragment discountFields on Discount {
@@ -8,4 +8,4 @@ export const discountFields = gql`
         comment
         terms
     }
-`
+`;

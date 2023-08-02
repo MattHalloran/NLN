@@ -1,4 +1,4 @@
-import { gql } from 'graphql-tag';
+import { gql } from "graphql-tag";
 
 export const customerSessionFields = gql`
     fragment customerSessionFields on Customer {
@@ -14,4 +14,4 @@ export const customerSessionFields = gql`
             }
         }
     }
-`
+`;

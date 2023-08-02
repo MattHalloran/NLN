@@ -1,10 +1,10 @@
-import ReactDOM from 'react-dom/client';
-import { App } from './App';
-import { Router } from '@shared/route';
-import { ApolloProvider } from '@apollo/client';
-import { initializeApollo } from 'graphql/utils/initialize';
-import * as serviceWorkerRegistration from './serviceWorkerRegistration';
-import { ErrorBoundary } from 'components';
+import { ApolloProvider } from "@apollo/client";
+import { Router } from "@local/shared";
+import { ErrorBoundary } from "components";
+import { initializeApollo } from "graphql/utils/initialize";
+import ReactDOM from "react-dom/client";
+import { App } from "./App";
+import * as serviceWorkerRegistration from "./serviceWorkerRegistration";
 
 const client = initializeApollo();
 
@@ -16,7 +16,7 @@ root.render(
                 <App />
             </ErrorBoundary>
         </ApolloProvider>
-    </Router>
+    </Router>,
 );
 
 // If you want your app to work offline and load faster, you can change
@@ -24,12 +24,12 @@ root.render(
 // Learn more about service workers: https://cra.link/PWA
 serviceWorkerRegistration.register({
     onUpdate: registration => {
-        alert('New version available! The site will now update.');
+        alert("New version available! The site will now update.");
         if (registration && registration.waiting) {
-            registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+            registration.waiting.postMessage({ type: "SKIP_WAITING" });
         }
         window.location.reload();
-    }
+    },
 });
 
 // If you want to start measuring performance in your app, pass a function

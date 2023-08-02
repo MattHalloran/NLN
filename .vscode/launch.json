@@ -7,7 +7,7 @@
             "request": "attach",
             "remoteRoot": "/srv/app/packages/server",
             "localRoot": "${workspaceFolder}/packages/server",
-            "port": 9229,
+            "port": 9230,
             "address": "localhost",
             "protocol": "inspector",
             "restart": true,
@@ -15,7 +15,7 @@
             "skipFiles": [
                 "/node_modules/**/*.js"
             ],
-            "dockerRunCommand": "--env --publish 5329:5329 --publish 9229:9229 --name ${containerName} ${image}",
+            "dockerRunCommand": "--env --publish 5330:5330 --publish 9230:9230 --name ${containerName} ${image}",
         }
     ]
 }

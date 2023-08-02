@@ -1,5 +1,5 @@
-import { gql } from 'graphql-tag';
-import { customerSessionFields } from 'graphql/fragment';
+import { gql } from "graphql-tag";
+import { customerSessionFields } from "graphql/fragment";
 
 export const updateCustomerMutation = gql`
     ${customerSessionFields}
@@ -8,4 +8,4 @@ export const updateCustomerMutation = gql`
             ...customerSessionFields
         }
     }
-`
+`;

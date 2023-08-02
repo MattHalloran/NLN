@@ -1,4 +1,4 @@
-import { gql } from 'graphql-tag';
+import { gql } from "graphql-tag";
 
 export const addImagesMutation = gql`
     mutation addImages($input: AddImagesInput!) {
@@ -8,4 +8,4 @@ export const addImagesMutation = gql`
             hash
         }
     }
-`
+`;

@@ -1,4 +1,4 @@
-import { gql } from 'graphql-tag';
+import { gql } from "graphql-tag";
 
 export const emailFields = gql`
     fragment emailFields on Email {
@@ -6,4 +6,4 @@ export const emailFields = gql`
         emailAddress
         receivesDeliveryUpdates
     }
-`
+`;

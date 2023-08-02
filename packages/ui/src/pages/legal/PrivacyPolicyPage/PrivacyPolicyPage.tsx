@@ -1,32 +1,32 @@
-import { useState, useEffect } from "react";
-import { useQuery } from '@apollo/client';
-import { readAssetsQuery } from 'graphql/query/readAssets';
-import { PageContainer, PolicyBreadcrumbs } from 'components';
-import { convertToDot, valueFromDot } from "utils";
+import { useQuery } from "@apollo/client";
 import { useTheme } from "@mui/material";
-import MarkdownInput from 'markdown-to-jsx';
+import { PageContainer, PolicyBreadcrumbs } from "components";
+import { readAssetsQuery } from "graphql/query/readAssets";
+import MarkdownInput from "markdown-to-jsx";
+import { useEffect, useState } from "react";
+import { convertToDot, valueFromDot } from "utils";
 
 export const PrivacyPolicyPage = ({
-    business
+    business,
 }) => {
     const { palette } = useTheme();
 
     const [privacy, setPrivacy] = useState(null);
-    const { data: privacyData } = useQuery(readAssetsQuery, { variables: { input: { files: ['privacy.md'] } } });
+    const { data: privacyData } = useQuery(readAssetsQuery, { variables: { input: { files: ["privacy.md"] } } });
 
     useEffect(() => {
         if (privacyData === undefined) return;
         let data = privacyData.readAssets[0];
         // Replace variables
         const business_fields = Object.keys(convertToDot(business));
-        business_fields.forEach(f => data = data.replaceAll(`<${f}>`, valueFromDot(business, f) || ''));
+        business_fields.forEach(f => data = data.replaceAll(`<${f}>`, valueFromDot(business, f) || ""));
         setPrivacy(data);
-    }, [privacyData, business])
+    }, [privacyData, business]);
 
     return (
         <PageContainer>
             <PolicyBreadcrumbs textColor={palette.secondary.dark} />
-            <MarkdownInput>{privacy ?? ''}</MarkdownInput>
+            <MarkdownInput>{privacy ?? ""}</MarkdownInput>
         </PageContainer>
     );
-}
+};

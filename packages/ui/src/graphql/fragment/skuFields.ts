@@ -1,4 +1,4 @@
-import { gql } from 'graphql-tag';
+import { gql } from "graphql-tag";
 
 export const skuFields = gql`
     fragment skuFields on Sku {
@@ -11,4 +11,4 @@ export const skuFields = gql`
         price
         status
     }
-`
+`;

@@ -1,10 +1,9 @@
-import { gql } from 'apollo-server-express';
-import { CODE, TASK_STATUS } from '@shared/consts';
-import { CustomError } from '../error';
-import { PrismaSelect } from '@paljs/plugins';
-import { IWrap, RecursivePartial } from '../types';
-import { Context } from '../context';
-import { GraphQLResolveInfo } from 'graphql';
+import { CODE, TASK_STATUS } from "@local/shared";
+import { gql } from "apollo-server-express";
+import { GraphQLResolveInfo } from "graphql";
+import { Context } from "../context";
+import { CustomError } from "../error";
+import { IWrap, RecursivePartial } from "../types";
 
 export const typeDef = gql`
     enum TaskStatus {
@@ -27,7 +26,7 @@ export const typeDef = gql`
     extend type Query {
         tasks(ids: [ID!], status: TaskStatus): [Task!]!
     }
-`
+`;
 
 export const resolvers = {
     TaskStatus: TASK_STATUS,
@@ -36,8 +35,8 @@ export const resolvers = {
             // Must be admin
             if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
             return await prisma.queue_task.findMany({
-                where: { status: input.status }
+                where: { status: input.status },
             });
-        }
-    }
-}
+        },
+    },
+};

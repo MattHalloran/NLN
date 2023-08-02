@@ -1,7 +1,6 @@
-import { signUpMutation } from 'graphql/mutation';
-import { useMutation } from '@apollo/client';
-import { APP_LINKS, CODE, DEFAULT_PRONOUNS } from '@shared/consts';
-import { useFormik } from 'formik';
+import { useMutation } from "@apollo/client";
+import { APP_LINKS, CODE, DEFAULT_PRONOUNS, signUpSchema, useLocation } from "@local/shared";
+import { Autocomplete } from "@mui/lab";
 import {
     Box,
     Button,
@@ -16,26 +15,25 @@ import {
     RadioGroup,
     TextField,
     Typography,
-    useTheme
-} from '@mui/material';
-import { Autocomplete } from '@mui/lab';
-import { PubSub } from 'utils';
-import { signUpSchema } from '@shared/validation';
-import { mutationWrapper } from 'graphql/utils';
-import { signUpVariables, signUp_signUp } from 'graphql/generated/signUp';
-import { useLocation } from '@shared/route';
-import { PasswordTextField } from 'components/inputs/PasswordTextField/PasswordTextField';
+    useTheme,
+} from "@mui/material";
+import { PasswordTextField } from "components/inputs/PasswordTextField/PasswordTextField";
+import { useFormik } from "formik";
+import { signUpVariables, signUp_signUp } from "graphql/generated/signUp";
+import { signUpMutation } from "graphql/mutation";
+import { mutationWrapper } from "graphql/utils";
+import { PubSub } from "utils";
 
 const clickSizeStyle = (palette: Palette) => ({
     color: palette.secondary.light,
-    minHeight: '48px', // Lighthouse recommends this for SEO, as it is more clickable
-    display: 'flex',
-    alignItems: 'center',
-})
+    minHeight: "48px", // Lighthouse recommends this for SEO, as it is more clickable
+    display: "flex",
+    alignItems: "center",
+});
 
 export const SignUpForm = ({
     business,
-    onSessionUpdate
+    onSessionUpdate,
 }) => {
     const { palette, spacing } = useTheme();
     const [, setLocation] = useLocation();
@@ -46,14 +44,14 @@ export const SignUpForm = ({
         initialValues: {
             accountApproved: true,
             marketingEmails: true,
-            firstName: '',
-            lastName: '',
-            pronouns: '',
-            business: '',
-            email: '',
-            phone: '',
-            password: '',
-            confirmPassword: ''
+            firstName: "",
+            lastName: "",
+            pronouns: "",
+            business: "",
+            email: "",
+            phone: "",
+            password: "",
+            confirmPassword: "",
         },
         validationSchema: signUpSchema,
         onSubmit: (values) => {
@@ -64,7 +62,7 @@ export const SignUpForm = ({
                     ...input,
                     accountApproved: values.accountApproved,
                     marketingEmails: values.marketingEmails,
-                    theme: palette.mode ?? 'light',
+                    theme: palette.mode ?? "light",
                 },
                 onSuccess: (data) => {
                     onSessionUpdate(data);
@@ -72,17 +70,17 @@ export const SignUpForm = ({
                         PubSub.get().publishAlertDialog({
                             message: `Welcome to ${business?.BUSINESS_NAME?.Short}. You may now begin shopping. Please verify your email within 48 hours.`,
                             buttons: [{
-                                text: 'OK',
+                                text: "OK",
                                 onClick: () => setLocation(APP_LINKS.Shopping),
-                            }]
+                            }],
                         });
                     } else {
                         PubSub.get().publishAlertDialog({
                             message: `Welcome to ${business?.BUSINESS_NAME?.Short}. Please verify your email within 48 hours. Since you have never ordered from us before, we must approve your account before you can order. If this was a mistake, you can edit this in the /profile page.`,
                             buttons: [{
-                                text: 'OK',
+                                text: "OK",
                                 onClick: () => setLocation(APP_LINKS.Profile),
-                            }]
+                            }],
                         });
                     }
                 },
@@ -91,19 +89,19 @@ export const SignUpForm = ({
                         PubSub.get().publishAlertDialog({
                             message: `${response.message}. Press OK if you would like to be redirected to the forgot password form.`,
                             buttons: [{
-                                text: 'OK',
+                                text: "OK",
                                 onClick: () => setLocation(APP_LINKS.ForgotPassword),
-                            }]
+                            }],
                         });
                     }
-                }
-            })
+                },
+            });
         },
     });
 
     return (
         <Box sx={{
-            width: '100%',
+            width: "100%",
             marginTop: spacing(3),
         }}>
             <form onSubmit={formik.handleSubmit}>
@@ -142,7 +140,7 @@ export const SignUpForm = ({
                             id="pronouns"
                             options={DEFAULT_PRONOUNS}
                             value={formik.values.pronouns}
-                            onChange={(_, value) => formik.setFieldValue('pronouns', value)}
+                            onChange={(_, value) => formik.setFieldValue("pronouns", value)}
                             renderInput={(params) => (
                                 <TextField
                                     {...params}
@@ -272,7 +270,7 @@ export const SignUpForm = ({
                     </Grid>
                     <Grid item xs={6}>
                         <Link onClick={() => setLocation(APP_LINKS.ForgotPassword)}>
-                            <Typography sx={{ ...clickSizeStyle(palette), flexDirection: 'row-reverse' }}>
+                            <Typography sx={{ ...clickSizeStyle(palette), flexDirection: "row-reverse" }}>
                                 Forgot Password?
                             </Typography>
                         </Link>
@@ -281,4 +279,4 @@ export const SignUpForm = ({
             </form>
         </Box>
     );
-}
+};

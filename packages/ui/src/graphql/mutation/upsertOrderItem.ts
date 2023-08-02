@@ -1,5 +1,5 @@
-import { gql } from 'graphql-tag';
-import { orderItemFields } from 'graphql/fragment';
+import { gql } from "graphql-tag";
+import { orderItemFields } from "graphql/fragment";
 
 export const upsertOrderItemMutation = gql`
     ${orderItemFields}
@@ -8,4 +8,4 @@ export const upsertOrderItemMutation = gql`
             ...orderItemFields
         }
     }
-`
+`;

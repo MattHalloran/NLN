@@ -1,4 +1,4 @@
-import { ApolloErrorCode, CODE } from "@shared/consts";
+import { ApolloErrorCode, CODE } from "@local/shared";
 import { ApolloError } from "types";
 
 /**
@@ -7,7 +7,7 @@ import { ApolloError } from "types";
  * @param defaultMessage The default text to display if no message is provided
  * @returns The text to display in the snackbar
  */
-export const errorToMessage = (error: ApolloError, defaultMessage: string = 'Unknown error occurred.') => {
+export const errorToMessage = (error: ApolloError, defaultMessage = "Unknown error occurred.") => {
     let message = defaultMessage;
     // If error directly contains a message property, use that
     if (error.message) {
@@ -39,7 +39,7 @@ export const errorToMessage = (error: ApolloError, defaultMessage: string = 'Unk
  * @returns True if the error code is in the error, false otherwise
  */
 export const hasErrorCode = (error: ApolloError, code: ApolloErrorCode): boolean => {
-    return Array.isArray(error.graphQLErrors) && error.graphQLErrors.some(e => 
-        e.extensions?.code === code.code
+    return Array.isArray(error.graphQLErrors) && error.graphQLErrors.some(e =>
+        e.extensions?.code === code.code,
     );
-}
+};

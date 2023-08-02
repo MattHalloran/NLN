@@ -1,4 +1,4 @@
-import { gql } from 'graphql-tag';
+import { gql } from "graphql-tag";
 
 export const deletePlantsMutation = gql`
     mutation deletePlants($input: DeleteManyInput!) {
@@ -6,4 +6,4 @@ export const deletePlantsMutation = gql`
             count
         }
     }
-`
+`;

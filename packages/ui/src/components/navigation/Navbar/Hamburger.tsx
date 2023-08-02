@@ -1,18 +1,17 @@
-import { useEffect, useState } from 'react';
+import { Badge, Collapse, Divider, IconButton, List, ListItem, ListItemIcon, ListItemText, Palette, SwipeableDrawer, useTheme } from "@mui/material";
 import {
     ContactInfo,
-} from 'components';
-import { getUserActions, PubSub } from 'utils';
-import { IconButton, SwipeableDrawer, List, ListItem, ListItemIcon, Badge, Collapse, Divider, ListItemText, useTheme, Palette } from '@mui/material';
-import { CopyrightBreadcrumbs } from 'components';
-import _ from 'lodash';
-import { CloseIcon, ContactSupportIcon, ExpandLessIcon, ExpandMoreIcon, FacebookIcon, HomeIcon, InfoIcon, InstagramIcon, LogOutIcon, MenuIcon, PhotoLibraryIcon, ShareIcon } from '@shared/icons';
-import { APP_LINKS } from '@shared/consts';
+    CopyrightBreadcrumbs,
+} from "components";
+import { APP_LINKS, CloseIcon, ContactSupportIcon, ExpandLessIcon, ExpandMoreIcon, FacebookIcon, HomeIcon, InfoIcon, InstagramIcon, LogOutIcon, MenuIcon, PhotoLibraryIcon, ShareIcon } from "icons";
+import _ from "lodash";
+import { useEffect, useState } from "react";
+import { PubSub, getUserActions } from "utils";
 
 const menuItemStyle = (palette: Palette) => ({
     color: palette.background.textPrimary,
-        borderBottom: `1px solid ${palette.background.textPrimary}`,
-})
+    borderBottom: `1px solid ${palette.background.textPrimary}`,
+});
 
 export const Hamburger = ({
     session,
@@ -20,7 +19,7 @@ export const Hamburger = ({
     logout,
     roles,
     cart,
-    onRedirect
+    onRedirect,
 }) => {
     const { palette } = useTheme();
 
@@ -29,16 +28,16 @@ export const Hamburger = ({
     const [open, setOpen] = useState(false);
 
     useEffect(() => {
-        let openSub = PubSub.get().subscribeBurgerMenu((data) => {
-            setOpen(open => data === 'toggle' ? !open : data);
+        const openSub = PubSub.get().subscribeBurgerMenu((data) => {
+            setOpen(open => data === "toggle" ? !open : data);
         });
         return (() => {
             PubSub.get().unsubscribe(openSub);
-        })
-    }, [])
+        });
+    }, []);
 
-    const closeMenu = () => PubSub.get().publishBurgerMenu(false)
-    const toggleOpen = () => PubSub.get().publishBurgerMenu('toggle')
+    const closeMenu = () => PubSub.get().publishBurgerMenu(false);
+    const toggleOpen = () => PubSub.get().publishBurgerMenu("toggle");
 
     const handleContactClick = () => {
         setContactOpen(!contactOpen);
@@ -46,11 +45,11 @@ export const Hamburger = ({
 
     const handleSocialClick = () => {
         setSocialOpen(!socialOpen);
-    }
+    };
 
     const newTab = (link) => {
         window.open(link, "_blank");
-    }
+    };
 
     const optionsToList = (options) => {
         return options.map(([label, _value, link, onClick, Icon, badgeNum], index) => (
@@ -66,23 +65,23 @@ export const Hamburger = ({
                 {Icon ?
                     (<ListItemIcon>
                         <Badge badgeContent={badgeNum ?? 0} color="error">
-                            <Icon fill={palette.background.textPrimary}/>
+                            <Icon fill={palette.background.textPrimary} />
                         </Badge>
                     </ListItemIcon>) : null}
                 <ListItemText primary={label} />
             </ListItem>
-        ))
-    }
+        ));
+    };
 
-    let nav_options = [
-        ['Home', 'home', APP_LINKS.Home, null, HomeIcon],
-        ['About Us', 'about', APP_LINKS.About, null, InfoIcon],
-        ['Gallery', 'gallery', APP_LINKS.Gallery, null, PhotoLibraryIcon]
-    ]
+    const nav_options = [
+        ["Home", "home", APP_LINKS.Home, null, HomeIcon],
+        ["About Us", "about", APP_LINKS.About, null, InfoIcon],
+        ["Gallery", "gallery", APP_LINKS.Gallery, null, PhotoLibraryIcon],
+    ];
 
-    let customer_actions = getUserActions(session, roles, cart);
+    const customer_actions = getUserActions(session, roles, cart);
     if (_.isObject(session) && Object.entries(session).length > 0) {
-        customer_actions.push(['Log Out', 'logout', APP_LINKS.Home, logout, LogOutIcon, 0]);
+        customer_actions.push(["Log Out", "logout", APP_LINKS.Home, logout, LogOutIcon, 0]);
     }
 
     return (
@@ -95,10 +94,10 @@ export const Hamburger = ({
                 onOpen={() => { }}
                 onClose={closeMenu}
                 sx={{
-                    '& .MuiDrawer-paper': {
+                    "& .MuiDrawer-paper": {
                         background: palette.background.default,
                         color: palette.background.textPrimary,
-                    }
+                    },
                 }}
             >
                 <IconButton
@@ -107,9 +106,9 @@ export const Hamburger = ({
                         color: palette.background.textPrimary,
                         borderRadius: 0,
                         borderBottom: `1px solid ${palette.background.textPrimary}`,
-                        justifyContent: 'end',
-                        direction: 'rtl',
-                        height: { xs: '64px', md: '80px' },
+                        justifyContent: "end",
+                        direction: "rtl",
+                        height: "64px",
                     }}
                 >
                     <CloseIcon fill={palette.background.textPrimary} />
@@ -153,12 +152,12 @@ export const Hamburger = ({
                     sx={{
                         color: palette.background.textPrimary,
                         padding: 5,
-                        display: 'block',
-                        marginLeft: 'auto',
-                        marginRight: 'auto',
+                        display: "block",
+                        marginLeft: "auto",
+                        marginRight: "auto",
                     }}
                 />
             </SwipeableDrawer>
         </>
     );
-}
+};

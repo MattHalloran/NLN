@@ -1,6 +1,6 @@
-import Typography from '@mui/material/Typography';
-import Box from '@mui/material/Box';
-import { useTheme } from '@mui/material';
+import { useTheme } from "@mui/material";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
 
 export const TabPanel = (props) => {
     const { palette } = useTheme();
@@ -23,4 +23,4 @@ export const TabPanel = (props) => {
             )}
         </Box>
     );
-}
+};

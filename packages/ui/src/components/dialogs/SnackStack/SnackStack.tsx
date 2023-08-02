@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Stack } from '@mui/material';
-import { PubSub } from 'utils';
-import { Snack } from '../Snack/Snack';
-import { SnackProps } from '../types';
-import { uuid } from '@shared/uuid';
+import { uuid } from "@local/shared";
+import { Stack } from "@mui/material";
+import { useEffect, useMemo, useState } from "react";
+import { PubSub } from "utils";
+import { Snack } from "../Snack/Snack";
+import { SnackProps } from "../types";
 
 /**
  * Displays short, temporary messages to the user.
@@ -22,7 +22,7 @@ export const SnackStack = () => {
 
     // Subscribe to snack events
     useEffect(() => {
-        let snackSub = PubSub.get().subscribeSnack((o) => {
+        const snackSub = PubSub.get().subscribeSnack((o) => {
             // Add the snack to the queue
             setSnacks((snacks) => {
                 const id = uuid();
@@ -42,19 +42,19 @@ export const SnackStack = () => {
                 return newSnacks;
             });
         });
-        return () => { PubSub.get().unsubscribe(snackSub) };
-    }, [])
+        return () => { PubSub.get().unsubscribe(snackSub); };
+    }, []);
 
-    let visible = useMemo(() => snacks.length > 0, [snacks]);
+    const visible = useMemo(() => snacks.length > 0, [snacks]);
 
     return (
         // Snacks displayed in bottom left corner
         <Stack direction="column" spacing={1} sx={{
-            display: visible ? 'block' : 'none',
-            position: 'fixed',
+            display: visible ? "block" : "none",
+            position: "fixed",
             // Displays above the bottom nav bar, accounting for PWA inset-bottom
-            bottom: { xs: 'calc(64px + env(safe-area-inset-bottom))', md: 'calc(8px + env(safe-area-inset-bottom))' },
-            left: 'calc(8px + env(safe-area-inset-left))',
+            bottom: { xs: "calc(64px + env(safe-area-inset-bottom))", md: "calc(8px + env(safe-area-inset-bottom))" },
+            left: "calc(8px + env(safe-area-inset-left))",
             zIndex: 20000,
         }}>
             {snacks.map((snack) => (
@@ -65,4 +65,4 @@ export const SnackStack = () => {
             ))}
         </Stack>
     );
-}
+};

@@ -1,17 +1,17 @@
-import { useState, useEffect } from 'react';
-import { AdminBreadcrumbs, PageContainer, PageTitle } from 'components';
+import { useMutation } from "@apollo/client";
 import {
     Box,
     Button,
     Grid,
     TextField,
-    useTheme
-} from '@mui/material';
-import { useMutation } from '@apollo/client';
-import { writeAssetsMutation } from 'graphql/mutation';
-import { graphqlWrapperHelper } from 'graphql/utils';
-import Markdown from 'markdown-to-jsx';
-import { CancelIcon, SaveIcon } from '@shared/icons';
+    useTheme,
+} from "@mui/material";
+import { AdminBreadcrumbs, PageContainer, PageTitle } from "components";
+import { writeAssetsMutation } from "graphql/mutation";
+import { graphqlWrapperHelper } from "graphql/utils";
+import { CancelIcon, SaveIcon } from "icons";
+import Markdown from "markdown-to-jsx";
+import { useEffect, useState } from "react";
 
 const helpText = `This page allows you to edit the contact info displayed on the site. 
 
@@ -20,40 +20,40 @@ The information is stored in Markdown. You can learn more about how to write Mar
 NOTE: This will not update Google My Business information. You must do that manually by logging into your Google My Business account.`;
 
 export const AdminContactPage = ({
-    business
+    business,
 }) => {
     const { palette, spacing } = useTheme();
 
-    const [hours, setHours] = useState('');
+    const [hours, setHours] = useState("");
     const [updateHours] = useMutation(writeAssetsMutation);
 
     useEffect(() => {
-        setHours(business?.hours ?? '');
-    }, [business])
+        setHours(business?.hours ?? "");
+    }, [business]);
 
     const applyHours = () => {
         // Data must be sent as a file to use writeAssets
-        const blob = new Blob([hours], { type: 'text/plain' });
-        const file = new File([blob], 'hours.md', { type: blob.type });
-        console.log('applying hours hours', hours);
-        console.log('applying hours blob', blob);
-        console.log('applying hours file', [file]);
+        const blob = new Blob([hours], { type: "text/plain" });
+        const file = new File([blob], "hours.md", { type: blob.type });
+        console.log("applying hours hours", hours);
+        console.log("applying hours blob", blob);
+        console.log("applying hours file", [file]);
         graphqlWrapperHelper({
             call: () => updateHours({ variables: { files: [file] } }),
             successCondition: (success: any) => success === true,
-            successMessage: () => 'Hours updated.',
-            errorMessage: () => 'Failed to update hours.',
-        })
-    }
+            successMessage: () => "Hours updated.",
+            errorMessage: () => "Failed to update hours.",
+        });
+    };
 
     const revertHours = () => {
         setHours(business?.hours);
-    }
+    };
 
-    let options = (
+    const options = (
         <Grid container spacing={2} sx={{
             marginBottom: spacing(2),
-            marginTop: spacing(2)
+            marginTop: spacing(2),
         }}>
             <Grid display="flex" justifyContent="center" item xs={6}>
                 <Button startIcon={<SaveIcon />} fullWidth disabled={business?.hours === hours} onClick={applyHours}>Apply</Button>
@@ -62,7 +62,7 @@ export const AdminContactPage = ({
                 <Button startIcon={<CancelIcon />} fullWidth disabled={business?.hours === hours} onClick={revertHours}>Revert</Button>
             </Grid>
         </Grid>
-    )
+    );
 
     return (
         <PageContainer>
@@ -83,10 +83,10 @@ export const AdminContactPage = ({
                 </Grid>
                 <Grid item xs={12} md={6}>
                     <Box sx={{
-                        border: '1px solid gray',
-                        borderRadius: '2px',
-                        width: '100%',
-                        height: '100%'
+                        border: "1px solid gray",
+                        borderRadius: "2px",
+                        width: "100%",
+                        height: "100%",
                     }}>
                         <Markdown>{hours}</Markdown>
                     </Box>
@@ -95,4 +95,4 @@ export const AdminContactPage = ({
             {options}
         </PageContainer>
     );
-}
+};

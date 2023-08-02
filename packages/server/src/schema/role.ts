@@ -1,10 +1,10 @@
-import { gql } from 'apollo-server-express';
-import { CODE } from '@shared/consts';
-import { CustomError } from '../error';
-import { PrismaSelect } from '@paljs/plugins';
-import { IWrap, RecursivePartial } from '../types';
-import { Context } from '../context';
-import { GraphQLResolveInfo } from 'graphql';
+import { CODE } from "@local/shared";
+import { PrismaSelect } from "@paljs/plugins";
+import { gql } from "apollo-server-express";
+import { GraphQLResolveInfo } from "graphql";
+import { Context } from "../context";
+import { CustomError } from "../error";
+import { IWrap, RecursivePartial } from "../types";
 
 export const typeDef = gql`
     input RoleInput {
@@ -35,7 +35,7 @@ export const typeDef = gql`
         updateRole(input: RoleInput!): Role!
         deleteRoles(input: DeleteManyInput!): Count!
     }
-`
+`;
 
 export const resolvers = {
     Query: {
@@ -43,13 +43,13 @@ export const resolvers = {
             // Must be admin
             if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
             return await prisma.role.findMany((new PrismaSelect(info).value));
-        }
+        },
     },
     Mutation: {
         addRole: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
             // Must be admin
             if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
-            return await prisma.role.create({ data: { ...input }, ...(new PrismaSelect(info).value) })
+            return await prisma.role.create({ data: { ...input }, ...(new PrismaSelect(info).value) });
         },
         updateRole: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
             // Must be admin
@@ -57,13 +57,13 @@ export const resolvers = {
             return await prisma.role.update({
                 where: { id: input.id || undefined },
                 data: { ...input },
-                ...(new PrismaSelect(info).value)
-            })
+                ...(new PrismaSelect(info).value),
+            });
         },
         deleteRoles: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
             // Must be admin
             if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
             return await prisma.role.deleteMany({ where: { id: { in: input.ids } } });
-        }
-    }
-}
+        },
+    },
+};

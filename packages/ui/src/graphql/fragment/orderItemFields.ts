@@ -1,7 +1,7 @@
-import { gql } from 'graphql-tag';
-import { skuFields } from './skuFields';
-import { plantFields } from './plantFields';
-import { discountFields } from './discountFields';
+import { gql } from "graphql-tag";
+import { discountFields } from "./discountFields";
+import { plantFields } from "./plantFields";
+import { skuFields } from "./skuFields";
 
 export const orderItemFields = gql`
     ${skuFields}
@@ -22,4 +22,4 @@ export const orderItemFields = gql`
             }
         }
     }
-`
+`;

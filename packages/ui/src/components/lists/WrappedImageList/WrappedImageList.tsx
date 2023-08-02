@@ -1,19 +1,19 @@
-import { useEffect, useState } from 'react';
-import { Box, Button, Grid } from '@mui/material';
-import { ImageList } from '../ImageList/ImageList';
+import { Box, Button, Grid } from "@mui/material";
+import { useEffect, useState } from "react";
+import { ImageList } from "../ImageList/ImageList";
 
 export const WrappedImageList = ({
     data,
-    onApply
+    onApply,
 }) => {
 
     const [changed, setChanged] = useState(null);
 
     useEffect(() => {
         setChanged(data);
-    }, [data])
+    }, [data]);
 
-    let options = (
+    const options = (
         <Grid mb={2} mt={2} container spacing={2}>
             <Grid display="flex" justifyContent="center" item xs={12} sm={6}>
                 <Button fullWidth onClick={() => onApply(changed)}>Apply Changes</Button>
@@ -22,7 +22,7 @@ export const WrappedImageList = ({
                 <Button fullWidth onClick={() => setChanged(data)}>Revert Changes</Button>
             </Grid>
         </Grid>
-    )
+    );
 
     return (
         <Box>
@@ -31,4 +31,4 @@ export const WrappedImageList = ({
             {options}
         </Box>
     );
-}
+};

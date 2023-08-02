@@ -1,6 +1,6 @@
-import { BottomNavigation, BottomNavigationAction, Badge, useTheme } from '@mui/material';
-import { useLocation } from '@shared/route';
-import { getUserActions } from 'utils';
+import { useLocation } from "@local/shared";
+import { Badge, BottomNavigation, BottomNavigationAction, useTheme } from "@mui/material";
+import { getUserActions } from "utils";
 
 export const BottomNav = ({
     session,
@@ -11,22 +11,22 @@ export const BottomNav = ({
     const [, setLocation] = useLocation();
     const { palette } = useTheme();
 
-    let actions = getUserActions(session, userRoles, cart);
+    const actions = getUserActions(session, userRoles, cart);
 
     return (
         <BottomNavigation
             showLabels
             sx={{
                 background: palette.primary.dark,
-                position: 'fixed',
+                position: "fixed",
                 zIndex: 5,
                 bottom: 0,
-                paddingBottom: 'env(safe-area-inset-bottom)',
-                paddingLeft: 'calc(4px + env(safe-area-inset-left))',
-                paddingRight: 'calc(4px + env(safe-area-inset-right))',
-                height: 'calc(56px + env(safe-area-inset-bottom))',
-                width: '100%',
-                display: { xs: 'flex', md: 'none' },
+                paddingBottom: "env(safe-area-inset-bottom)",
+                paddingLeft: "calc(4px + env(safe-area-inset-left))",
+                paddingRight: "calc(4px + env(safe-area-inset-right))",
+                height: "calc(56px + env(safe-area-inset-bottom))",
+                width: "100%",
+                display: { xs: "flex", md: "none" },
             }}
             {...props}
         >
@@ -36,11 +36,11 @@ export const BottomNav = ({
                     label={label}
                     value={value}
                     href={link}
-                    onClick={(e) => { e.preventDefault(); setLocation(link); if (onClick) onClick() }}
+                    onClick={(e) => { e.preventDefault(); setLocation(link); if (onClick) onClick(); }}
                     icon={<Badge badgeContent={badgeNum} color="error"><Icon /></Badge>}
                     sx={{ color: palette.primary.contrastText }}
                 />
             ))}
         </BottomNavigation>
     );
-}
+};
