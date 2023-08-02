@@ -1,14 +1,13 @@
-import express from 'express';
-import cookieParser from 'cookie-parser';
-import * as auth from './auth';
-import cors from "cors";
 import { ApolloServer } from 'apollo-server-express';
-import { depthLimit } from './depthLimit';
+import cookieParser from 'cookie-parser';
+import cors from "cors";
+import express from 'express';
 import { graphqlUploadExpress } from 'graphql-upload';
-import { schema } from './schema';
+import * as auth from './auth';
 import { context } from './context';
-import { setupDatabase } from './utils/setupDatabase';
+import { depthLimit } from './depthLimit';
 import { genErrorCode, logger, LogLevel } from './logger';
+import { schema } from './schema';
 
 const SERVER_URL = process.env.REACT_APP_SERVER_LOCATION === 'local' ?
     `http://localhost:5329/api` :
@@ -30,6 +29,11 @@ const main = async () => {
     // // For parsing application/xwww-
     // app.use(express.urlencoded({ extended: false }));
     app.use(cookieParser(process.env.JWT_SECRET));
+
+    // Set up health check endpoint
+    app.get("/healthcheck", (_req, res) => {
+        res.status(200).send("OK");
+    });
 
     // For authentication
     app.use(auth.authenticate);

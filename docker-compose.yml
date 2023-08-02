@@ -30,7 +30,8 @@ services:
       - ./packages/ui:${PROJECT_DIR}/packages/ui:z
       - ./packages/shared:${PROJECT_DIR}/packages/shared:z
     depends_on:
-      - server
+      server:
+        condition: service_healthy
     command: /bin/sh -c "chmod +x ${PROJECT_DIR}/scripts/* && ${PROJECT_DIR}/scripts/ui.sh"
   server:
     build:
@@ -76,8 +77,16 @@ services:
       - ./data/uploads:${PROJECT_DIR}/data/uploads:z
       - ./packages/server/src/db/migrations:${PROJECT_DIR}/packages/server/src/db/migrations
     depends_on:
-      - redis
-      - db
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD-SHELL", "node -e \"require('http').request({hostname: 'localhost', port: process.env.PORT_SERVER || 5329, path: '/healthcheck'}, res => { if (res.statusCode === 200) { process.exit(0) } else { process.exit(1) } }).on('error', err => { process.exit(1) }).end()\"" ]
+      start_period: 90s
+      interval: 20s
+      timeout: 5s
+      retries: 10
     command: /bin/sh -c "chmod +x ${PROJECT_DIR}/scripts/* && ${PROJECT_DIR}/scripts/server.sh"
   db:
     image: postgres:13-alpine
@@ -95,6 +104,12 @@ services:
     volumes:
       - ./data/postgres:/var/lib/postgresql/data
       - ./packages/db/entrypoint:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER:-site} && psql -U ${DB_USER:-site} -d ${DB_NAME:-postgres} -c 'SELECT 1'" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: /bin/sh -c "exec docker-entrypoint.sh postgres"
   redis:
     image: redis:7-alpine
     container_name: nln_redis
@@ -105,6 +120,11 @@ services:
       - ./data/redis:${PROJECT_DIR}/data/redis:z
     expose:
       - ${PORT_REDIS}
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     command: /bin/sh -c "mkdir -p ${PROJECT_DIR}/data/redis/appendonlydir && rm -f ${PROJECT_DIR}/data/redis/dump.rdb && redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru --appendonly yes --dbfilename dump.rdb --dir ${PROJECT_DIR}/data/redis/"
   # adminer:
   #     image: adminer

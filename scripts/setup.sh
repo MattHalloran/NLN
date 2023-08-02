@@ -1,5 +1,5 @@
 #!/bin/bash
-# Sets up NPM, Yarn, global dependencies, and anything else 
+# Sets up NPM, Yarn, global dependencies, and anything else
 # required to get the project up and running.
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 source "${HERE}/prettify.sh"
@@ -8,6 +8,9 @@ header "Checking for package updates"
 sudo apt-get update
 header "Running upgrade"
 sudo apt-get -y upgrade
+
+header "Setting script permissions"
+chmod +x "${HERE}/"*.sh
 
 header "Installing nvm"
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
@@ -19,6 +22,40 @@ nvm alias default v16.16.0
 
 header "Installing Yarn"
 npm install -g yarn
+
+if ! command -v docker &>/dev/null; then
+    info "Docker is not installed. Installing Docker..."
+    curl -fsSL https://get.docker.com -o get-docker.sh
+    trap 'rm -f get-docker.sh' EXIT
+    sudo sh get-docker.sh
+    # Check if Docker installation failed
+    if ! command -v docker &>/dev/null; then
+        echo "Error: Docker installation failed."
+        exit 1
+    fi
+else
+    info "Detected: $(docker --version)"
+fi
+
+if ! command -v docker-compose &>/dev/null; then
+    info "Docker Compose is not installed. Installing Docker Compose..."
+    sudo curl -L "https://github.com/docker/compose/releases/download/v2.15.1/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+    sudo chmod a+rx /usr/local/bin/docker-compose
+    # Check if Docker Compose installation failed
+    if ! command -v docker-compose &>/dev/null; then
+        echo "Error: Docker Compose installation failed."
+        exit 1
+    fi
+else
+    info "Detected: $(docker-compose --version)"
+fi
+
+header "Create nginx-proxy network"
+docker network create nginx-proxy
+# Ignore errors if the network already exists
+if [ $? -ne 0 ]; then
+    true
+fi
 
 header "Installing global dependencies"
 yarn global add apollo@2.34.0 typescript ts-node nodemon prisma@3.14.0 react-scripts serve
@@ -33,5 +70,5 @@ cd "${HERE}/.." && yarn cache clean && yarn
 header "Generating type models for Prisma"
 cd "${HERE}/../packages/server" && yarn prisma-generate
 
-info "Done! You may need to restart your editor for syntax highlighting to work correctly." 
+info "Done! You may need to restart your editor for syntax highlighting to work correctly."
 info "If you haven't already, copy .env-example to .env and edit it to match your environment."
