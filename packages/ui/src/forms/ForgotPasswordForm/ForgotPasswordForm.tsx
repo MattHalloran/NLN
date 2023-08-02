@@ -1,5 +1,5 @@
 import { useMutation } from "@apollo/client";
-import { APP_LINKS, requestPasswordChangeSchema, useLocation } from "@local/shared";
+import { APP_LINKS, requestPasswordChangeSchema } from "@local/shared";
 import {
     Box,
     Button,
@@ -14,6 +14,7 @@ import { useFormik } from "formik";
 import { requestPasswordChangeVariables } from "graphql/generated/requestPasswordChange";
 import { requestPasswordChangeMutation } from "graphql/mutation";
 import { mutationWrapper } from "graphql/utils";
+import { useLocation } from "route";
 
 const clickSizeStyle = (palette: Palette) => ({
     color: palette.secondary.light,

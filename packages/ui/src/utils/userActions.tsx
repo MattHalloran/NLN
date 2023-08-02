@@ -1,4 +1,6 @@
-import { APP_LINKS, CreateAccountIcon, ProfileIcon, ROLES, SettingsIcon, ShopIcon, ShoppingCartIcon, SvgComponent } from "@local/shared";
+import { APP_LINKS, ROLES } from "@local/shared";
+import { CreateAccountIcon, ProfileIcon, SettingsIcon, ShopIcon, ShoppingCartIcon } from "icons";
+import { SvgComponent } from "icons/types";
 import _ from "lodash";
 import { Session } from "types";
 

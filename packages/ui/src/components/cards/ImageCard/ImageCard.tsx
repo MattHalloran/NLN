@@ -1,5 +1,6 @@
-import { DeleteIcon, EditIcon, IMAGE_SIZE } from "@local/shared";
+import { IMAGE_SIZE } from "@local/shared";
 import { Card, CardActions, CardContent, CardMedia, IconButton, useTheme } from "@mui/material";
+import { DeleteIcon, EditIcon } from "icons";
 import { useRef } from "react";
 import { useDrag, useDrop } from "react-dnd";
 import { getImageSrc, getServerUrl } from "utils";

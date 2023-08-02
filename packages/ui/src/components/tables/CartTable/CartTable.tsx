@@ -1,3 +1,4 @@
+import { IMAGE_USE } from "@local/shared";
 import AdapterDateFns from "@mui/lab/AdapterDateFns";
 import DatePicker from "@mui/lab/DatePicker";
 import LocalizationProvider from "@mui/lab/LocalizationProvider";
@@ -7,7 +8,7 @@ import {
     Selector,
     SnackSeverity,
 } from "components";
-import { CloseIcon, IMAGE_USE, NoImageIcon } from "icons";
+import { CloseIcon, NoImageIcon } from "icons";
 import { useCallback } from "react";
 import { PubSub, deleteArrayIndex, getImageSrc, getPlantTrait, getServerUrl, showPrice, updateArray } from "utils";
 

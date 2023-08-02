@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from "@apollo/client";
-import { APP_LINKS, useLocation } from "@local/shared";
+import { APP_LINKS } from "@local/shared";
 import { Box } from "@mui/material";
 import {
     PlantCard,
@@ -12,7 +12,8 @@ import { upsertOrderItemMutation } from "graphql/mutation";
 import { plantsQuery } from "graphql/query";
 import { mutationWrapper } from "graphql/utils";
 import { useEffect, useState } from "react";
-import { PubSub, SORT_OPTIONS, getPlantTrait, parseSearchParams } from "utils";
+import { parseSearchParams, useLocation } from "route";
+import { PubSub, SORT_OPTIONS, getPlantTrait } from "utils";
 
 export const ShoppingList = ({
     session,

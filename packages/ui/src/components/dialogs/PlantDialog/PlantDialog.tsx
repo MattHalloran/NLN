@@ -1,7 +1,9 @@
-import { BeeIcon, CloseIcon, DroughtIcon, ExpandLessIcon, ExpandMoreIcon, IMAGE_SIZE, InfoIcon, LampIcon, LightModeIcon, MapIcon, MoistureIcon, MoveLeftRightIcon, MoveUpDownIcon, PHIcon, PaletteIcon, SaltIcon, ScheduleIcon, ShoppingCartAddIcon, SoilTypeIcon, SpeedIcon, SvgComponent } from "@local/shared";
+import { IMAGE_SIZE } from "@local/shared";
 import { AppBar, Avatar, Box, Button, Collapse, Dialog, Grid, IconButton, List, ListItem, ListItemAvatar, ListItemIcon, ListItemText, Toolbar, Typography, useTheme } from "@mui/material";
 import { QuantityBox, Selector, SnackSeverity, Transition } from "components";
 import { plants_plants_skus } from "graphql/generated/plants";
+import { BeeIcon, CloseIcon, DroughtIcon, ExpandLessIcon, ExpandMoreIcon, InfoIcon, LampIcon, LightModeIcon, MapIcon, MoistureIcon, MoveLeftRightIcon, MoveUpDownIcon, PHIcon, PaletteIcon, SaltIcon, ScheduleIcon, ShoppingCartAddIcon, SoilTypeIcon, SpeedIcon } from "icons";
+import { SvgComponent } from "icons/types";
 import { useEffect, useState } from "react";
 import Carousel from "react-gallery-carousel";
 import "react-gallery-carousel/dist/index.css";

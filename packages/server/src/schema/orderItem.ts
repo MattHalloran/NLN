@@ -72,7 +72,7 @@ export const resolvers = {
                 ...(new PrismaSelect(info).value),
             });
         },
-        deleteOrderItems: async (_parent: undefined, { input }: IWrap<DeleteManyInput>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
+        deleteOrderItems: async (_parent: undefined, { input }: IWrap<DeleteManyInput>, { prisma, req }: Context): Promise<RecursivePartial<any> | null> => {
             // Must be admin, or deleting your own
             // Find customerIds associated with orders that have the given order item ids
             let customerIds = await prisma.customer.findMany({

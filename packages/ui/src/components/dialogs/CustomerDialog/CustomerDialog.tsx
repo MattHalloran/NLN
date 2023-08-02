@@ -1,4 +1,3 @@
-import { CancelIcon, CloseIcon, CreateIcon, DeleteIcon, ErrorIcon, LockIcon, LockOpenIcon, SaveIcon, SvgComponent } from "@local/shared";
 import {
     AppBar,
     Box,
@@ -16,6 +15,8 @@ import { AccountStatus } from "graphql/generated/globalTypes";
 import { updateCustomerVariables } from "graphql/generated/updateCustomer";
 import { deleteCustomerMutation, updateCustomerMutation } from "graphql/mutation";
 import { documentNodeWrapper } from "graphql/utils";
+import { CancelIcon, CloseIcon, CreateIcon, DeleteIcon, ErrorIcon, LockIcon, LockOpenIcon, SaveIcon } from "icons";
+import { SvgComponent } from "icons/types";
 import _ from "lodash";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { PubSub } from "utils";

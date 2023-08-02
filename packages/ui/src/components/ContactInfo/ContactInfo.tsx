@@ -1,4 +1,3 @@
-import { EmailIcon, PhoneIcon, PinIcon, SvgComponent } from "@local/shared";
 import {
     BottomNavigation,
     BottomNavigationAction,
@@ -13,6 +12,8 @@ import {
     Tooltip,
     useTheme,
 } from "@mui/material";
+import { EmailIcon, PhoneIcon, PinIcon } from "icons";
+import { SvgComponent } from "icons/types";
 
 export const ContactInfo = ({
     business,

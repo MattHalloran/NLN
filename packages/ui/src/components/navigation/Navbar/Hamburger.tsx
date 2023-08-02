@@ -1,9 +1,10 @@
+import { APP_LINKS } from "@local/shared";
 import { Badge, Collapse, Divider, IconButton, List, ListItem, ListItemIcon, ListItemText, Palette, SwipeableDrawer, useTheme } from "@mui/material";
 import {
     ContactInfo,
     CopyrightBreadcrumbs,
 } from "components";
-import { APP_LINKS, CloseIcon, ContactSupportIcon, ExpandLessIcon, ExpandMoreIcon, FacebookIcon, HomeIcon, InfoIcon, InstagramIcon, LogOutIcon, MenuIcon, PhotoLibraryIcon, ShareIcon } from "icons";
+import { CloseIcon, ContactSupportIcon, ExpandLessIcon, ExpandMoreIcon, FacebookIcon, HomeIcon, InfoIcon, InstagramIcon, LogOutIcon, MenuIcon, PhotoLibraryIcon, ShareIcon } from "icons";
 import _ from "lodash";
 import { useEffect, useState } from "react";
 import { PubSub, getUserActions } from "utils";

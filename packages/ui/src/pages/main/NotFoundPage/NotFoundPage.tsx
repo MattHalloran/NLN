@@ -1,6 +1,7 @@
-import { APP_LINKS, Link } from "@local/shared";
+import { APP_LINKS } from "@local/shared";
 import { Box, Button } from "@mui/material";
 import { PageContainer } from "components";
+import { Link } from "route";
 
 export const NotFoundPage = () => {
     return (

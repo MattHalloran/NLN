@@ -1,4 +1,5 @@
 import { useMutation } from "@apollo/client";
+import { ORDER_STATUS, ROLES } from "@local/shared";
 import {
     AppBar,
     Box,
@@ -14,7 +15,7 @@ import { CartTable, Transition } from "components";
 import { updateOrderVariables, updateOrder_updateOrder } from "graphql/generated/updateOrder";
 import { updateOrderMutation } from "graphql/mutation";
 import { mutationWrapper } from "graphql/utils";
-import { CancelIcon, CloseIcon, CompleteIcon, DeliveryTruckIcon, EditIcon, ORDER_STATUS, ROLES, SaveIcon, ScheduleIcon, SuccessIcon, ThumbDownIcon, ThumbUpIcon } from "icons";
+import { CancelIcon, CloseIcon, CompleteIcon, DeliveryTruckIcon, EditIcon, SaveIcon, ScheduleIcon, SuccessIcon, ThumbDownIcon, ThumbUpIcon } from "icons";
 import _ from "lodash";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ORDER_FILTERS, findWithAttr } from "utils";

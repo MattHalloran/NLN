@@ -1,9 +1,10 @@
+import { APP_LINKS } from "@local/shared";
 import { Badge, Button, Container, IconButton, List, ListItem, ListItemIcon, ListItemText, Palette, useTheme } from "@mui/material";
 import {
     ContactInfo,
     PopupMenu,
 } from "components";
-import { APP_LINKS, CreateAccountIcon, InfoIcon, PhotoLibraryIcon, ShoppingCartIcon } from "icons";
+import { CreateAccountIcon, InfoIcon, PhotoLibraryIcon, ShoppingCartIcon } from "icons";
 import _ from "lodash";
 import { UserActions, getUserActions, updateArray } from "utils";
 

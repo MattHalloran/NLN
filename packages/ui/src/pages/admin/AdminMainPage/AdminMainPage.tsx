@@ -1,6 +1,8 @@
-import { APP_LINKS, OpenInNewIcon, useLocation } from "@local/shared";
+import { APP_LINKS } from "@local/shared";
 import { Box, Card, CardActions, CardContent, IconButton, Tooltip, Typography, useTheme } from "@mui/material";
 import { PageContainer, PageTitle } from "components";
+import { OpenInNewIcon } from "icons";
+import { useLocation } from "route";
 
 export const AdminMainPage = () => {
     const [, setLocation] = useLocation();

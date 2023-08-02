@@ -1,5 +1,5 @@
 import { useMutation } from "@apollo/client";
-import { CancelIcon, CloseIcon, CreateIcon, DEFAULT_PRONOUNS, addCustomerSchema } from "@local/shared";
+import { DEFAULT_PRONOUNS, addCustomerSchema } from "@local/shared";
 import {
     AppBar,
     Autocomplete,
@@ -17,6 +17,7 @@ import { useFormik } from "formik";
 import { addCustomerVariables, addCustomer_addCustomer } from "graphql/generated/addCustomer";
 import { addCustomerMutation } from "graphql/mutation";
 import { mutationWrapper } from "graphql/utils";
+import { CancelIcon, CloseIcon, CreateIcon } from "icons";
 import { Transition } from "../UpTransition/UpTransition";
 
 export const NewCustomerDialog = ({

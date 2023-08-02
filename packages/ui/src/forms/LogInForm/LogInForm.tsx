@@ -1,5 +1,5 @@
 import { useMutation } from "@apollo/client";
-import { APP_LINKS, CODE, logInSchema, useLocation } from "@local/shared";
+import { APP_LINKS, CODE, logInSchema } from "@local/shared";
 import {
     Box,
     Button,
@@ -16,7 +16,8 @@ import { loginVariables, login_login } from "graphql/generated/login";
 import { loginMutation } from "graphql/mutation";
 import { mutationWrapper } from "graphql/utils";
 import { useMemo } from "react";
-import { PubSub, parseSearchParams } from "utils";
+import { parseSearchParams, useLocation } from "route";
+import { PubSub } from "utils";
 
 const clickSizeStyle = (palette: Palette) => ({
     color: palette.secondary.light,

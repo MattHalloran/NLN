@@ -61,7 +61,7 @@ export const resolvers = {
                 ...(new PrismaSelect(info).value),
             });
         },
-        deletePhones: async (_parent: undefined, { input }: IWrap<DeleteManyInput>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
+        deletePhones: async (_parent: undefined, { input }: IWrap<DeleteManyInput>, { prisma, req }: Context): Promise<RecursivePartial<any> | null> => {
             // Must be admin, or deleting your own
             // TODO must leave one phone per customer
             const specified = await prisma.phone.findMany({ where: { id: { in: input.ids } } });

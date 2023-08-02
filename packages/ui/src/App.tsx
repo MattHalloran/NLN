@@ -1,5 +1,4 @@
 import { useMutation, useQuery } from "@apollo/client";
-import { useLocation } from "@local/shared";
 import { Box, CircularProgress, CssBaseline, StyledEngineProvider, ThemeProvider } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 import { Routes } from "Routes";
@@ -17,6 +16,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { GlobalHotKeys } from "react-hotkeys";
+import { useLocation } from "route";
 import { Session } from "types";
 import { PubSub, themes } from "utils";
 

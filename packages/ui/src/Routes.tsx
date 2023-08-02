@@ -1,4 +1,4 @@
-import { APP_LINKS, ROLES, Route, Switch } from "@local/shared";
+import { APP_LINKS, ROLES } from "@local/shared";
 import { Box, CircularProgress } from "@mui/material";
 import { ScrollToTop } from "components";
 import {
@@ -10,6 +10,7 @@ import {
 } from "forms";
 import { Suspense } from "react";
 import { lazily } from "react-lazily";
+import { Route, Switch } from "route";
 import { Page } from "./pages";
 
 // Lazy loading in the Routes component is a recommended way to improve performance. See https://reactjs.org/docs/code-splitting.html#route-based-code-splitting

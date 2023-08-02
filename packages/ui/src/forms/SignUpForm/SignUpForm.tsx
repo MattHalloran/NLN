@@ -1,5 +1,5 @@
 import { useMutation } from "@apollo/client";
-import { APP_LINKS, CODE, DEFAULT_PRONOUNS, signUpSchema, useLocation } from "@local/shared";
+import { APP_LINKS, CODE, DEFAULT_PRONOUNS, signUpSchema } from "@local/shared";
 import { Autocomplete } from "@mui/lab";
 import {
     Box,
@@ -22,6 +22,7 @@ import { useFormik } from "formik";
 import { signUpVariables, signUp_signUp } from "graphql/generated/signUp";
 import { signUpMutation } from "graphql/mutation";
 import { mutationWrapper } from "graphql/utils";
+import { useLocation } from "route";
 import { PubSub } from "utils";
 
 const clickSizeStyle = (palette: Palette) => ({

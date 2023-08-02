@@ -1,7 +1,6 @@
 import { gql } from "apollo-server-express";
-import { GraphQLResolveInfo, GraphQLScalarType } from "graphql";
+import { GraphQLScalarType } from "graphql";
 import { GraphQLUpload } from "graphql-upload";
-import { Context } from "../context";
 import { IWrap, RecursivePartial } from "../types";
 import { readFiles, saveFiles } from "../utils";
 import { ReadAssetsInput } from "./types";
@@ -67,12 +66,12 @@ export const resolvers = {
         },
     }),
     Query: {
-        readAssets: async (_parent: undefined, { input }: IWrap<ReadAssetsInput>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
+        readAssets: async (_parent: undefined, { input }: IWrap<ReadAssetsInput>): Promise<RecursivePartial<any> | null> => {
             return await readFiles(input.files);
         },
     },
     Mutation: {
-        writeAssets: async (_parent: undefined, input: any, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<boolean> => {
+        writeAssets: async (_parent: undefined, input: any): Promise<boolean> => {
             const data = await saveFiles(input.files);
             // Any failed writes will return null
             return !data.some(d => d === null);

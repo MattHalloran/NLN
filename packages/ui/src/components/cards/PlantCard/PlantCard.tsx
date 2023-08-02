@@ -1,4 +1,4 @@
-import { IMAGE_USE, NoImageIcon, SKU_STATUS } from "@local/shared";
+import { IMAGE_USE, SKU_STATUS } from "@local/shared";
 import {
     Box,
     Card,
@@ -10,6 +10,7 @@ import {
     Theme,
     Typography,
 } from "@mui/material";
+import { NoImageIcon } from "icons";
 import { getImageSrc, getPlantTrait, getServerUrl, showPrice } from "utils";
 
 const deleted: SxProps<Theme> = {

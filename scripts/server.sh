@@ -5,7 +5,7 @@ HERE=$(dirname $0)
 # If in development mode, convert shared packages to typescript
 # In production, this should already be done
 if [ "${NODE_ENV}" = "development" ]; then
-    ".${HERE}/shared.sh"
+    sh "${HERE}/shared.sh"
 fi
 
 PRISMA_SCHEMA_FILE="src/db/schema.prisma"

@@ -1,6 +1,7 @@
-import { APP_LINKS, Redirect, useLocation } from "@local/shared";
+import { APP_LINKS } from "@local/shared";
 import { PageProps } from "pages/types";
 import { useEffect } from "react";
+import { Redirect, useLocation } from "route";
 
 export const Page = ({
     title,
@@ -23,7 +24,7 @@ export const Page = ({
             const needArray: any[] = Array.isArray(restrictedToRoles) ? restrictedToRoles : [restrictedToRoles];
             if (haveArray.some((r: any) => needArray.includes(r?.role?.title))) return children;
         }
-        if (sessionChecked && location.pathname !== redirect) return <Redirect to={redirect} />;
+        if (sessionChecked && location !== redirect) return <Redirect to={redirect} />;
     }
 
     return children;

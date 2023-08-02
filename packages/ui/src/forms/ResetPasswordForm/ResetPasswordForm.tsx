@@ -13,7 +13,8 @@ import { resetPasswordVariables, resetPassword_resetPassword } from "graphql/gen
 import { resetPasswordMutation } from "graphql/mutation";
 import { mutationWrapper } from "graphql/utils";
 import { useMemo } from "react";
-import { PubSub, parseSearchParams } from "utils";
+import { parseSearchParams } from "route";
+import { PubSub } from "utils";
 
 export const ResetPasswordForm = ({
     onSessionUpdate,

@@ -1,5 +1,5 @@
-import { useLocation } from "@local/shared";
 import { Badge, BottomNavigation, BottomNavigationAction, useTheme } from "@mui/material";
+import { useLocation } from "route";
 import { getUserActions } from "utils";
 
 export const BottomNav = ({

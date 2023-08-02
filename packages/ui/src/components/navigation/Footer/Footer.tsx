@@ -1,9 +1,12 @@
-import { APP_LINKS, BusinessIcon, EmailIcon, PhoneIcon, PrintIcon, SvgComponent, useLocation } from "@local/shared";
+import { APP_LINKS } from "@local/shared";
 import { Box, ButtonBase, Grid, List, ListItem, ListItemIcon, ListItemText, Tooltip, useTheme } from "@mui/material";
 import AmericanHort from "assets/img/american-hort.png";
 import NJNLA from "assets/img/njnla_logo.jpg";
 import ProvenWinners from "assets/img/proven-winners.png";
 import { CopyrightBreadcrumbs } from "components";
+import { BusinessIcon, EmailIcon, PhoneIcon, PrintIcon } from "icons";
+import { SvgComponent } from "icons/types";
+import { useLocation } from "route";
 import { getServerUrl, printAvailability } from "utils";
 
 export const Footer = ({

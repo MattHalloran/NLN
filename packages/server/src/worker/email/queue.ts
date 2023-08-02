@@ -10,7 +10,7 @@ const welcomeTemplate = fs.readFileSync(`${process.env.PROJECT_DIR}/packages/ser
 const emailQueue = new Bull("email", { redis: { port: PORT, host: HOST } });
 emailQueue.process(emailProcess);
 
-export function sendMail(to = [], subject = "", text = "", html = "") {
+export function sendMail(to = [], subject = "", text = "", html = ""): void {
     emailQueue.add({
         to,
         subject,
@@ -19,34 +19,34 @@ export function sendMail(to = [], subject = "", text = "", html = "") {
     });
 }
 
-export function customerNotifyAdmin(name: string) {
+export function customerNotifyAdmin(name: string): void {
     emailQueue.add({
         to: [process.env.SITE_EMAIL_USERNAME],
         subject: `Account created for ${name}`,
         text: `${name} has created an account with ${BUSINESS_NAME.Long}. Website accounts can be viewed at ${WEBSITE}/admin/customers`,
-        html: `<p>${name} has created an account with ${BUSINESS_NAME.Long}. Website accounts can be viewed at <a href=\"${WEBSITE}/admin/customers\">${WEBSITE}/admin/customers</a></p>`,
+        html: `<p>${name} has created an account with ${BUSINESS_NAME.Long}. Website accounts can be viewed at <a href="${WEBSITE}/admin/customers">${WEBSITE}/admin/customers</a></p>`,
     });
 }
 
-export function orderNotifyAdmin() {
+export function orderNotifyAdmin(): void {
     emailQueue.add({
         to: [process.env.SITE_EMAIL_USERNAME],
         subject: "New Order Received!",
         text: `A new order has been submitted. It can be viewed at ${WEBSITE}/admin/orders`,
-        html: `<p>A new order has been submitted. It can be viewed at <a href=\"${WEBSITE}/admin/orders\">${WEBSITE}/admin/orders</a></p>`,
+        html: `<p>A new order has been submitted. It can be viewed at <a href="${WEBSITE}/admin/orders">${WEBSITE}/admin/orders</a></p>`,
     });
 }
 
-export function sendResetPasswordLink(email: string, userId: string | number, code: string) {
+export function sendResetPasswordLink(email: string, userId: string | number, code: string): void {
     emailQueue.add({
         to: [email],
         subject: `${BUSINESS_NAME} Password Reset`,
         text: `A password reset was requested for your account with ${BUSINESS_NAME}. If you sent this request, you may change your password through this link (${WEBSITE}/password-reset/${userId}/${code}) to continue. If you did not send this request, please ignore this email.`,
-        html: `<p>A password reset was requested for your account with ${BUSINESS_NAME}.</p><p>If you sent this request, you may change your password through this link (<a href=\"${WEBSITE}/password-reset/${userId}/${code}\">${WEBSITE}/password-reset/${userId}/${code}</a>) to continue.<p>If you did not send this request, please ignore this email.<p>`,
+        html: `<p>A password reset was requested for your account with ${BUSINESS_NAME}.</p><p>If you sent this request, you may change your password through this link (<a href="${WEBSITE}/password-reset/${userId}/${code}">${WEBSITE}/password-reset/${userId}/${code}</a>) to continue.<p>If you did not send this request, please ignore this email.<p>`,
     });
 }
 
-export function sendVerificationLink(email: string, userId: string | number) {
+export function sendVerificationLink(email: string, userId: string | number): void {
     // Replace all "${VERIFY_LINK}" in welcomeTemplate with the the actual link
     const link = `${WEBSITE}/start?code=${userId}`;
     const html = welcomeTemplate.replace(/\$\{VERIFY_LINK\}/g, link);
@@ -58,7 +58,7 @@ export function sendVerificationLink(email: string, userId: string | number) {
     });
 }
 
-export function feedbackNotifyAdmin(text: string, from?: string) {
+export function feedbackNotifyAdmin(text: string, from?: string): void {
     emailQueue.add({
         to: [process.env.SITE_EMAIL_USERNAME],
         subject: "You've received feedback!",

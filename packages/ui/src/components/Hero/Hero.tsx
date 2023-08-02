@@ -1,9 +1,10 @@
 // Code inspired by https://github.com/rmolinamir/hero-slider
 import { useQuery } from "@apollo/client";
-import { APP_LINKS, useLocation } from "@local/shared";
-import { Box, Button, Typography, useTheme } from "@mui/material";
+import { APP_LINKS } from "@local/shared";
+import { Box, Button, Typography } from "@mui/material";
 import { imagesByLabelQuery } from "graphql/query";
 import { useEffect, useState } from "react";
+import { useLocation } from "route";
 import { Slider } from "./Slider";
 
 const textPopStyle = ({
@@ -22,7 +23,6 @@ export const Hero = ({
     text,
     subtext,
 }) => {
-    const { palette } = useTheme();
     const [, setLocation] = useLocation();
 
     const [images, setImages] = useState([]);

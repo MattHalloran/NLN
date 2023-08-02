@@ -66,7 +66,7 @@ const SORT_TO_QUERY = {
     [PLANT_SORT_OPTIONS.ZA]: { latinName: "desc" },
     [PLANT_SORT_OPTIONS.Newest]: { created_at: "desc" },
     [PLANT_SORT_OPTIONS.Oldest]: { created_at: "asc" },
-};
+} as const;
 
 export const resolvers = {
     Query: {
@@ -120,12 +120,13 @@ export const resolvers = {
             // Create plant object
             const plant = await prisma.plant.create({ data: { id: input.id, latinName: input.latinName }, ...(new PrismaSelect(info).value) });
             // Create trait objects
-            for (const { name, value } of (input.traits || [])) {
-                await prisma.plant_trait.create({ data: { plantId: plant.id, name, value } });
+            for (const trait of (input.traits || [])) {
+                if (!trait) continue;
+                await prisma.plant_trait.create({ data: { plantId: plant.id, name: trait.name, value: trait.value } });
             }
             // Create images
             if (Array.isArray(input.images)) {
-                for (let i = 0; i < input.length; i++) {
+                for (let i = 0; i < input.images.length; i++) {
                     await prisma.plant_images.create({
                         data: {
                             plantId: plant.id,
@@ -146,6 +147,7 @@ export const resolvers = {
             // Must be admin
             if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
             // Update images
+            if (!input.id) throw new CustomError(CODE.InvalidArgs);
             await prisma.plant_images.deleteMany({ where: { plantId: input.id } });
             if (Array.isArray(input.images)) {
                 const rowUniques: { plantId: string, hash: string }[] = [];
@@ -153,10 +155,10 @@ export const resolvers = {
                 for (let i = 0; i < input.images.length; i++) {
                     const curr = input.images[i];
                     const rowData = { plantId: input.id, hash: curr.hash, index: i, isDisplay: curr.isDisplay ?? false };
-                    const rowId = { plantId: input.id, hash: curr.hash };
-                    rowUniques.push(rowId);
+                    const rowUnique = { plantId: input.id as string, hash: curr.hash };
+                    rowUniques.push(rowUnique);
                     await prisma.plant_images.upsert({
-                        where: { plant_images_plantid_hash_unique: rowId },
+                        where: { plant_images_plantid_hash_unique: rowUnique },
                         update: rowData,
                         create: rowData,
                     });
@@ -173,10 +175,11 @@ export const resolvers = {
             }
             // Update traits
             await prisma.plant_trait.deleteMany({ where: { plantId: input.id } });
-            for (const { name, value } of (input.traits || [])) {
-                const updateData = { plantId: input.id, name, value };
+            for (const trait of (input.traits || [])) {
+                if (!trait) continue;
+                const updateData = { plantId: input.id, name: trait.name, value: trait.value };
                 await prisma.plant_trait.upsert({
-                    where: { plant_trait_plantid_name_unique: { plantId: input.id, name } },
+                    where: { plant_trait_plantid_name_unique: { plantId: input.id, name: trait.name } },
                     update: updateData,
                     create: updateData,
                 });
@@ -184,13 +187,13 @@ export const resolvers = {
             // Update SKUs
             if (input.skus) {
                 const currSkus = await prisma.sku.findMany({ where: { plantId: input.id } });
-                const deletedSkus = currSkus.map((s) => s.sku).filter((s) => !input.skus.some((sku: any) => sku.sku === s));
+                const deletedSkus = currSkus.map((s) => s.sku).filter((s) => !input.skus!.some((sku: any) => sku.sku === s));
                 await prisma.sku.deleteMany({ where: { sku: { in: deletedSkus } } });
                 for (const sku of input.skus) {
                     await prisma.sku.upsert({
                         where: { sku: sku.sku },
-                        update: sku,
-                        create: { plantId: input.id, ...sku },
+                        update: sku as any,
+                        create: { ...(sku as any), plantId: input.id },
                     });
                 }
             }
