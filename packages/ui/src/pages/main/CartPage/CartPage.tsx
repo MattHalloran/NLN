@@ -1,11 +1,11 @@
 import { useMutation } from "@apollo/client";
 import { APP_LINKS } from "@local/shared";
 import { Box, Button, Grid, Typography, useTheme } from "@mui/material";
+import { submitOrderVariables } from "api/generated/submitOrder";
+import { updateOrderVariables, updateOrder_updateOrder } from "api/generated/updateOrder";
+import { submitOrderMutation, updateOrderMutation } from "api/mutation";
+import { mutationWrapper } from "api/utils";
 import { CartTable, PageContainer, SnackSeverity } from "components";
-import { submitOrderVariables } from "graphql/generated/submitOrder";
-import { updateOrderVariables, updateOrder_updateOrder } from "graphql/generated/updateOrder";
-import { submitOrderMutation, updateOrderMutation } from "graphql/mutation";
-import { mutationWrapper } from "graphql/utils";
 import { ArrowLeftIcon, ArrowRightIcon, SaveIcon } from "icons";
 import _ from "lodash";
 import { useCallback, useEffect, useState } from "react";

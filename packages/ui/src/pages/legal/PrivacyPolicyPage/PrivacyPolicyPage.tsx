@@ -1,7 +1,7 @@
 import { useQuery } from "@apollo/client";
 import { useTheme } from "@mui/material";
+import { readAssetsQuery } from "api/query/readAssets";
 import { PageContainer, PolicyBreadcrumbs } from "components";
-import { readAssetsQuery } from "graphql/query/readAssets";
 import MarkdownInput from "markdown-to-jsx";
 import { useEffect, useState } from "react";
 import { convertToDot, valueFromDot } from "utils";

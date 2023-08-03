@@ -5,13 +5,13 @@ import { Box, Button, Checkbox, Container, FormControlLabel, FormHelperText, Gri
 import FormControl from "@mui/material/FormControl";
 import Radio from "@mui/material/Radio";
 import RadioGroup from "@mui/material/RadioGroup";
+import { profile, profile_profile } from "api/generated/profile";
+import { updateCustomerVariables, updateCustomer_updateCustomer } from "api/generated/updateCustomer";
+import { updateCustomerMutation } from "api/mutation";
+import { profileQuery } from "api/query";
+import { mutationWrapper } from "api/utils";
 import { PasswordTextField } from "components/inputs/PasswordTextField/PasswordTextField";
 import { useFormik } from "formik";
-import { profile, profile_profile } from "graphql/generated/profile";
-import { updateCustomerVariables, updateCustomer_updateCustomer } from "graphql/generated/updateCustomer";
-import { updateCustomerMutation } from "graphql/mutation";
-import { profileQuery } from "graphql/query";
-import { mutationWrapper } from "graphql/utils";
 import { useMemo } from "react";
 import { PubSub } from "utils";
 

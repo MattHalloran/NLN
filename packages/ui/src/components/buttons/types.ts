@@ -1,5 +1,5 @@
 import { ButtonProps } from "@mui/material";
-import { SvgProps } from "assets/img/types";
+import { SvgProps } from "icons/types";
 import React from "react";
 
 export interface GridSubmitButtonsProps {

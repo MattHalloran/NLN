@@ -17,11 +17,11 @@ import {
     Typography,
     useTheme,
 } from "@mui/material";
+import { signUpVariables, signUp_signUp } from "api/generated/signUp";
+import { signUpMutation } from "api/mutation";
+import { mutationWrapper } from "api/utils";
 import { PasswordTextField } from "components/inputs/PasswordTextField/PasswordTextField";
 import { useFormik } from "formik";
-import { signUpVariables, signUp_signUp } from "graphql/generated/signUp";
-import { signUpMutation } from "graphql/mutation";
-import { mutationWrapper } from "graphql/utils";
 import { useLocation } from "route";
 import { PubSub } from "utils";
 

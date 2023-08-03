@@ -1,5 +1,7 @@
 import { useQuery } from "@apollo/client";
 import { Box, Button, useTheme } from "@mui/material";
+import { customers, customers_customers } from "api/generated/customers";
+import { customersQuery } from "api/query";
 import {
     AdminBreadcrumbs,
     CustomerCard,
@@ -9,8 +11,6 @@ import {
 } from "components";
 import { CustomerDialog } from "components/dialogs/CustomerDialog/CustomerDialog";
 import { NewCustomerDialog } from "components/dialogs/NewCustomerDialog/NewCustomerDialog";
-import { customers, customers_customers } from "graphql/generated/customers";
-import { customersQuery } from "graphql/query";
 import { useEffect, useState } from "react";
 import { PubSub } from "utils";
 

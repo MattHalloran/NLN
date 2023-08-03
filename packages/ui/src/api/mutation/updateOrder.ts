@@ -1,5 +1,5 @@
+import { orderFields, orderItemFields } from "api/fragment";
 import { gql } from "graphql-tag";
-import { orderFields, orderItemFields } from "graphql/fragment";
 
 export const updateOrderMutation = gql`
     ${orderFields}

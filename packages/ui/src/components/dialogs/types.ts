@@ -1,5 +1,5 @@
 import { PopoverProps } from "@mui/material";
-import { plants_plants, plants_plants_skus } from "graphql/generated/plants";
+import { plants_plants, plants_plants_skus } from "api/generated/plants";
 import { SnackSeverity } from "./Snack/Snack";
 
 export interface DialogTitleProps {

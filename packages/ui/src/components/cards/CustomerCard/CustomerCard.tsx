@@ -8,12 +8,12 @@ import {
     Typography,
     useTheme,
 } from "@mui/material";
+import { changeCustomerStatusVariables } from "api/generated/changeCustomerStatus";
+import { deleteCustomerVariables } from "api/generated/deleteCustomer";
+import { AccountStatus } from "api/generated/globalTypes";
+import { changeCustomerStatusMutation, deleteCustomerMutation } from "api/mutation";
+import { mutationWrapper } from "api/utils";
 import { ListDialog } from "components/dialogs";
-import { changeCustomerStatusVariables } from "graphql/generated/changeCustomerStatus";
-import { deleteCustomerVariables } from "graphql/generated/deleteCustomer";
-import { AccountStatus } from "graphql/generated/globalTypes";
-import { changeCustomerStatusMutation, deleteCustomerMutation } from "graphql/mutation";
-import { mutationWrapper } from "graphql/utils";
 import { DeleteForeverIcon, DeleteIcon, EditIcon, EmailIcon, LockIcon, LockOpenIcon, PhoneIcon, ThumbUpIcon } from "icons";
 import { useCallback, useMemo, useState } from "react";
 import { PubSub, emailLink, mapIfExists, phoneLink, showPhone } from "utils";

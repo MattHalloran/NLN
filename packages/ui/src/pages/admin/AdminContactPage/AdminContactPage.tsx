@@ -6,9 +6,9 @@ import {
     TextField,
     useTheme,
 } from "@mui/material";
+import { writeAssetsMutation } from "api/mutation";
+import { graphqlWrapperHelper } from "api/utils";
 import { AdminBreadcrumbs, PageContainer, PageTitle } from "components";
-import { writeAssetsMutation } from "graphql/mutation";
-import { graphqlWrapperHelper } from "graphql/utils";
 import { CancelIcon, SaveIcon } from "icons";
 import Markdown from "markdown-to-jsx";
 import { useEffect, useState } from "react";

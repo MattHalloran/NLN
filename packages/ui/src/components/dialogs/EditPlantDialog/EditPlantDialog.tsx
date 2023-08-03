@@ -19,8 +19,8 @@ import {
     Typography,
     useTheme,
 } from "@mui/material";
+import { addImagesMutation, deletePlantsMutation, updatePlantMutation } from "api/mutation";
 import { Dropzone, ImageList, Transition } from "components";
-import { addImagesMutation, deletePlantsMutation, updatePlantMutation } from "graphql/mutation";
 import { useCallback, useEffect, useState } from "react";
 import {
     PubSub,
@@ -32,10 +32,10 @@ import {
     setPlantTrait,
 } from "utils";
 // import { DropzoneAreaBase } from 'material-ui-dropzone';
-import { addImagesVariables, addImages_addImages } from "graphql/generated/addImages";
-import { deletePlantsVariables, deletePlants_deletePlants } from "graphql/generated/deletePlants";
-import { updatePlantVariables, updatePlant_updatePlant } from "graphql/generated/updatePlant";
-import { mutationWrapper } from "graphql/utils";
+import { addImagesVariables, addImages_addImages } from "api/generated/addImages";
+import { deletePlantsVariables, deletePlants_deletePlants } from "api/generated/deletePlants";
+import { updatePlantVariables, updatePlant_updatePlant } from "api/generated/updatePlant";
+import { mutationWrapper } from "api/utils";
 import { CancelIcon, CloseIcon, CreateIcon, DeleteIcon, SaveIcon } from "icons";
 import _ from "lodash";
 

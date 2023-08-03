@@ -10,11 +10,11 @@ import {
     Typography,
     useTheme,
 } from "@mui/material";
+import { loginVariables, login_login } from "api/generated/login";
+import { loginMutation } from "api/mutation";
+import { mutationWrapper } from "api/utils";
 import { PasswordTextField } from "components/inputs/PasswordTextField/PasswordTextField";
 import { useFormik } from "formik";
-import { loginVariables, login_login } from "graphql/generated/login";
-import { loginMutation } from "graphql/mutation";
-import { mutationWrapper } from "graphql/utils";
 import { useMemo } from "react";
 import { parseSearchParams, useLocation } from "route";
 import { PubSub } from "utils";

@@ -15,7 +15,7 @@ const createApolloClient = (): ApolloClient<NormalizedCacheObject> => {
     // Define link for error handling
     const errorLink = onError(({ graphQLErrors, networkError }) => {
         // Only developers should see these error messages
-        if (process.env.NODE_ENV === "production") return;
+        if (import.meta.env.NODE_ENV === "production") return;
         if (graphQLErrors) {
             graphQLErrors.forEach(({ message, locations, path }) => {
                 console.error("GraphQL error occurred");
@@ -32,13 +32,13 @@ const createApolloClient = (): ApolloClient<NormalizedCacheObject> => {
     let uri: string;
     // If running locally
     if (window.location.host.includes("localhost") || window.location.host.includes("192.168.0.")) {
-        uri = `http://${window.location.hostname}:${process.env.REACT_APP_PORT_SERVER ?? "5330"}/api/v1`;
+        uri = `http://${window.location.hostname}:${import.meta.env.REACT_APP_PORT_SERVER ?? "5330"}/api/v1`;
     }
     // If running on server
     else {
-        uri = process.env.REACT_APP_SERVER_URL && process.env.REACT_APP_SERVER_URL.length > 0 ?
-            `${process.env.REACT_APP_SERVER_URL}/v1` :
-            `http://${process.env.REACT_APP_SITE_IP}:${process.env.REACT_APP_PORT_SERVER ?? "5330"}/api/v1`;
+        uri = import.meta.env.REACT_APP_SERVER_URL && import.meta.env.REACT_APP_SERVER_URL.length > 0 ?
+            `${import.meta.env.REACT_APP_SERVER_URL}/v1` :
+            `http://${import.meta.env.REACT_APP_SITE_IP}:${import.meta.env.REACT_APP_PORT_SERVER ?? "5330"}/api/v1`;
     }
     // Define link for handling file uploads
     const uploadLink = createUploadLink({

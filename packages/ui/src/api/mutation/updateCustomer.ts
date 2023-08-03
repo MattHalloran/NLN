@@ -1,5 +1,5 @@
+import { customerSessionFields } from "api/fragment";
 import { gql } from "graphql-tag";
-import { customerSessionFields } from "graphql/fragment";
 
 export const updateCustomerMutation = gql`
     ${customerSessionFields}

@@ -10,10 +10,10 @@ import {
     Typography,
     useTheme,
 } from "@mui/material";
+import { requestPasswordChangeVariables } from "api/generated/requestPasswordChange";
+import { requestPasswordChangeMutation } from "api/mutation";
+import { mutationWrapper } from "api/utils";
 import { useFormik } from "formik";
-import { requestPasswordChangeVariables } from "graphql/generated/requestPasswordChange";
-import { requestPasswordChangeMutation } from "graphql/mutation";
-import { mutationWrapper } from "graphql/utils";
 import { useLocation } from "route";
 
 const clickSizeStyle = (palette: Palette) => ({

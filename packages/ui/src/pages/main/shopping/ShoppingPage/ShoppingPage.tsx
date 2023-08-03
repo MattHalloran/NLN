@@ -1,12 +1,12 @@
 import { useQuery } from "@apollo/client";
 import { Box, Button, FormControlLabel, Grid, Stack, SwipeableDrawer, Switch, useTheme } from "@mui/material";
+import { traitOptions } from "api/generated/traitOptions";
+import { traitOptionsQuery } from "api/query";
 import {
     PageContainer,
     SearchBar,
     Selector,
 } from "components";
-import { traitOptions } from "graphql/generated/traitOptions";
-import { traitOptionsQuery } from "graphql/query";
 import { CloseIcon, DeleteIcon, FilterIcon, PrintIcon } from "icons";
 import { useCallback, useEffect, useState } from "react";
 import { PubSub, SORT_OPTIONS, printAvailability } from "utils";

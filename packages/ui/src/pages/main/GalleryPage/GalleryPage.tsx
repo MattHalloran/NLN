@@ -1,8 +1,8 @@
 import { useQuery } from "@apollo/client";
 import { IMAGE_SIZE } from "@local/shared";
 import { Box, useTheme } from "@mui/material";
+import { imagesByLabelQuery } from "api/query";
 import { InformationalBreadcrumbs, PageContainer, SnackSeverity } from "components";
-import { imagesByLabelQuery } from "graphql/query";
 import { useEffect, useState } from "react";
 import Carousel from "react-gallery-carousel";
 import "react-gallery-carousel/dist/index.css";

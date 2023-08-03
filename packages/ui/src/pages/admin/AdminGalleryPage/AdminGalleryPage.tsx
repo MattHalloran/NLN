@@ -1,5 +1,10 @@
 import { useMutation, useQuery } from "@apollo/client";
 import { useTheme } from "@mui/material";
+import { addImagesVariables, addImages_addImages } from "api/generated/addImages";
+import { updateImagesVariables } from "api/generated/updateImages";
+import { addImagesMutation, updateImagesMutation } from "api/mutation";
+import { imagesByLabelQuery } from "api/query";
+import { mutationWrapper } from "api/utils";
 import {
     AdminBreadcrumbs,
     Dropzone,
@@ -7,11 +12,6 @@ import {
     PageTitle,
     WrappedImageList,
 } from "components";
-import { addImagesVariables, addImages_addImages } from "graphql/generated/addImages";
-import { updateImagesVariables } from "graphql/generated/updateImages";
-import { addImagesMutation, updateImagesMutation } from "graphql/mutation";
-import { imagesByLabelQuery } from "graphql/query";
-import { mutationWrapper } from "graphql/utils";
 import { useCallback, useEffect, useState } from "react";
 
 const helpText = "This page allows you to manage the images displayed on the gallery page";

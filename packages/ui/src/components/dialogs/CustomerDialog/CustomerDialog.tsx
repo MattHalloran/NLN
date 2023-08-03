@@ -9,12 +9,12 @@ import {
     Typography,
     useTheme,
 } from "@mui/material";
-import { customers_customers } from "graphql/generated/customers";
-import { deleteCustomerVariables } from "graphql/generated/deleteCustomer";
-import { AccountStatus } from "graphql/generated/globalTypes";
-import { updateCustomerVariables } from "graphql/generated/updateCustomer";
-import { deleteCustomerMutation, updateCustomerMutation } from "graphql/mutation";
-import { documentNodeWrapper } from "graphql/utils";
+import { customers_customers } from "api/generated/customers";
+import { deleteCustomerVariables } from "api/generated/deleteCustomer";
+import { AccountStatus } from "api/generated/globalTypes";
+import { updateCustomerVariables } from "api/generated/updateCustomer";
+import { deleteCustomerMutation, updateCustomerMutation } from "api/mutation";
+import { documentNodeWrapper } from "api/utils";
 import { CancelIcon, CloseIcon, CreateIcon, DeleteIcon, ErrorIcon, LockIcon, LockOpenIcon, SaveIcon } from "icons";
 import { SvgComponent } from "icons/types";
 import _ from "lodash";

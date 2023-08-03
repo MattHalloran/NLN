@@ -1,5 +1,6 @@
 import { Box, Button, IconButton, Palette, Typography, useTheme } from "@mui/material";
-import { CloseIcon, ErrorIcon, InfoIcon, SuccessIcon, SvgComponent, WarningIcon } from "icons";
+import { CloseIcon, ErrorIcon, InfoIcon, SuccessIcon, WarningIcon } from "icons";
+import { SvgComponent } from "icons/types";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { SnackProps } from "../types";
 
@@ -74,7 +75,7 @@ export const Snack = ({
 
     useEffect(() => {
         // Log snack errors if in development
-        if (process.env.NODE_ENV === "development" && data) {
+        if (import.meta.env.NODE_ENV === "development" && data) {
             if (severity === SnackSeverity.Error) console.error("Snack data", data);
             else console.info("Snack data", data);
         }

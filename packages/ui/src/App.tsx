@@ -2,6 +2,8 @@ import { useMutation, useQuery } from "@apollo/client";
 import { Box, CircularProgress, CssBaseline, StyledEngineProvider, ThemeProvider } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 import { Routes } from "Routes";
+import { loginMutation } from "api/mutation";
+import { readAssetsQuery } from "api/query/readAssets";
 import {
     AlertDialog,
     BottomNav,
@@ -10,8 +12,6 @@ import {
     PullToRefresh,
     SnackStack,
 } from "components";
-import { loginMutation } from "graphql/mutation";
-import { readAssetsQuery } from "graphql/query/readAssets";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
@@ -99,7 +99,7 @@ export function App() {
         login({ variables: { input: {} } }).then((response) => {
             setSession(response.data.login);
         }).catch((response) => {
-            if (process.env.NODE_ENV === "development") console.error("Error: cannot login", response);
+            if (import.meta.env.NODE_ENV === "development") console.error("Error: cannot login", response);
             setSession({});
         });
     }, [login]);

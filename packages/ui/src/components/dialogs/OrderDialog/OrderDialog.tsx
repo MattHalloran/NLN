@@ -11,10 +11,10 @@ import {
     Typography,
     useTheme,
 } from "@mui/material";
+import { updateOrderVariables, updateOrder_updateOrder } from "api/generated/updateOrder";
+import { updateOrderMutation } from "api/mutation";
+import { mutationWrapper } from "api/utils";
 import { CartTable, Transition } from "components";
-import { updateOrderVariables, updateOrder_updateOrder } from "graphql/generated/updateOrder";
-import { updateOrderMutation } from "graphql/mutation";
-import { mutationWrapper } from "graphql/utils";
 import { CancelIcon, CloseIcon, CompleteIcon, DeliveryTruckIcon, EditIcon, SaveIcon, ScheduleIcon, SuccessIcon, ThumbDownIcon, ThumbUpIcon } from "icons";
 import _ from "lodash";
 import { useCallback, useEffect, useMemo, useState } from "react";

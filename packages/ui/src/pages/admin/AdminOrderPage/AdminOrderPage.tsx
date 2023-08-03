@@ -1,5 +1,6 @@
 import { useQuery } from "@apollo/client";
 import { Box, useTheme } from "@mui/material";
+import { ordersQuery } from "api/query";
 import {
     AdminBreadcrumbs,
     OrderCard,
@@ -9,7 +10,6 @@ import {
     Selector,
     SnackSeverity,
 } from "components";
-import { ordersQuery } from "graphql/query";
 import { useEffect, useState } from "react";
 import { ORDER_FILTERS, PubSub } from "utils";
 

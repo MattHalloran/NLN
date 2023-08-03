@@ -1,5 +1,5 @@
 import { FetchResult } from "@apollo/client";
-import { Path } from "@local/shared";
+import { Path } from "route";
 
 // Top-level props that can be passed into any routed component
 export type SessionChecked = boolean;

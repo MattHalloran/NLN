@@ -1,8 +1,8 @@
 import { useMutation } from "@apollo/client";
 import { APP_LINKS } from "@local/shared";
 import { AppBar, Box, Slide, Toolbar, Typography, useScrollTrigger, useTheme } from "@mui/material";
+import { logoutMutation } from "api/mutation";
 import Logo from "assets/img/nln-logo-colorized.png";
-import { logoutMutation } from "graphql/mutation";
 import { useEffect, useState } from "react";
 import { noSelect } from "styles";
 import { hexToRGB } from "utils";

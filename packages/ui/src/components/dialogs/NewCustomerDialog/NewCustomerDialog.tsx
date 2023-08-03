@@ -13,10 +13,10 @@ import {
     Typography,
     useTheme,
 } from "@mui/material";
+import { addCustomerVariables, addCustomer_addCustomer } from "api/generated/addCustomer";
+import { addCustomerMutation } from "api/mutation";
+import { mutationWrapper } from "api/utils";
 import { useFormik } from "formik";
-import { addCustomerVariables, addCustomer_addCustomer } from "graphql/generated/addCustomer";
-import { addCustomerMutation } from "graphql/mutation";
-import { mutationWrapper } from "graphql/utils";
 import { CancelIcon, CloseIcon, CreateIcon } from "icons";
 import { Transition } from "../UpTransition/UpTransition";
 

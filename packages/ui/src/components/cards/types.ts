@@ -1,4 +1,4 @@
-import { customers_customers } from "graphql/generated/customers";
+import { customers_customers } from "api/generated/customers";
 
 export interface CustomerCardProps {
     customer: customers_customers;

@@ -1,5 +1,5 @@
+import { customerContactFields, orderFields, orderItemFields } from "api/fragment";
 import { gql } from "graphql-tag";
-import { customerContactFields, orderFields, orderItemFields } from "graphql/fragment";
 
 export const ordersQuery = gql`
     ${orderFields}

@@ -2,7 +2,7 @@
 import { useQuery } from "@apollo/client";
 import { APP_LINKS } from "@local/shared";
 import { Box, Button, Typography } from "@mui/material";
-import { imagesByLabelQuery } from "graphql/query";
+import { imagesByLabelQuery } from "api/query";
 import { useEffect, useState } from "react";
 import { useLocation } from "route";
 import { Slider } from "./Slider";

@@ -1,12 +1,12 @@
+import { customerSessionFields, orderFields, orderItemFields } from "api/fragment";
 import { gql } from "graphql-tag";
-import { customerSessionFields, orderFields, orderItemFields } from "graphql/fragment";
 
-export const loginMutation = gql`
+export const resetPasswordMutation = gql`
     ${customerSessionFields}
     ${orderFields}
     ${orderItemFields}
-    mutation login($input: LoginInput!) {
-        login(input: $input) {
+    mutation resetPassword($input: ResetPasswordInput!) {
+        resetPassword(input: $input) {
             ...customerSessionFields
             cart {
                 ...orderFields

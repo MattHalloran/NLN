@@ -1,5 +1,5 @@
+import { discountFields, plantFields, skuFields } from "api/fragment";
 import { gql } from "graphql-tag";
-import { discountFields, plantFields, skuFields } from "graphql/fragment";
 
 export const skusQuery = gql`
     ${skuFields}

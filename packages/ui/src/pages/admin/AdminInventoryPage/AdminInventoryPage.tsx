@@ -11,6 +11,9 @@ import {
     Switch,
     useTheme,
 } from "@mui/material";
+import { uploadAvailabilityMutation } from "api/mutation";
+import { plantsQuery, traitOptionsQuery } from "api/query";
+import { graphqlWrapperHelper } from "api/utils";
 import {
     AdminBreadcrumbs,
     Dropzone,
@@ -21,9 +24,6 @@ import {
     SearchBar,
     Selector,
 } from "components";
-import { uploadAvailabilityMutation } from "graphql/mutation";
-import { plantsQuery, traitOptionsQuery } from "graphql/query";
-import { graphqlWrapperHelper } from "graphql/utils";
 import { useState } from "react";
 import { PubSub, SORT_OPTIONS } from "utils";
 

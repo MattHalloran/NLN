@@ -6,12 +6,12 @@ import {
     Grid,
     useTheme,
 } from "@mui/material";
+import { resetPasswordVariables, resetPassword_resetPassword } from "api/generated/resetPassword";
+import { resetPasswordMutation } from "api/mutation";
+import { mutationWrapper } from "api/utils";
 import { SnackSeverity } from "components";
 import { PasswordTextField } from "components/inputs/PasswordTextField/PasswordTextField";
 import { useFormik } from "formik";
-import { resetPasswordVariables, resetPassword_resetPassword } from "graphql/generated/resetPassword";
-import { resetPasswordMutation } from "graphql/mutation";
-import { mutationWrapper } from "graphql/utils";
 import { useMemo } from "react";
 import { parseSearchParams } from "route";
 import { PubSub } from "utils";

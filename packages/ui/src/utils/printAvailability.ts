@@ -1,7 +1,7 @@
 import { SKU_SORT_OPTIONS } from "@local/shared";
+import { skusQuery } from "api/query";
+import { initializeApollo } from "api/utils/initialize";
 import { SnackSeverity } from "components";
-import { skusQuery } from "graphql/query";
-import { initializeApollo } from "graphql/utils/initialize";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
 import { Session } from "types";

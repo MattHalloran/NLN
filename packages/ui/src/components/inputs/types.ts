@@ -1,7 +1,7 @@
-import { BoxProps, SelectChangeEvent, SelectProps, TextFieldProps } from "@mui/material";
-import { ChangeEvent, FocusEventHandler } from "react";
+import { BoxProps, SelectChangeEvent, TextFieldProps } from "@mui/material";
+import { ChangeEvent } from "react";
 
-export interface PasswordTextFieldProps extends TextFieldProps {
+export interface PasswordTextFieldProps {
     autoComplete?: string;
     autoFocus?: boolean;
     error?: boolean;
@@ -10,7 +10,7 @@ export interface PasswordTextFieldProps extends TextFieldProps {
     id?: string;
     label?: string;
     name?: string;
-    onBlur?: (event: FocusEventHandler<HTMLInputElement | HTMLTextAreaElement>) => void;
+    onBlur?: TextFieldProps["onBlur"];
     onChange: (e: ChangeEvent<any>) => any;
     value: string;
 }
@@ -32,7 +32,7 @@ export interface QuantityBoxProps extends BoxProps {
     value: number;
 }
 
-export interface SelectorProps<T extends string | number | { [x: string]: any }> extends SelectProps {
+export interface SelectorProps<T extends string | number | { [x: string]: any }> {
     color?: string;
     disabled?: boolean;
     fullWidth?: boolean;
