@@ -7,7 +7,6 @@ import {
 import { onError } from "@apollo/client/link/error";
 import { createUploadLink } from "apollo-upload-client";
 import { useMemo } from "react";
-import { removeTypename } from "./removeTypename";
 
 let apolloClient: ApolloClient<NormalizedCacheObject>;
 
@@ -45,18 +44,10 @@ const createApolloClient = (): ApolloClient<NormalizedCacheObject> => {
         uri,
         credentials: "include",
     });
-    // Define link for removing '__typename'. This field cannot be in queries or mutations, 
-    // and is sometimes tedious to remove manually
-    const cleanTypenameLink = new ApolloLink((operation, forward) => {
-        if (operation.variables && !operation.variables.file && !operation.variables.files) {
-            operation.variables = removeTypename(operation.variables);
-        }
-        return forward(operation);
-    });
     // Create Apollo client
     return new ApolloClient({
         cache: new InMemoryCache(),
-        link: ApolloLink.from([errorLink, cleanTypenameLink, uploadLink]),
+        link: ApolloLink.from([errorLink, uploadLink]),
     });
 };
 

@@ -24,14 +24,15 @@ export const AdminHeroPage = () => {
     const [addImages] = useMutation(addImagesMutation);
     const [updateImages] = useMutation(updateImagesMutation);
 
-    const uploadImages = (acceptedFiles) => {
+    const uploadImages = useCallback((acceptedFiles: File[]) => {
+        // TODO for morning: all file uploading is broken, since they're not being sent as files. From logging, it seems like they're File objects all the way until the useMutation is called
         mutationWrapper<addImages_addImages, addImagesVariables>({
             mutation: addImages,
             input: { files: acceptedFiles, labels: ["hero"] },
             successMessage: () => `Successfully uploaded ${acceptedFiles.length} image(s).`,
             onSuccess: () => refetchImages(),
         });
-    };
+    }, [addImages, refetchImages]);
 
     useEffect(() => {
         // Table data must be extensible, and needs position

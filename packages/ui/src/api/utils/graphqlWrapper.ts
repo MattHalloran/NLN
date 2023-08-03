@@ -146,7 +146,7 @@ export const documentNodeWrapper = <Output extends object, Input extends InputTy
 export const mutationWrapper = <Output extends object, Input extends InputType>(props: MutationWrapperProps<Output, Input>) => {
     const { mutation, ...rest } = props;
     return graphqlWrapperHelper({
-        call: () => mutation({ variables: rest.input ? { input: rest.input } as Input : undefined }),
+        call: () => { console.log("in call", rest.input); return mutation({ variables: rest.input ? { input: rest.input } as Input : undefined }); },
         ...rest,
     });
 };

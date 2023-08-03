@@ -24,7 +24,7 @@ import {
     SearchBar,
     Selector,
 } from "components";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { PubSub, SORT_OPTIONS } from "utils";
 
 const helpText = `This page has the following features:  
@@ -48,7 +48,7 @@ export const AdminInventoryPage = () => {
     const { data: plantData } = useQuery(plantsQuery, { variables: { input: { sortBy: sortBy.value, searchString, active: showActive } }, pollInterval: 5000 });
     const [uploadAvailability, { loading }] = useMutation(uploadAvailabilityMutation);
 
-    const availabilityUpload = (acceptedFiles) => {
+    const availabilityUpload = useCallback((acceptedFiles: File[]) => {
         graphqlWrapperHelper({
             call: () => uploadAvailability({ variables: { file: acceptedFiles[0] } }),
             successCondition: (success: any) => success === true,
@@ -59,7 +59,7 @@ export const AdminInventoryPage = () => {
                 }],
             }),
         });
-    };
+    }, [uploadAvailability]);
 
     return (
         <PageContainer>

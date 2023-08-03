@@ -148,41 +148,36 @@ export const resolvers = {
             if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
             // Update images
             if (!input.id) throw new CustomError(CODE.InvalidArgs);
-            await prisma.plant_images.deleteMany({ where: { plantId: input.id } });
             if (Array.isArray(input.images)) {
-                const rowUniques: { plantId: string, hash: string }[] = [];
-                // Upsert passed in images
-                for (let i = 0; i < input.images.length; i++) {
-                    const curr = input.images[i];
-                    const rowData = { plantId: input.id, hash: curr.hash, index: i, isDisplay: curr.isDisplay ?? false };
-                    const rowUnique = { plantId: input.id as string, hash: curr.hash };
-                    rowUniques.push(rowUnique);
-                    await prisma.plant_images.upsert({
-                        where: { plant_images_plantid_hash_unique: rowUnique },
-                        update: rowData,
-                        create: rowData,
-                    });
-                }
+                const imgHashes = input.images.map((img) => img.hash);
                 // Delete images not passed in
                 await prisma.plant_images.deleteMany({
                     where: {
                         AND: [
-                            { plantId: { in: rowUniques.map(r => r.plantId) } },
-                            { NOT: { hash: { in: rowUniques.map(r => r.hash) } } },
+                            { plantId: input.id },
+                            { NOT: { hash: { in: imgHashes } } },
                         ],
                     },
                 });
             }
             // Update traits
-            await prisma.plant_trait.deleteMany({ where: { plantId: input.id } });
-            for (const trait of (input.traits || [])) {
+            const currentTraits = await prisma.plant_trait.findMany({ where: { plantId: input.id } });
+            const inputTraits = input.traits || [];
+            for (const trait of currentTraits) {
+                if (!inputTraits.find(it => it && it.name === trait.name)) {
+                    await prisma.plant_trait.delete({ where: { id: trait.id } });
+                }
+            }
+            for (const trait of inputTraits) {
                 if (!trait) continue;
-                const updateData = { plantId: input.id, name: trait.name, value: trait.value };
-                await prisma.plant_trait.upsert({
-                    where: { plant_trait_plantid_name_unique: { plantId: input.id, name: trait.name } },
-                    update: updateData,
-                    create: updateData,
-                });
+                // If trait already exists, update the value
+                const existingTrait = currentTraits.find((t) => t.name === trait.name);
+                if (existingTrait) {
+                    await prisma.plant_trait.update({ where: { id: existingTrait.id }, data: { value: trait.value } });
+                    continue;
+                }
+                // Otherwise, create a new trait
+                await prisma.plant_trait.create({ data: { plantId: input.id, name: trait.name, value: trait.value } });
             }
             // Update SKUs
             if (input.skus) {

@@ -77,7 +77,7 @@ export const EditPlantDialog = ({
     const [compactView, setCompactView] = useState(false);
     const toggleCompactView = () => setCompactView(view => !view);
 
-    const uploadImages = (acceptedFiles) => {
+    const uploadImages = useCallback((acceptedFiles: File[]) => {
         mutationWrapper<addImages_addImages[], addImagesVariables>({
             mutation: addImages,
             input: { files: acceptedFiles },
@@ -92,7 +92,7 @@ export const EditPlantDialog = ({
                 setImagesChanged(true);
             },
         });
-    };
+    }, [addImages, imageData]);
 
     const [currSkuIndex, setCurrSkuIndex] = useState(-1);
     const [selectedTrait, setSelectedTrait] = useState(PLANT_TRAITS[0]);

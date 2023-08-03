@@ -24,14 +24,14 @@ export const AdminGalleryPage = () => {
     const [addImages] = useMutation(addImagesMutation);
     const [updateImages] = useMutation(updateImagesMutation);
 
-    const uploadImages = (acceptedFiles) => {
+    const uploadImages = useCallback((acceptedFiles: File[]) => {
         mutationWrapper<addImages_addImages[], addImagesVariables>({
             mutation: addImages,
             input: { files: acceptedFiles, labels: ["gallery"] },
             successMessage: () => `Successfully uploaded ${acceptedFiles.length} image(s).`,
             onSuccess: () => refetchImages(),
         });
-    };
+    }, [addImages, refetchImages]);
 
     useEffect(() => {
         // Table data must be extensible, and needs position
