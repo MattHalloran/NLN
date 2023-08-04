@@ -10,6 +10,7 @@ import { customerFromEmail, getCart, getCustomerSelect, upsertCustomer } from ".
 import { CustomError, validateArgs } from "../error";
 import { LogLevel, logger } from "../logger";
 import { IWrap, RecursivePartial } from "../types";
+import { randomString } from "../utils";
 import { customerNotifyAdmin, sendResetPasswordLink, sendVerificationLink } from "../worker/email/queue";
 import { AccountStatus, AddCustomerRoleInput, ChangeCustomerStatusInput, Customer, CustomerInput, DeleteCustomerInput, LoginInput, RemoveCustomerRoleInput, RequestPasswordChangeInput, ResetPasswordInput, SignUpInput, UpdateCustomerInput } from "./types";
 
@@ -177,7 +178,7 @@ export const resolvers = {
             // Check for password in database, if doesn't exist, send a password reset link
             if (!customer.password) {
                 // Generate new code
-                const requestCode = bcrypt.genSaltSync(HASHING_ROUNDS).replace("/", "");
+                const requestCode = randomString(32);
                 // Store code and request time in customer row
                 await prisma.customer.update({
                     where: { id: customer.id },
@@ -386,7 +387,7 @@ export const resolvers = {
             // Find customer in database
             const customer = await customerFromEmail(input.email, prisma);
             // Generate request code
-            const requestCode = bcrypt.genSaltSync(HASHING_ROUNDS).replace("/", "");
+            const requestCode = randomString(32);
             // Store code and request time in customer row
             await prisma.customer.update({
                 where: { id: customer.id },
@@ -417,7 +418,7 @@ export const resolvers = {
                 !customer.lastResetPasswordReqestAttempt ||
                 Date.now() - new Date(customer.lastResetPasswordReqestAttempt).getTime() > REQUEST_PASSWORD_RESET_DURATION) {
                 // Generate new code
-                const requestCode = bcrypt.genSaltSync(HASHING_ROUNDS).replace("/", "");
+                const requestCode = randomString(32);
                 // Store code and request time in customer row
                 await prisma.customer.update({
                     where: { id: customer.id },

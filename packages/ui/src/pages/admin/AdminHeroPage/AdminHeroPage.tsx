@@ -25,7 +25,6 @@ export const AdminHeroPage = () => {
     const [updateImages] = useMutation(updateImagesMutation);
 
     const uploadImages = useCallback((acceptedFiles: File[]) => {
-        // TODO for morning: test all image uploading. Here, for example, uploaded images are not being added to the list for some reason.
         mutationWrapper<addImages_addImages, addImagesVariables>({
             mutation: addImages,
             input: { files: acceptedFiles, labels: ["hero"] },

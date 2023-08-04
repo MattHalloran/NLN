@@ -13,7 +13,6 @@ import { SnackSeverity } from "components";
 import { PasswordTextField } from "components/inputs/PasswordTextField/PasswordTextField";
 import { useFormik } from "formik";
 import { useMemo } from "react";
-import { parseSearchParams } from "route";
 import { PubSub } from "utils";
 
 export const ResetPasswordForm = ({
@@ -22,12 +21,13 @@ export const ResetPasswordForm = ({
 }) => {
     const { spacing } = useTheme();
 
-    const { id, code } = useMemo<{ id: string | undefined, code: string | undefined }>(() => {
-        const searchParams = parseSearchParams();
-        return {
-            id: searchParams.id === "string" ? searchParams.id : undefined,
-            code: searchParams.code === "string" ? searchParams.code : undefined,
-        };
+    const { id, code } = useMemo(() => {
+        const url = new URL(window.location.href);
+        const pathnameParts = url.pathname.split("/");
+        const id = pathnameParts[2];
+        const code = pathnameParts[3];
+        console.log("id", id, "code", code);
+        return { id, code };
     }, []);
     const [resetPassword, { loading }] = useMutation(resetPasswordMutation);
 

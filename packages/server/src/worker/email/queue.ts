@@ -3,7 +3,7 @@ import fs from "fs";
 import { HOST, PORT } from "../../redisConn";
 import { emailProcess } from "./process.js";
 
-const { BUSINESS_NAME, WEBSITE } = JSON.parse(fs.readFileSync(`${process.env.PROJECT_DIR}/assets/public/business.json`, "utf8"));
+const { BUSINESS_NAME, WEBSITE }: { BUSINESS_NAME: { Long: string, Short: string }, WEBSITE: string } = JSON.parse(fs.readFileSync(`${process.env.PROJECT_DIR}/assets/public/business.json`, "utf8"));
 
 const welcomeTemplate = fs.readFileSync(`${process.env.PROJECT_DIR}/packages/server/src/worker/email/templates/welcome.html`).toString();
 
@@ -40,9 +40,9 @@ export function orderNotifyAdmin(): void {
 export function sendResetPasswordLink(email: string, userId: string | number, code: string): void {
     emailQueue.add({
         to: [email],
-        subject: `${BUSINESS_NAME} Password Reset`,
-        text: `A password reset was requested for your account with ${BUSINESS_NAME}. If you sent this request, you may change your password through this link (${WEBSITE}/password-reset/${userId}/${code}) to continue. If you did not send this request, please ignore this email.`,
-        html: `<p>A password reset was requested for your account with ${BUSINESS_NAME}.</p><p>If you sent this request, you may change your password through this link (<a href="${WEBSITE}/password-reset/${userId}/${code}">${WEBSITE}/password-reset/${userId}/${code}</a>) to continue.<p>If you did not send this request, please ignore this email.<p>`,
+        subject: `${BUSINESS_NAME.Short} Password Reset`,
+        text: `A password reset was requested for your account with ${BUSINESS_NAME.Long}. If you sent this request, you may change your password through this link (${WEBSITE}/password-reset/${userId}/${code}) to continue. If you did not send this request, please ignore this email.`,
+        html: `<p>A password reset was requested for your account with ${BUSINESS_NAME.Long}.</p><p>If you sent this request, you may change your password through this link (<a href="${WEBSITE}/password-reset/${userId}/${code}">${WEBSITE}/password-reset/${userId}/${code}</a>) to continue.<p>If you did not send this request, please ignore this email.<p>`,
     });
 }
 
@@ -52,8 +52,8 @@ export function sendVerificationLink(email: string, userId: string | number): vo
     const html = welcomeTemplate.replace(/\$\{VERIFY_LINK\}/g, link);
     emailQueue.add({
         to: [email],
-        subject: `Verify ${BUSINESS_NAME} Account`,
-        text: `Welcome to ${BUSINESS_NAME}! Please log in through this link (${WEBSITE}/start?code=${userId}) to verify your account. If you did not create an account with us, please ignore this link.`,
+        subject: `Verify ${BUSINESS_NAME.Short} Account`,
+        text: `Welcome to ${BUSINESS_NAME.Long}! Please log in through this link (${WEBSITE}/start?code=${userId}) to verify your account. If you did not create an account with us, please ignore this link.`,
         html,
     });
 }
