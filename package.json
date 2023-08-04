@@ -1,16 +1,12 @@
 {
     "private": true,
     "workspaces": [
-        "packages/*",
-        "packages/shared/*"
+        "packages/*"
     ],
     "author": "New Life Nursery",
     "license": "MIT",
     "resolutions": {
         "babel-loader": "8.1.0"
-    },
-    "dependencies": {
-        "prisma": "4.0.0"
     },
     "version": "2.0.0"
 }
