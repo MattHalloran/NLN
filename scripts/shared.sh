@@ -6,4 +6,5 @@ HERE=$(dirname $0)
 header 'Converting shared typescript to javascript'
 cd "${HERE}/../packages/shared"
 yarn tsc
+cd ../../scripts
 success "Finished converting shared typescript to javascript"
