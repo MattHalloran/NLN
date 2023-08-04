@@ -3,14 +3,14 @@ import {
     List,
     ListItem,
     ListItemText,
-    useTheme
-} from '@mui/material';
-import { DialogTitle } from '../DialogTitle/DialogTitle';
+    useTheme,
+} from "@mui/material";
+import { DialogTitle } from "../DialogTitle/DialogTitle";
 
 export const ListDialog = ({
     open = true,
     onClose,
-    title = 'Select Item',
+    title = "Select Item",
     data,
     ...props
 }) => {
@@ -23,7 +23,7 @@ export const ListDialog = ({
             open={open}
             {...props}
             sx={{
-                '& .MuiDialogContent-root': {
+                "& .MuiDialogContent-root": {
                     background: palette.background.paper,
                 },
             }}
@@ -38,4 +38,4 @@ export const ListDialog = ({
             </List>
         </Dialog>
     );
-}
+};

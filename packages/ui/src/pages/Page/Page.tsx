@@ -1,7 +1,7 @@
-import { useEffect } from 'react';
-import { APP_LINKS } from '@shared/consts';
-import { PageProps } from 'pages/types';
-import { Redirect, useLocation } from '@shared/route';
+import { APP_LINKS } from "@local/shared";
+import { PageProps } from "pages/types";
+import { useEffect } from "react";
+import { Redirect, useLocation } from "route";
 
 export const Page = ({
     title,
@@ -9,7 +9,7 @@ export const Page = ({
     redirect = APP_LINKS.Home,
     userRoles,
     restrictedToRoles = [],
-    children
+    children,
 }: PageProps) => {
     const [location] = useLocation();
 
@@ -24,7 +24,7 @@ export const Page = ({
             const needArray: any[] = Array.isArray(restrictedToRoles) ? restrictedToRoles : [restrictedToRoles];
             if (haveArray.some((r: any) => needArray.includes(r?.role?.title))) return children;
         }
-        if (sessionChecked && location.pathname !== redirect) return <Redirect to={redirect} />;
+        if (sessionChecked && location !== redirect) return <Redirect to={redirect} />;
     }
 
     return children;

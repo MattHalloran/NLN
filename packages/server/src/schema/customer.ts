@@ -1,18 +1,18 @@
-import { gql } from 'apollo-server-express';
-import bcrypt from 'bcrypt';
-import { CODE, COOKIE } from '@shared/consts';
-import { CustomError, validateArgs } from '../error';
-import { generateToken } from '../auth';
-import { customerNotifyAdmin, sendResetPasswordLink, sendVerificationLink } from '../worker/email/queue';
-import { HASHING_ROUNDS } from '../consts';
-import { PrismaSelect } from '@paljs/plugins';
-import { customerFromEmail, getCart, getCustomerSelect, upsertCustomer } from '../db/models/customer';
-import { logInSchema, passwordSchema, requestPasswordChangeSchema, signUpSchema } from '@shared/validation';
-import { IWrap, RecursivePartial } from '../types';
-import { Context } from '../context';
-import { GraphQLResolveInfo } from 'graphql';
-import { AccountStatus, AddCustomerRoleInput, ChangeCustomerStatusInput, Count, Customer, CustomerInput, DeleteCustomerInput, LoginInput, RemoveCustomerRoleInput, RequestPasswordChangeInput, ResetPasswordInput, SignUpInput, UpdateCustomerInput } from './types';
-import { logger, LogLevel } from '../logger';
+import { CODE, COOKIE, logInSchema, passwordSchema, requestPasswordChangeSchema, signUpSchema } from "@local/shared";
+import { PrismaSelect } from "@paljs/plugins";
+import { gql } from "apollo-server-express";
+import bcrypt from "bcrypt";
+import { GraphQLResolveInfo } from "graphql";
+import { generateToken } from "../auth";
+import { HASHING_ROUNDS } from "../consts";
+import { Context } from "../context";
+import { customerFromEmail, getCart, getCustomerSelect, upsertCustomer } from "../db/models/customer";
+import { CustomError, validateArgs } from "../error";
+import { LogLevel, logger } from "../logger";
+import { IWrap, RecursivePartial } from "../types";
+import { randomString } from "../utils";
+import { customerNotifyAdmin, sendResetPasswordLink, sendVerificationLink } from "../worker/email/queue";
+import { AccountStatus, AddCustomerRoleInput, ChangeCustomerStatusInput, Customer, CustomerInput, DeleteCustomerInput, LoginInput, RemoveCustomerRoleInput, RequestPasswordChangeInput, ResetPasswordInput, SignUpInput, UpdateCustomerInput } from "./types";
 
 const LOGIN_ATTEMPTS_TO_SOFT_LOCKOUT = 3;
 const SOFT_LOCKOUT_DURATION = 15 * 60 * 1000;
@@ -29,6 +29,7 @@ export const typeDef = gql`
 
     input CustomerInput {
         id: ID
+        isAdmin: Boolean
         firstName: String
         lastName: String
         pronouns: String
@@ -131,17 +132,17 @@ export const typeDef = gql`
         addCustomerRole(input: AddCustomerRoleInput!): Customer!
         removeCustomerRole(input: RemoveCustomerRoleInput!): Boolean
     }
-`
+`;
 
 export const resolvers = {
-    AccountStatus: AccountStatus,
+    AccountStatus,
     Query: {
         customers: async (_parent: undefined, _input: undefined, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<Customer>[]> => {
             // Must be admin
             if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
             return await prisma.customer.findMany({
-                orderBy: { lastName: 'asc', },
-                ...(new PrismaSelect(info).value)
+                orderBy: { lastName: "asc" },
+                ...(new PrismaSelect(info).value),
             }) as any[];
         },
         profile: async (_parent: undefined, _input: undefined, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<Customer>> => {
@@ -149,25 +150,25 @@ export const resolvers = {
             const customerId = req.customerId;
             if (customerId === null || customerId === undefined) throw new CustomError(CODE.Unauthorized);
             return await prisma.customer.findUnique({ where: { id: customerId }, ...(new PrismaSelect(info).value) }) as any;
-        }
+        },
     },
     Mutation: {
         login: async (_parent: undefined, { input }: IWrap<LoginInput>, { prisma, req, res }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<Customer>> => {
-            logger.log(LogLevel.info, 'Logging in user a...', input);
+            logger.log(LogLevel.info, "Logging in user a...", input);
             const prismaInfo = getCustomerSelect(info);
-            logger.log(LogLevel.info, 'Logging in user b...');
+            logger.log(LogLevel.info, "Logging in user b...");
             // If username and password wasn't passed, then use the session cookie data to validate
             if (!input.email || !input.password) {
                 if (req.customerId && req.roles && req.roles.length > 0) {
                     const cart = await getCart(prisma, info, req.customerId);
-                    let userData: any = await prisma.customer.findUnique({ where: { id: req.customerId }, ...prismaInfo });
+                    const userData: any = await prisma.customer.findUnique({ where: { id: req.customerId }, ...prismaInfo });
                     if (userData) {
                         if (cart) userData.cart = cart;
                         return userData;
                     }
                     res.clearCookie(COOKIE.Jwt);
                 }
-                logger.log(LogLevel.info, 'Logging in user failed c...');
+                logger.log(LogLevel.info, "Logging in user failed c...");
                 throw new CustomError(CODE.BadCredentials);
             }
             // Validate input format
@@ -178,65 +179,65 @@ export const resolvers = {
             // Check for password in database, if doesn't exist, send a password reset link
             if (!customer.password) {
                 // Generate new code
-                const requestCode = bcrypt.genSaltSync(HASHING_ROUNDS).replace('/', '');
+                const requestCode = randomString(32);
                 // Store code and request time in customer row
                 await prisma.customer.update({
                     where: { id: customer.id },
-                    data: { resetPasswordCode: requestCode, lastResetPasswordReqestAttempt: new Date().toISOString() }
-                })
+                    data: { resetPasswordCode: requestCode, lastResetPasswordReqestAttempt: new Date().toISOString() },
+                });
                 // Send new verification email
                 sendResetPasswordLink(input.email, customer.id, requestCode);
-                logger.log(LogLevel.info, 'Logging in user failed d...');
+                logger.log(LogLevel.info, "Logging in user failed d...");
                 throw new CustomError(CODE.MustResetPassword);
             }
             // Validate verification code, if supplied
             if (input.verificationCode === customer.id && customer.emailVerified === false) {
                 customer = await prisma.customer.update({
                     where: { id: customer.id },
-                    data: { status: AccountStatus.Unlocked, emailVerified: true }
-                })
+                    data: { status: AccountStatus.Unlocked, emailVerified: true },
+                });
             }
             // Reset login attempts after 15 minutes
             const unable_to_reset = [AccountStatus.HardLock, AccountStatus.Deleted];
             if (!unable_to_reset.includes(customer.status as any) && Date.now() - new Date(customer.lastLoginAttempt).getTime() > SOFT_LOCKOUT_DURATION) {
                 customer = await prisma.customer.update({
                     where: { id: customer.id },
-                    data: { loginAttempts: 0 }
-                })
+                    data: { loginAttempts: 0 },
+                });
             }
             // Before validating password, let's check to make sure the account is unlocked
             const status_to_code = {
                 [AccountStatus.Deleted]: CODE.NoCustomer,
                 [AccountStatus.SoftLock]: CODE.SoftLockout,
-                [AccountStatus.HardLock]: CODE.HardLockout
-            }
+                [AccountStatus.HardLock]: CODE.HardLockout,
+            };
             if (customer.status in status_to_code) {
-                logger.log(LogLevel.info, 'Logging in user failed e...', customer.status);
+                logger.log(LogLevel.info, "Logging in user failed e...", customer.status);
                 throw new CustomError((status_to_code as any)[customer.status]);
             }
             // Now we can validate the password
             const validPassword = customer.password && bcrypt.compareSync(input.password, customer.password);
             if (validPassword) {
-                await generateToken(res, customer.id, customer.businessId ?? '');
+                await generateToken(res, customer.id, customer.businessId ?? "");
                 await prisma.customer.update({
                     where: { id: customer.id },
                     data: {
                         loginAttempts: 0,
                         lastLoginAttempt: new Date().toISOString(),
                         resetPasswordCode: null,
-                        lastResetPasswordReqestAttempt: null
+                        lastResetPasswordReqestAttempt: null,
                     },
-                    ...prismaInfo
-                })
+                    ...prismaInfo,
+                });
                 // Return cart, along with user data
                 const cart = await getCart(prisma, info, customer.id);
                 const userData: any = await prisma.customer.findUnique({ where: { id: customer.id }, ...prismaInfo });
                 if (cart) userData.cart = cart;
-                logger.log(LogLevel.info, 'Logging in user returning data...', userData);
+                logger.log(LogLevel.info, "Logging in user returning data...", userData);
                 return userData;
             } else {
                 let new_status = AccountStatus.Unlocked;
-                let login_attempts = customer.loginAttempts + 1;
+                const login_attempts = customer.loginAttempts + 1;
                 if (login_attempts >= LOGIN_ATTEMPTS_TO_SOFT_LOCKOUT) {
                     new_status = AccountStatus.SoftLock;
                 } else if (login_attempts > LOGIN_ATTEMPTS_TO_HARD_LOCKOUT) {
@@ -244,26 +245,26 @@ export const resolvers = {
                 }
                 await prisma.customer.update({
                     where: { id: customer.id },
-                    data: { status: new_status, loginAttempts: login_attempts, lastLoginAttempt: new Date().toISOString() }
-                })
-                logger.log(LogLevel.info, 'Logging in user failed f...');
+                    data: { status: new_status, loginAttempts: login_attempts, lastLoginAttempt: new Date().toISOString() },
+                });
+                logger.log(LogLevel.info, "Logging in user failed f...");
                 throw new CustomError(CODE.BadCredentials);
             }
         },
-        logout: async (_parent: undefined, _input: undefined, { prisma, req, res }: Context): Promise<boolean> => {
+        logout: async (_parent: undefined, _input: undefined, { res }: Context): Promise<boolean> => {
             res.clearCookie(COOKIE.Jwt);
             return true;
         },
-        signUp: async (_parent: undefined, { input }: IWrap<SignUpInput>, { prisma, req, res }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<Customer>> => {
+        signUp: async (_parent: undefined, { input }: IWrap<SignUpInput>, { prisma, res }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<Customer>> => {
             const prismaInfo = getCustomerSelect(info);
             // Validate input format
             const validateError = await validateArgs(signUpSchema, input);
             if (validateError) return validateError;
             // Find customer role to give to new user
-            const customerRole = await prisma.role.findUnique({ where: { title: 'Customer' } });
+            const customerRole = await prisma.role.findUnique({ where: { title: "Customer" } });
             if (!customerRole) throw new CustomError(CODE.ErrorUnknown);
             const customer = await upsertCustomer({
-                prisma: prisma,
+                prisma,
                 info,
                 data: {
                     firstName: input.firstName,
@@ -276,9 +277,9 @@ export const resolvers = {
                     status: AccountStatus.Unlocked,
                     emails: [{ emailAddress: input.email }],
                     phones: [{ number: input.phone }],
-                    roles: [customerRole]
-                }
-            })
+                    roles: [customerRole],
+                },
+            });
             await generateToken(res, customer.id, customer.businessId);
             // Send verification email
             sendVerificationLink(input.email, customer.id);
@@ -294,11 +295,20 @@ export const resolvers = {
             // Must be admin to add a customer directly
             if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
             const prismaInfo = getCustomerSelect(info);
-            // Find customer role to give to new user
-            const customerRole = await prisma.role.findUnique({ where: { title: 'Customer' } });
+            // Find roles to give to new user
+            let roles: any[] = [];
+            // Always gets the customer role
+            const customerRole = await prisma.role.findUnique({ where: { title: "Customer" } });
             if (!customerRole) throw new CustomError(CODE.ErrorUnknown);
+            roles.push(customerRole);
+            // If "isAdmin" is true, also give the admin role
+            if (input.isAdmin) {
+                const adminRole = await prisma.role.findUnique({ where: { title: "Admin" } });
+                if (!adminRole) throw new CustomError(CODE.ErrorUnknown);
+                roles.push(adminRole);
+            }
             const customer = await upsertCustomer({
-                prisma: prisma,
+                prisma,
                 info,
                 data: {
                     firstName: input.firstName,
@@ -306,12 +316,12 @@ export const resolvers = {
                     pronouns: input.pronouns,
                     business: input.business,
                     accountApproved: true,
-                    theme: 'light',
+                    theme: "light",
                     status: AccountStatus.Unlocked,
                     emails: input.emails,
                     phones: input.phones,
-                    roles: [customerRole]
-                }
+                    roles,
+                },
             });
             // Return cart, along with user data
             const cart = await getCart(prisma, info, customer.id);
@@ -324,33 +334,48 @@ export const resolvers = {
             if (!req.isAdmin && !input.input.id || (req.customerId !== input.input.id)) throw new CustomError(CODE.Unauthorized);
             if (!req.isAdmin) {
                 // Check for correct password
-                let customer = await prisma.customer.findUnique({
+                const customer = await prisma.customer.findUnique({
                     where: { id: input.input.id as string },
                     select: {
                         id: true,
                         password: true,
-                        business: { select: { id: true } }
-                    }
+                        business: { select: { id: true } },
+                    },
                 });
                 if (!customer?.password || !input.currentPassword || !bcrypt.compareSync(input.currentPassword, customer.password)) throw new CustomError(CODE.BadCredentials);
             }
+            // If newPassword provided, validate currentPassword
+            if (input.newPassword) {
+                if (!input.currentPassword) {
+                    throw new CustomError(CODE.BadCredentials);
+                }
+                // Check for correct password
+                const customer = await prisma.customer.findUnique({
+                    where: { id: input.input.id as string },
+                    select: {
+                        id: true,
+                        password: true,
+                    },
+                });
+                if (!customer?.password || !bcrypt.compareSync(input.currentPassword, customer.password)) throw new CustomError(CODE.BadCredentials);
+            }
             const user = await upsertCustomer({
-                prisma: prisma,
+                prisma,
                 info,
-                data: input.input
-            })
+                data: { ...input.input, password: input.newPassword ? bcrypt.hashSync(input.newPassword, HASHING_ROUNDS) : undefined },
+            });
             return user;
         },
         deleteCustomer: async (_parent: undefined, { input }: IWrap<DeleteCustomerInput>, { prisma, req }: Context): Promise<boolean> => {
             // Must be admin, or deleting your own
             if (!req.isAdmin && (req.customerId !== input.id)) throw new CustomError(CODE.Unauthorized);
             // Check for correct password
-            let customer = await prisma.customer.findUnique({
+            const customer = await prisma.customer.findUnique({
                 where: { id: input.id },
                 select: {
                     id: true,
-                    password: true
-                }
+                    password: true,
+                },
             });
             if (!customer) throw new CustomError(CODE.ErrorUnknown);
             // If admin, make sure you are not deleting yourself
@@ -365,24 +390,24 @@ export const resolvers = {
             await prisma.customer.delete({ where: { id: customer.id } });
             return true;
         },
-        requestPasswordChange: async (_parent: undefined, { input }: IWrap<RequestPasswordChangeInput>, { prisma, req }: Context): Promise<boolean> => {
+        requestPasswordChange: async (_parent: undefined, { input }: IWrap<RequestPasswordChangeInput>, { prisma }: Context): Promise<boolean> => {
             // Validate input format
             const validateError = await validateArgs(requestPasswordChangeSchema, input);
             if (validateError) return validateError;
             // Find customer in database
             const customer = await customerFromEmail(input.email, prisma);
             // Generate request code
-            const requestCode = bcrypt.genSaltSync(HASHING_ROUNDS).replace('/', '');
+            const requestCode = randomString(32);
             // Store code and request time in customer row
             await prisma.customer.update({
                 where: { id: customer.id },
-                data: { resetPasswordCode: requestCode, lastResetPasswordReqestAttempt: new Date().toISOString() }
-            })
+                data: { resetPasswordCode: requestCode, lastResetPasswordReqestAttempt: new Date().toISOString() },
+            });
             // Send email with correct reset link
             sendResetPasswordLink(input.email, customer.id, requestCode);
             return true;
         },
-        resetPassword: async (_parent: undefined, { input }: IWrap<ResetPasswordInput>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<Customer>> => {
+        resetPassword: async (_parent: undefined, { input }: IWrap<ResetPasswordInput>, { prisma }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<Customer>> => {
             // Validate input format
             const validateError = await validateArgs(passwordSchema, input.newPassword);
             if (validateError) return validateError;
@@ -393,8 +418,8 @@ export const resolvers = {
                     id: true,
                     resetPasswordCode: true,
                     lastResetPasswordReqestAttempt: true,
-                    emails: { select: { emailAddress: true } }
-                }
+                    emails: { select: { emailAddress: true } },
+                },
             });
             if (!customer) throw new CustomError(CODE.ErrorUnknown);
             // Verify request code and that request was made within 48 hours
@@ -403,12 +428,12 @@ export const resolvers = {
                 !customer.lastResetPasswordReqestAttempt ||
                 Date.now() - new Date(customer.lastResetPasswordReqestAttempt).getTime() > REQUEST_PASSWORD_RESET_DURATION) {
                 // Generate new code
-                const requestCode = bcrypt.genSaltSync(HASHING_ROUNDS).replace('/', '');
+                const requestCode = randomString(32);
                 // Store code and request time in customer row
                 await prisma.customer.update({
                     where: { id: customer.id },
-                    data: { resetPasswordCode: requestCode, lastResetPasswordReqestAttempt: new Date().toISOString() }
-                })
+                    data: { resetPasswordCode: requestCode, lastResetPasswordReqestAttempt: new Date().toISOString() },
+                });
                 // Send new verification email
                 for (const email of customer.emails) {
                     sendResetPasswordLink(email.emailAddress, customer.id, requestCode);
@@ -422,9 +447,9 @@ export const resolvers = {
                 data: {
                     resetPasswordCode: null,
                     lastResetPasswordReqestAttempt: null,
-                    password: bcrypt.hashSync(input.newPassword, HASHING_ROUNDS)
-                }
-            })
+                    password: bcrypt.hashSync(input.newPassword, HASHING_ROUNDS),
+                },
+            });
             // Return customer data
             const prismaInfo = getCustomerSelect(info);
             const cart = await getCart(prisma, info, customer.id);
@@ -437,8 +462,8 @@ export const resolvers = {
             if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
             await prisma.customer.update({
                 where: { id: input.id },
-                data: { status: input.status }
-            })
+                data: { status: input.status },
+            });
             return true;
         },
         addCustomerRole: async (_parent: undefined, { input }: IWrap<AddCustomerRoleInput>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<Customer>> => {
@@ -447,9 +472,9 @@ export const resolvers = {
             await prisma.customer_roles.create({
                 data: {
                     customerId: input.id,
-                    roleId: input.roleId
-                }
-            })
+                    roleId: input.roleId,
+                },
+            });
             return await prisma.customer.findUnique({ where: { id: input.id }, ...(new PrismaSelect(info).value) }) as any;
         },
         removeCustomerRole: async (_parent: undefined, { input }: IWrap<RemoveCustomerRoleInput>, { prisma, req }: Context): Promise<boolean> => {
@@ -459,11 +484,11 @@ export const resolvers = {
                 where: {
                     customer_roles_customerid_roleid_unique: {
                         customerId: input.id,
-                        roleId: input.roleId
-                    }
-                }
-            })
+                        roleId: input.roleId,
+                    },
+                },
+            });
             return true;
         },
-    }
-}
+    },
+};

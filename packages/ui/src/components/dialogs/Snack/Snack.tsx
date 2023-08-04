@@ -1,13 +1,14 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { IconButton, Button, useTheme, Palette, Box, Typography } from '@mui/material';
-import { CloseIcon, ErrorIcon, InfoIcon, SuccessIcon, SvgComponent, WarningIcon } from '@shared/icons';
-import { SnackProps } from '../types';
+import { Box, Button, IconButton, Palette, Typography, useTheme } from "@mui/material";
+import { CloseIcon, ErrorIcon, InfoIcon, SuccessIcon, WarningIcon } from "icons";
+import { SvgComponent } from "icons/types";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { SnackProps } from "../types";
 
 export enum SnackSeverity {
-    Error = 'error',
-    Info = 'info',
-    Success = 'success',
-    Warning = 'warning',
+    Error = "error",
+    Info = "info",
+    Success = "success",
+    Warning = "warning",
 }
 
 const severityStyle = (severity: SnackSeverity | undefined, palette: Palette) => {
@@ -32,7 +33,7 @@ const severityStyle = (severity: SnackSeverity | undefined, palette: Palette) =>
             break;
     }
     return { backgroundColor, color };
-}
+};
 
 const DURATION = 4000;
 
@@ -69,16 +70,16 @@ export const Snack = ({
             if (timeoutRef.current) {
                 clearTimeout(timeoutRef.current);
             }
-        }
+        };
     }, [handleClose]);
 
     useEffect(() => {
         // Log snack errors if in development
-        if (process.env.NODE_ENV === 'development' && data) {
-            if (severity === SnackSeverity.Error) console.error('Snack data', data);
-            else console.info('Snack data', data);
+        if (import.meta.env.DEV && data) {
+            if (severity === SnackSeverity.Error) console.error("Snack data", data);
+            else console.info("Snack data", data);
         }
-    }, [data, severity])
+    }, [data, severity]);
 
     const Icon = useMemo<SvgComponent>(() => {
         switch (severity) {
@@ -95,28 +96,28 @@ export const Snack = ({
 
     return (
         <Box sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            maxWidth: { xs: '100%', sm: '600px' },
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            maxWidth: { xs: "100%", sm: "600px" },
             // Scrolls out of view when closed
-            transform: open ? 'translateX(0)' : 'translateX(-150%)',
-            transition: 'transform 0.4s ease-in-out',
-            padding: '8px 16px',
-            borderRadius: '12px',
+            transform: open ? "translateX(0)" : "translateX(-150%)",
+            transition: "transform 0.4s ease-in-out",
+            padding: "8px 16px",
+            borderRadius: "12px",
             ...severityStyle(severity, palette),
         }}>
             {/* Icon */}
             <Icon fill="white" />
             {/* Message */}
-            <Typography variant="body1" sx={{ color: 'white', marginLeft: '4px' }}>
+            <Typography variant="body1" sx={{ color: "white", marginLeft: "4px" }}>
                 {message}
             </Typography>
             {/* Button */}
             {buttonText && buttonClicked && (
                 <Button
                     variant="text"
-                    sx={{ color: 'black', marginLeft: '16px', padding: '4px', border: '1px solid black', borderRadius: '8px' }}
+                    sx={{ color: "black", marginLeft: "16px", padding: "4px", border: "1px solid black", borderRadius: "8px" }}
                     onClick={buttonClicked}
                 >
                     {buttonText}
@@ -127,5 +128,5 @@ export const Snack = ({
                 <CloseIcon />
             </IconButton>
         </Box>
-    )
-}
+    );
+};

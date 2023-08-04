@@ -9,30 +9,30 @@
  * Example logger output: 
  * {"code":"0000-cKST", "error: "Some error message", "level":"error","message":"Detailed message","service":"express-server","timestamp":"2022-04-23 16:08:55"}
  */
-import { randomString } from './utils';
-import winston from 'winston';
+import winston from "winston";
+import { randomString } from "./utils";
 
 const LOG_DIR = `${process.env.PROJECT_DIR}/data/logs`;
 
 export enum LogLevel {
-    error = 'error',
-    warn = 'warn',
-    info = 'info',
-    verbose = 'verbose',
-    debug = 'debug',
-    silly = 'silly',
+    error = "error",
+    warn = "warn",
+    info = "info",
+    verbose = "verbose",
+    debug = "debug",
+    silly = "silly",
 }
 
 export const logger = winston.createLogger({
     levels: winston.config.syslog.levels,
     format: winston.format.combine(
-        winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-        winston.format.json()
+        winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
+        winston.format.json(),
     ),
-    defaultMeta: { service: 'express-server' },
+    defaultMeta: { service: "express-server" },
     transports: [
         // Errors are not only included in the combined log file, but also in their own file
-        new winston.transports.File({ filename: `${LOG_DIR}/error.log`, level: 'error' }),
+        new winston.transports.File({ filename: `${LOG_DIR}/error.log`, level: "error" }),
         new winston.transports.File({ filename: `${LOG_DIR}/combined.log` }),
     ],
 });
@@ -42,7 +42,7 @@ export const logger = winston.createLogger({
  * Format: `${info.level}: ${info.message} JSON.stringify({ ...rest }) `.
  * Be careful not to add any data with circular references, as this will break JSON.stringify.
  */
-if (process.env.NODE_ENV === 'development') {
+if (process.env.NODE_ENV === "development") {
     logger.add(new winston.transports.Console({
         format: winston.format.simple(),
     }));

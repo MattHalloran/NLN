@@ -1,9 +1,9 @@
-import { TextField, InputAdornment, IconButton } from '@mui/material';
-import AwesomeDebouncePromise from 'awesome-debounce-promise';
-import { SearchIcon } from '@shared/icons';
+import { IconButton, InputAdornment, TextField } from "@mui/material";
+import AwesomeDebouncePromise from "awesome-debounce-promise";
+import { SearchIcon } from "icons";
 
 export const SearchBar = ({
-    label = 'Search...',
+    label = "Search...",
     value,
     onChange,
     debounce = 0,
@@ -27,9 +27,9 @@ export const SearchBar = ({
                             <SearchIcon />
                         </IconButton>
                     </InputAdornment>
-                )
+                ),
             }}
             {...props}
         />
     );
-}
+};

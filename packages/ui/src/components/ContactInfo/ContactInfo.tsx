@@ -10,9 +10,10 @@ import {
     TableHead,
     TableRow,
     Tooltip,
-    useTheme
-} from '@mui/material';
-import { EmailIcon, PhoneIcon, PinIcon, SvgComponent } from '@shared/icons';
+    useTheme,
+} from "@mui/material";
+import { EmailIcon, PhoneIcon, PinIcon } from "icons";
+import { SvgComponent } from "icons/types";
 
 export const ContactInfo = ({
     business,
@@ -23,27 +24,27 @@ export const ContactInfo = ({
     const openLink = (e, link) => {
         window.location = link;
         e.preventDefault();
-    }
+    };
 
     // Parse business hours markdown into 2D array, remove |'s, and reduce to 1D array
     let hours;
     try {
         hours = business?.hours ?
-            business.hours.split('\n').slice(2).map(row => row.split('|').map(r => r.trim()).filter(r => r !== '')).filter(r => r.length > 0) :
+            business.hours.split("\n").slice(2).map(row => row.split("|").map(r => r.trim()).filter(r => r !== "")).filter(r => r.length > 0) :
             [];
-        hours = hours.map(row => `${row[0]}: ${row[1]}`)
+        hours = hours.map(row => `${row[0]}: ${row[1]}`);
     } catch (error) {
-        console.error('Failed to read business hours', error);
+        console.error("Failed to read business hours", error);
     }
 
     const contactInfo: [string, string | undefined, string | undefined, SvgComponent][] = [
-        ['Open in Google Maps', business?.ADDRESS?.Label, business?.ADDRESS?.Link, PinIcon],
-        ['Call Us', business?.PHONE?.Label, business?.PHONE?.Link, PhoneIcon],
-        ['Email Us', business?.EMAIL?.Label, business?.EMAIL?.Link, EmailIcon]
-    ]
+        ["Open in Google Maps", business?.ADDRESS?.Label, business?.ADDRESS?.Link, PinIcon],
+        ["Call Us", business?.PHONE?.Label, business?.PHONE?.Link, PhoneIcon],
+        ["Email Us", business?.EMAIL?.Label, business?.EMAIL?.Link, EmailIcon],
+    ];
 
     return (
-        <Box sx={{ minWidth: 'fit-content', height: 'fit-content' }} {...props}>
+        <Box sx={{ minWidth: "fit-content", height: "fit-content" }} {...props}>
             <TableContainer>
                 <Table aria-label="contact-hours-table" size="small">
                     <TableHead sx={{ background: palette.primary.main }}>
@@ -65,9 +66,9 @@ export const ContactInfo = ({
             <BottomNavigation
                 showLabels
                 sx={{
-                    alignItems: 'baseline',
-                    background: 'transparent',
-                    height: 'fit-content',
+                    alignItems: "baseline",
+                    background: "transparent",
+                    height: "fit-content",
                     marginTop: 1,
                 }}
             >
@@ -82,9 +83,9 @@ export const ContactInfo = ({
                                 </IconButton>
                             }
                             sx={{
-                                alignItems: 'center',
+                                alignItems: "center",
                                 color: palette.background.textPrimary,
-                                overflowWrap: 'anywhere',
+                                overflowWrap: "anywhere",
                             }}
                         />
                     </Tooltip>
@@ -92,4 +93,4 @@ export const ContactInfo = ({
             </BottomNavigation>
         </Box>
     );
-}
+};

@@ -4,7 +4,7 @@
 // 0. largest size if none requested
 // 1. exact size match
 // 2. smallest size greater than requested
-import _ from 'lodash';
+import _ from "lodash";
 
 // 3. largest size smaller than requested
 export function getImageSrc(image: any, size?: any) {

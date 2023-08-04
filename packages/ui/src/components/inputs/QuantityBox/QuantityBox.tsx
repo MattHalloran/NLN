@@ -1,16 +1,16 @@
-import { useRef, useCallback, useEffect } from "react";
-import { Box, FormControl, IconButton, Input, InputLabel, SxProps, Theme, Tooltip, useTheme } from '@mui/material';
+import { Box, FormControl, IconButton, Input, InputLabel, SxProps, Theme, Tooltip, useTheme } from "@mui/material";
+import { MinusIcon, PlusIcon } from "icons";
+import { useCallback, useEffect, useRef } from "react";
 import { QuantityBoxProps } from "../types";
-import { MinusIcon, PlusIcon } from "@shared/icons";
 
 const buttonProps: SxProps<Theme> = {
     minWidth: 30,
-    width: '20%',
+    width: "20%",
     background: (t) => t.palette.secondary.main,
-    '&:hover': {
+    "&:hover": {
         background: (t) => t.palette.secondary.dark,
-    }
-} as const
+    },
+} as const;
 
 // Time for a button press to become a hold
 const HOLD_DELAY = 750;
@@ -27,15 +27,15 @@ export const QuantityBox = ({
     disabled = false,
     error = false, // TODO use
     handleChange,
-    helperText = '', //TODO use
+    helperText = "", //TODO use
     id,
     key,
     initial = 0,
-    label = 'Quantity',
+    label = "Quantity",
     max = 2097151,
     min = -2097151,
     step = 1,
-    tooltip = '',
+    tooltip = "",
     value,
     ...props
 }: QuantityBoxProps) => {
@@ -45,11 +45,11 @@ export const QuantityBox = ({
         which: null,
         speed: 1,
         timeout: null,
-        value: value,
-    })
+        value,
+    });
     useEffect(() => {
-        holdRefs.current.value = value
-    }, [value])
+        holdRefs.current.value = value;
+    }, [value]);
 
     const updateValue = useCallback((quantity) => {
         if (quantity > max) quantity = max;
@@ -70,13 +70,13 @@ export const QuantityBox = ({
     }, [updateValue]);
 
     const handleMinusDown = useCallback(() => {
-        updateValue(holdRefs.current.value * 1 - step)
+        updateValue(holdRefs.current.value * 1 - step);
         holdRefs.current.which = false;
         holdRefs.current.timeout = setTimeout(startHold, HOLD_DELAY);
     }, [startHold, step, updateValue]);
 
     const handlePlusDown = useCallback(() => {
-        updateValue(holdRefs.current.value * 1 + step)
+        updateValue(holdRefs.current.value * 1 + step);
         holdRefs.current.which = true;
         holdRefs.current.timeout = setTimeout(startHold, HOLD_DELAY);
     }, [startHold, step, updateValue]);
@@ -85,13 +85,13 @@ export const QuantityBox = ({
         if (holdRefs.current.timeout) clearTimeout(holdRefs.current.timeout);
         holdRefs.current.which = null;
         holdRefs.current.speed = 1;
-    }
+    };
 
     return (
         <Tooltip title={tooltip}>
             <Box key={key} {...props} sx={{
                 ...props?.sx ?? {},
-                display: 'flex',
+                display: "flex",
             }}>
                 <IconButton
                     aria-label='minus'
@@ -103,26 +103,26 @@ export const QuantityBox = ({
                     onContextMenu={(e) => e.preventDefault()}
                     sx={{
                         ...buttonProps,
-                        borderRadius: '5px 0 0 5px',
-                        maxWidth: '48px',
+                        borderRadius: "5px 0 0 5px",
+                        maxWidth: "48px",
                     }}>
                     <MinusIcon />
                 </IconButton>
                 <FormControl sx={{
                     background: palette.background.paper,
-                    width: '60%',
-                    maxWidth: `12ch`,
-                    height: '100%',
-                    display: 'grid',
+                    width: "60%",
+                    maxWidth: "12ch",
+                    height: "100%",
+                    display: "grid",
                     "& input::-webkit-clear-button, & input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button": {
                         display: "none",
-                    }
+                    },
                 }}>
                     <InputLabel
                         htmlFor={`quantity-box-${id}`}
                         sx={{
                             color: palette.background.textSecondary,
-                            paddingTop: '10px'
+                            paddingTop: "10px",
                         }}
                     >{label}</InputLabel>
                     <Input
@@ -149,12 +149,12 @@ export const QuantityBox = ({
                     onContextMenu={(e) => e.preventDefault()}
                     sx={{
                         ...buttonProps,
-                        borderRadius: '0 5px 5px 0',
-                        maxWidth: '48px',
+                        borderRadius: "0 5px 5px 0",
+                        maxWidth: "48px",
                     }}>
                     <PlusIcon />
                 </IconButton>
             </Box>
         </Tooltip>
     );
-}
+};

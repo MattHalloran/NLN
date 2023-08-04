@@ -1,41 +1,41 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useMutation, useQuery } from "@apollo/client";
+import { Box, CircularProgress, CssBaseline, StyledEngineProvider, ThemeProvider } from "@mui/material";
+import { makeStyles } from "@mui/styles";
+import { Routes } from "Routes";
+import { loginMutation } from "api/mutation";
+import { readAssetsQuery } from "api/query/readAssets";
 import {
     AlertDialog,
-    Footer,
     BottomNav,
+    Footer,
     Navbar,
-    SnackStack,
     PullToRefresh,
-} from 'components';
-import { PubSub, themes } from 'utils';
+    SnackStack,
+} from "components";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
 import { GlobalHotKeys } from "react-hotkeys";
-import { Routes } from 'Routes';
-import { HTML5Backend } from 'react-dnd-html5-backend';
-import { DndProvider } from 'react-dnd';
-import { useMutation, useQuery } from '@apollo/client';
-import { readAssetsQuery } from 'graphql/query/readAssets';
-import { loginMutation } from 'graphql/mutation';
-import { Box, CircularProgress, CssBaseline, StyledEngineProvider, ThemeProvider } from '@mui/material';
-import { Session } from 'types';
-import { makeStyles } from '@mui/styles';
-import { useLocation } from '@shared/route';
+import { useLocation } from "route";
+import { Session } from "types";
+import { PubSub, themes } from "utils";
 
 const useStyles = makeStyles(() => ({
     "@global": {
         body: {
-            backgroundColor: 'black',
+            backgroundColor: "black",
         },
-        '#page': {
-            minWidth: '100%',
-            minHeight: '100%',
-            padding: '1em',
-            paddingTop: 'calc(14vh + 20px)'
+        "#page": {
+            minWidth: "100%",
+            minHeight: "100%",
+            padding: "1em",
+            paddingTop: "calc(14vh + 20px)",
         },
-        '@media (min-width:500px)': {
-            '#page': {
-                paddingLeft: 'max(1em, calc(15% - 75px))',
-                paddingRight: 'max(1em, calc(15% - 75px))',
-            }
+        "@media (min-width:500px)": {
+            "#page": {
+                paddingLeft: "max(1em, calc(15% - 75px))",
+                paddingRight: "max(1em, calc(15% - 75px))",
+            },
         },
     },
 }));
@@ -44,7 +44,7 @@ const keyMap = {
     OPEN_MENU: "left",
     TOGGLE_MENU: "m",
     CLOSE_MENU: "right",
-    CLOSE_MENU_OR_POPUP: ["escape", "backspace"]
+    CLOSE_MENU_OR_POPUP: ["escape", "backspace"],
 };
 
 export function App() {
@@ -56,8 +56,8 @@ export function App() {
     const [cart, setCart] = useState(null);
     const [loading, setLoading] = useState(false);
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-    const [business, setBusiness] = useState(null)
-    const { data: businessData } = useQuery(readAssetsQuery, { variables: { input: { files: ['hours.md', 'business.json'] } } });
+    const [business, setBusiness] = useState(null);
+    const { data: businessData } = useQuery(readAssetsQuery, { variables: { input: { files: ["hours.md", "business.json"] } } });
     const [login] = useMutation(loginMutation);
     const [, setLocation] = useLocation();
 
@@ -68,23 +68,23 @@ export function App() {
 
     useEffect(() => {
         if (businessData === undefined) return;
-        let data = businessData.readAssets[1] ? JSON.parse(businessData.readAssets[1]) : {};
-        let hoursRaw = businessData.readAssets[0];
+        const data = businessData.readAssets[1] ? JSON.parse(businessData.readAssets[1]) : {};
+        const hoursRaw = businessData.readAssets[0];
         data.hours = hoursRaw;
         setBusiness(data);
-    }, [businessData])
+    }, [businessData]);
 
     useEffect(() => {
         // Determine theme
-        if (session?.theme) setTheme(themes[session?.theme])
+        if (session?.theme) setTheme(themes[session?.theme]);
         //else if (session && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) setTheme(themes.dark);
         else setTheme(themes.light);
         setCart(session?.cart ?? null);
-    }, [session])
+    }, [session]);
 
     const handlers = {
         OPEN_MENU: () => PubSub.get().publishBurgerMenu(true),
-        TOGGLE_MENU: () => PubSub.get().publishBurgerMenu('toggle'),
+        TOGGLE_MENU: () => PubSub.get().publishBurgerMenu("toggle"),
         CLOSE_MENU: () => PubSub.get().publishBurgerMenu(false),
         CLOSE_MENU_OR_POPUP: () => {
             handlers.CLOSE_MENU();
@@ -99,15 +99,15 @@ export function App() {
         login({ variables: { input: {} } }).then((response) => {
             setSession(response.data.login);
         }).catch((response) => {
-            if (process.env.NODE_ENV === 'development') console.error('Error: cannot login', response);
-            setSession({})
-        })
-    }, [login])
+            if (import.meta.env.DEV) console.error("Error: cannot login", response);
+            setSession({});
+        });
+    }, [login]);
 
     useEffect(() => {
         checkLogin();
         // Handle loading spinner, which can have a delay
-        let loadingSub = PubSub.get().subscribeLoading((delay) => {
+        const loadingSub = PubSub.get().subscribeLoading((delay) => {
             if (timeoutRef.current) clearTimeout(timeoutRef.current);
             if (Number.isInteger(delay)) {
                 timeoutRef.current = setTimeout(() => setLoading(true), Math.abs(delay as number));
@@ -115,14 +115,14 @@ export function App() {
                 setLoading(Boolean(delay));
             }
         });
-        let businessSub = PubSub.get().subscribeBusiness((data) => setBusiness(data));
-        let themeSub = PubSub.get().subscribeTheme((theme) => setTheme(themes[theme as any] ?? themes.light));
+        const businessSub = PubSub.get().subscribeBusiness((data) => setBusiness(data));
+        const themeSub = PubSub.get().subscribeTheme((theme) => setTheme(themes[theme as any] ?? themes.light));
         return (() => {
             PubSub.get().unsubscribe(loadingSub);
             PubSub.get().unsubscribe(businessSub);
             PubSub.get().unsubscribe(themeSub);
-        })
-    }, [checkLogin])
+        });
+    }, [checkLogin]);
 
     const redirect = (link) => setLocation(link);
 
@@ -142,7 +142,7 @@ export function App() {
                         >
                             {/* Pull-to-refresh for PWAs */}
                             <PullToRefresh />
-                            <Box id="content-wrap" sx={{ minHeight: '100vh', }}>
+                            <Box id="content-wrap" sx={{ minHeight: "100vh" }}>
                                 <Navbar
                                     session={session}
                                     business={business}
@@ -153,10 +153,10 @@ export function App() {
                                 />
                                 {
                                     loading && <Box sx={{
-                                        position: 'absolute',
-                                        top: '50%',
-                                        left: '50%',
-                                        transform: 'translate(-50%, -50%)',
+                                        position: "absolute",
+                                        top: "50%",
+                                        left: "50%",
+                                        transform: "translate(-50%, -50%)",
                                         zIndex: 100000,
                                     }}>
                                         <CircularProgress size={100} />

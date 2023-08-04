@@ -23,21 +23,21 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             // Show centered error message
             return (
                 <div style={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    height: '100%',
-                    position: 'absolute',
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    height: "100%",
+                    position: "absolute",
                     top: 0,
                     left: 0,
                     right: 0,
                     bottom: 0,
-                    paddingLeft: '16px',
-                    paddingRight: '16px',
-                    background: 'white',
+                    paddingLeft: "16px",
+                    paddingRight: "16px",
+                    background: "white",
                 }}
                 >
-                    <div style={{ textAlign: 'center', color: 'black' }}>
+                    <div style={{ textAlign: "center", color: "black" }}>
                         <h1>Something went wrong 😔</h1>
                         <p>Try refreshing the page, or closing and reopening the application. If the problem persists,
                             you may contact us at <a href="mailto:info@newlifenurseryinc.com">info@newlifenurseryinc.com</a> and we will try to help you as soon as possible.

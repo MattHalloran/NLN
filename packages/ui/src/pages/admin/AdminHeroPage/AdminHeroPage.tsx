@@ -1,52 +1,52 @@
-import { useCallback, useEffect, useState } from 'react';
-import { imagesByLabelQuery } from 'graphql/query';
-import { addImagesMutation, updateImagesMutation } from 'graphql/mutation';
-import { useQuery, useMutation } from '@apollo/client';
+import { useMutation, useQuery } from "@apollo/client";
+import { useTheme } from "@mui/material";
+import { addImagesVariables, addImages_addImages } from "api/generated/addImages";
+import { updateImagesVariables } from "api/generated/updateImages";
+import { addImagesMutation, updateImagesMutation } from "api/mutation";
+import { imagesByLabelQuery } from "api/query";
+import { mutationWrapper } from "api/utils";
 import {
     AdminBreadcrumbs,
     Dropzone,
     PageContainer,
     PageTitle,
-    WrappedImageList
-} from 'components';
-import { useTheme } from '@mui/material';
-import { mutationWrapper } from 'graphql/utils';
-import { addImagesVariables, addImages_addImages } from 'graphql/generated/addImages';
-import { updateImagesVariables } from 'graphql/generated/updateImages';
+    WrappedImageList,
+} from "components";
+import { useCallback, useEffect, useState } from "react";
 
-const helpText = `This page allows you to manage the images displayed in the Hero banner (what you see when you first visit the site).`
+const helpText = "This page allows you to manage the images displayed in the Hero banner (what you see when you first visit the site).";
 
 export const AdminHeroPage = () => {
     const { palette } = useTheme();
 
     const [imageData, setImageData] = useState<any[]>([]);
-    const { data: currImages, refetch: refetchImages } = useQuery(imagesByLabelQuery, { variables: { input: { label: 'hero' } } });
+    const { data: currImages, refetch: refetchImages } = useQuery(imagesByLabelQuery, { variables: { input: { label: "hero" } } });
     const [addImages] = useMutation(addImagesMutation);
     const [updateImages] = useMutation(updateImagesMutation);
 
-    const uploadImages = (acceptedFiles) => {
+    const uploadImages = useCallback((acceptedFiles: File[]) => {
         mutationWrapper<addImages_addImages, addImagesVariables>({
             mutation: addImages,
-            input: { files: acceptedFiles, labels: ['hero'] },
+            input: { files: acceptedFiles, labels: ["hero"] },
             successMessage: () => `Successfully uploaded ${acceptedFiles.length} image(s).`,
             onSuccess: () => refetchImages(),
-        })
-    }
+        });
+    }, [addImages, refetchImages]);
 
     useEffect(() => {
         // Table data must be extensible, and needs position
         setImageData(currImages?.imagesByLabel?.map((d, index) => ({
             ...d,
-            pos: index
+            pos: index,
         })));
-    }, [currImages])
+    }, [currImages]);
 
     const applyChanges = useCallback((changed) => {
         // Prepare data for request
         const data = changed.map(d => ({
             hash: d.hash,
             alt: d.alt,
-            description: d.description
+            description: d.description,
         }));
         // Determine which files to mark as deleting
         const originals = imageData.map(d => d.hash);
@@ -55,17 +55,17 @@ export const AdminHeroPage = () => {
         // Perform update
         mutationWrapper<any, updateImagesVariables>({
             mutation: updateImages,
-            input: { data, deleting, label: 'hero' },
-            successMessage: () => 'Successfully updated image(s).',
-        })
-    }, [imageData, updateImages])
+            input: { data, deleting, label: "hero" },
+            successMessage: () => "Successfully updated image(s).",
+        });
+    }, [imageData, updateImages]);
 
     return (
         <PageContainer>
             <AdminBreadcrumbs textColor={palette.secondary.dark} />
             <PageTitle title="Manage Hero" helpText={helpText} />
             <Dropzone
-                dropzoneText={'Drag \'n\' drop new images here or click'}
+                dropzoneText={"Drag 'n' drop new images here or click"}
                 onUpload={uploadImages}
                 uploadText='Upload Images'
             />
@@ -73,4 +73,4 @@ export const AdminHeroPage = () => {
             <WrappedImageList data={imageData} onApply={applyChanges} />
         </PageContainer>
     );
-}
+};

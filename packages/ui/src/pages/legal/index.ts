@@ -1,2 +1,3 @@
-export * from './PrivacyPolicyPage/PrivacyPolicyPage';
-export * from './TermsPage/TermsPage';
+export * from "./PrivacyPolicyPage/PrivacyPolicyPage";
+export * from "./TermsPage/TermsPage";
+

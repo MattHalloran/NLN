@@ -1,12 +1,12 @@
 /**
  * Prompts user to select which link the new node should be added on
  */
-import { Box, Button, CircularProgress, Grid } from '@mui/material';
-import { CancelIcon, CreateIcon, SaveIcon } from '@shared/icons';
-import { PopoverWithArrow } from 'components/dialogs';
-import Markdown from 'markdown-to-jsx';
-import { useCallback, useMemo, useState } from 'react';
-import { GridSubmitButtonsProps } from '../types';
+import { Box, Button, CircularProgress, Grid } from "@mui/material";
+import { PopoverWithArrow } from "components/dialogs";
+import { CancelIcon, CreateIcon, SaveIcon } from "icons";
+import Markdown from "markdown-to-jsx";
+import { useCallback, useMemo, useState } from "react";
+import { GridSubmitButtonsProps } from "../types";
 
 const capitalizeFirstLetter = (str: string) => { return str.charAt(0).toUpperCase() + str.slice(1); };
 
@@ -25,11 +25,11 @@ export const GridSubmitButtons = ({
     const [errorAnchorEl, setErrorAnchorEl] = useState<any | null>(null);
     const openError = useCallback((ev: React.MouseEvent | React.TouchEvent) => {
         ev.preventDefault();
-        setErrorAnchorEl(ev.currentTarget ?? ev.target)
+        setErrorAnchorEl(ev.currentTarget ?? ev.target);
     }, []);
     const closeError = useCallback(() => {
         setErrorAnchorEl(null);
-        if (typeof onSetSubmitting === 'function') {
+        if (typeof onSetSubmitting === "function") {
             onSetSubmitting(false);
         }
     }, [onSetSubmitting]);
@@ -39,16 +39,16 @@ export const GridSubmitButtons = ({
         // Filter out null and undefined errors
         const filteredErrors = Object.entries(errors ?? {}).filter(([key, value]) => value !== null && value !== undefined) as [string, string | string[]][];
         // Helper to convert string to markdown list item
-        const toListItem = (str: string, level: number) => { return `${'  '.repeat(level)}* ${str}`; };
+        const toListItem = (str: string, level: number) => { return `${"  ".repeat(level)}* ${str}`; };
         // Convert errors to markdown list
         const errorList = filteredErrors.map(([key, value]) => {
             if (Array.isArray(value)) {
-                return toListItem(capitalizeFirstLetter(key), 0) + ': \n' + value.map((str) => toListItem(str, 1)).join('\n');
+                return toListItem(capitalizeFirstLetter(key), 0) + ": \n" + value.map((str) => toListItem(str, 1)).join("\n");
             }
             else {
-                return toListItem(capitalizeFirstLetter(key + ': ' + value), 0);
+                return toListItem(capitalizeFirstLetter(key + ": " + value), 0);
             }
-        }).join('\n');
+        }).join("\n");
         return errorList;
     }, [errors]);
 
@@ -57,10 +57,10 @@ export const GridSubmitButtons = ({
 
 
     const handleSubmit = useCallback((ev: React.MouseEvent | React.TouchEvent) => {
-        console.log('handle submit', hasErrors, isSubmitDisabled)
+        console.log("handle submit", hasErrors, isSubmitDisabled);
         // If formik invalid, display errors in popup
         if (hasErrors) openError(ev);
-        else if (!disabledSubmit && typeof onSubmit === 'function') onSubmit();
+        else if (!disabledSubmit && typeof onSubmit === "function") onSubmit();
     }, [hasErrors, isSubmitDisabled, openError, disabledSubmit, onSubmit]);
 
     return (
@@ -72,11 +72,11 @@ export const GridSubmitButtons = ({
                 sxs={{
                     root: {
                         // Remove horizontal spacing for list items
-                        '& ul': {
-                            paddingInlineStart: '20px',
-                            margin: '8px',
-                        }
-                    }
+                        "& ul": {
+                            paddingInlineStart: "20px",
+                            margin: "8px",
+                        },
+                    },
                 }}
             >
                 <Markdown>{errorMessage}</Markdown>
@@ -87,7 +87,7 @@ export const GridSubmitButtons = ({
                     <Button
                         disabled={isSubmitDisabled}
                         fullWidth
-                        startIcon={loading ? <CircularProgress size={24} sx={{ color: 'white' }} /> : (isCreate ? <CreateIcon /> : <SaveIcon />)}
+                        startIcon={loading ? <CircularProgress size={24} sx={{ color: "white" }} /> : (isCreate ? <CreateIcon /> : <SaveIcon />)}
                     >{isCreate ? "Create" : "Save"}</Button>
                 </Box>
             </Grid>
@@ -101,5 +101,5 @@ export const GridSubmitButtons = ({
                 >Cancel</Button>
             </Grid>
         </>
-    )
-}
+    );
+};

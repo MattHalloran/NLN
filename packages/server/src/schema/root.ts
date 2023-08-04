@@ -1,11 +1,9 @@
-import { gql } from 'apollo-server-express';
-import { GraphQLResolveInfo, GraphQLScalarType } from "graphql";
-import { GraphQLUpload } from 'graphql-upload';
-import { readFiles, saveFiles } from '../utils';
-import _ from 'lodash';
-import { IWrap, RecursivePartial } from '../types';
-import { Context } from '../context';
-import { ReadAssetsInput } from './types';
+import { gql } from "apollo-server-express";
+import { GraphQLScalarType } from "graphql";
+import { GraphQLUpload } from "graphql-upload";
+import { IWrap, RecursivePartial } from "../types";
+import { readFiles, saveFiles } from "../utils";
+import { ReadAssetsInput } from "./types";
 
 export const typeDef = gql`
     scalar Date
@@ -49,7 +47,7 @@ export const typeDef = gql`
         # _empty: String
         writeAssets(files: [Upload!]!): Boolean
     }
-`
+`;
 
 export const resolvers = {
     Upload: GraphQLUpload,
@@ -65,18 +63,18 @@ export const resolvers = {
         },
         parseLiteral(ast: any) {
             return new Date(ast).toDateString(); // ast value is always in string format
-        }
+        },
     }),
     Query: {
-        readAssets: async (_parent: undefined, { input }: IWrap<ReadAssetsInput>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
+        readAssets: async (_parent: undefined, { input }: IWrap<ReadAssetsInput>): Promise<RecursivePartial<any> | null> => {
             return await readFiles(input.files);
         },
     },
     Mutation: {
-        writeAssets: async (_parent: undefined, input: any, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<boolean> => {
+        writeAssets: async (_parent: undefined, input: any): Promise<boolean> => {
             const data = await saveFiles(input.files);
             // Any failed writes will return null
-            return !data.some(d => d === null)
+            return !data.some(d => d === null);
         },
-    }
-}
+    },
+};

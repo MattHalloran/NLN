@@ -126,6 +126,7 @@ export type CustomerInput = {
   emails?: InputMaybe<Array<EmailInput>>;
   firstName?: InputMaybe<Scalars['String']>;
   id?: InputMaybe<Scalars['ID']>;
+  isAdmin?: InputMaybe<Scalars['Boolean']>;
   lastName?: InputMaybe<Scalars['String']>;
   phones?: InputMaybe<Array<PhoneInput>>;
   pronouns?: InputMaybe<Scalars['String']>;
@@ -615,7 +616,7 @@ export type Phone = {
 };
 
 export type PhoneInput = {
-  businessID?: InputMaybe<Scalars['ID']>;
+  businessId?: InputMaybe<Scalars['ID']>;
   customerId?: InputMaybe<Scalars['ID']>;
   id?: InputMaybe<Scalars['ID']>;
   number: Scalars['String'];

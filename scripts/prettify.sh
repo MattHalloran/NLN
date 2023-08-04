@@ -1,6 +1,8 @@
 #!/bin/bash
 # These functions help to prettify echos
 
+export TERM=${TERM:-xterm}
+
 # Determine if tput is available
 if [ -n "$(command -v tput)" ]; then
     # Set colors
@@ -11,6 +13,7 @@ if [ -n "$(command -v tput)" ]; then
     MAGENTA=$(tput setaf 5)
     CYAN=$(tput setaf 6)
     WHITE=$(tput setaf 7)
+    ORANGE=$(tput setaf 208)
     RESET=$(tput sgr0)
 else
     RED=""
@@ -20,6 +23,7 @@ else
     MAGENTA=""
     CYAN=""
     WHITE=""
+    ORANGE=""
     RESET=""
 fi
 
@@ -46,4 +50,9 @@ error() {
 # Print warning message
 warning() {
     echo "${YELLOW}${1}${RESET}"
+}
+
+# Print input prompt message
+prompt() {
+    echo "${ORANGE}${1}${RESET}"
 }

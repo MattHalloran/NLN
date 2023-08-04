@@ -1,9 +1,9 @@
+import { CODE } from "@local/shared";
 import { Request } from "express";
 import { GraphQLResolveInfo } from "graphql";
-import { initializeRedis } from "./redisConn";
 import { CustomError } from "./error";
-import { CODE } from "@shared/consts";
 import { genErrorCode, logger, LogLevel } from "./logger";
+import { initializeRedis } from "./redisConn";
 
 export interface RateLimitProps {
     /**
@@ -34,7 +34,7 @@ export async function rateLimit({
     req,
     window = 60 * 60 * 24,
 }: RateLimitProps): Promise<void> {
-    if (byAccount && !req.userId) throw new CustomError(CODE.Unauthorized, "Calling rateLimit with 'byAccountOrKey' set to true, but with an invalid or expired JWT", { code: genErrorCode('0015') });
+    if (byAccount && !req.userId) throw new CustomError(CODE.Unauthorized, "Calling rateLimit with 'byAccountOrKey' set to true, but with an invalid or expired JWT", { code: genErrorCode("0015") });
     // Unique key for this request. Combination of GraphQL endpoint and userId/ip.
     const key = `rate-limit:${info.path.key}:${byAccount ? req.userId : req.ip}`;
     try {
@@ -43,7 +43,7 @@ export async function rateLimit({
         const count = await client.incr(key);
         // If limit reached, throw error.
         if (count > max) {
-            throw new CustomError(CODE.RateLimitExceeded, `Rate limit exceeded. Please try again in ${window} seconds.`, { code: genErrorCode('0017') });
+            throw new CustomError(CODE.RateLimitExceeded, `Rate limit exceeded. Please try again in ${window} seconds.`, { code: genErrorCode("0017") });
         }
         // If key is new, set expiration.
         if (count === 1) {
@@ -52,7 +52,7 @@ export async function rateLimit({
     }
     // If Redis fails, let the user through. It's not their fault. 
     catch (error) {
-        logger.log(LogLevel.error, 'Error occured while connecting or accessing redis server', { code: genErrorCode('0168'), error });
+        logger.log(LogLevel.error, "Error occured while connecting or accessing redis server", { code: genErrorCode("0168"), error });
     }
     // TODO also calculate cost of API request and add to redis. Will have to find a way to map request to a cost function
 }

@@ -1,57 +1,57 @@
 <?xml version="1.0" encoding="utf-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://newlifenurseryinc.com/</loc>
+    <loc>https://newlifenurseryinc.comAPP_LINKS.Home</loc>
     <priority>1.0</priority>
     <changefreq>monthly</changefreq>
   </url>
   <url>
-    <loc>https://newlifenurseryinc.com/about</loc>
+    <loc>https://newlifenurseryinc.comAPP_LINKS.About</loc>
     <priority>0.7</priority>
     <changefreq>never</changefreq>
   </url>
   <url>
-    <loc>https://newlifenurseryinc.com/privacy-policy</loc>
+    <loc>https://newlifenurseryinc.comAPP_LINKS.PrivacyPolicy</loc>
     <priority>0.1</priority>
     <changefreq>never</changefreq>
   </url>
   <url>
-    <loc>https://newlifenurseryinc.com/terms-and-conditions</loc>
+    <loc>https://newlifenurseryinc.comAPP_LINKS.Terms</loc>
     <priority>0.1</priority>
     <changefreq>never</changefreq>
   </url>
   <url>
-    <loc>https://newlifenurseryinc.com/gallery</loc>
+    <loc>https://newlifenurseryinc.com`$APP_LINKS.Gallery</loc>
     <priority>0.3</priority>
     <changefreq>never</changefreq>
   </url>
   <url>
-    <loc>https://newlifenurseryinc.com/register</loc>
+    <loc>https://newlifenurseryinc.comAPP_LINKS.Register</loc>
     <priority>0.9</priority>
     <changefreq>never</changefreq>
   </url>
   <url>
-    <loc>https://newlifenurseryinc.com/login</loc>
+    <loc>https://newlifenurseryinc.com`$APP_LINKS.LogIn</loc>
     <priority>0.8</priority>
     <changefreq>never</changefreq>
   </url>
   <url>
-    <loc>https://newlifenurseryinc.com/forgot-password</loc>
+    <loc>https://newlifenurseryinc.com`$APP_LINKS.ForgotPassword</loc>
     <priority>0.1</priority>
     <changefreq>never</changefreq>
   </url>
   <url>
-    <loc>https://newlifenurseryinc.com/password-reset</loc>
+    <loc>https://newlifenurseryinc.com`$APP_LINKS.ResetPassword</loc>
     <priority>0.1</priority>
     <changefreq>never</changefreq>
   </url>
   <url>
-    <loc>https://newlifenurseryinc.com/profile</loc>
+    <loc>https://newlifenurseryinc.comAPP_LINKS.Profile</loc>
     <priority>0.4</priority>
     <changefreq>never</changefreq>
   </url>
   <url>
-    <loc>https://newlifenurseryinc.com/shopping</loc>
+    <loc>https://newlifenurseryinc.com`$APP_LINKS.Shopping</loc>
     <priority>0.9</priority>
     <changefreq>never</changefreq>
   </url>

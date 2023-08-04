@@ -1,7 +1,5 @@
-import { requestPasswordChangeMutation } from 'graphql/mutation';
-import { useMutation } from '@apollo/client';
-import { APP_LINKS } from '@shared/consts';
-import { useFormik } from 'formik';
+import { useMutation } from "@apollo/client";
+import { APP_LINKS, requestPasswordChangeSchema } from "@local/shared";
 import {
     Box,
     Button,
@@ -10,22 +8,23 @@ import {
     Palette,
     TextField,
     Typography,
-    useTheme
-} from '@mui/material';
-import { requestPasswordChangeSchema } from '@shared/validation';
-import { mutationWrapper } from 'graphql/utils';
-import { requestPasswordChangeVariables } from 'graphql/generated/requestPasswordChange';
-import { useLocation } from '@shared/route';
+    useTheme,
+} from "@mui/material";
+import { requestPasswordChangeVariables } from "api/generated/requestPasswordChange";
+import { requestPasswordChangeMutation } from "api/mutation";
+import { mutationWrapper } from "api/utils";
+import { useFormik } from "formik";
+import { useLocation } from "route";
 
 const clickSizeStyle = (palette: Palette) => ({
     color: palette.secondary.light,
-    minHeight: '48px', // Lighthouse recommends this for SEO, as it is more clickable
-    display: 'flex',
-    alignItems: 'center',
-})
+    minHeight: "48px", // Lighthouse recommends this for SEO, as it is more clickable
+    display: "flex",
+    alignItems: "center",
+});
 
 export const ForgotPasswordForm = ({
-    onRedirect
+    onRedirect,
 }) => {
     const { palette, spacing } = useTheme();
     const [, setLocation] = useLocation();
@@ -34,7 +33,7 @@ export const ForgotPasswordForm = ({
 
     const formik = useFormik({
         initialValues: {
-            email: ''
+            email: "",
         },
         validationSchema: requestPasswordChangeSchema,
         onSubmit: (values) => {
@@ -43,14 +42,14 @@ export const ForgotPasswordForm = ({
                 input: { ...values },
                 successCondition: (success) => success === true,
                 onSuccess: () => onRedirect(APP_LINKS.Home),
-                successMessage: () => 'Request sent. Please check email.',
-            })
+                successMessage: () => "Request sent. Please check email.",
+            });
         },
     });
 
     return (
         <Box sx={{
-            width: '100%',
+            width: "100%",
             marginTop: spacing(3),
         }}>
             <form onSubmit={formik.handleSubmit}>
@@ -89,7 +88,7 @@ export const ForgotPasswordForm = ({
                     </Grid>
                     <Grid item xs={6}>
                         <Link onClick={() => setLocation(APP_LINKS.Register)}>
-                            <Typography sx={{ ...clickSizeStyle(palette), flexDirection: 'row-reverse' }}>
+                            <Typography sx={{ ...clickSizeStyle(palette), flexDirection: "row-reverse" }}>
                                 Don't have an account? Sign up
                             </Typography>
                         </Link>
@@ -98,4 +97,4 @@ export const ForgotPasswordForm = ({
             </form>
         </Box>
     );
-}
+};

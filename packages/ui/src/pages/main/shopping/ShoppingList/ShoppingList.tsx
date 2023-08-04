@@ -1,19 +1,19 @@
-import { useState, useEffect } from "react";
-import { plantsQuery } from 'graphql/query';
-import { upsertOrderItemMutation } from 'graphql/mutation';
-import { useQuery, useMutation } from '@apollo/client';
-import { getPlantTrait, parseSearchParams, PubSub, SORT_OPTIONS } from "utils";
+import { useMutation, useQuery } from "@apollo/client";
+import { APP_LINKS } from "@local/shared";
+import { Box } from "@mui/material";
+import { plants_plants, plants_plants_skus } from "api/generated/plants";
+import { upsertOrderItemVariables, upsertOrderItem_upsertOrderItem } from "api/generated/upsertOrderItem";
+import { upsertOrderItemMutation } from "api/mutation";
+import { plantsQuery } from "api/query";
+import { mutationWrapper } from "api/utils";
 import {
     PlantCard,
     PlantDialog,
-    SnackSeverity
-} from 'components';
-import { Box } from "@mui/material";
-import { APP_LINKS } from "@shared/consts";
-import { mutationWrapper } from "graphql/utils";
-import { upsertOrderItemVariables, upsertOrderItem_upsertOrderItem } from "graphql/generated/upsertOrderItem";
-import { useLocation } from "@shared/route";
-import { plants_plants, plants_plants_skus } from "graphql/generated/plants";
+    SnackSeverity,
+} from "components";
+import { useEffect, useState } from "react";
+import { parseSearchParams, useLocation } from "route";
+import { PubSub, SORT_OPTIONS, getPlantTrait } from "utils";
 
 export const ShoppingList = ({
     session,
@@ -22,20 +22,20 @@ export const ShoppingList = ({
     sortBy = SORT_OPTIONS[0].value,
     filters,
     hideOutOfStock,
-    searchString = '',
+    searchString = "",
 }) => {
 
     // Plant data for all visible plants (i.e. not filtered)
     const [plants, setPlants] = useState<plants_plants[]>([]);
-    const track_scrolling_id = 'scroll-tracked';
+    const track_scrolling_id = "scroll-tracked";
     const [, setLocation] = useLocation();
     const [sku, setSku] = useState<string | undefined>(undefined);
     useEffect(() => {
         const searchParams = parseSearchParams();
-        if (typeof searchParams.sku === 'string') {
+        if (typeof searchParams.sku === "string") {
             setSku(searchParams.sku);
         }
-    }, [setLocation])
+    }, [setLocation]);
     // Find current plant and current sku
     const currPlant = Array.isArray(plants) ? plants.find((p: any) => p.skus.some(s => s.sku === sku)) : undefined;
     const currSku = currPlant?.skus ? currPlant.skus.find(s => s.sku === sku) : undefined;
@@ -50,20 +50,20 @@ export const ShoppingList = ({
             setPlants(plantData?.plants);
             return;
         }
-        let filtered_plants: any[] = [];
+        const filtered_plants: any[] = [];
         for (const plant of plantData?.plants) {
             let found = false;
             for (const [key, value] of Object.entries(filters)) {
                 if (found) break;
                 const traitValue = getPlantTrait(key, plant);
-                if (traitValue && traitValue.toLowerCase() === (value + '').toLowerCase()) {
+                if (traitValue && traitValue.toLowerCase() === (value + "").toLowerCase()) {
                     found = true;
                     break;
                 }
                 if (!Array.isArray(plant.skus)) continue;
                 for (let i = 0; i < plant.skus.length; i++) {
                     const skuValue = plant.skus[i][key];
-                    if (skuValue && skuValue.toLowerCase() === (value + '').toLowerCase()) {
+                    if (skuValue && skuValue.toLowerCase() === (value + "").toLowerCase()) {
                         found = true;
                         break;
                     }
@@ -72,7 +72,7 @@ export const ShoppingList = ({
             if (found) filtered_plants.push(plant);
         }
         setPlants(filtered_plants);
-    }, [plantData, filters, searchString, hideOutOfStock])
+    }, [plantData, filters, searchString, hideOutOfStock]);
 
     const expandSku = (sku) => {
         setLocation(APP_LINKS.Shopping + "/" + sku);
@@ -86,11 +86,11 @@ export const ShoppingList = ({
 
     const toCart = () => {
         setLocation(APP_LINKS.Cart);
-    }
+    };
 
     const addToCart = (sku: plants_plants_skus, quantity: number) => {
         if (!session?.id) return;
-        let max_quantity = sku.availability;
+        const max_quantity = sku.availability;
         if (Number.isInteger(max_quantity) && quantity > max_quantity) {
             alert(`Error: Cannot add more than ${max_quantity}!`);
             return;
@@ -101,18 +101,18 @@ export const ShoppingList = ({
             successCondition: (data) => data !== null,
             onSuccess: () => {
                 onSessionUpdate();
-                PubSub.get().publishSnack({ message: 'Item added to cart', buttonText: 'View', buttonClicked: toCart, severity: SnackSeverity.Success });
-            }
-        })
-    }
+                PubSub.get().publishSnack({ message: "Item added to cart", buttonText: "View", buttonClicked: toCart, severity: SnackSeverity.Success });
+            },
+        });
+    };
 
     return (
         <Box
             id={track_scrolling_id}
             sx={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-                alignItems: 'stretch',
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+                alignItems: "stretch",
             }}
         >
             {(currPlant) ? <PlantDialog
@@ -128,4 +128,4 @@ export const ShoppingList = ({
                     plant={item} />)}
         </Box>
     );
-}
+};

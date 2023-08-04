@@ -4,22 +4,17 @@ FROM node:16-alpine3.16 as stage0
 
 # Set working directory
 ARG PROJECT_DIR
+ARG VIRTUAL_PORT
 WORKDIR ${PROJECT_DIR}
 
 # Copy main package.json, as well as packages this container will use. Doing this first helps with caching (I think).
 COPY --chown=node:node package.json yarn.lock ./
 COPY --chown=node:node packages/server/package.json packages/server/
-COPY --chown=node:node packages/shared/consts/package.json packages/shared/consts/
-COPY --chown=node:node packages/shared/route/package.json packages/shared/route/
-COPY --chown=node:node packages/shared/utils/package.json packages/shared/utils/
-COPY --chown=node:node packages/shared/validation/package.json packages/shared/validation/
+COPY --chown=node:node packages/shared/package.json packages/shared/
 
 # Copy all files from packages/server/src, and every directory's src in packages/shared
 COPY --chown=node:node packages/server/src packages/server/
-COPY --chown=node:node packages/shared/consts/src packages/shared/consts/
-COPY --chown=node:node packages/shared/route/src packages/shared/route/
-COPY --chown=node:node packages/shared/utils/src packages/shared/utils/
-COPY --chown=node:node packages/shared/validation/src packages/shared/validation/
+COPY --chown=node:node packages/shared/src packages/shared/
 
 # Copy required script files
 COPY --chown=node:node scripts/* scripts/
@@ -41,7 +36,7 @@ COPY --from=stage0 ${PROJECT_DIR} ./
 RUN yarn install
 
 # Install global packages
-RUN yarn global add typescript ts-node nodemon prisma@4.0.0
+RUN yarn global add typescript ts-node nodemon prisma@4.12.0
 
 # Stage 2. Copy files from stage 1, and install required unix tools
 FROM node:16-alpine3.16 as stage2
@@ -61,4 +56,4 @@ RUN apk update
 RUN apk add netcat-openbsd
 
 # Set port
-EXPOSE 5329
+EXPOSE ${VIRTUAL_PORT} 9229

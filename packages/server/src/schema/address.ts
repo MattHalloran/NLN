@@ -1,11 +1,11 @@
-import { gql } from 'apollo-server-express';
-import { CODE } from '@shared/consts';
-import { CustomError } from '../error';
-import { PrismaSelect } from '@paljs/plugins';
-import { IWrap, RecursivePartial } from '../types';
-import { Context } from '../context';
-import { GraphQLResolveInfo } from 'graphql';
-import { Address, AddressInput, Count, DeleteManyInput } from './types';
+import { CODE } from "@local/shared";
+import { PrismaSelect } from "@paljs/plugins";
+import { gql } from "apollo-server-express";
+import { GraphQLResolveInfo } from "graphql";
+import { Context } from "../context";
+import { CustomError } from "../error";
+import { IWrap, RecursivePartial } from "../types";
+import { Address, AddressInput, Count, DeleteManyInput } from "./types";
 
 export const typeDef = gql`
     input AddressInput {
@@ -47,7 +47,7 @@ export const typeDef = gql`
         updateAddress(input: AddressInput!): Address!
         deleteAddresses(input: DeleteManyInput!): Count!
     }
-`
+`;
 
 export const resolvers = {
     Query: {
@@ -55,13 +55,13 @@ export const resolvers = {
             // Must be admin
             if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
             return await prisma.address.findMany((new PrismaSelect(info).value));
-        }
+        },
     },
     Mutation: {
         addAddress: async (_parent: undefined, { input }: IWrap<AddressInput>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<Address>> => {
             // Must be admin, or adding to your own
-            if(!req.isAdmin && (req.businessId !== input.businessId)) throw new CustomError(CODE.Unauthorized);
-            return await prisma.address.create({ data: { ...input }, ...(new PrismaSelect(info).value) })
+            if (!req.isAdmin && (req.businessId !== input.businessId)) throw new CustomError(CODE.Unauthorized);
+            return await prisma.address.create({ data: { ...input }, ...(new PrismaSelect(info).value) });
         },
         updateAddress: async (_parent: undefined, { input }: IWrap<AddressInput>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<Address>> => {
             // Must be admin, or updating your own
@@ -71,16 +71,16 @@ export const resolvers = {
             return await prisma.address.update({
                 where: { id: input.id || undefined },
                 data: { ...input },
-                ...(new PrismaSelect(info).value)
-            })
+                ...(new PrismaSelect(info).value),
+            });
         },
-        deleteAddresses: async (_parent: undefined, { input }: IWrap<DeleteManyInput>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<Count> => {
+        deleteAddresses: async (_parent: undefined, { input }: IWrap<DeleteManyInput>, { prisma, req }: Context): Promise<Count> => {
             // Must be admin, or deleting your own
             const specified = await prisma.address.findMany({ where: { id: { in: input.ids } } });
             if (!specified) throw new CustomError(CODE.ErrorUnknown);
             const businessIds = [...new Set(specified.map((s) => s.businessId))];
             if (!req.isAdmin && (businessIds.length > 1 || req.businessId !== businessIds[0])) throw new CustomError(CODE.Unauthorized);
             return await prisma.address.deleteMany({ where: { id: { in: input.ids } } });
-        }
-    }
-}
+        },
+    },
+};

@@ -1,21 +1,19 @@
-import { useMemo } from 'react'
-import { DEFAULT_PRONOUNS } from '@shared/consts';
-import { useMutation, useQuery } from '@apollo/client';
-import { updateCustomerMutation } from 'graphql/mutation';
-import { profileQuery } from 'graphql/query';
-import { useFormik } from 'formik';
-import { Autocomplete } from '@mui/lab';
-import { PubSub } from 'utils';
-import { Button, Container, FormHelperText, Grid, TextField, Checkbox, FormControlLabel, useTheme, Box } from '@mui/material';
-import FormControl from '@mui/material/FormControl';
-import Radio from '@mui/material/Radio';
-import RadioGroup from '@mui/material/RadioGroup';
-import { profileSchema } from '@shared/validation';
-import { profile, profile_profile } from 'graphql/generated/profile';
-import { uuid } from '@shared/uuid';
-import { mutationWrapper } from 'graphql/utils';
-import { updateCustomerVariables, updateCustomer_updateCustomer } from 'graphql/generated/updateCustomer';
-import { PasswordTextField } from 'components/inputs/PasswordTextField/PasswordTextField';
+import { useMutation, useQuery } from "@apollo/client";
+import { DEFAULT_PRONOUNS, profileSchema, uuid } from "@local/shared";
+import { Autocomplete } from "@mui/lab";
+import { Box, Button, Checkbox, Container, FormControlLabel, FormHelperText, Grid, TextField, useTheme } from "@mui/material";
+import FormControl from "@mui/material/FormControl";
+import Radio from "@mui/material/Radio";
+import RadioGroup from "@mui/material/RadioGroup";
+import { profile, profile_profile } from "api/generated/profile";
+import { updateCustomerVariables, updateCustomer_updateCustomer } from "api/generated/updateCustomer";
+import { updateCustomerMutation } from "api/mutation";
+import { profileQuery } from "api/query";
+import { mutationWrapper } from "api/utils";
+import { PasswordTextField } from "components/inputs/PasswordTextField/PasswordTextField";
+import { useFormik } from "formik";
+import { useMemo } from "react";
+import { PubSub } from "utils";
 
 export const ProfileForm = () => {
     const { spacing } = useTheme();
@@ -27,46 +25,46 @@ export const ProfileForm = () => {
     const formik = useFormik({
         enableReinitialize: true,
         initialValues: {
-            firstName: profile?.firstName ?? '',
-            lastName: profile?.lastName ?? '',
-            business: profile?.business?.name ?? '',
-            pronouns: profile?.pronouns ?? '',
-            email: profile !== null && profile.emails.length > 0 ? profile.emails[0].emailAddress : '',
-            phone: profile !== null && profile.phones.length > 0 ? profile.phones[0].number : '1',
-            theme: profile?.theme ?? 'light',
-            accountApproved: (profile?.accountApproved || false) + '',
+            firstName: profile?.firstName ?? "",
+            lastName: profile?.lastName ?? "",
+            business: profile?.business?.name ?? "",
+            pronouns: profile?.pronouns ?? "",
+            email: profile !== null && profile.emails.length > 0 ? profile.emails[0].emailAddress : "",
+            phone: profile !== null && profile.phones.length > 0 ? profile.phones[0].number : "1",
+            theme: profile?.theme ?? "light",
+            accountApproved: (profile?.accountApproved || false) + "",
             marketingEmails: profile !== null && profile.emails.length > 0 ? profile.emails[0].receivesDeliveryUpdates : false,
-            currentPassword: '',
-            newPassword: '',
-            newPasswordConfirmation: ''
+            currentPassword: "",
+            newPassword: "",
+            newPasswordConfirmation: "",
         },
         validationSchema: profileSchema,
         onSubmit: (values) => {
             if (!profile) return;
-            let input = ({
+            const input = ({
                 id: profile.id,
                 firstName: values.firstName,
                 lastName: values.lastName,
                 business: {
                     id: profile.business?.id ?? uuid(),
-                    name: values.business
+                    name: values.business,
                 },
                 pronouns: values.pronouns,
                 emails: [
                     {
                         id: profile.emails.length > 0 ? profile.emails[0].id : uuid(),
                         emailAddress: values.email,
-                        receivesDeliveryUpdates: values.marketingEmails
-                    }
+                        receivesDeliveryUpdates: values.marketingEmails,
+                    },
                 ],
                 phones: [
                     {
                         id: profile.phones.length > 0 ? profile.phones[0].id : uuid(),
-                        number: values.phone
-                    }
+                        number: values.phone,
+                    },
                 ],
                 theme: values.theme,
-                accountApproved: Boolean(values.accountApproved)
+                accountApproved: Boolean(values.accountApproved),
             });
             // Only add email and phone ids if they previously existed
             if (profile.emails.length > 0) input.emails[0].id = profile.emails[0].id;
@@ -74,21 +72,21 @@ export const ProfileForm = () => {
             mutationWrapper<updateCustomer_updateCustomer, updateCustomerVariables>({
                 mutation: updateCustomer,
                 input: {
-                    input: input,
+                    input,
                     currentPassword: values.currentPassword,
-                    newPassword: values.newPassword
+                    newPassword: values.newPassword,
                 },
-                successMessage: () => 'Profile updated.',
-            })
+                successMessage: () => "Profile updated.",
+            });
         },
     });
 
     return (
         <Box sx={{
-            width: '100%',
+            width: "100%",
         }}>
             <form onSubmit={formik.handleSubmit}>
-                <fieldset style={{ border: 'none' }}>
+                <fieldset style={{ border: "none" }}>
                     <Container>
                         <Grid container spacing={2}>
                             <Grid item xs={12} sm={6}>
@@ -125,7 +123,7 @@ export const ProfileForm = () => {
                                     id="pronouns"
                                     options={DEFAULT_PRONOUNS}
                                     value={formik.values.pronouns}
-                                    onChange={(_, value) => formik.setFieldValue('pronouns', value)}
+                                    onChange={(_, value) => formik.setFieldValue("pronouns", value)}
                                     renderInput={(params) => (
                                         <TextField
                                             {...params}
@@ -184,7 +182,7 @@ export const ProfileForm = () => {
                                         name="theme"
                                         aria-label="theme-check"
                                         value={formik.values.theme}
-                                        onChange={(e) => { formik.handleChange(e); PubSub.get().publishTheme(e.target.value as 'light' | 'dark') }}
+                                        onChange={(e) => { formik.handleChange(e); PubSub.get().publishTheme(e.target.value as "light" | "dark"); }}
                                     >
                                         <FormControlLabel value="light" control={<Radio />} label="Light ☀️" />
                                         <FormControlLabel value="dark" control={<Radio />} label="Dark 🌙" />
@@ -289,7 +287,7 @@ export const ProfileForm = () => {
                             </Button>
                         </Grid>
                         <Grid item xs={12} sm={6}>
-                            <Button fullWidth onClick={() => { formik.resetForm() }}>
+                            <Button fullWidth onClick={() => { formik.resetForm(); }}>
                                 Cancel
                             </Button>
                         </Grid>
@@ -299,4 +297,4 @@ export const ProfileForm = () => {
         </Box>
 
     );
-}
+};

@@ -1,15 +1,15 @@
-import { useEffect, useState } from 'react';
 import {
     Button,
     Dialog,
     DialogActions,
     DialogContent,
     TextField,
-    useTheme
-} from '@mui/material';
-import { DialogTitle } from '../DialogTitle/DialogTitle';
+    useTheme,
+} from "@mui/material";
+import { useEffect, useState } from "react";
+import { DialogTitle } from "../DialogTitle/DialogTitle";
 
-const titleAria = 'edit-image-dialog-title';
+const titleAria = "edit-image-dialog-title";
 
 export const EditImageDialog = ({
     open,
@@ -19,13 +19,13 @@ export const EditImageDialog = ({
 }) => {
     const { palette } = useTheme();
 
-    const [alt, setAlt] = useState('')
-    const [description, setDescription] = useState('')
+    const [alt, setAlt] = useState("");
+    const [description, setDescription] = useState("");
 
     useEffect(() => {
-        setAlt(data?.alt ?? '');
-        setDescription(data?.description ?? '');
-    }, [data])
+        setAlt(data?.alt ?? "");
+        setDescription(data?.description ?? "");
+    }, [data]);
 
     return (
         <Dialog open={open} onClose={onClose} aria-labelledby={titleAria}>
@@ -50,10 +50,10 @@ export const EditImageDialog = ({
                 <Button onClick={onClose} variant="text" sx={{ color: palette.primary.main }}>
                     Cancel
                 </Button>
-                <Button onClick={() => onSave({ alt: alt, description: description })} variant="text" sx={{ color: palette.primary.main }}>
+                <Button onClick={() => onSave({ alt, description })} variant="text" sx={{ color: palette.primary.main }}>
                     Save
                 </Button>
             </DialogActions>
         </Dialog>
     );
-}
+};

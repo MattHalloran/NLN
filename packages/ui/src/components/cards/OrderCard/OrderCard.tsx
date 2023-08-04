@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import {
     Button,
     Card,
@@ -7,11 +6,12 @@ import {
     IconButton,
     Tooltip,
     Typography,
-    useTheme
-} from '@mui/material';
-import { ListDialog } from 'components';
-import { emailLink, mapIfExists, phoneLink, showPhone } from 'utils';
-import { EmailIcon, PhoneIcon } from '@shared/icons';
+    useTheme,
+} from "@mui/material";
+import { ListDialog } from "components";
+import { EmailIcon, PhoneIcon } from "icons";
+import { useState } from "react";
+import { emailLink, mapIfExists, phoneLink, showPhone } from "utils";
 
 export const OrderCard = ({
     onEdit,
@@ -25,16 +25,16 @@ export const OrderCard = ({
     const callPhone = (phoneLink: string) => {
         setPhoneDialogOpen(false);
         if (phoneLink) window.location.href = phoneLink;
-    }
+    };
 
     const sendEmail = (emailLink: string) => {
         setEmailDialogOpen(false);
-        if (emailLink) window.open(emailLink, '_blank', 'noopener,noreferrer')
-    }
+        if (emailLink) window.open(emailLink, "_blank", "noopener,noreferrer");
+    };
 
     // Phone and email [label, value] pairs
-    const phoneList = mapIfExists(order, 'customer.phones', (p) => ([showPhone(p.number), phoneLink(p.number)]));
-    const emailList = mapIfExists(order, 'customer.emails', (e) => ([e.emailAddress, emailLink(e.emailAddress)]));
+    const phoneList = mapIfExists(order, "customer.phones", (p) => ([showPhone(p.number), phoneLink(p.number)]));
+    const emailList = mapIfExists(order, "customer.emails", (e) => ([e.emailAddress, emailLink(e.emailAddress)]));
 
     return (
         <Card sx={{
@@ -45,7 +45,7 @@ export const OrderCard = ({
             padding: 1,
             minWidth: 150,
             minHeight: 50,
-            cursor: 'pointer',
+            cursor: "pointer",
         }}>
             {phoneDialogOpen ? (
                 <ListDialog
@@ -67,7 +67,7 @@ export const OrderCard = ({
                     Status: {order?.status}
                 </Typography>
                 <Typography variant="body1" component="h4">
-                    Requested Date: {order?.desiredDeliveryDate ? new Date(order?.desiredDeliveryDate).toLocaleDateString('en-US') : 'Unset'}
+                    Requested Date: {order?.desiredDeliveryDate ? new Date(order?.desiredDeliveryDate).toLocaleDateString("en-US") : "Unset"}
                 </Typography>
                 <Typography variant="body1" component="h4">
                     Items: {order?.items?.length ?? 0}
@@ -92,4 +92,4 @@ export const OrderCard = ({
             </CardActions>
         </Card>
     );
-}
+};

@@ -1,76 +1,91 @@
-import { useEffect, useState } from 'react';
-import { useDropzone } from 'react-dropzone';
-import { PubSub } from 'utils';
-import { Box, Button, Grid, useTheme } from '@mui/material';
-import { SnackSeverity } from 'components/dialogs';
+import { Box, Button, Grid, useTheme } from "@mui/material";
+import { SnackSeverity } from "components/dialogs";
+import { useEffect, useState } from "react";
+import { useDropzone } from "react-dropzone";
+import { PubSub } from "utils";
+
+interface DropzoneProps {
+    acceptedFileTypes?: string[];
+    dropzoneText?: string;
+    onUpload: (files: File[]) => unknown;
+    showThumbs?: boolean;
+    maxFiles?: number;
+    uploadText?: string;
+    cancelText?: string;
+    disabled?: boolean;
+}
+
+interface PreviewableFile extends File {
+    preview: string;
+}
 
 export const Dropzone = ({
-    acceptedFileTypes = ['image/*', '.heic', '.heif'],
-    dropzoneText = 'Drag \'n\' drop files here or click',
+    acceptedFileTypes = ["image/*", ".heic", ".heif"],
+    dropzoneText = "Drag 'n' drop files here or click",
     onUpload,
     showThumbs = true,
     maxFiles = 100,
-    uploadText = 'Upload file(s)',
-    cancelText = 'Cancel upload',
-    disabled = false
-}) => {
+    uploadText = "Upload file(s)",
+    cancelText = "Cancel upload",
+    disabled = false,
+}: DropzoneProps) => {
     const { spacing } = useTheme();
 
-    const [files, setFiles] = useState<any[]>([]);
+    const [files, setFiles] = useState<PreviewableFile[]>([]);
     const { getRootProps, getInputProps } = useDropzone({
         accept: acceptedFileTypes,
-        maxFiles: maxFiles,
+        maxFiles,
         onDrop: acceptedFiles => {
             if (acceptedFiles.length <= 0) {
-                PubSub.get().publishSnack({ message: 'Files not accepted', severity: SnackSeverity.Error });
+                PubSub.get().publishSnack({ message: "Files not accepted", severity: SnackSeverity.Error });
                 return;
             }
-            setFiles(acceptedFiles.map(file => Object.assign(file, {
-                preview: URL.createObjectURL(file)
-            })));
-        }
+            // Type annotate file as File
+            setFiles(acceptedFiles.map((file: File) =>
+                Object.assign(file, {
+                    preview: URL.createObjectURL(file),
+                }),
+            ));
+        },
     });
 
     const upload = (e) => {
         e.stopPropagation();
         if (files.length === 0) {
-            PubSub.get().publishSnack({ message: 'No files selected', severity: SnackSeverity.Error });
+            PubSub.get().publishSnack({ message: "No files selected", severity: SnackSeverity.Error });
             return;
         }
         onUpload(files);
         setFiles([]);
-    }
+    };
 
     const cancel = (e) => {
         e.stopPropagation();
         setFiles([]);
-    }
+    };
 
     const thumbs = files.map(file => (
         <Box key={file.name} sx={{
-            display: 'inline-flex',
-            borderRadius: 2,
-            border: '1px solid #eaeaea',
-            marginBottom: 8,
-            marginRight: 8,
+            display: "inline-flex",
+            marginBottom: 1,
+            marginLeft: 1,
             width: 100,
             height: 100,
-            padding: 4,
-            boxSizing: 'border-box'
+            boxSizing: "border-box",
         }}>
             <Box sx={{
-                display: 'flex',
+                display: "flex",
                 minWidth: 0,
-                overflow: 'hidden'
+                overflow: "hidden",
             }}>
                 <Box
                     component="img"
                     src={file.preview}
                     alt="Dropzone preview"
                     sx={{
-                        display: 'block',
-                        width: 'auto',
-                        height: '100%'
+                        display: "block",
+                        width: "auto",
+                        height: "100%",
                     }} />
             </Box>
         </Box>
@@ -83,24 +98,24 @@ export const Dropzone = ({
 
     return (
         <Box component="section" sx={{
-            background: 'white',
-            color: 'black',
-            border: '3px dashed gray',
-            borderRadius: '5px'
+            background: "white",
+            color: "black",
+            border: "3px dashed gray",
+            borderRadius: "5px",
         }}>
-            <Box sx={{ textAlign: 'center' }} {...getRootProps({ className: 'dropzone' })}>
+            <Box sx={{ textAlign: "center" }} {...getRootProps({ className: "dropzone" })}>
                 <input {...getInputProps()} />
                 <p>{dropzoneText}</p>
                 {showThumbs &&
                     <Box component="aside" sx={{
-                        display: 'flex',
-                        flexDirection: 'row',
-                        flexWrap: 'wrap',
-                        marginTop: 16
+                        display: "flex",
+                        flexDirection: "row",
+                        flexWrap: "wrap",
+                        marginTop: files.length === 0 ? spacing(8) : 0,
                     }}>
                         {thumbs}
                     </Box>}
-                <Grid container spacing={2} sx={{
+                <Grid container spacing={1} sx={{
                     paddingLeft: spacing(1),
                     paddingRight: spacing(1),
                 }}>
@@ -130,4 +145,4 @@ export const Dropzone = ({
             </Box>
         </Box>
     );
-}
+};

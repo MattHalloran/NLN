@@ -1,23 +1,23 @@
-import { useRef } from 'react';
-import { useDrag, useDrop } from 'react-dnd';
-import { getImageSrc, getServerUrl } from 'utils';
-import { IMAGE_SIZE } from '@shared/consts';
-import { Card, CardActions, CardContent, CardMedia, IconButton, useTheme } from '@mui/material';
-import { DeleteIcon, EditIcon } from '@shared/icons';
+import { IMAGE_SIZE } from "@local/shared";
+import { Card, CardActions, CardContent, CardMedia, IconButton, useTheme } from "@mui/material";
+import { DeleteIcon, EditIcon } from "icons";
+import { useRef } from "react";
+import { useDrag, useDrop } from "react-dnd";
+import { getImageSrc, getServerUrl } from "utils";
 
 export const ImageCard = ({
     onDelete,
     onEdit,
     data,
     index,
-    moveCard
+    moveCard,
 }) => {
     const { palette } = useTheme();
 
     const ref = useRef(null);
 
     const [, drop] = useDrop({
-        accept: 'card',
+        accept: "card",
         collect(monitor) {
             return {
                 handlerId: monitor.getHandlerId(),
@@ -38,7 +38,7 @@ export const ImageCard = ({
         },
     });
     const [{ isDragging }, drag] = useDrag({
-        type: 'card',
+        type: "card",
         item: () => {
             return { data, index };
         },
@@ -58,23 +58,23 @@ export const ImageCard = ({
                 color: (t) => t.palette.primary.contrastText,
                 borderRadius: 2,
                 margin: 1,
-                cursor: 'pointer',
-                '.MuiMenu-paper': {
-                    transitionDuration: '0s !important',
-                }
+                cursor: "pointer",
+                ".MuiMenu-paper": {
+                    transitionDuration: "0s !important",
+                },
             }}
         >
             <CardContent
                 sx={{
                     padding: 0,
-                    position: 'inherit',
+                    position: "inherit",
                 }}
             >
                 <CardMedia
                     image={`${getServerUrl()}/${getImageSrc(data, IMAGE_SIZE.ML)}`}
                     sx={{
                         height: 0,
-                        paddingTop: '56.25%',
+                        paddingTop: "56.25%",
                     }}
                 />
             </CardContent>
@@ -88,4 +88,4 @@ export const ImageCard = ({
             </CardActions>
         </Card>
     );
-}
+};

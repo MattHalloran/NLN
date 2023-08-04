@@ -1,11 +1,12 @@
-import { gql } from 'apollo-server-express';
-import { CODE, ORDER_STATUS } from '@shared/consts';
-import { CustomError } from '../error';
-import { PrismaSelect } from '@paljs/plugins';
-import { orderNotifyAdmin } from '../worker/email/queue';
-import { IWrap, RecursivePartial } from '../types';
-import { Context } from '../context';
-import { GraphQLResolveInfo } from 'graphql';
+import { CODE, ORDER_STATUS } from "@local/shared";
+import { PrismaSelect } from "@paljs/plugins";
+import { gql } from "apollo-server-express";
+import { GraphQLResolveInfo } from "graphql";
+import { Context } from "../context";
+import { CustomError } from "../error";
+import { IWrap, RecursivePartial } from "../types";
+import { orderNotifyAdmin } from "../worker/email/queue";
+import { DeleteManyInput, FindByIdInput, OrderInput, OrdersInput } from "./types";
 
 export const typeDef = gql`
     enum OrderStatus {
@@ -58,55 +59,55 @@ export const typeDef = gql`
         cancelOrder(input: FindByIdInput!): OrderStatus
         deleteOrders(input: DeleteManyInput!): Count!
     }
-`
+`;
 
 const STATUS_TO_SORT = {
-    [ORDER_STATUS.CanceledByAdmin]: { updated_at: 'desc' },
-    [ORDER_STATUS.CanceledByCustomer]: { updated_at: 'desc' },
-    [ORDER_STATUS.PendingCancel]: { updated_at: 'desc' },
-    [ORDER_STATUS.Rejected]: { updated_at: 'desc' },
-    [ORDER_STATUS.Draft]: { updated_at: 'desc' },
-    [ORDER_STATUS.Pending]: { updated_at: 'desc' },
-    [ORDER_STATUS.Approved]: { expectedDeliveryDate: 'desc' },
-    [ORDER_STATUS.Scheduled]: { expectedDeliveryDate: 'desc' },
-    [ORDER_STATUS.InTransit]: { expectedDeliveryDate: 'desc' },
-    [ORDER_STATUS.Delivered]: { expectedDeliveryDate: 'desc' },
-}
+    [ORDER_STATUS.CanceledByAdmin]: { updated_at: "desc" },
+    [ORDER_STATUS.CanceledByCustomer]: { updated_at: "desc" },
+    [ORDER_STATUS.PendingCancel]: { updated_at: "desc" },
+    [ORDER_STATUS.Rejected]: { updated_at: "desc" },
+    [ORDER_STATUS.Draft]: { updated_at: "desc" },
+    [ORDER_STATUS.Pending]: { updated_at: "desc" },
+    [ORDER_STATUS.Approved]: { expectedDeliveryDate: "desc" },
+    [ORDER_STATUS.Scheduled]: { expectedDeliveryDate: "desc" },
+    [ORDER_STATUS.InTransit]: { expectedDeliveryDate: "desc" },
+    [ORDER_STATUS.Delivered]: { expectedDeliveryDate: "desc" },
+};
 
 export const resolvers = {
     OrderStatus: ORDER_STATUS,
     Query: {
-        orders: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
+        orders: async (_parent: undefined, { input }: IWrap<OrdersInput>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
             // Must be admin (customers query SKUs)
             if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
             let idQuery;
-            if (Array.isArray(input.ids)) { idQuery = { id: { in: input.ids } } }
+            if (Array.isArray(input.ids)) { idQuery = { id: { in: input.ids } }; }
             // Determine sort order
-            let sortQuery: any = { updated_at: 'desc' };
+            let sortQuery: any = { updated_at: "desc" };
             if (input.status) sortQuery = STATUS_TO_SORT[input.status];
             // If search string provided, match it with customer or business name.
             // Maybe in the future, this could also be matched to sku names and such
             let searchQuery;
-            if (input.searchString !== undefined && input.searchString.length > 0) {
+            if (input.searchString !== undefined && input.searchString !== null && input.searchString.length > 0) {
                 // If there are two words, assume first is first name, last is last name
-                const words = input.searchString.trim().split(' ');
+                const words = input.searchString.trim().split(" ");
                 if (words.length === 2) {
                     searchQuery = {
                         OR: [
-                            { customer: { firstName: { contains: words[0], mode: 'insensitive' } } },
-                            { customer: { lastName: { contains: words[1], mode: 'insensitive' } } },
-                            { business: { name: { contains: input.searchString.trim(), mode: 'insensitive' } } },
-                        ]
-                    }
+                            { customer: { firstName: { contains: words[0], mode: "insensitive" } } },
+                            { customer: { lastName: { contains: words[1], mode: "insensitive" } } },
+                            { business: { name: { contains: input.searchString.trim(), mode: "insensitive" } } },
+                        ],
+                    };
                 }
                 else {
                     searchQuery = {
                         OR: [
-                            { customer: { firstName: { contains: input.searchString.trim(), mode: 'insensitive' } } },
-                            { customer: { lastName: { contains: input.searchString.trim(), mode: 'insensitive' } } },
-                            { customer: { business: { name: { contains: input.searchString.trim(), mode: 'insensitive' } } } }
-                        ]
-                    }
+                            { customer: { firstName: { contains: input.searchString.trim(), mode: "insensitive" } } },
+                            { customer: { lastName: { contains: input.searchString.trim(), mode: "insensitive" } } },
+                            { customer: { business: { name: { contains: input.searchString.trim(), mode: "insensitive" } } } },
+                        ],
+                    };
                 }
             }
             return await prisma.order.findMany({
@@ -116,16 +117,16 @@ export const resolvers = {
                     status: input.status ?? undefined,
                 },
                 orderBy: sortQuery,
-                ...(new PrismaSelect(info).value)
+                ...(new PrismaSelect(info).value),
             });
         },
     },
     Mutation: {
-        updateOrder: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
+        updateOrder: async (_parent: undefined, { input }: IWrap<OrderInput>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
             // Must be admin, or updating your own
             const curr: any = await prisma.order.findUnique({
-                where: { id: input.id },
-                select: { id: true, customerId: true, status: true, items: { select: { id: true } } }
+                where: { id: input.id as string },
+                select: { id: true, customerId: true, status: true, items: { select: { id: true } } },
             });
             if (!req.isAdmin && req.customerId !== curr.customerId) throw new CustomError(CODE.Unauthorized);
             if (!req.isAdmin) {
@@ -142,21 +143,21 @@ export const resolvers = {
                 if (updatedItemIds.length > 0) {
                     const updateMany = input.items.map((d: any) => prisma.order_item.updateMany({
                         where: { id: d.id },
-                        data: { ...d }
-                    }))
-                    Promise.all(updateMany)
+                        data: { ...d },
+                    }));
+                    Promise.all(updateMany);
                 }
                 if (deletingItemIds.length > 0) {
-                    await prisma.order_item.deleteMany({ where: { id: { in: deletingItemIds } } })
+                    await prisma.order_item.deleteMany({ where: { id: { in: deletingItemIds } } });
                 }
             }
             return await prisma.order.update({
                 where: { id: curr.id },
                 data: { ...input, items: undefined },
-                ...(new PrismaSelect(info).value)
-            })
+                ...(new PrismaSelect(info).value),
+            });
         },
-        submitOrder: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<boolean> => {
+        submitOrder: async (_parent: undefined, { input }: IWrap<FindByIdInput>, { prisma, req }: Context): Promise<boolean> => {
             // Must be admin, or submitting your own
             const curr: any = await prisma.order.findUnique({ where: { id: input.id } });
             if (!req.isAdmin && req.customerId !== curr.customerId) throw new CustomError(CODE.Unauthorized);
@@ -164,12 +165,12 @@ export const resolvers = {
             if (curr.status !== ORDER_STATUS.Draft) throw new CustomError(CODE.ErrorUnknown);
             await prisma.order.update({
                 where: { id: curr.id },
-                data: { status: ORDER_STATUS.Pending }
+                data: { status: ORDER_STATUS.Pending },
             });
             orderNotifyAdmin();
             return true;
         },
-        cancelOrder: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<any> => {
+        cancelOrder: async (_parent: undefined, { input }: IWrap<FindByIdInput>, { prisma, req }: Context): Promise<any> => {
             // Must be admin, or canceling your own
             const curr = await prisma.order.findUnique({ where: { id: input.id } });
             if (!curr) throw new CustomError(CODE.NotFound);
@@ -185,14 +186,14 @@ export const resolvers = {
             }
             await prisma.order.update({
                 where: { id: curr.id },
-                data: { status: order_status }
-            })
+                data: { status: order_status },
+            });
             return order_status;
         },
-        deleteOrders: async (_parent: undefined, { input }: IWrap<any>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
+        deleteOrders: async (_parent: undefined, { input }: IWrap<DeleteManyInput>, { prisma, req }: Context): Promise<RecursivePartial<any> | null> => {
             // Must be admin
             if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
             return await prisma.order.deleteMany({ where: { id: { in: input.ids } } });
-        }
-    }
-}
+        },
+    },
+};

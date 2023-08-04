@@ -1,4 +1,4 @@
-import { PageContainer } from 'components';
+import { PageContainer } from "components";
 
 export const ProfilePage = () => {
 
@@ -7,4 +7,4 @@ export const ProfilePage = () => {
             {/* TODO */}
         </PageContainer>
     );
-}
+};

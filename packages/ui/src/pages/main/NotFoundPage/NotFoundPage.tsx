@@ -1,16 +1,16 @@
-import { Box, Button } from '@mui/material';
-import { APP_LINKS } from '@shared/consts';
-import { Link } from '@shared/route';
-import { PageContainer } from 'components';
+import { APP_LINKS } from "@local/shared";
+import { Box, Button } from "@mui/material";
+import { PageContainer } from "components";
+import { Link } from "route";
 
 export const NotFoundPage = () => {
     return (
         <PageContainer>
             <Box sx={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                transform: 'translateX(-50%) translateY(-50%)',
+                position: "absolute",
+                top: "50%",
+                left: "50%",
+                transform: "translateX(-50%) translateY(-50%)",
             }}>
                 <h1>Page Not Found</h1>
                 <h3>Looks like you've followed a broken link or entered a URL that doesn't exist on this site</h3>
@@ -21,4 +21,4 @@ export const NotFoundPage = () => {
             </Box>
         </PageContainer>
     );
-}
+};

@@ -1,7 +1,5 @@
-import { loginMutation } from 'graphql/mutation';
-import { useMutation } from '@apollo/client';
-import { APP_LINKS, CODE } from '@shared/consts';
-import { useFormik } from 'formik';
+import { useMutation } from "@apollo/client";
+import { APP_LINKS, CODE, logInSchema } from "@local/shared";
 import {
     Box,
     Button,
@@ -10,41 +8,50 @@ import {
     Palette,
     TextField,
     Typography,
-    useTheme
-} from '@mui/material';
-import { parseSearchParams, PubSub } from 'utils';
-import { mutationWrapper } from 'graphql/utils';
-import { logInSchema } from '@shared/validation';
-import { loginVariables, login_login } from 'graphql/generated/login';
-import { useLocation } from '@shared/route';
-import { useMemo } from 'react';
-import { PasswordTextField } from 'components/inputs/PasswordTextField/PasswordTextField';
+    useTheme,
+} from "@mui/material";
+import { loginVariables, login_login } from "api/generated/login";
+import { loginMutation } from "api/mutation";
+import { mutationWrapper } from "api/utils";
+import { SnackSeverity } from "components";
+import { PasswordTextField } from "components/inputs/PasswordTextField/PasswordTextField";
+import { useFormik } from "formik";
+import { useEffect, useMemo } from "react";
+import { parseSearchParams, useLocation } from "route";
+import { PubSub } from "utils";
 
 const clickSizeStyle = (palette: Palette) => ({
     color: palette.secondary.light,
-    minHeight: '48px', // Lighthouse recommends this for SEO, as it is more clickable
-    display: 'flex',
-    alignItems: 'center',
-})
+    minHeight: "48px", // Lighthouse recommends this for SEO, as it is more clickable
+    display: "flex",
+    alignItems: "center",
+});
 
 export const LogInForm = ({
     onSessionUpdate,
-    onRedirect
+    onRedirect,
 }) => {
     const { palette, spacing } = useTheme();
     const [, setLocation] = useLocation();
     const { verificationCode } = useMemo<{ verificationCode: string | undefined }>(() => {
         const searchParams = parseSearchParams();
         return {
-            verificationCode: searchParams.code === 'string' ? searchParams.code : undefined
-        }
+            verificationCode: typeof searchParams.code === "string" ? searchParams.code : undefined,
+        };
     }, []);
     const [login, { loading }] = useMutation(loginMutation);
 
+    // If there's a verification code, show message to sign in to verify account
+    useEffect(() => {
+        if (verificationCode) {
+            PubSub.get().publishSnack({ message: "Sign in to verify your account.", severity: SnackSeverity.Info });
+        }
+    }, [verificationCode]);
+
     const formik = useFormik({
         initialValues: {
-            email: '',
-            password: ''
+            email: "",
+            password: "",
         },
         validationSchema: logInSchema,
         onSubmit: (values) => {
@@ -52,25 +59,32 @@ export const LogInForm = ({
                 mutation: login,
                 input: { ...values, verificationCode },
                 successCondition: (data) => data !== null,
-                onSuccess: (data) => { onSessionUpdate(data); onRedirect(APP_LINKS.Shopping) },
+                onSuccess: (data) => {
+                    // If code provided, notify of account verification
+                    if (verificationCode) {
+                        PubSub.get().publishSnack({ message: "Account verified.", severity: SnackSeverity.Success });
+                    }
+                    onSessionUpdate(data);
+                    onRedirect(APP_LINKS.Shopping);
+                },
                 onError: (response) => {
                     if (Array.isArray(response.graphQLErrors) && response.graphQLErrors.some(e => e.extensions?.code === CODE.MustResetPassword.code)) {
                         PubSub.get().publishAlertDialog({
-                            message: 'Before signing in, please follow the link sent to your email to change your password.',
+                            message: "Before signing in, please follow the link sent to your email to change your password.",
                             buttons: [{
-                                text: 'OK',
+                                text: "OK",
                                 onClick: () => setLocation(APP_LINKS.Home),
-                            }]
+                            }],
                         });
                     }
-                }
-            })
+                },
+            });
         },
     });
 
     return (
         <Box sx={{
-            width: '100%',
+            width: "100%",
             marginTop: spacing(3),
         }}>
             <form onSubmit={formik.handleSubmit}>
@@ -122,7 +136,7 @@ export const LogInForm = ({
                     </Grid>
                     <Grid item xs={6}>
                         <Link onClick={() => setLocation(APP_LINKS.Register)}>
-                            <Typography sx={{ ...clickSizeStyle(palette), flexDirection: 'row-reverse' }}>
+                            <Typography sx={{ ...clickSizeStyle(palette), flexDirection: "row-reverse" }}>
                                 Don't have an account? Sign up
                             </Typography>
                         </Link>
@@ -131,4 +145,4 @@ export const LogInForm = ({
             </form>
         </Box>
     );
-}
+};

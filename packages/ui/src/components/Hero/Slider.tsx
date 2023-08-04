@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
-import { SliderContent } from './SliderContent';
-import { Slide } from './Slide';
-import { Dots } from './Dots';
-import { Box } from '@mui/material';
+import { Box } from "@mui/material";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Dots } from "./Dots";
+import { Slide } from "./Slide";
+import { SliderContent } from "./SliderContent";
 
 const DEFAULT_DELAY = 3000;
 const DEFAULT_DURATION = 1000;
@@ -17,7 +17,7 @@ export const Slider = ({
     const [slideIndex, setSlideIndex] = useState(0);
     const [translate, setTranslate] = useState(0);
     const [transition, setTransition] = useState(0);
-    const sliderRef = useRef()
+    const sliderRef = useRef();
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     // Play and wait have circular dependencies, so they must be memoized together
@@ -32,42 +32,42 @@ export const Slider = ({
             if (images.length > 0) timeoutRef.current = setTimeout(play, slidingDelay, index);
             setTransition(0);
             setTranslate(width * index);
-        }
+        };
         return { play, wait };
-    }, [timeoutRef, images, slidingDelay, slidingDuration, width])
+    }, [timeoutRef, images, slidingDelay, slidingDuration, width]);
 
     useEffect(() => {
         const onResize = () => setWidth(window.innerWidth);
-        window.addEventListener('resize', onResize);
+        window.addEventListener("resize", onResize);
         if (autoPlay) wait(0);
 
         return () => {
-            window.removeEventListener('resize', onResize);
+            window.removeEventListener("resize", onResize);
             if (timeoutRef.current) clearTimeout(timeoutRef.current);
-        }
-    }, [autoPlay, wait])
+        };
+    }, [autoPlay, wait]);
 
     const slides = useMemo(() => {
         if (images?.length > 0) {
-            let copy = [...images, images[0]];
+            const copy = [...images, images[0]];
             return copy.map((s, i) => (
-                <Slide width={width} key={'slide-' + i} image={s} />
+                <Slide width={width} key={"slide-" + i} image={s} />
             ));
         } else {
             return [];
         }
-    }, [width, images])
+    }, [width, images]);
 
     return (
         <Box
             ref={sliderRef}
             sx={{
-                position: 'relative',
-                height: '100vh',
-                width: '100vw',
-                margin: '0 auto',
-                overflow: 'hidden',
-                whiteSpace: 'nowrap',
+                position: "relative",
+                height: "100vh",
+                width: "100vw",
+                margin: "0 auto",
+                overflow: "hidden",
+                whiteSpace: "nowrap",
             }}
         >
             <SliderContent
@@ -79,5 +79,5 @@ export const Slider = ({
             </SliderContent>
             <Dots quantity={images.length} activeIndex={slideIndex} />
         </Box>
-    )
-}
+    );
+};

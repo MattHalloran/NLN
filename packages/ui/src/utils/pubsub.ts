@@ -5,14 +5,14 @@
  *      import { PubSub } from 'utils';
  *      PubSub.get().publishSnack({ message: 'Hello World' });
  */
-import { COOKIE, ValueOf } from '@shared/consts';
-import { AlertDialogState, SnackSeverity } from 'components';
-import { Session } from 'types';
+import { COOKIE, ValueOf } from "@local/shared";
+import { AlertDialogState, SnackSeverity } from "components";
+import { Session } from "types";
 
 export const Pubs = {
     ...COOKIE,
-    BurgerMenu: 'BurgerMenu',
-    Business: 'Business',
+    BurgerMenu: "BurgerMenu",
+    Business: "Business",
     Loading: "loading",
     LogOut: "logout",
     AlertDialog: "alertDialog",
@@ -20,7 +20,7 @@ export const Pubs = {
     Snack: "snack",
     ArrowMenuOpen: "arrowMenuOpen",
     Theme: "theme",
-}
+};
 export type Pubs = ValueOf<typeof Pubs>;
 
 export type SnackPub = {
@@ -48,7 +48,7 @@ export class PubSub {
             this.subscribers[key].forEach(subscriber => subscriber[1](data));
         }
     }
-    publishBurgerMenu(to: boolean | 'toggle') {
+    publishBurgerMenu(to: boolean | "toggle") {
         this.publish(Pubs.BurgerMenu, to);
     }
     publishBusiness(data: any) {
@@ -69,10 +69,10 @@ export class PubSub {
     publishSnack(data: SnackPub) {
         this.publish(Pubs.Snack, data);
     }
-    publishArrowMenuOpen(data: boolean | 'toggle') {
+    publishArrowMenuOpen(data: boolean | "toggle") {
         this.publish(Pubs.ArrowMenuOpen, data);
     }
-    publishTheme(theme: 'light' | 'dark') {
+    publishTheme(theme: "light" | "dark") {
         this.publish(Pubs.Theme, theme);
     }
 
@@ -85,7 +85,7 @@ export class PubSub {
         this.subscribers[key].push([token, subscriber]);
         return token;
     }
-    subscribeBurgerMenu(subscriber: (to: boolean | 'toggle') => void) {
+    subscribeBurgerMenu(subscriber: (to: boolean | "toggle") => void) {
         return this.subscribe(Pubs.BurgerMenu, subscriber);
     }
     subscribeBusiness(subscriber: (data: any) => void) {
@@ -106,10 +106,10 @@ export class PubSub {
     subscribeSnack(subscriber: (data: SnackPub) => void) {
         return this.subscribe(Pubs.Snack, subscriber);
     }
-    subscribeArrowMenuOpen(subscriber: (data: boolean | 'toggle') => void) {
+    subscribeArrowMenuOpen(subscriber: (data: boolean | "toggle") => void) {
         return this.subscribe(Pubs.ArrowMenuOpen, subscriber);
     }
-    subscribeTheme(subscriber: (theme: 'light' | 'dark') => void) {
+    subscribeTheme(subscriber: (theme: "light" | "dark") => void) {
         return this.subscribe(Pubs.Theme, subscriber);
     }
 

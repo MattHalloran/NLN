@@ -1,13 +1,13 @@
-import { useCallback, useEffect, useState } from 'react';
 import {
     Button,
     Dialog,
     DialogActions,
     DialogContent,
     DialogContentText,
-} from '@mui/material';
-import { firstString, PubSub } from 'utils';
-import { DialogTitle } from 'components';
+} from "@mui/material";
+import { DialogTitle } from "components";
+import { useCallback, useEffect, useState } from "react";
+import { PubSub, firstString } from "utils";
 
 interface StateButton {
     text: string;
@@ -21,20 +21,20 @@ export interface AlertDialogState {
 }
 
 const default_state: AlertDialogState = {
-    buttons: [{ text: 'Ok' }],
+    buttons: [{ text: "Ok" }],
 };
 
-const titleAria = 'alert-dialog-title';
-const descriptionAria = 'alert-dialog-description';
+const titleAria = "alert-dialog-title";
+const descriptionAria = "alert-dialog-description";
 
 export const AlertDialog = () => {
-    const [state, setState] = useState<AlertDialogState>(default_state)
-    let open = Boolean(state.title) || Boolean(state.message);
+    const [state, setState] = useState<AlertDialogState>(default_state);
+    const open = Boolean(state.title) || Boolean(state.message);
 
     useEffect(() => {
-        let dialogSub = PubSub.get().subscribeAlertDialog((o) => setState({ ...default_state, ...o }));
-        return () => { PubSub.get().unsubscribe(dialogSub) };
-    }, [])
+        const dialogSub = PubSub.get().subscribeAlertDialog((o) => setState({ ...default_state, ...o }));
+        return () => { PubSub.get().unsubscribe(dialogSub); };
+    }, []);
 
     const handleClick = useCallback((event: any, action: ((e?: any) => void) | null | undefined) => {
         if (action) action(event);
@@ -58,8 +58,8 @@ export const AlertDialog = () => {
             />
             <DialogContent>
                 <DialogContentText id={descriptionAria} sx={{
-                    whiteSpace: 'pre-wrap',
-                    wordWrap: 'break-word',
+                    whiteSpace: "pre-wrap",
+                    wordWrap: "break-word",
                     paddingTop: 2,
                 }}>
                     {state.message}
@@ -77,4 +77,4 @@ export const AlertDialog = () => {
             </DialogActions>
         </Dialog >
     );
-}
+};

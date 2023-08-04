@@ -1,26 +1,25 @@
-import { useState, useCallback, useEffect } from 'react';
-import { PubSub } from 'utils';
-import { Box, Button, useTheme } from '@mui/material';
-import { CartTable, PageContainer, SnackSeverity } from 'components';
-import { updateOrderMutation, submitOrderMutation } from 'graphql/mutation';
-import { useMutation } from '@apollo/client';
-import { Typography, Grid } from '@mui/material';
-import _ from 'lodash';
-import { ArrowLeftIcon, ArrowRightIcon, SaveIcon } from '@shared/icons';
-import { mutationWrapper } from 'graphql/utils';
-import { updateOrderVariables, updateOrder_updateOrder } from 'graphql/generated/updateOrder';
-import { submitOrderVariables } from 'graphql/generated/submitOrder';
-import { APP_LINKS } from '@shared/consts';
-import { useLocation } from '@shared/route';
+import { useMutation } from "@apollo/client";
+import { APP_LINKS } from "@local/shared";
+import { Box, Button, Grid, Typography, useTheme } from "@mui/material";
+import { submitOrderVariables } from "api/generated/submitOrder";
+import { updateOrderVariables, updateOrder_updateOrder } from "api/generated/updateOrder";
+import { submitOrderMutation, updateOrderMutation } from "api/mutation";
+import { mutationWrapper } from "api/utils";
+import { CartTable, PageContainer, SnackSeverity } from "components";
+import { ArrowLeftIcon, ArrowRightIcon, SaveIcon } from "icons";
+import _ from "lodash";
+import { useCallback, useEffect, useState } from "react";
+import { useLocation } from "route";
+import { PubSub } from "utils";
 
 export const CartPage = ({
     business,
     cart,
-    onSessionUpdate
+    onSessionUpdate,
 }) => {
     const { spacing } = useTheme();
     const [, setLocation] = useLocation();
-    
+
     // Holds cart changes before update is final
     const [changedCart, setChangedCart] = useState<any | null>(null);
     const [updateOrder, { loading }] = useMutation(updateOrderMutation);
@@ -28,11 +27,11 @@ export const CartPage = ({
 
     useEffect(() => {
         setChangedCart(cart);
-    }, [cart])
+    }, [cart]);
 
     const orderUpdate = () => {
         if (!changedCart || !cart?.customer?.id) {
-            PubSub.get().publishSnack({ message: 'Failed to update order.', severity: SnackSeverity.Error });
+            PubSub.get().publishSnack({ message: "Failed to update order.", severity: SnackSeverity.Error });
             return;
         }
         mutationWrapper<updateOrder_updateOrder, updateOrderVariables>({
@@ -42,47 +41,47 @@ export const CartPage = ({
                 desiredDeliveryDate: changedCart.desiredDeliveryDate,
                 isDelivery: changedCart.isDelivery,
                 specialInstructions: changedCart.specialInstructions,
-                items: changedCart.items.map(i => ({ id: i.id, quantity: i.quantity }))
+                items: changedCart.items.map(i => ({ id: i.id, quantity: i.quantity })),
             },
             successCondition: (data) => data !== null,
             onSuccess: () => onSessionUpdate(),
-            successMessage: () => 'Order successfully updated.',
-        })
-    }
+            successMessage: () => "Order successfully updated.",
+        });
+    };
 
     const requestQuote = useCallback(() => {
         mutationWrapper<any, submitOrderVariables>({
             mutation: submitOrder,
             input: { id: cart.id },
             successCondition: (success) => success === true,
-            onSuccess: () => { PubSub.get().publishAlertDialog({ message: 'Order submitted! We will be in touch with you soon😊', buttons: [{ 'text': 'Ok' }] }); onSessionUpdate() },
-            onError: () => PubSub.get().publishAlertDialog({ message: `Failed to submit order. Please contact ${business?.BUSINESS_NAME?.Short}`, buttons: [{ 'text': 'Ok' }] }) //TODO add contact info
-        })
-    }, [submitOrder, cart, onSessionUpdate, business])
+            onSuccess: () => { PubSub.get().publishAlertDialog({ message: "Order submitted! We will be in touch with you soon😊", buttons: [{ "text": "Ok" }] }); onSessionUpdate(); },
+            onError: () => PubSub.get().publishAlertDialog({ message: `Failed to submit order. Please contact ${business?.BUSINESS_NAME?.Short}`, buttons: [{ "text": "Ok" }] }), //TODO add contact info
+        });
+    }, [submitOrder, cart, onSessionUpdate, business]);
 
     const finalizeOrder = useCallback(() => {
         // Make sure order is updated
         if (!_.isEqual(cart, changedCart)) {
-            PubSub.get().publishSnack({ message: 'Please click "UPDATE ORDER" before submitting.', severity: SnackSeverity.Error });
+            PubSub.get().publishSnack({ message: "Please click \"UPDATE ORDER\" before submitting.", severity: SnackSeverity.Error });
             return;
         }
         // Disallow empty orders
         if (cart.items.length <= 0) {
-            PubSub.get().publishSnack({ message: 'Cannot finalize order - cart is empty.', severity: SnackSeverity.Error });
+            PubSub.get().publishSnack({ message: "Cannot finalize order - cart is empty.", severity: SnackSeverity.Error });
             return;
         }
         PubSub.get().publishAlertDialog({
             message: `This will submit the order to ${business?.BUSINESS_NAME?.Short}. We will contact you for further information. Are you sure you want to continue?`,
             buttons: [{
-                text: 'Yes',
-                onClick: () => requestQuote()
+                text: "Yes",
+                onClick: () => requestQuote(),
             }, {
-                text: 'No',
-            }]
+                text: "No",
+            }],
         });
     }, [changedCart, cart, requestQuote, business]);
 
-    let options = (
+    const options = (
         <Grid container spacing={2} sx={{ paddingTop: spacing(2) }}>
             <Grid display="flex" justifyContent="center" item xs={12} sm={4}>
                 <Button
@@ -109,11 +108,11 @@ export const CartPage = ({
                 >Request Quote</Button>
             </Grid>
         </Grid>
-    )
+    );
 
     return (
         <PageContainer>
-            <Box sx={{ textAlign: 'center' }}>
+            <Box sx={{ textAlign: "center" }}>
                 <Typography variant="h3" component="h1">Cart</Typography>
             </Box>
             {options}
@@ -121,4 +120,4 @@ export const CartPage = ({
             {options}
         </PageContainer>
     );
-}
+};

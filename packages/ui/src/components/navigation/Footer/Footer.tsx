@@ -1,46 +1,47 @@
-import ProvenWinners from 'assets/img/proven-winners.png';
-import AmericanHort from 'assets/img/american-hort.png';
-import NJNLA from 'assets/img/njnla_logo.jpg';
-import { getServerUrl, printAvailability } from 'utils';
-import { List, ListItem, ListItemIcon, ListItemText, Grid, ButtonBase, Tooltip, Box, useTheme } from '@mui/material';
-import { CopyrightBreadcrumbs } from 'components';
-import { BusinessIcon, EmailIcon, PhoneIcon, PrintIcon, SvgComponent } from '@shared/icons';
-import { APP_LINKS } from '@shared/consts';
-import { useLocation } from '@shared/route';
+import { APP_LINKS } from "@local/shared";
+import { Box, ButtonBase, Grid, List, ListItem, ListItemIcon, ListItemText, Tooltip, useTheme } from "@mui/material";
+import AmericanHort from "assets/img/american-hort.png";
+import NJNLA from "assets/img/njnla_logo.jpg";
+import ProvenWinners from "assets/img/proven-winners.png";
+import { CopyrightBreadcrumbs } from "components";
+import { BusinessIcon, EmailIcon, PhoneIcon, PrintIcon } from "icons";
+import { SvgComponent } from "icons/types";
+import { useLocation } from "route";
+import { getServerUrl, printAvailability } from "utils";
 
 export const Footer = ({
     session,
-    business
+    business,
 }) => {
     const [, setLocation] = useLocation();
     const { palette } = useTheme();
 
     const contactAPP_LINKS: [string, string, string | null, string | null, SvgComponent][] = [
-        ['address', 'View in Google Maps', business?.ADDRESS?.Link, business?.ADDRESS?.Label, BusinessIcon],
-        ['contact-phone', 'Call Us', business?.PHONE?.Link, business?.PHONE?.Label, PhoneIcon],
-        ['contact-fax', 'Fax Us', business?.FAX?.Link, business?.FAX?.Label, PrintIcon],
-        ['contact-email', 'Email Us', business?.EMAIL?.Link, business?.EMAIL?.Label, EmailIcon],
-    ]
+        ["address", "View in Google Maps", business?.ADDRESS?.Link, business?.ADDRESS?.Label, BusinessIcon],
+        ["contact-phone", "Call Us", business?.PHONE?.Link, business?.PHONE?.Label, PhoneIcon],
+        ["contact-fax", "Fax Us", business?.FAX?.Link, business?.FAX?.Label, PrintIcon],
+        ["contact-email", "Email Us", business?.EMAIL?.Link, business?.EMAIL?.Label, EmailIcon],
+    ];
 
     const bottomImages: [string, string, any][] = [
         ["https://www.provenwinners.com/", "We Sell Proven Winners - The #1 Plant Brand", ProvenWinners],
         ["https://www.americanhort.org/", "Proud member of the AmericanHort", AmericanHort],
         ["https://www.njnla.org/", "Proud member of the New Jersey Nursery and Landscape Association", NJNLA],
-    ]
+    ];
 
     return (
         <Box sx={{
-            overflow: 'hidden',
+            overflow: "hidden",
             backgroundColor: palette.primary.dark,
             color: palette.primary.contrastText,
-            position: 'relative',
-            paddingBottom: '7vh',
+            position: "relative",
+            paddingBottom: "7vh",
         }}>
             <Grid container justifyContent='center' spacing={1}>
                 <Grid item xs={12} sm={6}>
                     <List component="nav">
                         <ListItem component="h3" >
-                            <ListItemText sx={{ textTransform: 'uppercase' }} primary="Resources" />
+                            <ListItemText sx={{ textTransform: "uppercase" }} primary="Resources" />
                         </ListItem>
                         <ListItem button component="a" onClick={() => setLocation(APP_LINKS.About)} >
                             <ListItemText primary="About Us" />
@@ -66,11 +67,11 @@ export const Footer = ({
                 <Grid item xs={12} sm={6}>
                     <List component="nav">
                         <ListItem component="h3" >
-                            <ListItemText sx={{ textTransform: 'uppercase' }} primary="Contact" />
+                            <ListItemText sx={{ textTransform: "uppercase" }} primary="Contact" />
                         </ListItem>
                         {contactAPP_LINKS.map(([label, tooltip, src, text, Icon], key) => (
                             <Tooltip key={key} title={tooltip} placement="left">
-                                <ListItem button component="a" aria-label={label} href={src ?? ''}>
+                                <ListItem button component="a" aria-label={label} href={src ?? ""}>
                                     <ListItemIcon>
                                         <Icon fill={palette.primary.contrastText} ></Icon>
                                     </ListItemIcon>
@@ -84,7 +85,7 @@ export const Footer = ({
                     <Grid key={key} item xs={4}>
                         <Tooltip title={alt} placement="bottom">
                             <ButtonBase sx={{
-                                maxWidth: '33vw',
+                                maxWidth: "33vw",
                                 padding: 1,
                             }}>
                                 <a href={src} target="_blank" rel="noopener noreferrer">
@@ -93,7 +94,7 @@ export const Footer = ({
                                         alt={alt}
                                         src={img}
                                         sx={{
-                                            maxWidth: '100%',
+                                            maxWidth: "100%",
                                             maxHeight: 200,
                                             background: palette.primary.contrastText,
                                         }}
@@ -107,4 +108,4 @@ export const Footer = ({
             <CopyrightBreadcrumbs business={business} textColor={palette.primary.contrastText} sx={{ color: palette.primary.contrastText }} />
         </Box>
     );
-}
+};

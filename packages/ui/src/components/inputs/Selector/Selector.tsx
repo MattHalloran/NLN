@@ -1,6 +1,6 @@
-import { useCallback, useMemo } from 'react';
-import { FormControl, InputLabel, MenuItem, Select, useTheme } from '@mui/material';
-import { SelectorProps } from '../types';
+import { FormControl, InputLabel, MenuItem, Select, useTheme } from "@mui/material";
+import { useCallback, useMemo } from "react";
+import { SelectorProps } from "../types";
 
 export function Selector<T extends string | number | { [x: string]: any }>({
     options,
@@ -8,9 +8,9 @@ export function Selector<T extends string | number | { [x: string]: any }>({
     getOptionLabel,
     handleChange,
     fullWidth = false,
-    inputAriaLabel = 'select-label',
+    inputAriaLabel = "select-label",
     noneOption = false,
-    label = 'Select',
+    label = "Select",
     required = true,
     disabled = false,
     color,
@@ -42,7 +42,7 @@ export function Selector<T extends string | number | { [x: string]: any }>({
     return (
         <FormControl
             variant="outlined"
-            sx={{ width: fullWidth ? '-webkit-fill-available' : '' }}
+            sx={{ width: fullWidth ? "-webkit-fill-available" : "" }}
         >
             <InputLabel
                 id={inputAriaLabel}
@@ -53,7 +53,7 @@ export function Selector<T extends string | number | { [x: string]: any }>({
             </InputLabel>
             <Select
                 labelId={inputAriaLabel}
-                value={selected ? getOptionLabel(selected) : ''}
+                value={selected ? getOptionLabel(selected) : ""}
                 onChange={(e) => handleChange(findOption(e.target.value as string) as T, e)}
                 label={label}
                 required={required}
@@ -62,7 +62,7 @@ export function Selector<T extends string | number | { [x: string]: any }>({
                 {...props}
                 sx={{
                     ...sx,
-                    color: palette.background.textPrimary
+                    color: palette.background.textPrimary,
                 }}
             >
                 {

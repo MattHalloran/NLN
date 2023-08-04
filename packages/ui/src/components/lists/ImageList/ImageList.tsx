@@ -1,12 +1,11 @@
-import { useCallback, useState } from 'react';
-import update from 'immutability-helper';
-import { ImageCard } from 'components';
-import { EditImageDialog } from 'components';
-import { Box } from '@mui/material';
+import { Box } from "@mui/material";
+import { EditImageDialog, ImageCard } from "components";
+import update from "immutability-helper";
+import { useCallback, useState } from "react";
 
 export const ImageList = ({
     data,
-    onUpdate
+    onUpdate,
 }) => {
     const [selected, setSelected] = useState(-1);
 
@@ -21,26 +20,26 @@ export const ImageList = ({
     }, [data, onUpdate]);
 
     const saveImageData = useCallback((d) => {
-        let updated = [...data];
+        const updated = [...data];
         updated[selected] = {
             ...updated[selected],
-            ...d
+            ...d,
         };
         onUpdate(updated);
         setSelected(-1);
-    }, [selected, data, onUpdate])
+    }, [selected, data, onUpdate]);
 
     const deleteImage = (index) => {
-        let updated = [...data];
+        const updated = [...data];
         updated.splice(index, 1);
         onUpdate(updated);
-    }
+    };
 
     return (
         <Box sx={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-            alignItems: 'stretch',
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+            alignItems: "stretch",
         }}>
             <EditImageDialog
                 open={selected >= 0}
@@ -60,4 +59,4 @@ export const ImageList = ({
             ))}
         </Box>
     );
-}
+};
