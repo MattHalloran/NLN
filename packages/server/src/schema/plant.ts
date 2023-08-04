@@ -159,6 +159,25 @@ export const resolvers = {
                         ],
                     },
                 });
+                // Upsert images passed in
+                for (let i = 0; i < input.images.length; i++) {
+                    const existingImage = await prisma.plant_images.findFirst({ where: { hash: input.images[i].hash } });
+                    if (existingImage) {
+                        await prisma.plant_images.update({
+                            where: { id: existingImage.id },
+                            data: { isDisplay: input.images[i].isDisplay ?? false, index: i },
+                        });
+                    } else {
+                        await prisma.plant_images.create({
+                            data: {
+                                plantId: input.id,
+                                hash: input.images[i].hash,
+                                isDisplay: input.images[i].isDisplay ?? false,
+                                index: i
+                            },
+                        });
+                    }
+                }
             }
             // Update traits
             const currentTraits = await prisma.plant_trait.findMany({ where: { plantId: input.id } });
