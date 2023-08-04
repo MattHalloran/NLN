@@ -126,13 +126,25 @@ services:
       timeout: 5s
       retries: 5
     command: /bin/sh -c "mkdir -p ${PROJECT_DIR}/data/redis/appendonlydir && rm -f ${PROJECT_DIR}/data/redis/dump.rdb && redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru --appendonly yes --dbfilename dump.rdb --dir ${PROJECT_DIR}/data/redis/"
-  # adminer:
-  #     image: adminer
-  #     restart: always
-  #     depends_on:
-  #         - db
-  #     ports:
-  #         - 8080:8080
+  adminer:
+    image: ghcr.io/jeliebig/adminer-autologin
+    container_name: nln_adminer
+    restart: always
+    environment:
+      ADMINER_PLUGINS: login-env-vars
+      ADMINER_DRIVER: pgsql
+      ADMINER_SERVER: db
+      ADMINER_USERNAME: "${DB_USER}"
+      ADMINER_PASSWORD: "${DB_PASSWORD}"
+      ADMINER_DB: "${DB_NAME}"
+    networks:
+      - app
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - 8080:8080
+    command: /bin/sh -c "exec php -S [::]:8080 -t /var/www/html/"
 
 networks:
   proxy:
