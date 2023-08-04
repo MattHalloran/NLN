@@ -48,12 +48,12 @@ export function sendResetPasswordLink(email: string, userId: string | number, co
 
 export function sendVerificationLink(email: string, userId: string | number): void {
     // Replace all "${VERIFY_LINK}" in welcomeTemplate with the the actual link
-    const link = `${WEBSITE}/start?code=${userId}`;
+    const link = `${WEBSITE}/login?code=${userId}`;
     const html = welcomeTemplate.replace(/\$\{VERIFY_LINK\}/g, link);
     emailQueue.add({
         to: [email],
         subject: `Verify ${BUSINESS_NAME.Short} Account`,
-        text: `Welcome to ${BUSINESS_NAME.Long}! Please log in through this link (${WEBSITE}/start?code=${userId}) to verify your account. If you did not create an account with us, please ignore this link.`,
+        text: `Welcome to ${BUSINESS_NAME.Long}! Please log in through this link (${WEBSITE}/login?code=${userId}) to verify your account. If you did not create an account with us, please ignore this link.`,
         html,
     });
 }

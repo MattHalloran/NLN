@@ -13,9 +13,10 @@ import {
 import { loginVariables, login_login } from "api/generated/login";
 import { loginMutation } from "api/mutation";
 import { mutationWrapper } from "api/utils";
+import { SnackSeverity } from "components";
 import { PasswordTextField } from "components/inputs/PasswordTextField/PasswordTextField";
 import { useFormik } from "formik";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { parseSearchParams, useLocation } from "route";
 import { PubSub } from "utils";
 
@@ -35,10 +36,17 @@ export const LogInForm = ({
     const { verificationCode } = useMemo<{ verificationCode: string | undefined }>(() => {
         const searchParams = parseSearchParams();
         return {
-            verificationCode: searchParams.code === "string" ? searchParams.code : undefined,
+            verificationCode: typeof searchParams.code === "string" ? searchParams.code : undefined,
         };
     }, []);
     const [login, { loading }] = useMutation(loginMutation);
+
+    // If there's a verification code, show message to sign in to verify account
+    useEffect(() => {
+        if (verificationCode) {
+            PubSub.get().publishSnack({ message: "Sign in to verify your account.", severity: SnackSeverity.Info });
+        }
+    }, [verificationCode]);
 
     const formik = useFormik({
         initialValues: {
@@ -51,7 +59,14 @@ export const LogInForm = ({
                 mutation: login,
                 input: { ...values, verificationCode },
                 successCondition: (data) => data !== null,
-                onSuccess: (data) => { onSessionUpdate(data); onRedirect(APP_LINKS.Shopping); },
+                onSuccess: (data) => {
+                    // If code provided, notify of account verification
+                    if (verificationCode) {
+                        PubSub.get().publishSnack({ message: "Account verified.", severity: SnackSeverity.Success });
+                    }
+                    onSessionUpdate(data);
+                    onRedirect(APP_LINKS.Shopping);
+                },
                 onError: (response) => {
                     if (Array.isArray(response.graphQLErrors) && response.graphQLErrors.some(e => e.extensions?.code === CODE.MustResetPassword.code)) {
                         PubSub.get().publishAlertDialog({
