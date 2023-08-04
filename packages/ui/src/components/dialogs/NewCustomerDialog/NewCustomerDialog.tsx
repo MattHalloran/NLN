@@ -5,7 +5,9 @@ import {
     Autocomplete,
     Box,
     Button,
+    Checkbox,
     Dialog,
+    FormControlLabel,
     Grid,
     IconButton,
     TextField,
@@ -31,6 +33,7 @@ export const NewCustomerDialog = ({
 
     const formik = useFormik({
         initialValues: {
+            isAdmin: false,
             firstName: "",
             lastName: "",
             pronouns: "",
@@ -43,6 +46,7 @@ export const NewCustomerDialog = ({
             mutationWrapper<addCustomer_addCustomer, addCustomerVariables>({
                 mutation: addCustomer,
                 input: {
+                    isAdmin: values.isAdmin,
                     firstName: values.firstName,
                     lastName: values.lastName,
                     pronouns: values.pronouns,
@@ -101,7 +105,7 @@ export const NewCustomerDialog = ({
                 padding: spacing(1),
                 paddingBottom: "15vh",
                 width: "100%",
-                marginTop: spacing(3),
+                paddingTop: spacing(3),
             }}>
                 <form>
                     <Grid container spacing={2}>
@@ -189,6 +193,21 @@ export const NewCustomerDialog = ({
                                 onChange={formik.handleChange}
                                 error={formik.touched.phone && Boolean(formik.errors.phone)}
                                 helperText={formik.touched.phone && formik.errors.phone}
+                            />
+                        </Grid>
+                        <Grid item xs={12}>
+                            <FormControlLabel
+                                control={
+                                    <Checkbox
+                                        id="isAdmin"
+                                        name="isAdmin"
+                                        value="isAdmin"
+                                        color="secondary"
+                                        checked={formik.values.isAdmin}
+                                        onChange={formik.handleChange}
+                                    />
+                                }
+                                label="Should this person have administrator privileges? (Can access the admin dashboard)"
                             />
                         </Grid>
                     </Grid>

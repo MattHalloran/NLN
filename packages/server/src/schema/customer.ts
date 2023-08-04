@@ -29,6 +29,7 @@ export const typeDef = gql`
 
     input CustomerInput {
         id: ID
+        isAdmin: Boolean
         firstName: String
         lastName: String
         pronouns: String
@@ -294,9 +295,18 @@ export const resolvers = {
             // Must be admin to add a customer directly
             if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
             const prismaInfo = getCustomerSelect(info);
-            // Find customer role to give to new user
+            // Find roles to give to new user
+            let roles: any[] = [];
+            // Always gets the customer role
             const customerRole = await prisma.role.findUnique({ where: { title: "Customer" } });
             if (!customerRole) throw new CustomError(CODE.ErrorUnknown);
+            roles.push(customerRole);
+            // If "isAdmin" is true, also give the admin role
+            if (input.isAdmin) {
+                const adminRole = await prisma.role.findUnique({ where: { title: "Admin" } });
+                if (!adminRole) throw new CustomError(CODE.ErrorUnknown);
+                roles.push(adminRole);
+            }
             const customer = await upsertCustomer({
                 prisma,
                 info,
@@ -310,7 +320,7 @@ export const resolvers = {
                     status: AccountStatus.Unlocked,
                     emails: input.emails,
                     phones: input.phones,
-                    roles: [customerRole],
+                    roles,
                 },
             });
             // Return cart, along with user data
