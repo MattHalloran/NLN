@@ -70,5 +70,23 @@ cd "${HERE}/.." && yarn cache clean && yarn
 header "Generating type models for Prisma"
 cd "${HERE}/../packages/server" && yarn prisma-generate
 
+# If hours.md does not exist, create it and fill with default content.
+# Should look like this:
+# | Day           | Hours |
+# | ------------- |:-------------:         |
+# | MON-FRI      | 8:00 am to 3:00 pm     |
+# | SAT     | CLOSED    |
+# | SUN    | CLOSED    |
+# | Note          | Closed daily from 12:00 pm to 1:00 pm    |
+if [ ! -f "${HERE}/../assets/public/hours.md" ]; then
+    header "Creating hours.md"
+    echo "| Day           | Hours |" >"${HERE}/../assets/public/hours.md"
+    echo "| ------------- |:-------------:         |" >>"${HERE}/../assets/public/hours.md"
+    echo "| MON-FRI      | 8:00 am to 3:00 pm     |" >>"${HERE}/../assets/public/hours.md"
+    echo "| SAT     | CLOSED    |" >>"${HERE}/../assets/public/hours.md"
+    echo "| SUN    | CLOSED    |" >>"${HERE}/../assets/public/hours.md"
+    echo "| Note          | Closed daily from 12:00 pm to 1:00 pm    |" >>"${HERE}/../assets/public/hours.md"
+fi
+
 info "Done! You may need to restart your editor for syntax highlighting to work correctly."
 info "If you haven't already, copy .env-example to .env and edit it to match your environment."
