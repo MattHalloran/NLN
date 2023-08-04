@@ -241,9 +241,9 @@ export async function saveImage({ file, alt, description, labels, errorOnDuplica
             for (let i = 0; i < labels.length; i++) {
                 await prisma.image_labels.create({
                     data: {
-                        hash,
                         label: labels[i],
                         index: i,
+                        image: { connect: { hash: hash as string } },
                     },
                 });
             }

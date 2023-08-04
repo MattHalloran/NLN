@@ -333,10 +333,25 @@ export const resolvers = {
                 });
                 if (!customer?.password || !input.currentPassword || !bcrypt.compareSync(input.currentPassword, customer.password)) throw new CustomError(CODE.BadCredentials);
             }
+            // If newPassword provided, validate currentPassword
+            if (input.newPassword) {
+                if (!input.currentPassword) {
+                    throw new CustomError(CODE.BadCredentials);
+                }
+                // Check for correct password
+                const customer = await prisma.customer.findUnique({
+                    where: { id: input.input.id as string },
+                    select: {
+                        id: true,
+                        password: true,
+                    },
+                });
+                if (!customer?.password || !bcrypt.compareSync(input.currentPassword, customer.password)) throw new CustomError(CODE.BadCredentials);
+            }
             const user = await upsertCustomer({
                 prisma,
                 info,
-                data: input.input,
+                data: { ...input.input, password: input.newPassword ? bcrypt.hashSync(input.newPassword, HASHING_ROUNDS) : undefined },
             });
             return user;
         },

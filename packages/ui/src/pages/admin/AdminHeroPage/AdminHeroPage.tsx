@@ -25,7 +25,7 @@ export const AdminHeroPage = () => {
     const [updateImages] = useMutation(updateImagesMutation);
 
     const uploadImages = useCallback((acceptedFiles: File[]) => {
-        // TODO for morning: all file uploading is broken, since they're not being sent as files. From logging, it seems like they're File objects all the way until the useMutation is called
+        // TODO for morning: test all image uploading. Here, for example, uploaded images are not being added to the list for some reason.
         mutationWrapper<addImages_addImages, addImagesVariables>({
             mutation: addImages,
             input: { files: acceptedFiles, labels: ["hero"] },
