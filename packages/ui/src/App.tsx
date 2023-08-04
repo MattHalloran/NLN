@@ -99,7 +99,7 @@ export function App() {
         login({ variables: { input: {} } }).then((response) => {
             setSession(response.data.login);
         }).catch((response) => {
-            if (import.meta.env.NODE_ENV === "development") console.error("Error: cannot login", response);
+            if (import.meta.env.DEV) console.error("Error: cannot login", response);
             setSession({});
         });
     }, [login]);

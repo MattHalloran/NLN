@@ -9,7 +9,7 @@ import { depthLimit } from "./depthLimit";
 import { genErrorCode, logger, LogLevel } from "./logger";
 import { schema } from "./schema";
 
-const SERVER_URL = process.env.REACT_APP_SERVER_LOCATION === "local" ?
+const SERVER_URL = process.env.VITE_SERVER_LOCATION === "local" ?
     "http://localhost:5330/api" :
     "https://newlifenurseryinc.com/api";
 
@@ -41,7 +41,7 @@ const main = async () => {
     // Cross-Origin access. Accepts requests from localhost and dns
     // If you want a public server, set origin to true instead
     const origins: Array<string | RegExp> = [];
-    if (process.env.REACT_APP_SERVER_LOCATION === "local") {
+    if (process.env.VITE_SERVER_LOCATION === "local") {
         origins.push(
             /^http:\/\/localhost(?::[0-9]+)?$/,
             /^http:\/\/192.168.0.[0-9]{1,2}(?::[0-9]+)?$/,

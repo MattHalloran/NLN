@@ -5,6 +5,7 @@ import ReactDOM from "react-dom/client";
 import { Router } from "route";
 import { App } from "./App";
 import * as serviceWorkerRegistration from "./serviceWorkerRegistration";
+import { getDeviceInfo } from "./utils/device";
 
 const client = initializeApollo();
 
@@ -35,10 +36,6 @@ serviceWorkerRegistration.register({
 
 if ("serviceWorker" in navigator) {
     navigator.serviceWorker.ready.then((registration) => {
-        // Add listener to detect new updates, so we can show a message to the user
-        registration.addEventListener("updatefound", () => {
-            PubSub.get().publishSnack({ message: "Downloading new updates...", autoHideDuration: "persist" });
-        });
         // Send message to service worker to let it know if this is a standalone (i.e. downloaded) PWA. 
         // Standalone PWAs come with more assets, like splash screens.
         //TODO not used yet

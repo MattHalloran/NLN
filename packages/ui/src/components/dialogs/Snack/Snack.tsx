@@ -75,7 +75,7 @@ export const Snack = ({
 
     useEffect(() => {
         // Log snack errors if in development
-        if (import.meta.env.NODE_ENV === "development" && data) {
+        if (import.meta.env.DEV && data) {
             if (severity === SnackSeverity.Error) console.error("Snack data", data);
             else console.info("Snack data", data);
         }
