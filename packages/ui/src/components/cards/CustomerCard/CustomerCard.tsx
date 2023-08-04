@@ -112,7 +112,7 @@ export const CustomerCard = ({
 
     const actions: ActionArray[] = [edit_action];
     // Actions for customer accounts
-    if (!Array.isArray(customer?.roles) || !customer.roles.some(r => ["Owner", "Admin"].includes(r.role.title))) {
+    if (!Array.isArray(customer?.roles) || !customer.roles.some(r => ["Owner"].includes(r.role.title))) {
         switch (customer?.status) {
             case AccountStatus.Unlocked:
                 actions.push(lock_action);
