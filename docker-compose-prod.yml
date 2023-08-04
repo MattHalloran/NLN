@@ -8,6 +8,7 @@ services:
       args:
         PROJECT_DIR: "${PROJECT_DIR}"
     container_name: nln_ui
+    image: nln_ui:prod
     restart: always
     environment:
       NODE_ENV: "production"
@@ -37,12 +38,13 @@ services:
       args:
         PROJECT_DIR: "${PROJECT_DIR}"
     container_name: nln_server
+    image: nln_server:prod
     restart: always
     environment:
       NODE_ENV: "production"
       JWT_SECRET: "${JWT_SECRET}"
       PROJECT_DIR: "${PROJECT_DIR}"
-      REACT_APP_SERVER_LOCATION: "${SERVER_LOCATION}"
+      VITE_SERVER_LOCATION: "${SERVER_LOCATION}"
       REDIS_CONN: "redis:${PORT_REDIS}"
       DB_CONN: "db:${PORT_DB}"
       DB_URL: "postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}"
