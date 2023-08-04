@@ -22,7 +22,7 @@ services:
       VIRTUAL_PORT: "${PORT_UI:-3000}"
       LETSENCRYPT_HOST: "${VIRTUAL_HOST}"
       LETSENCRYPT_EMAIL: "${LETSENCRYPT_EMAIL}"
-    expose:
+    ports:
       - ${PORT_UI:-3000}:${PORT_UI:-3000}
     networks:
       - proxy
@@ -63,7 +63,7 @@ services:
       VIRTUAL_PATH: "/api"
       LETSENCRYPT_HOST: "${VIRTUAL_HOST}"
       LETSENCRYPT_EMAIL: "${LETSENCRYPT_EMAIL}"
-    expose:
+    ports:
       - ${PORT_SERVER:-5330}:${PORT_SERVER:-5330}
     networks:
       - proxy

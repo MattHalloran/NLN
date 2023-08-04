@@ -1,0 +1,39 @@
+# Stage 0: Copy required files and install dependencies
+FROM node:16-alpine as stage0
+
+# Set working directory
+ARG PROJECT_DIR
+WORKDIR ${PROJECT_DIR}
+
+# Copy main package.json, as well as packages this container will use.
+COPY --chown=node:node package.json yarn.lock ./
+COPY --chown=node:node packages/server/package.json packages/server/
+COPY --chown=node:node packages/shared/package.json packages/shared/
+
+# Copy all files from packages/server/dist and every directory's dist in packages/shared 
+COPY --chown=node:node packages/server/dist packages/server/dist
+COPY --chown=node:node packages/shared/dist packages/shared/dist
+
+# Install local packages
+RUN yarn install --production
+
+# Install modclean and clean node_modules
+RUN yarn global add modclean
+RUN modclean --run
+
+# Stage 1: Copy files from stage 0, copy RSA keys, and set port
+FROM node:16-alpine as stage1
+
+# Set working directory
+ARG PROJECT_DIR
+ARG VIRTUAL_PORT
+WORKDIR ${PROJECT_DIR}
+
+# Copy entire working directory contents from stage 0
+COPY --from=stage0 --chown=node:node ${PROJECT_DIR} ./
+
+# Copy required script files
+COPY --chown=node:node scripts/* scripts/
+
+# Set port
+EXPOSE ${VIRTUAL_PORT}

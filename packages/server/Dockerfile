@@ -4,6 +4,7 @@ FROM node:16-alpine3.16 as stage0
 
 # Set working directory
 ARG PROJECT_DIR
+ARG VIRTUAL_PORT
 WORKDIR ${PROJECT_DIR}
 
 # Copy main package.json, as well as packages this container will use. Doing this first helps with caching (I think).
@@ -55,4 +56,4 @@ RUN apk update
 RUN apk add netcat-openbsd
 
 # Set port
-EXPOSE 5330
+EXPOSE ${VIRTUAL_PORT} 9229
