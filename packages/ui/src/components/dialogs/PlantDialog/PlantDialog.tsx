@@ -82,7 +82,7 @@ export const PlantDialog = ({
                     options={orderOptions}
                     selected={currSku}
                     getOptionLabel={(sku) => `#${sku.size} : ${showPrice(sku.price)}`}
-                    handleChange={(c, e) => { console.log("selector change!", c, e); setCurrSku(c); }}
+                    handleChange={(c, e) => { setCurrSku(c); }}
                     inputAriaLabel='size-selector-label'
                     label="Size"
                     color={palette.primary.contrastText}

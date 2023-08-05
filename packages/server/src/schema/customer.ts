@@ -154,9 +154,7 @@ export const resolvers = {
     },
     Mutation: {
         login: async (_parent: undefined, { input }: IWrap<LoginInput>, { prisma, req, res }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<Customer>> => {
-            logger.log(LogLevel.info, "Logging in user a...", input);
             const prismaInfo = getCustomerSelect(info);
-            logger.log(LogLevel.info, "Logging in user b...");
             // If username and password wasn't passed, then use the session cookie data to validate
             if (!input.email || !input.password) {
                 if (req.customerId && req.roles && req.roles.length > 0) {
@@ -168,7 +166,6 @@ export const resolvers = {
                     }
                     res.clearCookie(COOKIE.Jwt);
                 }
-                logger.log(LogLevel.info, "Logging in user failed c...");
                 throw new CustomError(CODE.BadCredentials);
             }
             // Validate input format
@@ -187,7 +184,6 @@ export const resolvers = {
                 });
                 // Send new verification email
                 sendResetPasswordLink(input.email, customer.id, requestCode);
-                logger.log(LogLevel.info, "Logging in user failed d...");
                 throw new CustomError(CODE.MustResetPassword);
             }
             // Validate verification code, if supplied
@@ -212,7 +208,6 @@ export const resolvers = {
                 [AccountStatus.HardLock]: CODE.HardLockout,
             };
             if (customer.status in status_to_code) {
-                logger.log(LogLevel.info, "Logging in user failed e...", customer.status);
                 throw new CustomError((status_to_code as any)[customer.status]);
             }
             // Now we can validate the password
@@ -247,7 +242,6 @@ export const resolvers = {
                     where: { id: customer.id },
                     data: { status: new_status, loginAttempts: login_attempts, lastLoginAttempt: new Date().toISOString() },
                 });
-                logger.log(LogLevel.info, "Logging in user failed f...");
                 throw new CustomError(CODE.BadCredentials);
             }
         },

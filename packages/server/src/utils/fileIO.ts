@@ -117,21 +117,15 @@ function resizeOptions(width: number, height: number): { [key: string]: number }
  */
 export async function saveFile(stream: any, filename: string, mimetype: any, overwrite?: boolean, acceptedTypes?: string[]) {
     try {
-        console.log("saveFile start", filename, stream);
         const { name, ext, folder } = await (overwrite ? clean(filename, "public") : findFileName(filename));
-        console.log("saveFile clean", name, ext, folder);
         if (name === null) throw Error("Could not create a valid file name");
         if (acceptedTypes) {
             if (Array.isArray(acceptedTypes) && !acceptedTypes.some(type => mimetype.startsWith(type) || ext === type)) {
-                console.log("not an accepted type");
-
                 throw Error("File type not accepted");
             }
         }
         // Download the file
-        console.log("awaiting download", `${UPLOAD_DIR}/${folder}/${name}${ext}`);
         await stream.pipe(fs.createWriteStream(`${UPLOAD_DIR}/${folder}/${name}${ext}`));
-        console.log("downloaded!");
         return {
             success: true,
             filename: `${folder}/${name}${ext}`,
@@ -199,7 +193,6 @@ export async function saveImage({ file, alt, description, labels, errorOnDuplica
         let image_buffer = await streamToBuffer(stream);
         const dimensions = probe.sync(image_buffer);
         if (dimensions === null) throw new Error("Could not determine image dimensions");
-        console.log("GOT DIMENSIONS", dimensions);
         // If image is .heic or .heif, convert to jpg. Thanks, Apple
         if ([".heic", ".heif"].includes(extCheck.toLowerCase())) {
             const converted_buffer = await convert({
@@ -212,14 +205,11 @@ export async function saveImage({ file, alt, description, labels, errorOnDuplica
         }
         // Determine image hash
         const hash = await imghash.hash(image_buffer);
-        console.log("IMAGE HASH", hash);
         // Check if hash already exists (image previously uploaded)
         const previously_uploaded = await prisma.image.findUnique({ where: { hash } });
-        console.log("previously uploaded", previously_uploaded);
         if (previously_uploaded && errorOnDuplicate) throw Error("File has already been uploaded");
         // Download the original image, and store metadata in database
         const full_size_filename = `${folder}/${name}-XXL${extCheck}`;
-        console.log("name", full_size_filename);
         await sharp(image_buffer).toFile(`${UPLOAD_DIR}/${full_size_filename}`);
         const imageData = { hash, alt, description };
         await prisma.image.upsert({
@@ -335,15 +325,10 @@ export function readFiles(files: string[]): (string | null)[] {
  */
 export async function saveFiles(files: any, overwrite = true, acceptedTypes?: string[]): Promise<(string | null)[]> {
     const data: (string | null)[] = [];
-    console.log("in savefiles", files);
     for (const file of files) {
-        console.log("file", file);
         const { createReadStream, filename, mimetype } = await file;
-        console.log("filename", filename, "mimetype", mimetype);
         const stream = createReadStream();
-        console.log("going to save file");
         const { success, filename: finalFilename } = await saveFile(stream, filename, mimetype, overwrite, acceptedTypes);
-        console.log("saved file", finalFilename, success);
         data.push(success ? finalFilename : null);
     }
     return data;
