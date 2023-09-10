@@ -110,7 +110,7 @@ cd ${HERE}/../packages/server
 
 # Build server
 info "Building server..."
-yarn build
+bun build
 if [ $? -ne 0 ]; then
     error "Failed to build server"
     exit 1
@@ -131,7 +131,7 @@ trap "rm .env" EXIT
 
 # Build React app
 info "Building React app..."
-yarn build
+bun build
 if [ $? -ne 0 ]; then
     error "Failed to build React app"
     exit 1

@@ -6,7 +6,7 @@ ARG PROJECT_DIR
 WORKDIR ${PROJECT_DIR}
 
 # Copy main package.json, as well as packages this container will use.
-COPY --chown=node:node package.json yarn.lock ./
+COPY --chown=node:node package.json bun.lockb ./
 COPY --chown=node:node packages/server/package.json packages/server/
 COPY --chown=node:node packages/shared/package.json packages/shared/
 
@@ -15,10 +15,10 @@ COPY --chown=node:node packages/server/dist packages/server/dist
 COPY --chown=node:node packages/shared/dist packages/shared/dist
 
 # Install local packages
-RUN yarn install --production
+RUN bun install --production
 
 # Install modclean and clean node_modules
-RUN yarn global add modclean
+RUN bun add modclean
 RUN modclean --run
 
 # Stage 1: Copy files from stage 0, copy RSA keys, and set port

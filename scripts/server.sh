@@ -13,7 +13,7 @@ PRISMA_SCHEMA_FILE="src/db/schema.prisma"
 cd ${PROJECT_DIR}/packages/server
 if [ "${DB_PULL}" = true ]; then
     info 'Generating schema.prisma file from database...'
-    yarn prisma db pull --schema=${PRISMA_SCHEMA_FILE}
+    bun prisma db pull --schema=${PRISMA_SCHEMA_FILE}
     if [ $? -ne 0 ]; then
         error "Failed to generate schema.prisma file from database"
         exit 1
@@ -21,7 +21,7 @@ if [ "${DB_PULL}" = true ]; then
     success 'Schema.prisma file generated'
 else
     info 'Running migrations...'
-    yarn prisma migrate deploy --schema=${PRISMA_SCHEMA_FILE}
+    bun prisma migrate deploy --schema=${PRISMA_SCHEMA_FILE}
     if [ $? -ne 0 ]; then
         error "Failed to run migrations"
         exit 1
@@ -30,7 +30,7 @@ else
 fi
 
 info 'Generating Prisma schema...'
-yarn prisma generate --schema=${PRISMA_SCHEMA_FILE}
+bun prisma generate --schema=${PRISMA_SCHEMA_FILE}
 if [ $? -ne 0 ]; then
     error "Failed to generate Prisma schema"
     exit 1
@@ -39,5 +39,5 @@ success 'Prisma schema generated'
 
 info 'Starting server...'
 cd ${PROJECT_DIR}/packages/server
-yarn start-${NODE_ENV}
+bun start-${NODE_ENV}
 success 'Server started'
