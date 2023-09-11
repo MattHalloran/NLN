@@ -35,7 +35,7 @@ export const printAvailability = (session: Session, title: string | null) => {
         variables: { input: { sortBy: SKU_SORT_OPTIONS.AZ } },
     }).then(response => {
         const data = response.data.skus;
-        const priceVisible = session !== null;
+        const priceVisible = false;//session !== null;
         const table_data = skusToTable(data, priceVisible);
         // Default export is a4 paper, portrait, using millimeters for units
         const doc: any = new jsPDF();
