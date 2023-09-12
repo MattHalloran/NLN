@@ -119,6 +119,7 @@ export const AdminInventoryPage = () => {
                 alignItems: "stretch",
             }}>
                 {plantData?.plants?.map((plant, index) => <PlantCard key={index}
+                    isAdminPage={true}
                     plant={plant}
                     onClick={setSelected} />)}
             </Box>

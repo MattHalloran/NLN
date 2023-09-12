@@ -14,5 +14,6 @@ export * from "./stringTools";
 export * from "./theme";
 export * from "./urlTools";
 export * from "./useHistoryState";
+export * from "./useWindowSize";
 export * from "./userActions";
 

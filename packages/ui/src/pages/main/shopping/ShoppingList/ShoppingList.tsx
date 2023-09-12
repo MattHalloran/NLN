@@ -1,16 +1,11 @@
 import { useMutation, useQuery } from "@apollo/client";
 import { APP_LINKS } from "@local/shared";
-import { Box } from "@mui/material";
 import { plants_plants, plants_plants_skus } from "api/generated/plants";
 import { upsertOrderItemVariables, upsertOrderItem_upsertOrderItem } from "api/generated/upsertOrderItem";
 import { upsertOrderItemMutation } from "api/mutation";
 import { plantsQuery } from "api/query";
 import { mutationWrapper } from "api/utils";
-import {
-    PlantCard,
-    PlantDialog,
-    SnackSeverity,
-} from "components";
+import { CardGrid, PlantCard, PlantDialog, SnackSeverity } from "components";
 import { useEffect, useState } from "react";
 import { parseSearchParams, useLocation } from "route";
 import { PubSub, SORT_OPTIONS, getPlantTrait } from "utils";
@@ -27,7 +22,6 @@ export const ShoppingList = ({
 
     // Plant data for all visible plants (i.e. not filtered)
     const [plants, setPlants] = useState<plants_plants[]>([]);
-    const track_scrolling_id = "scroll-tracked";
     const [, setLocation] = useLocation();
     const [sku, setSku] = useState<string | undefined>(undefined);
     useEffect(() => {
@@ -107,14 +101,7 @@ export const ShoppingList = ({
     };
 
     return (
-        <Box
-            id={track_scrolling_id}
-            sx={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
-                alignItems: "stretch",
-            }}
-        >
+        <CardGrid minWidth={300}>
             {(currPlant) ? <PlantDialog
                 plant={currPlant}
                 selectedSku={currSku}
@@ -124,8 +111,9 @@ export const ShoppingList = ({
                 onClose={closeSku} /> : null}
             {plants?.map((item, index) =>
                 <PlantCard key={index}
+                    isAdminPage={false}
                     onClick={(data) => expandSku(data.selectedSku?.sku)}
                     plant={item} />)}
-        </Box>
+        </CardGrid>
     );
 };

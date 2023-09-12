@@ -20,6 +20,7 @@ import {
 import { signUpVariables, signUp_signUp } from "api/generated/signUp";
 import { signUpMutation } from "api/mutation";
 import { mutationWrapper } from "api/utils";
+import { SnackSeverity } from "components";
 import { PasswordTextField } from "components/inputs/PasswordTextField/PasswordTextField";
 import { useFormik } from "formik";
 import { useLocation } from "route";
@@ -55,8 +56,13 @@ export const SignUpForm = ({
             confirmPassword: "",
         },
         validationSchema: signUpSchema,
-        onSubmit: (values) => {
+        onSubmit: (values, helpers) => {
             const { confirmPassword, ...input } = values;
+            if (values.password !== confirmPassword) {
+                PubSub.get().publishSnack({ message: "Passwords don't match.", severity: SnackSeverity.Error });
+                helpers.setSubmitting(false);
+                return;
+            }
             mutationWrapper<signUp_signUp, signUpVariables>({
                 mutation: signUp,
                 input: {

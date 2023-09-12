@@ -1,4 +1,6 @@
 import { FetchResult } from "@apollo/client";
+import { Theme } from "@mui/material";
+import { SystemStyleObject } from "@mui/system";
 import { Path } from "route";
 
 // Top-level props that can be passed into any routed component
@@ -31,3 +33,7 @@ export type ApolloError = {
 
 // Miscellaneous types
 export type SetLocation = (to: Path, options?: { replace?: boolean }) => void;
+
+export type SxType = NonNullable<SystemStyleObject<Theme>> & {
+    color?: string;
+};
