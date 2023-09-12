@@ -1,24 +1,15 @@
 import { useMutation, useQuery } from "@apollo/client";
-import { useTheme } from "@mui/material";
 import { addImagesVariables, addImages_addImages } from "api/generated/addImages";
 import { updateImagesVariables } from "api/generated/updateImages";
 import { addImagesMutation, updateImagesMutation } from "api/mutation";
 import { imagesByLabelQuery } from "api/query";
 import { mutationWrapper } from "api/utils";
-import {
-    AdminBreadcrumbs,
-    Dropzone,
-    PageContainer,
-    PageTitle,
-    WrappedImageList,
-} from "components";
+import { AdminTabOption, AdminTabs, Dropzone, PageContainer, PageTitle, WrappedImageList } from "components";
 import { useCallback, useEffect, useState } from "react";
 
 const helpText = "This page allows you to manage the images displayed on the gallery page";
 
 export const AdminGalleryPage = () => {
-    const { palette } = useTheme();
-
     const [imageData, setImageData] = useState<any[]>([]);
     const { data: currImages, refetch: refetchImages } = useQuery(imagesByLabelQuery, { variables: { input: { label: "gallery" } } });
     const [addImages] = useMutation(addImagesMutation);
@@ -62,7 +53,7 @@ export const AdminGalleryPage = () => {
 
     return (
         <PageContainer>
-            <AdminBreadcrumbs textColor={palette.secondary.dark} helpText={helpText} />
+            <AdminTabs defaultTab={AdminTabOption.Gallery} />
             <PageTitle title="Manage Gallery" helpText={helpText} />
             <Dropzone
                 dropzoneText={"Drag 'n' drop new images here or click"}

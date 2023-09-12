@@ -7,9 +7,11 @@ import {
     SearchBar,
     Selector,
 } from "components";
+import { BusinessContext } from "components/contexts/BusinessContext";
+import { SessionContext } from "components/contexts/SessionContext";
 import { CloseIcon, DeleteIcon, FilterIcon, PrintIcon } from "icons";
-import { useCallback, useEffect, useState } from "react";
-import { PubSub, SORT_OPTIONS, printAvailability } from "utils";
+import { useCallback, useContext, useEffect, useState } from "react";
+import { PubSub, SORT_OPTIONS, noop, printAvailability } from "utils";
 import { ShoppingList } from "../ShoppingList/ShoppingList";
 
 const traitList: [string, string][] = [
@@ -30,13 +32,10 @@ const traitList: [string, string][] = [
     ["Soil Types", "soilTypes"],
 ];
 
-export const ShoppingPage = ({
-    session,
-    onSessionUpdate,
-    business,
-    cart,
-}) => {
+export const ShoppingPage = () => {
     const { palette, spacing } = useTheme();
+    const session = useContext(SessionContext);
+    const business = useContext(BusinessContext);
 
     const [open, setOpen] = useState(false);
     const { data: traitOptionsData } = useQuery<traitOptions>(traitOptionsQuery);
@@ -127,7 +126,7 @@ export const ShoppingPage = ({
             <SwipeableDrawer
                 anchor="left"
                 open={open}
-                onOpen={() => { }}
+                onOpen={noop}
                 onClose={() => PubSub.get().publishArrowMenuOpen(false)}
                 sx={{
                     "& .MuiDrawer-paper": {
@@ -181,9 +180,6 @@ export const ShoppingPage = ({
                 >Print</Button>
             </Stack>
             <ShoppingList
-                session={session}
-                onSessionUpdate={onSessionUpdate}
-                cart={cart}
                 sortBy={sortBy.value}
                 filters={filters}
                 searchString={searchString}

@@ -1,9 +1,10 @@
 import { PageContainer } from "components";
-import { useLayoutEffect } from "react";
+import { BusinessContext } from "components/contexts/BusinessContext";
+import { useContext, useLayoutEffect } from "react";
 
-export const ContactPage = ({
-    business,
-}) => {
+export const ContactPage = () => {
+    const business = useContext(BusinessContext);
+
     useLayoutEffect(() => {
         document.title = `Contact | ${business?.BUSINESS_NAME?.Short}`;
     });

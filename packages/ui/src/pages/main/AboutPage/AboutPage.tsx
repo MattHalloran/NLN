@@ -7,11 +7,12 @@ import {
 import Facebook from "assets/img/Facebook.png";
 import Instagram from "assets/img/Instagram.png";
 import { InformationalBreadcrumbs, PageContainer } from "components";
+import { BusinessContext } from "components/contexts/BusinessContext";
+import { useContext } from "react";
 
-export const AboutPage = ({
-    business,
-}) => {
+export const AboutPage = () => {
     const { palette } = useTheme();
+    const business = useContext(BusinessContext);
 
     const socials = [
         [Facebook, "Facebook", business?.SOCIAL?.Facebook],

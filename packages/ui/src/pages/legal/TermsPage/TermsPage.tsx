@@ -2,14 +2,14 @@ import { useQuery } from "@apollo/client";
 import { useTheme } from "@mui/material";
 import { readAssetsQuery } from "api/query/readAssets";
 import { PageContainer, PolicyBreadcrumbs } from "components";
+import { BusinessContext } from "components/contexts/BusinessContext";
 import MarkdownInput from "markdown-to-jsx";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { convertToDot, valueFromDot } from "utils";
 
-export const TermsPage = ({
-    business,
-}) => {
+export const TermsPage = () => {
     const { palette } = useTheme();
+    const business = useContext(BusinessContext);
 
     const [terms, setTerms] = useState<string>("");
     const { data: termsData } = useQuery(readAssetsQuery, { variables: { input: { files: ["terms.md"] } } });

@@ -308,7 +308,7 @@ export type Mutation = {
   updateRole: Role;
   updateSku: Sku;
   uploadAvailability?: Maybe<Scalars['Boolean']>;
-  upsertOrderItem: OrderItem;
+  upsertOrderItem: Order;
   writeAssets?: Maybe<Scalars['Boolean']>;
 };
 

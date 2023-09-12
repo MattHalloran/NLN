@@ -1,30 +1,24 @@
 import { APP_LINKS } from "@local/shared";
+import { SessionContext } from "components/contexts/SessionContext";
 import { PageProps } from "pages/types";
-import { useEffect } from "react";
+import { useContext } from "react";
 import { Redirect, useLocation } from "route";
 
 export const Page = ({
-    title,
-    sessionChecked,
     redirect = APP_LINKS.Home,
-    userRoles,
     restrictedToRoles = [],
     children,
 }: PageProps) => {
     const [location] = useLocation();
-
-    useEffect(() => {
-        document.title = title || "";
-    }, [title]);
+    const session = useContext(SessionContext);
 
     // If this page has restricted access
     if (restrictedToRoles.length > 0) {
-        if (Array.isArray(userRoles) && userRoles.length > 0) {
-            const haveArray: any[] = Array.isArray(userRoles) ? userRoles : [userRoles];
+        if (session?.roles && Array.isArray(session.roles) && session.roles.length > 0) {
             const needArray: any[] = Array.isArray(restrictedToRoles) ? restrictedToRoles : [restrictedToRoles];
-            if (haveArray.some((r: any) => needArray.includes(r?.role?.title))) return children;
+            if (session.roles.some((r: any) => needArray.includes(r?.role?.title))) return children;
         }
-        if (sessionChecked && location !== redirect) return <Redirect to={redirect} />;
+        if (session !== null && session !== undefined && location !== redirect) return <Redirect to={redirect} />;
     }
 
     return children;

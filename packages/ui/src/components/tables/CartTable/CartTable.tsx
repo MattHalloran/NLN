@@ -103,7 +103,7 @@ export const CartTable = ({
             <TableRow key={key}>
                 {editable ? (<TableCell padding="checkbox">
                     <IconButton onClick={() => deleteCartItem(data.sku)}>
-                        <CloseIcon />
+                        <CloseIcon fill={palette.background.textPrimary} />
                     </IconButton>
                 </TableCell>) : null}
                 <TableCell padding="none" component="th" scope="row" align="center" sx={tableColumnStyle(palette)}>

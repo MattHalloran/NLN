@@ -38,10 +38,10 @@ const skusToTable = (skus, priceVisible: boolean) => {
 };
 
 export const printAvailability = (
-    session: Session,
-    title: string | null,
-    phone: string | null,
-    email: string | null,
+    session: Session | undefined,
+    title: string | null | undefined,
+    phone: string | null | undefined,
+    email: string | null | undefined,
 ) => {
     const client = initializeApollo();
     client.query({

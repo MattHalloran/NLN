@@ -8,10 +8,11 @@ import {
 } from "@mui/material";
 import { writeAssetsMutation } from "api/mutation";
 import { graphqlWrapperHelper } from "api/utils";
-import { AdminBreadcrumbs, PageContainer, PageTitle } from "components";
+import { AdminTabOption, AdminTabs, PageContainer, PageTitle } from "components";
+import { BusinessContext } from "components/contexts/BusinessContext";
 import { CancelIcon, SaveIcon } from "icons";
 import Markdown from "markdown-to-jsx";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 
 const helpText = `This page allows you to edit the contact info displayed on the site. 
 
@@ -19,10 +20,9 @@ The information is stored in Markdown. You can learn more about how to write Mar
 
 NOTE: This will not update Google My Business information. You must do that manually by logging into your Google My Business account.`;
 
-export const AdminContactPage = ({
-    business,
-}) => {
-    const { palette, spacing } = useTheme();
+export const AdminContactPage = () => {
+    const { spacing } = useTheme();
+    const business = useContext(BusinessContext);
 
     const [hours, setHours] = useState("");
     const [updateHours] = useMutation(writeAssetsMutation);
@@ -78,7 +78,7 @@ export const AdminContactPage = ({
 
     return (
         <PageContainer>
-            <AdminBreadcrumbs textColor={palette.secondary.dark} />
+            <AdminTabs defaultTab={AdminTabOption.ContactInfo} />
             <PageTitle title="Manage Contact Info" helpText={helpText} />
             {options}
             <Grid container spacing={2} direction="row">

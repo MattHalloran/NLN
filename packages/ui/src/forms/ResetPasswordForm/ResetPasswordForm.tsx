@@ -13,12 +13,11 @@ import { SnackSeverity } from "components";
 import { PasswordTextField } from "components/inputs/PasswordTextField/PasswordTextField";
 import { useFormik } from "formik";
 import { useMemo } from "react";
+import { useLocation } from "route";
 import { PubSub } from "utils";
 
-export const ResetPasswordForm = ({
-    onSessionUpdate,
-    onRedirect,
-}) => {
+export const ResetPasswordForm = () => {
+    const [, setLocation] = useLocation();
     const { spacing } = useTheme();
 
     const { id, code } = useMemo(() => {
@@ -45,7 +44,7 @@ export const ResetPasswordForm = ({
             mutationWrapper<resetPassword_resetPassword, resetPasswordVariables>({
                 mutation: resetPassword,
                 input: { id, code, newPassword: values.newPassword },
-                onSuccess: (data) => { onSessionUpdate(data); onRedirect(APP_LINKS.Shopping); },
+                onSuccess: (data) => { PubSub.get().publishSession(data); setLocation(APP_LINKS.Shopping); },
                 successMessage: () => "Password reset.",
             });
         },

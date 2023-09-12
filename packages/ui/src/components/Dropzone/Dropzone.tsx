@@ -26,7 +26,7 @@ export const Dropzone = ({
     showThumbs = true,
     maxFiles = 100,
     uploadText = "Upload file(s)",
-    cancelText = "Cancel upload",
+    cancelText = "Cancel",
     disabled = false,
 }: DropzoneProps) => {
     const { spacing } = useTheme();
@@ -119,7 +119,7 @@ export const Dropzone = ({
                     paddingLeft: spacing(1),
                     paddingRight: spacing(1),
                 }}>
-                    <Grid item xs={12} sm={6}>
+                    <Grid item xs={6}>
                         <Button
                             disabled={disabled || files.length === 0}
                             fullWidth
@@ -131,7 +131,7 @@ export const Dropzone = ({
                             variant="contained"
                         >{uploadText}</Button>
                     </Grid>
-                    <Grid item xs={12} sm={6}>
+                    <Grid item xs={6}>
                         <Button
                             disabled={disabled || files.length === 0}
                             fullWidth

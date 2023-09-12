@@ -1,17 +1,17 @@
 import { Badge, BottomNavigation, BottomNavigationAction, useTheme } from "@mui/material";
+import { SessionContext } from "components/contexts/SessionContext";
+import { useContext } from "react";
 import { useLocation } from "route";
 import { getUserActions } from "utils";
 
 export const BottomNav = ({
-    session,
-    userRoles,
-    cart,
     ...props
 }) => {
     const [, setLocation] = useLocation();
     const { palette } = useTheme();
+    const session = useContext(SessionContext);
 
-    const actions = getUserActions(session, userRoles, cart);
+    const actions = getUserActions(session);
 
     return (
         <BottomNavigation

@@ -21,8 +21,10 @@ import { signUpVariables, signUp_signUp } from "api/generated/signUp";
 import { signUpMutation } from "api/mutation";
 import { mutationWrapper } from "api/utils";
 import { SnackSeverity } from "components";
+import { BusinessContext } from "components/contexts/BusinessContext";
 import { PasswordTextField } from "components/inputs/PasswordTextField/PasswordTextField";
 import { useFormik } from "formik";
+import { useContext } from "react";
 import { useLocation } from "route";
 import { PubSub } from "utils";
 
@@ -33,12 +35,10 @@ const clickSizeStyle = (palette: Palette) => ({
     alignItems: "center",
 });
 
-export const SignUpForm = ({
-    business,
-    onSessionUpdate,
-}) => {
+export const SignUpForm = () => {
     const { palette, spacing } = useTheme();
     const [, setLocation] = useLocation();
+    const business = useContext(BusinessContext);
 
     const [signUp, { loading }] = useMutation(signUpMutation);
 
@@ -72,7 +72,7 @@ export const SignUpForm = ({
                     theme: palette.mode ?? "light",
                 },
                 onSuccess: (data) => {
-                    onSessionUpdate(data);
+                    PubSub.get().publishSession(data);
                     if (data.accountApproved) {
                         PubSub.get().publishAlertDialog({
                             message: `Welcome to ${business?.BUSINESS_NAME?.Short}. You may now begin shopping. Please verify your email within 48 hours.`,

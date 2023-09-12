@@ -13,14 +13,16 @@ import {
     Typography,
     useTheme,
 } from "@mui/material";
+import { BusinessContext } from "components/contexts/BusinessContext";
 import { EmailIcon, PhoneIcon, PinIcon } from "icons";
 import { SvgComponent } from "icons/types";
+import { useContext } from "react";
 
 export const ContactInfo = ({
-    business,
     ...props
 }) => {
     const { palette } = useTheme();
+    const business = useContext(BusinessContext);
 
     const openLink = (e, link) => {
         window.location = link;

@@ -13,7 +13,10 @@ export * from "./serverUrl";
 export * from "./stringTools";
 export * from "./theme";
 export * from "./urlTools";
+export * from "./useDimensions";
 export * from "./useHistoryState";
+export * from "./useSideMenu";
+export * from "./useTabs";
 export * from "./useWindowSize";
 export * from "./userActions";
 

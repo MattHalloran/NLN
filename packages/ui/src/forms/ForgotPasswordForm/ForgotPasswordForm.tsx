@@ -23,9 +23,7 @@ const clickSizeStyle = (palette: Palette) => ({
     alignItems: "center",
 });
 
-export const ForgotPasswordForm = ({
-    onRedirect,
-}) => {
+export const ForgotPasswordForm = () => {
     const { palette, spacing } = useTheme();
     const [, setLocation] = useLocation();
 
@@ -41,7 +39,7 @@ export const ForgotPasswordForm = ({
                 mutation: requestPasswordChange,
                 input: { ...values },
                 successCondition: (success) => success === true,
-                onSuccess: () => onRedirect(APP_LINKS.Home),
+                onSuccess: () => setLocation(APP_LINKS.Home),
                 successMessage: () => "Request sent. Please check email.",
             });
         },

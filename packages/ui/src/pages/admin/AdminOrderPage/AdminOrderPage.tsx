@@ -1,21 +1,11 @@
 import { useQuery } from "@apollo/client";
-import { Box, useTheme } from "@mui/material";
+import { Box } from "@mui/material";
 import { ordersQuery } from "api/query";
-import {
-    AdminBreadcrumbs,
-    OrderCard,
-    OrderDialog,
-    PageContainer,
-    PageTitle,
-    Selector,
-    SnackSeverity,
-} from "components";
+import { AdminTabOption, AdminTabs, OrderCard, OrderDialog, PageContainer, PageTitle, Selector, SnackSeverity } from "components";
 import { useEffect, useState } from "react";
 import { ORDER_FILTERS, PubSub } from "utils";
 
-export const AdminOrderPage = ({ userRoles }) => {
-    const { palette, spacing } = useTheme();
-
+export const AdminOrderPage = () => {
     const [filter, setFilter] = useState(ORDER_FILTERS[0]);
     // Selected order data. Used for popup
     const [currOrder, setCurrOrder] = useState(null);
@@ -35,11 +25,10 @@ export const AdminOrderPage = ({ userRoles }) => {
     return (
         <PageContainer>
             {currOrder ? (<OrderDialog
-                userRoles={userRoles}
                 order={currOrder}
                 open={currOrder !== null}
                 onClose={() => setCurrOrder(null)} />) : null}
-            <AdminBreadcrumbs textColor={palette.secondary.dark} sx={{ marginBottom: spacing(2) }} />
+            <AdminTabs defaultTab={AdminTabOption.Orders} />
             <PageTitle title="Manage Orders" />
             <Selector
                 color={undefined}

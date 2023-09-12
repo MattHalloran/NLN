@@ -1,6 +1,7 @@
 import { FormControl, FormHelperText, IconButton, InputAdornment, InputLabel, LinearProgress, OutlinedInput, useTheme } from "@mui/material";
 import { InvisibleIcon, VisibleIcon } from "icons";
 import { useCallback, useState } from "react";
+import { noop } from "utils";
 import zxcvbn from "zxcvbn";
 import { PasswordTextFieldProps } from "../types";
 
@@ -13,7 +14,7 @@ export const PasswordTextField = ({
     id = "password",
     label,
     name = "password",
-    onBlur = () => { },
+    onBlur = noop,
     onChange,
     value,
     ...props

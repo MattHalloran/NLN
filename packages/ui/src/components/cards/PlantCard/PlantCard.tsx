@@ -50,7 +50,7 @@ export const PlantCard = ({
             color="secondary"
             onClick={(e) => openWithSku(e, s)}
             sx={{
-                margin: 1,
+                margin: 0.5,
                 boxShadow: 0,
                 borderRadius: 2,
                 ...(SkuStatus[s.status + ""] ?? deleted),

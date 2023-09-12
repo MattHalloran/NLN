@@ -6,19 +6,18 @@ import { upsertOrderItemMutation } from "api/mutation";
 import { plantsQuery } from "api/query";
 import { mutationWrapper } from "api/utils";
 import { CardGrid, PlantCard, PlantDialog, SnackSeverity } from "components";
-import { useEffect, useState } from "react";
+import { SessionContext } from "components/contexts/SessionContext";
+import { useContext, useEffect, useState } from "react";
 import { parseSearchParams, useLocation } from "route";
 import { PubSub, SORT_OPTIONS, getPlantTrait } from "utils";
 
 export const ShoppingList = ({
-    session,
-    onSessionUpdate,
-    cart,
     sortBy = SORT_OPTIONS[0].value,
     filters,
     hideOutOfStock,
     searchString = "",
 }) => {
+    const session = useContext(SessionContext);
 
     // Plant data for all visible plants (i.e. not filtered)
     const [plants, setPlants] = useState<plants_plants[]>([]);
@@ -45,7 +44,7 @@ export const ShoppingList = ({
             return;
         }
         const filtered_plants: any[] = [];
-        for (const plant of plantData?.plants) {
+        for (const plant of (plantData?.plants ?? [])) {
             let found = false;
             for (const [key, value] of Object.entries(filters)) {
                 if (found) break;
@@ -91,10 +90,10 @@ export const ShoppingList = ({
         }
         mutationWrapper<upsertOrderItem_upsertOrderItem, upsertOrderItemVariables>({
             mutation: upsertOrderItem,
-            input: { quantity, orderId: cart?.id, skuId: sku.id },
+            input: { quantity, orderId: session?.cart?.id, skuId: sku.id },
             successCondition: (data) => data !== null,
-            onSuccess: () => {
-                onSessionUpdate();
+            onSuccess: (cart) => {
+                PubSub.get().publishSession({ cart });
                 PubSub.get().publishSnack({ message: "Item added to cart", buttonText: "View", buttonClicked: toCart, severity: SnackSeverity.Success });
             },
         });

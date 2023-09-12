@@ -27,10 +27,7 @@ const clickSizeStyle = (palette: Palette) => ({
     alignItems: "center",
 });
 
-export const LogInForm = ({
-    onSessionUpdate,
-    onRedirect,
-}) => {
+export const LogInForm = () => {
     const { palette, spacing } = useTheme();
     const [, setLocation] = useLocation();
     const { verificationCode } = useMemo<{ verificationCode: string | undefined }>(() => {
@@ -64,8 +61,8 @@ export const LogInForm = ({
                     if (verificationCode) {
                         PubSub.get().publishSnack({ message: "Account verified.", severity: SnackSeverity.Success });
                     }
-                    onSessionUpdate(data);
-                    onRedirect(APP_LINKS.Shopping);
+                    PubSub.get().publishSession(data);
+                    setLocation(APP_LINKS.Shopping);
                 },
                 onError: (response) => {
                     if (Array.isArray(response.graphQLErrors) && response.graphQLErrors.some(e => e.extensions?.code === CODE.MustResetPassword.code)) {

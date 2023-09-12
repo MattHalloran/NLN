@@ -1,14 +1,8 @@
 import { useQuery } from "@apollo/client";
-import { Box, Button, useTheme } from "@mui/material";
+import { Box, Button } from "@mui/material";
 import { customers, customers_customers } from "api/generated/customers";
 import { customersQuery } from "api/query";
-import {
-    AdminBreadcrumbs,
-    CustomerCard,
-    PageContainer,
-    PageTitle,
-    SnackSeverity,
-} from "components";
+import { AdminTabOption, AdminTabs, CustomerCard, PageContainer, PageTitle, SnackSeverity } from "components";
 import { CustomerDialog } from "components/dialogs/CustomerDialog/CustomerDialog";
 import { NewCustomerDialog } from "components/dialogs/NewCustomerDialog/NewCustomerDialog";
 import { useEffect, useState } from "react";
@@ -17,8 +11,6 @@ import { PubSub } from "utils";
 const helpText = "This page allows you to contact you customers, as well as manage their account information. This includes approving and deleting customers.";
 
 export const AdminCustomerPage = () => {
-    const { palette } = useTheme();
-
     const [customers, setCustomers] = useState<customers_customers[]>([]);
     const [selectedCustomer, setSelectedCustomer] = useState<customers_customers | null>(null);
     const [newCustomerOpen, setNewCustomerOpen] = useState(false);
@@ -39,7 +31,7 @@ export const AdminCustomerPage = () => {
             <NewCustomerDialog
                 open={newCustomerOpen}
                 onClose={() => setNewCustomerOpen(false)} />
-            <AdminBreadcrumbs textColor={palette.secondary.dark} />
+            <AdminTabs defaultTab={AdminTabOption.Customers} />
             <PageTitle title="Manage Customers" helpText={helpText} />
             <Button
                 color="secondary"
