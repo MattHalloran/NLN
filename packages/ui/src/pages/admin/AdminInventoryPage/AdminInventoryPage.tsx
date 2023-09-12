@@ -72,7 +72,7 @@ export const AdminInventoryPage = () => {
             <AdminBreadcrumbs textColor={palette.secondary.dark} />
             <PageTitle title="Manage Inventory" helpText={helpText} />
             <Box>
-                {/* <Button onClick={() => editSku({})}>Create new plant</Button> */}
+                {/* <Button variant="contained" onClick={() => editSku({})}>Create new plant</Button> */}
             </Box>
             <Dropzone
                 dropzoneText={"Drag 'n' drop availability file here or click"}

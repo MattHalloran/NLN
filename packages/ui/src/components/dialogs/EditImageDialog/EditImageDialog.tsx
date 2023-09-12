@@ -47,10 +47,18 @@ export const EditImageDialog = ({
                 />
             </DialogContent>
             <DialogActions>
-                <Button onClick={onClose} variant="text" sx={{ color: palette.primary.main }}>
+                <Button
+                    onClick={onClose}
+                    variant="text"
+                    sx={{ color: palette.primary.main }}
+                >
                     Cancel
                 </Button>
-                <Button onClick={() => onSave({ alt, description })} variant="text" sx={{ color: palette.primary.main }}>
+                <Button
+                    onClick={() => onSave({ alt, description })}
+                    variant="text"
+                    sx={{ color: palette.primary.main }}
+                >
                     Save
                 </Button>
             </DialogActions>

@@ -12,6 +12,7 @@ const navItemStyle = (palette: Palette) => ({
     background: "transparent",
     color: palette.primary.contrastText,
     textTransform: "none",
+    boxShadow: "none",
 });
 
 export const NavList = ({
@@ -95,10 +96,7 @@ export const NavList = ({
                 size="large"
                 sx={navItemStyle(palette)}
             >
-                <ContactInfo business={business} sx={{
-                    width: "calc(min(100vw, 400px))",
-                    height: "300px",
-                }} />
+                <ContactInfo business={business} sx={{ width: "calc(min(100vw, 500px))" }} />
             </PopupMenu>
             <PopupMenu
                 text="About"

@@ -41,7 +41,12 @@ export const AdminCustomerPage = () => {
                 onClose={() => setNewCustomerOpen(false)} />
             <AdminBreadcrumbs textColor={palette.secondary.dark} />
             <PageTitle title="Manage Customers" helpText={helpText} />
-            <Button color="secondary" onClick={() => setNewCustomerOpen(true)} sx={{ display: "block", margin: "auto" }}>Create Customer</Button>
+            <Button
+                color="secondary"
+                onClick={() => setNewCustomerOpen(true)}
+                sx={{ display: "block", margin: "auto" }}
+                variant="contained"
+            >Create Customer</Button>
             <Box sx={{
                 display: "grid",
                 gridTemplateColumns: "repeat(auto-fill, minmax(225px, .5fr))",

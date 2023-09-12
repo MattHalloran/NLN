@@ -16,7 +16,7 @@ export const NotFoundPage = () => {
                 <h3>Looks like you've followed a broken link or entered a URL that doesn't exist on this site</h3>
                 <br />
                 <Link to={APP_LINKS.Home}>
-                    <Button>Go to Home</Button>
+                    <Button variant="contained">Go to Home</Button>
                 </Link>
             </Box>
         </PageContainer>

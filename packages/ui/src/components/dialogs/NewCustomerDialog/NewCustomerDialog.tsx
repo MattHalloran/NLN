@@ -71,6 +71,7 @@ export const NewCustomerDialog = ({
                     fullWidth
                     startIcon={<CreateIcon />}
                     onClick={() => formik.handleSubmit()}
+                    variant="contained"
                 >Create</Button>
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -78,6 +79,7 @@ export const NewCustomerDialog = ({
                     fullWidth
                     startIcon={<CancelIcon />}
                     onClick={onClose}
+                    variant="contained"
                 >Cancel</Button>
             </Grid>
         </Grid>

@@ -210,6 +210,7 @@ export const EditPlantDialog = ({
                     disabled={!changes_made}
                     startIcon={<CancelIcon />}
                     onClick={revertPlant}
+                    variant="contained"
                 >Revert</Button>
             </Grid>
             <Grid item xs={12} sm={4}>
@@ -218,6 +219,7 @@ export const EditPlantDialog = ({
                     disabled={!changedPlant?.id}
                     startIcon={<DeleteIcon />}
                     onClick={confirmDelete}
+                    variant="contained"
                 >Delete</Button>
             </Grid>
             <Grid item xs={12} sm={4}>
@@ -226,6 +228,7 @@ export const EditPlantDialog = ({
                     disabled={!changes_made}
                     startIcon={<SaveIcon />}
                     onClick={savePlant}
+                    variant="contained"
                 >Update</Button>
             </Grid>
         </Grid>

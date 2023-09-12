@@ -128,6 +128,7 @@ export const Dropzone = ({
                                 marginTop: spacing(1),
                                 marginBottom: spacing(1),
                             }}
+                            variant="contained"
                         >{uploadText}</Button>
                     </Grid>
                     <Grid item xs={12} sm={6}>
@@ -139,6 +140,7 @@ export const Dropzone = ({
                                 marginTop: spacing(1),
                                 marginBottom: spacing(1),
                             }}
+                            variant="contained"
                         >{cancelText}</Button>
                     </Grid>
                 </Grid>

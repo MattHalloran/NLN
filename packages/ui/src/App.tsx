@@ -1,6 +1,5 @@
 import { useMutation, useQuery } from "@apollo/client";
-import { Box, CircularProgress, CssBaseline, StyledEngineProvider, ThemeProvider } from "@mui/material";
-import { makeStyles } from "@mui/styles";
+import { Box, CircularProgress, CssBaseline, GlobalStyles, StyledEngineProvider, ThemeProvider } from "@mui/material";
 import { Routes } from "Routes";
 import { loginMutation } from "api/mutation";
 import { readAssetsQuery } from "api/query/readAssets";
@@ -20,26 +19,6 @@ import { useLocation } from "route";
 import { Session } from "types";
 import { PubSub, themes } from "utils";
 
-const useStyles = makeStyles(() => ({
-    "@global": {
-        body: {
-            backgroundColor: "black",
-        },
-        "#page": {
-            minWidth: "100%",
-            minHeight: "100%",
-            padding: "1em",
-            paddingTop: "calc(14vh + 20px)",
-        },
-        "@media (min-width:500px)": {
-            "#page": {
-                paddingLeft: "max(1em, calc(15% - 75px))",
-                paddingRight: "max(1em, calc(15% - 75px))",
-            },
-        },
-    },
-}));
-
 const keyMap = {
     OPEN_MENU: "left",
     TOGGLE_MENU: "m",
@@ -48,7 +27,6 @@ const keyMap = {
 };
 
 export function App() {
-    useStyles();
     // Session cookie should automatically expire in time determined by server,
     // so no need to validate session on first load
     const [session, setSession] = useState<Session | undefined>(undefined);
@@ -130,6 +108,36 @@ export function App() {
         <StyledEngineProvider injectFirst>
             <CssBaseline />
             <ThemeProvider theme={theme}>
+                <GlobalStyles
+                    styles={() => ({
+                        body: {
+                            backgroundColor: "black",
+                        },
+                        "#page": {
+                            minWidth: "100%",
+                            minHeight: "100%",
+                            padding: "1em",
+                            paddingTop: "calc(14vh + 20px)",
+                        },
+                        "@media (min-width:500px)": {
+                            "#page": {
+                                paddingLeft: "max(1em, calc(15% - 75px))",
+                                paddingRight: "max(1em, calc(15% - 75px))",
+                            },
+                        },
+                        // Custom IconButton hover highlighting, which doesn't hide background color
+                        ".MuiIconButton-root": {
+                            "&:hover": {
+                                filter: "brightness(1.3)",
+                            },
+                            "&.Mui-disabled": {
+                                pointerEvents: "none",
+                                filter: "grayscale(1) opacity(0.5)",
+                            },
+                            transition: "filter 0.2s ease-in-out",
+                        },
+                    })}
+                />
                 <DndProvider backend={HTML5Backend}>
                     <Box id="App">
                         <GlobalHotKeys keyMap={keyMap} handlers={handlers} />

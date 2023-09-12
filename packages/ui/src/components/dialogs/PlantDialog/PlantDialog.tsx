@@ -107,6 +107,7 @@ export const PlantDialog = ({
                     color="secondary"
                     startIcon={<ShoppingCartAddIcon />}
                     onClick={handleAddToCart}
+                    variant="contained"
                 >Order</Button>
             </Grid>
         </Grid>

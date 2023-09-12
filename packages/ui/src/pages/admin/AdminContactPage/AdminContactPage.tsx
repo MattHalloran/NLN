@@ -56,10 +56,22 @@ export const AdminContactPage = ({
             marginTop: spacing(2),
         }}>
             <Grid display="flex" justifyContent="center" item xs={6}>
-                <Button startIcon={<SaveIcon />} fullWidth disabled={business?.hours === hours} onClick={applyHours}>Apply</Button>
+                <Button
+                    startIcon={<SaveIcon />}
+                    fullWidth
+                    disabled={business?.hours === hours}
+                    onClick={applyHours}
+                    variant="contained"
+                >Apply</Button>
             </Grid>
             <Grid display="flex" justifyContent="center" item xs={6}>
-                <Button startIcon={<CancelIcon />} fullWidth disabled={business?.hours === hours} onClick={revertHours}>Revert</Button>
+                <Button
+                    startIcon={<CancelIcon />}
+                    fullWidth
+                    disabled={business?.hours === hours}
+                    onClick={revertHours}
+                    variant="contained"
+                >Revert</Button>
             </Grid>
         </Grid>
     );

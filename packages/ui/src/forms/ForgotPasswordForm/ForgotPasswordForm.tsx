@@ -75,6 +75,7 @@ export const ForgotPasswordForm = ({
                     type="submit"
                     color="secondary"
                     sx={{ margin: spacing(3, 0, 2) }}
+                    variant="contained"
                 >
                     Submit
                 </Button>

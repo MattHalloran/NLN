@@ -282,12 +282,17 @@ export const ProfileForm = () => {
                                 disabled={loading}
                                 type="submit"
                                 color="secondary"
+                                variant="contained"
                             >
                                 Save Changes
                             </Button>
                         </Grid>
                         <Grid item xs={12} sm={6}>
-                            <Button fullWidth onClick={() => { formik.resetForm(); }}>
+                            <Button
+                                fullWidth
+                                onClick={() => { formik.resetForm(); }}
+                                variant="contained"
+                            >
                                 Cancel
                             </Button>
                         </Grid>

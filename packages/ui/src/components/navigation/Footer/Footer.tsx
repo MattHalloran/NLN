@@ -56,7 +56,7 @@ export const Footer = ({
                         >
                             <ListItemText primary="Credit App" />
                         </ListItem>
-                        <ListItem button component="a" onClick={() => printAvailability(session, business?.BUSINESS_NAME?.Long)} >
+                        <ListItem button component="a" onClick={() => printAvailability(session, business?.BUSINESS_NAME?.Long, business?.PHONE?.Label, business?.EMAIL?.Label)} >
                             <ListItemText primary="Print Availability" />
                         </ListItem>
                         <ListItem button component="a" onClick={() => setLocation(APP_LINKS.Gallery)} >

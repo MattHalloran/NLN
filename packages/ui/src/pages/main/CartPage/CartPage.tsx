@@ -89,6 +89,7 @@ export const CartPage = ({
                     startIcon={<ArrowLeftIcon />}
                     onClick={() => setLocation(APP_LINKS.Shopping)}
                     disabled={loading || (changedCart !== null && !_.isEqual(cart, changedCart))}
+                    variant="contained"
                 >Continue Shopping</Button>
             </Grid>
             <Grid display="flex" justifyContent="center" item xs={12} sm={4}>
@@ -97,6 +98,7 @@ export const CartPage = ({
                     startIcon={<SaveIcon />}
                     onClick={orderUpdate}
                     disabled={loading || (changedCart === null || _.isEqual(cart, changedCart))}
+                    variant="contained"
                 >Update Order</Button>
             </Grid>
             <Grid display="flex" justifyContent="center" item xs={12} sm={4}>
@@ -105,6 +107,7 @@ export const CartPage = ({
                     endIcon={<ArrowRightIcon />}
                     onClick={finalizeOrder}
                     disabled={loading || changedCart === null || !_.isEqual(cart, changedCart)}
+                    variant="contained"
                 >Request Quote</Button>
             </Grid>
         </Grid>

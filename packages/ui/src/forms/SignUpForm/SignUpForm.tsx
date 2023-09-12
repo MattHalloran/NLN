@@ -258,6 +258,7 @@ export const SignUpForm = ({
                     type="submit"
                     color="secondary"
                     sx={{ margin: spacing(3, 0, 2) }}
+                    variant="contained"
                 >
                     Sign Up
                 </Button>

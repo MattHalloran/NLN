@@ -104,15 +104,15 @@ export const Hamburger = ({
                 <IconButton
                     onClick={closeMenu}
                     sx={{
-                        color: palette.background.textPrimary,
+                        background: palette.primary.dark,
                         borderRadius: 0,
-                        borderBottom: `1px solid ${palette.background.textPrimary}`,
+                        borderBottom: `1px solid ${palette.divider}`,
                         justifyContent: "end",
                         direction: "rtl",
                         height: "64px",
                     }}
                 >
-                    <CloseIcon fill={palette.background.textPrimary} />
+                    <CloseIcon fill={palette.primary.contrastText} />
                 </IconButton>
                 <List>
                     {/* Collapsible contact information */}

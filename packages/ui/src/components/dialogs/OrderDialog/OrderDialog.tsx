@@ -139,6 +139,7 @@ export const OrderDialog = ({
                     startIcon={<SaveIcon />}
                     onClick={orderUpdate}
                     disabled={loading || _.isEqual(order, changedOrder)}
+                    variant="contained"
                 >Update</Button>
             </Grid>
             {availableActions.map(action => (
@@ -148,6 +149,7 @@ export const OrderDialog = ({
                         startIcon={action.icon}
                         onClick={() => setOrderStatus(action.status, action.successMessage, action.failureMessage)}
                         disabled={loading}
+                        variant="contained"
                     >{action.displayText}</Button>
                 </Grid>
             ))}

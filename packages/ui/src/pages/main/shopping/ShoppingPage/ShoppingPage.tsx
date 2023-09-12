@@ -107,6 +107,7 @@ export const ShoppingPage = ({
                     color="secondary"
                     startIcon={<DeleteIcon />}
                     onClick={resetSearchConstraints}
+                    variant="contained"
                 >Reset</Button>
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -115,6 +116,7 @@ export const ShoppingPage = ({
                     color="secondary"
                     startIcon={<CloseIcon />}
                     onClick={() => PubSub.get().publishArrowMenuOpen(false)}
+                    variant="contained"
                 >Close</Button>
             </Grid>
         </Grid>
@@ -169,11 +171,13 @@ export const ShoppingPage = ({
                     color="secondary"
                     startIcon={<FilterIcon />}
                     onClick={() => PubSub.get().publishArrowMenuOpen("toggle")}
+                    variant="contained"
                 >Filter</Button>
                 <Button
                     color="secondary"
                     startIcon={<PrintIcon />}
-                    onClick={() => printAvailability(session, business?.BUSINESS_NAME?.Long)}
+                    onClick={() => printAvailability(session, business?.BUSINESS_NAME?.Long, business?.PHONE?.Label, business?.EMAIL?.Label)}
+                    variant="contained"
                 >Print</Button>
             </Stack>
             <ShoppingList

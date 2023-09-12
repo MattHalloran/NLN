@@ -69,7 +69,12 @@ export const AlertDialog = () => {
             <DialogActions>
                 {state?.buttons && state.buttons.length > 0 ? (
                     state.buttons.map((b: StateButton, index) => (
-                        <Button key={`alert-button-${index}`} onClick={(e) => handleClick(e, b.onClick)} color="secondary">
+                        <Button
+                            key={`alert-button-${index}`}
+                            onClick={(e) => handleClick(e, b.onClick)}
+                            color="secondary"
+                            variant="text"
+                        >
                             {b.text}
                         </Button>
                     ))

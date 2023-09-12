@@ -102,6 +102,7 @@ export const CustomerDialog = ({
                     disabled={!changes_made}
                     startIcon={<CancelIcon />}
                     onClick={revert}
+                    variant="contained"
                 >Revert</Button>
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
@@ -110,6 +111,7 @@ export const CustomerDialog = ({
                     disabled={!customer?.id}
                     startIcon={<ToggleIcon />}
                     onClick={toggleLock}
+                    variant="contained"
                 >{toggleLabel}</Button>
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
@@ -118,6 +120,7 @@ export const CustomerDialog = ({
                     disabled={!customer?.id}
                     startIcon={<DeleteIcon />}
                     onClick={confirmDelete}
+                    variant="contained"
                 >Delete</Button>
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
@@ -126,6 +129,7 @@ export const CustomerDialog = ({
                     disabled={!changes_made}
                     startIcon={<SaveIcon />}
                     onClick={updateCustomer}
+                    variant="contained"
                 >Update</Button>
             </Grid>
         </Grid>

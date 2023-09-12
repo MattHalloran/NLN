@@ -95,6 +95,7 @@ export const ResetPasswordForm = ({
                     sx={{
                         margin: spacing(3, 0, 2),
                     }}
+                    variant="contained"
                 >
                     Submit
                 </Button>
