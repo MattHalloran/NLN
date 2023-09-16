@@ -8,7 +8,7 @@ import {
 } from "@mui/material";
 import { writeAssetsMutation } from "api/mutation";
 import { graphqlWrapperHelper } from "api/utils";
-import { AdminTabOption, AdminTabs, PageContainer, PageTitle } from "components";
+import { AdminTabOption, AdminTabs, PageTitle } from "components";
 import { BusinessContext } from "components/contexts/BusinessContext";
 import { CancelIcon, SaveIcon } from "icons";
 import Markdown from "markdown-to-jsx";
@@ -77,7 +77,7 @@ export const AdminContactPage = () => {
     );
 
     return (
-        <PageContainer>
+        <>
             <AdminTabs defaultTab={AdminTabOption.ContactInfo} />
             <PageTitle title="Manage Contact Info" helpText={helpText} />
             {options}
@@ -105,6 +105,6 @@ export const AdminContactPage = () => {
                 </Grid>
             </Grid>
             {options}
-        </PageContainer>
+        </>
     );
 };

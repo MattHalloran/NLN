@@ -1,6 +1,7 @@
-import { IconButton, InputAdornment, TextField } from "@mui/material";
-import AwesomeDebouncePromise from "awesome-debounce-promise";
+import { IconButton, InputAdornment, TextField, TextFieldProps } from "@mui/material";
 import { SearchIcon } from "icons";
+import { useState } from "react";
+import { useDebounce } from "utils";
 
 export const SearchBar = ({
     label = "Search...",
@@ -8,18 +9,25 @@ export const SearchBar = ({
     onChange,
     debounce = 0,
     ...props
+}: Omit<TextFieldProps, "labe" | "value" | "onChange"> & {
+    label?: string,
+    value: string,
+    onChange: (updatedString: string) => unknown,
+    debounce?: number,
 }) => {
 
-    const onChangeDebounced = AwesomeDebouncePromise(
-        onChange,
-        debounce ?? 0,
-    );
+    const [internalValue, setInternalValue] = useState(value);
+    const onChangeDebounce = useDebounce(onChange, debounce ?? 100);
 
     return (
         <TextField
             label={label}
-            value={value}
-            onChange={onChangeDebounced}
+            value={internalValue}
+            onChange={(e) => {
+                const updatedString = e.target.value;
+                setInternalValue(updatedString);
+                onChangeDebounce(updatedString);
+            }}
             InputProps={{
                 endAdornment: (
                     <InputAdornment position="end">

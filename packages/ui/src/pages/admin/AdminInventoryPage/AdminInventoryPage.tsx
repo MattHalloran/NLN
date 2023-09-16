@@ -94,7 +94,7 @@ export const AdminInventoryPage = () => {
                         />
                     </Grid>
                     <Grid item xs={12} sm={4}>
-                        <SearchBar fullWidth value={searchString} onChange={(e) => setSearchString(e.target.value)} />
+                        <SearchBar fullWidth value={searchString} onChange={setSearchString} />
                     </Grid>
                 </Grid>
             </Box>

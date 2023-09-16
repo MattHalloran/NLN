@@ -17,6 +17,7 @@ export interface MenuTitleProps {
 }
 
 export interface PlantDialogProps {
+    isAdminPage: boolean;
     plant: plants_plants | undefined;
     selectedSku: plants_plants_skus | undefined;
     onAddToCart: (sku: plants_plants_skus, quantity: number) => void;

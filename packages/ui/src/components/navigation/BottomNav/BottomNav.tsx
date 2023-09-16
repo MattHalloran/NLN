@@ -2,6 +2,7 @@ import { Badge, BottomNavigation, BottomNavigationAction, useTheme } from "@mui/
 import { SessionContext } from "components/contexts/SessionContext";
 import { useContext } from "react";
 import { useLocation } from "route";
+import { pagePaddingBottom } from "styles";
 import { getUserActions } from "utils";
 
 export const BottomNav = ({
@@ -24,7 +25,7 @@ export const BottomNav = ({
                 paddingBottom: "env(safe-area-inset-bottom)",
                 paddingLeft: "calc(4px + env(safe-area-inset-left))",
                 paddingRight: "calc(4px + env(safe-area-inset-right))",
-                height: "calc(56px + env(safe-area-inset-bottom))",
+                height: pagePaddingBottom,
                 width: "100%",
                 display: { xs: "flex", md: "none" },
             }}

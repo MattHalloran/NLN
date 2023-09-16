@@ -14,6 +14,7 @@ import {
 import { BusinessContext } from "components/contexts/BusinessContext";
 import { SessionContext } from "components/contexts/SessionContext";
 import { SideMenu, sideMenuDisplayData } from "components/navigation/Navbar/SideMenu";
+import { shoppingFilterSideMenuDisplayData } from "pages/main/shopping/ShoppingFilterSideMenu/ShoppingFilterSideMenu";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
@@ -22,6 +23,7 @@ import { BusinessData, Session } from "types";
 import { PubSub, SideMenuPub, themes, useWindowSize } from "utils";
 
 const menusDisplayData: { [key in SideMenuPub["id"]]: { persistentOnDesktop: boolean, sideForRightHanded: "left" | "right" } } = {
+    "shopping-filter-side-menu": shoppingFilterSideMenuDisplayData,
     "side-menu": sideMenuDisplayData,
 };
 
@@ -128,8 +130,29 @@ export function App() {
             <ThemeProvider theme={theme}>
                 <GlobalStyles
                     styles={() => ({
+                        // Custom scrollbar
+                        "*": {
+                            "&::-webkit-scrollbar": {
+                                width: 10,
+                            },
+                            "&::-webkit-scrollbar-track": {
+                                backgroundColor: "transparent",
+                            },
+                            "&::-webkit-scrollbar-thumb": {
+                                borderRadius: "100px",
+                                backgroundColor: "transparent", // Set initial color as transparent
+                            },
+                            "&:hover::-webkit-scrollbar-thumb": {
+                                backgroundColor: "#1b5e2085",  // Change color on hover
+                            },
+                        },
                         body: {
-                            backgroundColor: "black",
+                            overflowX: "hidden",
+                            overflowY: "auto",
+                            // Scrollbar should always be visible for the body
+                            "&::-webkit-scrollbar-thumb": {
+                                backgroundColor: "#1b5e2085",
+                            },
                         },
                         "#page": {
                             minWidth: "100%",
@@ -160,6 +183,8 @@ export function App() {
                     <SessionContext.Provider value={session}>
                         <BusinessContext.Provider value={business}>
                             <Box id="App" sx={{
+                                background: theme.palette.background.default,
+                                color: theme.palette.background.textPrimary,
                                 // Style visited, active, and hovered links
                                 "& span, p": {
                                     "& a": {

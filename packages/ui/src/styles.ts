@@ -1,5 +1,7 @@
 import { SxProps } from "@mui/material";
 
+export const pagePaddingBottom = "calc(56px + env(safe-area-inset-bottom))";
+
 /**
  * Disables text highlighting
  */

@@ -2,7 +2,7 @@ import { useQuery } from "@apollo/client";
 import { Box, Button } from "@mui/material";
 import { customers, customers_customers } from "api/generated/customers";
 import { customersQuery } from "api/query";
-import { AdminTabOption, AdminTabs, CustomerCard, PageContainer, PageTitle, SnackSeverity } from "components";
+import { AdminTabOption, AdminTabs, CustomerCard, PageTitle, SnackSeverity } from "components";
 import { CustomerDialog } from "components/dialogs/CustomerDialog/CustomerDialog";
 import { NewCustomerDialog } from "components/dialogs/NewCustomerDialog/NewCustomerDialog";
 import { useEffect, useState } from "react";
@@ -23,7 +23,7 @@ export const AdminCustomerPage = () => {
     }, [data]);
 
     return (
-        <PageContainer>
+        <>
             <CustomerDialog
                 customer={selectedCustomer}
                 open={selectedCustomer !== null}
@@ -51,6 +51,6 @@ export const AdminCustomerPage = () => {
                         customer={c}
                     />)}
             </Box>
-        </PageContainer>
+        </>
     );
 };

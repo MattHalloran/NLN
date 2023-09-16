@@ -32,7 +32,6 @@ const LogoComponent = ({
             onClick={onClick}
             sx={{
                 padding: 0,
-                paddingTop: "4px",
                 display: "flex",
                 alignItems: "center",
                 marginRight: isLeftHanded ? 1 : "auto",
@@ -57,8 +56,8 @@ const LogoComponent = ({
                     marginRight: "auto",
                     background: palette.mode === "light" ? "#ffffff42" : "radial-gradient(circle at center, #757565 0, #757565, white 100%)",
                     borderRadius: "100%",
-                    height: { xs: "56px", md: "64px" },
-                    width: { xs: "56px", md: "64px" },
+                    height: "48px",
+                    width: "48px",
                 }}>
                     {/* icon */}
                     <Box
@@ -72,7 +71,7 @@ const LogoComponent = ({
                 drop-shadow(-0.5px -0.5px 0 ${hexToRGB(palette.primary.dark, 0.9)})`,
                             verticalAlign: "middle",
                             fill: "black",
-                            height: { xs: "60px", md: "72px" },
+                            height: "48px",
                             transform: "rotate(20deg)",
                         }} />
                 </Box>
@@ -83,6 +82,7 @@ const LogoComponent = ({
                     sx={{
                         position: "relative",
                         cursor: "pointer",
+                        marginLeft: "8px",
                         fontSize: { xs: "1.2em", md: "1.5em" },
                         fontFamily: "'Kite One', sans-serif",
                         color: palette.primary.contrastText,

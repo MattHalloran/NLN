@@ -102,6 +102,7 @@ export const ShoppingList = ({
     return (
         <CardGrid minWidth={300}>
             {(currPlant) ? <PlantDialog
+                isAdminPage={false}
                 plant={currPlant}
                 selectedSku={currSku}
                 onAddToCart={addToCart}

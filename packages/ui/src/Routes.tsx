@@ -53,7 +53,7 @@ export const Routes = () => {
                     priority={1.0}
                     changeFreq="monthly">
                     <Suspense fallback={Fallback}>
-                        <Page>
+                        <Page excludePageContainer>
                             <HomePage />
                         </Page>
                     </Suspense>
