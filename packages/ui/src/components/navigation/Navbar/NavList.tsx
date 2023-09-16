@@ -3,12 +3,14 @@ import { APP_LINKS } from "@local/shared";
 import { Badge, Box, Button, IconButton, List, ListItem, ListItemIcon, ListItemText, Palette, useTheme } from "@mui/material";
 import { logoutMutation } from "api";
 import { ContactInfo, PopupMenu } from "components";
-import { SessionContext } from "components/contexts/SessionContext";
+import { SessionContext } from "contexts/SessionContext";
+import { useSideMenu } from "hooks/useSideMenu";
+import { useWindowSize } from "hooks/useWindowSize";
 import { CreateAccountIcon, InfoIcon, MenuIcon, PhotoLibraryIcon, ShoppingCartIcon } from "icons";
 import _ from "lodash";
 import { useCallback, useContext } from "react";
 import { useLocation } from "route";
-import { PubSub, UserActions, getUserActions, updateArray, useSideMenu, useWindowSize } from "utils";
+import { PubSub, UserActions, getUserActions, updateArray } from "utils";
 
 const navItemStyle = (palette: Palette) => ({
     background: "transparent",

@@ -1,4 +1,4 @@
-import { IconButton, InputAdornment, TextField, TextFieldProps } from "@mui/material";
+import { IconButton, InputAdornment, TextField, TextFieldProps, useTheme } from "@mui/material";
 import { SearchIcon } from "icons";
 import { useState } from "react";
 import { useDebounce } from "utils";
@@ -15,6 +15,7 @@ export const SearchBar = ({
     onChange: (updatedString: string) => unknown,
     debounce?: number,
 }) => {
+    const { palette } = useTheme();
 
     const [internalValue, setInternalValue] = useState(value);
     const onChangeDebounce = useDebounce(onChange, debounce ?? 100);
@@ -32,7 +33,7 @@ export const SearchBar = ({
                 endAdornment: (
                     <InputAdornment position="end">
                         <IconButton>
-                            <SearchIcon />
+                            <SearchIcon fill={palette.background.textSecondary} />
                         </IconButton>
                     </InputAdornment>
                 ),

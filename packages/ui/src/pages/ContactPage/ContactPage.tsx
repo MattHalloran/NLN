@@ -1,5 +1,5 @@
 import { PageContainer } from "components";
-import { BusinessContext } from "components/contexts/BusinessContext";
+import { BusinessContext } from "contexts/BusinessContext";
 import { useContext, useLayoutEffect } from "react";
 
 export const ContactPage = () => {

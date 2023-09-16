@@ -1,5 +1,5 @@
 import { APP_LINKS } from "@local/shared";
-import { BusinessContext } from "components/contexts/BusinessContext";
+import { BusinessContext } from "contexts/BusinessContext";
 import { useContext } from "react";
 import { BreadcrumbsBase } from "../BreadcrumbsBase/BreadcrumbsBase";
 import { CopyrightBreadcrumbsProps } from "../types";

@@ -1,5 +1,6 @@
 import { PopoverProps } from "@mui/material";
 import { plants_plants, plants_plants_skus } from "api/generated/plants";
+import { SxType } from "types";
 import { SnackSeverity } from "./Snack/Snack";
 
 export interface DialogTitleProps {
@@ -29,9 +30,11 @@ export interface PopoverWithArrowProps extends Omit<PopoverProps, "open" | "sx">
     anchorEl: HTMLElement | null;
     children: React.ReactNode;
     handleClose: () => any;
+    placement?: "bottom" | "left" | "right" | "top";
     sxs?: {
-        root?: { [x: string]: any };
-        content?: { [x: string]: any };
+        root?: Record<string, unknown>;
+        content?: SxType;
+        paper?: SxType;
     }
 }
 

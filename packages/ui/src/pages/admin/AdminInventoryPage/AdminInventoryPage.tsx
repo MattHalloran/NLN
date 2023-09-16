@@ -4,11 +4,12 @@
 // 3) Create a new SKU, either from scratch or by using plant species info
 
 import { useMutation, useQuery } from "@apollo/client";
-import { Box, FormControlLabel, Grid, Switch } from "@mui/material";
+import { Box, FormControlLabel, Grid, Switch, useTheme } from "@mui/material";
 import { uploadAvailabilityMutation } from "api/mutation";
 import { plantsQuery, traitOptionsQuery } from "api/query";
 import { graphqlWrapperHelper } from "api/utils";
 import { AdminTabOption, AdminTabs, CardGrid, Dropzone, EditPlantDialog, PageContainer, PageTitle, PlantCard, SearchBar, Selector } from "components";
+import { useWindowSize } from "hooks/useWindowSize";
 import { useCallback, useState } from "react";
 import { PubSub, SORT_OPTIONS } from "utils";
 
@@ -21,10 +22,12 @@ const helpText = `This page has the following features:
  - Add/Edit/Delete SKUs`;
 
 export const AdminInventoryPage = () => {
+    const { breakpoints } = useTheme();
     const [showActive, setShowActive] = useState(true);
     const [searchString, setSearchString] = useState("");
     // Selected plant data. Used for popup. { plant, selectedSku }
     const [selected, setSelected] = useState<any | null>(null);
+    const isMobile = useWindowSize(({ width }) => width <= breakpoints.values.sm);
 
     const [sortBy, setSortBy] = useState(SORT_OPTIONS[0]);
     const { data: traitOptions } = useQuery(traitOptionsQuery);
@@ -101,6 +104,7 @@ export const AdminInventoryPage = () => {
             <CardGrid minWidth={300}>
                 {plantData?.plants?.map((plant, index) => <PlantCard key={index}
                     isAdminPage={true}
+                    isMobile={isMobile}
                     plant={plant}
                     onClick={setSelected} />)}
             </CardGrid>

@@ -2,7 +2,7 @@ import { useQuery } from "@apollo/client";
 import { useTheme } from "@mui/material";
 import { readAssetsQuery } from "api/query/readAssets";
 import { PageContainer, PolicyBreadcrumbs } from "components";
-import { BusinessContext } from "components/contexts/BusinessContext";
+import { BusinessContext } from "contexts/BusinessContext";
 import MarkdownInput from "markdown-to-jsx";
 import { useContext, useEffect, useState } from "react";
 import { convertToDot, valueFromDot } from "utils";

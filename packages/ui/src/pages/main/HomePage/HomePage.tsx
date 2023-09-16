@@ -1,8 +1,5 @@
 import { Box } from "@mui/material";
-import {
-    FeaturedPlants,
-    Hero,
-} from "components";
+import { FeaturedPlants, Hero } from "components";
 
 export const HomePage = () => {
     return (

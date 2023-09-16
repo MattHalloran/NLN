@@ -1,36 +1,9 @@
 import { useMutation } from "@apollo/client";
-import {
-    AppBar,
-    Autocomplete,
-    Box,
-    Button,
-    Dialog,
-    FormControlLabel,
-    Grid,
-    IconButton,
-    List,
-    ListItem,
-    ListItemText,
-    ListSubheader,
-    Switch,
-    TextField,
-    Toolbar,
-    Tooltip,
-    Typography,
-    useTheme,
-} from "@mui/material";
+import { AppBar, Autocomplete, Box, Button, Dialog, FormControlLabel, Grid, IconButton, List, ListItem, ListItemText, ListSubheader, Switch, TextField, Toolbar, Tooltip, Typography, useTheme } from "@mui/material";
 import { addImagesMutation, deletePlantsMutation, updatePlantMutation } from "api/mutation";
 import { Dropzone, ImageList, Transition } from "components";
 import { useCallback, useEffect, useState } from "react";
-import {
-    PubSub,
-    addToArray,
-    deleteArrayIndex,
-    getPlantTrait,
-    makeID,
-    setPlantSkuField,
-    setPlantTrait,
-} from "utils";
+import { PubSub, addToArray, deleteArrayIndex, getPlantTrait, makeID, setPlantSkuField, setPlantTrait } from "utils";
 // import { DropzoneAreaBase } from 'material-ui-dropzone';
 import { addImagesVariables, addImages_addImages } from "api/generated/addImages";
 import { deletePlantsVariables, deletePlants_deletePlants } from "api/generated/deletePlants";

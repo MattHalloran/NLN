@@ -1,15 +1,6 @@
 import { useMutation } from "@apollo/client";
 import { APP_LINKS, requestPasswordChangeSchema } from "@local/shared";
-import {
-    Box,
-    Button,
-    Grid,
-    Link,
-    Palette,
-    TextField,
-    Typography,
-    useTheme,
-} from "@mui/material";
+import { Box, Button, Grid, Link, Palette, TextField, Typography, useTheme } from "@mui/material";
 import { requestPasswordChangeVariables } from "api/generated/requestPasswordChange";
 import { requestPasswordChangeMutation } from "api/mutation";
 import { mutationWrapper } from "api/utils";

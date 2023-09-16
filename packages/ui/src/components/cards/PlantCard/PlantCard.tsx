@@ -3,7 +3,6 @@ import { Avatar, Box, CardMedia, Chip, SxProps, Theme, Typography, useTheme } fr
 import { NoImageIcon } from "icons";
 import { useMemo } from "react";
 import { getImageSrc, getPlantTrait, getServerUrl, showPrice } from "utils";
-import { useWindowSize } from "utils/useWindowSize";
 
 const deleted: SxProps<Theme> = {
     background: "2px solid red",
@@ -20,17 +19,18 @@ const active: SxProps<Theme> = {
 
 export const PlantCard = ({
     isAdminPage,
+    isMobile,
     key,
     onClick,
     plant,
 }: {
     isAdminPage: boolean,
+    isMobile: boolean,
     key: string | number,
     onClick: ({ plant, selectedSku }: { plant: any, selectedSku: any }) => unknown,
     plant: any,
 }) => {
     const { breakpoints, palette } = useTheme();
-    const isMobile = useWindowSize(({ width }) => width <= breakpoints.values.sm);
 
     const SkuStatus = {
         [SKU_STATUS.Deleted]: deleted,
@@ -114,12 +114,12 @@ export const PlantCard = ({
                 background: palette.primary.main,
                 color: palette.primary.contrastText,
                 display: "flex",
-                flexDirection: { xs: "row", sm: "column" },
+                flexDirection: isMobile ? "row" : "column",
                 gap: 1,
                 cursor: "pointer",
                 overflow: "hidden",
-                boxShadow: { xs: 0, sm: 4 },
-                borderRadius: { xs: 0, sm: 2 },
+                boxShadow: isMobile ? 0 : 4,
+                borderRadius: isMobile ? 0 : 2,
                 [breakpoints.down("sm")]: {
                     borderBottom: `1px solid ${palette.divider}`,
                 },
@@ -132,7 +132,7 @@ export const PlantCard = ({
             <Box sx={{
                 marginLeft: "auto",
                 display: "flex",
-                flexDirection: { xs: "column", sm: "row" },
+                flexDirection: isMobile ? "column" : "row",
             }}>
                 {sizes}
             </Box>

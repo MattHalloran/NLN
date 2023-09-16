@@ -1,6 +1,6 @@
 import { Box, Tooltip, Typography, useTheme } from "@mui/material";
+import { useWindowSize } from "hooks/useWindowSize";
 import { createRef, useCallback, useEffect, useRef } from "react";
-import { useWindowSize } from "utils/useWindowSize";
 import { PageTabsProps } from "../types";
 
 export const PageTabs = <T, S extends boolean = true>({

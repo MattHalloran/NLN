@@ -5,6 +5,7 @@ export interface CardGridProps {
     children: ReactNode;
     disableMargin?: boolean;
     minWidth: number;
+    showMobileView?: boolean;
     sx?: SxType;
 }
 

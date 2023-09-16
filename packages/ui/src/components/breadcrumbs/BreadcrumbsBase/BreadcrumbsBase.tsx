@@ -1,7 +1,4 @@
-import {
-    Breadcrumbs,
-    Link,
-} from "@mui/material";
+import { Breadcrumbs, Link } from "@mui/material";
 import { useMemo } from "react";
 import { useLocation } from "route";
 import { noSelect } from "styles";

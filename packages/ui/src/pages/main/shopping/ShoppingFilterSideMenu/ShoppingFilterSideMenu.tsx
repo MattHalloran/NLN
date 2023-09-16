@@ -1,8 +1,11 @@
-import { Box, Button, Grid, IconButton, SwipeableDrawer, useTheme } from "@mui/material";
+import { Box, Button, FormControlLabel, Grid, IconButton, SwipeableDrawer, Switch, useTheme } from "@mui/material";
 import { SearchBar, Selector } from "components";
-import { CloseIcon, DeleteIcon } from "icons";
+import { BottomActionsGrid } from "components/buttons/BottomActionsGrid/BottomActionsGrid";
+import { useSideMenu } from "hooks/useSideMenu";
+import { useWindowSize } from "hooks/useWindowSize";
+import { CloseIcon, RefreshIcon } from "icons";
 import { useCallback, useEffect } from "react";
-import { PubSub, SORT_OPTIONS, noop, useSideMenu, useWindowSize } from "utils";
+import { PubSub, SORT_OPTIONS, noop } from "utils";
 
 export const shoppingFilterSideMenuDisplayData = {
     persistentOnDesktop: true,
@@ -30,7 +33,9 @@ const traitList: [string, string][] = [
 ];
 
 export const ShoppingFilterSideMenu = ({
+    hideOutOfStock,
     filters,
+    handleHideOutOfStockChange,
     handleFiltersChange,
     handleSearchChange,
     handleSortByChange,
@@ -38,7 +43,9 @@ export const ShoppingFilterSideMenu = ({
     sortBy,
     traitOptions,
 }: {
+    hideOutOfStock: boolean,
     filters: Record<string, string>,
+    handleHideOutOfStockChange: (updatedHideOutOfStock: boolean) => void,
     handleFiltersChange: (updatedFilters: Record<string, string>) => void,
     handleSearchChange: (updatedSearchString: string) => void,
     handleSortByChange: (updatedSortBy: { label: string, value: string }) => void,
@@ -93,29 +100,6 @@ export const ShoppingFilterSideMenu = ({
         handleFiltersChange({});
     };
 
-    const optionsContainer = (
-        <Grid mb={2} container spacing={2}>
-            <Grid item xs={12} sm={6}>
-                <Button
-                    fullWidth
-                    color="secondary"
-                    startIcon={<DeleteIcon />}
-                    onClick={resetSearchConstraints}
-                    variant="contained"
-                >Reset</Button>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-                <Button
-                    fullWidth
-                    color="secondary"
-                    startIcon={<CloseIcon />}
-                    onClick={() => PubSub.get().publishSideMenu({ id, isOpen: false })}
-                    variant="contained"
-                >Close</Button>
-            </Grid>
-        </Grid>
-    );
-
     return (
         <SwipeableDrawer
             anchor="left"
@@ -144,8 +128,18 @@ export const ShoppingFilterSideMenu = ({
             >
                 <CloseIcon fill={palette.primary.contrastText} />
             </IconButton>
-            {optionsContainer}
             <Box p={2}>
+                <FormControlLabel
+                    control={
+                        <Switch
+                            checked={hideOutOfStock}
+                            onChange={(e) => handleHideOutOfStockChange(e.target.checked)}
+                            color="secondary"
+                        />
+                    }
+                    sx={{ marginBottom: 2 }}
+                    label="Hide out of stock"
+                />
                 <Selector
                     fullWidth
                     options={SORT_OPTIONS}
@@ -161,7 +155,25 @@ export const ShoppingFilterSideMenu = ({
                 {/* {filters_to_checkbox(['Yes', 'No'], 'Jersey Native')}
                     {filters_to_checkbox(['Yes', 'No'], 'Discountable')} */}
             </Box>
-            {optionsContainer}
+            <BottomActionsGrid display="dialog">
+                <Grid item xs={6} p={1} sx={{ paddingTop: 0 }}>
+                    <Button
+                        fullWidth
+                        startIcon={<RefreshIcon />}
+                        type="submit"
+                        onClick={resetSearchConstraints}
+                        variant="contained"
+                    >Reset</Button>
+                </Grid>
+                <Grid item xs={6} p={1} sx={{ paddingTop: 0 }}>
+                    <Button
+                        fullWidth
+                        startIcon={<CloseIcon />}
+                        onClick={() => PubSub.get().publishSideMenu({ id, isOpen: false })}
+                        variant="outlined"
+                    >Close</Button>
+                </Grid>
+            </BottomActionsGrid>
         </SwipeableDrawer>
     );
 };

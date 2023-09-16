@@ -1,5 +1,5 @@
+import { PageTab } from "hooks/useTabs";
 import { SxType } from "types";
-import { PageTab } from "utils/useTabs";
 
 export interface BreadcrumbsBaseProps {
     paths: { text: string; link: string; }[];

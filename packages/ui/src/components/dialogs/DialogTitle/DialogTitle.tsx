@@ -1,10 +1,5 @@
-import {
-    Box,
-    IconButton,
-    DialogTitle as MuiDialogTitle,
-    useTheme,
-} from "@mui/material";
-import { HelpButton } from "components";
+import { Box, IconButton, DialogTitle as MuiDialogTitle, useTheme } from "@mui/material";
+import { HelpButton } from "components/buttons/HelpButton/HelpButton";
 import { CloseIcon } from "icons";
 import { noSelect } from "styles";
 import { DialogTitleProps } from "../types";

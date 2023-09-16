@@ -3,24 +3,19 @@ import { Box, CircularProgress, CssBaseline, GlobalStyles, StyledEngineProvider,
 import { Routes } from "Routes";
 import { loginMutation } from "api/mutation";
 import { readAssetsQuery } from "api/query/readAssets";
-import {
-    AlertDialog,
-    BottomNav,
-    Footer,
-    Navbar,
-    PullToRefresh,
-    SnackStack,
-} from "components";
-import { BusinessContext } from "components/contexts/BusinessContext";
-import { SessionContext } from "components/contexts/SessionContext";
+import { AlertDialog, BottomNav, Footer, Navbar, PullToRefresh, SnackStack } from "components";
 import { SideMenu, sideMenuDisplayData } from "components/navigation/Navbar/SideMenu";
+import { BusinessContext } from "contexts/BusinessContext";
+import { SessionContext } from "contexts/SessionContext";
+import { ZIndexProvider } from "contexts/ZIndexContext";
+import { useWindowSize } from "hooks/useWindowSize";
 import { shoppingFilterSideMenuDisplayData } from "pages/main/shopping/ShoppingFilterSideMenu/ShoppingFilterSideMenu";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { useLocation } from "route";
 import { BusinessData, Session } from "types";
-import { PubSub, SideMenuPub, themes, useWindowSize } from "utils";
+import { PubSub, SideMenuPub, themes } from "utils";
 
 const menusDisplayData: { [key in SideMenuPub["id"]]: { persistentOnDesktop: boolean, sideForRightHanded: "left" | "right" } } = {
     "shopping-filter-side-menu": shoppingFilterSideMenuDisplayData,
@@ -181,64 +176,66 @@ export function App() {
                 />
                 <DndProvider backend={HTML5Backend}>
                     <SessionContext.Provider value={session}>
-                        <BusinessContext.Provider value={business}>
-                            <Box id="App" sx={{
-                                background: theme.palette.background.default,
-                                color: theme.palette.background.textPrimary,
-                                // Style visited, active, and hovered links
-                                "& span, p": {
-                                    "& a": {
-                                        color: theme.palette.mode === "light" ? "#001cd3" : "#dd86db",
-                                        "&:visited": {
-                                            color: theme.palette.mode === "light" ? "#001cd3" : "#f551ef",
+                        <ZIndexProvider>
+                            <BusinessContext.Provider value={business}>
+                                <Box id="App" sx={{
+                                    background: theme.palette.background.default,
+                                    color: theme.palette.background.textPrimary,
+                                    // Style visited, active, and hovered links
+                                    "& span, p": {
+                                        "& a": {
+                                            color: theme.palette.mode === "light" ? "#001cd3" : "#dd86db",
+                                            "&:visited": {
+                                                color: theme.palette.mode === "light" ? "#001cd3" : "#f551ef",
+                                            },
+                                            "&:active": {
+                                                color: theme.palette.mode === "light" ? "#001cd3" : "#f551ef",
+                                            },
+                                            "&:hover": {
+                                                color: theme.palette.mode === "light" ? "#5a6ff6" : "#f3d4f2",
+                                            },
+                                            // Remove underline on links
+                                            textDecoration: "none",
                                         },
-                                        "&:active": {
-                                            color: theme.palette.mode === "light" ? "#001cd3" : "#f551ef",
-                                        },
-                                        "&:hover": {
-                                            color: theme.palette.mode === "light" ? "#5a6ff6" : "#f3d4f2",
-                                        },
-                                        // Remove underline on links
-                                        textDecoration: "none",
                                     },
-                                },
-                            }}>
-                                <main
-                                    id="page-container"
-                                    style={{
-                                        background: theme.palette.background.default,
-                                        color: theme.palette.background.textPrimary,
-                                    }}
-                                >
-                                    {/* Pull-to-refresh for PWAs */}
-                                    <PullToRefresh />
-                                    <Box id="content-wrap" sx={{
-                                        minHeight: "100vh",
-                                        ...(contentMargins),
-                                        transition: "margin 0.225s cubic-bezier(0, 0, 0.2, 1) 0s",
-                                    }}>
-                                        <Navbar />
-                                        {
-                                            loading && <Box sx={{
-                                                position: "absolute",
-                                                top: "50%",
-                                                left: "50%",
-                                                transform: "translate(-50%, -50%)",
-                                                zIndex: 100000,
-                                            }}>
-                                                <CircularProgress size={100} />
-                                            </Box>
-                                        }
-                                        <AlertDialog />
-                                        <SideMenu />
-                                        <SnackStack />
-                                        <Routes />
-                                    </Box>
-                                    <BottomNav />
-                                    <Footer />
-                                </main>
-                            </Box>
-                        </BusinessContext.Provider>
+                                }}>
+                                    <main
+                                        id="page-container"
+                                        style={{
+                                            background: theme.palette.background.default,
+                                            color: theme.palette.background.textPrimary,
+                                        }}
+                                    >
+                                        {/* Pull-to-refresh for PWAs */}
+                                        <PullToRefresh />
+                                        <Box id="content-wrap" sx={{
+                                            minHeight: "100vh",
+                                            ...(contentMargins),
+                                            transition: "margin 0.225s cubic-bezier(0, 0, 0.2, 1) 0s",
+                                        }}>
+                                            <Navbar />
+                                            {
+                                                loading && <Box sx={{
+                                                    position: "absolute",
+                                                    top: "50%",
+                                                    left: "50%",
+                                                    transform: "translate(-50%, -50%)",
+                                                    zIndex: 100000,
+                                                }}>
+                                                    <CircularProgress size={100} />
+                                                </Box>
+                                            }
+                                            <AlertDialog />
+                                            <SideMenu />
+                                            <SnackStack />
+                                            <Routes />
+                                        </Box>
+                                        <BottomNav />
+                                        <Footer />
+                                    </main>
+                                </Box>
+                            </BusinessContext.Provider>
+                        </ZIndexProvider>
                     </SessionContext.Provider>
                 </DndProvider>
             </ThemeProvider>

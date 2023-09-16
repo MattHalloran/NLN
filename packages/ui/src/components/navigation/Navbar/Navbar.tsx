@@ -1,13 +1,15 @@
 import { APP_LINKS } from "@local/shared";
 import { AppBar, Box, Stack, Typography, useTheme } from "@mui/material";
 import Logo from "assets/img/nln-logo-colorized.png";
-import { BusinessContext } from "components/contexts/BusinessContext";
 import { Title } from "components/text";
 import { NavbarProps } from "components/types";
+import { BusinessContext } from "contexts/BusinessContext";
+import { useDimensions } from "hooks/useDimensions";
+import { useWindowSize } from "hooks/useWindowSize";
 import { forwardRef, useCallback, useContext, useEffect, useMemo } from "react";
 import { useLocation } from "route";
 import { noSelect } from "styles";
-import { hexToRGB, useDimensions, useWindowSize } from "utils";
+import { hexToRGB } from "utils";
 import { HideOnScroll } from "../HideOnScroll/HideOnScroll";
 import { NavList } from "./NavList";
 

@@ -5,6 +5,7 @@ export const CardGrid = ({
     children,
     disableMargin,
     minWidth,
+    showMobileView,
     sx,
 }: CardGridProps) => {
     const { breakpoints } = useTheme();
@@ -14,12 +15,12 @@ export const CardGrid = ({
             display: "grid",
             gridTemplateColumns: `repeat(auto-fit, minmax(${minWidth}px, 1fr))`,
             alignItems: "stretch",
-            gap: 2,
-            margin: disableMargin ? 0 : 2,
+            gap: showMobileView === true ? 0 : 2,
+            margin: showMobileView === true || disableMargin === true ? 0 : 2,
             borderRadius: 2,
             [breakpoints.down("sm")]: {
-                gap: 0,
-                margin: 0,
+                gap: showMobileView === false ? 2 : 0,
+                margin: showMobileView === false || disableMargin === false ? 2 : 0,
             },
             ...(sx ?? {}),
         }}>

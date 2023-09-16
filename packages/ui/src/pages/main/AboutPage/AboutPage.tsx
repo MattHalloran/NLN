@@ -1,13 +1,8 @@
-import {
-    Box,
-    Grid,
-    Typography,
-    useTheme,
-} from "@mui/material";
+import { Box, Grid, Typography, useTheme } from "@mui/material";
 import Facebook from "assets/img/Facebook.png";
 import Instagram from "assets/img/Instagram.png";
 import { InformationalBreadcrumbs, PageContainer } from "components";
-import { BusinessContext } from "components/contexts/BusinessContext";
+import { BusinessContext } from "contexts/BusinessContext";
 import { useContext } from "react";
 
 export const AboutPage = () => {

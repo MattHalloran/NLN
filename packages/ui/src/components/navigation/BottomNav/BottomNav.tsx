@@ -1,5 +1,5 @@
 import { Badge, BottomNavigation, BottomNavigationAction, useTheme } from "@mui/material";
-import { SessionContext } from "components/contexts/SessionContext";
+import { SessionContext } from "contexts/SessionContext";
 import { useContext } from "react";
 import { useLocation } from "route";
 import { pagePaddingBottom } from "styles";

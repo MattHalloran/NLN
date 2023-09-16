@@ -2,17 +2,16 @@ import { useMutation } from "@apollo/client";
 import { APP_LINKS } from "@local/shared";
 import { Badge, Collapse, Divider, IconButton, List, ListItem, ListItemIcon, ListItemText, Palette, SwipeableDrawer, useTheme } from "@mui/material";
 import { logoutMutation } from "api";
-import {
-    ContactInfo,
-    CopyrightBreadcrumbs,
-} from "components";
-import { BusinessContext } from "components/contexts/BusinessContext";
-import { SessionContext } from "components/contexts/SessionContext";
+import { ContactInfo, CopyrightBreadcrumbs } from "components";
+import { BusinessContext } from "contexts/BusinessContext";
+import { SessionContext } from "contexts/SessionContext";
+import { useSideMenu } from "hooks/useSideMenu";
+import { useWindowSize } from "hooks/useWindowSize";
 import { CloseIcon, ContactSupportIcon, ExpandLessIcon, ExpandMoreIcon, FacebookIcon, HomeIcon, InfoIcon, InstagramIcon, LogOutIcon, PhotoLibraryIcon, ShareIcon } from "icons";
 import _ from "lodash";
 import { useContext, useState } from "react";
 import { useLocation } from "route";
-import { PubSub, getUserActions, noop, useSideMenu, useWindowSize } from "utils";
+import { PubSub, getUserActions, noop } from "utils";
 
 const menuItemStyle = (palette: Palette) => ({
     color: palette.background.textPrimary,

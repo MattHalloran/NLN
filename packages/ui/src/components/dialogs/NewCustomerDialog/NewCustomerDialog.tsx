@@ -1,20 +1,6 @@
 import { useMutation } from "@apollo/client";
 import { DEFAULT_PRONOUNS, addCustomerSchema } from "@local/shared";
-import {
-    AppBar,
-    Autocomplete,
-    Box,
-    Button,
-    Checkbox,
-    Dialog,
-    FormControlLabel,
-    Grid,
-    IconButton,
-    TextField,
-    Toolbar,
-    Typography,
-    useTheme,
-} from "@mui/material";
+import { AppBar, Autocomplete, Box, Button, Checkbox, Dialog, FormControlLabel, Grid, IconButton, TextField, Toolbar, Typography, useTheme } from "@mui/material";
 import { addCustomerVariables, addCustomer_addCustomer } from "api/generated/addCustomer";
 import { addCustomerMutation } from "api/mutation";
 import { mutationWrapper } from "api/utils";

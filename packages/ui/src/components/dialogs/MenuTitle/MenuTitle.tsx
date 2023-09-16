@@ -1,9 +1,5 @@
-import {
-    Box,
-    IconButton,
-    useTheme,
-} from "@mui/material";
-import { HelpButton } from "components";
+import { Box, IconButton, useTheme } from "@mui/material";
+import { HelpButton } from "components/buttons/HelpButton/HelpButton";
 import { CloseIcon } from "icons";
 import { noSelect } from "styles";
 import { MenuTitleProps } from "../types";

@@ -1,14 +1,4 @@
-import {
-    AppBar,
-    Box,
-    Button,
-    Dialog,
-    Grid,
-    IconButton,
-    Toolbar,
-    Typography,
-    useTheme,
-} from "@mui/material";
+import { AppBar, Box, Button, Dialog, Grid, IconButton, Toolbar, Typography, useTheme } from "@mui/material";
 import { customers_customers } from "api/generated/customers";
 import { deleteCustomerVariables } from "api/generated/deleteCustomer";
 import { AccountStatus } from "api/generated/globalTypes";

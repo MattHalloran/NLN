@@ -1,15 +1,9 @@
 import { useMutation } from "@apollo/client";
-import {
-    Box,
-    Button,
-    Grid,
-    TextField,
-    useTheme,
-} from "@mui/material";
+import { Box, Button, Grid, TextField, useTheme } from "@mui/material";
 import { writeAssetsMutation } from "api/mutation";
 import { graphqlWrapperHelper } from "api/utils";
 import { AdminTabOption, AdminTabs, PageTitle } from "components";
-import { BusinessContext } from "components/contexts/BusinessContext";
+import { BusinessContext } from "contexts/BusinessContext";
 import { CancelIcon, SaveIcon } from "icons";
 import Markdown from "markdown-to-jsx";
 import { useContext, useEffect, useState } from "react";

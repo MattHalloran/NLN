@@ -1,19 +1,5 @@
-import {
-    BottomNavigation,
-    BottomNavigationAction,
-    Box,
-    IconButton,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    Tooltip,
-    Typography,
-    useTheme,
-} from "@mui/material";
-import { BusinessContext } from "components/contexts/BusinessContext";
+import { BottomNavigation, BottomNavigationAction, Box, IconButton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tooltip, Typography, useTheme } from "@mui/material";
+import { BusinessContext } from "contexts/BusinessContext";
 import { EmailIcon, PhoneIcon, PinIcon } from "icons";
 import { SvgComponent } from "icons/types";
 import { useContext } from "react";

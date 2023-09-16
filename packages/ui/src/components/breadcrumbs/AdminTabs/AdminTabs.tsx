@@ -1,7 +1,7 @@
 import { APP_LINKS } from "@local/shared";
+import { PageTab, useTabs } from "hooks/useTabs";
 import { ChangeEvent, useCallback } from "react";
 import { useLocation } from "route";
-import { PageTab, useTabs } from "utils/useTabs";
 import { PageTabs } from "../PageTabs/PageTabs";
 
 export enum AdminTabOption {

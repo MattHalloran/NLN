@@ -6,8 +6,8 @@ import { updateOrderVariables, updateOrder_updateOrder } from "api/generated/upd
 import { submitOrderMutation, updateOrderMutation } from "api/mutation";
 import { mutationWrapper } from "api/utils";
 import { CartTable, PageContainer, SnackSeverity } from "components";
-import { BusinessContext } from "components/contexts/BusinessContext";
-import { SessionContext } from "components/contexts/SessionContext";
+import { BusinessContext } from "contexts/BusinessContext";
+import { SessionContext } from "contexts/SessionContext";
 import { ArrowLeftIcon, ArrowRightIcon, SaveIcon } from "icons";
 import _ from "lodash";
 import { useCallback, useContext, useEffect, useState } from "react";

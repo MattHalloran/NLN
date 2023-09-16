@@ -1,10 +1,4 @@
-import {
-    Dialog,
-    List,
-    ListItem,
-    ListItemText,
-    useTheme,
-} from "@mui/material";
+import { Dialog, List, ListItem, ListItemText, useTheme } from "@mui/material";
 import { DialogTitle } from "../DialogTitle/DialogTitle";
 
 export const ListDialog = ({

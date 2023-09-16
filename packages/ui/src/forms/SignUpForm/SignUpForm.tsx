@@ -1,28 +1,13 @@
 import { useMutation } from "@apollo/client";
 import { APP_LINKS, CODE, DEFAULT_PRONOUNS, signUpSchema } from "@local/shared";
 import { Autocomplete } from "@mui/lab";
-import {
-    Box,
-    Button,
-    Checkbox,
-    FormControl,
-    FormControlLabel,
-    FormHelperText,
-    Grid,
-    Link,
-    Palette,
-    Radio,
-    RadioGroup,
-    TextField,
-    Typography,
-    useTheme,
-} from "@mui/material";
+import { Box, Button, Checkbox, FormControl, FormControlLabel, FormHelperText, Grid, Link, Palette, Radio, RadioGroup, TextField, Typography, useTheme } from "@mui/material";
 import { signUpVariables, signUp_signUp } from "api/generated/signUp";
 import { signUpMutation } from "api/mutation";
 import { mutationWrapper } from "api/utils";
 import { SnackSeverity } from "components";
-import { BusinessContext } from "components/contexts/BusinessContext";
 import { PasswordTextField } from "components/inputs/PasswordTextField/PasswordTextField";
+import { BusinessContext } from "contexts/BusinessContext";
 import { useFormik } from "formik";
 import { useContext } from "react";
 import { useLocation } from "route";
