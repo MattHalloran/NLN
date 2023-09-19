@@ -1,14 +1,5 @@
 import { SvgComponent, SxType } from "types";
 
-export interface PageTitleProps {
-    helpText?: string;
-    title: string;
-    sxs?: {
-        stack?: { [x: string]: any; };
-        text?: { [x: string]: any; };
-    }
-}
-
 export interface TitleProps {
     /** Informational icons displayed to the right of the title */
     adornments?: JSX.Element[];
