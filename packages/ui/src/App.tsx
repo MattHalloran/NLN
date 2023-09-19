@@ -3,7 +3,7 @@ import { Box, CircularProgress, CssBaseline, GlobalStyles, StyledEngineProvider,
 import { Routes } from "Routes";
 import { loginMutation } from "api/mutation";
 import { readAssetsQuery } from "api/query/readAssets";
-import { AlertDialog, BottomNav, Footer, Navbar, PullToRefresh, SnackStack } from "components";
+import { AlertDialog, BottomNav, Footer, PullToRefresh, SnackStack } from "components";
 import { SideMenu, sideMenuDisplayData } from "components/navigation/Navbar/SideMenu";
 import { BusinessContext } from "contexts/BusinessContext";
 import { SessionContext } from "contexts/SessionContext";
@@ -149,12 +149,6 @@ export function App() {
                                 backgroundColor: "#1b5e2085",
                             },
                         },
-                        "#page": {
-                            minWidth: "100%",
-                            minHeight: "100%",
-                            padding: "1em",
-                            paddingTop: "calc(14vh + 20px)",
-                        },
                         "@media (min-width:500px)": {
                             "#page": {
                                 paddingLeft: "max(1em, calc(15% - 75px))",
@@ -213,7 +207,6 @@ export function App() {
                                             ...(contentMargins),
                                             transition: "margin 0.225s cubic-bezier(0, 0, 0.2, 1) 0s",
                                         }}>
-                                            <Navbar />
                                             {
                                                 loading && <Box sx={{
                                                     position: "absolute",

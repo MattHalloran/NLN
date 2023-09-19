@@ -11,8 +11,6 @@ export interface BreadcrumbsBaseProps {
 
 export type CopyrightBreadcrumbsProps = Omit<BreadcrumbsBaseProps, "paths" | "ariaLabel">;
 
-export type PolicyBreadcrumbsProps = Omit<BreadcrumbsBaseProps, "paths" | "ariaLabel">
-
 export interface PageTabsProps<T, S extends boolean = true> {
     ariaLabel: string,
     currTab: PageTab<T, S>,

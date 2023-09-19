@@ -22,7 +22,7 @@ export const ListDialog = ({
                 },
             }}
         >
-            <DialogTitle ariaLabel="simple-dialog-title" title={title} onClose={onClose} />
+            <DialogTitle id="simple-dialog-title" title={title} onClose={onClose} />
             <List>
                 {data?.map(([label, value], index) => (
                     <ListItem button onClick={() => onClose(value)} key={index}>

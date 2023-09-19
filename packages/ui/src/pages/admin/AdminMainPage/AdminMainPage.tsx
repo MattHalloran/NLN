@@ -1,6 +1,7 @@
 import { APP_LINKS } from "@local/shared";
 import { Box, Button, Typography, useTheme } from "@mui/material";
-import { CardGrid, PageContainer, PageTitle } from "components";
+import { CardGrid, PageContainer } from "components";
+import { TopBar } from "components/navigation/TopBar/TopBar";
 import { useLocation } from "route";
 
 const card_data: [string, string, string][] = [
@@ -72,7 +73,10 @@ export const AdminMainPage = () => {
 
     return (
         <PageContainer sx={{ paddingLeft: "0!important", paddingRight: "0!important" }}>
-            <PageTitle title="Manage Site" />
+            <TopBar
+                display="page"
+                title="Manage Site"
+            />
             <CardGrid minWidth={300}>
                 {card_data.map(([title, description, link], index) => (
                     <AdminPageCard

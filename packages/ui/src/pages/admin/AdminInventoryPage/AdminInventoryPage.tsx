@@ -8,7 +8,8 @@ import { Box, FormControlLabel, Grid, Switch, useTheme } from "@mui/material";
 import { uploadAvailabilityMutation } from "api/mutation";
 import { plantsQuery, traitOptionsQuery } from "api/query";
 import { graphqlWrapperHelper } from "api/utils";
-import { AdminTabOption, AdminTabs, CardGrid, Dropzone, EditPlantDialog, PageContainer, PageTitle, PlantCard, SearchBar, Selector } from "components";
+import { AdminTabOption, AdminTabs, CardGrid, Dropzone, EditPlantDialog, PageContainer, PlantCard, SearchBar, Selector } from "components";
+import { TopBar } from "components/navigation/TopBar/TopBar";
 import { useWindowSize } from "hooks/useWindowSize";
 import { useCallback, useState } from "react";
 import { PubSub, SORT_OPTIONS } from "utils";
@@ -55,8 +56,12 @@ export const AdminInventoryPage = () => {
                 trait_options={traitOptions?.traitOptions}
                 open={selected !== null}
                 onClose={() => setSelected(null)} />
-            <AdminTabs defaultTab={AdminTabOption.Inventory} />
-            <PageTitle title="Manage Inventory" helpText={helpText} />
+            <TopBar
+                display="page"
+                help={helpText}
+                title="Inventory"
+                below={<AdminTabs defaultTab={AdminTabOption.Inventory} />}
+            />
             <Box p={2}>
                 <Box>
                     {/* <Button variant="contained" onClick={() => editSku({})}>Create new plant</Button> */}

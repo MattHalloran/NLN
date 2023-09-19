@@ -183,7 +183,7 @@ export const Routes = () => {
                 <Route
                     path={APP_LINKS.Admin}>
                     <Suspense fallback={Fallback}>
-                        <Page restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
+                        <Page excludePageContainer restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
                             <AdminMainPage />
                         </Page>
                     </Suspense>

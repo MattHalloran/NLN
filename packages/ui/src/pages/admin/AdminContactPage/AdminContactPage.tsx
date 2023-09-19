@@ -2,7 +2,8 @@ import { useMutation } from "@apollo/client";
 import { Box, Button, Grid, TextField, useTheme } from "@mui/material";
 import { writeAssetsMutation } from "api/mutation";
 import { graphqlWrapperHelper } from "api/utils";
-import { AdminTabOption, AdminTabs, PageTitle } from "components";
+import { AdminTabOption, AdminTabs } from "components";
+import { TopBar } from "components/navigation/TopBar/TopBar";
 import { BusinessContext } from "contexts/BusinessContext";
 import { CancelIcon, SaveIcon } from "icons";
 import Markdown from "markdown-to-jsx";
@@ -72,10 +73,14 @@ export const AdminContactPage = () => {
 
     return (
         <>
-            <AdminTabs defaultTab={AdminTabOption.ContactInfo} />
-            <PageTitle title="Manage Contact Info" helpText={helpText} />
+            <TopBar
+                display="page"
+                help={helpText}
+                title="Contact Info"
+                below={<AdminTabs defaultTab={AdminTabOption.ContactInfo} />}
+            />
             {options}
-            <Grid container spacing={2} direction="row">
+            <Grid container spacing={2} padding={2} direction="row">
                 <Grid item xs={12} md={6}>
                     <TextField
                         id="filled-multiline-static"

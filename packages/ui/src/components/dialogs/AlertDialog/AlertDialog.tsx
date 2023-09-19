@@ -18,7 +18,6 @@ const default_state: AlertDialogState = {
     buttons: [{ text: "Ok" }],
 };
 
-const titleAria = "alert-dialog-title";
 const descriptionAria = "alert-dialog-description";
 
 export const AlertDialog = () => {
@@ -42,11 +41,10 @@ export const AlertDialog = () => {
             open={open}
             disableScrollLock={true}
             onClose={resetState}
-            aria-labelledby={titleAria}
             aria-describedby={descriptionAria}
         >
             <DialogTitle
-                ariaLabel={titleAria}
+                id="alert-dialog-title"
                 title={firstString(state.title)}
                 onClose={resetState}
             />

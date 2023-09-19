@@ -2,8 +2,6 @@ import { Button, Dialog, DialogActions, DialogContent, TextField, useTheme } fro
 import { useEffect, useState } from "react";
 import { DialogTitle } from "../DialogTitle/DialogTitle";
 
-const titleAria = "edit-image-dialog-title";
-
 export const EditImageDialog = ({
     open,
     data,
@@ -21,8 +19,8 @@ export const EditImageDialog = ({
     }, [data]);
 
     return (
-        <Dialog open={open} onClose={onClose} aria-labelledby={titleAria}>
-            <DialogTitle ariaLabel={titleAria} title="Edit Image Data" onClose={onClose} />
+        <Dialog open={open} onClose={onClose}>
+            <DialogTitle id="edit-image-title" title="Edit Image Data" onClose={onClose} />
             <DialogContent>
                 <TextField
                     fullWidth

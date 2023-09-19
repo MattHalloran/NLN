@@ -1,11 +1,12 @@
 import { useMutation } from "@apollo/client";
 import { APP_LINKS } from "@local/shared";
-import { Box, Button, Grid, Typography, useTheme } from "@mui/material";
+import { Box, Button, Grid, useTheme } from "@mui/material";
 import { submitOrderVariables } from "api/generated/submitOrder";
 import { updateOrderVariables, updateOrder_updateOrder } from "api/generated/updateOrder";
 import { submitOrderMutation, updateOrderMutation } from "api/mutation";
 import { mutationWrapper } from "api/utils";
-import { CartTable, PageContainer, SnackSeverity } from "components";
+import { CartTable, SnackSeverity } from "components";
+import { TopBar } from "components/navigation/TopBar/TopBar";
 import { BusinessContext } from "contexts/BusinessContext";
 import { SessionContext } from "contexts/SessionContext";
 import { ArrowLeftIcon, ArrowRightIcon, SaveIcon } from "icons";
@@ -122,13 +123,16 @@ export const CartPage = () => {
     );
 
     return (
-        <PageContainer>
-            <Box sx={{ textAlign: "center" }}>
-                <Typography variant="h3" component="h1">Cart</Typography>
+        <>
+            <TopBar
+                display="page"
+                title="Cart"
+            />
+            <Box p={2}>
+                {options}
+                <CartTable cart={changedCart} onUpdate={(d) => setChangedCart(d)} sx={{ paddingTop: spacing(2) }} />
+                {options}
             </Box>
-            {options}
-            <CartTable cart={changedCart} onUpdate={(d) => setChangedCart(d)} sx={{ paddingTop: spacing(2) }} />
-            {options}
-        </PageContainer>
+        </>
     );
 };

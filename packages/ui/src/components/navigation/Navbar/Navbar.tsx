@@ -158,7 +158,7 @@ export const Navbar = forwardRef(({
     const isMobile = useWindowSize(({ width }) => width <= breakpoints.values.md);
     const logoState = useMemo(() => {
         if (isMobile && startComponent) return "none";
-        if (isMobile && (title || titleComponent)) return "none"; // Used to be "icon"
+        if (isMobile && (title || titleComponent)) return "icon";
         return "full";
     }, [isMobile, startComponent, title, titleComponent]);
     const isLeftHanded = false;//useIsLeftHanded();

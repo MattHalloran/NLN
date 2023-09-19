@@ -2,9 +2,10 @@ import { useQuery } from "@apollo/client";
 import { Box, Button } from "@mui/material";
 import { customers, customers_customers } from "api/generated/customers";
 import { customersQuery } from "api/query";
-import { AdminTabOption, AdminTabs, CustomerCard, PageTitle, SnackSeverity } from "components";
+import { AdminTabOption, AdminTabs, CustomerCard, SnackSeverity } from "components";
 import { CustomerDialog } from "components/dialogs/CustomerDialog/CustomerDialog";
 import { NewCustomerDialog } from "components/dialogs/NewCustomerDialog/NewCustomerDialog";
+import { TopBar } from "components/navigation/TopBar/TopBar";
 import { useEffect, useState } from "react";
 import { PubSub } from "utils";
 
@@ -24,6 +25,12 @@ export const AdminCustomerPage = () => {
 
     return (
         <>
+            <TopBar
+                display="page"
+                help={helpText}
+                title="Customers"
+                below={<AdminTabs defaultTab={AdminTabOption.Customers} />}
+            />
             <CustomerDialog
                 customer={selectedCustomer}
                 open={selectedCustomer !== null}
@@ -31,12 +38,10 @@ export const AdminCustomerPage = () => {
             <NewCustomerDialog
                 open={newCustomerOpen}
                 onClose={() => setNewCustomerOpen(false)} />
-            <AdminTabs defaultTab={AdminTabOption.Customers} />
-            <PageTitle title="Manage Customers" helpText={helpText} />
             <Button
                 color="secondary"
                 onClick={() => setNewCustomerOpen(true)}
-                sx={{ display: "block", margin: "auto" }}
+                sx={{ display: "block", margin: "auto", marginTop: 2 }}
                 variant="contained"
             >Create Customer</Button>
             <Box sx={{

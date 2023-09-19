@@ -8,6 +8,7 @@ import { upsertOrderItemVariables, upsertOrderItem_upsertOrderItem } from "api/g
 import { plantsQuery, traitOptionsQuery } from "api/query";
 import { CardGrid, PlantCard, PlantDialog, SnackSeverity } from "components";
 import { SideActionsButtons } from "components/buttons/SideActionsButtons/SideActionsButtons";
+import { TopBar } from "components/navigation/TopBar/TopBar";
 import { BusinessContext } from "contexts/BusinessContext";
 import { SessionContext } from "contexts/SessionContext";
 import { useDimensions } from "hooks/useDimensions";
@@ -119,81 +120,87 @@ export const ShoppingPage = () => {
     };
 
     return (
-        <Box ref={dimRef}>
-            <ShoppingFilterSideMenu
-                hideOutOfStock={hideOutOfStock}
-                filters={filters}
-                handleHideOutOfStockChange={setHideOutOfStock}
-                handleFiltersChange={setFilters}
-                handleSearchChange={setSearchString}
-                handleSortByChange={setSortBy}
-                searchString={searchString}
-                sortBy={sortBy}
-                traitOptions={traitOptions}
-            />
-            {dimensions.width >= breakpoints.values.sm && <Stack direction="row" spacing={2} pt={2} justifyContent="center" alignItems="center" mb={2}>
-                <Button
-                    color="secondary"
-                    startIcon={<FilterIcon />}
-                    onClick={() => PubSub.get().publishSideMenu({ id: "shopping-filter-side-menu", isOpen: true })}
-                    variant="contained"
-                >Filter</Button>
-                <Button
-                    color="secondary"
-                    startIcon={<PrintIcon />}
-                    onClick={() => printAvailability(session, business?.BUSINESS_NAME?.Long, business?.PHONE?.Label, business?.EMAIL?.Label)}
-                    variant="contained"
-                >Print</Button>
-            </Stack>}
-            <CardGrid minWidth={300} showMobileView={dimensions.width < breakpoints.values.sm}>
-                {(currPlant) ? <PlantDialog
-                    isAdminPage={false}
-                    plant={currPlant}
-                    selectedSku={currSku}
-                    onAddToCart={addToCart}
-                    open={currPlant !== null}
-                    // navigate back on close
-                    onClose={closeSku} /> : null}
-                {plants?.map((item, index) =>
-                    <PlantCard key={index}
-                        isAdminPage={false}
-                        isMobile={dimensions.width < breakpoints.values.sm}
-                        onClick={(data) => expandSku(data.selectedSku?.sku)}
-                        plant={item} />)}
-            </CardGrid>
-            {dimensions.width < breakpoints.values.sm && <SideActionsButtons
+        <>
+            <TopBar
                 display="page"
-                sx={{
-                    position: "fixed",
-                    marginBottom: { xs: pagePaddingBottom, md: 0 },
-                    bottom: "8px",
-                }}
-            >
-                <IconButton
-                    aria-label="Filter"
-                    onClick={() => PubSub.get().publishSideMenu({ id: "shopping-filter-side-menu", isOpen: true })}
+                title="Availability"
+            />
+            <Box ref={dimRef}>
+                <ShoppingFilterSideMenu
+                    hideOutOfStock={hideOutOfStock}
+                    filters={filters}
+                    handleHideOutOfStockChange={setHideOutOfStock}
+                    handleFiltersChange={setFilters}
+                    handleSearchChange={setSearchString}
+                    handleSortByChange={setSortBy}
+                    searchString={searchString}
+                    sortBy={sortBy}
+                    traitOptions={traitOptions}
+                />
+                {dimensions.width >= breakpoints.values.sm && <Stack direction="row" spacing={2} pt={2} justifyContent="center" alignItems="center" mb={2}>
+                    <Button
+                        color="secondary"
+                        startIcon={<FilterIcon />}
+                        onClick={() => PubSub.get().publishSideMenu({ id: "shopping-filter-side-menu", isOpen: true })}
+                        variant="contained"
+                    >Filter</Button>
+                    <Button
+                        color="secondary"
+                        startIcon={<PrintIcon />}
+                        onClick={() => printAvailability(session, business?.BUSINESS_NAME?.Long, business?.PHONE?.Label, business?.EMAIL?.Label)}
+                        variant="contained"
+                    >Print</Button>
+                </Stack>}
+                <CardGrid minWidth={300} showMobileView={dimensions.width < breakpoints.values.sm}>
+                    {(currPlant) ? <PlantDialog
+                        isAdminPage={false}
+                        plant={currPlant}
+                        selectedSku={currSku}
+                        onAddToCart={addToCart}
+                        open={currPlant !== null}
+                        // navigate back on close
+                        onClose={closeSku} /> : null}
+                    {plants?.map((item, index) =>
+                        <PlantCard key={index}
+                            isAdminPage={false}
+                            isMobile={dimensions.width < breakpoints.values.sm}
+                            onClick={(data) => expandSku(data.selectedSku?.sku)}
+                            plant={item} />)}
+                </CardGrid>
+                {dimensions.width < breakpoints.values.sm && <SideActionsButtons
+                    display="page"
                     sx={{
-                        background: palette.secondary.main,
-                        padding: 0,
-                        width: "54px",
-                        height: "54px",
+                        position: "fixed",
+                        marginBottom: { xs: pagePaddingBottom, md: 0 },
+                        bottom: "8px",
                     }}
                 >
-                    <FilterIcon fill={palette.secondary.contrastText} width='36px' height='36px' />
-                </IconButton>
-                <IconButton
-                    aria-label="Print"
-                    onClick={() => printAvailability(session, business?.BUSINESS_NAME?.Long, business?.PHONE?.Label, business?.EMAIL?.Label)}
-                    sx={{
-                        background: palette.secondary.main,
-                        padding: 0,
-                        width: "54px",
-                        height: "54px",
-                    }}
-                >
-                    <PrintIcon fill={palette.secondary.contrastText} width='36px' height='36px' />
-                </IconButton>
-            </SideActionsButtons>}
-        </Box>
+                    <IconButton
+                        aria-label="Filter"
+                        onClick={() => PubSub.get().publishSideMenu({ id: "shopping-filter-side-menu", isOpen: true })}
+                        sx={{
+                            background: palette.secondary.main,
+                            padding: 0,
+                            width: "54px",
+                            height: "54px",
+                        }}
+                    >
+                        <FilterIcon fill={palette.secondary.contrastText} width='36px' height='36px' />
+                    </IconButton>
+                    <IconButton
+                        aria-label="Print"
+                        onClick={() => printAvailability(session, business?.BUSINESS_NAME?.Long, business?.PHONE?.Label, business?.EMAIL?.Label)}
+                        sx={{
+                            background: palette.secondary.main,
+                            padding: 0,
+                            width: "54px",
+                            height: "54px",
+                        }}
+                    >
+                        <PrintIcon fill={palette.secondary.contrastText} width='36px' height='36px' />
+                    </IconButton>
+                </SideActionsButtons>}
+            </Box>
+        </>
     );
 };

@@ -5,30 +5,38 @@ const { PrismaClient } = pkg;
 
 const prisma = new PrismaClient();
 
+/** Helper function to find the index of a column based on potential names */
+function findColumnIndex(header: string[], potentialNames: string[]): number {
+    for (const potentialName of potentialNames) {
+        const index = header.findIndex(h => h.trim().toLowerCase() === potentialName.toLowerCase());
+        if (index !== -1) return index;
+    }
+    return -1;
+}
+
 // Reads an .xls availability file into the database.
 // SKUs of plants not in the availability file will be hidden
 export async function uploadAvailabilityProcess(job: any) {
     console.info("📊 Updating availability...");
-    console.info("SKUs not in the availability data will be hidden");
 
     const rows: any[] = job.data.rows;
     const header = rows[0];
     const content = rows.slice(1, rows.length);
     // Determine which columns data is in
-    const index: { [x: string]: number } = {
-        latinName: header.indexOf("Botanical Name"),
-        commonName: header.indexOf("Common Name"),
-        size: header.indexOf("Size"),
-        note: header.indexOf("Notes"),
-        price: header.indexOf("Price 10+"),
-        sku: header.indexOf("Plant Code"),
-        availability: header.indexOf("Quantity"),
+    const columnIndex: { [x: string]: number } = {
+        latinName: findColumnIndex(header, ["Botanical Name", "Botanical", "Latin Name", "Latin"]),
+        commonName: findColumnIndex(header, ["Common Name", "Common", "Name", "Description"]),
+        size: findColumnIndex(header, ["Size"]),
+        note: findColumnIndex(header, ["Notes", "Note", "Comments", "Comment"]),
+        price: findColumnIndex(header, ["Price 10+", "Price", "Cost"]),
+        sku: findColumnIndex(header, ["Plant Code", "Code", "SKU"]),
+        availability: findColumnIndex(header, ["Quantity", "Availability", "Available", "Avail", "Amount"]),
     };
     // Hide all existing SKUs, so only the SKUs in this file can be set to visible
     await prisma.sku.updateMany({ data: { status: SKU_STATUS.Inactive } });
     for (const row of content) {
         // Insert or update plant data from row
-        const latinName = row[index.latinName];
+        const latinName = row[columnIndex.latinName];
         let plant = await prisma.plant.findUnique({
             where: { latinName }, select: {
                 id: true,
@@ -44,9 +52,9 @@ export async function uploadAvailabilityProcess(job: any) {
         if (!Array.isArray(plant.traits)) plant.traits = [];
         // Upsert traits
         for (const key of ["latinName", "commonName"]) {
-            if (row[index[key]]) {
+            if (row[columnIndex[key]]) {
                 try {
-                    const updateData = { plantId: plant.id, name: key, value: row[index[key]] };
+                    const updateData = { plantId: plant.id, name: key, value: row[columnIndex[key]] };
                     await prisma.plant_trait.upsert({
                         where: { plant_trait_plantid_name_unique: { plantId: plant.id, name: key } },
                         update: updateData,
@@ -57,11 +65,11 @@ export async function uploadAvailabilityProcess(job: any) {
         }
         // Insert or update SKU data from row
         const sku_data = {
-            sku: row[index.sku] ?? "",
-            size: parseFloat((row[index.size] + "").replace(/\D/g, "")) || null, //'#3.5' -> 3.5
-            price: parseFloat((row[index.price] + "").replace(/[^\d.-]/g, "")) || null, //'$23.32' -> 23.32
-            note: row[index.note],
-            availability: parseInt(row[index.availability]) || 0,
+            sku: row[columnIndex.sku] ?? "",
+            size: parseFloat((row[columnIndex.size] + "").replace(/\D/g, "")) || undefined, //'#3.5' -> 3.5
+            price: parseFloat((row[columnIndex.price] + "").replace(/[^\d.-]/g, "")) || undefined, //'$23.32' -> 23.32
+            note: row[columnIndex.note],
+            availability: parseInt(row[columnIndex.availability]) || 0,
             plantId: plant.id,
             status: SKU_STATUS.Active,
         };

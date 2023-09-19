@@ -33,7 +33,6 @@ export const Hero = ({
 
     return (
         <Box sx={{
-            position: "relative",
             overflow: "hidden",
             pointerEvents: "none",
         }}>
