@@ -32,7 +32,7 @@ export const AdminInventoryPage = () => {
 
     const [sortBy, setSortBy] = useState(SORT_OPTIONS[0]);
     const { data: traitOptions } = useQuery(traitOptionsQuery);
-    const { data: plantData } = useQuery(plantsQuery, { variables: { input: { sortBy: sortBy.value, searchString, active: showActive } }, pollInterval: 5000 });
+    const { data: plantData } = useQuery(plantsQuery, { variables: { input: { sortBy: sortBy.value, searchString, active: showActive } }, pollInterval: 30000 });
     const [uploadAvailability, { loading }] = useMutation(uploadAvailabilityMutation);
 
     const availabilityUpload = useCallback((acceptedFiles: File[]) => {

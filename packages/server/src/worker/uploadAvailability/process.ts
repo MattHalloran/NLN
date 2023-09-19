@@ -1,14 +1,46 @@
 import { SKU_STATUS } from "@local/shared";
-import pkg from "@prisma/client";
+import pkg, { Prisma } from "@prisma/client";
 
 const { PrismaClient } = pkg;
 
 const prisma = new PrismaClient();
 
+/** Helper function to normalize a string for comparison */
+const normalizeString = (input: string): string => {
+    // Remove emojis, punctuations, quotes and convert to lowercase
+    return input.replace(/['"“”‘’]/g, "").replace(/[^\w\s]/g, "").toLowerCase();
+}
+
+/** 
+ * Helper function to find sizes at the end of latin names, since 
+ * sometimes they are not specified in their own column
+ */
+const extractSizeFromName = (name: string): { name: string, size: number | null } => {
+    if (typeof name !== "string") return { name, size: null };
+    // Find all text after the " #"
+    const matches = name.match(/ #(.*)/);
+    // If there are no matches, return the original name
+    if (!matches) return { name, size: null };
+    // Try trimming the text after the " #" and parsing it as a number
+    const size = parseFloat(matches[1].trim());
+    // If the size is not a number, return the original name
+    if (isNaN(size)) return { name, size: null };
+    // Return the name without the size, and the size
+    return { name: name.replace(matches[0], ""), size };
+}
+
+/** Helper function to generate a SKU from a plant's latin name and size */
+const generateSKU = (latinName: string, size: number | null): string => {
+    const prefix = latinName.slice(0, 2).toUpperCase();
+    const randomChars = [...Array(4)].map(() => String.fromCharCode(65 + Math.floor(Math.random() * 26))).join(''); // Generates 4 random uppercase letters
+    const sizeStr = size ? (size < 10 ? '0' + size : String(size)) : '00';
+    return `${prefix}${randomChars}${sizeStr}`;
+}
+
 /** Helper function to find the index of a column based on potential names */
-function findColumnIndex(header: string[], potentialNames: string[]): number {
+const findColumnIndex = (header: string[], potentialNames: string[]): number => {
     for (const potentialName of potentialNames) {
-        const index = header.findIndex(h => h.trim().toLowerCase() === potentialName.toLowerCase());
+        const index = header.findIndex(h => typeof h === "string" && h.trim().toLowerCase() === potentialName.toLowerCase());
         if (index !== -1) return index;
     }
     return -1;
@@ -18,25 +50,63 @@ function findColumnIndex(header: string[], potentialNames: string[]): number {
 // SKUs of plants not in the availability file will be hidden
 export async function uploadAvailabilityProcess(job: any) {
     console.info("📊 Updating availability...");
-
     const rows: any[] = job.data.rows;
     const header = rows[0];
-    const content = rows.slice(1, rows.length);
+    let content = rows.slice(1, rows.length);
+    // Filter out blank rows, and rows where each cell is "Column1", "Column2", etc.
+    // (The latter happens in LibreOffice sometimes for some reason)
+    content = content.filter(row => row.some((cell: any) => typeof cell === "string" && cell.trim() !== "" && !cell.startsWith("Column")));
     // Determine which columns data is in
     const columnIndex: { [x: string]: number } = {
-        latinName: findColumnIndex(header, ["Botanical Name", "Botanical", "Latin Name", "Latin"]),
-        commonName: findColumnIndex(header, ["Common Name", "Common", "Name", "Description"]),
-        size: findColumnIndex(header, ["Size"]),
+        latinName: findColumnIndex(header, ["Botanical Name", "Botanical", "Latin Name", "Latin", "Description", "Name"]),
+        commonName: findColumnIndex(header, ["Common Name", "Common"]),
+        size: -1, //findColumnIndex(header, ["Size"]), The current size column means something else, so skip it
         note: findColumnIndex(header, ["Notes", "Note", "Comments", "Comment"]),
         price: findColumnIndex(header, ["Price 10+", "Price", "Cost"]),
         sku: findColumnIndex(header, ["Plant Code", "Code", "SKU"]),
         availability: findColumnIndex(header, ["Quantity", "Availability", "Available", "Avail", "Amount"]),
     };
-    // Hide all existing SKUs, so only the SKUs in this file can be set to visible
-    await prisma.sku.updateMany({ data: { status: SKU_STATUS.Inactive } });
+    // Hide all existing SKUs (inventory items, zero or more per plant), so only the SKUs in this file can be set to visible
+    await prisma.sku.updateMany({ data: { status: SKU_STATUS.Inactive, availability: 0 } });
+    // Find existing common names, for when latin name is not present
+    const existingCommonNames = await prisma.plant_trait.findMany({
+        where: { name: "commonName" },
+        select: { value: true, plantId: true }
+    });
+    // Find existing SKUs, for when SKU is not present
+    const existingSKUs = await prisma.sku.findMany({ select: { sku: true, size: true, plantId: true } });
+    // Loop through rows, and update/unhide SKUs. Also update any plant data that is present
     for (const row of content) {
+        // Try using latin name first (this is the unique column for SKUs), or fallback to common name. 
+        // Also, latin name may contain the size, so extract it if it does
+        let latinName = columnIndex.latinName !== -1 ? row[columnIndex.latinName] : null;
+        let size: number | null = null;
+        if (columnIndex.size === -1 && latinName) {
+            const extracted = extractSizeFromName(latinName);
+            latinName = extracted.name;
+            size = extracted.size;
+        } else if (columnIndex.size !== -1 && typeof row[columnIndex.size] === "string") {
+            size = parseFloat(row[columnIndex.size].replace(/\D/g, ""));
+            if (isNaN(size)) size = null;
+        }
+        const commonName = columnIndex.commonName !== -1 ? row[columnIndex.commonName] : null;
+        // If neither latin name nor common name found, skip row
+        if (!latinName && !commonName) {
+            console.error("⛔️ Cannot update rows without a latin name or common name. Row:", JSON.stringify(row));
+            continue;
+        }
+        // If latin name not found but common name is, try to find latin name from common name
+        if (!latinName && commonName) {
+            const existingCommonName = existingCommonNames.find(c => normalizeString(c.value) === normalizeString(commonName));
+            if (existingCommonName) latinName = existingCommonName.plantId;
+        }
+        // If latin name still not found, skip row
+        if (!latinName) {
+            console.error("⛔️ Could not find latin name for row:", JSON.stringify(row));
+            continue;
+        }
+
         // Insert or update plant data from row
-        const latinName = row[columnIndex.latinName];
         let plant = await prisma.plant.findUnique({
             where: { latinName }, select: {
                 id: true,
@@ -50,31 +120,53 @@ export async function uploadAvailabilityProcess(job: any) {
         }
         // If traits don't exist, replace with empty array
         if (!Array.isArray(plant.traits)) plant.traits = [];
-        // Upsert traits
+        // Upsert traits, even if they already existed. This will make sure that casing, quotes, and other formatting matches the uploaded file
         for (const key of ["latinName", "commonName"]) {
-            if (row[columnIndex[key]]) {
-                try {
-                    const updateData = { plantId: plant.id, name: key, value: row[columnIndex[key]] };
-                    await prisma.plant_trait.upsert({
-                        where: { plant_trait_plantid_name_unique: { plantId: plant.id, name: key } },
-                        update: updateData,
-                        create: updateData,
-                    });
-                } catch (error) { console.error(error); }
-            }
+            if (columnIndex[key] === -1) continue;
+            const updatedValue = row[columnIndex[key]];
+            if (typeof updatedValue !== "string" || !updatedValue.trim()) continue;
+            try {
+                const updateData = { plantId: plant.id, name: key, value: row[columnIndex[key]] };
+                await prisma.plant_trait.upsert({
+                    where: { plant_trait_plantid_name_unique: { plantId: plant.id, name: key } },
+                    update: updateData,
+                    create: updateData,
+                });
+            } catch (error) { console.error(error); }
         }
         // Insert or update SKU data from row
-        const sku_data = {
-            sku: row[columnIndex.sku] ?? "",
-            size: parseFloat((row[columnIndex.size] + "").replace(/\D/g, "")) || undefined, //'#3.5' -> 3.5
-            price: parseFloat((row[columnIndex.price] + "").replace(/[^\d.-]/g, "")) || undefined, //'$23.32' -> 23.32
-            note: row[columnIndex.note],
-            availability: parseInt(row[columnIndex.availability]) || 0,
+        const sku_data: Prisma.skuUpsertArgs["create"] = {
+            sku: "", // Placeholder
+            size: size,
+            note: columnIndex.note === -1 ? null : row[columnIndex.note],
             plantId: plant.id,
             status: SKU_STATUS.Active,
         };
+        // Handle SKU
+        let sku: string | null = null;
+        if (columnIndex.sku >= 0) {
+            sku = row[columnIndex.sku];
+        }
+        // If not in file, try to find existing SKU for this plant and size
+        if (typeof sku !== "string" || !sku.trim() && size !== null) {
+            const existingSKU = existingSKUs.find(s => s.plantId === plant?.id && s.size === size);
+            if (existingSKU) sku = existingSKU.sku;
+        }
+        // Otherwise, generate a new SKU
+        if (typeof sku !== "string" || !sku.trim()) {
+            sku = generateSKU(latinName, size);
+        }
+        sku_data.sku = sku;
+        // Handle price
+        let price = columnIndex.price === -1 ? null : parseFloat((row[columnIndex.price] + "").replace(/[^\d.-]/g, ""));
+        if (price !== null && isNaN(price)) price = null;
+        sku_data.price = price;
+        // Handle availability
+        let availability = columnIndex.availability === -1 ? 0 : parseInt(row[columnIndex.availability] + "");
+        if (isNaN(availability)) availability = 0;
+        sku_data.availability = availability;
         if (!sku_data.sku) {
-            console.error("⛔️ Cannot update rows without a SKU");
+            console.error("⛔️ Did not find SKU data in row:", JSON.stringify(row));
             continue;
         }
         try {

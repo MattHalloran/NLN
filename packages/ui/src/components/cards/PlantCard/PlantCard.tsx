@@ -47,13 +47,14 @@ export const PlantCard = ({
         <Chip
             key={s.sku}
             label={isAdminPage ? `#${s.size} | ${showPrice(s.price)} | Avail: ${s.availability}` : `#${s.size} | Avail: ${s.availability}`}
-            color="secondary"
             onClick={(e) => openWithSku(e, s)}
             sx={{
                 margin: 0.5,
                 boxShadow: 0,
                 borderRadius: 2,
                 ...(SkuStatus[s.status + ""] ?? deleted),
+                background: palette.primary.light,
+                color: palette.primary.contrastText,
                 fontSize: "0.75rem",
             } as any}
         />

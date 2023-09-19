@@ -84,29 +84,35 @@ export const resolvers = {
                     { traits: { some: { value: { contains: input.searchString.trim(), mode: "insensitive" } } } },
                 ],
             };
-            // Toggle for showing active/inactive plants (whether the plant has any SKUs available to order)
-            // Only admins can view inactive plants
-            let activeQuery;
-            const activeQueryBase = { skus: { some: { status: SKU_STATUS.Active } } };
-            if (input.active === true) activeQuery = activeQueryBase;
-            else if (input.active === false && req.isAdmin) activeQuery = { NOT: activeQueryBase };
-            // Toggle for showing/hiding plants that have no SKUs with any availability
-            const onlyInStock = {
-                skus: {
-                    ...(input.onlyInStock === true ? { some: { availability: { gt: 0 } } } : {}),
-                    every: { status: "Active" },
-                },
-            };
-            return await prisma.plant.findMany({
+            const showActive = input.active === true || !req.isAdmin;
+            // Query plants
+            let plants = await prisma.plant.findMany({
                 where: {
                     ...idQuery,
                     ...searchQuery,
-                    ...activeQuery,
-                    ...onlyInStock,
+                    ...(input.onlyInStock !== true && !showActive ? {} : {
+                        skus: {
+                            // ...(showActive ? { every: { status: SKU_STATUS.Active } } : {}), This would avoid the filtering later, but isn't ideal for AdminInventoryPage
+                            some: {
+                                ...(showActive ? { status: SKU_STATUS.Active } : {}),
+                                ...(input.onlyInStock === true ? { availability: { gt: 0 } } : {}),
+                            },
+                        },
+                    }),
                 },
                 orderBy: sortQuery,
                 ...(new PrismaSelect(info).value),
             });
+            // If showActive is true, filter out inactive SKUs
+            if (showActive) {
+                plants = plants.map((p: any) => {
+                    return {
+                        ...p,
+                        skus: p.skus?.filter((s) => s.status === SKU_STATUS.Active) || [],
+                    };
+                });
+            }
+            return plants;
         },
     },
     Mutation: {
