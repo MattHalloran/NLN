@@ -1,5 +1,7 @@
 import { SKU_STATUS } from "@local/shared";
 import pkg, { Prisma } from "@prisma/client";
+import { Decimal } from "@prisma/client/runtime";
+import { SkuStatus } from "../../schema/types";
 
 const { PrismaClient } = pkg;
 
@@ -74,7 +76,13 @@ export async function uploadAvailabilityProcess(job: any) {
         select: { value: true, plantId: true }
     });
     // Find existing SKUs, for when SKU is not present
-    const existingSKUs = await prisma.sku.findMany({ select: { sku: true, size: true, plantId: true } });
+    const existingSkuData = await prisma.sku.findMany({ select: { sku: true, size: true, plantId: true, availability: true, status: true } });
+    const existingSkus: { [plantId: string]: { skuId: string, size: Decimal, availability: number, status: SkuStatus }[] } = {};
+    for (const sku of existingSkuData) {
+        if (!sku.size) continue;
+        if (!existingSkus[sku.plantId]) existingSkus[sku.plantId] = [];
+        existingSkus[sku.plantId].push({ skuId: sku.sku, size: sku.size, availability: sku.availability, status: sku.status as SkuStatus });
+    }
     // Loop through rows, and update/unhide SKUs. Also update any plant data that is present
     for (const row of content) {
         // Try using latin name first (this is the unique column for SKUs), or fallback to common name. 
@@ -149,8 +157,8 @@ export async function uploadAvailabilityProcess(job: any) {
         }
         // If not in file, try to find existing SKU for this plant and size
         if (typeof sku !== "string" || !sku.trim() && size !== null) {
-            const existingSKU = existingSKUs.find(s => s.plantId === plant?.id && s.size === size);
-            if (existingSKU) sku = existingSKU.sku;
+            const existingSku = existingSkus[plant.id]?.find(s => (s.size ? s.size.toString() : null) === size?.toString());
+            if (existingSku) sku = existingSku.skuId;
         }
         // Otherwise, generate a new SKU
         if (typeof sku !== "string" || !sku.trim()) {
@@ -177,6 +185,47 @@ export async function uploadAvailabilityProcess(job: any) {
             });
         } catch (error) { console.error(error); }
     }
+    // Now that we've processed the file, let's perform some additional cleanup
+    // Find any SKUs with the same size and plant, and delete all but one. 
+    // Prefer active SKUs over inactive ones, and prefer SKUs with higher availability
+    const duplicateSKUsToDelete: string[] = [];
+    for (const plantId in existingSkus) {
+        const skusForPlant = existingSkus[plantId];
+        const skusGroupedBySize: { [size: string]: typeof skusForPlant } = {};
 
+        // Group the SKUs by size
+        for (const sku of skusForPlant) {
+            const sizeStr = sku.size.toString();
+            if (!skusGroupedBySize[sizeStr]) {
+                skusGroupedBySize[sizeStr] = [];
+            }
+            skusGroupedBySize[sizeStr].push(sku);
+        }
+
+        // Identify the duplicate SKUs to delete for each size group
+        for (const sizeStr in skusGroupedBySize) {
+            const skusForSize = skusGroupedBySize[sizeStr];
+
+            // Sort the SKUs such that the "best" SKU is the first one in the sorted array
+            skusForSize.sort((a, b) => {
+                // Prefer active SKUs
+                if (a.status === 'Active' && b.status !== 'Active') return -1;
+                if (a.status !== 'Active' && b.status === 'Active') return 1;
+                // If both are the same status, prefer higher availability
+                return b.availability - a.availability;
+            });
+
+            // The first SKU in the sorted array is the "best" one, all others are duplicates to be deleted
+            const skusToDelete = skusForSize.slice(1);
+            for (const sku of skusToDelete) {
+                duplicateSKUsToDelete.push(sku.skuId);
+            }
+        }
+    }
+    // Delete the duplicate SKUs
+    if (duplicateSKUsToDelete.length > 0) {
+        console.info(`Deleting ${duplicateSKUsToDelete.length} duplicate SKUs...`);
+        await prisma.sku.deleteMany({ where: { sku: { in: duplicateSKUsToDelete } } });
+    }
     console.info("✅ Availability updated!");
 }
