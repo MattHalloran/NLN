@@ -134,8 +134,36 @@ export const PlantDialog = ({
     const displayedTraitList: JSX.Element[] = displayedTraitData.map(([traitName, Icon, title]) => traitIconList(traitName, Icon, title)).filter(e => e !== null) as JSX.Element[];
 
     return (
-        <Dialog aria-describedby="modal-title" fullScreen open={open} onClose={onClose} TransitionComponent={Transition}>
-            <AppBar sx={{ position: "relative" }}>
+        <Dialog
+            aria-describedby="modal-title"
+            scroll="paper"
+            open={open}
+            onClose={onClose}
+            TransitionComponent={Transition}
+            sx={{
+                zIndex: 200000,
+                "& > .MuiDialog-container": {
+                    "& > .MuiPaper-root": {
+                        zIndex: 200000,
+                        margin: { xs: 0, sm: 2, md: 4 },
+                        minWidth: { xs: "100vw", sm: "unset" },
+                        maxWidth: { xs: "100vw", sm: "calc(100vw - 64px)" },
+                        bottom: { xs: 0, sm: "auto" },
+                        paddingBottom: "env(safe-area-inset-bottom)",
+                        top: { xs: "auto", sm: undefined },
+                        position: { xs: "absolute", sm: "relative" },
+                        display: { xs: "block", sm: "inline-block" },
+                        borderRadius: { xs: `${spacing(1)} ${spacing(1)} 0 0`, sm: 2 },
+                        background: palette.mode === "light" ? "#c2cadd" : palette.background.default,
+                        color: palette.background.textPrimary,
+                        "& > .MuiDialogContent-root": {
+                            position: "relative",
+                        },
+                    },
+                },
+            }}
+        >
+            <AppBar sx={{ position: "relative", background: palette.primary.dark }}>
                 <Toolbar>
                     <IconButton edge="start" color="inherit" onClick={onClose} aria-label="close">
                         <CloseIcon />
@@ -155,7 +183,6 @@ export const PlantDialog = ({
             <Box sx={{
                 background: palette.background.default,
                 flex: "auto",
-                paddingBottom: "15vh",
             }}>
                 <Grid container spacing={0}>
                     {images.length > 0 && <Grid item lg={6} xs={12}>
@@ -170,7 +197,7 @@ export const PlantDialog = ({
                                 <ListItem button onClick={handleDetailsClick}>
                                     <ListItemIcon><InfoIcon fill={palette.background.textPrimary} /></ListItemIcon>
                                     <ListItemText primary="Details" />
-                                    {detailsOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                                    {detailsOpen ? <ExpandLessIcon fill={palette.background.textPrimary} /> : <ExpandMoreIcon fill={palette.background.textPrimary} />}
                                 </ListItem>
                                 <Collapse in={detailsOpen} timeout='auto' unmountOnExit>
                                     {getPlantTrait("description", plant) ? <p style={{ padding: spacing(2) }}>{getPlantTrait("description", plant)}</p> : null}
@@ -180,14 +207,14 @@ export const PlantDialog = ({
                         ) : null}
                     </Grid>
                 </Grid>
-                <Box sx={{
-                    background: palette.primary.main,
-                    position: "fixed",
-                    bottom: "0",
-                    width: "-webkit-fill-available",
-                }}>
-                    {options}
-                </Box>
+            </Box>
+            <Box sx={{
+                background: palette.primary.main,
+                position: "sticky",
+                bottom: "0",
+                width: "-webkit-fill-available",
+            }}>
+                {options}
             </Box>
         </Dialog>
     );
