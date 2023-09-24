@@ -103,12 +103,12 @@ if [ ! "$(docker ps -q -f name=nginx-proxy)" ] || [ ! "$(docker ps -q -f name=ng
     fi
 fi
 
-# Copy current database and build to a safe location, under a temporary directory.
+TMP_DIR="/var/tmp/${VERSION}"
+
+# Copy current database =to a safe location, under a temporary directory.
 cd ${HERE}/..
-DB_TMP="/var/tmp/${VERSION}/postgres"
+DB_TMP="${TMP_DIR}/postgres"
 DB_CURR="${HERE}/../data/postgres"
-BUILD_TMP="/var/tmp/${VERSION}/old-build"
-BUILD_CURR="${HERE}/../packages/ui/dist"
 # Don't copy database if it already exists in /var/tmp, or it doesn't exist in DB_CURR
 if [ -d "${DB_TMP}" ]; then
     info "Old database already exists at ${DB_TMP}, so not copying it"
@@ -123,32 +123,45 @@ else
     fi
 fi
 
-# Stash old build if it doesn't already exists in /var/tmp.
-if [ -d "${BUILD_TMP}" ]; then
-    info "Old build already exists at ${BUILD_TMP}, so not moving it"
-elif [ -d "${BUILD_CURR}" ]; then
-    info "Moving old build to ${BUILD_TMP}"
-    mv -f "${BUILD_CURR}" "${BUILD_TMP}"
-    if [ $? -ne 0 ]; then
-        error "Could not move build to ${BUILD_TMP}"
+# Define paths for the additional directories
+DIRECTORIES=("packages/ui/dist"
+    "node_modules"
+    "packages/server/node_modules"
+    "packages/shared/node_modules"
+    "packages/ui/node_modules"
+    "packages/server/dist"
+    "packages/shared/dist")
+# Extract each compressed directory
+for dir in "${DIRECTORIES[@]}"; do
+    # Formulate tar name as stored
+    TAR_NAME=$(echo "${dir}" | tr '/' '.')
+    TAR_PATH="${TMP_DIR}/${TAR_NAME}.tar.gz"
+    CURRENT_PATH="${HERE}/../${dir}"
+    # Stash the current directory contents if they don't already exist in the temporary directory
+    if [ -d "${TAR_PATH%/*}" ]; then
+        info "${dir} already exists at ${TAR_PATH%/*}, so not moving it"
+    elif [ -d "${CURRENT_PATH}" ]; then
+        info "Moving ${dir} to ${TAR_PATH%/*}"
+        mv -f "${CURRENT_PATH}" "${TAR_PATH%/*}"
+        if [ $? -ne 0 ]; then
+            error "Could not move ${dir} to ${TAR_PATH%/*}"
+            exit 1
+        fi
+    fi
+    # Extract the compressed directory
+    if [ -f "${TAR_PATH}" ]; then
+        info "Extracting ${dir} from ${TAR_PATH}"
+        mkdir -p "${CURRENT_PATH}"
+        tar -xzf "${TAR_PATH}" -C "${CURRENT_PATH}" --strip-components=1
+        if [ $? -ne 0 ]; then
+            error "Failed to extract ${dir} from ${TAR_PATH}"
+            exit 1
+        fi
+    else
+        error "Could not find tar for ${dir} at ${TAR_PATH}"
         exit 1
     fi
-fi
-
-# Extract the zipped build created by build.sh
-BUILD_ZIP="/var/tmp/${VERSION}"
-if [ -f "${BUILD_ZIP}/build.tar.gz" ]; then
-    info "Extracting build at ${BUILD_ZIP}/build.tar.gz"
-    mkdir -p "${BUILD_CURR}"
-    tar -xzf "${BUILD_ZIP}/build.tar.gz" -C "${BUILD_CURR}" --strip-components=1
-    if [ $? -ne 0 ]; then
-        error "Failed to extract build at ${BUILD_ZIP}/build.tar.gz"
-        exit 1
-    fi
-else
-    error "Could not find build at ${BUILD_ZIP}/build.tar.gz"
-    exit 1
-fi
+done
 
 # Pull the latest changes from the repository.
 info "Pulling latest changes from repository..."
@@ -167,24 +180,24 @@ if [ $? -ne 0 ]; then
 fi
 
 # Transfer and load Docker images
-if [ -f "${BUILD_ZIP}/production-docker-images.tar.gz" ]; then
-    info "Loading Docker images from ${BUILD_ZIP}/production-docker-images.tar.gz"
-    docker load -i "${BUILD_ZIP}/production-docker-images.tar.gz"
+if [ -f "${TMP_DIR}/production-docker-images.tar.gz" ]; then
+    info "Loading Docker images from ${TMP_DIR}/production-docker-images.tar.gz"
+    docker load -i "${TMP_DIR}/production-docker-images.tar.gz"
     if [ $? -ne 0 ]; then
-        error "Failed to load Docker images from ${BUILD_ZIP}/production-docker-images.tar.gz"
+        error "Failed to load Docker images from ${TMP_DIR}/production-docker-images.tar.gz"
         exit 1
     fi
 else
-    error "Could not find Docker images archive at ${BUILD_ZIP}/production-docker-images.tar.gz"
+    error "Could not find Docker images archive at ${TMP_DIR}/production-docker-images.tar.gz"
     exit 1
 fi
 
 # Stop docker containers
 info "Stopping docker containers..."
-docker-compose --env-file ${BUILD_ZIP}/.env-prod down
+docker-compose --env-file ${TMP_DIR}/.env-prod down
 
 # Restart docker containers.
 info "Restarting docker containers..."
-docker-compose --env-file ${BUILD_ZIP}/.env-prod -f ${HERE}/../docker-compose-prod.yml up -d
+docker-compose --env-file ${TMP_DIR}/.env-prod -f ${HERE}/../docker-compose-prod.yml up -d
 
 success "Done! You may need to wait a few minutes for the Docker containers to finish starting up."

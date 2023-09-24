@@ -8,7 +8,6 @@ import { HASHING_ROUNDS } from "../consts";
 import { Context } from "../context";
 import { customerFromEmail, getCart, getCustomerSelect, upsertCustomer } from "../db/models/customer";
 import { CustomError, validateArgs } from "../error";
-import { LogLevel, logger } from "../logger";
 import { IWrap, RecursivePartial } from "../types";
 import { randomString } from "../utils";
 import { customerNotifyAdmin, sendResetPasswordLink, sendVerificationLink } from "../worker/email/queue";
@@ -228,7 +227,6 @@ export const resolvers = {
                 const cart = await getCart(prisma, info, customer.id);
                 const userData: any = await prisma.customer.findUnique({ where: { id: customer.id }, ...prismaInfo });
                 if (cart) userData.cart = cart;
-                logger.log(LogLevel.info, "Logging in user returning data...", userData);
                 return userData;
             } else {
                 let new_status = AccountStatus.Unlocked;

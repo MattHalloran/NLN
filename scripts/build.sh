@@ -158,14 +158,32 @@ else
     cd ../..
 fi
 
-# Compress build
+# Compress multiple build locations
 info "Compressing build..."
-tar -czf ${HERE}/../build.tar.gz -C ${HERE}/../packages/ui/dist .
-trap "rm build.tar.gz" EXIT
-if [ $? -ne 0 ]; then
-    error "Failed to compress build"
-    exit 1
-fi
+DIRECTORIES=("packages/ui/dist"
+    "node_modules"
+    "packages/server/node_modules"
+    "packages/shared/node_modules"
+    "packages/ui/node_modules"
+    "packages/server/dist"
+    "packages/shared/dist")
+# Declare an array to store the paths of the tar files
+TAR_FILES=()
+for dir in "${DIRECTORIES[@]}"; do
+    # Replace slashes with periods for the tar filenames
+    TAR_NAME=$(echo "${dir}" | tr '/' '.')
+    TAR_PATH="${HERE}/../${TAR_NAME}.tar.gz"
+    tar -czf "${TAR_PATH}" -C "${HERE}/../${dir}" .
+    trap "rm ${TAR_PATH}" EXIT
+    if [ $? -ne 0 ]; then
+        error "Failed to compress ${dir}"
+        exit 1
+    fi
+    # Append the tar path to our TAR_FILES array
+    TAR_FILES+=("${TAR_PATH}")
+    # Add trap to remove the tar file on exit
+    trap "rm ${TAR_PATH}" EXIT
+done
 
 # Build Docker images
 cd ${HERE}/..
@@ -188,6 +206,7 @@ if [ $? -ne 0 ]; then
     error "Failed to compress Docker images"
     exit 1
 fi
+TAR_FILES+=("production-docker-images.tar.gz")
 
 # Copy build to VPS
 if [ -z "$DEPLOY" ]; then
@@ -201,7 +220,7 @@ if [ "${DEPLOY}" = "y" ] || [ "${DEPLOY}" = "Y" ] || [ "${DEPLOY}" = "yes" ] || 
     BUILD_DIR="${SITE_IP}:/var/tmp/${VERSION}/"
     prompt "Going to copy build and .env-prod to ${BUILD_DIR}. Press any key to continue..."
     read -n1 -r -s
-    rsync -ri --info=progress2 -e "ssh -i ~/.ssh/id_rsa_${SITE_IP}" build.tar.gz production-docker-images.tar.gz ${ENV_FILE} root@${BUILD_DIR}
+    rsync -ri --info=progress2 -e "ssh -i ~/.ssh/id_rsa_${SITE_IP}" "${TAR_FILES[@]}" ${ENV_FILE} root@${BUILD_DIR}
     if [ $? -ne 0 ]; then
         error "Failed to copy files to ${BUILD_DIR}"
         exit 1
@@ -212,9 +231,9 @@ else
     info "Copying build locally to ${BUILD_DIR}."
     # Make sure to create missing directories
     mkdir -p "${BUILD_DIR}"
-    cp -p build.tar.gz production-docker-images.tar.gz ${BUILD_DIR}
+    cp -p "${TAR_FILES[@]}" "${BUILD_DIR}"
     if [ $? -ne 0 ]; then
-        error "Failed to copy build.tar.gz and production-docker-images.tar.gz to ${BUILD_DIR}"
+        error "Failed to copy tar.gz files to ${BUILD_DIR}"
         exit 1
     fi
     # If building locally, use .env and rename it to .env-prod
