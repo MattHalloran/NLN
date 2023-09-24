@@ -1,11 +1,6 @@
 import { useMutation } from "@apollo/client";
 import { APP_LINKS, resetPasswordSchema } from "@local/shared";
-import {
-    Box,
-    Button,
-    Grid,
-    useTheme,
-} from "@mui/material";
+import { Box, Button, Grid, useTheme } from "@mui/material";
 import { resetPasswordVariables, resetPassword_resetPassword } from "api/generated/resetPassword";
 import { resetPasswordMutation } from "api/mutation";
 import { mutationWrapper } from "api/utils";
@@ -13,12 +8,11 @@ import { SnackSeverity } from "components";
 import { PasswordTextField } from "components/inputs/PasswordTextField/PasswordTextField";
 import { useFormik } from "formik";
 import { useMemo } from "react";
+import { useLocation } from "route";
 import { PubSub } from "utils";
 
-export const ResetPasswordForm = ({
-    onSessionUpdate,
-    onRedirect,
-}) => {
+export const ResetPasswordForm = () => {
+    const [, setLocation] = useLocation();
     const { spacing } = useTheme();
 
     const { id, code } = useMemo(() => {
@@ -45,7 +39,7 @@ export const ResetPasswordForm = ({
             mutationWrapper<resetPassword_resetPassword, resetPasswordVariables>({
                 mutation: resetPassword,
                 input: { id, code, newPassword: values.newPassword },
-                onSuccess: (data) => { onSessionUpdate(data); onRedirect(APP_LINKS.Shopping); },
+                onSuccess: (data) => { PubSub.get().publishSession(data); setLocation(APP_LINKS.Shopping); },
                 successMessage: () => "Password reset.",
             });
         },
@@ -95,6 +89,7 @@ export const ResetPasswordForm = ({
                     sx={{
                         margin: spacing(3, 0, 2),
                     }}
+                    variant="contained"
                 >
                     Submit
                 </Button>

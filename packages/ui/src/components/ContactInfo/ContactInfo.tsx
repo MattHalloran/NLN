@@ -1,25 +1,14 @@
-import {
-    BottomNavigation,
-    BottomNavigationAction,
-    Box,
-    IconButton,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    Tooltip,
-    useTheme,
-} from "@mui/material";
+import { BottomNavigation, BottomNavigationAction, Box, IconButton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tooltip, Typography, useTheme } from "@mui/material";
+import { BusinessContext } from "contexts/BusinessContext";
 import { EmailIcon, PhoneIcon, PinIcon } from "icons";
 import { SvgComponent } from "icons/types";
+import { useContext } from "react";
 
 export const ContactInfo = ({
-    business,
     ...props
 }) => {
     const { palette } = useTheme();
+    const business = useContext(BusinessContext);
 
     const openLink = (e, link) => {
         window.location = link;
@@ -44,12 +33,14 @@ export const ContactInfo = ({
     ];
 
     return (
-        <Box sx={{ minWidth: "fit-content", height: "fit-content" }} {...props}>
+        <Box sx={{ minWidth: "fit-content", height: "fit-content", background: palette.primary.light }} {...props}>
             <TableContainer>
                 <Table aria-label="contact-hours-table" size="small">
                     <TableHead sx={{ background: palette.primary.main }}>
                         <TableRow>
-                            <TableCell sx={{ color: palette.primary.contrastText }}>Hours</TableCell>
+                            <TableCell sx={{ color: palette.primary.contrastText }}>
+                                <Typography variant="h6" sx={{ fontWeight: "bold" }}>Hours</Typography>
+                            </TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
@@ -70,6 +61,7 @@ export const ContactInfo = ({
                     background: "transparent",
                     height: "fit-content",
                     marginTop: 1,
+                    paddingBottom: 1,
                 }}
             >
                 {contactInfo.map(([tooltip, label, link, Icon]) => (
@@ -84,7 +76,7 @@ export const ContactInfo = ({
                             }
                             sx={{
                                 alignItems: "center",
-                                color: palette.background.textPrimary,
+                                color: palette.primary.contrastText,
                                 overflowWrap: "anywhere",
                             }}
                         />

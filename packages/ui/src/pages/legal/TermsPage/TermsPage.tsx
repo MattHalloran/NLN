@@ -1,15 +1,15 @@
 import { useQuery } from "@apollo/client";
-import { useTheme } from "@mui/material";
+import { Box } from "@mui/material";
 import { readAssetsQuery } from "api/query/readAssets";
-import { PageContainer, PolicyBreadcrumbs } from "components";
+import { PolicyTabOption, PolicyTabs } from "components/breadcrumbs/PolicyTabs/PolicyTabs";
+import { TopBar } from "components/navigation/TopBar/TopBar";
+import { BusinessContext } from "contexts/BusinessContext";
 import MarkdownInput from "markdown-to-jsx";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { convertToDot, valueFromDot } from "utils";
 
-export const TermsPage = ({
-    business,
-}) => {
-    const { palette } = useTheme();
+export const TermsPage = () => {
+    const business = useContext(BusinessContext);
 
     const [terms, setTerms] = useState<string>("");
     const { data: termsData } = useQuery(readAssetsQuery, { variables: { input: { files: ["terms.md"] } } });
@@ -24,9 +24,15 @@ export const TermsPage = ({
     }, [termsData, business]);
 
     return (
-        <PageContainer>
-            <PolicyBreadcrumbs textColor={palette.secondary.dark} />
-            <MarkdownInput>{terms}</MarkdownInput>
-        </PageContainer>
+        <>
+            <TopBar
+                display="page"
+                title="Terms & Conditions"
+                below={<PolicyTabs defaultTab={PolicyTabOption.Terms} />}
+            />
+            <Box p={2}>
+                <MarkdownInput>{terms}</MarkdownInput>
+            </Box>
+        </>
     );
 };

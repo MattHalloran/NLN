@@ -17,8 +17,8 @@ export const Pubs = {
     LogOut: "logout",
     AlertDialog: "alertDialog",
     Session: "session",
+    SideMenu: "sideMenu",
     Snack: "snack",
-    ArrowMenuOpen: "arrowMenuOpen",
     Theme: "theme",
 };
 export type Pubs = ValueOf<typeof Pubs>;
@@ -32,9 +32,16 @@ export type SnackPub = {
     autoHideDuration?: number;
 }
 
+export type SideMenuPub = {
+    id: "shopping-filter-side-menu" | "side-menu";
+    isOpen: boolean;
+}
+
 export class PubSub {
     private static instance: PubSub;
+    // eslint-disable-next-line @typescript-eslint/ban-types
     private subscribers: { [key: string]: [symbol, Function][] } = {};
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     private constructor() { }
     static get(): PubSub {
         if (!PubSub.instance) {
@@ -66,16 +73,17 @@ export class PubSub {
     publishSession(session: Session | undefined) {
         this.publish(Pubs.Session, session);
     }
+    publishSideMenu(data: SideMenuPub) {
+        this.publish("SideMenu", data);
+    }
     publishSnack(data: SnackPub) {
         this.publish(Pubs.Snack, data);
-    }
-    publishArrowMenuOpen(data: boolean | "toggle") {
-        this.publish(Pubs.ArrowMenuOpen, data);
     }
     publishTheme(theme: "light" | "dark") {
         this.publish(Pubs.Theme, theme);
     }
 
+    // eslint-disable-next-line @typescript-eslint/ban-types
     subscribe(key: Pubs, subscriber: Function): symbol {
         // Create unique token, so we can unsubscribe later
         const token = Symbol(key);
@@ -103,11 +111,11 @@ export class PubSub {
     subscribeSession(subscriber: (session: Session | undefined) => void) {
         return this.subscribe(Pubs.Session, subscriber);
     }
+    subscribeSideMenu(subscriber: (data: SideMenuPub) => void) {
+        return this.subscribe("SideMenu", subscriber);
+    }
     subscribeSnack(subscriber: (data: SnackPub) => void) {
         return this.subscribe(Pubs.Snack, subscriber);
-    }
-    subscribeArrowMenuOpen(subscriber: (data: boolean | "toggle") => void) {
-        return this.subscribe(Pubs.ArrowMenuOpen, subscriber);
     }
     subscribeTheme(subscriber: (theme: "light" | "dark") => void) {
         return this.subscribe(Pubs.Theme, subscriber);

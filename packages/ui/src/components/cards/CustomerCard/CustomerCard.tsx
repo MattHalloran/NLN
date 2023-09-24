@@ -1,13 +1,5 @@
 import { useMutation } from "@apollo/client";
-import {
-    Card,
-    CardActions,
-    CardContent,
-    IconButton,
-    Tooltip,
-    Typography,
-    useTheme,
-} from "@mui/material";
+import { Card, CardActions, CardContent, IconButton, Tooltip, Typography, useTheme } from "@mui/material";
 import { changeCustomerStatusVariables } from "api/generated/changeCustomerStatus";
 import { deleteCustomerVariables } from "api/generated/deleteCustomer";
 import { AccountStatus } from "api/generated/globalTypes";

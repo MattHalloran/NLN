@@ -4,19 +4,21 @@ import AmericanHort from "assets/img/american-hort.png";
 import NJNLA from "assets/img/njnla_logo.jpg";
 import ProvenWinners from "assets/img/proven-winners.png";
 import { CopyrightBreadcrumbs } from "components";
+import { BusinessContext } from "contexts/BusinessContext";
+import { SessionContext } from "contexts/SessionContext";
 import { BusinessIcon, EmailIcon, PhoneIcon, PrintIcon } from "icons";
 import { SvgComponent } from "icons/types";
+import { useContext } from "react";
 import { useLocation } from "route";
 import { getServerUrl, printAvailability } from "utils";
 
-export const Footer = ({
-    session,
-    business,
-}) => {
+export const Footer = () => {
     const [, setLocation] = useLocation();
     const { palette } = useTheme();
+    const session = useContext(SessionContext);
+    const business = useContext(BusinessContext);
 
-    const contactAPP_LINKS: [string, string, string | null, string | null, SvgComponent][] = [
+    const contactAPP_LINKS: [string, string, string | null | undefined, string | null | undefined, SvgComponent][] = [
         ["address", "View in Google Maps", business?.ADDRESS?.Link, business?.ADDRESS?.Label, BusinessIcon],
         ["contact-phone", "Call Us", business?.PHONE?.Link, business?.PHONE?.Label, PhoneIcon],
         ["contact-fax", "Fax Us", business?.FAX?.Link, business?.FAX?.Label, PrintIcon],
@@ -56,7 +58,7 @@ export const Footer = ({
                         >
                             <ListItemText primary="Credit App" />
                         </ListItem>
-                        <ListItem button component="a" onClick={() => printAvailability(session, business?.BUSINESS_NAME?.Long)} >
+                        <ListItem button component="a" onClick={() => printAvailability(session, business?.BUSINESS_NAME?.Long, business?.PHONE?.Label, business?.EMAIL?.Label)} >
                             <ListItemText primary="Print Availability" />
                         </ListItem>
                         <ListItem button component="a" onClick={() => setLocation(APP_LINKS.Gallery)} >
@@ -105,7 +107,7 @@ export const Footer = ({
                     </Grid>
                 ))}
             </Grid>
-            <CopyrightBreadcrumbs business={business} textColor={palette.primary.contrastText} sx={{ color: palette.primary.contrastText }} />
+            <CopyrightBreadcrumbs textColor={palette.primary.contrastText} sx={{ color: palette.primary.contrastText }} />
         </Box>
     );
 };

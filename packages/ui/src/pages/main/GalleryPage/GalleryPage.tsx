@@ -1,17 +1,21 @@
 import { useQuery } from "@apollo/client";
 import { IMAGE_SIZE } from "@local/shared";
-import { Box, useTheme } from "@mui/material";
+import { Box } from "@mui/material";
 import { imagesByLabelQuery } from "api/query";
-import { InformationalBreadcrumbs, PageContainer, SnackSeverity } from "components";
+import { CardGrid, SnackSeverity } from "components";
+import { InformationalTabOption, InformationalTabs } from "components/breadcrumbs/InformationalTabs/InformationalTabs";
+import { TopBar } from "components/navigation/TopBar/TopBar";
 import { useEffect, useState } from "react";
-import Carousel from "react-gallery-carousel";
-import "react-gallery-carousel/dist/index.css";
 import { PubSub, getImageSrc, getServerUrl } from "utils";
 
-export const GalleryPage = () => {
-    const { palette } = useTheme();
+type ImageData = {
+    alt: string;
+    src: string;
+    thumbnail: string;
+}
 
-    const [images, setImages] = useState([]);
+export const GalleryPage = () => {
+    const [images, setImages] = useState<ImageData[]>([]);
     const { data: imageData, error } = useQuery(imagesByLabelQuery, { variables: { input: { label: "gallery" } } });
 
     if (error) PubSub.get().publishSnack({ message: error.message ?? "Unknown error occurred", severity: SnackSeverity.Error, data: error });
@@ -28,19 +32,39 @@ export const GalleryPage = () => {
         })));
     }, [imageData]);
 
-    // useHotkeys('escape', () => setCurrImg([null, null]));
-    // useHotkeys('arrowLeft', () => navigate(-1));
-    // useHotkeys('arrowRight', () => navigate(1));
-
     return (
-        <PageContainer>
-            <InformationalBreadcrumbs textColor={palette.secondary.dark} />
-            <Box sx={{
-                width: "100%",
-                height: "calc(100vw * 0.8)",
-            }}>
-                <Carousel canAutoPlay={false} images={images} />
-            </Box>
-        </PageContainer>
+        <>
+            <TopBar
+                display="page"
+                title="Gallery"
+                below={<InformationalTabs defaultTab={InformationalTabOption.Gallery} />}
+            />
+            {/* Image grid */}
+            <CardGrid minWidth={300}>
+                {/* Individual images */}
+                {images.map((image, index) => (
+                    <Box
+                        key={index}
+                        sx={{
+                            display: "flex",
+                            justifyContent: "center",
+                            alignItems: "center",
+                            width: "100%",
+                            height: "100%",
+                            backgroundColor: "rgba(0, 0, 0, 0.1)",
+                        }}
+                    >
+                        <img
+                            src={image.src}
+                            alt={image.alt}
+                            style={{
+                                maxWidth: "100%",
+                                maxHeight: "100%",
+                            }}
+                        />
+                    </Box>
+                ))}
+            </CardGrid>
+        </>
     );
 };

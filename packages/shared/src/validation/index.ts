@@ -3,11 +3,8 @@ import * as yup from "yup";
 
 export const MIN_PASSWORD_LENGTH = 8;
 export const MAX_PASSWORD_LENGTH = 50;
-// See https://stackoverflow.com/a/21456918/10240279 for more options
-export const PASSWORD_REGEX = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/;
-export const PASSWORD_REGEX_ERROR = "Must be at least 8 characters, with at least one character and one number";
 
-export const passwordSchema = yup.string().min(MIN_PASSWORD_LENGTH).max(MAX_PASSWORD_LENGTH).matches(PASSWORD_REGEX, PASSWORD_REGEX_ERROR);
+export const passwordSchema = yup.string().min(MIN_PASSWORD_LENGTH).max(MAX_PASSWORD_LENGTH);
 
 export const businessSchema = yup.object().shape({
     name: yup.string().max(128).required(),
@@ -131,7 +128,6 @@ export const signUpSchema = yup.object().shape({
     accountApproved: yup.boolean().required(),
     marketingEmails: yup.boolean().required(),
     password: passwordSchema.required(),
-    passwordConfirmation: yup.string().oneOf([yup.ref("password"), null], "Passwords must match"),
 });
 
 // Schema for creating a new customer
@@ -161,7 +157,6 @@ export const profileSchema = yup.object().shape({
         otherwise: yup.string().notRequired(),
     }),
     newPassword: passwordSchema.optional(),
-    newPasswordConfirmation: yup.string().oneOf([yup.ref("newPassword"), null], "Passwords must match"),
 });
 
 // Schema for logging in

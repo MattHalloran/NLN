@@ -28,7 +28,7 @@ export const typeDef = gql`
     }
 
     extend type Mutation {
-        upsertOrderItem(input: UpsertOrderItemInput!): OrderItem!
+        upsertOrderItem(input: UpsertOrderItemInput!): Order!
         deleteOrderItems(input: DeleteManyInput!): Count!
     }
 `;
@@ -65,10 +65,14 @@ export const resolvers = {
                 if (!editable_order_statuses.includes(order.status)) throw new CustomError(CODE.Unauthorized);
             }
             // Add to existing order item, or create a new one
-            return await prisma.order_item.upsert({
+            const updatedOrderItem = await prisma.order_item.upsert({
                 where: { order_item_orderid_skuid_unique: { orderId: order.id, skuId: input.skuId } },
                 create: { orderId: order.id, skuId: input.skuId, quantity: input.quantity },
                 update: { quantity: { increment: input.quantity } },
+            });
+            // Return full order
+            return await prisma.order.findUnique({
+                where: { id: order.id },
                 ...(new PrismaSelect(info).value),
             });
         },

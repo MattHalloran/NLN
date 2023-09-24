@@ -1,4 +1,6 @@
+import { APP_LINKS } from "@local/shared";
 import { SnackSeverity } from "components";
+import { SetLocation } from "route";
 import { PubSub } from "utils/pubsub";
 
 /**
@@ -58,4 +60,22 @@ export const base36ToUuid = (base36: string, showError = true): string => {
         if (showError) PubSub.get().publishSnack({ message: "Could not parse ID in URL", severity: SnackSeverity.Error, data: { base36 } });
         return "";
     }
+};
+
+/**
+ * If onClose is a function, call it. Otherwise, 
+ * try to navigate back if previous url is this site. 
+ * Otherwise, navigate to the home page.
+ */
+export const tryOnClose = (
+    onClose: (() => void) | null | undefined,
+    setLocation: SetLocation,
+) => {
+    if (typeof onClose === "function") {
+        onClose();
+        return;
+    }
+    const hasPreviousPage = Boolean(sessionStorage.getItem("lastPath"));
+    if (hasPreviousPage) window.history.back();
+    else setLocation(APP_LINKS.Home);
 };

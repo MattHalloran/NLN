@@ -22,7 +22,12 @@ export function PopupMenu({
     const id = open ? "simple-popover" : undefined;
     return (
         <>
-            <Button aria-describedby={id} {...props} onClick={handleClick}>
+            <Button
+                aria-describedby={id}
+                {...props}
+                onClick={handleClick}
+                variant="contained"
+            >
                 {text}
             </Button>
             <Popover
@@ -42,7 +47,7 @@ export function PopupMenu({
                 sx={{
                     "& .MuiPopover-paper": {
                         background: palette.primary.light,
-                        borderRadius: "24px",
+                        borderRadius: 2,
                     },
                 }}
             >

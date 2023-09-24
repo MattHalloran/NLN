@@ -11,6 +11,7 @@ import { PubSub, getImageSrc, getPlantTrait, getServerUrl, showPrice } from "uti
 import { PlantDialogProps } from "../types";
 
 export const PlantDialog = ({
+    isAdminPage,
     plant,
     selectedSku,
     onAddToCart,
@@ -81,7 +82,7 @@ export const PlantDialog = ({
                     fullWidth
                     options={orderOptions}
                     selected={currSku}
-                    getOptionLabel={(sku) => `#${sku.size} : ${showPrice(sku.price)}`}
+                    getOptionLabel={(sku) => isAdminPage ? `#${sku.size} : ${showPrice(sku.price)}` : `#${sku.size}`}
                     handleChange={(c, e) => { setCurrSku(c); }}
                     inputAriaLabel='size-selector-label'
                     label="Size"
@@ -107,6 +108,7 @@ export const PlantDialog = ({
                     color="secondary"
                     startIcon={<ShoppingCartAddIcon />}
                     onClick={handleAddToCart}
+                    variant="contained"
                 >Order</Button>
             </Grid>
         </Grid>

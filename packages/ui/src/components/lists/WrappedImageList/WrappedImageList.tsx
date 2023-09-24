@@ -16,10 +16,18 @@ export const WrappedImageList = ({
     const options = (
         <Grid mb={2} mt={2} container spacing={2}>
             <Grid display="flex" justifyContent="center" item xs={12} sm={6}>
-                <Button fullWidth onClick={() => onApply(changed)}>Apply Changes</Button>
+                <Button
+                    fullWidth
+                    onClick={() => onApply(changed)}
+                    variant="contained"
+                >Apply Changes</Button>
             </Grid>
             <Grid display="flex" justifyContent="center" item xs={12} sm={6}>
-                <Button fullWidth onClick={() => setChanged(data)}>Revert Changes</Button>
+                <Button
+                    fullWidth
+                    onClick={() => setChanged(data)}
+                    variant="contained"
+                >Revert Changes</Button>
             </Grid>
         </Grid>
     );

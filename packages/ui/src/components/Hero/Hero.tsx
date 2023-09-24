@@ -33,7 +33,6 @@ export const Hero = ({
 
     return (
         <Box sx={{
-            position: "relative",
             overflow: "hidden",
             pointerEvents: "none",
         }}>
@@ -68,6 +67,7 @@ export const Hero = ({
                     color="secondary"
                     onClick={() => setLocation(APP_LINKS.Shopping)}
                     sx={{ pointerEvents: "auto", marginTop: 2 }}
+                    variant="contained"
                 >
                     Request Quote
                 </Button>

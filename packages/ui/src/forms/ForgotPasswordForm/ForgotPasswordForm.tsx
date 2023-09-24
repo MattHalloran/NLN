@@ -1,15 +1,6 @@
 import { useMutation } from "@apollo/client";
 import { APP_LINKS, requestPasswordChangeSchema } from "@local/shared";
-import {
-    Box,
-    Button,
-    Grid,
-    Link,
-    Palette,
-    TextField,
-    Typography,
-    useTheme,
-} from "@mui/material";
+import { Box, Button, Grid, Link, Palette, TextField, Typography, useTheme } from "@mui/material";
 import { requestPasswordChangeVariables } from "api/generated/requestPasswordChange";
 import { requestPasswordChangeMutation } from "api/mutation";
 import { mutationWrapper } from "api/utils";
@@ -23,9 +14,7 @@ const clickSizeStyle = (palette: Palette) => ({
     alignItems: "center",
 });
 
-export const ForgotPasswordForm = ({
-    onRedirect,
-}) => {
+export const ForgotPasswordForm = () => {
     const { palette, spacing } = useTheme();
     const [, setLocation] = useLocation();
 
@@ -41,7 +30,7 @@ export const ForgotPasswordForm = ({
                 mutation: requestPasswordChange,
                 input: { ...values },
                 successCondition: (success) => success === true,
-                onSuccess: () => onRedirect(APP_LINKS.Home),
+                onSuccess: () => setLocation(APP_LINKS.Home),
                 successMessage: () => "Request sent. Please check email.",
             });
         },
@@ -75,6 +64,7 @@ export const ForgotPasswordForm = ({
                     type="submit"
                     color="secondary"
                     sx={{ margin: spacing(3, 0, 2) }}
+                    variant="contained"
                 >
                     Submit
                 </Button>

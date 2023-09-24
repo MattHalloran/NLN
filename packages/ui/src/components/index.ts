@@ -9,7 +9,6 @@ export * from "./PullToRefresh/PullToRefresh";
 export * from "./ScrollToTop/ScrollToTop";
 export * from "./TabPanel/TabPanel";
 export * from "./breadcrumbs";
-export * from "./buttons";
 export * from "./cards";
 export * from "./dialogs";
 export * from "./inputs";

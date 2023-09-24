@@ -1,17 +1,18 @@
 import { Badge, BottomNavigation, BottomNavigationAction, useTheme } from "@mui/material";
+import { SessionContext } from "contexts/SessionContext";
+import { useContext } from "react";
 import { useLocation } from "route";
+import { pagePaddingBottom } from "styles";
 import { getUserActions } from "utils";
 
 export const BottomNav = ({
-    session,
-    userRoles,
-    cart,
     ...props
 }) => {
     const [, setLocation] = useLocation();
     const { palette } = useTheme();
+    const session = useContext(SessionContext);
 
-    const actions = getUserActions(session, userRoles, cart);
+    const actions = getUserActions(session);
 
     return (
         <BottomNavigation
@@ -24,7 +25,7 @@ export const BottomNav = ({
                 paddingBottom: "env(safe-area-inset-bottom)",
                 paddingLeft: "calc(4px + env(safe-area-inset-left))",
                 paddingRight: "calc(4px + env(safe-area-inset-right))",
-                height: "calc(56px + env(safe-area-inset-bottom))",
+                height: pagePaddingBottom,
                 width: "100%",
                 display: { xs: "flex", md: "none" },
             }}

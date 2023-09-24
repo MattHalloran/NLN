@@ -1,24 +1,17 @@
 import { useMutation, useQuery } from "@apollo/client";
-import { useTheme } from "@mui/material";
+import { Box } from "@mui/material";
 import { addImagesVariables, addImages_addImages } from "api/generated/addImages";
 import { updateImagesVariables } from "api/generated/updateImages";
 import { addImagesMutation, updateImagesMutation } from "api/mutation";
 import { imagesByLabelQuery } from "api/query";
 import { mutationWrapper } from "api/utils";
-import {
-    AdminBreadcrumbs,
-    Dropzone,
-    PageContainer,
-    PageTitle,
-    WrappedImageList,
-} from "components";
+import { AdminTabOption, AdminTabs, Dropzone, WrappedImageList } from "components";
+import { TopBar } from "components/navigation/TopBar/TopBar";
 import { useCallback, useEffect, useState } from "react";
 
 const helpText = "This page allows you to manage the images displayed on the gallery page";
 
 export const AdminGalleryPage = () => {
-    const { palette } = useTheme();
-
     const [imageData, setImageData] = useState<any[]>([]);
     const { data: currImages, refetch: refetchImages } = useQuery(imagesByLabelQuery, { variables: { input: { label: "gallery" } } });
     const [addImages] = useMutation(addImagesMutation);
@@ -61,16 +54,22 @@ export const AdminGalleryPage = () => {
     }, [imageData, updateImages]);
 
     return (
-        <PageContainer>
-            <AdminBreadcrumbs textColor={palette.secondary.dark} helpText={helpText} />
-            <PageTitle title="Manage Gallery" helpText={helpText} />
-            <Dropzone
-                dropzoneText={"Drag 'n' drop new images here or click"}
-                onUpload={uploadImages}
-                uploadText='Upload Images'
+        <>
+            <TopBar
+                display="page"
+                help={helpText}
+                title="Gallery"
+                below={<AdminTabs defaultTab={AdminTabOption.Gallery} />}
             />
-            <h2>Reorder and delete images</h2>
-            <WrappedImageList data={imageData} onApply={applyChanges} />
-        </PageContainer>
+            <Box p={2}>
+                <Dropzone
+                    dropzoneText={"Drag 'n' drop new images here or click"}
+                    onUpload={uploadImages}
+                    uploadText='Upload Images'
+                />
+                <h2>Reorder and delete images</h2>
+                <WrappedImageList data={imageData} onApply={applyChanges} />
+            </Box>
+        </>
     );
 };

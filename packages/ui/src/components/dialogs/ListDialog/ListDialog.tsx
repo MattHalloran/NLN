@@ -1,10 +1,4 @@
-import {
-    Dialog,
-    List,
-    ListItem,
-    ListItemText,
-    useTheme,
-} from "@mui/material";
+import { Dialog, List, ListItem, ListItemText, useTheme } from "@mui/material";
 import { DialogTitle } from "../DialogTitle/DialogTitle";
 
 export const ListDialog = ({
@@ -28,7 +22,7 @@ export const ListDialog = ({
                 },
             }}
         >
-            <DialogTitle ariaLabel="simple-dialog-title" title={title} onClose={onClose} />
+            <DialogTitle id="simple-dialog-title" title={title} onClose={onClose} />
             <List>
                 {data?.map(([label, value], index) => (
                     <ListItem button onClick={() => onClose(value)} key={index}>

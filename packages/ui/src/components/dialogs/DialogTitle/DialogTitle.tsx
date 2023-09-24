@@ -1,56 +1,65 @@
-import {
-    Box,
-    IconButton,
-    DialogTitle as MuiDialogTitle,
-    useTheme,
-} from "@mui/material";
-import { HelpButton } from "components";
+import { Box, IconButton, DialogTitle as MuiDialogTitle, useTheme } from "@mui/material";
+import { Title } from "components/text/Title/Title";
 import { CloseIcon } from "icons";
+import { forwardRef } from "react";
+import { useLocation } from "route";
 import { noSelect } from "styles";
+import { tryOnClose } from "utils";
 import { DialogTitleProps } from "../types";
 
-export const DialogTitle = ({
-    ariaLabel,
-    helpText,
+export const DialogTitle = forwardRef(({
+    below,
+    id,
     onClose,
-    title,
-}: DialogTitleProps) => {
+    startComponent,
+    ...titleData
+}: DialogTitleProps, ref) => {
     const { palette } = useTheme();
+    const [, setLocation] = useLocation();
+    const isLeftHanded = false;//useIsLeftHanded();
 
     return (
-        <MuiDialogTitle
-            id={ariaLabel}
-            sx={{
-                ...noSelect,
-                display: "flex",
-                alignItems: "center",
-                padding: 2,
-                background: palette.primary.dark,
-                color: palette.primary.contrastText,
-                textAlign: "center",
-                fontSize: { xs: "1.5rem", sm: "2rem" },
-            }}
-        >
-            <Box sx={{ marginLeft: "auto" }} >{title}</Box>
-            {helpText && <HelpButton
-                markdown={helpText}
+        <Box ref={ref} sx={{
+            background: palette.primary.dark,
+            color: palette.primary.contrastText,
+            position: "sticky",
+            top: 0,
+            zIndex: 2,
+            ...titleData.sxs?.root,
+        }}>
+            <MuiDialogTitle
+                id={id}
                 sx={{
-                    fill: palette.secondary.light,
-                }}
-                sxRoot={{
+                    ...noSelect,
                     display: "flex",
-                    marginTop: "auto",
-                    marginBottom: "auto",
+                    flexDirection: isLeftHanded ? "row-reverse" : "row",
+                    alignItems: "center",
+                    padding: 2,
+                    textAlign: "center",
+                    fontSize: { xs: "1.5rem", sm: "2rem" },
                 }}
-            />}
-            <IconButton
-                aria-label="close"
-                edge="end"
-                onClick={onClose}
-                sx={{ marginLeft: "auto" }}
             >
-                <CloseIcon fill={palette.primary.contrastText} />
-            </IconButton>
-        </MuiDialogTitle>
+                {startComponent}
+                <Title
+                    variant="subheader"
+                    {...titleData}
+                    sxs={{
+                        stack: {
+                            ...(isLeftHanded ? { marginRight: "auto" } : { marginLeft: "auto" }),
+                            padding: 0,
+                        },
+                    }}
+                />
+                <IconButton
+                    aria-label="close"
+                    edge="end"
+                    onClick={() => { tryOnClose(onClose, setLocation); }}
+                    sx={isLeftHanded ? { marginRight: "auto" } : { marginLeft: "auto" }}
+                >
+                    <CloseIcon fill={palette.primary.contrastText} />
+                </IconButton>
+            </MuiDialogTitle>
+            {below}
+        </Box>
     );
-};
+});

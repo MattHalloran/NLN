@@ -1,27 +1,15 @@
 import { useMutation } from "@apollo/client";
 import { APP_LINKS, CODE, DEFAULT_PRONOUNS, signUpSchema } from "@local/shared";
 import { Autocomplete } from "@mui/lab";
-import {
-    Box,
-    Button,
-    Checkbox,
-    FormControl,
-    FormControlLabel,
-    FormHelperText,
-    Grid,
-    Link,
-    Palette,
-    Radio,
-    RadioGroup,
-    TextField,
-    Typography,
-    useTheme,
-} from "@mui/material";
+import { Box, Button, Checkbox, FormControl, FormControlLabel, FormHelperText, Grid, Link, Palette, Radio, RadioGroup, TextField, Typography, useTheme } from "@mui/material";
 import { signUpVariables, signUp_signUp } from "api/generated/signUp";
 import { signUpMutation } from "api/mutation";
 import { mutationWrapper } from "api/utils";
+import { SnackSeverity } from "components";
 import { PasswordTextField } from "components/inputs/PasswordTextField/PasswordTextField";
+import { BusinessContext } from "contexts/BusinessContext";
 import { useFormik } from "formik";
+import { useContext } from "react";
 import { useLocation } from "route";
 import { PubSub } from "utils";
 
@@ -32,12 +20,10 @@ const clickSizeStyle = (palette: Palette) => ({
     alignItems: "center",
 });
 
-export const SignUpForm = ({
-    business,
-    onSessionUpdate,
-}) => {
+export const SignUpForm = () => {
     const { palette, spacing } = useTheme();
     const [, setLocation] = useLocation();
+    const business = useContext(BusinessContext);
 
     const [signUp, { loading }] = useMutation(signUpMutation);
 
@@ -55,8 +41,13 @@ export const SignUpForm = ({
             confirmPassword: "",
         },
         validationSchema: signUpSchema,
-        onSubmit: (values) => {
+        onSubmit: (values, helpers) => {
             const { confirmPassword, ...input } = values;
+            if (values.password !== confirmPassword) {
+                PubSub.get().publishSnack({ message: "Passwords don't match.", severity: SnackSeverity.Error });
+                helpers.setSubmitting(false);
+                return;
+            }
             mutationWrapper<signUp_signUp, signUpVariables>({
                 mutation: signUp,
                 input: {
@@ -66,7 +57,7 @@ export const SignUpForm = ({
                     theme: palette.mode ?? "light",
                 },
                 onSuccess: (data) => {
-                    onSessionUpdate(data);
+                    PubSub.get().publishSession(data);
                     if (data.accountApproved) {
                         PubSub.get().publishAlertDialog({
                             message: `Welcome to ${business?.BUSINESS_NAME?.Short}. You may now begin shopping. Please verify your email within 48 hours.`,
@@ -258,6 +249,7 @@ export const SignUpForm = ({
                     type="submit"
                     color="secondary"
                     sx={{ margin: spacing(3, 0, 2) }}
+                    variant="contained"
                 >
                     Sign Up
                 </Button>

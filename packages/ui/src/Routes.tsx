@@ -1,13 +1,7 @@
 import { APP_LINKS, ROLES } from "@local/shared";
 import { Box, CircularProgress } from "@mui/material";
 import { ScrollToTop } from "components";
-import {
-    ForgotPasswordForm,
-    LogInForm,
-    ProfileForm,
-    ResetPasswordForm,
-    SignUpForm,
-} from "forms";
+import { ForgotPasswordForm, LogInForm, ProfileForm, ResetPasswordForm, SignUpForm } from "forms";
 import { Suspense } from "react";
 import { lazily } from "react-lazily";
 import { Route, Switch } from "route";
@@ -47,25 +41,7 @@ const Fallback = <Box sx={{
     <CircularProgress size={100} />
 </Box>;
 
-export const Routes = ({
-    session,
-    onSessionUpdate,
-    business,
-    userRoles,
-    cart,
-    onRedirect,
-}) => {
-
-    const common = {
-        sessionChecked: session !== null && session !== undefined,
-        onSessionUpdate,
-        onRedirect,
-        userRoles,
-        business,
-    };
-
-    const title = (page) => `${page} | ${business?.BUSINESS_NAME?.Short}`;
-
+export const Routes = () => {
     return (
         <Suspense fallback={<div>Loading...</div>}>
             <ScrollToTop />
@@ -77,7 +53,7 @@ export const Routes = ({
                     priority={1.0}
                     changeFreq="monthly">
                     <Suspense fallback={Fallback}>
-                        <Page title={title("Home")} {...common}>
+                        <Page excludePageContainer>
                             <HomePage />
                         </Page>
                     </Suspense>
@@ -87,8 +63,8 @@ export const Routes = ({
                     sitemapIndex
                     priority={0.7}>
                     <Suspense fallback={Fallback}>
-                        <Page title={title("About")} {...common}>
-                            <AboutPage {...common} />
+                        <Page>
+                            <AboutPage />
                         </Page>
                     </Suspense>
                 </Route>
@@ -97,8 +73,8 @@ export const Routes = ({
                     sitemapIndex
                     priority={0.1}>
                     <Suspense fallback={Fallback}>
-                        <Page title={title("Privacy Policy")} {...common}>
-                            <PrivacyPolicyPage business={business} />
+                        <Page>
+                            <PrivacyPolicyPage />
                         </Page>
                     </Suspense>
                 </Route>
@@ -107,8 +83,8 @@ export const Routes = ({
                     sitemapIndex
                     priority={0.1}>
                     <Suspense fallback={Fallback}>
-                        <Page title={title("Terms & Conditions")} {...common}>
-                            <TermsPage business={business} />
+                        <Page>
+                            <TermsPage />
                         </Page>
                     </Suspense>
                 </Route>
@@ -117,7 +93,7 @@ export const Routes = ({
                     sitemapIndex
                     priority={0.3}>
                     <Suspense fallback={Fallback}>
-                        <Page title={title("Gallery")} {...common}>
+                        <Page>
                             <GalleryPage />
                         </Page>
                     </Suspense>
@@ -127,9 +103,9 @@ export const Routes = ({
                     sitemapIndex
                     priority={0.9}>
                     <Suspense fallback={Fallback}>
-                        <Page title={title("Sign Up")} {...common}>
+                        <Page>
                             <FormPage title="Sign Up">
-                                <SignUpForm {...common} />
+                                <SignUpForm />
                             </FormPage>
                         </Page>
                     </Suspense>
@@ -139,9 +115,9 @@ export const Routes = ({
                     sitemapIndex
                     priority={0.8}>
                     <Suspense fallback={Fallback}>
-                        <Page title={title("Log In")} {...common}>
+                        <Page>
                             <FormPage title="Log In">
-                                <LogInForm {...common} />
+                                <LogInForm />
                             </FormPage>
                         </Page>
                     </Suspense>
@@ -151,9 +127,9 @@ export const Routes = ({
                     sitemapIndex
                     priority={0.1}>
                     <Suspense fallback={Fallback}>
-                        <Page title={title("Forgot Password")} {...common}>
+                        <Page>
                             <FormPage title="Forgot Password">
-                                <ForgotPasswordForm {...common} />
+                                <ForgotPasswordForm />
                             </FormPage>
                         </Page>
                     </Suspense>
@@ -163,9 +139,9 @@ export const Routes = ({
                     sitemapIndex
                     priority={0.1}>
                     <Suspense fallback={Fallback}>
-                        <Page title={title("Reset Password")} {...common}>
+                        <Page>
                             <FormPage title="Reset Password">
-                                <ResetPasswordForm {...common} />
+                                <ResetPasswordForm />
                             </FormPage>
                         </Page>
                     </Suspense>
@@ -177,7 +153,7 @@ export const Routes = ({
                     sitemapIndex
                     priority={0.4}>
                     <Suspense fallback={Fallback}>
-                        <Page title={title("Profile")} {...common} restrictedToRoles={Object.values(ROLES)}>
+                        <Page restrictedToRoles={Object.values(ROLES)}>
                             <FormPage title="Profile">
                                 <ProfileForm />
                             </FormPage>
@@ -189,16 +165,16 @@ export const Routes = ({
                     sitemapIndex
                     priority={0.9}>
                     <Suspense fallback={Fallback}>
-                        <Page title={title("Shop")} {...common} restrictedToRoles={Object.values(ROLES)} redirect={APP_LINKS.LogIn}>
-                            <ShoppingPage {...common} session={session} cart={cart} />
+                        <Page restrictedToRoles={Object.values(ROLES)} redirect={APP_LINKS.LogIn}>
+                            <ShoppingPage />
                         </Page>
                     </Suspense>
                 </Route>
                 <Route
                     path={APP_LINKS.Cart}>
                     <Suspense fallback={Fallback}>
-                        <Page title={title("Cart")} {...common} restrictedToRoles={Object.values(ROLES)} redirect={APP_LINKS.LogIn}>
-                            <CartPage {...common} cart={cart} />
+                        <Page restrictedToRoles={Object.values(ROLES)} redirect={APP_LINKS.LogIn}>
+                            <CartPage />
                         </Page>
                     </Suspense>
                 </Route>
@@ -207,7 +183,7 @@ export const Routes = ({
                 <Route
                     path={APP_LINKS.Admin}>
                     <Suspense fallback={Fallback}>
-                        <Page title={title("Manage Site")} {...common} restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
+                        <Page excludePageContainer restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
                             <AdminMainPage />
                         </Page>
                     </Suspense>
@@ -215,43 +191,43 @@ export const Routes = ({
                 <Route
                     path={APP_LINKS.AdminContactInfo}>
                     <Suspense fallback={Fallback}>
-                        <Page title={"Edit Contact Info"} {...common} restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
-                            <AdminContactPage business={business} />
+                        <Page restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
+                            <AdminContactPage />
                         </Page>
                     </Suspense>
                 </Route>
                 <Route path={APP_LINKS.AdminCustomers}>
                     <Suspense fallback={Fallback}>
-                        <Page title={"Customer Page"} {...common} restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
+                        <Page restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
                             <AdminCustomerPage />
                         </Page>
                     </Suspense>
                 </Route>
                 <Route path={APP_LINKS.AdminGallery}>
                     <Suspense fallback={Fallback}>
-                        <Page title={"Edit Gallery"} {...common} restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
+                        <Page restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
                             <AdminGalleryPage />
                         </Page>
                     </Suspense>
                 </Route>
                 <Route path={APP_LINKS.AdminHero}>
                     <Suspense fallback={Fallback}>
-                        <Page title={"Edit Hero"} {...common} restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
+                        <Page restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
                             <AdminHeroPage />
                         </Page>
                     </Suspense>
                 </Route>
                 <Route path={APP_LINKS.AdminInventory}>
                     <Suspense fallback={Fallback}>
-                        <Page title={"Edit Inventory Info"} {...common} restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
+                        <Page restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
                             <AdminInventoryPage />
                         </Page>
                     </Suspense>
                 </Route>
                 <Route path={APP_LINKS.AdminOrders}>
                     <Suspense fallback={Fallback}>
-                        <Page title={"Order Page"} {...common} restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
-                            <AdminOrderPage userRoles={userRoles} />
+                        <Page restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
+                            <AdminOrderPage />
                         </Page>
                     </Suspense>
                 </Route>
@@ -259,7 +235,7 @@ export const Routes = ({
                 {/* 404 page */}
                 <Route>
                     <Suspense fallback={Fallback}>
-                        <Page title={title("404")} {...common}>
+                        <Page>
                             <NotFoundPage />
                         </Page>
                     </Suspense>

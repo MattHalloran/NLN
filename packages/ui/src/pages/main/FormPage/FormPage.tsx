@@ -1,5 +1,5 @@
 import { Box, useTheme } from "@mui/material";
-import { PageContainer, PageTitle } from "components";
+import { TopBar } from "components/navigation/TopBar/TopBar";
 
 export const FormPage = ({
     title,
@@ -9,8 +9,11 @@ export const FormPage = ({
     const { palette } = useTheme();
 
     return (
-        <PageContainer>
-            <PageTitle title={title} />
+        <>
+            <TopBar
+                display="page"
+                title={title}
+            />
             <Box sx={{
                 backgroundColor: palette.background.paper,
                 display: "grid",
@@ -28,6 +31,6 @@ export const FormPage = ({
             }}>
                 {children}
             </Box>
-        </PageContainer>
+        </>
     );
 };

@@ -1,24 +1,17 @@
 import { useQuery } from "@apollo/client";
-import { Box, Button, useTheme } from "@mui/material";
+import { Box, Button } from "@mui/material";
 import { customers, customers_customers } from "api/generated/customers";
 import { customersQuery } from "api/query";
-import {
-    AdminBreadcrumbs,
-    CustomerCard,
-    PageContainer,
-    PageTitle,
-    SnackSeverity,
-} from "components";
+import { AdminTabOption, AdminTabs, CustomerCard, SnackSeverity } from "components";
 import { CustomerDialog } from "components/dialogs/CustomerDialog/CustomerDialog";
 import { NewCustomerDialog } from "components/dialogs/NewCustomerDialog/NewCustomerDialog";
+import { TopBar } from "components/navigation/TopBar/TopBar";
 import { useEffect, useState } from "react";
 import { PubSub } from "utils";
 
 const helpText = "This page allows you to contact you customers, as well as manage their account information. This includes approving and deleting customers.";
 
 export const AdminCustomerPage = () => {
-    const { palette } = useTheme();
-
     const [customers, setCustomers] = useState<customers_customers[]>([]);
     const [selectedCustomer, setSelectedCustomer] = useState<customers_customers | null>(null);
     const [newCustomerOpen, setNewCustomerOpen] = useState(false);
@@ -31,7 +24,13 @@ export const AdminCustomerPage = () => {
     }, [data]);
 
     return (
-        <PageContainer>
+        <>
+            <TopBar
+                display="page"
+                help={helpText}
+                title="Customers"
+                below={<AdminTabs defaultTab={AdminTabOption.Customers} />}
+            />
             <CustomerDialog
                 customer={selectedCustomer}
                 open={selectedCustomer !== null}
@@ -39,9 +38,12 @@ export const AdminCustomerPage = () => {
             <NewCustomerDialog
                 open={newCustomerOpen}
                 onClose={() => setNewCustomerOpen(false)} />
-            <AdminBreadcrumbs textColor={palette.secondary.dark} />
-            <PageTitle title="Manage Customers" helpText={helpText} />
-            <Button color="secondary" onClick={() => setNewCustomerOpen(true)} sx={{ display: "block", margin: "auto" }}>Create Customer</Button>
+            <Button
+                color="secondary"
+                onClick={() => setNewCustomerOpen(true)}
+                sx={{ display: "block", margin: "auto", marginTop: 2 }}
+                variant="contained"
+            >Create Customer</Button>
             <Box sx={{
                 display: "grid",
                 gridTemplateColumns: "repeat(auto-fill, minmax(225px, .5fr))",
@@ -54,6 +56,6 @@ export const AdminCustomerPage = () => {
                         customer={c}
                     />)}
             </Box>
-        </PageContainer>
+        </>
     );
 };

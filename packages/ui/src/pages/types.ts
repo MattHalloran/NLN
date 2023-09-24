@@ -1,8 +1,10 @@
+import { SxType } from "types";
+
 export interface PageProps {
+    excludePageContainer?: boolean;
     title?: string;
-    sessionChecked: boolean;
     redirect?: string;
-    userRoles: string[];
     restrictedToRoles?: string[];
     children: JSX.Element;
+    sx?: SxType;
 }

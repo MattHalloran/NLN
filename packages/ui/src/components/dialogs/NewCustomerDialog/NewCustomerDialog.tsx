@@ -1,20 +1,6 @@
 import { useMutation } from "@apollo/client";
 import { DEFAULT_PRONOUNS, addCustomerSchema } from "@local/shared";
-import {
-    AppBar,
-    Autocomplete,
-    Box,
-    Button,
-    Checkbox,
-    Dialog,
-    FormControlLabel,
-    Grid,
-    IconButton,
-    TextField,
-    Toolbar,
-    Typography,
-    useTheme,
-} from "@mui/material";
+import { AppBar, Autocomplete, Box, Button, Checkbox, Dialog, FormControlLabel, Grid, IconButton, TextField, Toolbar, Typography, useTheme } from "@mui/material";
 import { addCustomerVariables, addCustomer_addCustomer } from "api/generated/addCustomer";
 import { addCustomerMutation } from "api/mutation";
 import { mutationWrapper } from "api/utils";
@@ -71,6 +57,7 @@ export const NewCustomerDialog = ({
                     fullWidth
                     startIcon={<CreateIcon />}
                     onClick={() => formik.handleSubmit()}
+                    variant="contained"
                 >Create</Button>
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -78,6 +65,7 @@ export const NewCustomerDialog = ({
                     fullWidth
                     startIcon={<CancelIcon />}
                     onClick={onClose}
+                    variant="contained"
                 >Cancel</Button>
             </Grid>
         </Grid>

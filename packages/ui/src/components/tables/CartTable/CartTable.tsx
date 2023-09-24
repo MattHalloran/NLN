@@ -3,11 +3,7 @@ import AdapterDateFns from "@mui/lab/AdapterDateFns";
 import DatePicker from "@mui/lab/DatePicker";
 import LocalizationProvider from "@mui/lab/LocalizationProvider";
 import { Box, Grid, IconButton, Palette, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, useTheme } from "@mui/material";
-import {
-    QuantityBox,
-    Selector,
-    SnackSeverity,
-} from "components";
+import { QuantityBox, Selector, SnackSeverity } from "components";
 import { CloseIcon, NoImageIcon } from "icons";
 import { useCallback } from "react";
 import { PubSub, deleteArrayIndex, getImageSrc, getPlantTrait, getServerUrl, showPrice, updateArray } from "utils";
@@ -103,7 +99,7 @@ export const CartTable = ({
             <TableRow key={key}>
                 {editable ? (<TableCell padding="checkbox">
                     <IconButton onClick={() => deleteCartItem(data.sku)}>
-                        <CloseIcon />
+                        <CloseIcon fill={palette.background.textPrimary} />
                     </IconButton>
                 </TableCell>) : null}
                 <TableCell padding="none" component="th" scope="row" align="center" sx={tableColumnStyle(palette)}>

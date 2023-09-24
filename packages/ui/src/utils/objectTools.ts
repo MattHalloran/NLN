@@ -68,3 +68,7 @@ export function hasObjectChanged(original: any, updated: any, fields: string[] =
     }
     return false;
 }
+
+export const noop = () => {
+    console.warn("Noop called");
+};

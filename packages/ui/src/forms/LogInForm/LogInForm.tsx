@@ -1,15 +1,6 @@
 import { useMutation } from "@apollo/client";
 import { APP_LINKS, CODE, logInSchema } from "@local/shared";
-import {
-    Box,
-    Button,
-    Grid,
-    Link,
-    Palette,
-    TextField,
-    Typography,
-    useTheme,
-} from "@mui/material";
+import { Box, Button, Grid, Link, Palette, TextField, Typography, useTheme } from "@mui/material";
 import { loginVariables, login_login } from "api/generated/login";
 import { loginMutation } from "api/mutation";
 import { mutationWrapper } from "api/utils";
@@ -27,10 +18,7 @@ const clickSizeStyle = (palette: Palette) => ({
     alignItems: "center",
 });
 
-export const LogInForm = ({
-    onSessionUpdate,
-    onRedirect,
-}) => {
+export const LogInForm = () => {
     const { palette, spacing } = useTheme();
     const [, setLocation] = useLocation();
     const { verificationCode } = useMemo<{ verificationCode: string | undefined }>(() => {
@@ -64,8 +52,8 @@ export const LogInForm = ({
                     if (verificationCode) {
                         PubSub.get().publishSnack({ message: "Account verified.", severity: SnackSeverity.Success });
                     }
-                    onSessionUpdate(data);
-                    onRedirect(APP_LINKS.Shopping);
+                    PubSub.get().publishSession(data);
+                    setLocation(APP_LINKS.Shopping);
                 },
                 onError: (response) => {
                     if (Array.isArray(response.graphQLErrors) && response.graphQLErrors.some(e => e.extensions?.code === CODE.MustResetPassword.code)) {
@@ -123,6 +111,7 @@ export const LogInForm = ({
                     type="submit"
                     color="secondary"
                     sx={{ margin: spacing(3, 0, 2) }}
+                    variant="contained"
                 >
                     Log In
                 </Button>

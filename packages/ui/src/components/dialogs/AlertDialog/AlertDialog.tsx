@@ -1,10 +1,4 @@
-import {
-    Button,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogContentText,
-} from "@mui/material";
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText } from "@mui/material";
 import { DialogTitle } from "components";
 import { useCallback, useEffect, useState } from "react";
 import { PubSub, firstString } from "utils";
@@ -24,7 +18,6 @@ const default_state: AlertDialogState = {
     buttons: [{ text: "Ok" }],
 };
 
-const titleAria = "alert-dialog-title";
 const descriptionAria = "alert-dialog-description";
 
 export const AlertDialog = () => {
@@ -48,11 +41,10 @@ export const AlertDialog = () => {
             open={open}
             disableScrollLock={true}
             onClose={resetState}
-            aria-labelledby={titleAria}
             aria-describedby={descriptionAria}
         >
             <DialogTitle
-                ariaLabel={titleAria}
+                id="alert-dialog-title"
                 title={firstString(state.title)}
                 onClose={resetState}
             />
@@ -69,7 +61,12 @@ export const AlertDialog = () => {
             <DialogActions>
                 {state?.buttons && state.buttons.length > 0 ? (
                     state.buttons.map((b: StateButton, index) => (
-                        <Button key={`alert-button-${index}`} onClick={(e) => handleClick(e, b.onClick)} color="secondary">
+                        <Button
+                            key={`alert-button-${index}`}
+                            onClick={(e) => handleClick(e, b.onClick)}
+                            color="secondary"
+                            variant="text"
+                        >
                             {b.text}
                         </Button>
                     ))

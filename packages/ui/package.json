@@ -1,6 +1,6 @@
 {
     "name": "ui",
-    "version": "2.1.0",
+    "version": "2.2.0",
     "main": "index.ts",
     "type": "module",
     "private": true,
@@ -13,7 +13,6 @@
         "@mui/material": "^5.14.0",
         "@mui/styles": "^5.14.0",
         "apollo-upload-client": "^15.0.0",
-        "awesome-debounce-promise": "^2.1.0",
         "date-fns": "^2.0.0-beta.5",
         "formik": "^2.2.8",
         "graphql": "^15.5.0",
@@ -29,7 +28,6 @@
         "react-dom": "^18.2.0",
         "react-dropzone": "^11.3.2",
         "react-gallery-carousel": "^0.1.4",
-        "react-hotkeys": "^2.0.0-pre9",
         "react-lazily": "^0.9.0",
         "remark-gfm": "^1.0.0",
         "styled-components": "^5.2.1",
@@ -47,7 +45,8 @@
         "workbox-routing": "^7.0.0",
         "workbox-strategies": "^7.0.0",
         "workbox-streams": "^7.0.0",
-        "xmlbuilder": "^15.1.1"
+        "xmlbuilder": "^15.1.1",
+        "zxcvbn": "^4.4.2"
     },
     "scripts": {
         "build": "tsc && vite build && node workbox-build.js",

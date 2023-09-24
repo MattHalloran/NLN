@@ -1,15 +1,15 @@
 import { useQuery } from "@apollo/client";
-import { useTheme } from "@mui/material";
+import { Box } from "@mui/material";
 import { readAssetsQuery } from "api/query/readAssets";
-import { PageContainer, PolicyBreadcrumbs } from "components";
+import { PolicyTabOption, PolicyTabs } from "components/breadcrumbs/PolicyTabs/PolicyTabs";
+import { TopBar } from "components/navigation/TopBar/TopBar";
+import { BusinessContext } from "contexts/BusinessContext";
 import MarkdownInput from "markdown-to-jsx";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { convertToDot, valueFromDot } from "utils";
 
-export const PrivacyPolicyPage = ({
-    business,
-}) => {
-    const { palette } = useTheme();
+export const PrivacyPolicyPage = () => {
+    const business = useContext(BusinessContext);
 
     const [privacy, setPrivacy] = useState(null);
     const { data: privacyData } = useQuery(readAssetsQuery, { variables: { input: { files: ["privacy.md"] } } });
@@ -24,9 +24,15 @@ export const PrivacyPolicyPage = ({
     }, [privacyData, business]);
 
     return (
-        <PageContainer>
-            <PolicyBreadcrumbs textColor={palette.secondary.dark} />
-            <MarkdownInput>{privacy ?? ""}</MarkdownInput>
-        </PageContainer>
+        <>
+            <TopBar
+                display="page"
+                title="Privacy Policy"
+                below={<PolicyTabs defaultTab={PolicyTabOption.Privacy} />}
+            />
+            <Box p={2}>
+                <MarkdownInput>{privacy ?? ""}</MarkdownInput>
+            </Box>
+        </>
     );
 };

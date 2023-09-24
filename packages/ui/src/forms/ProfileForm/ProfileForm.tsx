@@ -10,6 +10,7 @@ import { updateCustomerVariables, updateCustomer_updateCustomer } from "api/gene
 import { updateCustomerMutation } from "api/mutation";
 import { profileQuery } from "api/query";
 import { mutationWrapper } from "api/utils";
+import { SnackSeverity } from "components";
 import { PasswordTextField } from "components/inputs/PasswordTextField/PasswordTextField";
 import { useFormik } from "formik";
 import { useMemo } from "react";
@@ -39,8 +40,13 @@ export const ProfileForm = () => {
             newPasswordConfirmation: "",
         },
         validationSchema: profileSchema,
-        onSubmit: (values) => {
+        onSubmit: (values, helpers) => {
             if (!profile) return;
+            if (typeof values.newPassword === "string" && values.newPassword.length > 0 && values.newPassword !== (values as any).newPasswordConfirmation) {
+                PubSub.get().publishSnack({ message: "Passwords don't match.", severity: SnackSeverity.Error });
+                helpers.setSubmitting(false);
+                return;
+            }
             const input = ({
                 id: profile.id,
                 firstName: values.firstName,
@@ -282,12 +288,17 @@ export const ProfileForm = () => {
                                 disabled={loading}
                                 type="submit"
                                 color="secondary"
+                                variant="contained"
                             >
                                 Save Changes
                             </Button>
                         </Grid>
                         <Grid item xs={12} sm={6}>
-                            <Button fullWidth onClick={() => { formik.resetForm(); }}>
+                            <Button
+                                fullWidth
+                                onClick={() => { formik.resetForm(); }}
+                                variant="contained"
+                            >
                                 Cancel
                             </Button>
                         </Grid>

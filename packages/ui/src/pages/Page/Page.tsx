@@ -1,31 +1,47 @@
 import { APP_LINKS } from "@local/shared";
+import { Box, useTheme } from "@mui/material";
+import { PageContainer } from "components";
+import { SessionContext } from "contexts/SessionContext";
 import { PageProps } from "pages/types";
-import { useEffect } from "react";
+import { useContext } from "react";
 import { Redirect, useLocation } from "route";
 
 export const Page = ({
-    title,
-    sessionChecked,
+    excludePageContainer = false,
     redirect = APP_LINKS.Home,
-    userRoles,
     restrictedToRoles = [],
     children,
+    sx,
 }: PageProps) => {
     const [location] = useLocation();
-
-    useEffect(() => {
-        document.title = title || "";
-    }, [title]);
+    const session = useContext(SessionContext);
+    const { palette } = useTheme();
 
     // If this page has restricted access
     if (restrictedToRoles.length > 0) {
-        if (Array.isArray(userRoles) && userRoles.length > 0) {
-            const haveArray: any[] = Array.isArray(userRoles) ? userRoles : [userRoles];
+        if (session?.roles && Array.isArray(session.roles) && session.roles.length > 0) {
             const needArray: any[] = Array.isArray(restrictedToRoles) ? restrictedToRoles : [restrictedToRoles];
-            if (haveArray.some((r: any) => needArray.includes(r?.role?.title))) return children;
+            if (session.roles.some((r: any) => needArray.includes(r?.role?.title))) return children;
         }
-        if (sessionChecked && location !== redirect) return <Redirect to={redirect} />;
+        if (session !== null && session !== undefined && location !== redirect) return <Redirect to={redirect} />;
     }
 
-    return children;
+    return (
+        <>
+            {/* Hidden div under the page for top overscroll color.
+            Color should mimic `content-wrap` component, but with sx override */}
+            <Box sx={{
+                backgroundColor: (sx as any)?.background ?? (sx as any)?.backgroundColor ?? (palette.mode === "light" ? "#c2cadd" : palette.background.default),
+                height: "100vh",
+                position: "fixed",
+                top: "0",
+                width: "100%",
+                zIndex: -3, // Below the footer's hidden div
+            }} />
+            {!excludePageContainer && <PageContainer sx={sx}>
+                {children}
+            </PageContainer>}
+            {excludePageContainer && children}
+        </>
+    );
 };

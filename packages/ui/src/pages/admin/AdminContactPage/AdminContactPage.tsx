@@ -1,17 +1,13 @@
 import { useMutation } from "@apollo/client";
-import {
-    Box,
-    Button,
-    Grid,
-    TextField,
-    useTheme,
-} from "@mui/material";
+import { Box, Button, Grid, TextField, useTheme } from "@mui/material";
 import { writeAssetsMutation } from "api/mutation";
 import { graphqlWrapperHelper } from "api/utils";
-import { AdminBreadcrumbs, PageContainer, PageTitle } from "components";
+import { AdminTabOption, AdminTabs } from "components";
+import { TopBar } from "components/navigation/TopBar/TopBar";
+import { BusinessContext } from "contexts/BusinessContext";
 import { CancelIcon, SaveIcon } from "icons";
 import Markdown from "markdown-to-jsx";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 
 const helpText = `This page allows you to edit the contact info displayed on the site. 
 
@@ -19,10 +15,9 @@ The information is stored in Markdown. You can learn more about how to write Mar
 
 NOTE: This will not update Google My Business information. You must do that manually by logging into your Google My Business account.`;
 
-export const AdminContactPage = ({
-    business,
-}) => {
-    const { palette, spacing } = useTheme();
+export const AdminContactPage = () => {
+    const { spacing } = useTheme();
+    const business = useContext(BusinessContext);
 
     const [hours, setHours] = useState("");
     const [updateHours] = useMutation(writeAssetsMutation);
@@ -56,20 +51,36 @@ export const AdminContactPage = ({
             marginTop: spacing(2),
         }}>
             <Grid display="flex" justifyContent="center" item xs={6}>
-                <Button startIcon={<SaveIcon />} fullWidth disabled={business?.hours === hours} onClick={applyHours}>Apply</Button>
+                <Button
+                    startIcon={<SaveIcon />}
+                    fullWidth
+                    disabled={business?.hours === hours}
+                    onClick={applyHours}
+                    variant="contained"
+                >Apply</Button>
             </Grid>
             <Grid display="flex" justifyContent="center" item xs={6}>
-                <Button startIcon={<CancelIcon />} fullWidth disabled={business?.hours === hours} onClick={revertHours}>Revert</Button>
+                <Button
+                    startIcon={<CancelIcon />}
+                    fullWidth
+                    disabled={business?.hours === hours}
+                    onClick={revertHours}
+                    variant="contained"
+                >Revert</Button>
             </Grid>
         </Grid>
     );
 
     return (
-        <PageContainer>
-            <AdminBreadcrumbs textColor={palette.secondary.dark} />
-            <PageTitle title="Manage Contact Info" helpText={helpText} />
+        <>
+            <TopBar
+                display="page"
+                help={helpText}
+                title="Contact Info"
+                below={<AdminTabs defaultTab={AdminTabOption.ContactInfo} />}
+            />
             {options}
-            <Grid container spacing={2} direction="row">
+            <Grid container spacing={2} padding={2} direction="row">
                 <Grid item xs={12} md={6}>
                     <TextField
                         id="filled-multiline-static"
@@ -93,6 +104,6 @@ export const AdminContactPage = ({
                 </Grid>
             </Grid>
             {options}
-        </PageContainer>
+        </>
     );
 };

@@ -1,56 +1,92 @@
 import { APP_LINKS } from "@local/shared";
-import { Box, Card, CardActions, CardContent, IconButton, Tooltip, Typography, useTheme } from "@mui/material";
-import { PageContainer, PageTitle } from "components";
-import { OpenInNewIcon } from "icons";
+import { Box, Button, Typography, useTheme } from "@mui/material";
+import { CardGrid, PageContainer } from "components";
+import { TopBar } from "components/navigation/TopBar/TopBar";
 import { useLocation } from "route";
+
+const card_data: [string, string, string][] = [
+    ["Orders", "Approve, create, and edit customer's orders", APP_LINKS.AdminOrders],
+    ["Customers", "Approve new customers, edit customer information", APP_LINKS.AdminCustomers],
+    ["Inventory", "Add, remove, and update inventory", APP_LINKS.AdminInventory],
+    ["Hero", "Add, remove, and rearrange hero (home page) images", APP_LINKS.AdminHero],
+    ["Gallery", "Add, remove, and rearrange gallery images", APP_LINKS.AdminGallery],
+    ["Contact Info", "Edit business hours and other contact information", APP_LINKS.AdminContactInfo],
+];
+
+const AdminPageCard = ({
+    description,
+    key,
+    onClick,
+    title,
+}: {
+    description: string;
+    key: string | number;
+    onClick: (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => void;
+    title: string;
+}) => {
+    const { breakpoints, palette } = useTheme();
+
+    return (
+        <Box
+            key={key}
+            onClick={onClick}
+            sx={{
+                width: "100%",
+                boxShadow: { xs: 0, sm: 4 },
+                padding: 2,
+                borderRadius: { xs: 0, sm: 2 },
+                cursor: "pointer",
+                background: palette.primary.main,
+                color: palette.primary.contrastText,
+                "&:hover": {
+                    filter: "brightness(1.05)",
+                },
+                display: "flex",
+                flexDirection: "column",
+                gap: 1,
+                [breakpoints.down("sm")]: {
+                    borderBottom: `1px solid ${palette.divider}`,
+                },
+            }}>
+            <Typography variant='h6' component='div' sx={{ overflowWrap: "anywhere" }}>
+                {title}
+            </Typography>
+            <Typography variant='body2' sx={{ overflowWrap: "anywhere" }}>
+                {description}
+            </Typography>
+            {/* Bottom of card is button */}
+            <Button
+                size='small'
+                sx={{
+                    marginLeft: "auto",
+                    alignSelf: "flex-end",
+                }}
+                variant="text"
+            >Open</Button>
+        </Box>
+    );
+};
+
 
 export const AdminMainPage = () => {
     const [, setLocation] = useLocation();
-    const { palette } = useTheme();
-
-    const card_data: [string, string, string][] = [
-        ["Orders", "Approve, create, and edit customer's orders", APP_LINKS.AdminOrders],
-        ["Customers", "Approve new customers, edit customer information", APP_LINKS.AdminCustomers],
-        ["Inventory", "Add, remove, and update inventory", APP_LINKS.AdminInventory],
-        ["Hero", "Add, remove, and rearrange hero (home page) images", APP_LINKS.AdminHero],
-        ["Gallery", "Add, remove, and rearrange gallery images", APP_LINKS.AdminGallery],
-        ["Contact Info", "Edit business hours and other contact information", APP_LINKS.AdminContactInfo],
-    ];
 
     return (
-        <PageContainer>
-            <PageTitle title="Manage Site" />
-            <Box sx={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(225px, 1fr))",
-                gridGap: "20px",
-                alignItems: "stretch",
-                marginTop: 2,
-            }}>
-                {card_data.map(([title, description, link]) => (
-                    <Card onClick={() => setLocation(link)} sx={{
-                        background: palette.primary.main,
-                        color: palette.primary.contrastText,
-                        cursor: "pointer",
-                    }}>
-                        <CardContent>
-                            <Typography variant="h5" component="h2">
-                                {title}
-                            </Typography>
-                            <Typography variant="body2" component="p">
-                                {description}
-                            </Typography>
-                        </CardContent>
-                        <CardActions>
-                            <Tooltip title="Open" placement="bottom">
-                                <IconButton onClick={() => setLocation(link)}>
-                                    <OpenInNewIcon fill={palette.secondary.light} />
-                                </IconButton>
-                            </Tooltip>
-                        </CardActions>
-                    </Card>
+        <PageContainer sx={{ paddingLeft: "0!important", paddingRight: "0!important" }}>
+            <TopBar
+                display="page"
+                title="Manage Site"
+            />
+            <CardGrid minWidth={300}>
+                {card_data.map(([title, description, link], index) => (
+                    <AdminPageCard
+                        description={description}
+                        key={index}
+                        onClick={() => setLocation(link)}
+                        title={title}
+                    />
                 ))}
-            </Box>
+            </CardGrid>
         </PageContainer>
     );
 };

@@ -1,34 +1,25 @@
 import { useMutation } from "@apollo/client";
 import { ORDER_STATUS, ROLES } from "@local/shared";
-import {
-    AppBar,
-    Box,
-    Button,
-    Dialog,
-    Grid,
-    IconButton,
-    Toolbar,
-    Typography,
-    useTheme,
-} from "@mui/material";
+import { AppBar, Box, Button, Dialog, Grid, IconButton, Toolbar, Typography, useTheme } from "@mui/material";
 import { updateOrderVariables, updateOrder_updateOrder } from "api/generated/updateOrder";
 import { updateOrderMutation } from "api/mutation";
 import { mutationWrapper } from "api/utils";
 import { CartTable, Transition } from "components";
+import { SessionContext } from "contexts/SessionContext";
 import { CancelIcon, CloseIcon, CompleteIcon, DeliveryTruckIcon, EditIcon, SaveIcon, ScheduleIcon, SuccessIcon, ThumbDownIcon, ThumbUpIcon } from "icons";
 import _ from "lodash";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { ORDER_FILTERS, findWithAttr } from "utils";
 
 const editableStatuses = [ORDER_STATUS.PendingCancel, ORDER_STATUS.Pending, ORDER_STATUS.Approved, ORDER_STATUS.Scheduled];
 
 export const OrderDialog = ({
     order,
-    userRoles,
     open = true,
     onClose,
 }) => {
     const { palette, spacing } = useTheme();
+    const session = useContext(SessionContext);
 
     // Holds order changes before update is final
     const [changedOrder, setChangedOrder] = useState(order);
@@ -68,8 +59,8 @@ export const OrderDialog = ({
     // First item is a check to detemine if action is currently available.
     // The rest is the data needed to display the action and call mutationWrapper.
     const changeStatus = useMemo(() => {
-        const isCustomer = Array.isArray(userRoles) && userRoles.some(r => [ROLES.Customer].includes(r?.role?.title));
-        const isOwner = Array.isArray(userRoles) && userRoles.some(r => [ROLES.Owner, ROLES.Admin].includes(r?.role?.title));
+        const isCustomer = session?.roles && Array.isArray(session.roles) && session.roles.some(r => [ROLES.Customer].includes(r?.role?.title));
+        const isOwner = session?.roles && Array.isArray(session.roles) && session.roles.some(r => [ROLES.Owner, ROLES.Admin].includes(r?.role?.title));
         const isCanceled = [ORDER_STATUS.CanceledByAdmin, ORDER_STATUS.CanceledByCustomer, ORDER_STATUS.Rejected].includes(changedOrder?.status);
         const isOutTheDoor = [ORDER_STATUS.InTransit, ORDER_STATUS.Delivered].includes(changedOrder?.status);
         return {
@@ -114,7 +105,7 @@ export const OrderDialog = ({
                 "Set order status to \"Delivered\"", <SuccessIcon />, "Order status set to \"delivered\".", "Failed to update order status.",
             ],
         };
-    }, [changedOrder, userRoles]);
+    }, [changedOrder, session]);
 
     // Filter out order mutation actions that are not currently available
     const availableActions = Object.entries(changeStatus).filter(([, value]) => value[0]).map(([status, statusData]) => ({
@@ -139,6 +130,7 @@ export const OrderDialog = ({
                     startIcon={<SaveIcon />}
                     onClick={orderUpdate}
                     disabled={loading || _.isEqual(order, changedOrder)}
+                    variant="contained"
                 >Update</Button>
             </Grid>
             {availableActions.map(action => (
@@ -148,6 +140,7 @@ export const OrderDialog = ({
                         startIcon={action.icon}
                         onClick={() => setOrderStatus(action.status, action.successMessage, action.failureMessage)}
                         disabled={loading}
+                        variant="contained"
                     >{action.displayText}</Button>
                 </Grid>
             ))}
