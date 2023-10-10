@@ -29,5 +29,5 @@
 *.rmeta binary
 *.wasm binary
 *.dylib binary
-*.doc text
-*.docx text
+*.doc binary
+*.docx binary
