@@ -7,6 +7,7 @@ import { PubSub } from "utils";
 
 interface DropzoneProps {
     acceptedFileTypes?: string[];
+    autoUpload?: boolean;
     dropzoneText?: string;
     onUpload: (files: File[]) => unknown;
     showThumbs?: boolean;
@@ -23,6 +24,7 @@ interface PreviewableFile extends File {
 
 export const Dropzone = ({
     acceptedFileTypes = ["image/*", ".heic", ".heif"],
+    autoUpload = false,
     dropzoneText = "Drag 'n' drop files here or click",
     onUpload,
     showThumbs = true,
@@ -51,6 +53,11 @@ export const Dropzone = ({
                 // Otherwise, use default preview
                 return Object.assign(file, { preview });
             }));
+            // If autoUpload is true, automatically upload the files
+            if (autoUpload) {
+                onUpload(acceptedFiles);
+                setFiles([]);
+            }
         },
     });
 
@@ -124,7 +131,7 @@ export const Dropzone = ({
             border: "3px dashed gray",
             borderRadius: "5px",
         }}>
-            <Box sx={{ textAlign: "center" }} {...getRootProps({ className: "dropzone" })}>
+            <Box sx={{ textAlign: "center", cursor: "pointer" }} {...getRootProps({ className: "dropzone" })}>
                 <input {...getInputProps()} />
                 <p>{dropzoneText}</p>
                 {showThumbs &&
@@ -136,7 +143,7 @@ export const Dropzone = ({
                     }}>
                         {thumbs}
                     </Box>}
-                <Grid container spacing={1} sx={{
+                {!autoUpload && <Grid container spacing={1} sx={{
                     paddingLeft: spacing(1),
                     paddingRight: spacing(1),
                 }}>
@@ -164,7 +171,7 @@ export const Dropzone = ({
                             variant="contained"
                         >{cancelText}</Button>
                     </Grid>
-                </Grid>
+                </Grid>}
             </Box>
         </Box>
     );

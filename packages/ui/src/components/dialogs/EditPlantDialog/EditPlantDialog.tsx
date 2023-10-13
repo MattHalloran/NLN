@@ -310,6 +310,7 @@ export const EditPlantDialog = ({
                         <Box display="flex" flexDirection="column" sx={{ gap: 2, marginTop: 1, marginBottom: 8 }}>
                             {/* Upload new images */}
                             <Dropzone
+                                autoUpload
                                 dropzoneText={"Drag 'n' drop new images here or click"}
                                 onUpload={uploadImages}
                                 uploadText='Confirm'
@@ -319,7 +320,7 @@ export const EditPlantDialog = ({
                             <ImageList
                                 data={imageData ?? []}
                                 onUpdate={(d) => {
-                                    setImageData(d);
+                                    setImageData(d as PlantImageInfo[]);
                                     setImagesChanged(true);
                                 }}
                             />
