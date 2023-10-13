@@ -1,7 +1,7 @@
 import { gql } from "apollo-server-express";
 import { Context } from "../context";
 import { IWrap, RecursivePartial } from "../types";
-import { TraitValuesInput } from "./types";
+import { TraitOptions, TraitValuesInput } from "./types";
 
 export const typeDef = gql`
     input TraitValuesInput {
@@ -28,7 +28,7 @@ export const typeDef = gql`
 
 export const resolvers = {
     Query: {
-        traitNames: async (_parent: undefined, _input: undefined, { prisma }: Context): Promise<RecursivePartial<any> | null> => {
+        traitNames: async (_parent: undefined, _input: undefined, { prisma }: Context): Promise<string[] | null> => {
             const traits = await prisma.plant_trait.findMany({
                 select: {
                     name: true,
@@ -36,7 +36,7 @@ export const resolvers = {
             });
             return traits.map((t) => t.name);
         },
-        traitValues: async (_parent: undefined, { input }: IWrap<TraitValuesInput>, { prisma }: Context): Promise<RecursivePartial<any> | null> => {
+        traitValues: async (_parent: undefined, { input }: IWrap<TraitValuesInput>, { prisma }: Context): Promise<string[] | null> => {
             const traits = await prisma.plant_trait.findMany({
                 where: { name: input.name },
                 select: {
@@ -46,7 +46,7 @@ export const resolvers = {
             return traits.map((t) => t.value);
         },
         // Returns all values previously entered for every trait
-        traitOptions: async (_parent: undefined, _data: IWrap<undefined>, { prisma }: Context): Promise<RecursivePartial<any> | null> => {
+        traitOptions: async (_parent: undefined, _data: IWrap<undefined>, { prisma }: Context): Promise<RecursivePartial<TraitOptions[]> | null> => {
             // Query all data
             const trait_data = await prisma.plant_trait.findMany();
             // Combine data into object

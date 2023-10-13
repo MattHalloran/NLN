@@ -53,7 +53,6 @@ export const AdminInventoryPage = () => {
             <EditPlantDialog
                 plant={selected?.plant}
                 selectedSku={selected?.selectedSku}
-                trait_options={traitOptions?.traitOptions}
                 open={selected !== null}
                 onClose={() => setSelected(null)} />
             <TopBar
@@ -74,7 +73,7 @@ export const AdminInventoryPage = () => {
                     uploadText='Upload'
                     disabled={loading}
                 />
-                <h2>Filter</h2>
+                <h2 style={{ marginTop: "64px", marginBottom: "0px" }}>Filter</h2>
                 <Grid container spacing={2}>
                     <Grid item xs={12} sm={4}>
                         <Selector

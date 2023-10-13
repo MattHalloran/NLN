@@ -34,7 +34,7 @@ export const PlantDialog = ({
         setOrderOptions(plant?.skus ?? []);
     }, [plant, orderOptions]);
 
-    const images = (plant && Array.isArray(plant.images)) ? plant.images.map(d => ({
+    const images = (plant && Array.isArray(plant.images)) ? [...plant.images].sort((a, b) => a.index - b.index).map(d => ({
         alt: d.image.alt ?? "",
         src: `${getServerUrl()}/${getImageSrc(d.image)}`,
         thumbnail: `${getServerUrl()}/${getImageSrc(d.image, IMAGE_SIZE.M)}`,

@@ -5,7 +5,7 @@ import { GraphQLResolveInfo } from "graphql";
 import { Context } from "../context";
 import { CustomError } from "../error";
 import { IWrap, RecursivePartial } from "../types";
-import { DeleteManyInput, PlantInput, PlantsInput } from "./types";
+import { Count, DeleteManyInput, PlantInput, PlantsInput } from "./types";
 
 export const typeDef = gql`
 
@@ -166,28 +166,52 @@ export const resolvers = {
                     },
                 });
                 // Upsert images passed in
+                const highestIdResult = await prisma.plant_images.findFirst({
+                    orderBy: { id: 'desc' },
+                    select: { id: true },
+                });
+                let currentMaxId = highestIdResult?.id || 0;
+                const operations: any[] = [];
                 for (let i = 0; i < input.images.length; i++) {
                     const existingImage = await prisma.plant_images.findFirst({ where: { hash: input.images[i].hash } });
                     if (existingImage) {
-                        await prisma.plant_images.update({
-                            where: { id: existingImage.id },
-                            data: { isDisplay: input.images[i].isDisplay ?? false, index: i },
-                        });
+                        operations.push(
+                            prisma.plant_images.update({
+                                where: { id: existingImage.id },
+                                data: { isDisplay: input.images[i].isDisplay ?? false, index: i },
+                            })
+                        );
                     } else {
-                        await prisma.plant_images.create({
-                            data: {
-                                plantId: input.id,
-                                hash: input.images[i].hash,
-                                isDisplay: input.images[i].isDisplay ?? false,
-                                index: i
-                            },
-                        });
+                        operations.push(
+                            prisma.plant_images.create({
+                                data: {
+                                    id: ++currentMaxId,
+                                    plantId: input.id,
+                                    hash: input.images[i].hash,
+                                    isDisplay: input.images[i].isDisplay ?? false,
+                                    index: i
+                                },
+                            })
+                        );
                     }
                 }
+                await prisma.$transaction(operations);
             }
             // Update traits
             const currentTraits = await prisma.plant_trait.findMany({ where: { plantId: input.id } });
             const inputTraits = input.traits || [];
+            const temp = await prisma.plant.findUnique({
+                where: { id: input.id },
+                select: {
+                    id: true,
+                    traits: {
+                        select: {
+                            name: true,
+                            value: true
+                        }
+                    }
+                }
+            })
             for (const trait of currentTraits) {
                 if (!inputTraits.find(it => it && it.name === trait.name)) {
                     await prisma.plant_trait.delete({ where: { id: trait.id } });
@@ -224,7 +248,7 @@ export const resolvers = {
                 ...(new PrismaSelect(info).value),
             });
         },
-        deletePlants: async (_parent: undefined, { input }: IWrap<DeleteManyInput>, { prisma, req }: Context): Promise<RecursivePartial<any> | null> => {
+        deletePlants: async (_parent: undefined, { input }: IWrap<DeleteManyInput>, { prisma, req }: Context): Promise<Count | null> => {
             // Must be admin
             if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
             // TODO handle images

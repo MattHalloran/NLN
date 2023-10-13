@@ -5,7 +5,7 @@ import { GraphQLResolveInfo } from "graphql";
 import { Context } from "../context";
 import { CustomError } from "../error";
 import { IWrap, RecursivePartial } from "../types";
-import { DeleteManyInput, UpsertOrderItemInput } from "./types";
+import { Count, DeleteManyInput, UpsertOrderItemInput } from "./types";
 
 export const typeDef = gql`
 
@@ -76,7 +76,7 @@ export const resolvers = {
                 ...(new PrismaSelect(info).value),
             });
         },
-        deleteOrderItems: async (_parent: undefined, { input }: IWrap<DeleteManyInput>, { prisma, req }: Context): Promise<RecursivePartial<any> | null> => {
+        deleteOrderItems: async (_parent: undefined, { input }: IWrap<DeleteManyInput>, { prisma, req }: Context): Promise<Count | null> => {
             // Must be admin, or deleting your own
             // Find customerIds associated with orders that have the given order item ids
             let customerIds = await prisma.customer.findMany({

@@ -5,7 +5,7 @@ import { GraphQLResolveInfo } from "graphql";
 import { Context } from "../context";
 import { CustomError } from "../error";
 import { IWrap, RecursivePartial } from "../types";
-import { DeleteManyInput, RoleInput } from "./types";
+import { Count, DeleteManyInput, RoleInput } from "./types";
 
 export const typeDef = gql`
     input RoleInput {
@@ -61,7 +61,7 @@ export const resolvers = {
                 ...(new PrismaSelect(info).value),
             });
         },
-        deleteRoles: async (_parent: undefined, { input }: IWrap<DeleteManyInput>, { prisma, req }: Context): Promise<RecursivePartial<any> | null> => {
+        deleteRoles: async (_parent: undefined, { input }: IWrap<DeleteManyInput>, { prisma, req }: Context): Promise<Count | null> => {
             // Must be admin
             if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
             return await prisma.role.deleteMany({ where: { id: { in: input.ids } } });

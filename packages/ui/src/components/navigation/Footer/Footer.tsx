@@ -51,7 +51,7 @@ export const Footer = () => {
                         <ListItem
                             button
                             component="a"
-                            href={`${getServerUrl()}/Commercial_Credit_Application-2010.doc`}
+                            href={`${getServerUrl()}/Credit_App-2010.doc`}
                             target='_blank'
                             rel="noopener noreferrer"
                             download={`Commercial Credit Application - ${business?.BUSINESS_NAME?.Short}`}

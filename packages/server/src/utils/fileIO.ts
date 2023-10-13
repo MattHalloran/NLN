@@ -7,6 +7,7 @@ import path from "path";
 import probe from "probe-image-size";
 import sharp from "sharp";
 import { LogLevel, genErrorCode, logger } from "../logger";
+import { AddImageResponse } from "../schema/types";
 
 const { PrismaClient } = pkg;
 const prisma = new PrismaClient();
@@ -157,9 +158,9 @@ export async function deleteFile(file: string) {
 
 interface SaveImageProps {
     file: Promise<any>,
-    alt?: string,
-    description?: string,
-    labels?: string[],
+    alt?: string | null,
+    description?: string | null,
+    labels?: string[] | null,
     errorOnDuplicate?: boolean,
 }
 
@@ -172,11 +173,7 @@ interface SaveImageProps {
  * @param errorOnDuplicate If image previously updated, throw error 
  * @returns Object of shape { success, src, hash }
  */
-export async function saveImage({ file, alt, description, labels, errorOnDuplicate = false }: SaveImageProps): Promise<{
-    success: boolean,
-    src: string | null,
-    hash: string | null,
-}> {
+export async function saveImage({ file, alt, description, labels, errorOnDuplicate = false }: SaveImageProps): Promise<AddImageResponse> {
     try {
         // Destructure data. Each file upload is a promise
         const { createReadStream, filename, mimetype } = await file;
@@ -262,6 +259,8 @@ export async function saveImage({ file, alt, description, labels, errorOnDuplica
             success: true,
             src: full_size_filename,
             hash,
+            width: dimensions.width,
+            height: dimensions.height,
         };
     } catch (error) {
         console.error(error);
@@ -269,6 +268,8 @@ export async function saveImage({ file, alt, description, labels, errorOnDuplica
             success: false,
             src: null,
             hash: null,
+            width: null,
+            height: null,
         };
     }
 }

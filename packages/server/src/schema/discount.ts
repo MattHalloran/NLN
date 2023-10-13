@@ -5,7 +5,7 @@ import { GraphQLResolveInfo } from "graphql";
 import { Context } from "../context";
 import { CustomError } from "../error";
 import { IWrap, RecursivePartial } from "../types";
-import { DeleteManyInput, Discount, DiscountInput } from "./types";
+import { Count, DeleteManyInput, Discount, DiscountInput } from "./types";
 
 export const typeDef = gql`
     input DiscountInput {
@@ -62,7 +62,7 @@ export const resolvers = {
                 ...(new PrismaSelect(info).value),
             });
         },
-        deleteDiscounts: async (_parent: undefined, { input }: IWrap<DeleteManyInput>, { prisma, req }: Context): Promise<RecursivePartial<any> | null> => {
+        deleteDiscounts: async (_parent: undefined, { input }: IWrap<DeleteManyInput>, { prisma, req }: Context): Promise<Count | null> => {
             // Must be admin
             if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
             return await prisma.discount.deleteMany({ where: { id: { in: input.ids } } });

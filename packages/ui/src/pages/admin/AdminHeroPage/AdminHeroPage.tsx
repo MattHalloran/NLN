@@ -67,7 +67,7 @@ export const AdminHeroPage = () => {
                     onUpload={uploadImages}
                     uploadText='Upload Images'
                 />
-                <h2>Reorder and delete images</h2>
+                <h2 style={{ marginTop: "64px", marginBottom: "0px" }}>Reorder and delete images</h2>
                 <WrappedImageList data={imageData} onApply={applyChanges} />
             </Box>
         </>

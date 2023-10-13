@@ -5,9 +5,10 @@
 // 1. exact size match
 // 2. smallest size greater than requested
 import _ from "lodash";
+import { ImageInfo } from "types";
 
 // 3. largest size smaller than requested
-export function getImageSrc(image: any, size?: any) {
+export function getImageSrc(image: ImageInfo['image'], size?: any) {
     // Return null if invalid input
     if (!Array.isArray(image?.files) || image.files.length === 0) return null;
     // Create copy of image files, to prevent any problems with sorting

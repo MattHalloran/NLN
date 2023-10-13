@@ -1,5 +1,7 @@
 import { Button, Dialog, DialogActions, DialogContent, TextField, useTheme } from "@mui/material";
+import { CancelIcon, SaveIcon } from "icons";
 import { useEffect, useState } from "react";
+import { ImageInfo } from "types";
 import { DialogTitle } from "../DialogTitle/DialogTitle";
 
 export const EditImageDialog = ({
@@ -7,6 +9,11 @@ export const EditImageDialog = ({
     data,
     onClose,
     onSave,
+}: {
+    open: boolean;
+    data: ImageInfo | null;
+    onClose: () => unknown;
+    onSave: (data: ImageInfo) => unknown;
 }) => {
     const { palette } = useTheme();
 
@@ -14,8 +21,8 @@ export const EditImageDialog = ({
     const [description, setDescription] = useState("");
 
     useEffect(() => {
-        setAlt(data?.alt ?? "");
-        setDescription(data?.description ?? "");
+        setAlt(data?.image?.alt ?? "");
+        setDescription(data?.image?.description ?? "");
     }, [data]);
 
     return (
@@ -28,6 +35,7 @@ export const EditImageDialog = ({
                     label="Alt"
                     value={alt}
                     onChange={e => setAlt(e.target.value)}
+                    sx={{ marginBottom: 2 }}
                 />
                 <TextField
                     fullWidth
@@ -39,18 +47,18 @@ export const EditImageDialog = ({
             </DialogContent>
             <DialogActions>
                 <Button
-                    onClick={onClose}
-                    variant="text"
-                    sx={{ color: palette.primary.main }}
-                >
-                    Cancel
-                </Button>
-                <Button
-                    onClick={() => onSave({ alt, description })}
-                    variant="text"
-                    sx={{ color: palette.primary.main }}
+                    onClick={() => data && onSave({ ...data, image: { ...data.image, alt, description } })}
+                    startIcon={<SaveIcon />}
+                    variant="contained"
                 >
                     Save
+                </Button>
+                <Button
+                    onClick={onClose}
+                    startIcon={<CancelIcon />}
+                    variant="outlined"
+                >
+                    Cancel
                 </Button>
             </DialogActions>
         </Dialog>

@@ -1,6 +1,6 @@
 {
     "name": "server",
-    "version": "2.2.0",
+    "version": "2.2.1",
     "description": "",
     "main": "dist/index.js",
     "type": "module",
@@ -17,7 +17,7 @@
         "pre-build-prisma": "mkdir -p dist/db && [ -f src/db/schema.prisma ] && cp src/db/schema.prisma dist/db/schema.prisma || echo 'schema.prisma not found, skipping copy' && [ -d src/db/migrations ] && rm -rf dist/db/migrations && cp -r src/db/migrations dist/db/migrations || echo 'migrations directory not found, skipping copy' && prisma migrate deploy && yarn prisma-generate",
         "build": "yarn tsc && yarn post-build",
         "post-build": "cp -R src/worker/email/templates dist/worker/email/",
-        "start-development": "yarn pre-build && yarn build && nodemon --experimental-modules --experimental-specifier-resolution=node --inspect=0.0.0.0:9230 dist/index.js",
+        "start-development": "yarn pre-build && yarn build && nodemon --experimental-modules --experimental-specifier-resolution=node --inspect=0.0.0.0:9229 dist/index.js",
         "start-production": "node --experimental-modules --experimental-specifier-resolution=node dist/index.js",
         "prisma-generate": "prisma generate",
         "graphql-generate": "graphql-codegen && mv generatedTypes.ts src/schema/types.ts"

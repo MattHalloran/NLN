@@ -1,7 +1,7 @@
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText } from "@mui/material";
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, useTheme } from "@mui/material";
 import { DialogTitle } from "components";
 import { useCallback, useEffect, useState } from "react";
-import { PubSub, firstString } from "utils";
+import { PubSub } from "utils";
 
 interface StateButton {
     text: string;
@@ -18,9 +18,12 @@ const default_state: AlertDialogState = {
     buttons: [{ text: "Ok" }],
 };
 
+const titleAria = "alert-dialog-title";
 const descriptionAria = "alert-dialog-description";
 
 export const AlertDialog = () => {
+    const { palette } = useTheme();
+
     const [state, setState] = useState<AlertDialogState>(default_state);
     const open = Boolean(state.title) || Boolean(state.message);
 
@@ -41,13 +44,22 @@ export const AlertDialog = () => {
             open={open}
             disableScrollLock={true}
             onClose={resetState}
+            aria-labelledby={state.title ? titleAria : undefined}
             aria-describedby={descriptionAria}
+            sx={{
+                "& > .MuiDialog-container": {
+                    "& > .MuiPaper-root": {
+                        borderRadius: 4,
+                        background: palette.background.paper,
+                    },
+                },
+            }}
         >
-            <DialogTitle
-                id="alert-dialog-title"
-                title={firstString(state.title)}
+            {state.title && <DialogTitle
+                id={titleAria}
+                title={state.title}
                 onClose={resetState}
-            />
+            />}
             <DialogContent>
                 <DialogContentText id={descriptionAria} sx={{
                     whiteSpace: "pre-wrap",
@@ -64,7 +76,6 @@ export const AlertDialog = () => {
                         <Button
                             key={`alert-button-${index}`}
                             onClick={(e) => handleClick(e, b.onClick)}
-                            color="secondary"
                             variant="text"
                         >
                             {b.text}

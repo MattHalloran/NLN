@@ -63,7 +63,10 @@ export const PlantCard = ({
     const imgDisplay = useMemo(() => {
         let display: JSX.Element;
         let display_data = plant.images.find(image => image.usedFor === IMAGE_USE.PlantDisplay)?.image;
-        if (!display_data && plant.images.length > 0) display_data = plant.images[0].image;
+        if (!display_data && plant.images.length > 0) {
+            const sorted = [...plant.images].sort((a, b) => a.index - b.index);
+            display_data = sorted[0].image;
+        }
         // On mobile, use Avatar (best for lists)
         if (isMobile) {
             display = <Avatar

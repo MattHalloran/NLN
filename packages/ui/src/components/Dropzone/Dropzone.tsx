@@ -1,4 +1,4 @@
-import { Box, Button, Grid, Typography, useTheme } from "@mui/material";
+import { Box, Button, Grid, SxProps, Typography, useTheme } from "@mui/material";
 import SpreadsheetFallback from "assets/img/spreadsheet-fallback.png";
 import { SnackSeverity } from "components/dialogs";
 import { useEffect, useState } from "react";
@@ -7,6 +7,7 @@ import { PubSub } from "utils";
 
 interface DropzoneProps {
     acceptedFileTypes?: string[];
+    autoUpload?: boolean;
     dropzoneText?: string;
     onUpload: (files: File[]) => unknown;
     showThumbs?: boolean;
@@ -14,6 +15,7 @@ interface DropzoneProps {
     uploadText?: string;
     cancelText?: string;
     disabled?: boolean;
+    sx?: SxProps;
 }
 
 interface PreviewableFile extends File {
@@ -22,6 +24,7 @@ interface PreviewableFile extends File {
 
 export const Dropzone = ({
     acceptedFileTypes = ["image/*", ".heic", ".heif"],
+    autoUpload = false,
     dropzoneText = "Drag 'n' drop files here or click",
     onUpload,
     showThumbs = true,
@@ -29,6 +32,7 @@ export const Dropzone = ({
     uploadText = "Upload file(s)",
     cancelText = "Cancel",
     disabled = false,
+    sx,
 }: DropzoneProps) => {
     const { spacing } = useTheme();
 
@@ -49,6 +53,11 @@ export const Dropzone = ({
                 // Otherwise, use default preview
                 return Object.assign(file, { preview });
             }));
+            // If autoUpload is true, automatically upload the files
+            if (autoUpload) {
+                onUpload(acceptedFiles);
+                setFiles([]);
+            }
         },
     });
 
@@ -79,6 +88,7 @@ export const Dropzone = ({
                 width: 100,
                 height: 100,
                 boxSizing: "border-box",
+                ...sx,
             }}>
                 <Box sx={{
                     display: "flex",
@@ -121,7 +131,7 @@ export const Dropzone = ({
             border: "3px dashed gray",
             borderRadius: "5px",
         }}>
-            <Box sx={{ textAlign: "center" }} {...getRootProps({ className: "dropzone" })}>
+            <Box sx={{ textAlign: "center", cursor: "pointer" }} {...getRootProps({ className: "dropzone" })}>
                 <input {...getInputProps()} />
                 <p>{dropzoneText}</p>
                 {showThumbs &&
@@ -133,7 +143,7 @@ export const Dropzone = ({
                     }}>
                         {thumbs}
                     </Box>}
-                <Grid container spacing={1} sx={{
+                {!autoUpload && <Grid container spacing={1} sx={{
                     paddingLeft: spacing(1),
                     paddingRight: spacing(1),
                 }}>
@@ -161,7 +171,7 @@ export const Dropzone = ({
                             variant="contained"
                         >{cancelText}</Button>
                     </Grid>
-                </Grid>
+                </Grid>}
             </Box>
         </Box>
     );
