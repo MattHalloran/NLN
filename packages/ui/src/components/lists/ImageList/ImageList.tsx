@@ -2,14 +2,18 @@ import { Box } from "@mui/material";
 import { EditImageDialog, ImageCard } from "components";
 import update from "immutability-helper";
 import { useCallback, useState } from "react";
+import { ImageInfo } from "types";
 
 export const ImageList = ({
     data,
     onUpdate,
+}: {
+    data: ImageInfo[];
+    onUpdate: (data: ImageInfo[]) => unknown;
 }) => {
     const [selected, setSelected] = useState(-1);
 
-    const moveCard = useCallback((dragIndex, hoverIndex) => {
+    const moveCard = useCallback((dragIndex: number, hoverIndex: number) => {
         const dragCard = data[dragIndex];
         onUpdate(update(data, {
             $splice: [
@@ -29,7 +33,7 @@ export const ImageList = ({
         setSelected(-1);
     }, [selected, data, onUpdate]);
 
-    const deleteImage = (index) => {
+    const deleteImage = (index: number) => {
         const updated = [...data];
         updated.splice(index, 1);
         onUpdate(updated);

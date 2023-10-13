@@ -5,7 +5,7 @@ import { GraphQLResolveInfo } from "graphql";
 import { Context } from "../context";
 import { CustomError } from "../error";
 import { IWrap, RecursivePartial } from "../types";
-import { DeleteManyInput, FeedbackInput } from "./types";
+import { Count, DeleteManyInput, FeedbackInput } from "./types";
 
 export const typeDef = gql`
     input FeedbackInput {
@@ -42,7 +42,7 @@ export const resolvers = {
         addFeedback: async (_parent: undefined, { input }: IWrap<FeedbackInput>, { prisma }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
             return await prisma.feedback.create({ data: { ...input }, ...(new PrismaSelect(info).value) });
         },
-        deleteFeedbacks: async (_parent: undefined, { input }: IWrap<DeleteManyInput>, { prisma, req }: Context): Promise<RecursivePartial<any> | null> => {
+        deleteFeedbacks: async (_parent: undefined, { input }: IWrap<DeleteManyInput>, { prisma, req }: Context): Promise<Count | null> => {
             // Must be admin, or deleting your own
             const specified = await prisma.feedback.findMany({ where: { id: { in: input.ids } } });
             if (!specified) throw new CustomError(CODE.ErrorUnknown);

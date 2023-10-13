@@ -8,9 +8,9 @@ declare module "@mui/material/styles/createPalette" {
     }
 }
 
+// Define common theme options (button appearance, etc.)
 const commonTheme = createTheme({
     components: {
-        // Style sheet name ⚛️
         MuiButton: {
             defaultProps: {
                 variant: "contained",

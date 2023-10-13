@@ -33,7 +33,7 @@ export const SvgPath = ({ d, props }: Pick<SvgBaseProps, "props"> & { d: string 
     >
         <path
             style={{
-                fill: props.fill ?? "white",
+                fill: props.fill ?? "currentColor",
                 fillOpacity: 1,
             }}
             d={d}

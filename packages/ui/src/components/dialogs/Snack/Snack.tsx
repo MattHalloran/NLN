@@ -125,7 +125,7 @@ export const Snack = ({
             )}
             {/* Close icon */}
             <IconButton onClick={handleClose}>
-                <CloseIcon />
+                <CloseIcon fill="white" />
             </IconButton>
         </Box>
     );

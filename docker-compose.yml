@@ -65,7 +65,7 @@ services:
       LETSENCRYPT_EMAIL: "${LETSENCRYPT_EMAIL}"
     ports:
       - ${PORT_SERVER:-5330}:${PORT_SERVER:-5330}
-      - "9230:9230" # For debugger
+      - "9229:9229" # For debugger
     networks:
       - proxy
       - app

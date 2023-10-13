@@ -5,7 +5,7 @@ import { GraphQLResolveInfo } from "graphql";
 import { Context } from "../context";
 import { CustomError } from "../error";
 import { IWrap, RecursivePartial } from "../types";
-import { DeleteManyInput, EmailInput } from "./types";
+import { Count, DeleteManyInput, EmailInput } from "./types";
 
 export const typeDef = gql`
     input EmailInput {
@@ -60,7 +60,7 @@ export const resolvers = {
                 ...(new PrismaSelect(info).value),
             });
         },
-        deleteEmails: async (_parent: undefined, { input }: IWrap<DeleteManyInput>, { prisma, req }: Context): Promise<RecursivePartial<any> | null> => {
+        deleteEmails: async (_parent: undefined, { input }: IWrap<DeleteManyInput>, { prisma, req }: Context): Promise<Count | null> => {
             // Must be admin, or deleting your own
             // TODO must keep at least one email per customer
             const specified = await prisma.email.findMany({ where: { id: { in: input.ids } } });

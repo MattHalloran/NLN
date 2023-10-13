@@ -1,4 +1,4 @@
-import { Box, Button, Grid, Typography, useTheme } from "@mui/material";
+import { Box, Button, Grid, SxProps, Typography, useTheme } from "@mui/material";
 import SpreadsheetFallback from "assets/img/spreadsheet-fallback.png";
 import { SnackSeverity } from "components/dialogs";
 import { useEffect, useState } from "react";
@@ -14,6 +14,7 @@ interface DropzoneProps {
     uploadText?: string;
     cancelText?: string;
     disabled?: boolean;
+    sx?: SxProps;
 }
 
 interface PreviewableFile extends File {
@@ -29,6 +30,7 @@ export const Dropzone = ({
     uploadText = "Upload file(s)",
     cancelText = "Cancel",
     disabled = false,
+    sx,
 }: DropzoneProps) => {
     const { spacing } = useTheme();
 
@@ -79,6 +81,7 @@ export const Dropzone = ({
                 width: 100,
                 height: 100,
                 boxSizing: "border-box",
+                ...sx,
             }}>
                 <Box sx={{
                     display: "flex",

@@ -7,7 +7,7 @@ import { CustomError } from "../error";
 import { IWrap, RecursivePartial } from "../types";
 import { saveFile } from "../utils";
 import { uploadAvailability } from "../worker/uploadAvailability/queue";
-import { DeleteManyInput, SkuInput, SkusInput } from "./types";
+import { Count, DeleteManyInput, SkuInput, SkusInput } from "./types";
 
 export const typeDef = gql`
     enum SkuStatus {
@@ -84,6 +84,13 @@ const SORT_TO_QUERY = {
     [SKU_SORT_OPTIONS.Oldest]: { created_at: "asc" },
 };
 
+const toNumber = (str: string | null | undefined): number | null => {
+    if (!str) return null;
+    const num = parseFloat(str.replace(/[^\d.-]/g, ""));
+    if (isNaN(num)) return null;
+    return num;
+}
+
 export const resolvers = {
     SkuStatus: SKU_STATUS,
     SkuSortBy: SKU_SORT_OPTIONS,
@@ -130,18 +137,29 @@ export const resolvers = {
         addSku: async (_parent: undefined, { input }: IWrap<SkuInput>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
             // Must be admin
             if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
-            return await prisma.sku.create({ data: { ...input }, ...(new PrismaSelect(info).value) });
+            return await prisma.sku.create({
+                data: {
+                    ...input,
+                    size: toNumber(input.size),
+                    price: toNumber(input.price),
+                },
+                ...(new PrismaSelect(info).value)
+            });
         },
         updateSku: async (_parent: undefined, { input }: IWrap<SkuInput>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
             // Must be admin
             if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
             return await prisma.sku.update({
                 where: { id: input.id || undefined },
-                data: { ...input },
+                data: {
+                    ...input,
+                    size: toNumber(input.size),
+                    price: toNumber(input.price),
+                },
                 ...(new PrismaSelect(info).value),
             });
         },
-        deleteSkus: async (_parent: undefined, { input }: IWrap<DeleteManyInput>, { prisma, req }: Context): Promise<RecursivePartial<any> | null> => {
+        deleteSkus: async (_parent: undefined, { input }: IWrap<DeleteManyInput>, { prisma, req }: Context): Promise<Count | null> => {
             // Must be admin
             if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
             return await prisma.sku.deleteMany({ where: { id: { in: input.ids } } });

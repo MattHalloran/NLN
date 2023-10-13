@@ -1,3 +1,4 @@
+import { SvgProps } from "icons/types";
 import { ReactNode } from "react";
 import { SvgComponent, SxType } from "types";
 
@@ -7,6 +8,22 @@ export interface CardGridProps {
     minWidth: number;
     showMobileView?: boolean;
     sx?: SxType;
+}
+
+export interface ContentCollapseProps {
+    children?: React.ReactNode;
+    helpText?: string;
+    id?: string;
+    isOpen?: boolean;
+    onOpenChange?: (isOpen: boolean) => unknown;
+    sxs?: {
+        titleContainer?: SxType;
+        root?: SxType;
+        helpButton?: SvgProps;
+    }
+    title?: string | null;
+    titleComponent?: "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "p" | "span" | "legend";
+    titleVariant?: "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
 }
 
 export interface ErrorBoundaryProps {

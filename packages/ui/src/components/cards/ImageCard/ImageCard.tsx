@@ -3,6 +3,7 @@ import { Card, CardActions, CardContent, CardMedia, IconButton, useTheme } from 
 import { DeleteIcon, EditIcon } from "icons";
 import { useRef } from "react";
 import { useDrag, useDrop } from "react-dnd";
+import { ImageInfo } from "types";
 import { getImageSrc, getServerUrl } from "utils";
 
 export const ImageCard = ({
@@ -11,8 +12,15 @@ export const ImageCard = ({
     data,
     index,
     moveCard,
+}: {
+    onDelete: () => unknown;
+    onEdit: () => unknown;
+    data: ImageInfo;
+    index: number;
+    moveCard: (dragIndex: number, hoverIndex: number) => unknown;
 }) => {
     const { palette } = useTheme();
+    console.log('ImageCard data', data);
 
     const ref = useRef(null);
 
@@ -71,7 +79,7 @@ export const ImageCard = ({
                 }}
             >
                 <CardMedia
-                    image={`${getServerUrl()}/${getImageSrc(data, IMAGE_SIZE.ML)}`}
+                    image={`${getServerUrl()}/${getImageSrc(data.image, IMAGE_SIZE.ML)}`}
                     sx={{
                         height: 0,
                         paddingTop: "56.25%",
@@ -82,7 +90,7 @@ export const ImageCard = ({
                 <IconButton aria-label="edit image data" onClick={onEdit}>
                     <EditIcon fill={palette.secondary.light} />
                 </IconButton>
-                <IconButton aria-label="delete image" onClick={onDelete}>
+                <IconButton aria-label="delete image" onClick={onDelete} sx={{ marginLeft: "auto" }}>
                     <DeleteIcon fill={palette.secondary.light} />
                 </IconButton>
             </CardActions>

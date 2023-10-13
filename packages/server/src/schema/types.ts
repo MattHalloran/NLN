@@ -29,8 +29,10 @@ export type AddCustomerRoleInput = {
 export type AddImageResponse = {
   __typename?: 'AddImageResponse';
   hash?: Maybe<Scalars['String']>;
+  height?: Maybe<Scalars['Int']>;
   src?: Maybe<Scalars['String']>;
   success: Scalars['Boolean'];
+  width?: Maybe<Scalars['Int']>;
 };
 
 export type AddImagesInput = {

@@ -5,7 +5,7 @@ import { GraphQLResolveInfo } from "graphql";
 import { Context } from "../context";
 import { CustomError } from "../error";
 import { IWrap, RecursivePartial } from "../types";
-import { DeleteManyInput, PhoneInput } from "./types";
+import { Count, DeleteManyInput, Phone, PhoneInput } from "./types";
 
 export const typeDef = gql`
     input PhoneInput {
@@ -37,19 +37,19 @@ export const typeDef = gql`
 
 export const resolvers = {
     Query: {
-        phones: async (_parent: undefined, _data: IWrap<undefined>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
+        phones: async (_parent: undefined, _data: IWrap<undefined>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<Phone[]> | null> => {
             // Must be admin
             if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
             return await prisma.phone.findMany((new PrismaSelect(info).value));
         },
     },
     Mutation: {
-        addPhone: async (_parent: undefined, { input }: IWrap<PhoneInput>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
+        addPhone: async (_parent: undefined, { input }: IWrap<PhoneInput>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<Phone> | null> => {
             // Must be admin, or adding to your own
             if (!req.isAdmin || (req.businessId !== input.businessId)) throw new CustomError(CODE.Unauthorized);
             return await prisma.phone.create({ data: { ...input }, ...(new PrismaSelect(info).value) });
         },
-        updatePhone: async (_parent: undefined, { input }: IWrap<PhoneInput>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
+        updatePhone: async (_parent: undefined, { input }: IWrap<PhoneInput>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<Phone> | null> => {
             // Must be admin, or updating your own
             if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
             const curr = await prisma.phone.findUnique({ where: input.id ? { id: input.id } : { number: input.number } });
@@ -61,7 +61,7 @@ export const resolvers = {
                 ...(new PrismaSelect(info).value),
             });
         },
-        deletePhones: async (_parent: undefined, { input }: IWrap<DeleteManyInput>, { prisma, req }: Context): Promise<RecursivePartial<any> | null> => {
+        deletePhones: async (_parent: undefined, { input }: IWrap<DeleteManyInput>, { prisma, req }: Context): Promise<Count | null> => {
             // Must be admin, or deleting your own
             // TODO must leave one phone per customer
             const specified = await prisma.phone.findMany({ where: { id: { in: input.ids } } });
