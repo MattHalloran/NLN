@@ -256,6 +256,8 @@ export const EditPlantDialog = ({
             }}>
                 <Box display="flex" flexDirection="column" sx={{
                     height: "100%",
+                    maxWidth: "800px",
+                    margin: "auto",
                     padding: spacing(1),
                     paddingBottom: "80px",
                 }}>
@@ -283,6 +285,7 @@ export const EditPlantDialog = ({
                                 <TextField
                                     fullWidth
                                     multiline
+                                    minRows={4}
                                     maxRows={10}
                                     size="small"
                                     label="Description"
@@ -346,6 +349,7 @@ export const EditPlantDialog = ({
                                     fullWidth
                                     size="small"
                                     label="SKU Size"
+                                    type="number"
                                     value={getSkuField("size")}
                                     onChange={e => updateSkuField("size", e.target.value)}
                                 />
@@ -354,7 +358,8 @@ export const EditPlantDialog = ({
                                 <TextField
                                     fullWidth
                                     size="small"
-                                    label="Price"
+                                    label="Price ($)"
+                                    type="number"
                                     value={getSkuField("price")}
                                     onChange={e => updateSkuField("price", e.target.value)}
                                 />
@@ -364,7 +369,7 @@ export const EditPlantDialog = ({
                                     fullWidth
                                     size="small"
                                     label="Availability"
-                                    InputProps={{ inputMode: "numeric" }}
+                                    type="number"
                                     value={getSkuField("availability")}
                                     onChange={e => updateSkuField("availability", e.target.value)}
                                 />

@@ -151,14 +151,11 @@ export const resolvers = {
         // NOTE: Images must be uploaded separately
         updatePlant: async (_parent: undefined, { input }: IWrap<PlantInput>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
             // Must be admin
-            console.log('update plant a', input)
             if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
             // Update images
             if (!input.id) throw new CustomError(CODE.InvalidArgs);
-            console.log('update plant b')
             if (Array.isArray(input.images)) {
                 const imgHashes = input.images.map((img) => img.hash);
-                console.log('update plant c', imgHashes)
                 // Delete images not passed in
                 await prisma.plant_images.deleteMany({
                     where: {
@@ -168,39 +165,41 @@ export const resolvers = {
                         ],
                     },
                 });
-                console.log('update plant d')
                 // Upsert images passed in
+                const highestIdResult = await prisma.plant_images.findFirst({
+                    orderBy: { id: 'desc' },
+                    select: { id: true },
+                });
+                let currentMaxId = highestIdResult?.id || 0;
+                const operations: any[] = [];
                 for (let i = 0; i < input.images.length; i++) {
                     const existingImage = await prisma.plant_images.findFirst({ where: { hash: input.images[i].hash } });
                     if (existingImage) {
-                        console.log('update plant e', i, existingImage)
-                        await prisma.plant_images.update({
-                            where: { id: existingImage.id },
-                            data: { isDisplay: input.images[i].isDisplay ?? false, index: i },
-                        });
+                        operations.push(
+                            prisma.plant_images.update({
+                                where: { id: existingImage.id },
+                                data: { isDisplay: input.images[i].isDisplay ?? false, index: i },
+                            })
+                        );
                     } else {
-                        console.log('update plant f', {
-                            plantId: input.id,
-                            hash: input.images[i].hash,
-                            isDisplay: input.images[i].isDisplay ?? false,
-                            index: i
-                        })
-                        await prisma.plant_images.create({
-                            data: {
-                                plantId: input.id,
-                                hash: input.images[i].hash,
-                                isDisplay: input.images[i].isDisplay ?? false,
-                                index: i
-                            },
-                        });
+                        operations.push(
+                            prisma.plant_images.create({
+                                data: {
+                                    id: ++currentMaxId,
+                                    plantId: input.id,
+                                    hash: input.images[i].hash,
+                                    isDisplay: input.images[i].isDisplay ?? false,
+                                    index: i
+                                },
+                            })
+                        );
                     }
                 }
+                await prisma.$transaction(operations);
             }
-            console.log('update plant g')
             // Update traits
             const currentTraits = await prisma.plant_trait.findMany({ where: { plantId: input.id } });
             const inputTraits = input.traits || [];
-            console.log('update plant h', currentTraits)
             const temp = await prisma.plant.findUnique({
                 where: { id: input.id },
                 select: {
@@ -213,35 +212,28 @@ export const resolvers = {
                     }
                 }
             })
-            console.log('update plant h1', temp)
             for (const trait of currentTraits) {
                 if (!inputTraits.find(it => it && it.name === trait.name)) {
                     await prisma.plant_trait.delete({ where: { id: trait.id } });
                 }
             }
-            console.log('update plant i')
             for (const trait of inputTraits) {
                 if (!trait) continue;
                 // If trait already exists, update the value
                 const existingTrait = currentTraits.find((t) => t.name === trait.name);
-                console.log('update plant j', existingTrait)
                 if (existingTrait) {
                     await prisma.plant_trait.update({ where: { id: existingTrait.id }, data: { value: trait.value } });
                     continue;
                 }
                 // Otherwise, create a new trait
-                console.log('update plant k', { plantId: input.id, name: trait.name, value: trait.value })
                 await prisma.plant_trait.create({ data: { plantId: input.id, name: trait.name, value: trait.value } });
             }
             // Update SKUs
             if (input.skus) {
-                console.log('update plant l')
                 const currSkus = await prisma.sku.findMany({ where: { plantId: input.id } });
                 const deletedSkus = currSkus.map((s) => s.sku).filter((s) => !input.skus!.some((sku: any) => sku.sku === s));
-                console.log('update plant m', currSkus, deletedSkus)
                 await prisma.sku.deleteMany({ where: { sku: { in: deletedSkus } } });
                 for (const sku of input.skus) {
-                    console.log('update plant n', sku)
                     await prisma.sku.upsert({
                         where: { sku: sku.sku },
                         update: sku as any,
@@ -249,7 +241,6 @@ export const resolvers = {
                     });
                 }
             }
-            console.log('update plant o')
             // Update latin name
             return await prisma.plant.update({
                 where: { id: input.id },
