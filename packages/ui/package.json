@@ -52,7 +52,7 @@
         "build": "tsc && vite build && node workbox-build.js",
         "start-development": "vite",
         "start-production": "serve --config serve.json",
-        "analyze": "source-map-explorer dist/assets/*",
+        "analyze": "source-map-explorer --html \"source-tree-$(date '+%Y%m%d%H%M%S').html\" --no-border-checks dist/assets/*",
         "graphql-generate": "apollo client:codegen --target typescript --endpoint=http://localhost:5330/api/v1 --outputFlat --includes \"src/api/**/*.ts\" --excludes \"src/api/generated\" src/api/generated",
         "lint": "eslint src"
     },
