@@ -1,9 +1,15 @@
 import { FormControl, FormHelperText, IconButton, InputAdornment, InputLabel, LinearProgress, OutlinedInput, useTheme } from "@mui/material";
 import { InvisibleIcon, VisibleIcon } from "icons";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { noop } from "utils";
-import zxcvbn from "zxcvbn";
 import { PasswordTextFieldProps } from "../types";
+
+type PasswordStrengthProps = {
+    label: string;
+    primary: string;
+    secondary: string;
+    score: number;
+};
 
 export const PasswordTextField = ({
     autoComplete = "current-password",
@@ -27,24 +33,33 @@ export const PasswordTextField = ({
         setShowPassword(!showPassword);
     }, [showPassword]);
 
-    const getPasswordStrengthProps = useCallback((password) => {
+    const getPasswordStrengthProps = useCallback(async (password: string) => {
+        const defaultProps = { label: "N/A", primary: palette.info.main, secondary: palette.info.light };
+        if (!password) {
+            return { ...defaultProps, score: 0 };
+        }
+        const zxcvbn = (await import("zxcvbn")).default;
         const result = zxcvbn(password);
         const score = result.score;
         switch (score) {
             case 0:
             case 1:
-                return { label: "Weak", color: palette.error.main, score };
+                return { label: "Weak", primary: palette.error.main, secondary: palette.error.light, score };
             case 2:
-                return { label: "Moderate", color: palette.warning.main, score };
+                return { label: "Moderate", primary: palette.warning.main, secondary: palette.warning.light, score };
             case 3:
-                return { label: "Strong", color: palette.success.main, score };
+                return { label: "Strong", primary: palette.success.main, secondary: palette.success.light, score };
             case 4:
-                return { label: "Very Strong", color: palette.success.dark, score };
+                return { label: "Very Strong", primary: palette.success.dark, secondary: palette.success.light, score };
             default:
-                return { label: "N/A", color: palette.info.main, score };
+                return { ...defaultProps, score };
         }
     }, [palette]);
-    const strengthProps = getPasswordStrengthProps(value);
+
+    const [strengthProps, setStrengthProps] = useState<PasswordStrengthProps>({ label: "N/A", primary: palette.info.main, secondary: palette.info.light, score: 0 });
+    useEffect(() => {
+        getPasswordStrengthProps(value).then(setStrengthProps);
+    }, [value, getPasswordStrengthProps]);
 
     return (
         <FormControl fullWidth={fullWidth} variant="outlined" {...props as any}>
@@ -82,9 +97,12 @@ export const PasswordTextField = ({
                         value={strengthProps.score * 25}  // Convert score to percentage
                         variant="determinate"
                         sx={{
-                            marginTop: 1,
+                            marginTop: 0,
+                            height: "6px",
+                            borderRadius: "0 0 4px 4px",
+                            backgroundColor: value.length === 0 ? "transparent" : strengthProps.secondary,
                             "& .MuiLinearProgress-bar": {
-                                backgroundColor: strengthProps.color,
+                                backgroundColor: strengthProps.primary,
                             },
                         }}
                     />

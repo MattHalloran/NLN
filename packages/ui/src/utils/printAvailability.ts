@@ -3,8 +3,6 @@ import { skusQuery } from "api/query";
 import { initializeApollo } from "api/utils/initialize";
 import Logo from "assets/img/nln-logo-colorized.png";
 import { SnackSeverity } from "components";
-import { jsPDF } from "jspdf";
-import "jspdf-autotable";
 import { Session } from "types";
 import { PubSub, showPrice } from "utils";
 import { getPlantTrait } from "./plantTools";
@@ -37,12 +35,14 @@ const skusToTable = (skus, priceVisible: boolean) => {
     });
 };
 
-export const printAvailability = (
+export const printAvailability = async (
     session: Session | undefined,
     title: string | null | undefined,
     phone: string | null | undefined,
     email: string | null | undefined,
 ) => {
+    const { jsPDF } = await import("jspdf");
+    await import("jspdf-autotable");
     const client = initializeApollo();
     client.query({
         query: skusQuery,

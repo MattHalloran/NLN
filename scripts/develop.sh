@@ -43,7 +43,7 @@ done
 
 # Running setup.sh
 info "Running setup.sh..."
-"${HERE}/setup.sh" -e y -r n "${SETUP_ARGS[@]}"
+. "${HERE}/setup.sh" -r n "${SETUP_ARGS[@]}"
 if [ $? -ne 0 ]; then
     error "setup.sh failed"
     exit 1

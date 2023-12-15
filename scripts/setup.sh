@@ -5,6 +5,7 @@
 # Arguments (all optional):
 # -f: Force install (y/N) - If set to "y", will delete all node_modules directories and reinstall
 # -r: Run on remote server (y/N) - If set to "y", will run additional commands to set up the remote server
+ORIGINAL_DIR=$(pwd)
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 . "${HERE}/prettify.sh"
 
@@ -90,7 +91,7 @@ if [ -z "${ON_REMOTE}" ]; then
     read -n1 -r ON_REMOTE
     echo
 fi
-if [ "${ON_REMOTE}" = "y" ] || [ "${ON_REMOTE}" = "Y" ] || [ "${ON_REMOTE}" = "yes" ] || [ "${ON_REMOTE}" = "Yes" ]; then
+if [[ "$ON_REMOTE" =~ ^[Yy]([Ee][Ss])?$ ]]; then
     header "Enabling PasswordAuthentication"
     sudo sed -i 's/#\?PasswordAuthentication .*/PasswordAuthentication yes/g' /etc/ssh/sshd_config
     sudo sed -i 's/#\?PubkeyAuthentication .*/PubkeyAuthentication yes/g' /etc/ssh/sshd_config
@@ -112,6 +113,7 @@ if [ "${ON_REMOTE}" = "y" ] || [ "${ON_REMOTE}" = "Y" ] || [ "${ON_REMOTE}" = "y
         # If ssh also fails, exit with an error
         if [ $? -ne 0 ]; then
             echo "Failed to restart ssh. Exiting with error."
+            cd "$ORIGINAL_DIR"
             exit 1
         fi
     fi
@@ -157,6 +159,7 @@ if ! command -v docker &>/dev/null; then
     # Check if Docker installation failed
     if ! command -v docker &>/dev/null; then
         echo "Error: Docker installation failed."
+        cd "$ORIGINAL_DIR"
         exit 1
     fi
 else
@@ -171,6 +174,7 @@ if ! command -v docker &>/dev/null; then
     # Check if Docker installation failed
     if ! command -v docker &>/dev/null; then
         echo "Error: Docker installation failed."
+        cd "$ORIGINAL_DIR"
         exit 1
     fi
 else
@@ -183,6 +187,7 @@ sudo service docker start
 # Verify Docker is running by attempting a command
 if ! docker version >/dev/null 2>&1; then
     error "Failed to start Docker or Docker is not running. If you are in Windows Subsystem for Linux (WSL), please start Docker Desktop and try again."
+    cd "$ORIGINAL_DIR"
     exit 1
 fi
 
@@ -200,6 +205,7 @@ if ! command -v docker-compose &>/dev/null; then
     # Check if Docker Compose installation failed
     if ! command -v docker-compose &>/dev/null; then
         echo "Error: Docker Compose installation failed."
+        cd "$ORIGINAL_DIR"
         exit 1
     fi
 else
@@ -251,6 +257,7 @@ if [ "${ENVIRONMENT}" = "dev" ]; then
                 yarn global add "$pkg"
                 if [ $? -ne 0 ]; then
                     error "Failed to install $pkg"
+                    cd "$ORIGINAL_DIR"
                     exit 1
                 else
                     info "$pkg installed successfully"
@@ -298,5 +305,6 @@ if [ ! -f "${HERE}/../assets/public/hours.md" ]; then
     echo "| Note          | Closed daily from 12:00 pm to 1:00 pm    |" >>"${HERE}/../assets/public/hours.md"
 fi
 
+cd "$ORIGINAL_DIR"
 info "Done! You may need to restart your editor for syntax highlighting to work correctly."
 info "If you haven't already, copy .env-example to .env and edit it to match your environment."
