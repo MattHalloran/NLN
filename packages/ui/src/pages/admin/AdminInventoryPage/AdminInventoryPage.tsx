@@ -72,6 +72,7 @@ export const AdminInventoryPage = () => {
                     onUpload={availabilityUpload}
                     uploadText='Upload'
                     disabled={loading}
+                    sxs={{ root: { maxWidth: "min(100%, 700px)", margin: "auto" } }}
                 />
                 <h2 style={{ marginTop: "64px", marginBottom: "0px" }}>Filter</h2>
                 <Grid container spacing={2}>

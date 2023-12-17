@@ -15,7 +15,10 @@ interface DropzoneProps {
     uploadText?: string;
     cancelText?: string;
     disabled?: boolean;
-    sx?: SxProps;
+    sxs?: {
+        root?: SxProps;
+        thumbs?: SxProps;
+    }
 }
 
 interface PreviewableFile extends File {
@@ -32,7 +35,7 @@ export const Dropzone = ({
     uploadText = "Upload file(s)",
     cancelText = "Cancel",
     disabled = false,
-    sx,
+    sxs,
 }: DropzoneProps) => {
     const { spacing } = useTheme();
 
@@ -88,7 +91,7 @@ export const Dropzone = ({
                 width: 100,
                 height: 100,
                 boxSizing: "border-box",
-                ...sx,
+                ...sxs?.thumbs,
             }}>
                 <Box sx={{
                     display: "flex",
@@ -130,6 +133,7 @@ export const Dropzone = ({
             color: "black",
             border: "3px dashed gray",
             borderRadius: "5px",
+            ...sxs?.root,
         }}>
             <Box sx={{ textAlign: "center", cursor: "pointer" }} {...getRootProps({ className: "dropzone" })}>
                 <input {...getInputProps()} />
