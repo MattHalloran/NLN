@@ -5,9 +5,10 @@ import { updateImagesVariables } from "api/generated/updateImages";
 import { addImagesMutation, updateImagesMutation } from "api/mutation";
 import { imagesByLabelQuery } from "api/query";
 import { mutationWrapper } from "api/utils";
-import { AdminTabOption, AdminTabs, Dropzone, WrappedImageList } from "components";
+import { AdminTabOption, AdminTabs, Dropzone, PageContainer, WrappedImageList } from "components";
 import { TopBar } from "components/navigation/TopBar/TopBar";
 import { useCallback, useEffect, useState } from "react";
+import { pagePaddingBottom } from "styles";
 
 const helpText = "This page allows you to manage the images displayed on the gallery page";
 
@@ -54,7 +55,7 @@ export const AdminGalleryPage = () => {
     }, [imageData, updateImages]);
 
     return (
-        <>
+        <PageContainer sx={{ minHeight: "100vh", paddingBottom: 0 }}>
             <TopBar
                 display="page"
                 help={helpText}
@@ -66,10 +67,11 @@ export const AdminGalleryPage = () => {
                     dropzoneText={"Drag 'n' drop new images here or click"}
                     onUpload={uploadImages}
                     uploadText='Upload Images'
+                    sxs={{ root: { maxWidth: "min(100%, 700px)", margin: "auto" } }}
                 />
                 <h2 style={{ marginTop: "64px", marginBottom: "0px" }}>Reorder and delete images</h2>
-                <WrappedImageList data={imageData} onApply={applyChanges} />
+                <WrappedImageList data={imageData} onApply={applyChanges} sxs={{ imageList: { paddingBottom: pagePaddingBottom } }} />
             </Box>
-        </>
+        </PageContainer>
     );
 };

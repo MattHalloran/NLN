@@ -2,12 +2,14 @@ import { useMutation } from "@apollo/client";
 import { Box, Button, Grid, TextField, useTheme } from "@mui/material";
 import { writeAssetsMutation } from "api/mutation";
 import { graphqlWrapperHelper } from "api/utils";
-import { AdminTabOption, AdminTabs } from "components";
+import { AdminTabOption, AdminTabs, PageContainer } from "components";
+import { BottomActionsGrid } from "components/buttons/BottomActionsGrid/BottomActionsGrid";
 import { TopBar } from "components/navigation/TopBar/TopBar";
 import { BusinessContext } from "contexts/BusinessContext";
 import { CancelIcon, SaveIcon } from "icons";
 import Markdown from "markdown-to-jsx";
 import { useContext, useEffect, useState } from "react";
+import { pagePaddingBottom } from "styles";
 
 const helpText = `This page allows you to edit the contact info displayed on the site. 
 
@@ -45,42 +47,17 @@ export const AdminContactPage = () => {
         setHours(business?.hours);
     };
 
-    const options = (
-        <Grid container spacing={2} sx={{
-            marginBottom: spacing(2),
-            marginTop: spacing(2),
-        }}>
-            <Grid display="flex" justifyContent="center" item xs={6}>
-                <Button
-                    startIcon={<SaveIcon />}
-                    fullWidth
-                    disabled={business?.hours === hours}
-                    onClick={applyHours}
-                    variant="contained"
-                >Apply</Button>
-            </Grid>
-            <Grid display="flex" justifyContent="center" item xs={6}>
-                <Button
-                    startIcon={<CancelIcon />}
-                    fullWidth
-                    disabled={business?.hours === hours}
-                    onClick={revertHours}
-                    variant="contained"
-                >Revert</Button>
-            </Grid>
-        </Grid>
-    );
-
     return (
-        <>
+        <PageContainer sx={{ minHeight: "100vh", paddingBottom: 0 }}>
             <TopBar
                 display="page"
                 help={helpText}
                 title="Contact Info"
                 below={<AdminTabs defaultTab={AdminTabOption.ContactInfo} />}
             />
-            {options}
-            <Grid container spacing={2} padding={2} direction="row">
+            <Grid container spacing={2} padding={2} direction="row" sx={{
+                paddingBottom: pagePaddingBottom
+            }}>
                 <Grid item xs={12} md={6}>
                     <TextField
                         id="filled-multiline-static"
@@ -103,7 +80,24 @@ export const AdminContactPage = () => {
                     </Box>
                 </Grid>
             </Grid>
-            {options}
-        </>
+            <BottomActionsGrid display="page">
+                <Grid item xs={6} p={1} sx={{ paddingTop: 0 }}>
+                    <Button
+                        fullWidth
+                        onClick={applyHours}
+                        startIcon={<SaveIcon />}
+                        variant="contained"
+                    >Apply</Button>
+                </Grid>
+                <Grid item xs={6} p={1} sx={{ paddingTop: 0 }}>
+                    <Button
+                        fullWidth
+                        onClick={revertHours}
+                        startIcon={<CancelIcon />}
+                        variant="outlined"
+                    >Revert</Button>
+                </Grid>
+            </BottomActionsGrid>
+        </PageContainer>
     );
 };

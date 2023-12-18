@@ -191,7 +191,7 @@ export const Routes = () => {
                 <Route
                     path={APP_LINKS.AdminContactInfo}>
                     <Suspense fallback={Fallback}>
-                        <Page restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
+                        <Page excludePageContainer restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
                             <AdminContactPage />
                         </Page>
                     </Suspense>
@@ -205,14 +205,14 @@ export const Routes = () => {
                 </Route>
                 <Route path={APP_LINKS.AdminGallery}>
                     <Suspense fallback={Fallback}>
-                        <Page restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
+                        <Page excludePageContainer restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
                             <AdminGalleryPage />
                         </Page>
                     </Suspense>
                 </Route>
                 <Route path={APP_LINKS.AdminHero}>
                     <Suspense fallback={Fallback}>
-                        <Page restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
+                        <Page excludePageContainer restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
                             <AdminHeroPage />
                         </Page>
                     </Suspense>

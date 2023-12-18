@@ -1,18 +1,23 @@
+import _ from "lodash";
+import { Image, ImageFile, ImageInfo } from "types";
+
+export const getImageFiles = (data: ImageInfo | Image | null | undefined): ImageFile[] => {
+    if (!data) return [];
+    if ((data as Image).__typename === "Image") return (data as Image).files ?? [];
+    return getImageFiles((data as ImageInfo).image);
+}
+
 // Return the image name with the best-match size
 // Size is measured by width
 // Priority:
 // 0. largest size if none requested
 // 1. exact size match
 // 2. smallest size greater than requested
-import _ from "lodash";
-import { ImageInfo } from "types";
-
 // 3. largest size smaller than requested
-export function getImageSrc(image: ImageInfo['image'], size?: any) {
-    // Return null if invalid input
-    if (!Array.isArray(image?.files) || image.files.length === 0) return null;
+export function getImageSrc(image: ImageInfo | Image, size?: any) {
     // Create copy of image files, to prevent any problems with sorting
-    const files = [...image.files];
+    const files = [...getImageFiles(image)];
+    if (files.length === 0) return null;
     // Return largest size if size not specified
     if (!_.isNumber(size)) return files.sort((a, b) => b.width - a.width)[0].src;
     // Determine sizes >= requested
