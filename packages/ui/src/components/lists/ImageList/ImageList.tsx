@@ -2,14 +2,16 @@ import { Box } from "@mui/material";
 import { EditImageDialog, ImageCard } from "components";
 import update from "immutability-helper";
 import { useCallback, useState } from "react";
-import { ImageInfo } from "types";
+import { ImageInfo, SxType } from "types";
 
 export const ImageList = ({
     data,
     onUpdate,
+    sx,
 }: {
     data: ImageInfo[];
     onUpdate: (data: ImageInfo[]) => unknown;
+    sx?: SxType;
 }) => {
     const [selected, setSelected] = useState(-1);
 
@@ -44,6 +46,7 @@ export const ImageList = ({
             display: "grid",
             gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
             alignItems: "stretch",
+            ...sx,
         }}>
             <EditImageDialog
                 open={selected >= 0}

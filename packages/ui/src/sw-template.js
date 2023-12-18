@@ -16,7 +16,7 @@ const { createHandlerBoundToURL, precacheAndRoute } = (workbox.precaching);
 const { registerRoute } = (workbox.routing);
 const { CacheFirst } = (workbox.strategies);
 
-const CACHE_NAME = "vrooli-cache";
+const CACHE_NAME = "nln-cache";
 const CURRENT_CACHE_VERSION = "2023-08-01"; // Change this value to force a cache update
 
 clientsClaim();

@@ -13,6 +13,9 @@ yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 
+# Source map analytics
+source-tree*.html
+
 ### Zipped ###
 *.tar
 *.tar.gz

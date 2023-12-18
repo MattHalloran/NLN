@@ -5,6 +5,7 @@
 # Arguments (all optional):
 # -f: Force install (y/N) - If set to "y", will delete all node_modules directories and reinstall
 # -r: Run on remote server (y/N) - If set to "y", will run additional commands to set up the remote server
+ORIGINAL_DIR=$(pwd)
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 . "${HERE}/prettify.sh"
 
@@ -39,10 +40,47 @@ for arg in "$@"; do
     esac
 done
 
-header "Checking for package updates"
-sudo apt-get update
-header "Running upgrade"
-RUNLEVEL=1 sudo apt-get -y upgrade
+header "Making sure the system clock is accurate"
+sudo hwclock -s
+info "System clock is now: $(date)"
+
+# Limit the number of apt-get update and upgrade calls
+should_run_apt_get_update() {
+    local last_update=$(stat -c %Y /var/lib/apt/lists/)
+    local current_time=$(date +%s)
+    local update_interval=$((24 * 60 * 60)) # 24 hours
+
+    if ((current_time - last_update > update_interval)); then
+        return 0 # true, should run
+    else
+        return 1 # false, should not run
+    fi
+}
+should_run_apt_get_upgrade() {
+    local last_upgrade=$(stat -c %Y /var/lib/dpkg/status)
+    local current_time=$(date +%s)
+    local upgrade_interval=$((7 * 24 * 60 * 60)) # 1 week
+
+    if ((current_time - last_upgrade > upgrade_interval)); then
+        return 0 # true, should run
+    else
+        return 1 # false, should not run
+    fi
+}
+
+# Check and run apt-get update and upgrade
+if should_run_apt_get_update; then
+    header "Updating apt-get package lists"
+    sudo apt-get update
+else
+    info "Skipping apt-get update - last update was less than 24 hours ago"
+fi
+if should_run_apt_get_upgrade; then
+    header "Upgrading apt-get packages"
+    RUNLEVEL=1 sudo apt-get -y upgrade
+else
+    info "Skipping apt-get upgrade - last upgrade was less than 1 week ago"
+fi
 
 header "Setting script permissions"
 chmod +x "${HERE}/"*.sh
@@ -53,7 +91,7 @@ if [ -z "${ON_REMOTE}" ]; then
     read -n1 -r ON_REMOTE
     echo
 fi
-if [ "${ON_REMOTE}" = "y" ] || [ "${ON_REMOTE}" = "Y" ] || [ "${ON_REMOTE}" = "yes" ] || [ "${ON_REMOTE}" = "Yes" ]; then
+if [[ "$ON_REMOTE" =~ ^[Yy]([Ee][Ss])?$ ]]; then
     header "Enabling PasswordAuthentication"
     sudo sed -i 's/#\?PasswordAuthentication .*/PasswordAuthentication yes/g' /etc/ssh/sshd_config
     sudo sed -i 's/#\?PubkeyAuthentication .*/PubkeyAuthentication yes/g' /etc/ssh/sshd_config
@@ -75,6 +113,7 @@ if [ "${ON_REMOTE}" = "y" ] || [ "${ON_REMOTE}" = "Y" ] || [ "${ON_REMOTE}" = "y
         # If ssh also fails, exit with an error
         if [ $? -ne 0 ]; then
             echo "Failed to restart ssh. Exiting with error."
+            cd "$ORIGINAL_DIR"
             exit 1
         fi
     fi
@@ -99,7 +138,7 @@ else
 fi
 
 header "Installing nvm"
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
 . ~/.nvm/nvm.sh
 
 header "Installing Node (includes npm)"
@@ -109,6 +148,9 @@ nvm alias default v16.16.0
 header "Installing Yarn"
 npm install -g yarn
 
+header "Installing jq for JSON parsing"
+sudo apt-get install -y jq
+
 if ! command -v docker &>/dev/null; then
     info "Docker is not installed. Installing Docker..."
     curl -fsSL https://get.docker.com -o get-docker.sh
@@ -117,10 +159,43 @@ if ! command -v docker &>/dev/null; then
     # Check if Docker installation failed
     if ! command -v docker &>/dev/null; then
         echo "Error: Docker installation failed."
+        cd "$ORIGINAL_DIR"
         exit 1
     fi
 else
     info "Detected: $(docker --version)"
+fi
+
+if ! command -v docker &>/dev/null; then
+    info "Docker is not installed. Installing Docker..."
+    curl -fsSL https://get.docker.com -o get-docker.sh
+    trap 'rm -f get-docker.sh' EXIT
+    sudo sh get-docker.sh
+    # Check if Docker installation failed
+    if ! command -v docker &>/dev/null; then
+        echo "Error: Docker installation failed."
+        cd "$ORIGINAL_DIR"
+        exit 1
+    fi
+else
+    info "Detected: $(docker --version)"
+fi
+
+# Try to start Docker (if already running, this should be a no-op)
+sudo service docker start
+
+# Verify Docker is running by attempting a command
+if ! docker version >/dev/null 2>&1; then
+    error "Failed to start Docker or Docker is not running. If you are in Windows Subsystem for Linux (WSL), please start Docker Desktop and try again."
+    cd "$ORIGINAL_DIR"
+    exit 1
+fi
+
+header "Create nginx-proxy network"
+docker network create nginx-proxy
+# Ignore errors if the network already exists
+if [ $? -ne 0 ]; then
+    true
 fi
 
 if ! command -v docker-compose &>/dev/null; then
@@ -130,6 +205,7 @@ if ! command -v docker-compose &>/dev/null; then
     # Check if Docker Compose installation failed
     if ! command -v docker-compose &>/dev/null; then
         echo "Error: Docker Compose installation failed."
+        cd "$ORIGINAL_DIR"
         exit 1
     fi
 else
@@ -146,15 +222,52 @@ fi
 # Less needs to be done for production environments
 if [ "${ENVIRONMENT}" = "dev" ]; then
     header "Installing global dependencies"
-    yarn global add apollo@2.34.0 typescript ts-node nodemon prisma@4.14.0 vite
+    installedPackages=$(yarn global list)
+    check_and_add_to_install_list() {
+        package="$1"
+        version="$2"
+        fullPackageName="$package"
+        if [ ! -z "$version" ]; then
+            fullPackageName="$package@$version"
+        fi
+        # Check if package is installed globally
+        if ! echo "$installedPackages" | grep -E "info \"$package(@$version)?" >/dev/null; then
+            info "Installing $fullPackageName"
+            toInstall="$toInstall $fullPackageName"
+        fi
+    }
+    toInstall=""
+    check_and_add_to_install_list "apollo" "2.34.0"
+    check_and_add_to_install_list "typescript" ""
+    check_and_add_to_install_list "ts-node" ""
+    check_and_add_to_install_list "nodemon" ""
+    check_and_add_to_install_list "prisma" "4.14.0"
+    check_and_add_to_install_list "vite" "4.4.4"
+    # Install all at once if there are packages to install
+    if [ ! -z "$toInstall" ]; then
+        yarn global add $toInstall
+        if [ $? -ne 0 ]; then
+            error "Failed to install global dependencies: $toInstall"
+            info "Trying to install each package individually..."
+            # Split the toInstall string into an array
+            IFS=' ' read -r -a individualPackages <<<"$toInstall"
+            # Loop through each package and try to install it individually
+            for pkg in "${individualPackages[@]}"; do
+                info "Attempting to install $pkg individually..."
+                yarn global add "$pkg"
+                if [ $? -ne 0 ]; then
+                    error "Failed to install $pkg"
+                    cd "$ORIGINAL_DIR"
+                    exit 1
+                else
+                    info "$pkg installed successfully"
+                fi
+            done
+        fi
+    fi
 
     # If reinstalling modules, delete all node_modules directories before installing dependencies
-    if [ -z "${REINSTALL_MODULES}" ]; then
-        prompt "Force install node_modules? This will delete all node_modules and the yarn.lock file. (y/N)"
-        read -n1 -r REINSTALL_MODULES
-        echo
-    fi
-    if [ "${REINSTALL_MODULES}" = "y" ] || [ "${REINSTALL_MODULES}" = "Y" ] || [ "${REINSTALL_MODULES}" = "yes" ] || [ "${REINSTALL_MODULES}" = "Yes" ]; then
+    if [[ "$REINSTALL_MODULES" =~ ^[Yy]([Ee][Ss])?$ ]]; then
         header "Deleting all node_modules directories"
         find "${HERE}/.." -maxdepth 4 -name "node_modules" -type d -exec rm -rf {} \;
         header "Deleting yarn.lock"
@@ -192,5 +305,6 @@ if [ ! -f "${HERE}/../assets/public/hours.md" ]; then
     echo "| Note          | Closed daily from 12:00 pm to 1:00 pm    |" >>"${HERE}/../assets/public/hours.md"
 fi
 
+cd "$ORIGINAL_DIR"
 info "Done! You may need to restart your editor for syntax highlighting to work correctly."
 info "If you haven't already, copy .env-example to .env and edit it to match your environment."

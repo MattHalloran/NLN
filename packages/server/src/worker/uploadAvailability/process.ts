@@ -53,11 +53,15 @@ const findColumnIndex = (header: string[], potentialNames: string[]): number => 
 export async function uploadAvailabilityProcess(job: any) {
     console.info("📊 Updating availability...");
     const rows: any[] = job.data.rows;
-    const header = rows[0];
     let content = rows.slice(1, rows.length);
     // Filter out blank rows, and rows where each cell is "Column1", "Column2", etc.
     // (The latter happens in LibreOffice sometimes for some reason)
     content = content.filter(row => row.some((cell: any) => typeof cell === "string" && cell.trim() !== "" && !cell.startsWith("Column")));
+    // Filter out any rows which aren't actual data (e.g. headers, footers, category names).
+    // We determine this by removing any rows which have 0-2 non-empty cells
+    content = content.filter(row => row.length > 2);
+    // Header should be the first real row
+    const header = content[0];
     // Determine which columns data is in
     const columnIndex: { [x: string]: number } = {
         latinName: findColumnIndex(header, ["Botanical Name", "Botanical", "Latin Name", "Latin", "Description", "Name"]),

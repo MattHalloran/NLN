@@ -1,6 +1,7 @@
 import { FetchResult } from "@apollo/client";
 import { Theme } from "@mui/material";
 import { SystemStyleObject } from "@mui/system";
+import { imagesByLabel_imagesByLabel } from "api/generated/imagesByLabel";
 import { orders_orders } from "api/generated/orders";
 import { plants_plants_images } from "api/generated/plants";
 import { SvgProps } from "icons/types";
@@ -10,6 +11,9 @@ export type Cart = Omit<orders_orders, "customer">;
 
 export type PlantImageInfo = plants_plants_images;
 export type ImageInfo = { index: number, image: PlantImageInfo['image'] };
+
+export type Image = imagesByLabel_imagesByLabel
+export type ImageFile = { __typename: "ImageFile", src: string, width: number, height: number };
 
 // Top-level props that can be passed into any routed component
 export type Session = {

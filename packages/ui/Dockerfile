@@ -26,7 +26,7 @@ WORKDIR ${PROJECT_DIR}
 COPY --from=stage0 ${PROJECT_DIR} ./
 
 # Install global packages
-RUN yarn global add vite
+RUN yarn global add vite@4.4.4
 
 # Stage 2. Copy files from stage 1
 FROM node:16-alpine as stage2
