@@ -2,11 +2,15 @@ import Bull from "bull";
 import XLSX from "xlsx";
 import { uploadAvailabilityProcess } from "./process";
 
+export type UploadAvailabilityPayload = {
+    rows: unknown[][];
+}
+
 const split = (process.env.REDIS_CONN || "redis:6379").split(":");
 export const HOST = split[0];
 export const PORT = Number(split[1]);
 
-const uploadAvailabilityQueue = new Bull("uploadAvailability", { redis: { port: PORT, host: HOST } });
+const uploadAvailabilityQueue = new Bull<UploadAvailabilityPayload>("uploadAvailability", { redis: { port: PORT, host: HOST } });
 uploadAvailabilityQueue.process(uploadAvailabilityProcess);
 
 export async function uploadAvailability(filename: string) {
