@@ -142,12 +142,25 @@ export const CartTable = ({
                                     id={id}
                                     align={align as any}
                                     padding={disablePadding ? "none" : "normal"}
+                                    sx={{
+                                        paddingLeft: index === 0 ? 1 : 0,
+                                        color: palette.primary.contrastText,
+                                    }}
                                 >{label}</TableCell>
                             ))}
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {Array.isArray(cart?.items) ? cart.items.map((c, index) => cart_item_to_row(c, index)) : null}
+                        {Array.isArray(cart?.items) && cart.items.length > 0
+                            ? cart.items.map((c, index) => cart_item_to_row(c, index))
+                            : (
+                                <TableRow>
+                                    <TableCell colSpan={headCells.length} align="center">
+                                        Your cart is empty.
+                                    </TableCell>
+                                </TableRow>
+                            )
+                        }
                     </TableBody>
                 </Table>
             </TableContainer>

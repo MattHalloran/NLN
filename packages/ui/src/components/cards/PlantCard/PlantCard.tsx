@@ -46,7 +46,11 @@ export const PlantCard = ({
     const sizes = plant.skus?.map(s => (
         <Chip
             key={s.sku}
-            label={isAdminPage ? `#${s.size} | ${showPrice(s.price)} | Avail: ${s.availability}` : `#${s.size} | Avail: ${s.availability}`}
+            label={
+                isAdminPage
+                    ? `${s.size ? `#${s.size} | ` : ""} ${showPrice(s.price)} | Avail: ${s.availability}`
+                    : `${s.size ? `#${s.size} | ` : ""} Avail: ${s.availability}`
+            }
             onClick={(e) => openWithSku(e, s)}
             sx={{
                 margin: 0.5,

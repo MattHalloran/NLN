@@ -33,7 +33,7 @@ type PlantData = {
 type SkuData = {
     isNew: boolean,
     skuId: string,
-    size: Decimal,
+    size: Decimal | null,
     availability: number,
     status: SkuStatus
 };
@@ -70,27 +70,6 @@ export const findColumnIndex = (header: unknown[], potentialNames: string[]): nu
         if (index !== -1) return index;
     }
     return -1;
-}
-
-/**
- * Merges processed SKUs into the existing SKUs map.
- * For each plant, it combines the SKUs from both sources, preferring the processed SKUs.
- *
- * @param processedSkus - The map of SKUs processed from the current file.
- * @param existingSkus - The map of existing SKUs from the database.
- * @returns The merged map of SKUs.
- */
-export const mergeProcessedSkus = (processedSkus: SkuDataMap, existingSkus: SkuDataMap): SkuDataMap => {
-    // Iterate over the processed SKUs and merge them into the existing SKUs
-    for (const plantId in processedSkus) {
-        if (!existingSkus[plantId]) {
-            existingSkus[plantId] = [];
-        }
-        // Assuming that processedSkus for a plant should replace existing ones
-        // If this assumption is incorrect, you might need to merge them more carefully
-        existingSkus[plantId].push(...processedSkus[plantId]);
-    }
-    return existingSkus;
 }
 
 /**
@@ -423,6 +402,27 @@ async function processRow(
 }
 
 /**
+ * Merges processed SKUs into the existing SKUs map.
+ * For each plant, it combines the SKUs from both sources, preferring the processed SKUs.
+ *
+ * @param processedSkus - The map of SKUs processed from the current file.
+ * @param existingSkus - The map of existing SKUs from the database.
+ * @returns The merged map of SKUs.
+ */
+export const mergeProcessedSkus = (processedSkus: SkuDataMap, existingSkus: SkuDataMap): SkuDataMap => {
+    // Iterate over the processed SKUs and merge them into the existing SKUs
+    for (const plantId in processedSkus) {
+        if (!existingSkus[plantId]) {
+            existingSkus[plantId] = [];
+        }
+        // Assuming that processedSkus for a plant should replace existing ones
+        // If this assumption is incorrect, you might need to merge them more carefully
+        existingSkus[plantId].push(...processedSkus[plantId]);
+    }
+    return existingSkus;
+}
+
+/**
  * Identifies and prepares duplicate SKUs for deletion.
  * 
  * In this context, a duplicate SKU is defined as an SKU that belongs to the same plant and has the same size as another SKU, 
@@ -434,8 +434,8 @@ async function processRow(
  * and within the same status, preferring SKUs with higher availability. The "best" SKU in each group (active and with the highest availability)
  * is retained, while the rest are marked for deletion to streamline the inventory and avoid the aforementioned issues.
  * 
- * @param {Object} existingSkus - An object where each key is a plantId and each value is an array of SKUs for that plant.
- * @returns {string[]} An array of SKU IDs that are identified as duplicates and should be deleted.
+ * @param existingSkus - An object where each key is a plantId and each value is an array of SKUs for that plant.
+ * @returns An array of SKU IDs that are identified as duplicates and should be deleted.
  */
 export const findDuplicateSkus = (existingSkus: SkuDataMap) => {
     const duplicateSKUsToDelete: Set<string> = new Set(); // Use a Set to avoid duplicate entries
@@ -446,7 +446,8 @@ export const findDuplicateSkus = (existingSkus: SkuDataMap) => {
 
         // Group the SKUs by size
         for (const sku of skusForPlant) {
-            const sizeStr = sku.size.toString();
+            // Handle null size by assigning a unique identifier, e.g., 'N/A'
+            const sizeStr = sku.size !== null ? sku.size.toString() : 'N/A';
             skusGroupedBySize[sizeStr] = skusGroupedBySize[sizeStr] || [];
             skusGroupedBySize[sizeStr].push(sku);
         }
@@ -483,12 +484,12 @@ export const findDuplicateSkus = (existingSkus: SkuDataMap) => {
 // SKUs of plants not in the availability file will be hidden
 export async function uploadAvailabilityProcess(job: Bull.Job<UploadAvailabilityPayload>) {
     console.info("📊 Updating availability...");
-    const rows = job.data.rows;
-    let content = rows.slice(1, rows.length);
-    // Filter out invalid rows
-    content = filterContentRows(content);
-    // Header should be the first real row
-    const header = content[0];
+    const rows = filterContentRows(job.data.rows);
+    if (rows.length === 0) {
+        console.warn("⚠️ No rows found in file!");
+        return;
+    }
+    const [header, ...content] = rows;
     // Determine which columns data is in
     const columnIndexMap = extractColumnIndices(header);
     // Hide all existing SKUs (inventory items, zero or more per plant), so only the SKUs in this file can be set to visible
@@ -516,11 +517,6 @@ export async function uploadAvailabilityProcess(job: Bull.Job<UploadAvailability
     const processedSkus: SkuDataMap = {};
     for (const row of content) {
         await processRow(row, columnIndexMap, existingCommonNames, existingSkus, processedSkus, prisma);
-    }
-    // Merge processed SKUs with existing SKUs
-    for (const plantId in processedSkus) {
-        if (!existingSkus[plantId]) existingSkus[plantId] = [];
-        existingSkus[plantId].push(...processedSkus[plantId]);
     }
     // Cleanup duplicate SKUs
     const duplicateSKUsToDelete = findDuplicateSkus(mergeProcessedSkus(processedSkus, existingSkus));

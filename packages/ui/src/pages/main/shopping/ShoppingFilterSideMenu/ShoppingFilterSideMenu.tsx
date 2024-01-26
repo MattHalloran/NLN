@@ -159,19 +159,19 @@ export const ShoppingFilterSideMenu = ({
                 <Grid item xs={6} p={1} sx={{ paddingTop: 0 }}>
                     <Button
                         fullWidth
-                        startIcon={<RefreshIcon />}
-                        type="submit"
-                        onClick={resetSearchConstraints}
+                        startIcon={<CloseIcon />}
+                        onClick={() => PubSub.get().publishSideMenu({ id, isOpen: false })}
                         variant="contained"
-                    >Reset</Button>
+                    >Close</Button>
                 </Grid>
                 <Grid item xs={6} p={1} sx={{ paddingTop: 0 }}>
                     <Button
                         fullWidth
-                        startIcon={<CloseIcon />}
-                        onClick={() => PubSub.get().publishSideMenu({ id, isOpen: false })}
+                        startIcon={<RefreshIcon />}
+                        type="submit"
+                        onClick={resetSearchConstraints}
                         variant="outlined"
-                    >Close</Button>
+                    >Reset</Button>
                 </Grid>
             </BottomActionsGrid>
         </SwipeableDrawer>

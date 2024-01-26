@@ -5,7 +5,8 @@ import { submitOrderVariables } from "api/generated/submitOrder";
 import { updateOrderVariables, updateOrder_updateOrder } from "api/generated/updateOrder";
 import { submitOrderMutation, updateOrderMutation } from "api/mutation";
 import { mutationWrapper } from "api/utils";
-import { CartTable, SnackSeverity } from "components";
+import { CartTable, PageContainer, SnackSeverity } from "components";
+import { BottomActionsGrid } from "components/buttons/BottomActionsGrid/BottomActionsGrid";
 import { TopBar } from "components/navigation/TopBar/TopBar";
 import { BusinessContext } from "contexts/BusinessContext";
 import { SessionContext } from "contexts/SessionContext";
@@ -90,49 +91,46 @@ export const CartPage = () => {
         });
     }, [changedCart, session, requestQuote, business]);
 
-    const options = (
-        <Grid container spacing={2} sx={{ paddingTop: spacing(2) }}>
-            <Grid display="flex" justifyContent="center" item xs={12} sm={4}>
-                <Button
-                    fullWidth
-                    startIcon={<ArrowLeftIcon />}
-                    onClick={() => setLocation(APP_LINKS.Shopping)}
-                    disabled={loading || (changedCart !== null && !_.isEqual(session?.cart, changedCart))}
-                    variant="contained"
-                >Continue Shopping</Button>
-            </Grid>
-            <Grid display="flex" justifyContent="center" item xs={12} sm={4}>
-                <Button
-                    fullWidth
-                    startIcon={<SaveIcon />}
-                    onClick={orderUpdate}
-                    disabled={loading || (changedCart === null || _.isEqual(session?.cart, changedCart))}
-                    variant="contained"
-                >Update Order</Button>
-            </Grid>
-            <Grid display="flex" justifyContent="center" item xs={12} sm={4}>
-                <Button
-                    fullWidth
-                    endIcon={<ArrowRightIcon />}
-                    onClick={finalizeOrder}
-                    disabled={loading || changedCart === null || !_.isEqual(session?.cart, changedCart)}
-                    variant="contained"
-                >Request Quote</Button>
-            </Grid>
-        </Grid>
-    );
-
     return (
-        <>
+        <PageContainer>
             <TopBar
                 display="page"
-                title="Cart"
+                title="Request a Quote"
             />
-            <Box p={2}>
-                {options}
+            <Box p={2} sx={{ minHeight: "100vh", paddingBottom: 0 }}>
                 <CartTable cart={changedCart} onUpdate={(d) => setChangedCart(d)} sx={{ paddingTop: spacing(2) }} />
-                {options}
             </Box>
-        </>
+            <BottomActionsGrid display="page">
+                <Grid container spacing={2} sx={{ paddingTop: 0 }}>
+                    <Grid display="flex" justifyContent="center" item xs={12} sm={4}>
+                        <Button
+                            fullWidth
+                            startIcon={<ArrowLeftIcon />}
+                            onClick={() => setLocation(APP_LINKS.Shopping)}
+                            disabled={loading || (changedCart !== null && !_.isEqual(session?.cart, changedCart))}
+                            variant="contained"
+                        >Continue Shopping</Button>
+                    </Grid>
+                    <Grid display="flex" justifyContent="center" item xs={12} sm={4}>
+                        <Button
+                            fullWidth
+                            startIcon={<SaveIcon />}
+                            onClick={orderUpdate}
+                            disabled={loading || (changedCart === null || _.isEqual(session?.cart, changedCart))}
+                            variant="contained"
+                        >Update Order</Button>
+                    </Grid>
+                    <Grid display="flex" justifyContent="center" item xs={12} sm={4}>
+                        <Button
+                            fullWidth
+                            endIcon={<ArrowRightIcon />}
+                            onClick={finalizeOrder}
+                            disabled={loading || changedCart === null || !_.isEqual(session?.cart, changedCart)}
+                            variant="contained"
+                        >Request Quote</Button>
+                    </Grid>
+                </Grid>
+            </BottomActionsGrid>
+        </PageContainer>
     );
 };

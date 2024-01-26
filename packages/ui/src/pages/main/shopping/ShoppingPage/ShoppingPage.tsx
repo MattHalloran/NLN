@@ -123,7 +123,7 @@ export const ShoppingPage = () => {
         <>
             <TopBar
                 display="page"
-                title="Availability"
+                title={hideOutOfStock ? "Available Inventory" : "Inventory"}
             />
             <Box ref={dimRef}>
                 <ShoppingFilterSideMenu

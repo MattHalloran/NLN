@@ -173,7 +173,7 @@ export const Routes = () => {
                 <Route
                     path={APP_LINKS.Cart}>
                     <Suspense fallback={Fallback}>
-                        <Page restrictedToRoles={Object.values(ROLES)} redirect={APP_LINKS.LogIn}>
+                        <Page excludePageContainer restrictedToRoles={Object.values(ROLES)} redirect={APP_LINKS.LogIn}>
                             <CartPage />
                         </Page>
                     </Suspense>
