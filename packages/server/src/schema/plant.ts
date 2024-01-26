@@ -103,7 +103,7 @@ export const resolvers = {
                 orderBy: sortQuery,
                 ...(new PrismaSelect(info).value),
             });
-            // If showActive is true, filter out inactive SKUs
+            // If showActive is true, filter out inactive SKUs and SKUs with 0 availability
             if (showActive) {
                 plants = plants.map((p: any) => {
                     return {
@@ -111,6 +111,17 @@ export const resolvers = {
                         skus: p.skus?.filter((s) => s.status === SKU_STATUS.Active) || [],
                     };
                 });
+                plants = plants.filter((p: any) => p.skus.length > 0);
+            }
+            // If onlyInStock is true, filter out SKUs with 0 availability
+            if (input.onlyInStock === true) {
+                plants = plants.map((p: any) => {
+                    return {
+                        ...p,
+                        skus: p.skus?.filter((s) => s.availability > 0) || [],
+                    };
+                });
+                plants = plants.filter((p: any) => p.skus.length > 0);
             }
             return plants;
         },
