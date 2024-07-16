@@ -1,10 +1,13 @@
-import { AppBar, Box, Button, Dialog, Grid, IconButton, Toolbar, Typography, useTheme } from "@mui/material";
+import { useMutation } from "@apollo/client";
+import { uuid } from "@local/shared";
+import { AppBar, Box, Button, Dialog, Grid, IconButton, TextField, Toolbar, Typography, useTheme } from "@mui/material";
 import { customers_customers } from "api/generated/customers";
 import { deleteCustomerVariables } from "api/generated/deleteCustomer";
 import { AccountStatus } from "api/generated/globalTypes";
-import { updateCustomerVariables } from "api/generated/updateCustomer";
+import { updateCustomer_updateCustomer, updateCustomerVariables } from "api/generated/updateCustomer";
 import { deleteCustomerMutation, updateCustomerMutation } from "api/mutation";
-import { documentNodeWrapper } from "api/utils";
+import { documentNodeWrapper, mutationWrapper } from "api/utils";
+import { useFormik } from "formik";
 import { CancelIcon, CloseIcon, CreateIcon, DeleteIcon, ErrorIcon, LockIcon, LockOpenIcon, SaveIcon } from "icons";
 import { SvgComponent } from "icons/types";
 import _ from "lodash";
@@ -41,6 +44,54 @@ export const CustomerDialog = ({
         return (currCustomer?.status in statusToggle ? statusToggle[currCustomer.status] : ["", "", null, ErrorIcon]) as [string, string, AccountStatus | null, SvgComponent];
     }, [currCustomer]);
 
+    const [updateCustomer, { loading }] = useMutation(updateCustomerMutation);
+    const formik = useFormik({
+        enableReinitialize: true,
+        initialValues: {
+            firstName: customer?.firstName ?? "",
+            lastName: customer?.lastName ?? "",
+            business: customer?.business?.name ?? "",
+            pronouns: customer?.pronouns ?? "",
+            email: customer !== null && customer.emails.length > 0 ? customer.emails[0].emailAddress : "",
+            phone: customer !== null && customer.phones.length > 0 ? customer.phones[0].number : "",
+            accountApproved: (customer?.accountApproved || false),
+            marketingEmails: customer !== null && customer.emails.length > 0 ? customer.emails[0].receivesDeliveryUpdates : false,
+        },
+        onSubmit: (values) => {
+            if (!customer) return;
+            const input = {
+                id: customer.id,
+                firstName: values.firstName,
+                lastName: values.lastName,
+                business: {
+                    id: customer.business?.id ?? uuid(),
+                    name: values.business,
+                },
+                pronouns: values.pronouns,
+                emails: [
+                    {
+                        id: customer.emails.length > 0 ? customer.emails[0].id : uuid(),
+                        emailAddress: values.email,
+                        receivesDeliveryUpdates: values.marketingEmails,
+                    },
+                ],
+                phones: [
+                    {
+                        id: customer.phones.length > 0 ? customer.phones[0].id : uuid(),
+                        number: values.phone,
+                    },
+                ],
+                accountApproved: values.accountApproved,
+            };
+
+            mutationWrapper<updateCustomer_updateCustomer, updateCustomerVariables>({
+                mutation: updateCustomer,
+                input: { input },
+                successMessage: () => "Customer updated.",
+            });
+        },
+    });
+
     // Locks/unlocks/undeletes a user
     const toggleLock = useCallback(() => {
         documentNodeWrapper<any, updateCustomerVariables>({
@@ -72,14 +123,6 @@ export const CustomerDialog = ({
         });
     }, [currCustomer, deleteCustomer]);
 
-    const updateCustomer = useCallback(() => {
-        documentNodeWrapper<any, updateCustomerVariables>({
-            node: updateCustomerMutation,
-            input: { input: currCustomer },
-            successMessage: () => "Customer updated.",
-        });
-    }, [currCustomer]);
-
     const changes_made = !_.isEqual(customer, currCustomer);
     const options = (
         <Grid container spacing={2} sx={{
@@ -89,7 +132,7 @@ export const CustomerDialog = ({
             <Grid item xs={12} sm={6} md={3}>
                 <Button
                     fullWidth
-                    disabled={!changes_made}
+                    disabled={loading || !changes_made}
                     startIcon={<CancelIcon />}
                     onClick={revert}
                     variant="contained"
@@ -98,7 +141,7 @@ export const CustomerDialog = ({
             <Grid item xs={12} sm={6} md={3}>
                 <Button
                     fullWidth
-                    disabled={!customer?.id}
+                    disabled={loading || !customer?.id}
                     startIcon={<ToggleIcon />}
                     onClick={toggleLock}
                     variant="contained"
@@ -107,7 +150,7 @@ export const CustomerDialog = ({
             <Grid item xs={12} sm={6} md={3}>
                 <Button
                     fullWidth
-                    disabled={!customer?.id}
+                    disabled={loading || !customer?.id}
                     startIcon={<DeleteIcon />}
                     onClick={confirmDelete}
                     variant="contained"
@@ -116,9 +159,9 @@ export const CustomerDialog = ({
             <Grid item xs={12} sm={6} md={3}>
                 <Button
                     fullWidth
-                    disabled={!changes_made}
+                    disabled={loading || !changes_made}
                     startIcon={<SaveIcon />}
-                    onClick={updateCustomer}
+                    onClick={() => { formik.handleSubmit(); }}
                     variant="contained"
                 >Update</Button>
             </Grid>
@@ -144,6 +187,84 @@ export const CustomerDialog = ({
                     </Grid>
                 </Toolbar>
             </AppBar>
+            <Box component="form" onSubmit={formik.handleSubmit} sx={{
+                background: palette.background.default,
+                flex: "auto",
+                padding: spacing(3),
+                paddingBottom: "20vh",
+                overflowY: "auto",
+            }}>
+                <Grid container spacing={3}>
+                    <Grid item xs={12} sm={6}>
+                        <TextField
+                            fullWidth
+                            label="First Name"
+                            value={currCustomer?.firstName || ""}
+                            onChange={(e) => setCurrCustomer({ ...currCustomer, firstName: e.target.value })}
+                        />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                        <TextField
+                            fullWidth
+                            label="Last Name"
+                            value={currCustomer?.lastName || ""}
+                            onChange={(e) => setCurrCustomer({ ...currCustomer, lastName: e.target.value })}
+                        />
+                    </Grid>
+                    <Grid item xs={12}>
+                        <TextField
+                            fullWidth
+                            label="Pronouns"
+                            value={currCustomer?.pronouns || ""}
+                            onChange={(e) => setCurrCustomer({ ...currCustomer, pronouns: e.target.value })}
+                        />
+                    </Grid>
+                    {Boolean(customer?.business) && <Grid item xs={12}>
+                        <TextField
+                            fullWidth
+                            label="Business Name"
+                            value={currCustomer?.business?.name || ""}
+                            onChange={(e) => setCurrCustomer({ ...currCustomer, business: { ...currCustomer.business!, name: e.target.value } })}
+                        />
+                    </Grid>}
+                    <Grid item xs={12}>
+                        <TextField
+                            fullWidth
+                            label="Email"
+                            value={currCustomer?.emails?.[0]?.emailAddress || ""}
+                            onChange={(e) => setCurrCustomer({ ...currCustomer, emails: [{ ...currCustomer.emails[0], emailAddress: e.target.value }] })}
+                        />
+                    </Grid>
+                    <Grid item xs={12}>
+                        <TextField
+                            fullWidth
+                            label="Phone"
+                            value={currCustomer?.phones?.[0]?.number || ""}
+                            onChange={(e) => setCurrCustomer({ ...currCustomer, phones: [{ ...currCustomer.phones[0], number: e.target.value }] })}
+                        />
+                    </Grid>
+                    <Grid item xs={12}>
+                        <TextField
+                            fullWidth
+                            label="Account Status"
+                            value={currLabel}
+                            InputProps={{
+                                readOnly: true,
+                            }}
+                        />
+                    </Grid>
+                    <Grid item xs={12}>
+                        <TextField
+                            fullWidth
+                            label="Roles"
+                            value={currCustomer?.roles?.map(role => role.role.title).join(", ") || ""}
+                            InputProps={{
+                                readOnly: true,
+                            }}
+                        />
+                    </Grid>
+                </Grid>
+            </Box>
             <Box sx={{
                 background: palette.background.default,
                 flex: "auto",
