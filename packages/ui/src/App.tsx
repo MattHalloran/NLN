@@ -149,12 +149,6 @@ export function App() {
                                 backgroundColor: "#1b5e2085",
                             },
                         },
-                        "@media (min-width:500px)": {
-                            "#page": {
-                                paddingLeft: "max(1em, calc(15% - 75px))",
-                                paddingRight: "max(1em, calc(15% - 75px))",
-                            },
-                        },
                         // Custom IconButton hover highlighting, which doesn't hide background color
                         ".MuiIconButton-root": {
                             "&:hover": {

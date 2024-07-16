@@ -73,7 +73,7 @@ export const Routes = () => {
                     sitemapIndex
                     priority={0.1}>
                     <Suspense fallback={Fallback}>
-                        <Page>
+                        <Page excludePageContainer>
                             <PrivacyPolicyPage />
                         </Page>
                     </Suspense>
@@ -83,7 +83,7 @@ export const Routes = () => {
                     sitemapIndex
                     priority={0.1}>
                     <Suspense fallback={Fallback}>
-                        <Page>
+                        <Page excludePageContainer>
                             <TermsPage />
                         </Page>
                     </Suspense>

@@ -40,12 +40,13 @@ export type KeyComboOption = `${WindowsKey}` | "Shift" | "Tab" | "Backspace" | "
  * Any values not found will be undefined.
  * NOTE: This data can be spoofed by the user
  */
-export const getDeviceInfo = (): {
+export function getDeviceInfo(): {
     deviceName: string | undefined,
     deviceType: DeviceType | undefined,
     deviceOS: DeviceOS | undefined,
+    isMobile: boolean,
     isStandalone: boolean,
-} => {
+} {
     // Get the user agent string
     const userAgent = navigator.userAgent;
     // Determine name
@@ -65,8 +66,8 @@ export const getDeviceInfo = (): {
     const deviceOS = isAndroid ? DeviceOS.Android : isIOS ? DeviceOS.IOS : isWindows ? DeviceOS.Windows : isMacOS ? DeviceOS.MacOS : isLinux ? DeviceOS.Linux : DeviceOS.Unknown;
     // Check if the app is running in standalone mode (i.e. downloaded to the home screen
     const isStandalone = window.matchMedia("(display-mode: standalone)").matches;
-    return { deviceName, deviceType, deviceOS, isStandalone };
-};
+    return { deviceName, deviceType, deviceOS, isMobile, isStandalone };
+}
 
 /**
  * Converts a key combination into a string for display.
