@@ -192,7 +192,7 @@ export const PlantDialog = ({
                         }} />
                     </Grid>}
                     <Grid item lg={6} xs={12}>
-                        {displayedTraitList.length > 0 ? (
+                        {(getPlantTrait("description", plant) || displayedTraitList.length > 0) ? (
                             <>
                                 <ListItem button onClick={handleDetailsClick}>
                                     <ListItemIcon><InfoIcon fill={palette.background.textPrimary} /></ListItemIcon>
