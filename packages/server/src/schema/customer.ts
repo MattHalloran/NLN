@@ -323,7 +323,7 @@ export const resolvers = {
         },
         updateCustomer: async (_parent: undefined, { input }: IWrap<UpdateCustomerInput>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<Customer>> => {
             // Must be admin, or updating your own
-            if (!req.isAdmin && !input.input.id || (req.customerId !== input.input.id)) throw new CustomError(CODE.Unauthorized);
+            if (!req.isAdmin || (req.customerId !== input.input.id)) throw new CustomError(CODE.Unauthorized);
             if (!req.isAdmin) {
                 // Check for correct password
                 const customer = await prisma.customer.findUnique({

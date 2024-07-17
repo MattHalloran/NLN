@@ -23,9 +23,10 @@ enum CustomerStatus {
 
 export const CustomerCard = ({
     customer,
+    isMobile,
     onEdit,
 }: CustomerCardProps) => {
-    const { palette } = useTheme();
+    const { breakpoints, palette } = useTheme();
 
     const [changeCustomerStatus] = useMutation(changeCustomerStatusMutation);
     const [deleteCustomer] = useMutation(deleteCustomerMutation);
@@ -131,9 +132,16 @@ export const CustomerCard = ({
         <Card sx={{
             background: palette.primary.main,
             color: palette.primary.contrastText,
-            borderRadius: 2,
-            margin: 2,
+            display: "flex",
+            flexDirection: isMobile ? "row" : "column",
+            gap: 1,
             cursor: "pointer",
+            overflow: "hidden",
+            boxShadow: isMobile ? 0 : 4,
+            borderRadius: isMobile ? 0 : 2,
+            [breakpoints.down("sm")]: {
+                borderBottom: `1px solid ${palette.divider}`,
+            },
         }}>
             {phoneDialogOpen ? (
                 <ListDialog
@@ -152,6 +160,7 @@ export const CustomerCard = ({
                 sx={{
                     padding: 2,
                     position: "inherit",
+                    width: "100%",
                 }}
             >
                 <Typography gutterBottom variant="h6" component="h2">
@@ -161,7 +170,9 @@ export const CustomerCard = ({
                 <p>Business: {customer?.business?.name}</p>
                 <p>Pronouns: {customer?.pronouns ?? "Unset"}</p>
             </CardContent>
-            <CardActions>
+            <CardActions sx={{
+                flexDirection: isMobile ? "column" : "row",
+            }}>
                 {actions?.map((action, index) =>
                     <Tooltip key={`action-${index}`} title={action[2]} placement="bottom">
                         <IconButton onClick={action[0]}>
