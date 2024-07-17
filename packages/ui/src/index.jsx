@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 import { ApolloProvider } from "@apollo/client";
 import { initializeApollo } from "api/utils/initialize";
 import { ErrorBoundary } from "components";
@@ -6,6 +7,7 @@ import { Router } from "route";
 import { App } from "./App";
 import * as serviceWorkerRegistration from "./serviceWorkerRegistration";
 import { getDeviceInfo } from "./utils/device";
+import { PubSub } from "./utils/pubsub";
 
 const client = initializeApollo();
 
@@ -20,30 +22,78 @@ root.render(
     </Router>,
 );
 
-// If you want your app to work offline and load faster, you can change
-// unregister() to register() below. Note this comes with some pitfalls.
-// Learn more about service workers: https://cra.link/PWA
-serviceWorkerRegistration.register({
-    onUpdate: (registration) => {
-        if (registration && registration.waiting) {
-            registration.waiting.postMessage({ type: "SKIP_WAITING" });
-            if (window.confirm("New version available! The site will now update. Press \"Cancel\" if you need to save any unsaved data.")) {
-                window.location.reload();
-            }
-        }
-    },
-});
+const HOURS_1_MS = 60 * 60 * 1000;
 
-if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.ready.then((registration) => {
-        // Send message to service worker to let it know if this is a standalone (i.e. downloaded) PWA. 
-        // Standalone PWAs come with more assets, like splash screens.
-        //TODO not used yet
-        registration.active.postMessage({
-            type: "IS_STANDALONE",
-            isStandalone: getDeviceInfo().isStandalone,
-        });
+// Enable service worker in production for PWA and offline support
+if (process.env.PROD) {
+    serviceWorkerRegistration.register({
+        onUpdate: (registration) => {
+            if (registration && registration.waiting) {
+                registration.waiting.postMessage({ type: "SKIP_WAITING" });
+                PubSub.get().publish("snack", {
+                    autoHideDuration: "persist",
+                    id: "pwa-update",
+                    message: "New version available!",
+                    buttonKey: "Reload",
+                    buttonClicked: function updateVersionButtonClicked() {
+                        window.location.reload();
+                    },
+                });
+            }
+        },
     });
+    if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.ready.then((registration) => {
+            // Check for updates periodically
+            setInterval(() => { registration.update(); }, HOURS_1_MS);
+
+            // Listen for updatefound event
+            registration.addEventListener("updatefound", () => {
+                const newWorker = registration.installing;
+
+                function handleUpdateState() {
+                    if (newWorker.state === "installing") {
+                        PubSub.get().publish("snack", {
+                            autoHideDuration: "persist",
+                            id: "pwa-update",
+                            message: "Downloading updates...",
+                        });
+                    } else if (newWorker.state === "activated") {
+                        PubSub.get().publish("snack", {
+                            autoHideDuration: "persist",
+                            id: "pwa-update",
+                            message: "New version available!",
+                            buttonKey: "Reload",
+                            buttonClicked: function updateVersionButtonClicked() {
+                                window.location.reload();
+                            },
+                        });
+                    }
+                }
+
+                newWorker.addEventListener("statechange", () => {
+                    handleUpdateState();
+                });
+                handleUpdateState();
+            });
+
+            // Listen for controlling change
+            navigator.serviceWorker.addEventListener("controllerchange", () => {
+                if (!refreshing) {
+                    refreshing = true;
+                    window.location.reload();
+                }
+            });
+
+            // Send message about standalone status
+            registration.active.postMessage({
+                type: "IS_STANDALONE",
+                isStandalone: getDeviceInfo().isStandalone,
+            });
+        });
+    }
+} else {
+    serviceWorkerRegistration.unregister();
 }
 
 // // Measure performance with Google Analytics. 
