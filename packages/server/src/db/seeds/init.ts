@@ -6,19 +6,19 @@ import { PrismaType } from "../../types";
 export async function init(prisma: PrismaType) {
     console.info("🌱 Starting database intial seed...");
 
-    // Make sure auto-increment fields have the correct starting value
-    // plant_trait
-    const maxId = await prisma.$executeRaw`SELECT MAX(id) FROM plant_trait`;
-    await prisma.$executeRaw`ALTER TABLE plant_trait AUTO_INCREMENT = ${maxId + 1}`;
-    // plant_images
-    const maxId2 = await prisma.$executeRaw`SELECT MAX(id) FROM plant_images`;
-    await prisma.$executeRaw`ALTER TABLE plant_images AUTO_INCREMENT = ${maxId2 + 1}`;
-    // queue_task
-    const maxId3 = await prisma.$executeRaw`SELECT MAX(id) FROM queue_task`;
-    await prisma.$executeRaw`ALTER TABLE queue_task AUTO_INCREMENT = ${maxId3 + 1}`;
-    // image_labels
-    const maxId4 = await prisma.$executeRaw`SELECT MAX(id) FROM image_labels`;
-    await prisma.$executeRaw`ALTER TABLE image_labels AUTO_INCREMENT = ${maxId4 + 1}`;
+    // // Make sure auto-increment fields have the correct starting value
+    // // plant_trait
+    // const maxId = await prisma.$executeRaw`SELECT MAX(id) FROM plant_trait`;
+    // await prisma.$executeRaw`ALTER TABLE plant_trait AUTO_INCREMENT = ${maxId + 1}`;
+    // // plant_images
+    // const maxId2 = await prisma.$executeRaw`SELECT MAX(id) FROM plant_images`;
+    // await prisma.$executeRaw`ALTER TABLE plant_images AUTO_INCREMENT = ${maxId2 + 1}`;
+    // // queue_task
+    // const maxId3 = await prisma.$executeRaw`SELECT MAX(id) FROM queue_task`;
+    // await prisma.$executeRaw`ALTER TABLE queue_task AUTO_INCREMENT = ${maxId3 + 1}`;
+    // // image_labels
+    // const maxId4 = await prisma.$executeRaw`SELECT MAX(id) FROM image_labels`;
+    // await prisma.$executeRaw`ALTER TABLE image_labels AUTO_INCREMENT = ${maxId4 + 1}`;
 
     // Upsert roles
     const adminRole = await prisma.role.upsert({
@@ -57,6 +57,7 @@ export async function init(prisma: PrismaType) {
             },
         },
     });
+    // Create admin account if it doesn't exist
     if (!admin) {
         await prisma.customer.create({
             data: {
@@ -82,6 +83,17 @@ export async function init(prisma: PrismaType) {
                         roleId: adminRole.id,
                     }],
                 },
+            },
+        });
+    }
+    // Ensure admin account is unlocked if it exists
+    else {
+        await prisma.customer.update({
+            where: { id: admin.id },
+            data: {
+                emailVerified: true,
+                loginAttempts: 0,
+                status: AccountStatus.Unlocked,
             },
         });
     }

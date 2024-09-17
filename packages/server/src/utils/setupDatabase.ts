@@ -1,23 +1,19 @@
 
-// Sets up database on server initialization
 import pkg from "@prisma/client";
-import { init } from "../db/seeds/init.js";
-import { genErrorCode, logger, LogLevel } from "../logger";
-import { PrismaType } from "../types";
 
 const { PrismaClient } = pkg;
 const prisma = new PrismaClient();
 
-const executeSeed = async (func: (prisma: PrismaType) => any, exitOnFail = false) => {
-    await func(prisma).catch((error: any) => {
-        logger.log(LogLevel.error, "Database seed caught error", { code: genErrorCode("00011"), error });
-        if (exitOnFail) process.exit(1);
-    }).finally(async () => {
-        await prisma.$disconnect();
-    });
-};
-
+/** Performs database setup, including seeding */
 export const setupDatabase = async () => {
+    const { init } = await import("../db/seeds/init.js");
+    const { logger } = await import("../logger.js");
     // Seed database
-    await executeSeed(init, true);
+    try {
+        await init(prisma);
+    } catch (error) {
+        logger.error("Caught error in setupDatabase", { trace: "0011", error });
+        // Don't let the app start if the database setup fails
+        process.exit(1);
+    }
 };

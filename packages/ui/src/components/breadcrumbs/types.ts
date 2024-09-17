@@ -2,7 +2,7 @@ import { PageTab } from "hooks/useTabs";
 import { SxType } from "types";
 
 export interface BreadcrumbsBaseProps {
-    paths: { text: string; link: string; }[];
+    paths: readonly { text: string; link: string; }[];
     separator?: string;
     ariaLabel?: string;
     textColor?: string;

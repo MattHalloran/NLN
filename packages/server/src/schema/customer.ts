@@ -13,10 +13,10 @@ import { randomString } from "../utils";
 import { customerNotifyAdmin, sendResetPasswordLink, sendVerificationLink } from "../worker/email/queue";
 import { AccountStatus, AddCustomerRoleInput, ChangeCustomerStatusInput, Customer, CustomerInput, DeleteCustomerInput, LoginInput, RemoveCustomerRoleInput, RequestPasswordChangeInput, ResetPasswordInput, SignUpInput, UpdateCustomerInput } from "./types";
 
-const LOGIN_ATTEMPTS_TO_SOFT_LOCKOUT = 3;
-const SOFT_LOCKOUT_DURATION = 15 * 60 * 1000;
-const REQUEST_PASSWORD_RESET_DURATION = 2 * 24 * 3600 * 1000;
-const LOGIN_ATTEMPTS_TO_HARD_LOCKOUT = 10;
+const LOGIN_ATTEMPTS_TO_SOFT_LOCKOUT = 5;
+const SOFT_LOCKOUT_DURATION_MS = 5 * 60 * 1000;
+const REQUEST_PASSWORD_RESET_DURATION_MS = 2 * 24 * 3600 * 1000;
+const LOGIN_ATTEMPTS_TO_HARD_LOCKOUT = 15;
 
 export const typeDef = gql`
     enum AccountStatus {
@@ -194,7 +194,7 @@ export const resolvers = {
             }
             // Reset login attempts after 15 minutes
             const unable_to_reset = [AccountStatus.HardLock, AccountStatus.Deleted];
-            if (!unable_to_reset.includes(customer.status as any) && Date.now() - new Date(customer.lastLoginAttempt).getTime() > SOFT_LOCKOUT_DURATION) {
+            if (!unable_to_reset.includes(customer.status as any) && Date.now() - new Date(customer.lastLoginAttempt).getTime() > SOFT_LOCKOUT_DURATION_MS) {
                 customer = await prisma.customer.update({
                     where: { id: customer.id },
                     data: { loginAttempts: 0 },
@@ -418,7 +418,7 @@ export const resolvers = {
             if (!customer.resetPasswordCode ||
                 customer.resetPasswordCode !== input.code ||
                 !customer.lastResetPasswordReqestAttempt ||
-                Date.now() - new Date(customer.lastResetPasswordReqestAttempt).getTime() > REQUEST_PASSWORD_RESET_DURATION) {
+                Date.now() - new Date(customer.lastResetPasswordReqestAttempt).getTime() > REQUEST_PASSWORD_RESET_DURATION_MS) {
                 // Generate new code
                 const requestCode = randomString(32);
                 // Store code and request time in customer row

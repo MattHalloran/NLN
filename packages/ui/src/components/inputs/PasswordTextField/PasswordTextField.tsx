@@ -1,5 +1,5 @@
 import { FormControl, FormHelperText, IconButton, InputAdornment, InputLabel, LinearProgress, OutlinedInput, useTheme } from "@mui/material";
-import { InvisibleIcon, VisibleIcon } from "icons";
+import { InvisibleIcon, LockIcon, VisibleIcon } from "icons";
 import { useCallback, useEffect, useState } from "react";
 import { noop } from "utils";
 import { PasswordTextFieldProps } from "../types";
@@ -10,6 +10,12 @@ type PasswordStrengthProps = {
     secondary: string;
     score: number;
 };
+
+const passwordStartAdornment = (
+    <InputAdornment position="start">
+        <LockIcon />
+    </InputAdornment>
+);
 
 export const PasswordTextField = ({
     autoComplete = "current-password",
@@ -74,6 +80,7 @@ export const PasswordTextField = ({
                 autoComplete={autoComplete}
                 autoFocus={autoFocus}
                 error={!!error}
+                startAdornment={passwordStartAdornment}
                 endAdornment={
                     <InputAdornment position="end">
                         <IconButton
@@ -82,7 +89,7 @@ export const PasswordTextField = ({
                             edge="end"
                             sx={{
                                 "&:focus": {
-                                    border: `2px solid ${palette.background.textPrimary}`
+                                    border: `2px solid ${palette.background.textPrimary}`,
                                 },
                                 borderRadius: "2px",
                             }}

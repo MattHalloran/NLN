@@ -1,25 +1,32 @@
 import { useMutation } from "@apollo/client";
 import { APP_LINKS, CODE, logInSchema } from "@local/shared";
-import { Box, Button, Grid, Link, Palette, TextField, Typography, useTheme } from "@mui/material";
+import { Box, Button, Grid, InputAdornment, TextField, useTheme } from "@mui/material";
 import { loginVariables, login_login } from "api/generated/login";
 import { loginMutation } from "api/mutation";
 import { mutationWrapper } from "api/utils";
-import { SnackSeverity } from "components";
+import { BreadcrumbsBase, SnackSeverity } from "components";
 import { PasswordTextField } from "components/inputs/PasswordTextField/PasswordTextField";
 import { useFormik } from "formik";
+import { formSubmit } from "forms/styles";
+import { EmailIcon } from "icons/common";
 import { useEffect, useMemo } from "react";
 import { parseSearchParams, useLocation } from "route";
 import { PubSub } from "utils";
 
-const clickSizeStyle = (palette: Palette) => ({
-    color: palette.secondary.light,
-    minHeight: "48px", // Lighthouse recommends this for SEO, as it is more clickable
-    display: "flex",
-    alignItems: "center",
-});
+const breadcrumbsStyle = {
+    margin: "auto",
+} as const;
+
+const emailStartAdornment = {
+    startAdornment: (
+        <InputAdornment position="start">
+            <EmailIcon />
+        </InputAdornment>
+    ),
+};
 
 export const LogInForm = () => {
-    const { palette, spacing } = useTheme();
+    const { spacing } = useTheme();
     const [, setLocation] = useLocation();
     const { verificationCode } = useMemo<{ verificationCode: string | undefined }>(() => {
         const searchParams = parseSearchParams();
@@ -70,6 +77,17 @@ export const LogInForm = () => {
         },
     });
 
+    const breadcrumbPaths = [
+        {
+            text: "Forgot Password",
+            link: APP_LINKS.ForgotPassword,
+        },
+        {
+            text: "Sign Up",
+            link: APP_LINKS.Register,
+        },
+    ] as const;
+
     return (
         <Box sx={{
             width: "100%",
@@ -83,6 +101,7 @@ export const LogInForm = () => {
                             id="email"
                             name="email"
                             autoComplete="email"
+                            InputProps={emailStartAdornment}
                             label="Email Address"
                             value={formik.values.email}
                             onChange={formik.handleChange}
@@ -105,32 +124,23 @@ export const LogInForm = () => {
                         />
                     </Grid>
                 </Grid>
-                <Button
-                    fullWidth
-                    disabled={loading}
-                    type="submit"
-                    color="secondary"
-                    sx={{ margin: spacing(3, 0, 2) }}
-                    variant="contained"
-                >
-                    Log In
-                </Button>
-                <Grid container spacing={2}>
-                    <Grid item xs={6}>
-                        <Link onClick={() => setLocation(APP_LINKS.ForgotPassword)}>
-                            <Typography sx={clickSizeStyle(palette)}>
-                                Forgot Password?
-                            </Typography>
-                        </Link>
-                    </Grid>
-                    <Grid item xs={6}>
-                        <Link onClick={() => setLocation(APP_LINKS.Register)}>
-                            <Typography sx={{ ...clickSizeStyle(palette), flexDirection: "row-reverse" }}>
-                                Don't have an account? Sign up
-                            </Typography>
-                        </Link>
-                    </Grid>
-                </Grid>
+                <Box width="100%" display="flex" flexDirection="column" p={2}>
+                    <Button
+                        fullWidth
+                        disabled={loading}
+                        type="submit"
+                        color="secondary"
+                        variant='contained'
+                        sx={formSubmit}
+                    >
+                        Log In
+                    </Button>
+                    <BreadcrumbsBase
+                        paths={breadcrumbPaths}
+                        separator={"•"}
+                        sx={breadcrumbsStyle}
+                    />
+                </Box>
             </form>
         </Box>
     );

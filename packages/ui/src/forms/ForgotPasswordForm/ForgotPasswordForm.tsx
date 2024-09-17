@@ -1,21 +1,30 @@
 import { useMutation } from "@apollo/client";
 import { APP_LINKS, requestPasswordChangeSchema } from "@local/shared";
-import { Box, Button, Grid, Link, Palette, TextField, Typography, useTheme } from "@mui/material";
+import { Box, Button, Grid, InputAdornment, TextField, useTheme } from "@mui/material";
 import { requestPasswordChangeVariables } from "api/generated/requestPasswordChange";
 import { requestPasswordChangeMutation } from "api/mutation";
 import { mutationWrapper } from "api/utils";
+import { BreadcrumbsBase } from "components/breadcrumbs/BreadcrumbsBase/BreadcrumbsBase";
 import { useFormik } from "formik";
+import { formSubmit } from "forms/styles";
+import { EmailIcon } from "icons/common";
 import { useLocation } from "route";
 
-const clickSizeStyle = (palette: Palette) => ({
-    color: palette.secondary.light,
-    minHeight: "48px", // Lighthouse recommends this for SEO, as it is more clickable
-    display: "flex",
-    alignItems: "center",
-});
+const breadcrumbsStyle = {
+    margin: "auto",
+} as const;
+
+const emailStartAdornment = {
+    startAdornment: (
+        <InputAdornment position="start">
+            <EmailIcon />
+        </InputAdornment>
+    ),
+};
+
 
 export const ForgotPasswordForm = () => {
-    const { palette, spacing } = useTheme();
+    const { spacing } = useTheme();
     const [, setLocation] = useLocation();
 
     const [requestPasswordChange, { loading }] = useMutation(requestPasswordChangeMutation);
@@ -36,6 +45,17 @@ export const ForgotPasswordForm = () => {
         },
     });
 
+    const breadcrumbPaths = [
+        {
+            text: "Log In",
+            link: APP_LINKS.LogIn,
+        },
+        {
+            text: "Sign Up",
+            link: APP_LINKS.Register,
+        },
+    ] as const;
+
     return (
         <Box sx={{
             width: "100%",
@@ -50,6 +70,7 @@ export const ForgotPasswordForm = () => {
                             id="email"
                             name="email"
                             autoComplete="email"
+                            InputProps={emailStartAdornment}
                             label="Email Address"
                             value={formik.values.email}
                             onChange={formik.handleChange}
@@ -58,32 +79,23 @@ export const ForgotPasswordForm = () => {
                         />
                     </Grid>
                 </Grid>
-                <Button
-                    fullWidth
-                    disabled={loading}
-                    type="submit"
-                    color="secondary"
-                    sx={{ margin: spacing(3, 0, 2) }}
-                    variant="contained"
-                >
-                    Submit
-                </Button>
-                <Grid container spacing={2}>
-                    <Grid item xs={6}>
-                        <Link onClick={() => setLocation(APP_LINKS.LogIn)}>
-                            <Typography sx={clickSizeStyle(palette)}>
-                                Remember? Back to Log In
-                            </Typography>
-                        </Link>
-                    </Grid>
-                    <Grid item xs={6}>
-                        <Link onClick={() => setLocation(APP_LINKS.Register)}>
-                            <Typography sx={{ ...clickSizeStyle(palette), flexDirection: "row-reverse" }}>
-                                Don't have an account? Sign up
-                            </Typography>
-                        </Link>
-                    </Grid>
-                </Grid>
+                <Box width="100%" display="flex" flexDirection="column" p={2}>
+                    <Button
+                        fullWidth
+                        disabled={loading}
+                        type="submit"
+                        color="secondary"
+                        variant='contained'
+                        sx={formSubmit}
+                    >
+                        Submit
+                    </Button>
+                    <BreadcrumbsBase
+                        paths={breadcrumbPaths}
+                        separator={"•"}
+                        sx={breadcrumbsStyle}
+                    />
+                </Box>
             </form>
         </Box>
     );

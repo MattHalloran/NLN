@@ -8,6 +8,7 @@ import { context } from "./context";
 import { depthLimit } from "./depthLimit";
 import { genErrorCode, logger, LogLevel } from "./logger";
 import { schema } from "./schema";
+import { setupDatabase } from "./utils/setupDatabase";
 
 const SERVER_URL = process.env.VITE_SERVER_LOCATION === "local" ?
     "http://localhost:5330/api" :
@@ -21,6 +22,8 @@ const main = async () => {
         logger.log(LogLevel.error, "🚨 JWT_SECRET not in environment variables. Stopping server", { code: genErrorCode("0007") });
         process.exit(1);
     }
+
+    await setupDatabase();
 
     const app = express();
 

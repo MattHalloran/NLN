@@ -2,7 +2,7 @@ import { Breadcrumbs, Link } from "@mui/material";
 import { useMemo } from "react";
 import { useLocation } from "route";
 import { noSelect } from "styles";
-import { openLink } from "utils";
+import { openLink } from "utils/openLink";
 import { BreadcrumbsBaseProps } from "../types";
 
 export const BreadcrumbsBase = ({
@@ -31,10 +31,7 @@ export const BreadcrumbsBase = ({
         <Breadcrumbs
             sx={{
                 ...sx,
-                "& .MuiBreadcrumbs-ol": {
-                    justifyContent: "center",
-                },
-                "& .MuiBreadcrumbs-la > a": {
+                "& .MuiBreadcrumbs-li > a": {
                     color: sx?.color || "inherit",
                     minHeight: "48px", // Lighthouse recommends this for SEO, as it is more clickable
                     display: "flex",
