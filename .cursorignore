@@ -1,9 +1,14 @@
+# This is for the Cursor editor. It tells the editor to ignore certain files and directories 
+# when indexing the project. Indexing allows the editor to provide relevant context to the AI 
+# for better code completions and suggestions.
+# NOTE: Currently identical to the `.gitignore` file. If you change one, consider changing the other
+
 # Created by https://www.toptal.com/developers/gitignore/api/react,node
 # Edit at https://www.toptal.com/developers/gitignore?templates=react,node
-# NOTE: Currently identical to the `.cursorignore` file. If you change one, consider changing the other
 
-# Business hours data
-assets/public/hours.md
+### Zipped ###
+*.tar
+*.tar.gz
 
 ### Node ###
 # Logs
@@ -16,10 +21,6 @@ lerna-debug.log*
 
 # Source map analytics
 source-tree*.html
-
-### Zipped ###
-*.tar
-*.tar.gz
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
@@ -105,9 +106,11 @@ dist
 .out
 .storybook-out
 storybook-static
+*storybook.log
 
 # rollup.js default build output
 dist/
+test-dist/
 
 # Gatsby files
 .cache/
@@ -158,16 +161,14 @@ build/
 *.db
 
 #Persistent data
-data/logs/
-data/postgres/
+data/logs*
+data/postgres*
 data/redis/
 data/stats/
 data/uploads/
 
-#Assets
-assets/images/
-packages/server/plant_info/yards/yards*.json
-assets/private/availability-*.*
+#Backups
+backups/
 
 .eslintcache
 package-lock.json
