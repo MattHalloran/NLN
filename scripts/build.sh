@@ -11,7 +11,7 @@
 # -e: .env file location (e.g. "/root/my-folder/.env"). Defaults to .env-prod
 # -h: Show this help message
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-. "${HERE}/prettify.sh"
+. "${HERE}/utils.sh"
 
 # Read arguments
 ENV_FILE="${HERE}/../.env-prod"
@@ -100,6 +100,13 @@ if [ "${SHOULD_UPDATE_VERSION}" = true ]; then
         # Go back to packages directory
         cd ${HERE}/../packages
     done
+fi
+
+# Run bash script tests
+if is_yes "$TEST"; then
+    run_step "Running bash script tests (bats)" "${HERE}/tests/__runTests.sh"
+else
+    warning "Skipping bash script tests..."
 fi
 
 # Navigate to server directory

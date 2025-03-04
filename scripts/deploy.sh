@@ -15,7 +15,7 @@
 # -n: Nginx proxy location (e.g. "/root/NginxSSLReverseProxy")
 # -h: Show this help message
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-. "${HERE}/prettify.sh"
+. "${HERE}/utils.sh"
 
 # Read arguments
 SETUP_ARGS=()

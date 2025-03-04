@@ -8,7 +8,7 @@
 # -e: .env file location (e.g. "/root/my-folder/.env"). Defaults to .env-prod
 
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-. "${HERE}/prettify.sh"
+. "${HERE}/utils.sh"
 
 # Connection timeout in seconds
 CONN_TIMEOUT=10

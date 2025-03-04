@@ -7,7 +7,7 @@
 # -r: Run on remote server (y/N) - If set to "y", will run additional commands to set up the remote server
 ORIGINAL_DIR=$(pwd)
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-. "${HERE}/prettify.sh"
+. "${HERE}/utils.sh"
 
 # Read arguments
 REINSTALL_MODULES=""

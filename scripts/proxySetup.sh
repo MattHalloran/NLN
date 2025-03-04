@@ -2,7 +2,7 @@
 # Sets up reverse proxy for a remote server
 ORIGINAL_DIR=$(pwd)
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-. "${HERE}/prettify.sh"
+. "${HERE}/utils.sh"
 
 # Read arguments
 SETUP_ARGS=()
