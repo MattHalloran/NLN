@@ -64,7 +64,7 @@ export const SignUpForm = () => {
                     theme: palette.mode ?? "light",
                 },
                 onSuccess: (data) => {
-                    PubSub.get().publishSession(data);
+                    PubSub.get().publishSession({ ...data, theme: (data.theme as "light" | "dark") || "light" });
                     if (data.accountApproved) {
                         PubSub.get().publishAlertDialog({
                             message: `Welcome to ${business?.BUSINESS_NAME?.Short}. You may now begin shopping. Please verify your email within 48 hours.`,

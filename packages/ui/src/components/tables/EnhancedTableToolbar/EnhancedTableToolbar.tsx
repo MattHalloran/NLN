@@ -5,11 +5,17 @@ import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import { DeleteIcon } from "icons";
 
+interface EnhancedTableToolbarProps {
+    title: string;
+    numSelected?: number;
+    onDelete: () => void;
+}
+
 export const EnhancedTableToolbar = ({
     title,
     numSelected = 0,
     onDelete,
-}) => {
+}: EnhancedTableToolbarProps) => {
     const { palette, spacing } = useTheme();
 
     return (

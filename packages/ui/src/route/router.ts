@@ -53,13 +53,13 @@ export type LinkProps = Omit<
 // when no value is provided — default object is used.
 // allows us to use the router context as a global ref to store
 // the implicitly created router (see `useRouter` below)
-const RouterCtx = createContext<{ [x: string]: any }>({});
+const RouterCtx = createContext<{ v?: RouterProps }>({});
 
 const buildRouter = ({
     hook = locationHook,
     base = "",
     matcher = makeMatcher(),
-} = {}) => ({ hook, base, matcher });
+} = {}): RouterProps => ({ hook, base, matcher });
 
 export const useRouter = () => {
     const globalRef = useContext(RouterCtx);
@@ -81,15 +81,19 @@ export const useRoute = <
     ):
     Match<T extends DefaultParams ? T : ExtractRouteParams<RoutePath>> => {
     const [path] = useLocation();
-    return useRouter().matcher(pattern, path);
+    return useRouter().matcher(pattern, path) as Match<T extends DefaultParams ? T : ExtractRouteParams<RoutePath>>;
 };
 
 // internal hook used by Link and Redirect in order to perform navigation
-const useNavigate = (options: any) => {
-    const navRef = useRef<any>();
+const useNavigate = (options: NavigationalProps) => {
+    const navRef = useRef<(() => void) | null>(null);
     const [, navigate] = useLocation();
 
-    navRef.current = () => navigate(options.to || options.href, options);
+    navRef.current = () => {
+        const to = (options as any).to || (options as any).href;
+        const navOptions = { replace: (options as any).replace };
+        navigate(to, navOptions);
+    };
     return navRef;
 };
 
@@ -177,7 +181,7 @@ export const Link = (props: LinkProps) => {
             onClick && onClick(event);
             if (!event.defaultPrevented) {
                 event.preventDefault();
-                navRef.current();
+                navRef.current?.();
             }
         },
         // navRef is a ref so it never changes
@@ -228,7 +232,7 @@ export const Switch = ({ children, location, fallback }: SwitchProps) => {
     const [originalLocation] = useLocation();
 
     for (const element of flattenChildren(children)) {
-        let match = 0;
+        let match: Match;
 
         if (
             isValidElement(element) &&
@@ -238,7 +242,7 @@ export const Switch = ({ children, location, fallback }: SwitchProps) => {
             // inside of a switch, for example <AnimatedRoute />.
             (match = (element as any).props.path
                 ? matcher((element as any).props.path, location || originalLocation)
-                : [true, {}])[0]
+                : [true, {}] as Match) && match[0]
         ) {
             // If there is a fallback, wrap the route in it
             if (fallback) {
@@ -257,8 +261,8 @@ export const Redirect = (props: any): JSX.Element | null => {
 
     // empty array means running the effect once, navRef is a ref so it never changes
     useLayoutEffect(() => {
-        navRef.current();
-    }, []);
+        navRef.current?.();
+    }, []); 
 
     return null;
 };

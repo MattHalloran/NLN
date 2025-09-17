@@ -1,16 +1,21 @@
-import { Button, Popover, useTheme } from "@mui/material";
-import { useState } from "react";
+import { Button, Popover, useTheme, ButtonProps } from "@mui/material";
+import { ReactNode, useState } from "react";
+
+interface PopupMenuProps extends Omit<ButtonProps, 'onClick'> {
+    text?: string;
+    children: ReactNode;
+}
 
 export function PopupMenu({
     text = "Menu",
     children,
     ...props
-}) {
+}: PopupMenuProps) {
     const { palette } = useTheme();
 
     const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
-    const handleClick = (event) => {
+    const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         setAnchorEl(event.currentTarget);
     };
 

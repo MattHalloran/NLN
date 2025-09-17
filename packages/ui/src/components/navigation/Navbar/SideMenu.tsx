@@ -8,10 +8,10 @@ import { SessionContext } from "contexts/SessionContext";
 import { useSideMenu } from "hooks/useSideMenu";
 import { useWindowSize } from "hooks/useWindowSize";
 import { CloseIcon, ContactSupportIcon, ExpandLessIcon, ExpandMoreIcon, FacebookIcon, HomeIcon, InfoIcon, InstagramIcon, LogOutIcon, PhotoLibraryIcon, ShareIcon } from "icons";
-import _ from "lodash";
+import { isObject } from "lodash-es";
 import { useContext, useState } from "react";
 import { useLocation } from "route";
-import { PubSub, getUserActions, noop } from "utils";
+import { PubSub, getUserActions, noop, UserActions } from "utils";
 
 const menuItemStyle = (palette: Palette) => ({
     color: palette.background.textPrimary,
@@ -55,11 +55,11 @@ export const SideMenu = () => {
         setSocialOpen(!socialOpen);
     };
 
-    const newTab = (link) => {
+    const newTab = (link: string): void => {
         window.open(link, "_blank");
     };
 
-    const optionsToList = (options) => {
+    const optionsToList = (options: UserActions): JSX.Element[] => {
         return options.map(([label, _value, link, onClick, Icon, badgeNum], index) => (
             <ListItem
                 key={index}
@@ -81,14 +81,14 @@ export const SideMenu = () => {
         ));
     };
 
-    const nav_options = [
-        ["Home", "home", APP_LINKS.Home, null, HomeIcon],
-        ["About Us", "about", APP_LINKS.About, null, InfoIcon],
-        ["Gallery", "gallery", APP_LINKS.Gallery, null, PhotoLibraryIcon],
+    const nav_options: UserActions = [
+        ["Home", "home", APP_LINKS.Home, null, HomeIcon, 0],
+        ["About Us", "about", APP_LINKS.About, null, InfoIcon, 0],
+        ["Gallery", "gallery", APP_LINKS.Gallery, null, PhotoLibraryIcon, 0],
     ];
 
     const customer_actions = getUserActions(session);
-    if (_.isObject(session) && Object.entries(session).length > 0) {
+    if (isObject(session) && Object.entries(session).length > 0) {
         customer_actions.push(["Log Out", "logout", APP_LINKS.Home, logoutCustomer, LogOutIcon, 0]);
     }
 
@@ -137,13 +137,13 @@ export const SideMenu = () => {
                     {socialOpen ? <ExpandLessIcon fill={palette.background.textPrimary} /> : <ExpandMoreIcon fill={palette.background.textPrimary} />}
                 </ListItem>
                 <Collapse in={socialOpen} timeout="auto" unmountOnExit>
-                    <ListItem button onClick={() => newTab(business?.SOCIAL?.Facebook)} sx={menuItemStyle(palette)}>
+                    <ListItem button onClick={() => newTab(business?.SOCIAL?.Facebook || '')} sx={menuItemStyle(palette)}>
                         <ListItemIcon>
                             <FacebookIcon fill={palette.background.textPrimary} />
                         </ListItemIcon>
                         <ListItemText primary="Facebook" />
                     </ListItem>
-                    <ListItem button onClick={() => newTab(business?.SOCIAL?.Instagram)} sx={menuItemStyle(palette)}>
+                    <ListItem button onClick={() => newTab(business?.SOCIAL?.Instagram || '')} sx={menuItemStyle(palette)}>
                         <ListItemIcon>
                             <InstagramIcon fill={palette.background.textPrimary} />
                         </ListItemIcon>

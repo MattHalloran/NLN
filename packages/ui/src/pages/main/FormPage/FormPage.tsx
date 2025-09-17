@@ -1,11 +1,17 @@
 import { Box, useTheme } from "@mui/material";
 import { TopBar } from "components/navigation/TopBar/TopBar";
 
+interface FormPageProps {
+    title: string;
+    autocomplete?: string;
+    children: React.ReactNode;
+}
+
 export const FormPage = ({
     title,
     autocomplete = "on",
     children,
-}) => {
+}: FormPageProps) => {
     const { palette } = useTheme();
 
     return (

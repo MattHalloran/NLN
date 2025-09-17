@@ -52,7 +52,7 @@ export const ShoppingPage = () => {
         }
     }, [setLocation]);
     // Find current plant and current sku
-    const currPlant = Array.isArray(plants) ? plants.find((p: any) => p.skus.some(s => s.sku === sku)) : undefined;
+    const currPlant = Array.isArray(plants) ? plants.find((p: any) => p.skus.some((s: any) => s.sku === sku)) : undefined;
     const currSku = currPlant?.skus ? currPlant.skus.find(s => s.sku === sku) : undefined;
     const { data: plantData } = useQuery(plantsQuery, { variables: { input: { sortBy: sortBy.value, searchString, active: true, onlyInStock: hideOutOfStock } } });
     const [upsertOrderItem] = useMutation(upsertOrderItemMutation);
@@ -87,7 +87,7 @@ export const ShoppingPage = () => {
         setPlants(filtered_plants);
     }, [plantData, filters, searchString, hideOutOfStock]);
 
-    const expandSku = (sku) => {
+    const expandSku = (sku: string) => {
         setLocation(APP_LINKS.Shopping + "/" + sku);
         setSku(sku);
     };
@@ -164,7 +164,7 @@ export const ShoppingPage = () => {
                         <PlantCard key={index}
                             isAdminPage={false}
                             isMobile={dimensions.width < breakpoints.values.sm}
-                            onClick={(data) => expandSku(data.selectedSku?.sku)}
+                            onClick={(data) => expandSku(data.selectedSku?.sku || "")}
                             plant={item} />)}
                 </CardGrid>
                 {dimensions.width < breakpoints.values.sm && <SideActionsButtons

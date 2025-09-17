@@ -10,18 +10,18 @@ export const ContactInfo = ({
     const { palette } = useTheme();
     const business = useContext(BusinessContext);
 
-    const openLink = (e, link) => {
-        window.location = link;
+    const openLink = (e: React.MouseEvent, link: string) => {
+        window.location.href = link;
         e.preventDefault();
     };
 
     // Parse business hours markdown into 2D array, remove |'s, and reduce to 1D array
-    let hours;
+    let hours: string[] = [];
     try {
-        hours = business?.hours ?
+        const hoursRaw = business?.hours ?
             business.hours.split("\n").slice(2).map(row => row.split("|").map(r => r.trim()).filter(r => r !== "")).filter(r => r.length > 0) :
             [];
-        hours = hours.map(row => `${row[0]}: ${row[1]}`);
+        hours = hoursRaw.map(row => `${row[0]}: ${row[1]}`);
     } catch (error) {
         console.error("Failed to read business hours", error);
     }
@@ -44,7 +44,7 @@ export const ContactInfo = ({
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {hours.map((row, index) => (
+                        {hours?.map((row: string, index: number) => (
                             <TableRow key={index} sx={{ background: palette.background.paper }}>
                                 <TableCell>
                                     {row}
@@ -68,7 +68,7 @@ export const ContactInfo = ({
                     <Tooltip title={tooltip} placement="top">
                         <BottomNavigationAction
                             label={label}
-                            onClick={(e) => openLink(e, link)}
+                            onClick={(e) => openLink(e, link!)}
                             icon={
                                 <IconButton sx={{ background: palette.secondary.main }}>
                                     <Icon fill={palette.secondary.contrastText} />

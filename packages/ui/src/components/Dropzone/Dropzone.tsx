@@ -41,7 +41,14 @@ export const Dropzone = ({
 
     const [files, setFiles] = useState<PreviewableFile[]>([]);
     const { getRootProps, getInputProps } = useDropzone({
-        accept: acceptedFileTypes,
+        accept: acceptedFileTypes.reduce((acc, type) => {
+            if (type.includes('/')) {
+                acc[type] = [];
+            } else {
+                acc[type] = [];
+            }
+            return acc;
+        }, {} as Record<string, string[]>),
         maxFiles,
         onDrop: acceptedFiles => {
             if (acceptedFiles.length <= 0) {
@@ -64,7 +71,7 @@ export const Dropzone = ({
         },
     });
 
-    const upload = (e) => {
+    const upload = (e: React.MouseEvent<HTMLButtonElement>) => {
         e.stopPropagation();
         if (files.length === 0) {
             PubSub.get().publishSnack({ message: "No files selected", severity: SnackSeverity.Error });
@@ -74,7 +81,7 @@ export const Dropzone = ({
         setFiles([]);
     };
 
-    const cancel = (e) => {
+    const cancel = (e: React.MouseEvent<HTMLButtonElement>) => {
         e.stopPropagation();
         setFiles([]);
     };

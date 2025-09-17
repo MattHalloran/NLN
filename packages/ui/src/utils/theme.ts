@@ -1,4 +1,4 @@
-import { createTheme, lighten } from "@mui/material";
+import { createTheme, lighten, alpha } from "@mui/material";
 
 // Define custom theme properties
 declare module "@mui/material/styles/createPalette" {
@@ -6,7 +6,52 @@ declare module "@mui/material/styles/createPalette" {
         textPrimary: string;
         textSecondary: string;
     }
+    interface Palette {
+        admin: PaletteAdmin;
+    }
+    interface PaletteOptions {
+        admin: PaletteAdmin;
+    }
 }
+
+// Admin-specific design tokens
+interface PaletteAdmin {
+    surface: string;
+    surfaceVariant: string;
+    outline: string;
+    success: string;
+    warning: string;
+    error: string;
+    info: string;
+    cardHover: string;
+    iconBackground: string;
+    gradientPrimary: string;
+    gradientSecondary: string;
+}
+
+// Design tokens for consistent spacing and elevation
+export const designTokens = {
+    spacing: {
+        xs: 0.5,  // 4px
+        sm: 1,    // 8px
+        md: 2,    // 16px
+        lg: 3,    // 24px
+        xl: 4,    // 32px
+        xxl: 6,   // 48px
+    },
+    elevation: {
+        card: 1,
+        dialog: 8,
+        drawer: 16,
+        tooltip: 24,
+    },
+    borderRadius: {
+        sm: 1,    // 8px
+        md: 1.5,  // 12px
+        lg: 2,    // 16px
+        xl: 2.5,  // 20px
+    },
+} as const;
 
 // Define common theme options (button appearance, etc.)
 const commonTheme = createTheme({
@@ -44,6 +89,19 @@ const lightPalette = {
         paper: "#ffffff",
         textPrimary: "#000000",
         textSecondary: "#6f6f6f",
+    },
+    admin: {
+        surface: "#f8f9fa",
+        surfaceVariant: "#f1f3f4",
+        outline: "#dadce0",
+        success: "#137333",
+        warning: "#ea8600",
+        error: "#d93025",
+        info: "#1a73e8",
+        cardHover: alpha("#1b5e20", 0.04),
+        iconBackground: alpha("#1b5e20", 0.1),
+        gradientPrimary: "linear-gradient(135deg, #4c8c4a 0%, #1b5e20 100%)",
+        gradientSecondary: "linear-gradient(135deg, #63a4ff 0%, #1976d2 100%)",
     },
 } as const;
 const lightTheme = createTheme({
@@ -104,6 +162,19 @@ const darkPalette = {
         paper: "#2e2e2e",
         textPrimary: "#ffffff",
         textSecondary: "#c3c3c3",
+    },
+    admin: {
+        surface: "#2a2a2a",
+        surfaceVariant: "#3c3c3c",
+        outline: "#5f5f5f",
+        success: "#34a853",
+        warning: "#fbbc04",
+        error: "#ea4335",
+        info: "#4285f4",
+        cardHover: alpha("#515774", 0.08),
+        iconBackground: alpha("#515774", 0.15),
+        gradientPrimary: "linear-gradient(135deg, #5f6a89 0%, #515774 100%)",
+        gradientSecondary: "linear-gradient(135deg, #5b99da 0%, #4372a3 100%)",
     },
 } as const;
 const darkTheme = createTheme({

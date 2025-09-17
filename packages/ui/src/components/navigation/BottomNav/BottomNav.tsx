@@ -43,7 +43,18 @@ export const BottomNav = ({
                     label={label}
                     value={value}
                     href={link}
-                    onClick={(e) => { e.preventDefault(); setLocation(link); if (onClick) onClick(); }}
+                    onClick={(e) => { 
+                        e.preventDefault(); 
+                        // Redirect to external URLs for availability and cart
+                        if (value === "availability") {
+                            window.location.href = "https://newlife.online-orders.sbiteam.com/";
+                        } else if (value === "cart") {
+                            window.location.href = "https://newlife.online-orders.sbiteam.com/orders";
+                        } else {
+                            setLocation(link); 
+                            if (onClick) onClick();
+                        }
+                    }}
                     icon={<Badge badgeContent={badgeNum} color="error"><Icon /></Badge>}
                     sx={{ color: palette.primary.contrastText }}
                 />

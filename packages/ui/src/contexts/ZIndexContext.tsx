@@ -9,7 +9,7 @@ export const DEFAULT_Z_INDEX = 1400;
 
 export const ZIndexContext = createContext<ZIndexContextType | undefined>(undefined);
 
-export const ZIndexProvider = ({ children }) => {
+export const ZIndexProvider = ({ children }: { children: React.ReactNode }) => {
     const stack = useRef<number[]>([]);
 
     const getZIndex = () => {

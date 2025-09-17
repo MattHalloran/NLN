@@ -28,10 +28,26 @@ export interface ContentCollapseProps {
 
 export interface ErrorBoundaryProps {
     children: React.ReactNode;
+    /** 
+     * Optional fallback component to render instead of default error UI 
+     */
+    fallback?: React.ComponentType<{
+        error: Error;
+        errorInfo: React.ErrorInfo;
+        resetError: () => void;
+    }>;
+    /**
+     * Callback fired when an error is caught
+     */
+    onError?: (error: Error, errorInfo: React.ErrorInfo) => void;
+    /**
+     * Whether to enable error reporting to external services
+     */
+    enableReporting?: boolean;
 }
 
 export interface PageContainerProps {
-    children: boolean | null | undefined | JSX.Element | (boolean | null | undefined | JSX.Element)[];
+    children?: boolean | null | undefined | JSX.Element | (boolean | null | undefined | JSX.Element)[];
     sx?: { [x: string]: any };
 }
 

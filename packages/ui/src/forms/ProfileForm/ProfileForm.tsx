@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "@apollo/client";
 import { DEFAULT_PRONOUNS, profileSchema, uuid } from "@local/shared";
 import { Autocomplete } from "@mui/lab";
-import { Box, Button, Checkbox, Container, Divider, FormControlLabel, FormHelperText, Grid, TextField, useTheme } from "@mui/material";
+import { Box, Button, Checkbox, Container, Divider, FormControlLabel, FormHelperText, Grid, TextField, useTheme, Typography, Paper } from "@mui/material";
 import FormControl from "@mui/material/FormControl";
 import Radio from "@mui/material/Radio";
 import RadioGroup from "@mui/material/RadioGroup";
@@ -18,7 +18,7 @@ import { useMemo } from "react";
 import { PubSub } from "utils";
 
 export const ProfileForm = () => {
-    const { spacing } = useTheme();
+    const { spacing, palette } = useTheme();
 
     const { data } = useQuery<profile>(profileQuery);
     const profile = useMemo<profile_profile | null>(() => data?.profile || null, [data]);
@@ -98,7 +98,22 @@ export const ProfileForm = () => {
                 flexDirection: "column",
                 gap: 4,
             }}>
-            <Container>
+            {/* Personal Information Section */}
+            <Box>
+                <Typography 
+                    variant="h6" 
+                    component="h3" 
+                    sx={{ 
+                        fontWeight: 600,
+                        color: palette.text.primary,
+                        mb: 3,
+                        pb: 1,
+                        borderBottom: `1px solid ${palette.divider}`
+                    }}
+                >
+                    Personal Information
+                </Typography>
+                <Container sx={{ px: 0 }}>
                 <Grid container spacing={2}>
                     <Grid item xs={12} sm={6}>
                         <TextField
@@ -186,55 +201,143 @@ export const ProfileForm = () => {
                             helperText={formik.touched.phone && formik.errors.phone}
                         />
                     </Grid>
-                    <Grid item xs={12}>
-                        <FormControl component="fieldset">
-                            <RadioGroup
-                                id="theme"
-                                name="theme"
-                                aria-label="theme-check"
-                                value={formik.values.theme}
-                                onChange={(e) => { formik.handleChange(e); PubSub.get().publishTheme(e.target.value as "light" | "dark"); }}
-                            >
-                                <FormControlLabel value="light" control={<Radio />} label="Light ☀️" />
-                                <FormControlLabel value="dark" control={<Radio />} label="Dark 🌙" />
-                            </RadioGroup>
-                            <FormHelperText>{formik.touched.theme && formik.errors.theme}</FormHelperText>
-                        </FormControl>
-                    </Grid>
-                    <Grid item xs={12}>
-                        <FormControl component="fieldset">
-                            <RadioGroup
-                                id="accountApproved"
-                                name="accountApproved"
-                                aria-label="existing-customer-check"
-                                value={formik.values.accountApproved}
-                                onChange={formik.handleChange}
-                            >
-                                <FormControlLabel value="true" control={<Radio />} label="I have ordered from New Life Nursery before" />
-                                <FormControlLabel value="false" control={<Radio />} label="I have never ordered from New Life Nursery" />
-                            </RadioGroup>
-                            <FormHelperText>{formik.touched.accountApproved && formik.errors.accountApproved}</FormHelperText>
-                        </FormControl>
-                    </Grid>
-                    <Grid item xs={12}>
-                        <FormControlLabel
-                            control={
-                                <Checkbox
-                                    id="marketingEmails"
-                                    name="marketingEmails"
-                                    value="marketingEmails"
-                                    color="secondary"
-                                    checked={formik.values.marketingEmails}
-                                    onChange={formik.handleChange}
-                                />
-                            }
-                            label="I want to receive marketing promotions and updates via email."
-                        />
-                    </Grid>
                 </Grid>
-            </Container>
-            <Divider />
-            <Container>
+                </Container>
+            </Box>
+
+            {/* Theme & Account Settings Section */}
+            <Box>
+                <Typography 
+                    variant="h6" 
+                    component="h3" 
+                    sx={{ 
+                        fontWeight: 600,
+                        color: palette.text.primary,
+                        mb: 3,
+                        pb: 1,
+                        borderBottom: `1px solid ${palette.divider}`
+                    }}
+                >
+                    Account Settings
+                </Typography>
+                <Container sx={{ px: 0 }}>
+                    <Grid container spacing={3}>
+                        <Grid item xs={12}>
+                            <FormControl component="fieldset">
+                                <Typography 
+                                    variant="subtitle2" 
+                                    sx={{ 
+                                        fontWeight: 500,
+                                        color: palette.text.primary,
+                                        mb: 1
+                                    }}
+                                >
+                                    Theme Preference
+                                </Typography>
+                                <RadioGroup
+                                    id="theme"
+                                    name="theme"
+                                    aria-label="theme-selection"
+                                    value={formik.values.theme}
+                                    onChange={(e) => { formik.handleChange(e); PubSub.get().publishTheme(e.target.value as "light" | "dark"); }}
+                                    sx={{ ml: 1 }}
+                                >
+                                    <FormControlLabel 
+                                        value="light" 
+                                        control={<Radio />} 
+                                        label="Light Theme" 
+                                        sx={{ mb: 0.5 }}
+                                    />
+                                    <FormControlLabel 
+                                        value="dark" 
+                                        control={<Radio />} 
+                                        label="Dark Theme" 
+                                        sx={{ mb: 0.5 }}
+                                    />
+                                </RadioGroup>
+                                <FormHelperText>{formik.touched.theme && formik.errors.theme}</FormHelperText>
+                            </FormControl>
+                        </Grid>
+                        <Grid item xs={12}>
+                            <FormControl component="fieldset">
+                                <Typography 
+                                    variant="subtitle2" 
+                                    sx={{ 
+                                        fontWeight: 500,
+                                        color: palette.text.primary,
+                                        mb: 1
+                                    }}
+                                >
+                                    Customer Status
+                                </Typography>
+                                <RadioGroup
+                                    id="accountApproved"
+                                    name="accountApproved"
+                                    aria-label="customer-status"
+                                    value={formik.values.accountApproved}
+                                    onChange={formik.handleChange}
+                                    sx={{ ml: 1 }}
+                                >
+                                    <FormControlLabel 
+                                        value="true" 
+                                        control={<Radio />} 
+                                        label="Existing Customer - I have ordered from New Life Nursery before" 
+                                        sx={{ mb: 0.5 }}
+                                    />
+                                    <FormControlLabel 
+                                        value="false" 
+                                        control={<Radio />} 
+                                        label="New Customer - I have never ordered from New Life Nursery" 
+                                        sx={{ mb: 0.5 }}
+                                    />
+                                </RadioGroup>
+                                <FormHelperText>{formik.touched.accountApproved && formik.errors.accountApproved}</FormHelperText>
+                            </FormControl>
+                        </Grid>
+                        <Grid item xs={12}>
+                            <FormControlLabel
+                                control={
+                                    <Checkbox
+                                        id="marketingEmails"
+                                        name="marketingEmails"
+                                        value="marketingEmails"
+                                        color="primary"
+                                        checked={formik.values.marketingEmails}
+                                        onChange={formik.handleChange}
+                                    />
+                                }
+                                label="I want to receive marketing promotions and updates via email."
+                                sx={{
+                                    alignItems: "flex-start",
+                                    "& .MuiFormControlLabel-label": {
+                                        color: palette.text.secondary,
+                                        fontSize: "0.875rem",
+                                        lineHeight: 1.5,
+                                        mt: 0.25
+                                    }
+                                }}
+                            />
+                        </Grid>
+                    </Grid>
+                </Container>
+            </Box>
+
+            {/* Password Change Section */}
+            <Box>
+                <Typography 
+                    variant="h6" 
+                    component="h3" 
+                    sx={{ 
+                        fontWeight: 600,
+                        color: palette.text.primary,
+                        mb: 3,
+                        pb: 1,
+                        borderBottom: `1px solid ${palette.divider}`
+                    }}
+                >
+                    Change Password
+                </Typography>
+                <Container sx={{ px: 0 }}>
                 <Grid container spacing={2}>
                     <Grid item xs={12}>
                         <PasswordTextField
@@ -279,38 +382,52 @@ export const ProfileForm = () => {
                         />
                     </Grid>
                 </Grid>
-            </Container>
-            <Grid
-                container
-                spacing={2}
+                </Container>
+            </Box>
+
+            {/* Action Buttons */}
+            <Box 
                 sx={{
-                    paddingTop: spacing(2),
-                    paddingBottom: spacing(2),
+                    display: "flex",
+                    gap: 2,
+                    justifyContent: "flex-end",
+                    pt: 2,
+                    borderTop: `1px solid ${palette.divider}`,
+                    mt: 2
                 }}
             >
-                <Grid item xs={6}>
-                    <Button
-                        fullWidth
-                        disabled={loading}
-                        type="submit"
-                        color="secondary"
-                        variant="contained"
-                        startIcon={<SaveIcon />}
-                    >
-                        Save
-                    </Button>
-                </Grid>
-                <Grid item xs={6}>
-                    <Button
-                        fullWidth
-                        onClick={() => { formik.resetForm(); }}
-                        variant="contained"
-                        startIcon={<CancelIcon />}
-                    >
-                        Cancel
-                    </Button>
-                </Grid>
-            </Grid>
+                <Button
+                    onClick={() => { formik.resetForm(); }}
+                    variant="outlined"
+                    startIcon={<CancelIcon />}
+                    sx={{
+                        minWidth: 120,
+                        color: palette.text.secondary,
+                        borderColor: palette.divider,
+                        "&:hover": {
+                            borderColor: palette.text.secondary,
+                            backgroundColor: palette.action.hover
+                        }
+                    }}
+                >
+                    Cancel
+                </Button>
+                <Button
+                    disabled={loading}
+                    type="submit"
+                    variant="contained"
+                    startIcon={<SaveIcon />}
+                    sx={{
+                        minWidth: 120,
+                        backgroundColor: "#546e7a",
+                        "&:hover": {
+                            backgroundColor: "#455a64"
+                        }
+                    }}
+                >
+                    Save Changes
+                </Button>
+            </Box>
         </Box>
 
     );

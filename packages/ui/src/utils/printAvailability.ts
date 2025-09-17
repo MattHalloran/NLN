@@ -12,20 +12,20 @@ const SUBTITLE_FONT_SIZE = 18;
 const TEXT_FONT_SIZE = 12;
 const LIST_FONT_SIZE = 12;
 
-const centeredText = (text: string, doc, y) => {
+const centeredText = (text: string, doc: any, y: number): void => {
     const textWidth = doc.getStringUnitWidth(text) * doc.internal.getFontSize() / doc.internal.scaleFactor;
     const textOffset = (doc.internal.pageSize.width - textWidth) / 2;
     doc.text(textOffset, y, text);
 };
 
-const leftText = (text: string, doc, y) => {
+const leftText = (text: string, doc: any, y: number): void => {
     const textWidth = doc.getStringUnitWidth(text) * doc.internal.getFontSize() / doc.internal.scaleFactor;
     const textOffset = 10;
     doc.text(textOffset, y, text);
 };
 
-const skusToTable = (skus, priceVisible: boolean) => {
-    return skus.map(sku => {
+const skusToTable = (skus: any[], priceVisible: boolean): (string | number)[][] => {
+    return skus.map((sku: any) => {
         const displayName = sku.plant?.latinName ?? getPlantTrait("commonName", sku.plant) ?? sku.sku;
         const size = isNaN(sku.size) ? sku.size : `#${sku.size}`;
         const availability = sku.availability ?? "N/A";

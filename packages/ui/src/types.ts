@@ -18,8 +18,8 @@ export type ImageFile = { __typename: "ImageFile", src: string, width: number, h
 // Top-level props that can be passed into any routed component
 export type Session = {
     id?: string | null;
-    roles?: any
-    theme?: string;
+    roles?: Array<{ role: { title: string } }>;
+    theme?: 'light' | 'dark';
     cart?: Cart | null;
     firstName?: string | null;
     lastName?: string | null;
@@ -31,7 +31,7 @@ type BusinessLink = {
     Link: string;
 }
 export type BusinessData = {
-    hours?: any;
+    hours?: string;
     BUSINESS_NAME: {
         Short: string;
         Long: string;

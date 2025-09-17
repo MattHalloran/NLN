@@ -2,111 +2,104 @@
 import { ApolloProvider } from "@apollo/client";
 import { initializeApollo } from "api/utils/initialize";
 import { ErrorBoundary } from "components";
+import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
 import { Router } from "route";
 import { App } from "./App";
 import * as serviceWorkerRegistration from "./serviceWorkerRegistration";
-import { getDeviceInfo } from "./utils/device";
-import { PubSub } from "./utils/pubsub";
 
 const client = initializeApollo();
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
-root.render(
+
+const AppWrapper = (
     <Router>
         <ApolloProvider client={client}>
             <ErrorBoundary>
                 <App />
             </ErrorBoundary>
         </ApolloProvider>
-    </Router>,
+    </Router>
+);
+
+// Enable StrictMode for better error detection and future compatibility
+root.render(
+    <StrictMode>
+        {AppWrapper}
+    </StrictMode>
 );
 
 const HOURS_1_MS = 60 * 60 * 1000;
 
-// Enable service worker in production for PWA and offline support
-if (process.env.PROD) {
-    serviceWorkerRegistration.register({
-        onUpdate: (registration) => {
-            if (registration && registration.waiting) {
-                registration.waiting.postMessage({ type: "SKIP_WAITING" });
-                PubSub.get().publish("snack", {
-                    autoHideDuration: "persist",
-                    id: "pwa-update",
-                    message: "New version available!",
-                    buttonKey: "Reload",
-                    buttonClicked: function updateVersionButtonClicked() {
-                        window.location.reload();
-                    },
-                });
-            }
-        },
-    });
-    if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.ready.then((registration) => {
-            // Check for updates periodically
-            setInterval(() => { registration.update(); }, HOURS_1_MS);
+// Enable PWA service worker with smart cleanup strategy
+const initializePWA = async () => {
+    if (!("serviceWorker" in navigator)) {
+        console.log("Service Workers not supported");
+        return;
+    }
 
-            // Listen for updatefound event
-            registration.addEventListener("updatefound", () => {
-                const newWorker = registration.installing;
-
-                function handleUpdateState() {
-                    if (newWorker.state === "installing") {
-                        PubSub.get().publish("snack", {
-                            autoHideDuration: "persist",
-                            id: "pwa-update",
-                            message: "Downloading updates...",
-                        });
-                    } else if (newWorker.state === "activated") {
-                        PubSub.get().publish("snack", {
-                            autoHideDuration: "persist",
-                            id: "pwa-update",
-                            message: "New version available!",
-                            buttonKey: "Reload",
-                            buttonClicked: function updateVersionButtonClicked() {
-                                window.location.reload();
-                            },
+    // Only enable PWA in production for security and performance
+    if (import.meta.env.PROD) {
+        try {
+            // Force cleanup of any old service workers and caches first
+            console.log("Performing PWA cleanup...");
+            await serviceWorkerRegistration.forceCleanup();
+            
+            // Wait a moment for cleanup to complete
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Register new service worker
+            console.log("Registering new service worker...");
+            serviceWorkerRegistration.register({
+                onUpdate: (registration) => {
+                    if (registration && registration.waiting) {
+                        // Auto-update: skip waiting and reload
+                        registration.waiting.postMessage({ type: "SKIP_WAITING" });
+                        
+                        // Optional: Show user-friendly update notification
+                        // This could be integrated with your snack/notification system
+                        console.log("PWA update available, applying...");
+                        
+                        // Reload page to apply update
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000);
+                    }
+                },
+                onSuccess: (registration) => {
+                    console.log("PWA cached and ready for offline use");
+                    
+                    // Send standalone status for push notification setup
+                    if (registration && registration.active) {
+                        registration.active.postMessage({
+                            type: "IS_STANDALONE",
+                            isStandalone: window.matchMedia('(display-mode: standalone)').matches,
                         });
                     }
                 }
-
-                newWorker.addEventListener("statechange", () => {
-                    handleUpdateState();
+            });
+            
+            // Set up periodic update checks (every hour)
+            if ("serviceWorker" in navigator) {
+                navigator.serviceWorker.ready.then((registration) => {
+                    setInterval(() => {
+                        registration.update();
+                    }, HOURS_1_MS);
                 });
-                handleUpdateState();
-            });
-
-            // Listen for controlling change
-            navigator.serviceWorker.addEventListener("controllerchange", () => {
-                if (!refreshing) {
-                    refreshing = true;
-                    window.location.reload();
-                }
-            });
-
-            // Send message about standalone status
-            registration.active.postMessage({
-                type: "IS_STANDALONE",
-                isStandalone: getDeviceInfo().isStandalone,
-            });
-        });
+            }
+            
+        } catch (error) {
+            console.error("PWA initialization failed:", error);
+            // Fallback: disable service workers if initialization fails
+            serviceWorkerRegistration.unregister();
+        }
+    } else {
+        // In development, clean up any existing service workers to avoid conflicts
+        console.log("Development mode: cleaning up service workers");
+        serviceWorkerRegistration.forceCleanup();
     }
-} else {
-    serviceWorkerRegistration.unregister();
-}
+};
 
-// // Measure performance with Google Analytics. 
-// // See results at https://analytics.google.com/
-// ReactGA.initialize(import.meta.env.VITE_GOOGLE_TRACKING_ID);
-// const sendToAnalytics = ({ name, delta, id }) => {
-//     console.log("sendToAnalytics", { name, delta, id }, import.meta.env.VITE_GOOGLE_TRACKING_ID);
-//     ReactGA.event({
-//         category: "Web Vitals",
-//         action: name,
-//         value: Math.round(name === "CLS" ? delta * 1000 : delta), // CLS is reported as a fraction, so multiply by 1000 to make it more readable
-//         label: id,
-//         nonInteraction: true,
-//     });
-// };
-// reportWebVitals(sendToAnalytics);
+// Initialize PWA after app loads
+initializePWA();
+

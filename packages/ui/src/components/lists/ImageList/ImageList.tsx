@@ -25,7 +25,7 @@ export const ImageList = ({
         }));
     }, [data, onUpdate]);
 
-    const saveImageData = useCallback((d) => {
+    const saveImageData = useCallback((d: any) => {
         const updated = [...data];
         updated[selected] = {
             ...updated[selected],

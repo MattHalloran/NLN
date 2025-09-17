@@ -29,22 +29,22 @@ export const AdminGalleryPage = () => {
 
     useEffect(() => {
         // Table data must be extensible, and needs position
-        setImageData(currImages?.imagesByLabel?.map((d, index) => ({
+        setImageData(currImages?.imagesByLabel?.map((d: any, index: number) => ({
             ...d,
             pos: index,
         })));
     }, [currImages]);
 
-    const applyChanges = useCallback((changed) => {
+    const applyChanges = useCallback((changed: any[]) => {
         // Prepare data for request
-        const data = changed.map(d => ({
+        const data = changed.map((d: any) => ({
             hash: d.hash,
             alt: d.alt,
             description: d.description,
         }));
         // Determine which files to mark as deleting
         const originals = imageData.map(d => d.hash);
-        const finals = changed.map(d => d.hash);
+        const finals = changed.map((d: any) => d.hash);
         const deleting = originals.filter(s => !finals.includes(s));
         // Perform update
         mutationWrapper<any, updateImagesVariables>({

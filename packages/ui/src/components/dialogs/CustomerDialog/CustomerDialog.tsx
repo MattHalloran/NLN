@@ -1,6 +1,32 @@
 import { useMutation } from "@apollo/client";
 import { uuid } from "@local/shared";
-import { AppBar, Box, Button, Dialog, Grid, IconButton, TextField, Toolbar, Typography, useTheme } from "@mui/material";
+import { 
+    Dialog, 
+    DialogTitle, 
+    DialogContent, 
+    DialogActions,
+    Box, 
+    Button, 
+    Grid, 
+    IconButton, 
+    TextField, 
+    Typography, 
+    useTheme,
+    Paper,
+    Divider,
+    Chip,
+    Avatar,
+    useMediaQuery
+} from "@mui/material";
+import { 
+    Close as CloseIcon,
+    Business as BusinessIcon,
+    Person as PersonIcon,
+    CheckCircle as ApprovedIcon,
+    Schedule as PendingIcon,
+    Block as BlockedIcon,
+    Delete as DeletedIcon
+} from "@mui/icons-material";
 import { customers_customers } from "api/generated/customers";
 import { deleteCustomerVariables } from "api/generated/deleteCustomer";
 import { AccountStatus } from "api/generated/globalTypes";
@@ -8,12 +34,12 @@ import { updateCustomer_updateCustomer, updateCustomerVariables } from "api/gene
 import { deleteCustomerMutation, updateCustomerMutation } from "api/mutation";
 import { documentNodeWrapper, mutationWrapper } from "api/utils";
 import { useFormik } from "formik";
-import { CancelIcon, CloseIcon, CreateIcon, DeleteIcon, ErrorIcon, LockIcon, LockOpenIcon, SaveIcon } from "icons";
+import { CancelIcon, CreateIcon, DeleteIcon, ErrorIcon, LockIcon, LockOpenIcon, SaveIcon } from "icons";
 import { SvgComponent } from "icons/types";
-import _ from "lodash";
+import { isEqual } from "lodash-es";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { PubSub } from "utils";
-import { Transition } from "../UpTransition/UpTransition";
+import { CustomerDialogProps } from "../types";
 
 // Associates account states with a dynamic action button
 // curr_account_value: [curr_account_label, toggled_account_label, toggled_account_value, toggle_icon]
@@ -28,8 +54,9 @@ export const CustomerDialog = ({
     customer,
     open = true,
     onClose,
-}) => {
-    const { palette, spacing } = useTheme();
+}: CustomerDialogProps) => {
+    const { palette } = useTheme();
+    const isMobile = useMediaQuery('(max-width:600px)');
 
     // Stores the modified customer data before updating
     const [currCustomer, setCurrCustomer] = useState<customers_customers>(customer);
@@ -88,6 +115,7 @@ export const CustomerDialog = ({
                 mutation: updateCustomer,
                 input: { input },
                 successMessage: () => "Customer updated.",
+                onSuccess: onClose,
             });
         },
     });
@@ -99,8 +127,9 @@ export const CustomerDialog = ({
             input: { input: { id: currCustomer.id, status: toggleValue } },
             successMessage: () => "Customer updated.",
             errorMessage: () => "Failed to update customer.",
+            onSuccess: onClose,
         });
-    }, [currCustomer, toggleValue]);
+    }, [currCustomer, toggleValue, onClose]);
 
     const deleteCustomer = useCallback(() => {
         documentNodeWrapper<any, deleteCustomerVariables>({
@@ -123,165 +152,328 @@ export const CustomerDialog = ({
         });
     }, [currCustomer, deleteCustomer]);
 
-    const changes_made = !_.isEqual(customer, currCustomer);
-    const options = (
-        <Grid container spacing={2} sx={{
-            padding: spacing(2),
-            background: palette.primary.main,
-        }}>
-            <Grid item xs={12} sm={6} md={3}>
-                <Button
-                    fullWidth
-                    disabled={loading || !changes_made}
-                    startIcon={<CancelIcon />}
-                    onClick={revert}
-                    variant="contained"
-                >Revert</Button>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-                <Button
-                    fullWidth
-                    disabled={loading || !customer?.id}
-                    startIcon={<ToggleIcon />}
-                    onClick={toggleLock}
-                    variant="contained"
-                >{toggleLabel}</Button>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-                <Button
-                    fullWidth
-                    disabled={loading || !customer?.id}
-                    startIcon={<DeleteIcon />}
-                    onClick={confirmDelete}
-                    variant="contained"
-                >Delete</Button>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-                <Button
-                    fullWidth
-                    disabled={loading || !changes_made}
-                    startIcon={<SaveIcon />}
-                    onClick={() => { formik.handleSubmit(); }}
-                    variant="contained"
-                >Update</Button>
-            </Grid>
-        </Grid>
-    );
+    const changes_made = !isEqual(customer, currCustomer);
+
+    const getStatusChip = () => {
+        const currentStatus = currCustomer?.accountApproved === false ? 'WaitingApproval' : currCustomer?.status;
+        const statusConfig = {
+            'Unlocked': { 
+                label: 'Active', 
+                color: '#2e7d32', 
+                icon: <ApprovedIcon sx={{ fontSize: 14 }} /> 
+            },
+            'WaitingApproval': { 
+                label: 'Pending Approval', 
+                color: '#ed6c02', 
+                icon: <PendingIcon sx={{ fontSize: 14 }} /> 
+            },
+            'SoftLock': { 
+                label: 'Soft Locked', 
+                color: '#d32f2f', 
+                icon: <BlockedIcon sx={{ fontSize: 14 }} /> 
+            },
+            'HardLock': { 
+                label: 'Hard Locked', 
+                color: '#d32f2f', 
+                icon: <BlockedIcon sx={{ fontSize: 14 }} /> 
+            },
+            'Deleted': { 
+                label: 'Deleted', 
+                color: '#424242', 
+                icon: <DeletedIcon sx={{ fontSize: 14 }} /> 
+            }
+        };
+        
+        const config = statusConfig[currentStatus as keyof typeof statusConfig] || statusConfig['Unlocked'];
+        
+        return (
+            <Chip
+                icon={config.icon}
+                label={config.label}
+                size="small"
+                sx={{
+                    bgcolor: config.color,
+                    color: 'white',
+                    fontSize: '0.75rem',
+                    '& .MuiChip-icon': {
+                        color: 'white'
+                    }
+                }}
+            />
+        );
+    };
+
+    if (!customer) return null;
 
     return (
-        <Dialog fullScreen open={open} onClose={onClose} TransitionComponent={Transition}>
-            <AppBar sx={{ position: "relative" }}>
-                <Toolbar>
-                    <IconButton edge="start" color="inherit" onClick={onClose} aria-label="close">
-                        <CloseIcon />
-                    </IconButton>
-                    <Grid container spacing={0}>
-                        <Grid sx={{ textAlign: "center" }} item xs={12}>
-                            <Typography variant="h5">
-                                {customer?.firstName} {customer?.lastName}
-                            </Typography>
-                            <Typography variant="h6">
-                                {customer?.business?.name}
-                            </Typography>
-                        </Grid>
-                    </Grid>
-                </Toolbar>
-            </AppBar>
-            <Box component="form" onSubmit={formik.handleSubmit} sx={{
-                background: palette.background.default,
-                flex: "auto",
-                padding: spacing(3),
-                paddingBottom: "20vh",
-                overflowY: "auto",
+        <Dialog
+            open={open}
+            onClose={onClose}
+            maxWidth="md"
+            fullWidth
+            fullScreen={isMobile}
+            PaperProps={{
+                sx: {
+                    borderRadius: isMobile ? 0 : 2,
+                    bgcolor: palette.background.paper,
+                }
+            }}
+        >
+            <DialogTitle sx={{ 
+                p: 3, 
+                bgcolor: palette.background.paper,
+                borderBottom: `1px solid ${palette.divider}`
             }}>
-                <Grid container spacing={3}>
-                    <Grid item xs={12} sm={6}>
-                        <TextField
-                            fullWidth
-                            label="First Name"
-                            value={currCustomer?.firstName || ""}
-                            onChange={(e) => setCurrCustomer({ ...currCustomer, firstName: e.target.value })}
-                        />
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                        <TextField
-                            fullWidth
-                            label="Last Name"
-                            value={currCustomer?.lastName || ""}
-                            onChange={(e) => setCurrCustomer({ ...currCustomer, lastName: e.target.value })}
-                        />
-                    </Grid>
-                    <Grid item xs={12}>
-                        <TextField
-                            fullWidth
-                            label="Pronouns"
-                            value={currCustomer?.pronouns || ""}
-                            onChange={(e) => setCurrCustomer({ ...currCustomer, pronouns: e.target.value })}
-                        />
-                    </Grid>
-                    {Boolean(customer?.business) && <Grid item xs={12}>
-                        <TextField
-                            fullWidth
-                            label="Business Name"
-                            value={currCustomer?.business?.name || ""}
-                            onChange={(e) => setCurrCustomer({ ...currCustomer, business: { ...currCustomer.business!, name: e.target.value } })}
-                        />
-                    </Grid>}
-                    <Grid item xs={12}>
-                        <TextField
-                            fullWidth
-                            label="Email"
-                            value={currCustomer?.emails?.[0]?.emailAddress || ""}
-                            onChange={(e) => setCurrCustomer({ ...currCustomer, emails: [{ ...currCustomer.emails[0], emailAddress: e.target.value }] })}
-                        />
-                    </Grid>
-                    <Grid item xs={12}>
-                        <TextField
-                            fullWidth
-                            label="Phone"
-                            value={currCustomer?.phones?.[0]?.number || ""}
-                            onChange={(e) => setCurrCustomer({ ...currCustomer, phones: [{ ...currCustomer.phones[0], number: e.target.value }] })}
-                        />
-                    </Grid>
-                    <Grid item xs={12}>
-                        <TextField
-                            fullWidth
-                            label="Account Status"
-                            value={currLabel}
-                            InputProps={{
-                                readOnly: true,
+                <Box display="flex" alignItems="center" justifyContent="space-between">
+                    <Box display="flex" alignItems="center" gap={2}>
+                        <Avatar
+                            sx={{
+                                bgcolor: customer?.business ? '#1976d2' : '#546e7a',
+                                width: 48,
+                                height: 48,
                             }}
-                        />
-                    </Grid>
-                    <Grid item xs={12}>
-                        <TextField
-                            fullWidth
-                            label="Roles"
-                            value={currCustomer?.roles?.map(role => role.role.title).join(", ") || ""}
-                            InputProps={{
-                                readOnly: true,
+                        >
+                            {customer?.business ? <BusinessIcon /> : <PersonIcon />}
+                        </Avatar>
+                        <Box>
+                            <Typography variant="h5" fontWeight="600" color="text.primary">
+                                {customer.firstName} {customer.lastName}
+                            </Typography>
+                            {customer?.business && (
+                                <Typography variant="body1" color="text.secondary" sx={{ mt: 0.5 }}>
+                                    {customer.business.name}
+                                </Typography>
+                            )}
+                        </Box>
+                    </Box>
+                    
+                    <Box display="flex" alignItems="center" gap={2}>
+                        {getStatusChip()}
+                        <IconButton 
+                            onClick={onClose}
+                            sx={{ 
+                                color: palette.text.secondary,
+                                "&:hover": { bgcolor: palette.action.hover }
                             }}
-                        />
-                    </Grid>
-                </Grid>
-            </Box>
-            <Box sx={{
-                background: palette.background.default,
-                flex: "auto",
-                padding: spacing(1),
-                paddingBottom: "15vh",
-            }}>
-
-                <Box sx={{
-                    background: palette.primary.main,
-                    position: "fixed",
-                    bottom: "0",
-                    width: "-webkit-fill-available",
-                    zIndex: 1,
-                }}>
-                    {options}
+                        >
+                            <CloseIcon />
+                        </IconButton>
+                    </Box>
                 </Box>
-            </Box>
+            </DialogTitle>
+            
+            <DialogContent sx={{ p: 0 }}>
+                <Box component="form" onSubmit={formik.handleSubmit}>
+                    {/* Personal Information Section */}
+                    <Paper 
+                        elevation={0} 
+                        sx={{ 
+                            m: 3, 
+                            p: 3, 
+                            border: `1px solid ${palette.divider}`,
+                            borderRadius: 2
+                        }}
+                    >
+                        <Typography variant="h6" fontWeight="600" sx={{ mb: 2, color: palette.text.primary }}>
+                            Personal Information
+                        </Typography>
+                        <Grid container spacing={3}>
+                            <Grid item xs={12} sm={6}>
+                                <TextField
+                                    fullWidth
+                                    label="First Name"
+                                    value={currCustomer?.firstName || ""}
+                                    onChange={(e) => setCurrCustomer({ ...currCustomer, firstName: e.target.value })}
+                                    variant="outlined"
+                                />
+                            </Grid>
+                            <Grid item xs={12} sm={6}>
+                                <TextField
+                                    fullWidth
+                                    label="Last Name"
+                                    value={currCustomer?.lastName || ""}
+                                    onChange={(e) => setCurrCustomer({ ...currCustomer, lastName: e.target.value })}
+                                    variant="outlined"
+                                />
+                            </Grid>
+                            <Grid item xs={12}>
+                                <TextField
+                                    fullWidth
+                                    label="Pronouns"
+                                    value={currCustomer?.pronouns || ""}
+                                    onChange={(e) => setCurrCustomer({ ...currCustomer, pronouns: e.target.value })}
+                                    variant="outlined"
+                                    helperText="Optional - How should we refer to this customer?"
+                                />
+                            </Grid>
+                        </Grid>
+                    </Paper>
+
+                    {/* Business Information Section */}
+                    {customer?.business && (
+                        <Paper 
+                            elevation={0} 
+                            sx={{ 
+                                m: 3, 
+                                p: 3, 
+                                border: `1px solid ${palette.divider}`,
+                                borderRadius: 2
+                            }}
+                        >
+                            <Typography variant="h6" fontWeight="600" sx={{ mb: 2, color: palette.text.primary }}>
+                                Business Information
+                            </Typography>
+                            <Grid container spacing={3}>
+                                <Grid item xs={12}>
+                                    <TextField
+                                        fullWidth
+                                        label="Business Name"
+                                        value={currCustomer?.business?.name || ""}
+                                        onChange={(e) => setCurrCustomer({ ...currCustomer, business: { ...currCustomer.business!, name: e.target.value } })}
+                                        variant="outlined"
+                                    />
+                                </Grid>
+                            </Grid>
+                        </Paper>
+                    )}
+
+                    {/* Contact Information Section */}
+                    <Paper 
+                        elevation={0} 
+                        sx={{ 
+                            m: 3, 
+                            p: 3, 
+                            border: `1px solid ${palette.divider}`,
+                            borderRadius: 2
+                        }}
+                    >
+                        <Typography variant="h6" fontWeight="600" sx={{ mb: 2, color: palette.text.primary }}>
+                            Contact Information
+                        </Typography>
+                        <Grid container spacing={3}>
+                            <Grid item xs={12} sm={6}>
+                                <TextField
+                                    fullWidth
+                                    label="Email Address"
+                                    type="email"
+                                    value={currCustomer?.emails?.[0]?.emailAddress || ""}
+                                    onChange={(e) => setCurrCustomer({ ...currCustomer, emails: [{ ...currCustomer.emails[0], emailAddress: e.target.value }] })}
+                                    variant="outlined"
+                                />
+                            </Grid>
+                            <Grid item xs={12} sm={6}>
+                                <TextField
+                                    fullWidth
+                                    label="Phone Number"
+                                    type="tel"
+                                    value={currCustomer?.phones?.[0]?.number || ""}
+                                    onChange={(e) => setCurrCustomer({ ...currCustomer, phones: [{ ...currCustomer.phones[0], number: e.target.value }] })}
+                                    variant="outlined"
+                                />
+                            </Grid>
+                        </Grid>
+                    </Paper>
+
+                    {/* Account Information Section */}
+                    <Paper 
+                        elevation={0} 
+                        sx={{ 
+                            m: 3, 
+                            p: 3, 
+                            border: `1px solid ${palette.divider}`,
+                            borderRadius: 2
+                        }}
+                    >
+                        <Typography variant="h6" fontWeight="600" sx={{ mb: 2, color: palette.text.primary }}>
+                            Account Information
+                        </Typography>
+                        <Grid container spacing={3}>
+                            <Grid item xs={12} sm={6}>
+                                <Box>
+                                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                                        Account Status
+                                    </Typography>
+                                    {getStatusChip()}
+                                </Box>
+                            </Grid>
+                            <Grid item xs={12} sm={6}>
+                                <Box>
+                                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                                        Roles
+                                    </Typography>
+                                    <Box display="flex" flexWrap="wrap" gap={0.5}>
+                                        {currCustomer?.roles?.map((role, index) => (
+                                            <Chip
+                                                key={index}
+                                                label={role.role.title}
+                                                size="small"
+                                                variant="outlined"
+                                                sx={{
+                                                    fontSize: '0.75rem',
+                                                    borderColor: palette.divider
+                                                }}
+                                            />
+                                        )) || (
+                                            <Typography variant="body2" color="text.secondary">
+                                                No roles assigned
+                                            </Typography>
+                                        )}
+                                    </Box>
+                                </Box>
+                            </Grid>
+                        </Grid>
+                    </Paper>
+                </Box>
+            </DialogContent>
+            
+            <DialogActions sx={{ 
+                p: 3, 
+                bgcolor: palette.background.paper,
+                borderTop: `1px solid ${palette.divider}`,
+                gap: 1
+            }}>
+                <Button
+                    onClick={onClose}
+                    variant="outlined"
+                    startIcon={<CancelIcon />}
+                    disabled={loading}
+                >
+                    Cancel
+                </Button>
+                
+                <Box flex={1} />
+                
+                {toggleValue && (
+                    <Button
+                        onClick={toggleLock}
+                        variant="outlined"
+                        startIcon={<ToggleIcon />}
+                        disabled={loading || !customer?.id}
+                        color="warning"
+                    >
+                        {toggleLabel}
+                    </Button>
+                )}
+                
+                <Button
+                    onClick={confirmDelete}
+                    variant="outlined"
+                    startIcon={<DeleteIcon />}
+                    disabled={loading || !customer?.id}
+                    color="error"
+                >
+                    Delete
+                </Button>
+                
+                <Button
+                    onClick={() => formik.handleSubmit()}
+                    variant="contained"
+                    startIcon={<SaveIcon />}
+                    disabled={loading || !changes_made}
+                >
+                    Save Changes
+                </Button>
+            </DialogActions>
         </Dialog>
     );
 };

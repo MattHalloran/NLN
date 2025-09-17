@@ -113,7 +113,7 @@ export const PopoverWithArrow = ({
                 modifiers: [
                     { name: "flip", options: { altBoundary: true, fallbackPlacements: ["top", "right", "bottom", "left"] } },
                     { name: "preventOverflow", options: { altAxis: true, tether: false, padding: 10, boundary: "viewport" } },
-                    { name: "onUpdate", enabled: true, phase: "write", fn: ({ state }) => handlePopperState(state) },
+                    { name: "onUpdate", enabled: true, phase: "write", fn: ({ state }: { state: any }) => handlePopperState(state) },
                     { name: "offset", options: offsetModifier },
                     { name: "arrow", options: { element: "[data-popper-arrow]" } },
                 ],

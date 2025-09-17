@@ -19,10 +19,13 @@ export const errorToMessage = (error: ApolloError, defaultMessage = "Unknown err
         // If the first error has a code, use it to determine a message
         if (firstError.extensions?.code) {
             // Loop through possible error codes
-            for (const code in CODE) {
-                // If the error code matches, return the message
-                if (message.endsWith(CODE[code].message))
-                    return CODE[code].snack ?? CODE[code].message ?? defaultMessage;
+            for (const codeKey in CODE) {
+                if (CODE.hasOwnProperty(codeKey)) {
+                    const errorCode = CODE[codeKey as keyof typeof CODE];
+                    // If the error code matches, return the message
+                    if (message.endsWith(errorCode.message))
+                        return ('snack' in errorCode ? errorCode.snack : undefined) ?? errorCode.message ?? defaultMessage;
+                }
             }
         }
         // Otherwise, use the first error's message

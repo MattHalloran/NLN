@@ -1,10 +1,10 @@
 import { APP_LINKS, ROLES } from "@local/shared";
 import { CreateAccountIcon, ProfileIcon, SettingsIcon, ShopIcon, ShoppingCartIcon } from "icons";
 import { SvgComponent } from "icons/types";
-import _ from "lodash";
+import { isObject } from "lodash-es";
 import { Session } from "types";
 
-export type UserActions = [string, string, string, (() => any) | null, SvgComponent, number][]
+export type UserActions = [string, string, string, (() => unknown) | null, SvgComponent, number][]
 
 // Returns user actions, in a list of this format:
 //  [
@@ -16,10 +16,10 @@ export type UserActions = [string, string, string, (() => any) | null, SvgCompon
 //      number of notifications: int,
 //  ]
 export function getUserActions(session: Session | undefined): UserActions {
-    const actions: [string, string, string, (() => any) | null, SvgComponent, number][] = [];
+    const actions: [string, string, string, (() => unknown) | null, SvgComponent, number][] = [];
 
     // If someone is not logged in, display sign up/log in APP_LINKS
-    if (!_.isObject(session) || Object.entries(session).length === 0) {
+    if (!isObject(session) || !session || Object.keys(session).length === 0) {
         actions.push(["Log In", "login", APP_LINKS.LogIn, null, CreateAccountIcon, 0]);
     } else {
         // If an owner admin is logged in, display owner APP_LINKS

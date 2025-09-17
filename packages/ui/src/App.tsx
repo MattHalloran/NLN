@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from "@apollo/client";
-import { Box, CircularProgress, CssBaseline, GlobalStyles, StyledEngineProvider, ThemeProvider } from "@mui/material";
+import { alpha, Box, CircularProgress, CssBaseline, GlobalStyles, StyledEngineProvider, ThemeProvider } from "@mui/material";
 import { Routes } from "Routes";
 import { loginMutation } from "api/mutation";
 import { readAssetsQuery } from "api/query/readAssets";
@@ -52,7 +52,9 @@ export function App() {
 
     useEffect(() => {
         // Determine theme
-        if (session?.theme) setTheme(themes[session?.theme]);
+        if (session?.theme && (session.theme === 'light' || session.theme === 'dark')) {
+            setTheme(themes[session.theme]);
+        }
         //else if (session && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) setTheme(themes.dark);
         else setTheme(themes.light);
     }, [session]);
@@ -81,8 +83,14 @@ export function App() {
                 setLoading(Boolean(delay));
             }
         });
-        const businessSub = PubSub.get().subscribeBusiness((data) => setBusiness(data));
-        const themeSub = PubSub.get().subscribeTheme((theme) => setTheme(themes[theme as any] ?? themes.light));
+        const businessSub = PubSub.get().subscribeBusiness((data) => setBusiness(data as BusinessData));
+        const themeSub = PubSub.get().subscribeTheme((theme) => {
+            if (theme && (theme === 'light' || theme === 'dark')) {
+                setTheme(themes[theme]);
+            } else {
+                setTheme(themes.light);
+            }
+        });
         // Handle session updates
         const sessionSub = PubSub.get().subscribeSession((session) => {
             // If undefined or empty, set session to published data
@@ -138,7 +146,7 @@ export function App() {
                                 backgroundColor: "transparent", // Set initial color as transparent
                             },
                             "&:hover::-webkit-scrollbar-thumb": {
-                                backgroundColor: "#1b5e2085",  // Change color on hover
+                                backgroundColor: alpha(theme.palette.primary.main, 0.52),
                             },
                         },
                         body: {
@@ -146,7 +154,7 @@ export function App() {
                             overflowY: "auto",
                             // Scrollbar should always be visible for the body
                             "&::-webkit-scrollbar-thumb": {
-                                backgroundColor: "#1b5e2085",
+                                backgroundColor: alpha(theme.palette.primary.main, 0.52),
                             },
                         },
                         // Custom IconButton hover highlighting, which doesn't hide background color
@@ -172,15 +180,15 @@ export function App() {
                                     // Style visited, active, and hovered links
                                     "& span, p": {
                                         "& a": {
-                                            color: theme.palette.mode === "light" ? "#001cd3" : "#dd86db",
+                                            color: theme.palette.primary.dark,
                                             "&:visited": {
-                                                color: theme.palette.mode === "light" ? "#001cd3" : "#f551ef",
+                                                color: theme.palette.primary.dark,
                                             },
                                             "&:active": {
-                                                color: theme.palette.mode === "light" ? "#001cd3" : "#f551ef",
+                                                color: theme.palette.primary.dark,
                                             },
                                             "&:hover": {
-                                                color: theme.palette.mode === "light" ? "#5a6ff6" : "#f3d4f2",
+                                                color: alpha(theme.palette.primary.light, 0.8),
                                             },
                                             // Remove underline on links
                                             textDecoration: "none",

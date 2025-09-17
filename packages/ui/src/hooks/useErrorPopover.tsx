@@ -1,6 +1,6 @@
 import { uppercaseFirstLetter } from "@local/shared";
+import { LazyMarkdown } from "components";
 import { PopoverWithArrow } from "components/dialogs/PopoverWithArrow/PopoverWithArrow";
-import Markdown from "markdown-to-jsx";
 import { useCallback, useMemo, useState } from "react";
 
 interface UsePopoverMenuOptions {
@@ -68,7 +68,7 @@ export const useErrorPopover = ({
                     },
                 }}
             >
-                <Markdown>{errorMessage}</Markdown>
+                <LazyMarkdown>{errorMessage}</LazyMarkdown>
             </PopoverWithArrow>
         );
     }, [closePopover, errorAnchorEl, errorMessage]);

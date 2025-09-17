@@ -8,12 +8,19 @@ const exampleCells = [
     { id: "protein", align: "right", disablePadding: false, label: "Protein (g)" },
 ];
 
+interface EnhancedTableHeadProps {
+    headCells?: any[];
+    numSelected?: number;
+    rowCount: number;
+    onSelectAllClick: (event: React.ChangeEvent<HTMLInputElement>) => void;
+}
+
 export const EnhancedTableHead = ({
     headCells = exampleCells,
     numSelected = 0,
     rowCount,
     onSelectAllClick,
-}) => {
+}: EnhancedTableHeadProps) => {
     const { palette } = useTheme();
 
     return (

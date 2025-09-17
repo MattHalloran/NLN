@@ -6,7 +6,15 @@ import { Box, Grid, IconButton, Palette, Paper, Table, TableBody, TableCell, Tab
 import { QuantityBox, Selector, SnackSeverity } from "components";
 import { CloseIcon, NoImageIcon } from "icons";
 import { useCallback } from "react";
+import { Cart } from "types";
 import { PubSub, deleteArrayIndex, getImageSrc, getPlantTrait, getServerUrl, showPrice, updateArray } from "utils";
+
+interface CartTableProps {
+    cart: Cart;
+    onUpdate: (cart: Cart) => void;
+    editable?: boolean;
+    sx?: any;
+}
 
 const tableColumnStyle = (palette: Palette) => ({
     verticalAlign: "middle",
@@ -32,17 +40,17 @@ export const CartTable = ({
     onUpdate,
     editable = true,
     ...props
-}) => {
+}: CartTableProps) => {
     const { palette } = useTheme();
 
-    const all_total = Array.isArray(cart?.items) ? cart.items.map(i => (+i.sku.price) * (+i.quantity)).reduce((a, b) => (+a) + (+b), 0) : -1;
+    const all_total = Array.isArray(cart?.items) ? cart.items.map((i: any) => (+i.sku.price) * (+i.quantity)).reduce((a: number, b: number) => (+a) + (+b), 0) : -1;
 
-    const setNotes = (notes) => onUpdate({ ...cart, specialInstructions: notes });
-    const setDeliveryDate = (date) => onUpdate({ ...cart, desiredDeliveryDate: +date });
+    const setNotes = (notes: string) => onUpdate({ ...cart, specialInstructions: notes });
+    const setDeliveryDate = (date: Date) => onUpdate({ ...cart, desiredDeliveryDate: +date });
     const handleDeliveryChange = (change: { label: string, value: boolean }) => onUpdate({ ...cart, isDelivery: change.value });
 
-    const updateItemQuantity = useCallback((sku, quantity) => {
-        const index = cart.items.findIndex(i => i.sku.sku === sku);
+    const updateItemQuantity = useCallback((sku: string, quantity: number) => {
+        const index = cart.items.findIndex((i: any) => i.sku.sku === sku);
         if (index < 0 || index >= (cart.items.length)) {
             PubSub.get().publishSnack({ message: "Failed to update item quantity", severity: SnackSeverity.Error, data: { index } });
             return;
@@ -50,7 +58,7 @@ export const CartTable = ({
         onUpdate({ ...cart, items: updateArray(cart.items, index, { ...cart.items[index], quantity }) });
     }, [cart, onUpdate]);
 
-    const deleteCartItem = useCallback((sku) => {
+    const deleteCartItem = useCallback((sku: { sku: string }) => {
         const index = cart.items.findIndex(i => i.sku.sku === sku.sku);
         if (index < 0) {
             PubSub.get().publishSnack({ message: `Failed to remove item for ${sku.sku}`, severity: SnackSeverity.Error, data: sku });
@@ -60,7 +68,7 @@ export const CartTable = ({
         onUpdate({ ...cart, items: changed_item_list });
     }, [cart, onUpdate]);
 
-    const cart_item_to_row = useCallback((data, key: string) => {
+    const cart_item_to_row = useCallback((data: any, key: string) => {
         const commonName = getPlantTrait("commonName", data.sku.plant);
         const quantity = data.quantity;
         let price: string | number = +data.sku.price;
@@ -74,14 +82,14 @@ export const CartTable = ({
         }
 
         let display;
-        let display_data = data.sku.plant.images.find(image => image.usedFor === IMAGE_USE.PlantDisplay)?.image;
+        let display_data = data.sku.plant.images.find((image: any) => image.usedFor === IMAGE_USE.PlantDisplay)?.image;
         if (!display_data && data.sku.plant.images.length > 0) display_data = data.sku.plant.images[0].image;
         if (display_data) {
             display = <Box
                 component="img"
-                src={`${getServerUrl()}/${getImageSrc(display_data)}`}
-                alt={display_data.alt}
-                title={commonName}
+                src={`${getServerUrl()}/${getImageSrc(display_data) ?? ''}`}
+                alt={display_data.alt || ''}
+                title={commonName ?? ''}
                 sx={{
                     minHeight: 100,
                     maxHeight: 100,
@@ -152,7 +160,7 @@ export const CartTable = ({
                     </TableHead>
                     <TableBody>
                         {Array.isArray(cart?.items) && cart.items.length > 0
-                            ? cart.items.map((c, index) => cart_item_to_row(c, index))
+                            ? cart.items.map((c, index) => cart_item_to_row(c, index.toString()))
                             : (
                                 <TableRow>
                                     <TableCell colSpan={headCells.length} align="center">
@@ -185,10 +193,10 @@ export const CartTable = ({
                             label="Delivery Date"
                             disabled={!editable}
                             value={cart?.desiredDeliveryDate ? new Date(cart.desiredDeliveryDate) : +(new Date())}
-                            onChange={(date) => {
-                                setDeliveryDate(date);
+                            onChange={(date: Date | null) => {
+                                if (date) setDeliveryDate(date);
                             }}
-                            renderInput={(params) => <TextField fullWidth {...params} />}
+                            renderInput={(params: any) => <TextField fullWidth {...params} />}
                         />
                     </LocalizationProvider>
                 </Grid>

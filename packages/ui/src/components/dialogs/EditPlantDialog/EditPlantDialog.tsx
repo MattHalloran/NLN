@@ -14,7 +14,7 @@ import { mutationWrapper } from "api/utils";
 import { ContentCollapse } from "components/ContentCollapse/ContentCollapse";
 import { TopBar } from "components/navigation/TopBar/TopBar";
 import { AddIcon, CancelIcon, DeleteIcon, SaveIcon } from "icons";
-import _ from "lodash";
+import { isEqual } from "lodash-es";
 import { PlantImageInfo } from "types";
 
 // Common plant traits, and their corresponding field names
@@ -64,11 +64,16 @@ export const EditPlantDialog = ({
     const addSku = () => {
         if (!changedPlant) return;
         const newSku = {
+            __typename: "Sku" as const,
+            id: makeID(10),
             sku: makeID(10),
             size: "",
             price: "",
             availability: 0,
-        };
+            isDiscountable: false,
+            note: null,
+            status: "ACTIVE" as SkuStatus,
+        } as plants_plants_skus;
         const updatedList = addToArray(changedPlant?.skus ?? [], newSku);
         setChangedPlant({ ...changedPlant, skus: updatedList });
         setCurrSkuIndex(updatedList.length - 1);
@@ -82,7 +87,7 @@ export const EditPlantDialog = ({
                 text: "Yes",
                 onClick: () => {
                     setCurrSkuIndex((changedPlant.skus?.length ?? 0) - 2);
-                    setChangedPlant({ ...changedPlant, skus: deleteArrayIndex(changedPlant.skus, currSkuIndex) });
+                    setChangedPlant({ ...changedPlant, skus: deleteArrayIndex(changedPlant.skus || [], currSkuIndex) });
                 },
             }, {
                 text: "No",
@@ -219,24 +224,24 @@ export const EditPlantDialog = ({
         });
     }, [changedPlant, deletePlant, onClose]);
 
-    const updateTrait = useCallback((traitName, value, createIfNotExists) => {
+    const updateTrait = useCallback((traitName: string, value: any, createIfNotExists: boolean) => {
         if (!changedPlant) return;
         const updatedPlant = setPlantTrait(traitName, value, changedPlant, createIfNotExists);
         if (updatedPlant) setChangedPlant(updatedPlant);
     }, [changedPlant]);
 
-    const getSkuField = useCallback((fieldName) => {
+    const getSkuField = useCallback((fieldName: keyof plants_plants_skus) => {
         if (!changedPlant?.skus) return "";
         if (!Array.isArray(changedPlant?.skus) || currSkuIndex < 0 || currSkuIndex >= changedPlant.skus.length) return "";
-        return changedPlant.skus[currSkuIndex][fieldName];
+        return (changedPlant.skus[currSkuIndex] as any)[fieldName];
     }, [changedPlant, currSkuIndex]);
 
-    const updateSkuField = useCallback((fieldName, value) => {
+    const updateSkuField = useCallback((fieldName: string, value: any) => {
         const updatedPlant = setPlantSkuField(fieldName, currSkuIndex, value, changedPlant);
         if (updatedPlant) setChangedPlant(updatedPlant);
     }, [changedPlant, currSkuIndex]);
 
-    const changes_made = !_.isEqual(plant, changedPlant) || imagesChanged;
+    const changes_made = !isEqual(plant, changedPlant) || imagesChanged;
 
     return (
         <Dialog fullScreen open={open} onClose={onClose} TransitionComponent={Transition}>

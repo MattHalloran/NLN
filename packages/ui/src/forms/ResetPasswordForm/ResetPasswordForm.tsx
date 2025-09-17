@@ -39,7 +39,7 @@ export const ResetPasswordForm = () => {
             mutationWrapper<resetPassword_resetPassword, resetPasswordVariables>({
                 mutation: resetPassword,
                 input: { id, code, newPassword: values.newPassword },
-                onSuccess: (data) => { PubSub.get().publishSession(data); setLocation(APP_LINKS.Shopping); },
+                onSuccess: (data) => { PubSub.get().publishSession({ ...data, theme: (data.theme as "light" | "dark") || "light" }); setLocation(APP_LINKS.Shopping); },
                 successMessage: () => "Password reset.",
             });
         },

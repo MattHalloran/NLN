@@ -1,14 +1,18 @@
 import { IMAGE_SIZE } from "@local/shared";
-import { AppBar, Avatar, Box, Button, Collapse, Dialog, Grid, IconButton, List, ListItem, ListItemAvatar, ListItemIcon, ListItemText, Toolbar, Typography, useTheme } from "@mui/material";
+import { AppBar, Avatar, Box, Button, CircularProgress, Collapse, Dialog, Grid, IconButton, List, ListItem, ListItemAvatar, ListItemIcon, ListItemText, Toolbar, Typography, useTheme } from "@mui/material";
 import { plants_plants_skus } from "api/generated/plants";
 import { QuantityBox, Selector, SnackSeverity, Transition } from "components";
 import { BeeIcon, CloseIcon, DroughtIcon, ExpandLessIcon, ExpandMoreIcon, InfoIcon, LampIcon, LightModeIcon, MapIcon, MoistureIcon, MoveLeftRightIcon, MoveUpDownIcon, PHIcon, PaletteIcon, SaltIcon, ScheduleIcon, ShoppingCartAddIcon, SoilTypeIcon, SpeedIcon } from "icons";
 import { SvgComponent } from "icons/types";
-import { useEffect, useState } from "react";
-import Carousel from "react-gallery-carousel";
-import "react-gallery-carousel/dist/index.css";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { PubSub, getImageSrc, getPlantTrait, getServerUrl, showPrice } from "utils";
 import { PlantDialogProps } from "../types";
+
+// Lazy load the carousel component and its styles
+const Carousel = lazy(() => import("react-gallery-carousel").then(module => {
+    import("react-gallery-carousel/dist/index.css");
+    return module;
+}));
 
 export const PlantDialog = ({
     isAdminPage,
@@ -186,10 +190,21 @@ export const PlantDialog = ({
             }}>
                 <Grid container spacing={0}>
                     {images.length > 0 && <Grid item lg={6} xs={12}>
-                        <Carousel canAutoPlay={false} images={images} style={{
-                            maxHeight: "75vh",
-                            width: "100%",
-                        }} />
+                        <Suspense fallback={
+                            <Box sx={{ 
+                                display: 'flex', 
+                                justifyContent: 'center', 
+                                alignItems: 'center', 
+                                minHeight: '400px' 
+                            }}>
+                                <CircularProgress />
+                            </Box>
+                        }>
+                            <Carousel canAutoPlay={false} images={images} style={{
+                                maxHeight: "75vh",
+                                width: "100%",
+                            }} />
+                        </Suspense>
                     </Grid>}
                     <Grid item lg={6} xs={12}>
                         {(getPlantTrait("description", plant) || displayedTraitList.length > 0) ? (

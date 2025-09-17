@@ -1,9 +1,14 @@
 import { Box, useTheme } from "@mui/material";
 
+interface DotsProps {
+    quantity?: number;
+    activeIndex: number;
+}
+
 export const Dots = ({
     quantity = 0,
     activeIndex,
-}) => {
+}: DotsProps) => {
     const { palette } = useTheme();
 
     const slides: JSX.Element[] = [];

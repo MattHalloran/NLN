@@ -1,11 +1,10 @@
 import { useQuery } from "@apollo/client";
 import { Box, styled } from "@mui/material";
 import { readAssetsQuery } from "api/query/readAssets";
-import { PageContainer } from "components";
+import { LazyMarkdown, PageContainer } from "components";
 import { PolicyTabOption, PolicyTabs } from "components/breadcrumbs/PolicyTabs/PolicyTabs";
 import { TopBar } from "components/navigation/TopBar/TopBar";
 import { BusinessContext } from "contexts/BusinessContext";
-import MarkdownInput from "markdown-to-jsx";
 import { useContext, useEffect, useState } from "react";
 import { convertToDot, valueFromDot } from "utils";
 
@@ -33,8 +32,8 @@ export const PrivacyPolicyPage = () => {
         if (privacyData === undefined) return;
         let data = privacyData.readAssets[0];
         // Replace variables
-        const business_fields = Object.keys(convertToDot(business));
-        business_fields.forEach(f => data = data.replaceAll(`<${f}>`, valueFromDot(business, f) || ""));
+        const business_fields = Object.keys(convertToDot(business || {} as any));
+        business_fields.forEach(f => data = data.replaceAll(`<${f}>`, valueFromDot(business || {} as any, f) || ""));
         setPrivacy(data);
     }, [privacyData, business]);
 
@@ -46,7 +45,7 @@ export const PrivacyPolicyPage = () => {
                 below={<PolicyTabs defaultTab={PolicyTabOption.Privacy} />}
             />
             <OuterBox>
-                <MarkdownInput>{privacy ?? ""}</MarkdownInput>
+                <LazyMarkdown>{privacy ?? ""}</LazyMarkdown>
             </OuterBox>
         </PageContainer>
     );

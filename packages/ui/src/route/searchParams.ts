@@ -61,8 +61,8 @@ export const stringifySearchParams = (params: object): string => {
     const keys = Object.keys(params);
     if (keys.length === 0) return "";
     // Filter out any keys which are associated with undefined or null values
-    const filteredKeys = keys.filter(key => params[key] !== null && params[key] !== undefined);
-    const encodedParams = filteredKeys.map(key => encodeURIComponent(key) + "=" + encodeURIComponent(JSON.stringify(params[key]))).join("&");
+    const filteredKeys = keys.filter((key: string) => (params as any)[key] !== null && (params as any)[key] !== undefined);
+    const encodedParams = filteredKeys.map((key: string) => encodeURIComponent(key) + "=" + encodeURIComponent(JSON.stringify((params as any)[key]))).join("&");
     return "?" + encodedParams;
 };
 

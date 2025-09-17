@@ -9,7 +9,7 @@ export const SearchBar = ({
     onChange,
     debounce = 0,
     ...props
-}: Omit<TextFieldProps, "labe" | "value" | "onChange"> & {
+}: Omit<TextFieldProps, "label" | "value" | "onChange"> & {
     label?: string,
     value: string,
     onChange: (updatedString: string) => unknown,

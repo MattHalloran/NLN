@@ -26,9 +26,9 @@ export type Pubs = ValueOf<typeof Pubs>;
 export type SnackPub = {
     message?: string;
     severity: SnackSeverity;
-    data?: any;
+    data?: unknown;
     buttonText?: string;
-    buttonClicked?: (event?: any) => any;
+    buttonClicked?: (event?: Event) => unknown;
     autoHideDuration?: number;
 }
 
@@ -39,8 +39,7 @@ export type SideMenuPub = {
 
 export class PubSub {
     private static instance: PubSub;
-    // eslint-disable-next-line @typescript-eslint/ban-types
-    private subscribers: { [key: string]: [symbol, Function][] } = {};
+    private subscribers: { [key: string]: [symbol, (data?: any) => void][] } = {};
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     private constructor() { }
     static get(): PubSub {
@@ -50,7 +49,7 @@ export class PubSub {
         return PubSub.instance;
     }
 
-    publish(key: Pubs, data?: any) {
+    publish(key: Pubs, data?: unknown) {
         if (this.subscribers[key]) {
             this.subscribers[key].forEach(subscriber => subscriber[1](data));
         }
@@ -58,7 +57,7 @@ export class PubSub {
     publishBurgerMenu(to: boolean | "toggle") {
         this.publish(Pubs.BurgerMenu, to);
     }
-    publishBusiness(data: any) {
+    publishBusiness(data: unknown) {
         this.publish(Pubs.Business, data);
     }
     publishLoading(spinnerDelay: number | false) {
@@ -84,7 +83,7 @@ export class PubSub {
     }
 
     // eslint-disable-next-line @typescript-eslint/ban-types
-    subscribe(key: Pubs, subscriber: Function): symbol {
+    subscribe(key: Pubs, subscriber: (data?: any) => void): symbol {
         // Create unique token, so we can unsubscribe later
         const token = Symbol(key);
         if (!this.subscribers[key]) {
@@ -96,7 +95,7 @@ export class PubSub {
     subscribeBurgerMenu(subscriber: (to: boolean | "toggle") => void) {
         return this.subscribe(Pubs.BurgerMenu, subscriber);
     }
-    subscribeBusiness(subscriber: (data: any) => void) {
+    subscribeBusiness(subscriber: (data: unknown) => void) {
         return this.subscribe(Pubs.Business, subscriber);
     }
     subscribeLoading(subscriber: (spinnerDelay: number | false) => void) {

@@ -1,4 +1,6 @@
 import { PopoverProps } from "@mui/material";
+import { customers_customers } from "api/generated/customers";
+import { orders_orders } from "api/generated/orders";
 import { plants_plants, plants_plants_skus } from "api/generated/plants";
 import { TitleProps } from "components/text/types";
 import { SxType } from "types";
@@ -51,4 +53,28 @@ export interface SnackProps {
     id: string;
     message?: string;
     severity?: SnackSeverity;
+}
+
+export interface CustomerDialogProps {
+    customer: customers_customers;
+    open?: boolean;
+    onClose: () => void;
+}
+
+export interface OrderDialogProps {
+    order: orders_orders;
+    open?: boolean;
+    onClose: () => void;
+}
+
+export interface ListDialogProps {
+    open?: boolean;
+    onClose: (value?: string) => void;
+    title?: string;
+    data?: Array<[string, string]>;
+}
+
+export interface NewCustomerDialogProps {
+    open?: boolean;
+    onClose: () => void;
 }

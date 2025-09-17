@@ -7,17 +7,23 @@ import { mutationWrapper } from "api/utils";
 import { CartTable, Transition } from "components";
 import { SessionContext } from "contexts/SessionContext";
 import { CancelIcon, CloseIcon, CompleteIcon, DeliveryTruckIcon, EditIcon, SaveIcon, ScheduleIcon, SuccessIcon, ThumbDownIcon, ThumbUpIcon } from "icons";
-import _ from "lodash";
+import { isEqual } from "lodash-es";
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { ORDER_FILTERS, findWithAttr } from "utils";
 
 const editableStatuses = [ORDER_STATUS.PendingCancel, ORDER_STATUS.Pending, ORDER_STATUS.Approved, ORDER_STATUS.Scheduled];
 
+interface OrderDialogProps {
+    order: any;
+    open?: boolean;
+    onClose: () => void;
+}
+
 export const OrderDialog = ({
     order,
     open = true,
     onClose,
-}) => {
+}: OrderDialogProps) => {
     const { palette, spacing } = useTheme();
     const session = useContext(SessionContext);
 
@@ -36,7 +42,7 @@ export const OrderDialog = ({
                 id: changedOrder.id,
                 desiredDeliveryDate: changedOrder.desiredDeliveryDate,
                 isDelivery: changedOrder.isDelivery,
-                items: changedOrder.items.map(i => ({ id: i.id, quantity: i.quantity })),
+                items: changedOrder.items.map((i: any) => ({ id: i.id, quantity: i.quantity })),
             },
             successCondition: (data) => data !== null,
             successMessage: () => "Order successfully updated.",
@@ -44,10 +50,10 @@ export const OrderDialog = ({
         });
     };
 
-    const setOrderStatus = useCallback((status, successMessage, errorMessage) => {
+    const setOrderStatus = useCallback((status: string, successMessage: string, errorMessage: string) => {
         mutationWrapper<updateOrder_updateOrder, updateOrderVariables>({
             mutation: updateOrder,
-            input: { id: order.id, status },
+            input: { id: order.id, status: status as any },
             successMessage: () => successMessage,
             errorMessage: () => errorMessage,
             onSuccess: (data) => setChangedOrder(data),
@@ -129,7 +135,7 @@ export const OrderDialog = ({
                     fullWidth
                     startIcon={<SaveIcon />}
                     onClick={orderUpdate}
-                    disabled={loading || _.isEqual(order, changedOrder)}
+                    disabled={loading || isEqual(order, changedOrder)}
                     variant="contained"
                 >Update</Button>
             </Grid>
@@ -138,7 +144,7 @@ export const OrderDialog = ({
                     <Button
                         fullWidth
                         startIcon={action.icon}
-                        onClick={() => setOrderStatus(action.status, action.successMessage, action.failureMessage)}
+                        onClick={() => setOrderStatus(String(action.status), String(action.successMessage), String(action.failureMessage))}
                         disabled={loading}
                         variant="contained"
                     >{action.displayText}</Button>

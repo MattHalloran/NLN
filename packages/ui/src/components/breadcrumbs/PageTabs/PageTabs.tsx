@@ -208,7 +208,7 @@ export const PageTabs = <T, S extends boolean = true>({
                             href={href}
                             aria-selected={isSelected}
                             aria-controls={`${ariaLabel}-tabpanel-${index}`}
-                            onClick={(event) => handleTabChange(event, index)}
+                            onClick={(event: React.MouseEvent) => handleTabChange(event, index)}
                             style={{
                                 padding: "10px",
                                 margin: fullWidth ? "0 auto" : "0",

@@ -4,22 +4,22 @@
 import { isObject } from "@local/shared";
 
 // Grabs data from an object using dot notation (ex: 'parent.child.property')
-export const valueFromDot = (object, notation) => {
-    function index(object, i) { return object[i]; }
+export const valueFromDot = (object: Record<string, any>, notation: string): any => {
+    function index(object: Record<string, any>, i: string): any { return object[i]; }
     if (!object || !notation) return null;
     return notation.split(".").reduce(index, object);
 };
 
-export const arrayValueFromDot = (object, notation, index) => {
+export const arrayValueFromDot = (object: Record<string, any>, notation: string, index: number): any => {
     const value = valueFromDot(object, notation);
     if (!value || !Array.isArray(value) || index <= 0 || value.length >= index) return null;
     return value[index];
 };
 
 // Maps the keys of an object to dot notation
-export function convertToDot(obj, parent = [], keyValue = {}) {
+export function convertToDot(obj: Record<string, any>, parent: string[] = [], keyValue: Record<string, any> = {}): Record<string, any> {
     for (const key in obj) {
-        const keyPath: any = [...parent, key];
+        const keyPath: string[] = [...parent, key];
         if (obj[key] !== null && typeof obj[key] === "object") {
             Object.assign(keyValue, convertToDot(obj[key], keyPath, keyValue));
         } else {
@@ -44,7 +44,7 @@ export const removeFirstLevel = (notationArray: string[]) => notationArray.map(s
  * @param updated The updated object
  * @param fields The fields to check for changes
  */
-export function hasObjectChanged(original: any, updated: any, fields: string[] = []): boolean {
+export function hasObjectChanged(original: Record<string, any>, updated: Record<string, any>, fields: string[] = []): boolean {
     if (!updated) return false;
     if (!original) return true;
     const fieldsToCheck = fields.length > 0 ? fields : Object.keys(original);

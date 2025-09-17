@@ -51,7 +51,7 @@ export const QuantityBox = ({
         holdRefs.current.value = value;
     }, [value]);
 
-    const updateValue = useCallback((quantity) => {
+    const updateValue = useCallback((quantity: number) => {
         if (quantity > max) quantity = max;
         if (quantity < min) quantity = min;
         handleChange(quantity);
@@ -133,7 +133,7 @@ export const QuantityBox = ({
                         type="number"
                         inputProps={{ min, max }}
                         value={value}
-                        onChange={(e) => updateValue(e.target.value)}
+                        onChange={(e) => updateValue(parseInt(e.target.value) || 0)}
                         sx={{
                             color: palette.background.textPrimary,
                         }}

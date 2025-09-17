@@ -1,8 +1,10 @@
 import { IMAGE_USE, SKU_STATUS } from "@local/shared";
 import { Avatar, Box, CardMedia, Chip, SxProps, Theme, Typography, useTheme } from "@mui/material";
+import { plants_plants_skus } from "api/generated/plants";
 import { NoImageIcon } from "icons";
-import { useMemo } from "react";
+import { memo, useMemo } from "react";
 import { getImageSrc, getPlantTrait, getServerUrl, showPrice } from "utils";
+import { PlantCardProps } from "../types";
 
 const deleted: SxProps<Theme> = {
     background: "2px solid red",
@@ -17,19 +19,12 @@ const active: SxProps<Theme> = {
 } as const;
 
 
-export const PlantCard = ({
+const PlantCardComponent = ({
     isAdminPage,
     isMobile,
-    key,
     onClick,
     plant,
-}: {
-    isAdminPage: boolean,
-    isMobile: boolean,
-    key: string | number,
-    onClick: ({ plant, selectedSku }: { plant: any, selectedSku: any }) => unknown,
-    plant: any,
-}) => {
+}: PlantCardProps) => {
     const { breakpoints, palette } = useTheme();
 
     const SkuStatus = {
@@ -38,12 +33,12 @@ export const PlantCard = ({
         [SKU_STATUS.Active]: active,
     };
 
-    const openWithSku = (e, sku) => {
+    const openWithSku = (e: React.MouseEvent, sku: plants_plants_skus) => {
         e.stopPropagation();
-        onClick({ plant, selectedSku: sku });
+        onClick?.({ plant, selectedSku: sku });
     };
 
-    const sizes = plant.skus?.map(s => (
+    const sizes = plant.skus?.map((s) => (
         <Chip
             key={s.sku}
             label={
@@ -60,21 +55,21 @@ export const PlantCard = ({
                 background: palette.primary.light,
                 color: palette.primary.contrastText,
                 fontSize: "0.75rem",
-            } as any}
+            }}
         />
     ));
 
     const imgDisplay = useMemo(() => {
         let display: JSX.Element;
-        let display_data = plant.images.find(image => image.usedFor === IMAGE_USE.PlantDisplay)?.image;
-        if (!display_data && plant.images.length > 0) {
+        let display_data = plant.images?.find((image) => (image as any).usedFor === IMAGE_USE.PlantDisplay)?.image;
+        if (!display_data && plant.images && plant.images.length > 0) {
             const sorted = [...plant.images].sort((a, b) => a.index - b.index);
             display_data = sorted[0].image;
         }
         // On mobile, use Avatar (best for lists)
         if (isMobile) {
             display = <Avatar
-                src={`${getServerUrl()}/${getImageSrc(display_data)}`}
+                src={display_data ? `${getServerUrl()}/${getImageSrc(display_data)}` : ''}
                 alt={display_data?.alt ?? plant.latinName}
                 sx={{
                     backgroundColor: palette.primary.main,
@@ -94,8 +89,8 @@ export const PlantCard = ({
             if (display_data) {
                 display = <CardMedia
                     component="img"
-                    src={`${getServerUrl()}/${getImageSrc(display_data)}`}
-                    alt={display_data.alt}
+                    src={`${getServerUrl()}/${getImageSrc(display_data) || ''}`}
+                    alt={display_data?.alt || ''}
                     title={plant.latinName}
                     sx={{
                         minHeight: 200,
@@ -116,8 +111,7 @@ export const PlantCard = ({
 
     return (
         <Box
-            key={key}
-            onClick={() => onClick({ plant, selectedSku: plant.skus[0] })}
+            onClick={() => onClick?.({ plant, selectedSku: plant.skus?.[0] })}
             sx={{
                 background: palette.primary.main,
                 color: palette.primary.contrastText,
@@ -147,3 +141,6 @@ export const PlantCard = ({
         </Box >
     );
 };
+
+// Memoize the component for better performance in lists
+export const PlantCard = memo(PlantCardComponent);

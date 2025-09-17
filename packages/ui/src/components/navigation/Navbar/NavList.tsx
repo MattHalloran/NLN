@@ -7,7 +7,7 @@ import { SessionContext } from "contexts/SessionContext";
 import { useSideMenu } from "hooks/useSideMenu";
 import { useWindowSize } from "hooks/useWindowSize";
 import { CreateAccountIcon, InfoIcon, MenuIcon, PhotoLibraryIcon, ShoppingCartIcon } from "icons";
-import _ from "lodash";
+import { isObject } from "lodash-es";
 import { useCallback, useContext } from "react";
 import { useLocation } from "route";
 import { PubSub, UserActions, getUserActions, updateArray } from "utils";
@@ -39,20 +39,20 @@ export const NavList = () => {
 
     let cart_button;
     // If someone is not logged in, display sign up/log in APP_LINKS
-    if (!_.isObject(session) || Object.keys(session).length === 0) {
+    if (!isObject(session) || Object.keys(session).length === 0) {
         nav_options.push(["Sign Up", "signup", APP_LINKS.Register, null, CreateAccountIcon, 0]);
     } else {
         // Cart option is rendered differently, so we must take it out of the array
         const cart_index = nav_options.length - 1;
         const cart_option = nav_options[cart_index];
         // Replace cart option with log out option
-        nav_options = updateArray(nav_options, cart_index, ["Log Out", "logout", APP_LINKS.Home, logoutCustomer]);
+        nav_options = updateArray(nav_options, cart_index, ["Log Out", "logout", APP_LINKS.Home, logoutCustomer, CreateAccountIcon, 0]);
         cart_button = (
             <IconButton
                 edge="start"
                 color="inherit"
                 aria-label={cart_option[1]}
-                onClick={() => setLocation(APP_LINKS.Cart)}
+                onClick={() => window.location.href = "https://newlife.online-orders.sbiteam.com/orders"}
                 sx={{ margin: 0 }}
             >
                 <Badge badgeContent={cart_option[5]} color="error">
@@ -71,8 +71,8 @@ export const NavList = () => {
     const { isOpen: isSideMenuOpen } = useSideMenu("side-menu", isMobile);
     const openSideMenu = useCallback(() => { PubSub.get().publishSideMenu({ id: "side-menu", isOpen: true }); }, []);
 
-    const optionsToList = (options) => {
-        return options.map(([label, value, link, onClick, Icon], index) => (
+    const optionsToList = (options: UserActions): JSX.Element[] => {
+        return options.map(([label, value, link, onClick, Icon, _badgeNum], index) => (
             <ListItem
                 button
                 key={index}
@@ -88,8 +88,8 @@ export const NavList = () => {
         ));
     };
 
-    const optionsToMenu = (options) => {
-        return options.map(([label, value, link, onClick], index) => (
+    const optionsToMenu = (options: UserActions): JSX.Element[] => {
+        return options.map(([label, value, link, onClick, _Icon, _badgeNum], index) => (
             <Button
                 key={index}
                 variant="text"

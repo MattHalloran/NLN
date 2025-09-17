@@ -59,7 +59,7 @@ export const LogInForm = () => {
                     if (verificationCode) {
                         PubSub.get().publishSnack({ message: "Account verified.", severity: SnackSeverity.Success });
                     }
-                    PubSub.get().publishSession(data);
+                    PubSub.get().publishSession({ ...data, theme: (data.theme as "light" | "dark") || "light" });
                     setLocation(APP_LINKS.Shopping);
                 },
                 onError: (response) => {

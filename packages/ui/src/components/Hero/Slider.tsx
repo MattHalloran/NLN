@@ -1,5 +1,6 @@
 import { Box } from "@mui/material";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Image } from "types";
 import { Dots } from "./Dots";
 import { Slide } from "./Slide";
 import { SliderContent } from "./SliderContent";
@@ -7,12 +8,19 @@ import { SliderContent } from "./SliderContent";
 const DEFAULT_DELAY = 3000;
 const DEFAULT_DURATION = 1000;
 
+interface SliderProps {
+    images?: Image[];
+    autoPlay?: boolean;
+    slidingDelay?: number;
+    slidingDuration?: number;
+}
+
 export const Slider = ({
     images = [],
     autoPlay = true,
     slidingDelay = DEFAULT_DELAY,
     slidingDuration = DEFAULT_DURATION,
-}) => {
+}: SliderProps) => {
     const [width, setWidth] = useState(window.innerWidth);
     const [slideIndex, setSlideIndex] = useState(0);
     const [translate, setTranslate] = useState(0);
@@ -22,12 +30,12 @@ export const Slider = ({
 
     // Play and wait have circular dependencies, so they must be memoized together
     const { wait } = useMemo(() => {
-        const play = (index) => {
+        const play = (index: number) => {
             if (images.length > 0) timeoutRef.current = setTimeout(wait, slidingDuration, index === images.length - 1 ? 0 : index + 1);
             setTransition(slidingDuration);
             setTranslate(width * (index + 1));
         };
-        const wait = (index) => {
+        const wait = (index: number) => {
             setSlideIndex(index);
             if (images.length > 0) timeoutRef.current = setTimeout(play, slidingDelay, index);
             setTransition(0);

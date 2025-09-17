@@ -22,6 +22,7 @@ const {
     AdminCustomerPage,
     AdminGalleryPage,
     AdminHeroPage,
+    AdminHomePage,
     AdminMainPage,
     AdminInventoryPage,
     AdminOrderPage,
@@ -63,7 +64,7 @@ export const Routes = () => {
                     sitemapIndex
                     priority={0.7}>
                     <Suspense fallback={Fallback}>
-                        <Page>
+                        <Page excludePageContainer>
                             <AboutPage />
                         </Page>
                     </Suspense>
@@ -93,7 +94,7 @@ export const Routes = () => {
                     sitemapIndex
                     priority={0.3}>
                     <Suspense fallback={Fallback}>
-                        <Page>
+                        <Page excludePageContainer>
                             <GalleryPage />
                         </Page>
                     </Suspense>
@@ -213,7 +214,7 @@ export const Routes = () => {
                 <Route path={APP_LINKS.AdminHero}>
                     <Suspense fallback={Fallback}>
                         <Page excludePageContainer restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
-                            <AdminHeroPage />
+                            <AdminHomePage />
                         </Page>
                     </Suspense>
                 </Route>

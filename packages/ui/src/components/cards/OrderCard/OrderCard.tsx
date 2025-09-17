@@ -3,29 +3,30 @@ import { ListDialog } from "components";
 import { EmailIcon, PhoneIcon } from "icons";
 import { useState } from "react";
 import { emailLink, mapIfExists, phoneLink, showPhone } from "utils";
+import { OrderCardProps } from "../types";
 
 export const OrderCard = ({
     onEdit,
     order,
-}) => {
+}: OrderCardProps) => {
     const { palette } = useTheme();
 
     const [emailDialogOpen, setEmailDialogOpen] = useState(false);
     const [phoneDialogOpen, setPhoneDialogOpen] = useState(false);
 
-    const callPhone = (phoneLink: string) => {
+    const callPhone = (phoneLink?: string): void => {
         setPhoneDialogOpen(false);
         if (phoneLink) window.location.href = phoneLink;
     };
 
-    const sendEmail = (emailLink: string) => {
+    const sendEmail = (emailLink?: string): void => {
         setEmailDialogOpen(false);
         if (emailLink) window.open(emailLink, "_blank", "noopener,noreferrer");
     };
 
     // Phone and email [label, value] pairs
-    const phoneList = mapIfExists(order, "customer.phones", (p) => ([showPhone(p.number), phoneLink(p.number)]));
-    const emailList = mapIfExists(order, "customer.emails", (e) => ([e.emailAddress, emailLink(e.emailAddress)]));
+    const phoneList = mapIfExists(order as unknown as Record<string, unknown>, "customer.phones", (p: any) => [showPhone(p.number), phoneLink(p.number)] as [string, string]) as [string, string][] | null;
+    const emailList = mapIfExists(order as unknown as Record<string, unknown>, "customer.emails", (e: any) => [e.emailAddress, emailLink(e.emailAddress)] as [string, string]) as [string, string][] | null;
 
     return (
         <Card sx={{
@@ -41,16 +42,16 @@ export const OrderCard = ({
             {phoneDialogOpen ? (
                 <ListDialog
                     title={`Call ${order?.customer?.firstName} ${order?.customer?.lastName}`}
-                    data={phoneList}
+                    data={phoneList ?? undefined}
                     onClose={callPhone} />
             ) : null}
             {emailDialogOpen ? (
                 <ListDialog
                     title={`Email ${order?.customer?.firstName} ${order?.customer?.lastName}`}
-                    data={emailList}
+                    data={emailList ?? undefined}
                     onClose={sendEmail} />
             ) : null}
-            <CardContent onClick={onEdit}>
+            <CardContent onClick={() => onEdit?.(order)}>
                 <Typography variant="h6" component="h3" gutterBottom>
                     {order?.customer?.firstName} {order?.customer?.lastName}
                 </Typography>
@@ -65,7 +66,7 @@ export const OrderCard = ({
                 </Typography>
             </CardContent>
             <CardActions>
-                <Button variant="text" onClick={onEdit} sx={{ color: palette.secondary.light }}>View</Button>
+                <Button variant="text" onClick={() => onEdit?.(order)} sx={{ color: palette.secondary.light }}>View</Button>
                 {phoneList && phoneList.length &&
                     (<Tooltip title="View phone numbers" placement="bottom">
                         <IconButton onClick={() => setPhoneDialogOpen(true)}>

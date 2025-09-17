@@ -1,8 +1,16 @@
 import { useTheme } from "@mui/material";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
+import { memo, ReactNode } from "react";
 
-export const TabPanel = (props) => {
+interface TabPanelProps {
+    children: ReactNode;
+    value: number;
+    index: number;
+    [key: string]: unknown;
+}
+
+const TabPanelComponent = (props: TabPanelProps) => {
     const { palette } = useTheme();
 
     const { children, value, index, ...other } = props;
@@ -24,3 +32,6 @@ export const TabPanel = (props) => {
         </Box>
     );
 };
+
+// Memoize TabPanel for better performance when switching tabs
+export const TabPanel = memo(TabPanelComponent);

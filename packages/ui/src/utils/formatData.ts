@@ -1,19 +1,19 @@
 // A collection of functions for parsing and serializing data from the backend
 // Ex: phone numbers are often stored as a string of just numbers, 
 // and formatted in the frontend to have spaces, parentheses, etc.
-import _ from "lodash";
+import { isNumber } from "lodash-es";
 
 // Convert price stored in database to user-friendly version
-export const showPrice = (price: string | number | null) => {
+export const showPrice = (price: string | number | null): string => {
     if (!price) return "N/A";
     const result = Number(price);
     if (result < 0) return "N/A";
-    if (isNaN(result)) return price;
+    if (isNaN(result)) return String(price);
     return `$${result.toFixed(2)}`;
 };
 
 // Convert display price to database representation
-export const storePrice = (price: string | number) => {
+export const storePrice = (price: string | number): string | null => {
     // Convert to string, if needed
     let priceString = price + "";
     // Remove unit
@@ -21,11 +21,11 @@ export const storePrice = (price: string | number) => {
     const number = Number(priceString);
     // If number, return cents
     // If not a number, return 'N/A'
-    return (_.isNumber(number) && number > 0) ? number.toFixed(2) : null;
+    return (isNumber(number) && number > 0) ? number.toFixed(2) : null;
 };
 
 // '15558675309' -> '+1 (555) 867-5309'
-export const showPhone = (phone: string | number) => {
+export const showPhone = (phone: string | number): string | null => {
     const cleaned = ("" + phone).replace(/\D/g, "");
     const match = cleaned.match(/^(1|)?(\d{3})(\d{3})(\d{4})$/);
     if (match) {
@@ -36,7 +36,7 @@ export const showPhone = (phone: string | number) => {
 };
 
 // '+1 (555) 867-5309' -> '15558675309'
-export const storePhone = (phone: string) => {
+export const storePhone = (phone: string): string | null => {
     const cleaned = ("" + phone).replace(/\D/g, "");
     // Remove spaces, and special characters
     const match = cleaned.match(/^(1|)?(\d{3})(\d{3})(\d{4})$/);
@@ -47,5 +47,5 @@ export const storePhone = (phone: string) => {
 };
 
 // '15558675309' -> 'tel:+15558675309'
-export const phoneLink = (phone: string | number) => `tel:${phone}`;
-export const emailLink = (address: string, subject = "", body = "") => `mailto:${address}?subject=${subject}&body=${body}`;
+export const phoneLink = (phone: string | number): string => `tel:${phone}`;
+export const emailLink = (address: string, subject = "", body = ""): string => `mailto:${address}?subject=${subject}&body=${body}`;

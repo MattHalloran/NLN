@@ -216,3 +216,40 @@ export function unregister() {
             });
     }
 }
+
+// Force cleanup of old service workers and caches
+export async function forceCleanup() {
+    if (!("serviceWorker" in navigator)) {
+        return;
+    }
+    
+    try {
+        // Get all registrations
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        console.log("Found service worker registrations:", registrations.length);
+        
+        // Unregister all existing service workers
+        await Promise.all(
+            registrations.map(async (registration) => {
+                console.log("Unregistering service worker:", registration.scope);
+                return registration.unregister();
+            })
+        );
+        
+        // Clear all caches
+        const cacheNames = await caches.keys();
+        console.log("Found caches:", cacheNames);
+        await Promise.all(
+            cacheNames.map(async (cacheName) => {
+                console.log("Deleting cache:", cacheName);
+                return caches.delete(cacheName);
+            })
+        );
+        
+        console.log("Service worker cleanup completed");
+        return true;
+    } catch (error) {
+        console.error("Error during service worker cleanup:", error);
+        return false;
+    }
+}

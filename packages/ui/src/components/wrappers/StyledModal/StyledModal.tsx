@@ -3,12 +3,19 @@ import { CloseIcon } from "icons";
 
 // const ESCAPE_KEY = 27;
 
+interface StyledModalProps {
+    open?: boolean;
+    scrollable?: boolean;
+    onClose: () => void;
+    children: React.ReactNode;
+}
+
 export const StyledModal = ({
     open = true,
     scrollable = false,
     onClose,
     children,
-}) => {
+}: StyledModalProps) => {
     const { palette } = useTheme();
 
     return (

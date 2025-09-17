@@ -7,7 +7,7 @@
 export function getServerUrl(): string {
     // If running locally
     if (window.location.host.includes("localhost") || window.location.host.includes("192.168.0.")) {
-        return `http://${window.location.hostname}:5330/api`;
+        return `http://${window.location.hostname}:5331/api`;
     }
     // If running on server
     return "https://newlifenurseryinc.com/api";

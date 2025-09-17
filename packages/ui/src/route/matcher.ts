@@ -29,11 +29,11 @@ export default function makeMatcher(makeRegexpFn: (pattern: string) => PatternTo
     const getRegexp = (pattern: string) =>
         cache[pattern] || (cache[pattern] = makeRegexpFn(pattern));
 
-    return (pattern: string, path: string) => {
+    return (pattern: string, path: string): Match => {
         const { regexp, keys } = getRegexp(pattern || "");
         const out = regexp.exec(path);
 
-        if (!out) return [false, null];
+        if (!out) return [false, null] as NoMatch;
 
         // formats an object with matched params
         const params = keys.reduce((params: any, key: any, i: number) => {
@@ -41,7 +41,7 @@ export default function makeMatcher(makeRegexpFn: (pattern: string) => PatternTo
             return params;
         }, {});
 
-        return [true, params];
+        return [true, params] as MatchWithParams;
     };
 }
 

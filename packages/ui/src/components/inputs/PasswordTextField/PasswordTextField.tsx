@@ -28,8 +28,7 @@ export const PasswordTextField = ({
     name = "password",
     onBlur = noop,
     onChange,
-    value,
-    ...props
+    value
 }: PasswordTextFieldProps) => {
     const { palette } = useTheme();
 
@@ -68,7 +67,7 @@ export const PasswordTextField = ({
     }, [value, getPasswordStrengthProps]);
 
     return (
-        <FormControl fullWidth={fullWidth} variant="outlined" {...props as any}>
+        <FormControl fullWidth={fullWidth} variant="outlined">
             <InputLabel htmlFor={name}>{label ?? "Password"}</InputLabel>
             <OutlinedInput
                 id={name}

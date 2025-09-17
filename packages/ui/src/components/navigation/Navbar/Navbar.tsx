@@ -1,5 +1,5 @@
 import { APP_LINKS } from "@local/shared";
-import { AppBar, Box, Stack, Typography, useTheme } from "@mui/material";
+import { alpha, AppBar, Box, Stack, Typography, useTheme } from "@mui/material";
 import Logo from "assets/img/nln-logo-colorized.png";
 import { Title } from "components/text";
 import { NavbarProps } from "components/types";
@@ -56,7 +56,7 @@ const LogoComponent = ({
                     marginTop: { xs: "4px", md: "8px" },
                     marginBottom: { xs: "4px", md: "8px" },
                     marginRight: "auto",
-                    background: palette.mode === "light" ? "#ffffff42" : "radial-gradient(circle at center, #757565 0, #757565, white 100%)",
+                    background: palette.mode === "light" ? alpha(palette.background.paper, 0.26) : "radial-gradient(circle at center, #757565 0, #757565, white 100%)",
                     borderRadius: "100%",
                     height: "48px",
                     width: "48px",
@@ -95,7 +95,15 @@ const LogoComponent = ({
     );
 };
 
-const TitleDisplay = ({ isMobile, title, titleComponent, help, options, shouldHideTitle, showOnMobile }) => {
+const TitleDisplay = ({ isMobile, title, titleComponent, help, options, shouldHideTitle, showOnMobile }: {
+    isMobile: boolean;
+    title?: string;
+    titleComponent?: JSX.Element;
+    help?: string;
+    options?: any;
+    shouldHideTitle?: boolean;
+    showOnMobile?: boolean;
+}) => {
     // Check if title should be displayed here, based on screen size
     if ((isMobile && !showOnMobile) || (!isMobile && showOnMobile)) return null;
     // Desktop title can be hidden
@@ -112,7 +120,7 @@ const TitleDisplay = ({ isMobile, title, titleComponent, help, options, shouldHi
     return null;
 };
 
-const NavListComponent = ({ isLeftHanded }) => {
+const NavListComponent = ({ isLeftHanded }: { isLeftHanded: boolean }) => {
     return <Box sx={{
         marginLeft: isLeftHanded ? 0 : "auto",
         marginRight: isLeftHanded ? "auto" : 0,

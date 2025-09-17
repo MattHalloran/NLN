@@ -11,7 +11,7 @@ import { TopBar } from "components/navigation/TopBar/TopBar";
 import { BusinessContext } from "contexts/BusinessContext";
 import { SessionContext } from "contexts/SessionContext";
 import { ArrowLeftIcon, ArrowRightIcon, SaveIcon } from "icons";
-import _ from "lodash";
+import { isEqual } from "lodash-es";
 import { useCallback, useContext, useEffect, useState } from "react";
 import { useLocation } from "route";
 import { Cart } from "types";
@@ -71,7 +71,7 @@ export const CartPage = () => {
 
     const finalizeOrder = useCallback(() => {
         // Make sure order is updated
-        if (!_.isEqual(session?.cart, changedCart)) {
+        if (!isEqual(session?.cart, changedCart)) {
             PubSub.get().publishSnack({ message: "Please click \"UPDATE ORDER\" before submitting.", severity: SnackSeverity.Error });
             return;
         }
@@ -98,7 +98,7 @@ export const CartPage = () => {
                 title="Request a Quote"
             />
             <Box p={2} sx={{ minHeight: "100vh", paddingBottom: 0 }}>
-                <CartTable cart={changedCart} onUpdate={(d) => setChangedCart(d)} sx={{ paddingTop: spacing(2) }} />
+                <CartTable cart={changedCart!} onUpdate={(d) => setChangedCart(d)} sx={{ paddingTop: spacing(2) }} />
             </Box>
             <BottomActionsGrid display="page">
                 <Grid container spacing={2} sx={{ paddingTop: 0 }}>
@@ -107,7 +107,7 @@ export const CartPage = () => {
                             fullWidth
                             startIcon={<ArrowLeftIcon />}
                             onClick={() => setLocation(APP_LINKS.Shopping)}
-                            disabled={loading || (changedCart !== null && !_.isEqual(session?.cart, changedCart))}
+                            disabled={loading || (changedCart !== null && !isEqual(session?.cart, changedCart))}
                             variant="contained"
                         >Continue Shopping</Button>
                     </Grid>
@@ -116,7 +116,7 @@ export const CartPage = () => {
                             fullWidth
                             startIcon={<SaveIcon />}
                             onClick={orderUpdate}
-                            disabled={loading || (changedCart === null || _.isEqual(session?.cart, changedCart))}
+                            disabled={loading || (changedCart === null || isEqual(session?.cart, changedCart))}
                             variant="contained"
                         >Update Order</Button>
                     </Grid>
@@ -125,7 +125,7 @@ export const CartPage = () => {
                             fullWidth
                             endIcon={<ArrowRightIcon />}
                             onClick={finalizeOrder}
-                            disabled={loading || changedCart === null || !_.isEqual(session?.cart, changedCart)}
+                            disabled={loading || changedCart === null || !isEqual(session?.cart, changedCart)}
                             variant="contained"
                         >Request Quote</Button>
                     </Grid>
