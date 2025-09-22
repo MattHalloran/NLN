@@ -2,9 +2,9 @@ import { SKU_STATUS } from "@local/shared";
 import pkg, { Prisma } from "@prisma/client";
 import { Decimal } from "@prisma/client/runtime";
 import Bull from "bull";
-import { SkuStatus } from "../../schema/types";
-import { PrismaType } from "../../types";
-import { UploadAvailabilityPayload } from "./queue";
+import { SkuStatus } from "../../schema/types.js";
+import { PrismaType } from "../../types.js";
+import { UploadAvailabilityPayload } from "./queue.js";
 
 const { PrismaClient } = pkg;
 

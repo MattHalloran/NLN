@@ -1,14 +1,14 @@
 import { CODE, ORDER_STATUS } from "@local/shared";
 import { PrismaSelect } from "@paljs/plugins";
-import { gql } from "apollo-server-express";
-import { GraphQLResolveInfo } from "graphql";
-import { Context } from "../context";
-import { CustomError } from "../error";
-import { IWrap, RecursivePartial } from "../types";
-import { orderNotifyAdmin } from "../worker/email/queue";
-import { DeleteManyInput, FindByIdInput, OrderInput, OrdersInput } from "./types";
 
-export const typeDef = gql`
+import { GraphQLResolveInfo } from "graphql";
+import { Context } from "../context.js";
+import { CustomError } from "../error.js";
+import { IWrap, RecursivePartial } from "../types.js";
+import { orderNotifyAdmin } from "../worker/email/queue.js";
+import { DeleteManyInput, FindByIdInput, OrderInput, OrdersInput } from "./types.js";
+
+export const typeDef = /* GraphQL */ `
     enum OrderStatus {
         CanceledByAdmin
         CanceledByCustomer

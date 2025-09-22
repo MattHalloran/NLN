@@ -2,7 +2,7 @@ import { CODE, COOKIE } from "@local/shared";
 import pkg from "@prisma/client";
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import { CustomError } from "./error";
+import { CustomError } from "./error.js";
 
 const { PrismaClient } = pkg;
 

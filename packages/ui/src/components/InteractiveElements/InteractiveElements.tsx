@@ -15,8 +15,7 @@ import {
     Tabs
 } from "@mui/material";
 import { useState, useEffect } from "react";
-import { useQuery } from "@apollo/client";
-import { landingPageContentQuery } from "api/query";
+import { useLandingPageContent } from "api/rest/hooks";
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import { Leaf, Lightbulb, Sprout, Flower, Snowflake, LucideIcon, Star } from "lucide-react";
@@ -62,15 +61,12 @@ export const InteractiveElements = () => {
     const [email, setEmail] = useState("");
     const [subscribed, setSubscribed] = useState(false);
 
-    // Fetch landing page content
-    const { data, loading, error } = useQuery(landingPageContentQuery, {
-        variables: { onlyActive: true },
-        pollInterval: 300000, // Refresh every 5 minutes
-    });
+    // Fetch landing page content using REST API
+    const { data, loading, error } = useLandingPageContent(true);
 
-    const seasonalPlants = data?.landingPageContent?.seasonalPlants || [];
-    const plantTips = data?.landingPageContent?.plantTips || [];
-    const settings = data?.landingPageContent?.settings;
+    const seasonalPlants = data?.seasonalPlants || [];
+    const plantTips = data?.plantTips || [];
+    const settings = data?.settings;
 
     // Get unique categories from tips
     const tipCategories = ["All", ...Array.from(new Set(plantTips.map(tip => tip.category)))];

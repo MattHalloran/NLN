@@ -21,12 +21,11 @@ if [ "${DB_PULL}" = true ]; then
     success 'Schema.prisma file generated'
 else
     info 'Running migrations...'
-    yarn prisma migrate deploy --schema=${PRISMA_SCHEMA_FILE}
-    if [ $? -ne 0 ]; then
-        error "Failed to run migrations"
-        exit 1
+    if yarn prisma migrate deploy --schema=${PRISMA_SCHEMA_FILE}; then
+        success 'Migrations completed'
+    else
+        warning 'Migrations failed, continuing with existing database schema...'
     fi
-    success 'Migrations completed'
 fi
 
 info 'Generating Prisma schema...'

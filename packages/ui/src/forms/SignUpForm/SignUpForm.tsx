@@ -1,7 +1,7 @@
 import { useMutation } from "@apollo/client";
 import { APP_LINKS, CODE, DEFAULT_PRONOUNS, signUpSchema } from "@local/shared";
 import { Autocomplete } from "@mui/lab";
-import { Box, Button, Checkbox, FormControl, FormControlLabel, FormHelperText, Grid, InputAdornment, Radio, RadioGroup, TextField, useTheme } from "@mui/material";
+import { Box, Button, Checkbox, FormControl, FormControlLabel, FormHelperText, Grid, InputAdornment, Radio, RadioGroup, TextField, Typography, useTheme } from "@mui/material";
 import { signUpVariables, signUp_signUp } from "api/generated/signUp";
 import { signUpMutation } from "api/mutation";
 import { mutationWrapper } from "api/utils";
@@ -70,7 +70,7 @@ export const SignUpForm = () => {
                             message: `Welcome to ${business?.BUSINESS_NAME?.Short}. You may now begin shopping. Please verify your email within 48 hours.`,
                             buttons: [{
                                 text: "OK",
-                                onClick: () => setLocation(APP_LINKS.Shopping),
+                                onClick: () => setLocation(APP_LINKS.Home),
                             }],
                         });
                     } else {
@@ -110,12 +110,25 @@ export const SignUpForm = () => {
     ] as const;
 
     return (
-        <Box sx={{
-            width: "100%",
-            marginTop: spacing(3),
-        }}>
+        <Box sx={{ width: "100%" }}>
             <form onSubmit={formik.handleSubmit}>
-                <Grid container spacing={2}>
+                <Grid container spacing={3}>
+                    {/* Personal Information Section */}
+                    <Grid item xs={12}>
+                        <Typography
+                            variant="h6"
+                            sx={{
+                                color: palette.text.primary,
+                                fontWeight: 600,
+                                fontSize: "1.1rem",
+                                mb: 2,
+                                borderBottom: `2px solid ${palette.primary.main}`,
+                                pb: 1,
+                            }}
+                        >
+                            Personal Information
+                        </Typography>
+                    </Grid>
                     <Grid item xs={12} sm={6}>
                         <TextField
                             fullWidth
@@ -154,7 +167,7 @@ export const SignUpForm = () => {
                             renderInput={(params) => (
                                 <TextField
                                     {...params}
-                                    label="Pronouns"
+                                    label="Pronouns (Optional)"
                                     value={formik.values.pronouns}
                                     onChange={formik.handleChange}
                                     error={formik.touched.pronouns && Boolean(formik.errors.pronouns)}
@@ -169,12 +182,29 @@ export const SignUpForm = () => {
                             id="business"
                             name="business"
                             autoComplete="business"
-                            label="Business"
+                            label="Business/Organization (Optional)"
                             value={formik.values.business}
                             onChange={formik.handleChange}
                             error={formik.touched.business && Boolean(formik.errors.business)}
                             helperText={formik.touched.business && formik.errors.business}
                         />
+                    </Grid>
+
+                    {/* Contact Information Section */}
+                    <Grid item xs={12} sx={{ mt: 3 }}>
+                        <Typography
+                            variant="h6"
+                            sx={{
+                                color: palette.text.primary,
+                                fontWeight: 600,
+                                fontSize: "1.1rem",
+                                mb: 2,
+                                borderBottom: `2px solid ${palette.primary.main}`,
+                                pb: 1,
+                            }}
+                        >
+                            Contact Information
+                        </Typography>
                     </Grid>
                     <Grid item xs={12}>
                         <TextField
@@ -202,6 +232,23 @@ export const SignUpForm = () => {
                             error={formik.touched.phone && Boolean(formik.errors.phone)}
                             helperText={formik.touched.phone && formik.errors.phone}
                         />
+                    </Grid>
+
+                    {/* Security Section */}
+                    <Grid item xs={12} sx={{ mt: 3 }}>
+                        <Typography
+                            variant="h6"
+                            sx={{
+                                color: palette.text.primary,
+                                fontWeight: 600,
+                                fontSize: "1.1rem",
+                                mb: 2,
+                                borderBottom: `2px solid ${palette.primary.main}`,
+                                pb: 1,
+                            }}
+                        >
+                            Account Security
+                        </Typography>
                     </Grid>
                     <Grid item xs={12}>
                         <PasswordTextField
@@ -231,6 +278,23 @@ export const SignUpForm = () => {
                             helperText={formik.touched.confirmPassword ? formik.errors.confirmPassword : null}
                         />
                     </Grid>
+
+                    {/* Account Preferences */}
+                    <Grid item xs={12} sx={{ mt: 3 }}>
+                        <Typography
+                            variant="h6"
+                            sx={{
+                                color: palette.text.primary,
+                                fontWeight: 600,
+                                fontSize: "1.1rem",
+                                mb: 2,
+                                borderBottom: `2px solid ${palette.primary.main}`,
+                                pb: 1,
+                            }}
+                        >
+                            Account Preferences
+                        </Typography>
+                    </Grid>
                     <Grid item xs={12}>
                         <FormControl component="fieldset">
                             <RadioGroup
@@ -253,7 +317,7 @@ export const SignUpForm = () => {
                                     id="marketingEmails"
                                     name="marketingEmails"
                                     value="marketingEmails"
-                                    color="secondary"
+                                    color="primary"
                                     checked={formik.values.marketingEmails ?? false}
                                     onChange={formik.handleChange}
                                 />
@@ -261,18 +325,24 @@ export const SignUpForm = () => {
                             label="I want to receive marketing promotions and updates via email."
                         />
                     </Grid>
+
+                    {/* Submit Button */}
+                    <Grid item xs={12} sx={{ mt: 3 }}>
+                        <Button
+                            fullWidth
+                            disabled={loading}
+                            type="submit"
+                            color="primary"
+                            variant="contained"
+                            size="large"
+                        >
+                            {loading ? "Creating Account..." : "Create Account"}
+                        </Button>
+                    </Grid>
                 </Grid>
-                <Box width="100%" display="flex" flexDirection="column" p={2}>
-                    <Button
-                        fullWidth
-                        disabled={loading}
-                        type="submit"
-                        color="secondary"
-                        variant='contained'
-                        sx={formSubmit}
-                    >
-                        Sign Up
-                    </Button>
+
+                {/* Navigation Links */}
+                <Box sx={{ textAlign: "center", mt: 4, pt: 3, borderTop: `1px solid ${palette.divider}` }}>
                     <BreadcrumbsBase
                         paths={breadcrumbPaths}
                         separator={"•"}

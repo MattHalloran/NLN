@@ -1,6 +1,6 @@
 import { useMutation } from "@apollo/client";
 import { APP_LINKS, resetPasswordSchema } from "@local/shared";
-import { Box, Button, Grid, useTheme } from "@mui/material";
+import { Box, Button, Grid, Typography, useTheme } from "@mui/material";
 import { resetPasswordVariables, resetPassword_resetPassword } from "api/generated/resetPassword";
 import { resetPasswordMutation } from "api/mutation";
 import { mutationWrapper } from "api/utils";
@@ -13,7 +13,7 @@ import { PubSub } from "utils";
 
 export const ResetPasswordForm = () => {
     const [, setLocation] = useLocation();
-    const { spacing } = useTheme();
+    const { spacing, palette } = useTheme();
 
     const { id, code } = useMemo(() => {
         const url = new URL(window.location.href);
@@ -39,25 +39,59 @@ export const ResetPasswordForm = () => {
             mutationWrapper<resetPassword_resetPassword, resetPasswordVariables>({
                 mutation: resetPassword,
                 input: { id, code, newPassword: values.newPassword },
-                onSuccess: (data) => { PubSub.get().publishSession({ ...data, theme: (data.theme as "light" | "dark") || "light" }); setLocation(APP_LINKS.Shopping); },
+                onSuccess: (data) => { PubSub.get().publishSession({ ...data, theme: (data.theme as "light" | "dark") || "light" }); setLocation(APP_LINKS.Home); },
                 successMessage: () => "Password reset.",
             });
         },
     });
 
     return (
-        <Box sx={{
-            width: "100%",
-            marginTop: spacing(3),
-        }}>
+        <Box sx={{ width: "100%" }}>
             <form onSubmit={formik.handleSubmit}>
-                <Grid container spacing={2}>
+                <Grid container spacing={3}>
+                    {/* Instructions */}
+                    <Grid item xs={12}>
+                        <Box
+                            sx={{
+                                p: 3,
+                                backgroundColor: palette.mode === "light"
+                                    ? "rgba(0, 0, 0, 0.02)"
+                                    : "rgba(255, 255, 255, 0.02)",
+                                borderRadius: 1,
+                                border: `1px solid ${palette.divider}`,
+                            }}
+                        >
+                            <Typography
+                                variant="body1"
+                                sx={{
+                                    color: palette.text.primary,
+                                    mb: 2,
+                                    fontSize: "1rem",
+                                    fontWeight: 500,
+                                }}
+                            >
+                                Create New Password
+                            </Typography>
+                            <Typography
+                                variant="body2"
+                                sx={{
+                                    color: palette.text.secondary,
+                                    fontSize: "0.9rem",
+                                    lineHeight: 1.6,
+                                }}
+                            >
+                                Choose a strong password that is at least 8 characters long and includes a combination of letters, numbers, and special characters.
+                            </Typography>
+                        </Box>
+                    </Grid>
+
+                    {/* Password Fields */}
                     <Grid item xs={12}>
                         <PasswordTextField
                             fullWidth
                             id="newPassword"
                             name="newPassword"
-                            autoComplete="password"
+                            autoComplete="new-password"
                             label="New Password"
                             value={formik.values.newPassword}
                             onBlur={formik.handleBlur}
@@ -80,19 +114,21 @@ export const ResetPasswordForm = () => {
                             helperText={formik.touched.confirmNewPassword ? formik.errors.confirmNewPassword : null}
                         />
                     </Grid>
+
+                    {/* Submit Button */}
+                    <Grid item xs={12} sx={{ mt: 2 }}>
+                        <Button
+                            fullWidth
+                            disabled={loading}
+                            type="submit"
+                            color="primary"
+                            variant="contained"
+                            size="large"
+                        >
+                            {loading ? "Updating Password..." : "Update Password"}
+                        </Button>
+                    </Grid>
                 </Grid>
-                <Button
-                    fullWidth
-                    disabled={loading}
-                    type="submit"
-                    color="secondary"
-                    sx={{
-                        margin: spacing(3, 0, 2),
-                    }}
-                    variant="contained"
-                >
-                    Submit
-                </Button>
             </form>
         </Box>
     );

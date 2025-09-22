@@ -152,7 +152,7 @@ export const profileSchema = yup.object().shape({
     accountApproved: yup.boolean().required(),
     // Don't apply validation to current password. If you change password requirements, customers would be unable to change their password
     currentPassword: yup.string().max(128).when("newPassword", {
-        is: (val) => (val && val.length > 0),
+        is: (val: any) => (val && val.length > 0),
         then: yup.string().required(),
         otherwise: yup.string().notRequired(),
     }),

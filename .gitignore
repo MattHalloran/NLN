@@ -195,3 +195,4 @@ upload-keystore.jks
 # Bats test helpers (e.g. bats-core)
 scripts/tests/helpers
 scripts/tests/tmp
+.claude/settings.local.json

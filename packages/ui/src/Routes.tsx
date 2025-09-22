@@ -10,18 +10,15 @@ import { Page } from "./pages";
 // Lazy loading in the Routes component is a recommended way to improve performance. See https://reactjs.org/docs/code-splitting.html#route-based-code-splitting
 const {
     AboutPage,
-    CartPage,
     FormPage,
     GalleryPage,
     HomePage,
     NotFoundPage,
-    ShoppingPage,
 } = lazily(() => import("./pages/main"));
 const {
     AdminContactPage,
     AdminCustomerPage,
     AdminGalleryPage,
-    AdminHeroPage,
     AdminHomePage,
     AdminMainPage,
     AdminInventoryPage,
@@ -158,24 +155,6 @@ export const Routes = () => {
                             <FormPage title="Profile">
                                 <ProfileForm />
                             </FormPage>
-                        </Page>
-                    </Suspense>
-                </Route>
-                <Route
-                    path={`${APP_LINKS.Shopping}/:params*`}
-                    sitemapIndex
-                    priority={0.9}>
-                    <Suspense fallback={Fallback}>
-                        <Page restrictedToRoles={Object.values(ROLES)} redirect={APP_LINKS.LogIn}>
-                            <ShoppingPage />
-                        </Page>
-                    </Suspense>
-                </Route>
-                <Route
-                    path={APP_LINKS.Cart}>
-                    <Suspense fallback={Fallback}>
-                        <Page excludePageContainer restrictedToRoles={Object.values(ROLES)} redirect={APP_LINKS.LogIn}>
-                            <CartPage />
                         </Page>
                     </Suspense>
                 </Route>

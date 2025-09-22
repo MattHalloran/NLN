@@ -1,11 +1,11 @@
 // Code inspired by https://github.com/rmolinamir/hero-slider
-import { useQuery } from "@apollo/client";
 import { APP_LINKS } from "@local/shared";
 import { Box, Button, Chip, Stack, Typography, useTheme } from "@mui/material";
-import { landingPageContentQuery } from "api/query";
+import { useLandingPageContent } from "api/rest/hooks";
 import { Award, Leaf, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation } from "route";
+import { getShortBusinessHours } from "utils/businessHours";
 import { Slider } from "./Slider";
 
 interface HeroProps {
@@ -28,15 +28,12 @@ export const Hero = ({
     const [, setLocation] = useLocation();
     const { palette } = useTheme();
 
-    // Fetch unified landing page content
-    const { data, loading } = useQuery(landingPageContentQuery, {
-        variables: { onlyActive: true },
-        pollInterval: 300000, // Refresh every 5 minutes
-    });
+    // Fetch unified landing page content using REST API
+    const { data, loading } = useLandingPageContent(true);
 
-    const heroBanners = data?.landingPageContent?.heroBanners || [];
-    const heroSettings = data?.landingPageContent?.heroSettings;
-    const settings = data?.landingPageContent?.settings;
+    const heroBanners = data?.heroBanners || [];
+    const heroSettings = data?.heroSettings;
+    const settings = data?.settings;
 
     // Convert hero banners to the format expected by Slider
     const images = heroBanners.map(banner => ({
@@ -45,6 +42,7 @@ export const Hero = ({
         alt: banner.alt,
         description: banner.description,
         files: [{
+            __typename: "ImageFile" as const,
             src: banner.src,
             width: banner.width,
             height: banner.height
@@ -115,18 +113,18 @@ export const Hero = ({
                     margin: "0 auto",
                     width: "90%",
                     fontSize: { xs: "2.5rem", sm: "3rem", md: "4rem", lg: "4.5rem" },
-                    fontWeight: 800,
                     letterSpacing: "-0.02em",
                     lineHeight: 1.1,
                     ...textPopStyle,
+                    fontWeight: 800,
                 }}>{settings?.hero?.title || text}</Typography>
 
                 <Typography variant='h4' component='h2' sx={{
                     margin: "20px auto 0",
                     width: "80%",
                     fontSize: { xs: "1.25rem", sm: "1.75rem", md: "2.25rem" },
-                    fontWeight: 500,
                     ...textPopStyle,
+                    fontWeight: 500,
                 }}>{settings?.hero?.subtitle || subtext}</Typography>
 
                 {/* Value proposition */}
@@ -213,7 +211,7 @@ export const Hero = ({
                         fontSize: { xs: "0.9rem", sm: "1rem" },
                         letterSpacing: "0.02em",
                     }}>
-                        {settings?.hero?.businessHours || "OPEN 7 DAYS A WEEK | Mon-Sat 8AM-6PM | Sun 9AM-5PM"}
+                        {data?.contactInfo?.hours ? getShortBusinessHours(data.contactInfo.hours) : (settings?.hero?.businessHours || "Contact us for hours")}
                     </Typography>
                 </Box>
             </Box>

@@ -1,11 +1,9 @@
-import { gql } from "apollo-server-express";
 import { GraphQLScalarType } from "graphql";
-import { GraphQLUpload } from "graphql-upload";
-import { IWrap, RecursivePartial } from "../types";
-import { readFiles, saveFiles } from "../utils";
-import { ReadAssetsInput } from "./types";
+import { IWrap, RecursivePartial } from "../types.js";
+import { readFiles, saveFiles } from "../utils/index.js";
+import { ReadAssetsInput } from "./types.js";
 
-export const typeDef = gql`
+export const typeDef = /* GraphQL */ `
     scalar Date
     scalar Upload
 
@@ -50,7 +48,7 @@ export const typeDef = gql`
 `;
 
 export const resolvers = {
-    Upload: GraphQLUpload,
+    // GraphQL Yoga handles the Upload scalar automatically
     Date: new GraphQLScalarType({
         name: "Date",
         description: "Custom description for the date scalar",

@@ -1,10 +1,12 @@
-import { ApolloError } from "apollo-server-express";
-import { logger, LogLevel } from "./logger";
+import { GraphQLError } from "graphql";
+import { logger, LogLevel } from "./logger.js";
 
-export class CustomError extends ApolloError {
+export class CustomError extends GraphQLError {
     constructor(error: any, message?: any, logMeta?: { [key: string]: any }) {
         // Format error
-        super(message || error.message, error.code);
+        super(message || error.message, undefined, undefined, undefined, undefined, undefined, {
+            code: error.code
+        });
         Object.defineProperty(this, "name", { value: error.code });
         // Log error, if logMeta is provided
         if (logMeta) logger.log(LogLevel.error, message ?? error.message, logMeta);

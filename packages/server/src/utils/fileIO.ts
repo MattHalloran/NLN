@@ -192,13 +192,22 @@ export async function saveImage({ file, alt, description, labels, errorOnDuplica
         if (dimensions === null) throw new Error("Could not determine image dimensions");
         // If image is .heic or .heif, convert to jpg. Thanks, Apple
         if ([".heic", ".heif"].includes(extCheck.toLowerCase())) {
-            const converted_buffer = await convert({
-                buffer: image_buffer, // the HEIC file buffer
-                format: "JPEG",       // output format
-                quality: 1,           // the jpeg compression quality, between 0 and 1
-            });
-            extCheck = "jpg";
-            image_buffer = Buffer.from(converted_buffer);
+            try {
+                const converted_buffer = await convert({
+                    buffer: image_buffer, // the HEIC file buffer
+                    format: "JPEG",       // output format
+                    quality: 1,           // the jpeg compression quality, between 0 and 1
+                });
+                extCheck = "jpg";
+                image_buffer = Buffer.from(converted_buffer);
+            } catch (heicError) {
+                logger.log(LogLevel.error, "HEIC conversion failed, skipping file", { 
+                    code: genErrorCode("0012"), 
+                    error: heicError,
+                    filename 
+                });
+                throw new Error("HEIC conversion not available in current environment");
+            }
         }
         // Determine image hash
         const hash = await imghash.hash(image_buffer);

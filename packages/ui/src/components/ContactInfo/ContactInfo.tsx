@@ -1,8 +1,8 @@
-import { BottomNavigation, BottomNavigationAction, Box, IconButton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tooltip, Typography, useTheme } from "@mui/material";
+import { Box, Card, CardContent, Grid, IconButton, Stack, Typography, useTheme } from "@mui/material";
 import { BusinessContext } from "contexts/BusinessContext";
-import { EmailIcon, PhoneIcon, PinIcon } from "icons";
-import { SvgComponent } from "icons/types";
+import { Clock, MapPin, Phone, Mail } from "lucide-react";
 import { useContext } from "react";
+import { parseBusinessHours } from "utils/businessHours";
 
 export const ContactInfo = ({
     ...props
@@ -15,74 +15,204 @@ export const ContactInfo = ({
         e.preventDefault();
     };
 
-    // Parse business hours markdown into 2D array, remove |'s, and reduce to 1D array
-    let hours: string[] = [];
-    try {
-        const hoursRaw = business?.hours ?
-            business.hours.split("\n").slice(2).map(row => row.split("|").map(r => r.trim()).filter(r => r !== "")).filter(r => r.length > 0) :
-            [];
-        hours = hoursRaw.map(row => `${row[0]}: ${row[1]}`);
-    } catch (error) {
-        console.error("Failed to read business hours", error);
-    }
+    const hours = parseBusinessHours(business?.hours || "");
 
-    const contactInfo: [string, string | undefined, string | undefined, SvgComponent][] = [
-        ["Open in Google Maps", business?.ADDRESS?.Label, business?.ADDRESS?.Link, PinIcon],
-        ["Call Us", business?.PHONE?.Label, business?.PHONE?.Link, PhoneIcon],
-        ["Email Us", business?.EMAIL?.Label, business?.EMAIL?.Link, EmailIcon],
+    const contactInfo = [
+        {
+            tooltip: "Open in Google Maps",
+            label: business?.ADDRESS?.Label,
+            link: business?.ADDRESS?.Link,
+            icon: <MapPin size={16} />,
+        },
+        {
+            tooltip: "Call Us",
+            label: business?.PHONE?.Label,
+            link: business?.PHONE?.Link,
+            icon: <Phone size={16} />,
+        },
+        {
+            tooltip: "Email Us",
+            label: business?.EMAIL?.Label,
+            link: business?.EMAIL?.Link,
+            icon: <Mail size={16} />,
+        },
     ];
 
     return (
-        <Box sx={{ minWidth: "fit-content", height: "fit-content", background: palette.primary.light }} {...props}>
-            <TableContainer>
-                <Table aria-label="contact-hours-table" size="small">
-                    <TableHead sx={{ background: palette.primary.main }}>
-                        <TableRow>
-                            <TableCell sx={{ color: palette.primary.contrastText }}>
-                                <Typography variant="h6" sx={{ fontWeight: "bold" }}>Hours</Typography>
-                            </TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {hours?.map((row: string, index: number) => (
-                            <TableRow key={index} sx={{ background: palette.background.paper }}>
-                                <TableCell>
-                                    {row}
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </TableContainer>
-            <BottomNavigation
-                showLabels
+        <Stack spacing={2} sx={{ width: "100%" }} {...props}>
+            {/* Hours Section */}
+            <Card
                 sx={{
-                    alignItems: "baseline",
-                    background: "transparent",
-                    height: "fit-content",
-                    marginTop: 1,
-                    paddingBottom: 1,
+                    backgroundColor: palette.background.paper,
+                    border: `1px solid ${palette.divider}`,
+                    borderRadius: 1,
+                    boxShadow: "none",
                 }}
             >
-                {contactInfo.map(([tooltip, label, link, Icon]) => (
-                    <Tooltip title={tooltip} placement="top">
-                        <BottomNavigationAction
-                            label={label}
-                            onClick={(e) => openLink(e, link!)}
-                            icon={
-                                <IconButton sx={{ background: palette.secondary.main }}>
-                                    <Icon fill={palette.secondary.contrastText} />
-                                </IconButton>
-                            }
-                            sx={{
-                                alignItems: "center",
-                                color: palette.primary.contrastText,
-                                overflowWrap: "anywhere",
-                            }}
+                <CardContent sx={{ padding: 2 }}>
+                    <Box
+                        sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1,
+                            marginBottom: 1.5,
+                            paddingBottom: 1,
+                            borderBottom: `1px solid ${palette.divider}`,
+                        }}
+                    >
+                        <Clock
+                            size={18}
+                            color={palette.text.secondary}
                         />
-                    </Tooltip>
+                        <Typography
+                            variant="h6"
+                            sx={{
+                                color: palette.text.primary,
+                                fontWeight: 500,
+                                fontSize: "0.95rem",
+                            }}
+                        >
+                            Hours
+                        </Typography>
+                    </Box>
+                    <Stack spacing={0.5}>
+                        {hours?.map((row: string, index: number) => {
+                            // The row is already formatted like "MON-FRI: 8:00 am to 3:00 pm"
+                            const [day, time] = row.includes(": ")
+                                ? row.split(": ")
+                                : [row, ""];
+
+                            return (
+                                <Box
+                                    key={index}
+                                    sx={{
+                                        display: "flex",
+                                        justifyContent: "space-between",
+                                        alignItems: "center",
+                                        paddingY: 0.25,
+                                    }}
+                                >
+                                    <Typography
+                                        variant="body2"
+                                        sx={{
+                                            color: palette.text.primary,
+                                            fontSize: "0.85rem",
+                                            fontWeight: time?.toUpperCase().includes("CLOSED") ? 400 : 500,
+                                            opacity: time?.toUpperCase().includes("CLOSED") ? 0.7 : 1,
+                                        }}
+                                    >
+                                        {day}
+                                    </Typography>
+                                    {time && (
+                                        <Typography
+                                            variant="body2"
+                                            sx={{
+                                                color: palette.text.secondary,
+                                                fontSize: "0.8rem",
+                                            }}
+                                        >
+                                            {time}
+                                        </Typography>
+                                    )}
+                                </Box>
+                            );
+                        })}
+                        {business?.hours?.includes("Note:") && (
+                            <Typography
+                                variant="caption"
+                                sx={{
+                                    color: palette.text.secondary,
+                                    fontSize: "0.75rem",
+                                    fontStyle: "italic",
+                                    marginTop: 1,
+                                    lineHeight: 1.3,
+                                }}
+                            >
+                                {business.hours.split("Note:")[1]?.trim()}
+                            </Typography>
+                        )}
+                    </Stack>
+                </CardContent>
+            </Card>
+
+            {/* Contact Methods */}
+            <Stack spacing={1}>
+                {contactInfo.map(({ tooltip, label, link, icon }, index) => (
+                    label && link ? (
+                        <Card
+                            key={index}
+                            onClick={(e) => openLink(e, link)}
+                            sx={{
+                                cursor: "pointer",
+                                backgroundColor: palette.background.paper,
+                                border: `1px solid ${palette.divider}`,
+                                borderRadius: 1,
+                                boxShadow: "none",
+                                transition: "background-color 0.2s ease",
+                                "&:hover": {
+                                    backgroundColor: palette.mode === "light"
+                                        ? "rgba(0, 0, 0, 0.02)"
+                                        : "rgba(255, 255, 255, 0.02)",
+                                },
+                            }}
+                        >
+                            <CardContent
+                                sx={{
+                                    padding: 1.5,
+                                    "&:last-child": { paddingBottom: 1.5 },
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 1.5,
+                                }}
+                            >
+                                <Box
+                                    sx={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        width: 32,
+                                        height: 32,
+                                        backgroundColor: palette.mode === "light"
+                                            ? "rgba(0, 0, 0, 0.06)"
+                                            : "rgba(255, 255, 255, 0.06)",
+                                        borderRadius: 1,
+                                        color: palette.text.secondary,
+                                    }}
+                                >
+                                    {icon}
+                                </Box>
+                                <Box sx={{ flex: 1, minWidth: 0 }}>
+                                    <Typography
+                                        variant="caption"
+                                        sx={{
+                                            color: palette.text.secondary,
+                                            fontSize: "0.75rem",
+                                            display: "block",
+                                            lineHeight: 1,
+                                            marginBottom: 0.25,
+                                        }}
+                                    >
+                                        {tooltip}
+                                    </Typography>
+                                    <Typography
+                                        variant="body2"
+                                        sx={{
+                                            color: palette.text.primary,
+                                            fontSize: "0.85rem",
+                                            fontWeight: 400,
+                                            wordBreak: "break-word",
+                                            overflowWrap: "break-word",
+                                            lineHeight: 1.2,
+                                        }}
+                                    >
+                                        {label}
+                                    </Typography>
+                                </Box>
+                            </CardContent>
+                        </Card>
+                    ) : null
                 ))}
-            </BottomNavigation>
-        </Box>
+            </Stack>
+        </Stack>
     );
 };

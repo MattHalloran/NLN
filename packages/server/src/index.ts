@@ -1,17 +1,18 @@
-import { ApolloServer } from "apollo-server-express";
+import { createYoga } from "graphql-yoga";
+import { useDepthLimit } from "@envelop/depth-limit";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import express from "express";
-import { graphqlUploadExpress } from "graphql-upload";
-import * as auth from "./auth";
-import { context } from "./context";
-import { depthLimit } from "./depthLimit";
-import { genErrorCode, logger, LogLevel } from "./logger";
-import { schema } from "./schema";
-import { setupDatabase } from "./utils/setupDatabase";
+import { AsyncLocalStorage } from "async_hooks";
+import * as auth from "./auth.js";
+import { context } from "./context.js";
+import { genErrorCode, logger, LogLevel } from "./logger.js";
+import { schema } from "./schema/index.js";
+import { setupDatabase } from "./utils/setupDatabase.js";
+import restRouter from "./rest/index.js";
 
 const SERVER_URL = process.env.VITE_SERVER_LOCATION === "local" ?
-    "http://localhost:5330/api" :
+    "http://localhost:5331/api" :
     "https://newlifenurseryinc.com/api";
 
 const main = async () => {
@@ -73,31 +74,77 @@ const main = async () => {
     app.use("/api/private", auth.requireAdmin, express.static(`${process.env.PROJECT_DIR}/assets/private`));
     app.use("/api/images", express.static(`${process.env.PROJECT_DIR}/assets/images`));
 
-    // Set up image uploading
-    app.use("/api/v1", graphqlUploadExpress({ maxFileSize: 10000000, maxFiles: 100 }));
+    // Mount REST API routes
+    app.use(express.json()); // Enable JSON parsing for REST endpoints
+    app.use("/api/rest", restRouter);
+    
+    /**
+     * AsyncLocalStorage for Express req/res
+     */
+    const asyncLocalStorage = new AsyncLocalStorage();
 
     /**
-     * Apollo Server for GraphQL
+     * GraphQL Yoga Server
      */
-    const apollo_options = new ApolloServer({
-        introspection: process.env.NODE_ENV === "development",
+    const yoga = createYoga({
         schema,
-        context: (c) => context(c), // Allows request and response to be included in the context
-        validationRules: [depthLimit(8)], // Prevents DoS attack from arbitrarily-nested query
-        uploads: false,
-    });
-    // Start server
-    await apollo_options.start();
-    // Configure server with ExpressJS settings and path
-    apollo_options.applyMiddleware({
-        app,
-        path: "/api/v1",
+        context: async () => {
+            // Get Express req/res from AsyncLocalStorage
+            const store: any = asyncLocalStorage.getStore();
+            if (!store || !store.req || !store.res) {
+                console.error('Express request/response not available in context');
+                throw new Error('Express request/response not available');
+            }
+            return context({ req: store.req, res: store.res });
+        },
+        plugins: [
+            useDepthLimit({
+                maxDepth: 8,
+                ignore: ['__schema', '__type'] // Ignore introspection fields
+            })
+        ],
+        landingPage: process.env.NODE_ENV === "development",
+        graphqlEndpoint: '/api/v1',
         cors: false,
+        multipart: true, // Enable file uploads
+        maskedErrors: process.env.NODE_ENV === "production"
     });
-    // Start Express server
-    app.listen(5330);
 
-    console.info(`🚀 Server running at ${SERVER_URL}`);
+    // Configure GraphQL Yoga with Express using AsyncLocalStorage
+    app.use('/api/v1', (req, res, next) => {
+        // Store Express req/res in AsyncLocalStorage
+        asyncLocalStorage.run({ req, res }, async () => {
+            // Call yoga's handle method properly
+            try {
+                await yoga.handle(req, res);
+            } catch (error) {
+                next(error);
+            }
+        });
+    });
+    
+    // Start Express server
+    const server = app.listen(5331, () => {
+        console.info(`🚀 Server running at ${SERVER_URL}`);
+    });
+
+    server.on('error', (error: any) => {
+        if (error.code === 'EADDRINUSE') {
+            logger.log(LogLevel.error, `Port 5331 is already in use`, { code: genErrorCode("0015") });
+        } else {
+            logger.log(LogLevel.error, `Server failed to start: ${error.message}`, { code: genErrorCode("0016"), error });
+        }
+        process.exit(1);
+    });
+
+    // Graceful shutdown
+    process.on('SIGINT', () => {
+        console.info('Shutting down server...');
+        server.close(() => {
+            console.info('Server shutdown complete');
+            process.exit(0);
+        });
+    });
 };
 
 main();

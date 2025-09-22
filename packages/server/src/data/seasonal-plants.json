@@ -1,0 +1,44 @@
+{
+  "plants": [
+    {
+      "id": "japanese-maple",
+      "name": "Japanese Maple",
+      "description": "Stunning fall foliage with vibrant red and orange colors. Perfect for adding dramatic autumn color to your landscape.",
+      "season": "Fall",
+      "careLevel": "Medium",
+      "icon": "leaf",
+      "displayOrder": 1,
+      "isActive": true
+    },
+    {
+      "id": "winter-jasmine",
+      "name": "Winter Jasmine",
+      "description": "Bright yellow flowers bloom in winter, providing cheerful color during the coldest months.",
+      "season": "Winter",
+      "careLevel": "Easy",
+      "icon": "snowflake",
+      "displayOrder": 2,
+      "isActive": true
+    },
+    {
+      "id": "cherry-blossom",
+      "name": "Cherry Blossom",
+      "description": "Beautiful spring blooms create a stunning display. A classic choice for spring garden interest.",
+      "season": "Spring",
+      "careLevel": "Medium",
+      "icon": "flower",
+      "displayOrder": 3,
+      "isActive": true
+    },
+    {
+      "id": "hydrangea",
+      "name": "Hydrangea",
+      "description": "Large, colorful flower clusters bloom throughout summer. Excellent for adding bold color to shaded areas.",
+      "season": "Summer",
+      "careLevel": "Easy",
+      "icon": "flower2",
+      "displayOrder": 4,
+      "isActive": true
+    }
+  ]
+}

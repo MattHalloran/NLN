@@ -8,7 +8,6 @@
     "main": "dist/index.js",
     "typings": "src/types.d.ts",
     "sideEffects": false,
-    "type": "module",
     "scripts": {
         "build": "tsc"
     },

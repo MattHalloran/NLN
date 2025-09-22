@@ -1,15 +1,15 @@
 import { CODE, SKU_SORT_OPTIONS, SKU_STATUS } from "@local/shared";
 import { PrismaSelect } from "@paljs/plugins";
-import { gql } from "apollo-server-express";
-import { GraphQLResolveInfo } from "graphql";
-import { Context } from "../context";
-import { CustomError } from "../error";
-import { IWrap, RecursivePartial } from "../types";
-import { saveFile } from "../utils";
-import { uploadAvailability } from "../worker/uploadAvailability/queue";
-import { Count, DeleteManyInput, SkuInput, SkusInput } from "./types";
 
-export const typeDef = gql`
+import { GraphQLResolveInfo } from "graphql";
+import { Context } from "../context.js";
+import { CustomError } from "../error.js";
+import { IWrap, RecursivePartial } from "../types.js";
+import { saveFile } from "../utils/index.js";
+import { uploadAvailability } from "../worker/uploadAvailability/queue.js";
+import { Count, DeleteManyInput, SkuInput, SkusInput } from "./types.js";
+
+export const typeDef = /* GraphQL */ `
     enum SkuStatus {
         Deleted
         Inactive

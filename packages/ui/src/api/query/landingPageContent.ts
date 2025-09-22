@@ -77,6 +77,38 @@ export const landingPageContentQuery = gql`
                     enableAnimations
                 }
             }
+            contactInfo {
+                business {
+                    BUSINESS_NAME {
+                        Short
+                        Long
+                    }
+                    ADDRESS {
+                        Label
+                        Link
+                    }
+                    PHONE {
+                        Label
+                        Link
+                    }
+                    FAX {
+                        Label
+                        Link
+                    }
+                    EMAIL {
+                        Label
+                        Link
+                    }
+                    SOCIAL {
+                        Facebook
+                        Instagram
+                        Twitter
+                        LinkedIn
+                    }
+                    WEBSITE
+                }
+                hours
+            }
             lastUpdated
         }
     }

@@ -1,11 +1,10 @@
-import { useMutation, useQuery } from "@apollo/client";
-import { Box, Tab, Tabs, Card, CardContent, Chip, Dialog, DialogActions, DialogContent, DialogTitle, Grid, IconButton, Paper, Stack, TextField, ToggleButton, ToggleButtonGroup, Typography, useTheme, Button } from "@mui/material";
-import { addImagesVariables, addImages_addImages } from "api/generated/addImages";
-import { updateImagesVariables } from "api/generated/updateImages";
-import { addImagesMutation, updateImagesMutation } from "api/mutation";
-import { imagesByLabelQuery, seasonalContentQuery, upsertSeasonalPlantMutation, deleteSeasonalPlantMutation, upsertPlantTipMutation, deletePlantTipMutation } from "api/query";
-import { mutationWrapper } from "api/utils";
-import { AdminTabOption, AdminTabs, Dropzone, PageContainer, WrappedImageList } from "components";
+import { Box, Tab, Tabs, Card, CardContent, CardMedia, CardActions, Chip, Dialog, DialogActions, DialogContent, DialogTitle, Grid, IconButton, Paper, Stack, TextField, ToggleButton, ToggleButtonGroup, Typography, useTheme, Button, Snackbar, Alert, Switch, FormControlLabel } from "@mui/material";
+import { Delete as DeleteIcon, DragIndicator as DragIcon } from "@mui/icons-material";
+import { useLandingPageContent } from "api/rest/hooks";
+import { restApi } from "api/rest/client";
+import { AdminTabOption, AdminTabs, Dropzone, PageContainer } from "components";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import { getServerUrl } from "utils/serverUrl";
 import { TopBar } from "components/navigation/TopBar/TopBar";
 import { Flower, Leaf, Lightbulb, Plus, Settings, Snowflake, Sprout, Star, Trash2, Edit3, Image, Home } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
@@ -59,93 +58,174 @@ export const AdminHomePage = () => {
     const [tipDialogOpen, setTipDialogOpen] = useState(false);
 
     // Hero image management state
-    const [imageData, setImageData] = useState<any[]>([]);
-    const { data: currImages, refetch: refetchImages } = useQuery(imagesByLabelQuery, { variables: { input: { label: "hero" } } });
-    const [addImages] = useMutation(addImagesMutation);
-    const [updateImages] = useMutation(updateImagesMutation);
-
-    // Seasonal content state
-    const { data: seasonalData, loading: seasonalLoading, refetch: refetchSeasonal } = useQuery(seasonalContentQuery, {
-        variables: { onlyActive: false },
-        pollInterval: 30000,
+    const [heroBanners, setHeroBanners] = useState<any[]>([]);
+    const [originalHeroBanners, setOriginalHeroBanners] = useState<any[]>([]);
+    const [hasChanges, setHasChanges] = useState(false);
+    const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: "success" | "error" }>({ 
+        open: false, 
+        message: "", 
+        severity: "success" 
     });
+    const [isLoading, setIsLoading] = useState(false);
 
-    const [upsertPlant] = useMutation(upsertSeasonalPlantMutation, {
-        onCompleted: () => {
-            PubSub.publish("alertsCreate", { text: "Plant saved successfully!", severity: "success" });
-            setPlantDialogOpen(false);
-            setEditingPlant(null);
-            refetchSeasonal();
-        },
-        onError: (error) => {
-            PubSub.publish("alertsCreate", { text: error.message, severity: "error" });
+    // Landing page content state
+    const { data: landingPageContent, refetch } = useLandingPageContent(false);
+    
+    useEffect(() => {
+        if (landingPageContent?.heroBanners && !hasChanges) {
+            const sorted = [...landingPageContent.heroBanners].sort((a: any, b: any) => a.displayOrder - b.displayOrder);
+            setHeroBanners(sorted);
+            setOriginalHeroBanners(sorted);
         }
-    });
+    }, [landingPageContent, hasChanges]);
+    
+    const seasonalData = landingPageContent;
 
-    const [deletePlant] = useMutation(deleteSeasonalPlantMutation, {
-        onCompleted: () => {
-            PubSub.publish("alertsCreate", { text: "Plant deleted successfully!", severity: "success" });
-            refetchSeasonal();
-        },
-        onError: (error) => {
-            PubSub.publish("alertsCreate", { text: error.message, severity: "error" });
-        }
-    });
+    const handleApiError = (error: any, defaultMessage: string) => {
+        const message = error?.message || defaultMessage;
+        PubSub.publish("alertsCreate", { text: message, severity: "error" });
+    };
 
-    const [upsertTip] = useMutation(upsertPlantTipMutation, {
-        onCompleted: () => {
-            PubSub.publish("alertsCreate", { text: "Tip saved successfully!", severity: "success" });
-            setTipDialogOpen(false);
-            setEditingTip(null);
-            refetchSeasonal();
-        },
-        onError: (error) => {
-            PubSub.publish("alertsCreate", { text: error.message, severity: "error" });
-        }
-    });
-
-    const [deleteTip] = useMutation(deletePlantTipMutation, {
-        onCompleted: () => {
-            PubSub.publish("alertsCreate", { text: "Tip deleted successfully!", severity: "success" });
-            refetchSeasonal();
-        },
-        onError: (error) => {
-            PubSub.publish("alertsCreate", { text: error.message, severity: "error" });
-        }
-    });
+    const handleApiSuccess = (message: string) => {
+        PubSub.publish("alertsCreate", { text: message, severity: "success" });
+    };
 
     // Hero image handlers
-    const uploadImages = useCallback((acceptedFiles: File[]) => {
-        mutationWrapper<addImages_addImages, addImagesVariables>({
-            mutation: addImages,
-            input: { files: acceptedFiles, labels: ["hero"] },
-            successMessage: () => `Successfully uploaded ${acceptedFiles.length} image(s).`,
-            onSuccess: () => refetchImages(),
-        });
-    }, [addImages, refetchImages]);
+    const uploadImages = useCallback(async (acceptedFiles: File[]) => {
+        try {
+            setIsLoading(true);
+            const newBanners: any[] = [];
+            
+            let currentLength = 0;
+            setHeroBanners(prev => {
+                currentLength = prev.length;
+                return prev;
+            });
+            
+            for (const file of acceptedFiles) {
+                const reader = new FileReader();
+                const base64 = await new Promise<string>((resolve) => {
+                    reader.onload = (e) => resolve(e.target?.result as string);
+                    reader.readAsDataURL(file);
+                });
+                
+                const img = new Image();
+                await new Promise((resolve) => {
+                    img.onload = resolve;
+                    img.src = base64;
+                });
+                
+                const newBanner = {
+                    id: `hero-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                    src: `/images/${file.name}`,
+                    alt: file.name.replace(/\.[^/.]+$/, ""),
+                    description: "",
+                    width: img.width,
+                    height: img.height,
+                    displayOrder: currentLength + newBanners.length + 1,
+                    isActive: true
+                };
+                newBanners.push(newBanner);
+            }
+            
+            setHeroBanners(prev => [...prev, ...newBanners]);
+            setHasChanges(true);
+            setSnackbar({ 
+                open: true, 
+                message: `Added ${acceptedFiles.length} image(s). Remember to save changes.`, 
+                severity: "success" 
+            });
+        } catch (error) {
+            setSnackbar({ 
+                open: true, 
+                message: "Failed to add images", 
+                severity: "error" 
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
 
-    useEffect(() => {
-        setImageData(currImages?.imagesByLabel?.map((d: any, index: number) => ({
-            ...d,
-            pos: index,
-        })));
-    }, [currImages]);
+    const handleDragEnd = useCallback((result: any) => {
+        if (!result.destination) return;
 
-    const applyChanges = useCallback((changed: any[]) => {
-        const data = changed.map((d: any) => ({
-            hash: d.hash,
-            alt: d.alt,
-            description: d.description,
-        }));
-        const originals = imageData.map(d => d.hash);
-        const finals = changed.map((d: any) => d.hash);
-        const deleting = originals.filter(s => !finals.includes(s));
-        mutationWrapper<any, updateImagesVariables>({
-            mutation: updateImages,
-            input: { data, deleting, label: "hero" },
-            successMessage: () => "Successfully updated image(s).",
+        setHeroBanners(prev => {
+            const items = Array.from(prev);
+            const [reorderedItem] = items.splice(result.source.index, 1);
+            items.splice(result.destination.index, 0, reorderedItem);
+
+            return items.map((item, index) => ({
+                ...item,
+                displayOrder: index + 1
+            }));
         });
-    }, [imageData, updateImages]);
+        setHasChanges(true);
+    }, []);
+
+    const handleDeleteBanner = useCallback((id: string) => {
+        setHeroBanners(prev => prev
+            .filter(b => b.id !== id)
+            .map((item, index) => ({
+                ...item,
+                displayOrder: index + 1
+            }))
+        );
+        setHasChanges(true);
+    }, []);
+
+    const handleFieldChange = useCallback((id: string, field: string, value: any) => {
+        setHeroBanners(prev => prev.map(banner => 
+            banner.id === id ? { ...banner, [field]: value } : banner
+        ));
+        setHasChanges(true);
+    }, []);
+
+    const handleSaveHeroBanners = useCallback(async () => {
+        try {
+            setIsLoading(true);
+            
+            // Include heroSettings to prevent them from being lost
+            const heroSettings = landingPageContent?.heroSettings || {
+                autoPlay: true,
+                autoPlayDelay: 5000,
+                showDots: true,
+                showArrows: true,
+                fadeTransition: true
+            };
+            
+            const response = await restApi.updateLandingPageContent({ 
+                heroBanners,
+                heroSettings 
+            });
+            
+            if (response.success) {
+                setSnackbar({ 
+                    open: true, 
+                    message: "Hero banners updated successfully", 
+                    severity: "success" 
+                });
+                setHasChanges(false);
+                setOriginalHeroBanners([...heroBanners]);
+                // Note: Cache invalidation is handled automatically by the server
+                await refetch();
+            } else {
+                throw new Error("Failed to update");
+            }
+        } catch (error: any) {
+            setSnackbar({ 
+                open: true, 
+                message: error.message || "Failed to save changes", 
+                severity: "error" 
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    }, [heroBanners, landingPageContent, refetch]);
+
+    const handleCancelChanges = useCallback(() => {
+        setHeroBanners([...originalHeroBanners]);
+        setHasChanges(false);
+    }, [originalHeroBanners]);
 
     // Seasonal content handlers
     const handlePlantEdit = (plant?: SeasonalPlant) => {
@@ -156,7 +236,7 @@ export const AdminHomePage = () => {
             season: "Spring",
             careLevel: "Easy",
             icon: "leaf",
-            displayOrder: seasonalData?.seasonalContent?.plants?.length || 0,
+            displayOrder: seasonalData?.seasonalPlants?.length || 0,
             isActive: true
         });
         setPlantDialogOpen(true);
@@ -169,53 +249,120 @@ export const AdminHomePage = () => {
             description: "",
             category: "General",
             season: "Year-round",
-            displayOrder: seasonalData?.seasonalContent?.tips?.length || 0,
+            displayOrder: seasonalData?.plantTips?.length || 0,
             isActive: true
         });
         setTipDialogOpen(true);
     };
 
-    const handlePlantSave = () => {
-        if (editingPlant) {
-            upsertPlant({
-                variables: {
-                    input: {
-                        id: editingPlant.id || undefined,
-                        name: editingPlant.name,
-                        description: editingPlant.description,
-                        season: editingPlant.season,
-                        careLevel: editingPlant.careLevel,
-                        icon: editingPlant.icon,
-                        displayOrder: editingPlant.displayOrder,
-                        isActive: editingPlant.isActive
-                    }
-                }
-            });
+    const handlePlantSave = async () => {
+        if (!editingPlant) return;
+
+        try {
+            const currentPlants = seasonalData?.seasonalPlants || [];
+            let updatedPlants;
+            
+            if (editingPlant.id) {
+                // Update existing plant
+                updatedPlants = currentPlants.map((plant: SeasonalPlant) => 
+                    plant.id === editingPlant.id ? editingPlant : plant
+                );
+            } else {
+                // Add new plant with generated ID
+                const newPlant = { 
+                    ...editingPlant, 
+                    id: `plant-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` 
+                };
+                updatedPlants = [...currentPlants, newPlant];
+            }
+
+            const response = await restApi.updateLandingPageContent({ seasonalPlants: updatedPlants });
+            if (response.success) {
+                handleApiSuccess("Plant saved successfully!");
+                setPlantDialogOpen(false);
+                setEditingPlant(null);
+                await refetch();
+            } else {
+                throw new Error("Failed to save");
+            }
+        } catch (error) {
+            handleApiError(error, "Failed to save plant");
         }
     };
 
-    const handleTipSave = () => {
-        if (editingTip) {
-            upsertTip({
-                variables: {
-                    input: {
-                        id: editingTip.id || undefined,
-                        title: editingTip.title,
-                        description: editingTip.description,
-                        category: editingTip.category,
-                        season: editingTip.season,
-                        displayOrder: editingTip.displayOrder,
-                        isActive: editingTip.isActive
-                    }
-                }
-            });
+    const handleTipSave = async () => {
+        if (!editingTip) return;
+
+        try {
+            const currentTips = seasonalData?.plantTips || [];
+            let updatedTips;
+            
+            if (editingTip.id) {
+                // Update existing tip
+                updatedTips = currentTips.map((tip: PlantTip) => 
+                    tip.id === editingTip.id ? editingTip : tip
+                );
+            } else {
+                // Add new tip with generated ID
+                const newTip = { 
+                    ...editingTip, 
+                    id: `tip-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` 
+                };
+                updatedTips = [...currentTips, newTip];
+            }
+
+            const response = await restApi.updateLandingPageContent({ plantTips: updatedTips });
+            if (response.success) {
+                handleApiSuccess("Tip saved successfully!");
+                setTipDialogOpen(false);
+                setEditingTip(null);
+                await refetch();
+            } else {
+                throw new Error("Failed to save");
+            }
+        } catch (error) {
+            handleApiError(error, "Failed to save tip");
         }
     };
 
-    const plants = seasonalData?.seasonalContent?.plants || [];
-    const tips = seasonalData?.seasonalContent?.tips || [];
+    const plants = seasonalData?.seasonalPlants || [];
+    const tips = seasonalData?.plantTips || [];
     const activePlants = plants.filter((p: SeasonalPlant) => p.isActive).length;
     const activeTips = tips.filter((t: PlantTip) => t.isActive).length;
+
+    const handlePlantDelete = async (plant: SeasonalPlant) => {
+        if (!confirm(`Delete ${plant.name}?`)) return;
+        
+        try {
+            const updatedPlants = plants.filter((p: SeasonalPlant) => p.id !== plant.id);
+            const response = await restApi.updateLandingPageContent({ seasonalPlants: updatedPlants });
+            if (response.success) {
+                handleApiSuccess("Plant deleted successfully!");
+                await refetch();
+            } else {
+                throw new Error("Failed to delete");
+            }
+        } catch (error) {
+            handleApiError(error, "Failed to delete plant");
+        }
+    };
+
+    const handleTipDelete = async (tip: PlantTip) => {
+        if (!confirm(`Delete ${tip.title}?`)) return;
+        
+        try {
+            const updatedTips = tips.filter((t: PlantTip) => t.id !== tip.id);
+            const response = await restApi.updateLandingPageContent({ plantTips: updatedTips });
+            if (response.success) {
+                handleApiSuccess("Tip deleted successfully!");
+                await refetch();
+            } else {
+                throw new Error("Failed to delete");
+            }
+        } catch (error) {
+            handleApiError(error, "Failed to delete tip");
+        }
+    };
 
     return (
         <PageContainer sx={{ minHeight: "100vh", paddingBottom: 0 }}>
@@ -243,8 +390,118 @@ export const AdminHomePage = () => {
                         uploadText='Upload Images'
                         sxs={{ root: { maxWidth: "min(100%, 700px)", margin: "auto" } }}
                     />
-                    <h2 style={{ marginTop: "64px", marginBottom: "0px" }}>Reorder and delete images</h2>
-                    <WrappedImageList data={imageData} onApply={applyChanges} sxs={{ imageList: { paddingBottom: pagePaddingBottom } }} />
+                    
+                    <Box sx={{ mt: 4, mb: 2, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <Typography variant="h5">Hero Banners</Typography>
+                        {hasChanges && (
+                            <Box>
+                                <Button onClick={handleCancelChanges} sx={{ mr: 1 }}>
+                                    Cancel
+                                </Button>
+                                <Button 
+                                    variant="contained" 
+                                    onClick={handleSaveHeroBanners}
+                                    disabled={isLoading}
+                                >
+                                    Save Changes
+                                </Button>
+                            </Box>
+                        )}
+                    </Box>
+
+                    <DragDropContext onDragEnd={handleDragEnd}>
+                        <Droppable droppableId="hero-banners">
+                            {(provided) => (
+                                <Box
+                                    {...provided.droppableProps}
+                                    ref={provided.innerRef}
+                                    sx={{ pb: pagePaddingBottom }}
+                                >
+                                    {heroBanners.map((banner, index) => (
+                                        <Draggable key={banner.id} draggableId={banner.id} index={index}>
+                                            {(provided, snapshot) => (
+                                                <Card
+                                                    ref={provided.innerRef}
+                                                    {...provided.draggableProps}
+                                                    sx={{ 
+                                                        mb: 2, 
+                                                        opacity: snapshot.isDragging ? 0.5 : 1,
+                                                        backgroundColor: snapshot.isDragging ? "action.hover" : "background.paper"
+                                                    }}
+                                                >
+                                                    <Box sx={{ display: "flex", alignItems: "stretch" }}>
+                                                        <Box
+                                                            {...provided.dragHandleProps}
+                                                            sx={{ 
+                                                                display: "flex", 
+                                                                alignItems: "center", 
+                                                                px: 2, 
+                                                                cursor: "grab",
+                                                                backgroundColor: "action.hover"
+                                                            }}
+                                                        >
+                                                            <DragIcon />
+                                                        </Box>
+                                                        
+                                                        <CardMedia
+                                                            component="img"
+                                                            height="200"
+                                                            image={banner.src.startsWith('http') ? banner.src : `${getServerUrl()}${banner.src}`}
+                                                            alt={banner.alt}
+                                                            sx={{ width: 300, objectFit: "cover" }}
+                                                        />
+                                                        
+                                                        <Box sx={{ flex: 1, p: 2 }}>
+                                                            <Typography variant="subtitle2" gutterBottom>
+                                                                Order: {banner.displayOrder}
+                                                            </Typography>
+                                                            <TextField
+                                                                label="Alt Text"
+                                                                value={banner.alt}
+                                                                onChange={(e) => handleFieldChange(banner.id, "alt", e.target.value)}
+                                                                fullWidth
+                                                                size="small"
+                                                                sx={{ mb: 1 }}
+                                                            />
+                                                            <TextField
+                                                                label="Description"
+                                                                value={banner.description}
+                                                                onChange={(e) => handleFieldChange(banner.id, "description", e.target.value)}
+                                                                fullWidth
+                                                                size="small"
+                                                                multiline
+                                                                rows={2}
+                                                            />
+                                                            <FormControlLabel
+                                                                control={
+                                                                    <Switch
+                                                                        checked={banner.isActive}
+                                                                        onChange={(e) => handleFieldChange(banner.id, "isActive", e.target.checked)}
+                                                                    />
+                                                                }
+                                                                label="Active"
+                                                                sx={{ mt: 1 }}
+                                                            />
+                                                        </Box>
+                                                        
+                                                        <CardActions>
+                                                            <IconButton 
+                                                                onClick={() => handleDeleteBanner(banner.id)}
+                                                                color="error"
+                                                            >
+                                                                <DeleteIcon />
+                                                            </IconButton>
+                                                        </CardActions>
+                                                    </Box>
+                                                </Card>
+                                            )}
+                                        </Draggable>
+                                    ))}
+                                    {provided.placeholder}
+                                </Box>
+                            )}
+                        </Droppable>
+                    </DragDropContext>
                 </Box>
             )}
 
@@ -331,11 +588,7 @@ export const AdminHomePage = () => {
                                                             </IconButton>
                                                             <IconButton 
                                                                 size="small" 
-                                                                onClick={() => {
-                                                                    if (confirm(`Delete ${plant.name}?`)) {
-                                                                        deletePlant({ variables: { id: plant.id } });
-                                                                    }
-                                                                }}
+                                                                onClick={() => handlePlantDelete(plant)}
                                                             >
                                                                 <Trash2 size={18} />
                                                             </IconButton>
@@ -394,11 +647,7 @@ export const AdminHomePage = () => {
                                                         </IconButton>
                                                         <IconButton 
                                                             size="small"
-                                                            onClick={() => {
-                                                                if (confirm(`Delete ${tip.title}?`)) {
-                                                                    deleteTip({ variables: { id: tip.id } });
-                                                                }
-                                                            }}
+                                                            onClick={() => handleTipDelete(tip)}
                                                         >
                                                             <Trash2 size={18} />
                                                         </IconButton>
@@ -508,7 +757,13 @@ export const AdminHomePage = () => {
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setPlantDialogOpen(false)}>Cancel</Button>
-                    <Button variant="contained" onClick={handlePlantSave}>Save</Button>
+                    <Button 
+                        variant="contained" 
+                        onClick={handlePlantSave}
+                        disabled={isLoading}
+                    >
+                        {isLoading ? "Saving..." : "Save"}
+                    </Button>
                 </DialogActions>
             </Dialog>
 
@@ -581,9 +836,25 @@ export const AdminHomePage = () => {
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setTipDialogOpen(false)}>Cancel</Button>
-                    <Button variant="contained" onClick={handleTipSave}>Save</Button>
+                    <Button 
+                        variant="contained" 
+                        onClick={handleTipSave}
+                        disabled={isLoading}
+                    >
+                        {isLoading ? "Saving..." : "Save"}
+                    </Button>
                 </DialogActions>
             </Dialog>
+            
+            <Snackbar
+                open={snackbar.open}
+                autoHideDuration={6000}
+                onClose={() => setSnackbar({ ...snackbar, open: false })}
+            >
+                <Alert severity={snackbar.severity} onClose={() => setSnackbar({ ...snackbar, open: false })}>
+                    {snackbar.message}
+                </Alert>
+            </Snackbar>
         </PageContainer>
     );
 };

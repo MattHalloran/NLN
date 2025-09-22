@@ -4,7 +4,7 @@ import { SvgComponent } from "icons/types";
 import { isObject } from "lodash-es";
 import { Session } from "types";
 
-export type UserActions = [string, string, string, (() => unknown) | null, SvgComponent, number][]
+export type UserActions = [string, string, string, (() => unknown) | null, SvgComponent | null, number][]
 
 // Returns user actions, in a list of this format:
 //  [
@@ -16,7 +16,7 @@ export type UserActions = [string, string, string, (() => unknown) | null, SvgCo
 //      number of notifications: int,
 //  ]
 export function getUserActions(session: Session | undefined): UserActions {
-    const actions: [string, string, string, (() => unknown) | null, SvgComponent, number][] = [];
+    const actions: [string, string, string, (() => unknown) | null, SvgComponent | null, number][] = [];
 
     // If someone is not logged in, display sign up/log in APP_LINKS
     if (!isObject(session) || !session || Object.keys(session).length === 0) {

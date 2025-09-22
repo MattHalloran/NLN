@@ -1,8 +1,9 @@
-import { useMutation, useQuery } from "@apollo/client";
+import { useMutation } from "@apollo/client";
 import { alpha, Box, CircularProgress, CssBaseline, GlobalStyles, StyledEngineProvider, ThemeProvider } from "@mui/material";
 import { Routes } from "Routes";
 import { loginMutation } from "api/mutation";
-import { readAssetsQuery } from "api/query/readAssets";
+// Using REST API for landing page content
+import { useLandingPageContent } from "api/rest/hooks";
 import { AlertDialog, BottomNav, Footer, PullToRefresh, SnackStack } from "components";
 import { SideMenu, sideMenuDisplayData } from "components/navigation/Navbar/SideMenu";
 import { BusinessContext } from "contexts/BusinessContext";
@@ -33,7 +34,10 @@ export function App() {
     const [business, setBusiness] = useState<BusinessData | undefined>(undefined);
     const [contentMargins, setContentMargins] = useState<{ paddingLeft?: string, paddingRight?: string }>({}); // Adds margins to content when a persistent drawer is open
     const isMobile = useWindowSize(({ width }) => width <= theme.breakpoints.values.md);
-    const { data: businessData } = useQuery(readAssetsQuery, { variables: { input: { files: ["hours.md", "business.json"] } } });
+    
+    // Using REST API for landing page content
+    const { data: landingPageData } = useLandingPageContent(true);
+    
     const [login] = useMutation(loginMutation);
     const [, setLocation] = useLocation();
 
@@ -43,12 +47,15 @@ export function App() {
     }, []);
 
     useEffect(() => {
-        if (businessData === undefined) return;
-        const data = businessData.readAssets[1] ? JSON.parse(businessData.readAssets[1]) : {};
-        const hoursRaw = businessData.readAssets[0];
-        data.hours = hoursRaw;
-        setBusiness(data);
-    }, [businessData]);
+        if (landingPageData?.contactInfo) {
+            const { business, hours } = landingPageData.contactInfo;
+            const data = {
+                ...business,
+                hours
+            };
+            setBusiness(data);
+        }
+    }, [landingPageData]);
 
     useEffect(() => {
         // Determine theme

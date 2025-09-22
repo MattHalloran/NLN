@@ -1,4 +1,3 @@
-import { useMutation } from "@apollo/client";
 import { 
     Box, 
     Button, 
@@ -35,11 +34,9 @@ import {
     Schedule,
     Add
 } from "@mui/icons-material";
-import { writeAssetsMutation } from "api/mutation";
-import { graphqlWrapperHelper } from "api/utils";
+import { useUpdateContactInfo, useLandingPageContent } from "api/rest/hooks";
 import { AdminTabOption, AdminTabs, PageContainer } from "components";
 import { TopBar } from "components/navigation/TopBar/TopBar";
-import { BusinessContext } from "contexts/BusinessContext";
 import { CancelIcon, SaveIcon } from "icons";
 import { useContext, useEffect, useState } from "react";
 
@@ -57,6 +54,11 @@ interface DayHours {
     closed: boolean;
 }
 
+interface BusinessNote {
+    id: string;
+    text: string;
+}
+
 const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const TIME_OPTIONS = [
     '6:00 AM', '6:30 AM', '7:00 AM', '7:30 AM', '8:00 AM', '8:30 AM', '9:00 AM', '9:30 AM',
@@ -67,16 +69,18 @@ const TIME_OPTIONS = [
 
 export const AdminContactPage = () => {
     const { palette } = useTheme();
-    const business = useContext(BusinessContext);
-    const [updateHours] = useMutation(writeAssetsMutation);
+    const { data: landingPageData, refetch } = useLandingPageContent(false); // Get all data, not just active
+    const { mutate: updateContactInfo, loading: updateLoading, error: updateError } = useUpdateContactInfo();
     
     const [dayHours, setDayHours] = useState<DayHours[]>([]);
     const [showAdvancedMode, setShowAdvancedMode] = useState(false);
     const [markdownHours, setMarkdownHours] = useState("");
+    const [businessNotes, setBusinessNotes] = useState<BusinessNote[]>([]);
+    const [useRangeGrouping, setUseRangeGrouping] = useState(true);
     
     // Parse existing hours from markdown on load
     useEffect(() => {
-        if (!business?.hours) {
+        if (!landingPageData?.contactInfo?.hours) {
             // Initialize with default hours
             const defaultHours = DAYS_OF_WEEK.map(day => ({
                 day,
@@ -89,12 +93,13 @@ export const AdminContactPage = () => {
             return;
         }
         
-        setMarkdownHours(business.hours);
+        setMarkdownHours(landingPageData.contactInfo.hours);
         
         // Parse markdown table into structured data
         try {
-            const lines = business.hours.split('\n').filter(line => line.trim());
+            const lines = landingPageData.contactInfo.hours.split('\n').filter(line => line.trim());
             const parsedHours: DayHours[] = [];
+            const parsedNotes: BusinessNote[] = [];
             
             for (const line of lines) {
                 if (line.includes('|') && !line.includes('---')) {
@@ -103,7 +108,54 @@ export const AdminContactPage = () => {
                         const day = parts[0];
                         const hours = parts[1];
                         
-                        if (DAYS_OF_WEEK.includes(day)) {
+                        // Check if this is a range (e.g., "MON-FRI")
+                        if (day.includes('-') && !DAYS_OF_WEEK.includes(day)) {
+                            const rangeParts = day.split('-');
+                            if (rangeParts.length === 2) {
+                                const startDay = rangeParts[0].trim();
+                                const endDay = rangeParts[1].trim();
+                                
+                                // Find the day range
+                                const startIndex = DAYS_OF_WEEK.findIndex(d => d.toUpperCase().startsWith(startDay.toUpperCase()));
+                                const endIndex = DAYS_OF_WEEK.findIndex(d => d.toUpperCase().startsWith(endDay.toUpperCase()));
+                                
+                                if (startIndex !== -1 && endIndex !== -1) {
+                                    for (let i = startIndex; i <= endIndex; i++) {
+                                        if (hours.toLowerCase() === 'closed') {
+                                            parsedHours.push({
+                                                day: DAYS_OF_WEEK[i],
+                                                enabled: true,
+                                                openTime: '8:00 AM',
+                                                closeTime: '5:00 PM',
+                                                closed: true
+                                            });
+                                        } else {
+                                            const timeParts = hours.split(' to ');
+                                            if (timeParts.length === 2) {
+                                                parsedHours.push({
+                                                    day: DAYS_OF_WEEK[i],
+                                                    enabled: true,
+                                                    openTime: timeParts[0].trim(),
+                                                    closeTime: timeParts[1].trim(),
+                                                    closed: false
+                                                });
+                                            } else {
+                                                const dashParts = hours.split(' - ');
+                                                if (dashParts.length === 2) {
+                                                    parsedHours.push({
+                                                        day: DAYS_OF_WEEK[i],
+                                                        enabled: true,
+                                                        openTime: dashParts[0].trim(),
+                                                        closeTime: dashParts[1].trim(),
+                                                        closed: false
+                                                    });
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        } else if (DAYS_OF_WEEK.includes(day)) {
                             if (hours.toLowerCase() === 'closed') {
                                 parsedHours.push({
                                     day,
@@ -113,7 +165,7 @@ export const AdminContactPage = () => {
                                     closed: true
                                 });
                             } else {
-                                const timeParts = hours.split(' - ');
+                                const timeParts = hours.split(' to ');
                                 if (timeParts.length === 2) {
                                     parsedHours.push({
                                         day,
@@ -122,12 +174,31 @@ export const AdminContactPage = () => {
                                         closeTime: timeParts[1].trim(),
                                         closed: false
                                     });
+                                } else {
+                                    const dashParts = hours.split(' - ');
+                                    if (dashParts.length === 2) {
+                                        parsedHours.push({
+                                            day,
+                                            enabled: true,
+                                            openTime: dashParts[0].trim(),
+                                            closeTime: dashParts[1].trim(),
+                                            closed: false
+                                        });
+                                    }
                                 }
                             }
+                        } else {
+                            // This is likely a note (e.g., "Note", "Special")
+                            parsedNotes.push({
+                                id: Date.now().toString() + Math.random(),
+                                text: hours
+                            });
                         }
                     }
                 }
             }
+            
+            setBusinessNotes(parsedNotes);
             
             // Fill in any missing days
             const finalHours = DAYS_OF_WEEK.map(day => {
@@ -154,7 +225,7 @@ export const AdminContactPage = () => {
             }));
             setDayHours(defaultHours);
         }
-    }, [business]);
+    }, [landingPageData?.contactInfo?.hours]);
     
     const updateDayHours = (index: number, field: keyof DayHours, value: any) => {
         const newHours = [...dayHours];
@@ -174,41 +245,148 @@ export const AdminContactPage = () => {
         setDayHours(newHours);
     };
     
-    const generateMarkdown = () => {
-        let markdown = '| Day | Hours |\n';
-        markdown += '|-----|-------|\n';
+    const groupConsecutiveDays = (hours: DayHours[]) => {
+        const enabledHours = hours.filter(h => h.enabled);
+        const groups: Array<{
+            days: string[];
+            openTime: string;
+            closeTime: string;
+            closed: boolean;
+        }> = [];
         
-        for (const hours of dayHours) {
-            if (hours.enabled) {
-                if (hours.closed) {
-                    markdown += `| ${hours.day} | Closed |\n`;
+        let currentGroup: DayHours[] = [];
+        
+        for (const hour of enabledHours) {
+            if (currentGroup.length === 0) {
+                currentGroup = [hour];
+            } else {
+                const lastHour = currentGroup[currentGroup.length - 1];
+                // Check if this hour has the same schedule as the last one
+                const sameSchedule = 
+                    hour.openTime === lastHour.openTime &&
+                    hour.closeTime === lastHour.closeTime &&
+                    hour.closed === lastHour.closed;
+                
+                // Check if this day is consecutive to the last day
+                const lastDayIndex = DAYS_OF_WEEK.indexOf(lastHour.day);
+                const currentDayIndex = DAYS_OF_WEEK.indexOf(hour.day);
+                const isConsecutive = currentDayIndex === lastDayIndex + 1;
+                
+                if (sameSchedule && isConsecutive) {
+                    currentGroup.push(hour);
                 } else {
-                    markdown += `| ${hours.day} | ${hours.openTime} - ${hours.closeTime} |\n`;
+                    // Close current group and start new one
+                    groups.push({
+                        days: currentGroup.map(h => h.day),
+                        openTime: currentGroup[0].openTime,
+                        closeTime: currentGroup[0].closeTime,
+                        closed: currentGroup[0].closed
+                    });
+                    currentGroup = [hour];
                 }
             }
+        }
+        
+        // Don't forget the last group
+        if (currentGroup.length > 0) {
+            groups.push({
+                days: currentGroup.map(h => h.day),
+                openTime: currentGroup[0].openTime,
+                closeTime: currentGroup[0].closeTime,
+                closed: currentGroup[0].closed
+            });
+        }
+        
+        return groups;
+    };
+
+    const formatDayRange = (days: string[]) => {
+        if (days.length === 1) {
+            return days[0].toUpperCase().substring(0, 3);
+        } else if (days.length === 2) {
+            return `${days[0].toUpperCase().substring(0, 3)}-${days[1].toUpperCase().substring(0, 3)}`;
+        } else {
+            return `${days[0].toUpperCase().substring(0, 3)}-${days[days.length - 1].toUpperCase().substring(0, 3)}`;
+        }
+    };
+
+    const generateMarkdown = () => {
+        let markdown = '| Day           | Hours |\n';
+        markdown += '| ------------- |:-------------:         |\n';
+        
+        if (useRangeGrouping) {
+            const groups = groupConsecutiveDays(dayHours);
+            
+            for (const group of groups) {
+                const dayRange = formatDayRange(group.days);
+                if (group.closed) {
+                    markdown += `| ${dayRange}     | CLOSED    |\n`;
+                } else {
+                    markdown += `| ${dayRange}      | ${group.openTime} to ${group.closeTime}     |\n`;
+                }
+            }
+        } else {
+            for (const hours of dayHours) {
+                if (hours.enabled) {
+                    if (hours.closed) {
+                        markdown += `| ${hours.day} | CLOSED |\n`;
+                    } else {
+                        markdown += `| ${hours.day} | ${hours.openTime} to ${hours.closeTime} |\n`;
+                    }
+                }
+            }
+        }
+        
+        // Add notes
+        for (const note of businessNotes) {
+            markdown += `| Note          | ${note.text}    |\n`;
         }
         
         return markdown;
     };
     
-    const applyHours = () => {
-        const markdown = showAdvancedMode ? markdownHours : generateMarkdown();
-        const blob = new Blob([markdown], { type: "text/plain" });
-        const file = new File([blob], "hours.md", { type: blob.type });
-        
-        graphqlWrapperHelper({
-            call: () => updateHours({ variables: { files: [file] } }),
-            successCondition: (success: any) => success === true,
-            successMessage: () => "Contact information updated successfully!",
-            errorMessage: () => "Failed to update contact information.",
-        });
+    const addNote = () => {
+        const newNote: BusinessNote = {
+            id: Date.now().toString() + Math.random(),
+            text: ""
+        };
+        setBusinessNotes([...businessNotes, newNote]);
+    };
+    
+    const updateNote = (id: string, text: string) => {
+        setBusinessNotes(businessNotes.map(note => 
+            note.id === id ? { ...note, text } : note
+        ));
+    };
+    
+    const removeNote = (id: string) => {
+        setBusinessNotes(businessNotes.filter(note => note.id !== id));
+    };
+    
+    const applyHours = async () => {
+        try {
+            const markdown = showAdvancedMode ? markdownHours : generateMarkdown();
+            
+            await updateContactInfo({
+                hours: markdown
+            });
+            
+            // Refetch the landing page data to get updated information
+            await refetch();
+            
+            alert("Contact information updated successfully!");
+        } catch (error) {
+            console.error("Failed to update contact information:", error);
+            alert("Failed to update contact information.");
+        }
     };
     
     const revertHours = () => {
-        if (business?.hours) {
-            // Re-parse from original business hours
-            const lines = business.hours.split('\n').filter(line => line.trim());
+        if (landingPageData?.contactInfo?.hours) {
+            // Re-parse from original business hours using the same logic as useEffect
+            const lines = landingPageData.contactInfo.hours.split('\n').filter(line => line.trim());
             const parsedHours: DayHours[] = [];
+            const parsedNotes: BusinessNote[] = [];
             
             for (const line of lines) {
                 if (line.includes('|') && !line.includes('---')) {
@@ -217,7 +395,54 @@ export const AdminContactPage = () => {
                         const day = parts[0];
                         const hours = parts[1];
                         
-                        if (DAYS_OF_WEEK.includes(day)) {
+                        // Check if this is a range (e.g., "MON-FRI")
+                        if (day.includes('-') && !DAYS_OF_WEEK.includes(day)) {
+                            const rangeParts = day.split('-');
+                            if (rangeParts.length === 2) {
+                                const startDay = rangeParts[0].trim();
+                                const endDay = rangeParts[1].trim();
+                                
+                                // Find the day range
+                                const startIndex = DAYS_OF_WEEK.findIndex(d => d.toUpperCase().startsWith(startDay.toUpperCase()));
+                                const endIndex = DAYS_OF_WEEK.findIndex(d => d.toUpperCase().startsWith(endDay.toUpperCase()));
+                                
+                                if (startIndex !== -1 && endIndex !== -1) {
+                                    for (let i = startIndex; i <= endIndex; i++) {
+                                        if (hours.toLowerCase() === 'closed') {
+                                            parsedHours.push({
+                                                day: DAYS_OF_WEEK[i],
+                                                enabled: true,
+                                                openTime: '8:00 AM',
+                                                closeTime: '5:00 PM',
+                                                closed: true
+                                            });
+                                        } else {
+                                            const timeParts = hours.split(' to ');
+                                            if (timeParts.length === 2) {
+                                                parsedHours.push({
+                                                    day: DAYS_OF_WEEK[i],
+                                                    enabled: true,
+                                                    openTime: timeParts[0].trim(),
+                                                    closeTime: timeParts[1].trim(),
+                                                    closed: false
+                                                });
+                                            } else {
+                                                const dashParts = hours.split(' - ');
+                                                if (dashParts.length === 2) {
+                                                    parsedHours.push({
+                                                        day: DAYS_OF_WEEK[i],
+                                                        enabled: true,
+                                                        openTime: dashParts[0].trim(),
+                                                        closeTime: dashParts[1].trim(),
+                                                        closed: false
+                                                    });
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        } else if (DAYS_OF_WEEK.includes(day)) {
                             if (hours.toLowerCase() === 'closed') {
                                 parsedHours.push({
                                     day,
@@ -227,7 +452,7 @@ export const AdminContactPage = () => {
                                     closed: true
                                 });
                             } else {
-                                const timeParts = hours.split(' - ');
+                                const timeParts = hours.split(' to ');
                                 if (timeParts.length === 2) {
                                     parsedHours.push({
                                         day,
@@ -236,8 +461,25 @@ export const AdminContactPage = () => {
                                         closeTime: timeParts[1].trim(),
                                         closed: false
                                     });
+                                } else {
+                                    const dashParts = hours.split(' - ');
+                                    if (dashParts.length === 2) {
+                                        parsedHours.push({
+                                            day,
+                                            enabled: true,
+                                            openTime: dashParts[0].trim(),
+                                            closeTime: dashParts[1].trim(),
+                                            closed: false
+                                        });
+                                    }
                                 }
                             }
+                        } else {
+                            // This is likely a note (e.g., "Note", "Special")
+                            parsedNotes.push({
+                                id: Date.now().toString() + Math.random(),
+                                text: hours
+                            });
                         }
                     }
                 }
@@ -255,7 +497,8 @@ export const AdminContactPage = () => {
             });
             
             setDayHours(finalHours);
-            setMarkdownHours(business.hours);
+            setBusinessNotes(parsedNotes);
+            setMarkdownHours(landingPageData.contactInfo.hours);
         }
     };
 
@@ -274,16 +517,28 @@ export const AdminContactPage = () => {
                     <Typography variant="h5" fontWeight="600" color="text.primary">
                         Business Hours Management
                     </Typography>
-                    <FormControlLabel
-                        control={
-                            <Switch 
-                                checked={showAdvancedMode} 
-                                onChange={(e) => setShowAdvancedMode(e.target.checked)}
-                                color="primary"
-                            />
-                        }
-                        label="Advanced Mode (Markdown)"
-                    />
+                    <Box display="flex" gap={2} alignItems="center">
+                        <FormControlLabel
+                            control={
+                                <Switch 
+                                    checked={useRangeGrouping} 
+                                    onChange={(e) => setUseRangeGrouping(e.target.checked)}
+                                    color="primary"
+                                />
+                            }
+                            label="Group Ranges (MON-FRI)"
+                        />
+                        <FormControlLabel
+                            control={
+                                <Switch 
+                                    checked={showAdvancedMode} 
+                                    onChange={(e) => setShowAdvancedMode(e.target.checked)}
+                                    color="primary"
+                                />
+                            }
+                            label="Advanced Mode (Markdown)"
+                        />
+                    </Box>
                 </Box>
 
                 {!showAdvancedMode ? (
@@ -406,6 +661,69 @@ export const AdminContactPage = () => {
                                             </Paper>
                                         ))}
                                     </Box>
+                                    
+                                    {/* Notes Section */}
+                                    <Divider sx={{ my: 3 }} />
+                                    
+                                    <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+                                        <Box display="flex" alignItems="center" gap={1}>
+                                            <Schedule sx={{ color: palette.primary.main }} />
+                                            <Typography variant="h6" fontWeight="600">
+                                                Special Notes
+                                            </Typography>
+                                        </Box>
+                                        <Button
+                                            size="small"
+                                            variant="outlined"
+                                            onClick={addNote}
+                                            startIcon={<Add />}
+                                            sx={{ borderRadius: 1 }}
+                                        >
+                                            Add Note
+                                        </Button>
+                                    </Box>
+                                    
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                        {businessNotes.map((note, index) => (
+                                            <Paper 
+                                                key={note.id} 
+                                                elevation={0}
+                                                sx={{ 
+                                                    p: 2, 
+                                                    border: `1px solid ${palette.divider}`,
+                                                    borderRadius: 1,
+                                                    bgcolor: palette.background.paper
+                                                }}
+                                            >
+                                                <Grid container spacing={2} alignItems="center">
+                                                    <Grid item xs={10}>
+                                                        <TextField
+                                                            fullWidth
+                                                            value={note.text}
+                                                            onChange={(e) => updateNote(note.id, e.target.value)}
+                                                            placeholder="Enter a note (e.g., 'Closed daily from 12:00 pm to 1:00 pm')"
+                                                            variant="outlined"
+                                                            size="small"
+                                                        />
+                                                    </Grid>
+                                                    <Grid item xs={2}>
+                                                        <IconButton
+                                                            onClick={() => removeNote(note.id)}
+                                                            color="error"
+                                                            size="small"
+                                                        >
+                                                            <Delete />
+                                                        </IconButton>
+                                                    </Grid>
+                                                </Grid>
+                                            </Paper>
+                                        ))}
+                                        {businessNotes.length === 0 && (
+                                            <Typography color="text.secondary" textAlign="center" py={2}>
+                                                No special notes. Click "Add Note" to add information like lunch breaks or special hours.
+                                            </Typography>
+                                        )}
+                                    </Box>
                                 </CardContent>
                             </Card>
                         </Grid>
@@ -428,7 +746,7 @@ export const AdminContactPage = () => {
                                     </Box>
                                     
                                     <Alert severity="info" sx={{ mb: 3 }}>
-                                        This is how your business hours will appear on the website.
+                                        This is how your business hours will appear on the website. Use "Group Ranges" to automatically combine consecutive days with identical hours (e.g., MON-FRI).
                                     </Alert>
                                     
                                     <TableContainer component={Paper} variant="outlined">
@@ -444,26 +762,66 @@ export const AdminContactPage = () => {
                                                 </TableRow>
                                             </TableHead>
                                             <TableBody>
-                                                {dayHours.filter(h => h.enabled).map((hours) => (
-                                                    <TableRow key={hours.day}>
-                                                        <TableCell>{hours.day}</TableCell>
-                                                        <TableCell>
-                                                            {hours.closed ? (
-                                                                <Typography color="error" fontWeight={500}>Closed</Typography>
-                                                            ) : (
-                                                                `${hours.openTime} - ${hours.closeTime}`
-                                                            )}
-                                                        </TableCell>
-                                                    </TableRow>
-                                                ))}
-                                                {dayHours.filter(h => h.enabled).length === 0 && (
-                                                    <TableRow>
-                                                        <TableCell colSpan={2} align="center">
-                                                            <Typography color="text.secondary">
-                                                                No hours set. Please select days to display.
-                                                            </Typography>
-                                                        </TableCell>
-                                                    </TableRow>
+                                                {useRangeGrouping ? (
+                                                    <>
+                                                        {groupConsecutiveDays(dayHours).map((group, index) => (
+                                                            <TableRow key={index}>
+                                                                <TableCell>{formatDayRange(group.days)}</TableCell>
+                                                                <TableCell>
+                                                                    {group.closed ? (
+                                                                        <Typography color="error" fontWeight={500}>CLOSED</Typography>
+                                                                    ) : (
+                                                                        `${group.openTime} to ${group.closeTime}`
+                                                                    )}
+                                                                </TableCell>
+                                                            </TableRow>
+                                                        ))}
+                                                        {businessNotes.map((note) => (
+                                                            <TableRow key={note.id}>
+                                                                <TableCell>Note</TableCell>
+                                                                <TableCell>{note.text}</TableCell>
+                                                            </TableRow>
+                                                        ))}
+                                                        {groupConsecutiveDays(dayHours).length === 0 && businessNotes.length === 0 && (
+                                                            <TableRow>
+                                                                <TableCell colSpan={2} align="center">
+                                                                    <Typography color="text.secondary">
+                                                                        No hours set. Please select days to display.
+                                                                    </Typography>
+                                                                </TableCell>
+                                                            </TableRow>
+                                                        )}
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        {dayHours.filter(h => h.enabled).map((hours) => (
+                                                            <TableRow key={hours.day}>
+                                                                <TableCell>{hours.day}</TableCell>
+                                                                <TableCell>
+                                                                    {hours.closed ? (
+                                                                        <Typography color="error" fontWeight={500}>CLOSED</Typography>
+                                                                    ) : (
+                                                                        `${hours.openTime} to ${hours.closeTime}`
+                                                                    )}
+                                                                </TableCell>
+                                                            </TableRow>
+                                                        ))}
+                                                        {businessNotes.map((note) => (
+                                                            <TableRow key={note.id}>
+                                                                <TableCell>Note</TableCell>
+                                                                <TableCell>{note.text}</TableCell>
+                                                            </TableRow>
+                                                        ))}
+                                                        {dayHours.filter(h => h.enabled).length === 0 && businessNotes.length === 0 && (
+                                                            <TableRow>
+                                                                <TableCell colSpan={2} align="center">
+                                                                    <Typography color="text.secondary">
+                                                                        No hours set. Please select days to display.
+                                                                    </Typography>
+                                                                </TableCell>
+                                                            </TableRow>
+                                                        )}
+                                                    </>
                                                 )}
                                             </TableBody>
                                         </Table>
@@ -562,6 +920,7 @@ export const AdminContactPage = () => {
                         onClick={applyHours}
                         variant="contained"
                         startIcon={<SaveIcon />}
+                        disabled={updateLoading}
                         sx={{
                             minWidth: 120,
                             borderRadius: 1,
@@ -571,7 +930,7 @@ export const AdminContactPage = () => {
                             }
                         }}
                     >
-                        Save Changes
+                        {updateLoading ? "Saving..." : "Save Changes"}
                     </Button>
                 </Box>
             </Box>

@@ -1,6 +1,5 @@
-import { useMutation, useQuery } from "@apollo/client";
 import { Box, Button, Card, CardContent, Chip, Container, Dialog, DialogActions, DialogContent, DialogTitle, Grid, IconButton, Paper, Stack, Tab, Tabs, TextField, ToggleButton, ToggleButtonGroup, Typography, useTheme } from "@mui/material";
-import { seasonalContentQuery, upsertSeasonalPlantMutation, deleteSeasonalPlantMutation, upsertPlantTipMutation, deletePlantTipMutation, invalidateLandingPageCacheMutation } from "api/query";
+import { useLandingPageContent, useUpdateLandingPageContent } from "api/rest/hooks";
 import { AdminTabs, PageContainer, TopBar } from "components";
 import { Flower, Leaf, Lightbulb, Plus, Settings, Snowflake, Sprout, Star, Trash2, Edit3, Check, X } from "lucide-react";
 import { useState } from "react";
@@ -49,64 +48,18 @@ export const AdminSeasonalContentPage = () => {
     const [plantDialogOpen, setPlantDialogOpen] = useState(false);
     const [tipDialogOpen, setTipDialogOpen] = useState(false);
 
-    // GraphQL queries and mutations
-    const { data, loading, refetch } = useQuery(seasonalContentQuery, {
-        variables: { onlyActive: false },
-        pollInterval: 30000,
-    });
+    // REST API queries and mutations
+    const { data, loading, error, refetch } = useLandingPageContent(false);
+    const updateLandingPageContent = useUpdateLandingPageContent();
 
-    const [upsertPlant] = useMutation(upsertSeasonalPlantMutation, {
-        onCompleted: () => {
-            PubSub.publish("alertsCreate", { text: "Plant saved successfully!", severity: "success" });
-            setPlantDialogOpen(false);
-            setEditingPlant(null);
-            refetch();
-        },
-        onError: (error) => {
-            PubSub.publish("alertsCreate", { text: error.message, severity: "error" });
-        }
-    });
+    const handleApiError = (error: any, defaultMessage: string) => {
+        const message = error?.message || defaultMessage;
+        PubSub.publish("alertsCreate", { text: message, severity: "error" });
+    };
 
-    const [deletePlant] = useMutation(deleteSeasonalPlantMutation, {
-        onCompleted: () => {
-            PubSub.publish("alertsCreate", { text: "Plant deleted successfully!", severity: "success" });
-            refetch();
-        },
-        onError: (error) => {
-            PubSub.publish("alertsCreate", { text: error.message, severity: "error" });
-        }
-    });
-
-    const [upsertTip] = useMutation(upsertPlantTipMutation, {
-        onCompleted: () => {
-            PubSub.publish("alertsCreate", { text: "Tip saved successfully!", severity: "success" });
-            setTipDialogOpen(false);
-            setEditingTip(null);
-            refetch();
-        },
-        onError: (error) => {
-            PubSub.publish("alertsCreate", { text: error.message, severity: "error" });
-        }
-    });
-
-    const [deleteTip] = useMutation(deletePlantTipMutation, {
-        onCompleted: () => {
-            PubSub.publish("alertsCreate", { text: "Tip deleted successfully!", severity: "success" });
-            refetch();
-        },
-        onError: (error) => {
-            PubSub.publish("alertsCreate", { text: error.message, severity: "error" });
-        }
-    });
-
-    const [invalidateCache] = useMutation(invalidateLandingPageCacheMutation, {
-        onCompleted: () => {
-            PubSub.publish("alertsCreate", { text: "Landing page cache cleared successfully!", severity: "success" });
-        },
-        onError: (error) => {
-            PubSub.publish("alertsCreate", { text: error.message, severity: "error" });
-        }
-    });
+    const handleApiSuccess = (message: string) => {
+        PubSub.publish("alertsCreate", { text: message, severity: "success" });
+    };
 
     const handlePlantEdit = (plant?: SeasonalPlant) => {
         setEditingPlant(plant || {
@@ -116,7 +69,7 @@ export const AdminSeasonalContentPage = () => {
             season: "Spring",
             careLevel: "Easy",
             icon: "leaf",
-            displayOrder: data?.seasonalContent?.plants?.length || 0,
+            displayOrder: data?.seasonalPlants?.length || 0,
             isActive: true
         });
         setPlantDialogOpen(true);
@@ -129,51 +82,112 @@ export const AdminSeasonalContentPage = () => {
             description: "",
             category: "General",
             season: "Year-round",
-            displayOrder: data?.seasonalContent?.tips?.length || 0,
+            displayOrder: data?.plantTips?.length || 0,
             isActive: true
         });
         setTipDialogOpen(true);
     };
 
-    const handlePlantSave = () => {
-        if (editingPlant) {
-            upsertPlant({
-                variables: {
-                    input: {
-                        id: editingPlant.id || undefined,
-                        name: editingPlant.name,
-                        description: editingPlant.description,
-                        season: editingPlant.season,
-                        careLevel: editingPlant.careLevel,
-                        icon: editingPlant.icon,
-                        displayOrder: editingPlant.displayOrder,
-                        isActive: editingPlant.isActive
-                    }
-                }
-            });
+    const handlePlantSave = async () => {
+        if (!editingPlant) return;
+
+        try {
+            const currentPlants = data?.seasonalPlants || [];
+            let updatedPlants;
+            
+            if (editingPlant.id) {
+                // Update existing plant
+                updatedPlants = currentPlants.map(plant => 
+                    plant.id === editingPlant.id ? editingPlant : plant
+                );
+            } else {
+                // Add new plant with generated ID
+                const newPlant = { 
+                    ...editingPlant, 
+                    id: `plant-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` 
+                };
+                updatedPlants = [...currentPlants, newPlant];
+            }
+
+            await updateLandingPageContent.mutate({ seasonalPlants: updatedPlants });
+            handleApiSuccess("Plant saved successfully!");
+            setPlantDialogOpen(false);
+            setEditingPlant(null);
+            await refetch();
+        } catch (error) {
+            handleApiError(error, "Failed to save plant");
         }
     };
 
-    const handleTipSave = () => {
-        if (editingTip) {
-            upsertTip({
-                variables: {
-                    input: {
-                        id: editingTip.id || undefined,
-                        title: editingTip.title,
-                        description: editingTip.description,
-                        category: editingTip.category,
-                        season: editingTip.season,
-                        displayOrder: editingTip.displayOrder,
-                        isActive: editingTip.isActive
-                    }
-                }
-            });
+    const handleTipSave = async () => {
+        if (!editingTip) return;
+
+        try {
+            const currentTips = data?.plantTips || [];
+            let updatedTips;
+            
+            if (editingTip.id) {
+                // Update existing tip
+                updatedTips = currentTips.map(tip => 
+                    tip.id === editingTip.id ? editingTip : tip
+                );
+            } else {
+                // Add new tip with generated ID
+                const newTip = { 
+                    ...editingTip, 
+                    id: `tip-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` 
+                };
+                updatedTips = [...currentTips, newTip];
+            }
+
+            await updateLandingPageContent.mutate({ plantTips: updatedTips });
+            handleApiSuccess("Tip saved successfully!");
+            setTipDialogOpen(false);
+            setEditingTip(null);
+            await refetch();
+        } catch (error) {
+            handleApiError(error, "Failed to save tip");
         }
     };
 
-    const plants = data?.seasonalContent?.plants || [];
-    const tips = data?.seasonalContent?.tips || [];
+    const plants = data?.seasonalPlants || [];
+    const tips = data?.plantTips || [];
+
+    const handlePlantDelete = async (plant: SeasonalPlant) => {
+        if (!confirm(`Delete ${plant.name}?`)) return;
+        
+        try {
+            const updatedPlants = plants.filter(p => p.id !== plant.id);
+            await updateLandingPageContent.mutate({ seasonalPlants: updatedPlants });
+            handleApiSuccess("Plant deleted successfully!");
+            await refetch();
+        } catch (error) {
+            handleApiError(error, "Failed to delete plant");
+        }
+    };
+
+    const handleTipDelete = async (tip: PlantTip) => {
+        if (!confirm(`Delete ${tip.title}?`)) return;
+        
+        try {
+            const updatedTips = tips.filter(t => t.id !== tip.id);
+            await updateLandingPageContent.mutate({ plantTips: updatedTips });
+            handleApiSuccess("Tip deleted successfully!");
+            await refetch();
+        } catch (error) {
+            handleApiError(error, "Failed to delete tip");
+        }
+    };
+
+    const handleInvalidateCache = async () => {
+        try {
+            // The unified endpoint automatically invalidates cache after updates
+            await refetch();
+            handleApiSuccess("Landing page cache cleared successfully!");
+        } catch (error) {
+            handleApiError(error, "Failed to clear cache");
+        }
+    };
 
     return (
         <PageContainer>
@@ -226,7 +240,7 @@ export const AdminSeasonalContentPage = () => {
                                 <Button
                                     variant="outlined"
                                     size="small"
-                                    onClick={() => invalidateCache()}
+                                    onClick={handleInvalidateCache}
                                     sx={{ textTransform: "none" }}
                                 >
                                     Clear Cache
@@ -273,11 +287,7 @@ export const AdminSeasonalContentPage = () => {
                                                         </IconButton>
                                                         <IconButton 
                                                             size="small" 
-                                                            onClick={() => {
-                                                                if (confirm(`Delete ${plant.name}?`)) {
-                                                                    deletePlant({ variables: { id: plant.id } });
-                                                                }
-                                                            }}
+                                                            onClick={() => handlePlantDelete(plant)}
                                                         >
                                                             <Trash2 size={18} />
                                                         </IconButton>
@@ -336,11 +346,7 @@ export const AdminSeasonalContentPage = () => {
                                                     </IconButton>
                                                     <IconButton 
                                                         size="small"
-                                                        onClick={() => {
-                                                            if (confirm(`Delete ${tip.title}?`)) {
-                                                                deleteTip({ variables: { id: tip.id } });
-                                                            }
-                                                        }}
+                                                        onClick={() => handleTipDelete(tip)}
                                                     >
                                                         <Trash2 size={18} />
                                                     </IconButton>
@@ -449,7 +455,13 @@ export const AdminSeasonalContentPage = () => {
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setPlantDialogOpen(false)}>Cancel</Button>
-                    <Button variant="contained" onClick={handlePlantSave}>Save</Button>
+                    <Button 
+                        variant="contained" 
+                        onClick={handlePlantSave}
+                        disabled={updateLandingPageContent.loading}
+                    >
+                        {updateLandingPageContent.loading ? "Saving..." : "Save"}
+                    </Button>
                 </DialogActions>
             </Dialog>
 
@@ -522,7 +534,13 @@ export const AdminSeasonalContentPage = () => {
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setTipDialogOpen(false)}>Cancel</Button>
-                    <Button variant="contained" onClick={handleTipSave}>Save</Button>
+                    <Button 
+                        variant="contained" 
+                        onClick={handleTipSave}
+                        disabled={updateLandingPageContent.loading}
+                    >
+                        {updateLandingPageContent.loading ? "Saving..." : "Save"}
+                    </Button>
                 </DialogActions>
             </Dialog>
         </PageContainer>

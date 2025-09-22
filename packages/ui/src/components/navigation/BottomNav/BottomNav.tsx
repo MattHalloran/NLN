@@ -1,6 +1,7 @@
 import { Badge, BottomNavigation, BottomNavigationAction, useTheme } from "@mui/material";
 import { SessionContext } from "contexts/SessionContext";
 import { useKeyboardOpen } from "hooks/useKeyboardOpen";
+import { isObject } from "lodash-es";
 import { useContext } from "react";
 import { useLocation } from "route";
 import { pagePaddingBottom } from "styles";
@@ -15,11 +16,14 @@ export const BottomNav = ({
 
     const actions = getUserActions(session);
 
-    // Hide the nav if the keyboard is open. This is because fixed bottom navs 
+    // Hide the nav if the keyboard is open. This is because fixed bottom navs
     // will appear above the keyboard on Android for some reason.
     const invisible = useKeyboardOpen();
 
-    if (invisible) return null;
+    // Hide the nav when not logged in (only admin needs access now)
+    const isLoggedIn = isObject(session) && session && Object.keys(session).length > 0;
+
+    if (invisible || !isLoggedIn) return null;
     return (
         <BottomNavigation
             showLabels
@@ -55,7 +59,7 @@ export const BottomNav = ({
                             if (onClick) onClick();
                         }
                     }}
-                    icon={<Badge badgeContent={badgeNum} color="error"><Icon /></Badge>}
+                    icon={Icon ? <Badge badgeContent={badgeNum} color="error"><Icon /></Badge> : null}
                     sx={{ color: palette.primary.contrastText }}
                 />
             ))}

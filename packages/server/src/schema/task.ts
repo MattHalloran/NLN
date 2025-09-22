@@ -1,10 +1,10 @@
 import { CODE, TASK_STATUS } from "@local/shared";
-import { gql } from "apollo-server-express";
+
 import { Context } from "../context";
 import { CustomError } from "../error";
 import { RecursivePartial } from "../types";
 
-export const typeDef = gql`
+export const typeDef = /* GraphQL */ `
     enum TaskStatus {
         Unknown
         Failed

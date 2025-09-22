@@ -1,14 +1,14 @@
 import { CODE, IMAGE_SIZE } from "@local/shared";
 import { PrismaSelect } from "@paljs/plugins";
-import { gql } from "apollo-server-express";
-import { GraphQLResolveInfo } from "graphql";
-import { Context } from "../context";
-import { CustomError } from "../error";
-import { IWrap, RecursivePartial } from "../types";
-import { deleteImage, saveImage } from "../utils";
-import { AddImageResponse, AddImagesInput, DeleteImagesByLabelInput, DeleteImagesInput, Image, ImagesByLabelInput, UpdateImagesInput } from "./types";
 
-export const typeDef = gql`
+import { GraphQLResolveInfo } from "graphql";
+import { Context } from "../context.js";
+import { CustomError } from "../error.js";
+import { IWrap, RecursivePartial } from "../types.js";
+import { deleteImage, saveImage } from "../utils/index.js";
+import { AddImageResponse, AddImagesInput, DeleteImagesByLabelInput, DeleteImagesInput, Image, ImagesByLabelInput, UpdateImagesInput } from "./types.js";
+
+export const typeDef = /* GraphQL */ `
     enum ImageSize {
         XXS
         XS

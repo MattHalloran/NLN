@@ -12,10 +12,15 @@ import {
 } from "@mui/material";
 import { useLocation } from "route";
 import { Eye, Gift, Smartphone, Car, Clock, Phone, MapPin, Mail, Map, LucideIcon } from "lucide-react";
+import { useLandingPageContent } from "api/rest/hooks";
+import { parseBusinessHours } from "utils/businessHours";
 
 export const LocationVisit = () => {
     const { palette } = useTheme();
     const [, setLocation] = useLocation();
+    
+    // Fetch business hours from API
+    const { data } = useLandingPageContent(true);
 
     const visitInfo = [
         {
@@ -40,12 +45,18 @@ export const LocationVisit = () => {
         }
     ];
 
-    const hours = [
-        { day: "Monday - Thursday", time: "7:00 AM - 4:00 PM" },
-        { day: "Friday", time: "7:00 AM - 3:00 PM" },
-        { day: "Saturday", time: "7:00 AM - 12:00 PM" },
-        { day: "Sunday", time: "Closed" }
-    ];
+    // Get real business hours from API or use fallback
+    const businessHours = data?.contactInfo?.hours ? parseBusinessHours(data.contactInfo.hours) : [];
+    const hours = businessHours.length > 0 ? 
+        businessHours.map(hour => {
+            const [day, time] = hour.split(': ');
+            return { day, time };
+        }) : [
+            { day: "Monday - Friday", time: "8:00 AM - 3:00 PM" },
+            { day: "Saturday", time: "Closed" },
+            { day: "Sunday", time: "Closed" },
+            { day: "Note", time: "Closed daily 12:00 PM - 1:00 PM" }
+        ];
 
     const contactMethods = [
         {

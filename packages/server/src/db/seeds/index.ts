@@ -1,3 +1,3 @@
-export * from "./init";
-export * from "./mock";
+export * from "./init.js";
+export * from "./mock.js";
 

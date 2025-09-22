@@ -1,11 +1,15 @@
 {
-    "ignore": [".git", "node_modules", "*.test.ts"],
+    "exec": "node",
+    "ignore": [".git", "node_modules", "*.test.ts", "dist"],
     "watch": ["./src"],
-    "ext": "ts",
-    "execMap": {
-        "ts": "ts-node"
-    },
+    "ext": "ts,js", 
     "events": {
-        "restart": "yarn build"
-      }
-  }
+        "start": "echo 'Nodemon starting server...'",
+        "restart": "echo 'File change detected, rebuilding...' && yarn build"
+    },
+    "delay": 3000,
+    "env": {
+        "NODE_ENV": "development"
+    },
+    "verbose": false
+}

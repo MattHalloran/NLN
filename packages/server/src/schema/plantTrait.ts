@@ -1,9 +1,9 @@
-import { gql } from "apollo-server-express";
-import { Context } from "../context";
-import { IWrap, RecursivePartial } from "../types";
-import { TraitOptions, TraitValuesInput } from "./types";
 
-export const typeDef = gql`
+import { Context } from "../context.js";
+import { IWrap, RecursivePartial } from "../types.js";
+import { TraitOptions, TraitValuesInput } from "./types.js";
+
+export const typeDef = /* GraphQL */ `
     input TraitValuesInput {
         name: String!
     }

@@ -1,0 +1,41 @@
+{
+  "banners": [
+    {
+      "id": "hero-2",
+      "src": "/images/hero-rainbow-XL.jpg",
+      "alt": "Interior view of New Life Nursery garden center",
+      "description": "Well-organized garden center with wide selection of plants",
+      "width": 1920,
+      "height": 1080,
+      "displayOrder": 1,
+      "isActive": true
+    },
+    {
+      "id": "hero-1",
+      "src": "/images/hero-plants-XL.jpg",
+      "alt": "New Life Nursery spring display with vibrant flowers and plants",
+      "description": "Beautiful spring display showcasing colorful annuals and perennials",
+      "width": 1920,
+      "height": 1080,
+      "displayOrder": 2,
+      "isActive": true
+    },
+    {
+      "id": "hero-3",
+      "src": "/images/hero-butterfly-XXL.jpg",
+      "alt": "Outdoor plant displays at New Life Nursery",
+      "description": "Extensive outdoor plant displays and growing areas",
+      "width": 1920,
+      "height": 1080,
+      "displayOrder": 3,
+      "isActive": true
+    }
+  ],
+  "settings": {
+    "autoPlay": true,
+    "autoPlayDelay": 5000,
+    "showDots": true,
+    "showArrows": true,
+    "fadeTransition": true
+  }
+}

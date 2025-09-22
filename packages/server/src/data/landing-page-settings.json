@@ -1,0 +1,55 @@
+{
+  "hero": {
+    "title": "Beautiful, healthy plants",
+    "subtitle": "At competitive prices",
+    "description": "Serving the community for over 30 years with the finest selection of plants, trees, and expert gardening advice",
+    "businessHours": "OPEN 7 DAYS A WEEK | Mon-Sat 8AM-6PM | Sun 9AM-5PM",
+    "trustBadges": [
+      {
+        "icon": "users",
+        "text": "Family Owned Since 1980"
+      },
+      {
+        "icon": "award", 
+        "text": "Licensed & Certified"
+      },
+      {
+        "icon": "leaf",
+        "text": "Expert Plant Care"
+      }
+    ],
+    "buttons": [
+      {
+        "text": "Browse Plants",
+        "link": "https://newlife.online-orders.sbiteam.com/",
+        "type": "primary"
+      },
+      {
+        "text": "Visit Our Nursery",
+        "link": "/about",
+        "type": "secondary"
+      }
+    ]
+  },
+  "newsletter": {
+    "title": "Stay in the Grow",
+    "description": "Get seasonal care tips, new arrival notifications, and exclusive offers delivered to your inbox",
+    "disclaimer": "No spam, just helpful gardening tips. Unsubscribe anytime.",
+    "isActive": true
+  },
+  "companyInfo": {
+    "foundedYear": 1980,
+    "description": "Expert plant care and community service"
+  },
+  "colors": {
+    "primary": "#2E7D32",
+    "secondary": "#FF6B35", 
+    "accent": "#4CAF50"
+  },
+  "features": {
+    "showSeasonalContent": true,
+    "showNewsletter": true,
+    "showSocialProof": true,
+    "enableAnimations": true
+  }
+}

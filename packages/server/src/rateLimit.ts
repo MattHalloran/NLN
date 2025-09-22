@@ -1,9 +1,9 @@
 import { CODE } from "@local/shared";
 import { Request } from "express";
 import { GraphQLResolveInfo } from "graphql";
-import { CustomError } from "./error";
-import { genErrorCode, logger, LogLevel } from "./logger";
-import { initializeRedis } from "./redisConn";
+import { CustomError } from "./error.js";
+import { genErrorCode, logger, LogLevel } from "./logger.js";
+import { initializeRedis } from "./redisConn.js";
 
 export interface RateLimitProps {
     /**

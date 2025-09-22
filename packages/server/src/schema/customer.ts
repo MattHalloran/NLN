@@ -1,24 +1,24 @@
 import { CODE, COOKIE, logInSchema, passwordSchema, requestPasswordChangeSchema, signUpSchema } from "@local/shared";
 import { PrismaSelect } from "@paljs/plugins";
-import { gql } from "apollo-server-express";
+
 import bcrypt from "bcrypt";
 import { GraphQLResolveInfo } from "graphql";
-import { generateToken } from "../auth";
-import { HASHING_ROUNDS } from "../consts";
-import { Context } from "../context";
-import { customerFromEmail, getCart, getCustomerSelect, upsertCustomer } from "../db/models/customer";
-import { CustomError, validateArgs } from "../error";
-import { IWrap, RecursivePartial } from "../types";
-import { randomString } from "../utils";
-import { customerNotifyAdmin, sendResetPasswordLink, sendVerificationLink } from "../worker/email/queue";
-import { AccountStatus, AddCustomerRoleInput, ChangeCustomerStatusInput, Customer, CustomerInput, DeleteCustomerInput, LoginInput, RemoveCustomerRoleInput, RequestPasswordChangeInput, ResetPasswordInput, SignUpInput, UpdateCustomerInput } from "./types";
+import { generateToken } from "../auth.js";
+import { HASHING_ROUNDS } from "../consts.js";
+import { Context } from "../context.js";
+import { customerFromEmail, getCart, getCustomerSelect, upsertCustomer } from "../db/models/customer.js";
+import { CustomError, validateArgs } from "../error.js";
+import { IWrap, RecursivePartial } from "../types.js";
+import { randomString } from "../utils/index.js";
+import { customerNotifyAdmin, sendResetPasswordLink, sendVerificationLink } from "../worker/email/queue.js";
+import { AccountStatus, AddCustomerRoleInput, ChangeCustomerStatusInput, Customer, CustomerInput, DeleteCustomerInput, LoginInput, RemoveCustomerRoleInput, RequestPasswordChangeInput, ResetPasswordInput, SignUpInput, UpdateCustomerInput } from "./types.js";
 
 const LOGIN_ATTEMPTS_TO_SOFT_LOCKOUT = 5;
 const SOFT_LOCKOUT_DURATION_MS = 5 * 60 * 1000;
 const REQUEST_PASSWORD_RESET_DURATION_MS = 2 * 24 * 3600 * 1000;
 const LOGIN_ATTEMPTS_TO_HARD_LOCKOUT = 15;
 
-export const typeDef = gql`
+export const typeDef = /* GraphQL */ `
     enum AccountStatus {
         Deleted
         Unlocked

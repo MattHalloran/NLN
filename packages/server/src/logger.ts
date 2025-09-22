@@ -10,7 +10,7 @@
  * {"code":"0000-cKST", "error: "Some error message", "level":"error","message":"Detailed message","service":"express-server","timestamp":"2022-04-23 16:08:55"}
  */
 import winston from "winston";
-import { randomString } from "./utils";
+import { randomString } from "./utils/index.js";
 
 const LOG_DIR = `${process.env.PROJECT_DIR}/data/logs`;
 

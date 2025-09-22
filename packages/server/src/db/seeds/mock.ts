@@ -137,5 +137,6 @@ export async function seed(prisma: PrismaType) {
             },
         });
     }
+
     console.info("✅ Database mock complete.");
 }

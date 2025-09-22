@@ -1,5 +1,5 @@
 import { GraphQLError, Kind } from "graphql";
-import { logger } from "./logger";
+import { logger } from "./logger.js";
 
 interface Options {
     ignoreTypenames?: any

@@ -41,54 +41,57 @@ export const AboutPage = () => {
                 title="Our Story"
                 below={<InformationalTabs defaultTab={InformationalTabOption.About} />}
             />
-            <Box sx={{ minHeight: '100vh', width: '100%' }}>
+            <Box sx={{ minHeight: '100vh', overflowX: 'hidden' }}>
                 {/* Hero Section */}
                 <Box
                     sx={{
                         backgroundColor: theme.palette.mode === 'light' ? '#f8f6f3' : '#1a1816',
-                        py: 8,
-                        position: 'relative',
-                        width: '100%',
+                        py: { xs: 4, sm: 6, md: 8 },
                         borderBottom: `1px solid ${theme.palette.mode === 'light' ? '#e2ddd6' : '#2a2622'}`
                     }}
                 >
-                    <Container maxWidth="lg">
-                        <Stack direction="column" spacing={4} alignItems="center" sx={{ position: 'relative', zIndex: 1 }}>
-                            <Box sx={{ textAlign: 'center', mb: 6 }}>
+                    <Container maxWidth="lg" disableGutters sx={{ px: { xs: 2, sm: 3 } }}>
+                        <Stack direction="column" spacing={{ xs: 2, sm: 3, md: 4 }} alignItems="center" sx={{ position: 'relative', zIndex: 1, width: '100%' }}>
+                            <Box sx={{ textAlign: 'center', mb: { xs: 3, sm: 4, md: 6 }, width: '100%' }}>
                                 <Typography 
                                     variant="h1" 
                                     component="h1" 
-                                    sx={{ 
+                                    sx={{
                                         color: theme.palette.mode === 'light' ? '#2c4a2c' : '#e8e2d8',
                                         fontWeight: 400,
                                         mb: 3,
-                                        fontSize: { xs: '2.5rem', md: '3.2rem', lg: '3.8rem' },
+                                        fontSize: { xs: '2rem', sm: '2.5rem', md: '3.2rem', lg: '3.8rem' },
                                         fontFamily: 'serif',
-                                        letterSpacing: '0.02em'
+                                        letterSpacing: '0.02em',
+                                        wordBreak: 'break-word',
+                                        overflowWrap: 'break-word'
                                     }}
                                 >
                                     Our Heritage
                                 </Typography>
-                                <Box 
-                                    sx={{ 
-                                        width: 80, 
-                                        height: 3, 
-                                        backgroundColor: theme.palette.mode === 'light' ? '#6b8e6b' : '#9bb89b', 
-                                        mx: 'auto', 
-                                        mb: 4 
-                                    }} 
+                                <Box
+                                    sx={{
+                                        width: { xs: 60, sm: 80 },
+                                        height: 3,
+                                        backgroundColor: theme.palette.mode === 'light' ? '#6b8e6b' : '#9bb89b',
+                                        mx: 'auto',
+                                        mb: { xs: 2, sm: 3, md: 4 }
+                                    }}
                                 />
                                 <Typography 
                                     variant="h4" 
                                     component="h2" 
-                                    sx={{ 
+                                    sx={{
                                         color: theme.palette.mode === 'light' ? '#5a6b5a' : '#c4bdb2',
                                         fontWeight: 300,
-                                        fontSize: { xs: '1.3rem', md: '1.6rem' },
-                                        maxWidth: '700px',
+                                        fontSize: { xs: '1.1rem', sm: '1.3rem', md: '1.6rem' },
+                                        maxWidth: { xs: '100%', sm: '600px', md: '700px' },
                                         mx: 'auto',
                                         lineHeight: 1.6,
-                                        fontStyle: 'italic'
+                                        fontStyle: 'italic',
+                                        px: { xs: 1, sm: 0 },
+                                        wordBreak: 'break-word',
+                                        overflowWrap: 'break-word'
                                     }}
                                 >
                                     Four Decades of Horticultural Excellence in Southern New Jersey
@@ -96,18 +99,18 @@ export const AboutPage = () => {
                             </Box>
 
                             {/* Statistics Section */}
-                            <Grid container spacing={6} sx={{ mt: 2 }}>
-                                <Grid item xs={12} sm={4}>
-                                    <Box sx={{ textAlign: 'center', p: 4 }}>
-                                        <Typography 
-                                            variant="h2" 
-                                            component="div" 
-                                            sx={{ 
-                                                fontWeight: 300, 
+                            <Grid container spacing={{ xs: 0, sm: 4, md: 6 }} sx={{ mt: 2, mx: { xs: 0, sm: 'auto' } }}>
+                                <Grid item xs={12} sm={4} sx={{ pl: { xs: '0 !important', sm: 'inherit' } }}>
+                                    <Box sx={{ textAlign: 'center', p: { xs: 1, sm: 3, md: 4 } }}>
+                                        <Typography
+                                            variant="h2"
+                                            component="div"
+                                            sx={{
+                                                fontWeight: 300,
                                                 color: theme.palette.mode === 'light' ? '#4a6b4a' : '#b8c7b8',
                                                 mb: 2,
                                                 fontFamily: 'serif',
-                                                fontSize: { xs: '3rem', md: '3.5rem' }
+                                                fontSize: { xs: '2.5rem', sm: '3rem', md: '3.5rem' }
                                             }}
                                         >
                                             40
@@ -125,17 +128,17 @@ export const AboutPage = () => {
                                         </Typography>
                                     </Box>
                                 </Grid>
-                                <Grid item xs={12} sm={4}>
-                                    <Box sx={{ textAlign: 'center', p: 4 }}>
-                                        <Typography 
-                                            variant="h2" 
-                                            component="div" 
-                                            sx={{ 
-                                                fontWeight: 300, 
+                                <Grid item xs={12} sm={4} sx={{ pl: { xs: '0 !important', sm: 'inherit' } }}>
+                                    <Box sx={{ textAlign: 'center', p: { xs: 1, sm: 3, md: 4 } }}>
+                                        <Typography
+                                            variant="h2"
+                                            component="div"
+                                            sx={{
+                                                fontWeight: 300,
                                                 color: theme.palette.mode === 'light' ? '#4a6b4a' : '#b8c7b8',
                                                 mb: 2,
                                                 fontFamily: 'serif',
-                                                fontSize: { xs: '3rem', md: '3.5rem' }
+                                                fontSize: { xs: '2.5rem', sm: '3rem', md: '3.5rem' }
                                             }}
                                         >
                                             70+
@@ -153,17 +156,17 @@ export const AboutPage = () => {
                                         </Typography>
                                     </Box>
                                 </Grid>
-                                <Grid item xs={12} sm={4}>
-                                    <Box sx={{ textAlign: 'center', p: 4 }}>
-                                        <Typography 
-                                            variant="h2" 
-                                            component="div" 
-                                            sx={{ 
-                                                fontWeight: 300, 
+                                <Grid item xs={12} sm={4} sx={{ pl: { xs: '0 !important', sm: 'inherit' } }}>
+                                    <Box sx={{ textAlign: 'center', p: { xs: 1, sm: 3, md: 4 } }}>
+                                        <Typography
+                                            variant="h2"
+                                            component="div"
+                                            sx={{
+                                                fontWeight: 300,
                                                 color: theme.palette.mode === 'light' ? '#4a6b4a' : '#b8c7b8',
                                                 mb: 2,
                                                 fontFamily: 'serif',
-                                                fontSize: { xs: '3rem', md: '3.5rem' }
+                                                fontSize: { xs: '2.5rem', sm: '3rem', md: '3.5rem' }
                                             }}
                                         >
                                             3-25
@@ -187,41 +190,42 @@ export const AboutPage = () => {
                 </Box>
 
                 {/* Main Content Area */}
-                <Box sx={{ py: 10, backgroundColor: theme.palette.mode === 'light' ? '#ffffff' : '#0f0e0c', width: '100%' }}>
-                <Container maxWidth="lg">
-                    <Stack direction="column" spacing={6}>
+                <Box sx={{ py: { xs: 4, sm: 6, md: 10 }, backgroundColor: theme.palette.mode === 'light' ? '#ffffff' : '#0f0e0c', width: '100%', overflowX: 'hidden' }}>
+                <Container maxWidth="lg" disableGutters sx={{ px: { xs: 2, sm: 3 } }}>
+                    <Stack direction="column" spacing={{ xs: 3, sm: 4, md: 6 }}>
 
                         {/* Featured Company Motto */}
-                        <Box sx={{ mb: 8, textAlign: 'center' }}>
-                            <Box sx={{ maxWidth: '800px', mx: 'auto' }}>
-                                <Typography 
-                                    variant="h3" 
-                                    component="blockquote" 
-                                    sx={{ 
-                                        fontStyle: 'italic', 
+                        <Box sx={{ mb: { xs: 4, sm: 6, md: 8 }, textAlign: 'center', px: { xs: 1, sm: 0 }, width: '100%' }}>
+                            <Box sx={{ maxWidth: { xs: '100%', sm: '700px', md: '800px' }, mx: 'auto', position: 'relative', overflow: 'hidden' }}>
+                                <Typography
+                                    variant="h3"
+                                    component="blockquote"
+                                    sx={{
+                                        fontStyle: 'italic',
                                         textAlign: 'center',
                                         color: theme.palette.grey[800],
                                         fontWeight: 400,
-                                        fontSize: { xs: '1.6rem', md: '2.2rem' },
+                                        fontSize: { xs: '1.3rem', sm: '1.6rem', md: '2.2rem' },
                                         lineHeight: 1.5,
                                         mb: 3,
                                         fontFamily: 'serif',
                                         position: 'relative',
+                                        px: { xs: 3, sm: 0 },
                                         '&::before': {
                                             content: '""',
                                             position: 'absolute',
-                                            left: '-40px',
-                                            top: '-20px',
-                                            fontSize: '4rem',
+                                            left: { xs: '-20px', sm: '-40px' },
+                                            top: { xs: '-10px', sm: '-20px' },
+                                            fontSize: { xs: '2.5rem', sm: '4rem' },
                                             color: theme.palette.grey[300],
                                             fontFamily: 'serif'
                                         },
                                         '&::after': {
                                             content: '""',
                                             position: 'absolute',
-                                            right: '-40px',
-                                            bottom: '-20px',
-                                            fontSize: '4rem',
+                                            right: { xs: '-20px', sm: '-40px' },
+                                            bottom: { xs: '-10px', sm: '-20px' },
+                                            fontSize: { xs: '2.5rem', sm: '4rem' },
                                             color: theme.palette.grey[300],
                                             fontFamily: 'serif'
                                         }
@@ -229,7 +233,7 @@ export const AboutPage = () => {
                                 >
                                     Growing top quality material for buyers who are interested in the best.
                                 </Typography>
-                                <Divider sx={{ width: 200, mx: 'auto', mb: 2 }} />
+                                <Divider sx={{ width: { xs: 100, sm: 150, md: 200 }, mx: 'auto', mb: 2 }} />
                                 <Typography 
                                     variant="subtitle1" 
                                     sx={{ 
@@ -244,24 +248,26 @@ export const AboutPage = () => {
                         </Box>
 
                         {/* Main Content Sections */}
-                        <Grid container spacing={6}>
-                            <Grid item xs={12} md={8}>
-                                <Stack spacing={6}>
+                        <Grid container spacing={{ xs: 0, sm: 4, md: 6 }} sx={{ mx: { xs: 0, sm: 'auto' } }}>
+                            <Grid item xs={12} md={8} sx={{ width: '100%', boxSizing: 'border-box', pl: { xs: '0 !important', sm: 'inherit' } }}>
+                                <Stack spacing={{ xs: 3, sm: 4, md: 6 }} sx={{ width: '100%' }}>
                                     {/* Family Legacy Section */}
-                                    <Box 
-                                        sx={{ 
+                                    <Box
+                                        sx={{
                                             border: `1px solid ${theme.palette.grey[200]}`,
                                             '&:hover': {
                                                 borderColor: theme.palette.grey[300]
                                             },
-                                            transition: 'border-color 0.2s ease'
+                                            transition: 'border-color 0.2s ease',
+                                            width: '100%',
+                                            boxSizing: 'border-box'
                                         }}
                                     >
-                                        <Box sx={{ p: 6 }}>
-                                            <Typography 
-                                                variant="h4" 
-                                                component="h3" 
-                                                sx={{ 
+                                        <Box sx={{ p: { xs: 2, sm: 4, md: 6 } }}>
+                                            <Typography
+                                                variant="h4"
+                                                component="h3"
+                                                sx={{
                                                     color: theme.palette.grey[800],
                                                     fontWeight: 500,
                                                     fontSize: { xs: '1.6rem', md: '1.8rem' },
@@ -289,20 +295,22 @@ export const AboutPage = () => {
                                     </Box>
 
                                     {/* Innovation Section */}
-                                    <Box 
-                                        sx={{ 
+                                    <Box
+                                        sx={{
                                             border: `1px solid ${theme.palette.grey[200]}`,
                                             '&:hover': {
                                                 borderColor: theme.palette.grey[300]
                                             },
-                                            transition: 'border-color 0.2s ease'
+                                            transition: 'border-color 0.2s ease',
+                                            width: '100%',
+                                            boxSizing: 'border-box'
                                         }}
                                     >
-                                        <Box sx={{ p: 6 }}>
-                                            <Typography 
-                                                variant="h4" 
-                                                component="h3" 
-                                                sx={{ 
+                                        <Box sx={{ p: { xs: 2, sm: 4, md: 6 } }}>
+                                            <Typography
+                                                variant="h4"
+                                                component="h3"
+                                                sx={{
                                                     color: theme.palette.grey[800],
                                                     fontWeight: 500,
                                                     fontSize: { xs: '1.6rem', md: '1.8rem' },
@@ -330,20 +338,22 @@ export const AboutPage = () => {
                                     </Box>
 
                                     {/* Facility Section */}
-                                    <Box 
-                                        sx={{ 
+                                    <Box
+                                        sx={{
                                             border: `1px solid ${theme.palette.grey[200]}`,
                                             '&:hover': {
                                                 borderColor: theme.palette.grey[300]
                                             },
-                                            transition: 'border-color 0.2s ease'
+                                            transition: 'border-color 0.2s ease',
+                                            width: '100%',
+                                            boxSizing: 'border-box'
                                         }}
                                     >
-                                        <Box sx={{ p: 6 }}>
-                                            <Typography 
-                                                variant="h4" 
-                                                component="h3" 
-                                                sx={{ 
+                                        <Box sx={{ p: { xs: 2, sm: 4, md: 6 } }}>
+                                            <Typography
+                                                variant="h4"
+                                                component="h3"
+                                                sx={{
                                                     color: theme.palette.grey[800],
                                                     fontWeight: 500,
                                                     fontSize: { xs: '1.6rem', md: '1.8rem' },
@@ -369,9 +379,9 @@ export const AboutPage = () => {
                                                 With over <strong>seventy acres in production</strong>, New Life Nursery, Inc has the inventory capacity to meet your landscaping needs reliably and efficiently. All sizes, from 3-gallon shrubs to 25-gallon specimen trees, are cultivated here on our farm in <strong>Southern New Jersey</strong>, ensuring consistent quality and availability.
                                             </Typography>
 
-                                            <Box 
-                                                sx={{ 
-                                                    p: 4, 
+                                            <Box
+                                                sx={{
+                                                    p: { xs: 1.5, sm: 3, md: 4 },
                                                     backgroundColor: theme.palette.grey[50],
                                                     border: `1px solid ${theme.palette.grey[200]}`
                                                 }}
@@ -423,26 +433,28 @@ export const AboutPage = () => {
                                 </Stack>
                             </Grid>
                         
-                            <Grid item xs={12} md={4}>
-                                <Stack spacing={6}>
+                            <Grid item xs={12} md={4} sx={{ width: '100%', boxSizing: 'border-box', pl: { xs: '0 !important', sm: 'inherit' } }}>
+                                <Stack spacing={{ xs: 3, sm: 4, md: 6 }} sx={{ width: '100%' }}>
                                     {/* Quality Promise Card */}
-                                    <Box 
-                                        sx={{ 
+                                    <Box
+                                        sx={{
                                             backgroundColor: theme.palette.grey[50],
                                             border: `1px solid ${theme.palette.grey[200]}`,
                                             '&:hover': {
                                                 backgroundColor: theme.palette.grey[100]
                                             },
-                                            transition: 'background-color 0.2s ease'
+                                            transition: 'background-color 0.2s ease',
+                                            width: '100%',
+                                            boxSizing: 'border-box'
                                         }}
                                     >
-                                        <Box sx={{ p: 5, textAlign: 'center' }}>
-                                            <Typography 
-                                                variant="h5" 
-                                                component="h3" 
-                                                gutterBottom 
-                                                sx={{ 
-                                                    color: theme.palette.grey[800], 
+                                        <Box sx={{ p: { xs: 2, sm: 4, md: 5 }, textAlign: 'center' }}>
+                                            <Typography
+                                                variant="h5"
+                                                component="h3"
+                                                gutterBottom
+                                                sx={{
+                                                    color: theme.palette.grey[800],
                                                     mb: 4,
                                                     fontWeight: 500,
                                                     fontFamily: 'serif',
@@ -451,7 +463,7 @@ export const AboutPage = () => {
                                             >
                                                 Quality Assurance
                                             </Typography>
-                                            <Divider sx={{ width: 60, mx: 'auto', mb: 4, borderColor: theme.palette.primary.main }} />
+                                            <Divider sx={{ width: { xs: 40, sm: 50, md: 60 }, mx: 'auto', mb: { xs: 2, sm: 3, md: 4 }, borderColor: theme.palette.primary.main }} />
                                             <Typography 
                                                 variant="body1" 
                                                 sx={{ 
@@ -466,7 +478,7 @@ export const AboutPage = () => {
                                             <Box
                                                 sx={{
                                                     display: 'inline-block',
-                                                    px: 3,
+                                                    px: { xs: 2, sm: 3 },
                                                     py: 1,
                                                     border: `1px solid ${theme.palette.primary.main}`,
                                                     color: theme.palette.primary.main,
@@ -481,23 +493,25 @@ export const AboutPage = () => {
                                     </Box>
 
                                     {/* Signature Card */}
-                                    <Box 
-                                        sx={{ 
+                                    <Box
+                                        sx={{
                                             backgroundColor: 'white',
                                             border: `1px solid ${theme.palette.grey[200]}`,
                                             '&:hover': {
                                                 borderColor: theme.palette.grey[300]
                                             },
-                                            transition: 'border-color 0.2s ease'
+                                            transition: 'border-color 0.2s ease',
+                                            width: '100%',
+                                            boxSizing: 'border-box'
                                         }}
                                     >
-                                        <Box sx={{ p: 5, textAlign: 'center' }}>
-                                            <Typography 
-                                                variant="h5" 
-                                                component="h3" 
-                                                gutterBottom 
-                                                sx={{ 
-                                                    color: theme.palette.grey[800], 
+                                        <Box sx={{ p: { xs: 2, sm: 4, md: 5 }, textAlign: 'center' }}>
+                                            <Typography
+                                                variant="h5"
+                                                component="h3"
+                                                gutterBottom
+                                                sx={{
+                                                    color: theme.palette.grey[800],
                                                     mb: 4,
                                                     fontWeight: 500,
                                                     fontFamily: 'serif',
@@ -506,12 +520,14 @@ export const AboutPage = () => {
                                             >
                                                 With Warm Regards
                                             </Typography>
-                                            <Box 
-                                                sx={{ 
-                                                    p: 3,
+                                            <Box
+                                                sx={{
+                                                    p: { xs: 2, sm: 3 },
                                                     backgroundColor: theme.palette.grey[50],
                                                     border: `1px solid ${theme.palette.grey[200]}`,
-                                                    mb: 3
+                                                    mb: { xs: 2, sm: 3 },
+                                                    width: '100%',
+                                                    boxSizing: 'border-box'
                                                 }}
                                             >
                                                 <img 
@@ -539,23 +555,25 @@ export const AboutPage = () => {
                                     </Box>
 
                                     {/* Social Media Card */}
-                                    <Box 
-                                        sx={{ 
+                                    <Box
+                                        sx={{
                                             backgroundColor: theme.palette.grey[50],
                                             border: `1px solid ${theme.palette.grey[200]}`,
                                             '&:hover': {
                                                 backgroundColor: theme.palette.grey[100]
                                             },
-                                            transition: 'background-color 0.2s ease'
+                                            transition: 'background-color 0.2s ease',
+                                            width: '100%',
+                                            boxSizing: 'border-box'
                                         }}
                                     >
-                                        <Box sx={{ p: 5, textAlign: 'center' }}>
-                                            <Typography 
-                                                variant="h5" 
-                                                component="h3" 
-                                                gutterBottom 
-                                                sx={{ 
-                                                    color: theme.palette.grey[800], 
+                                        <Box sx={{ p: { xs: 2, sm: 4, md: 5 }, textAlign: 'center' }}>
+                                            <Typography
+                                                variant="h5"
+                                                component="h3"
+                                                gutterBottom
+                                                sx={{
+                                                    color: theme.palette.grey[800],
                                                     mb: 4,
                                                     fontWeight: 500,
                                                     fontFamily: 'serif',
@@ -564,7 +582,7 @@ export const AboutPage = () => {
                                             >
                                                 Stay Connected
                                             </Typography>
-                                            <Divider sx={{ width: 60, mx: 'auto', mb: 4, borderColor: theme.palette.primary.main }} />
+                                            <Divider sx={{ width: { xs: 40, sm: 50, md: 60 }, mx: 'auto', mb: { xs: 2, sm: 3, md: 4 }, borderColor: theme.palette.primary.main }} />
                                             <Typography 
                                                 variant="body1" 
                                                 paragraph 

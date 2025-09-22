@@ -50,9 +50,4 @@
     <priority>0.4</priority>
     <changefreq>never</changefreq>
   </url>
-  <url>
-    <loc>https://newlifenurseryinc.com`$APP_LINKS.Shopping</loc>
-    <priority>0.9</priority>
-    <changefreq>never</changefreq>
-  </url>
 </urlset>

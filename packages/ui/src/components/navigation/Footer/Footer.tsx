@@ -1,13 +1,23 @@
 import { APP_LINKS } from "@local/shared";
-import { Box, ButtonBase, Grid, List, ListItem, ListItemIcon, ListItemText, Tooltip, useTheme } from "@mui/material";
+import { Box, ButtonBase, Container, Grid, IconButton, Link, Stack, Typography, useTheme } from "@mui/material";
 import AmericanHort from "assets/img/american-hort.png";
 import NJNLA from "assets/img/njnla_logo.jpg";
 import ProvenWinners from "assets/img/proven-winners.png";
 import { CopyrightBreadcrumbs } from "components";
 import { BusinessContext } from "contexts/BusinessContext";
 import { SessionContext } from "contexts/SessionContext";
-import { BusinessIcon, EmailIcon, PhoneIcon, PrintIcon } from "icons";
-import { SvgComponent } from "icons/types";
+import {
+    MapPin,
+    Phone,
+    Printer,
+    Mail,
+    Info,
+    FileText,
+    Camera,
+    ExternalLink,
+    LogIn
+} from "lucide-react";
+import { isObject } from "lodash-es";
 import { useContext } from "react";
 import { useLocation } from "route";
 import { getServerUrl, printAvailability } from "utils";
@@ -18,96 +28,318 @@ export const Footer = () => {
     const session = useContext(SessionContext);
     const business = useContext(BusinessContext);
 
-    const contactAPP_LINKS: [string, string, string | null | undefined, string | null | undefined, SvgComponent][] = [
-        ["address", "View in Google Maps", business?.ADDRESS?.Link, business?.ADDRESS?.Label, BusinessIcon],
-        ["contact-phone", "Call Us", business?.PHONE?.Link, business?.PHONE?.Label, PhoneIcon],
-        ["contact-fax", "Fax Us", business?.FAX?.Link, business?.FAX?.Label, PrintIcon],
-        ["contact-email", "Email Us", business?.EMAIL?.Link, business?.EMAIL?.Label, EmailIcon],
+    const contactLinks = [
+        {
+            icon: <MapPin size={18} />,
+            label: business?.ADDRESS?.Label || "Address",
+            href: business?.ADDRESS?.Link,
+            tooltip: "View in Google Maps"
+        },
+        {
+            icon: <Phone size={18} />,
+            label: business?.PHONE?.Label || "Phone",
+            href: business?.PHONE?.Link,
+            tooltip: "Call Us"
+        },
+        {
+            icon: <Printer size={18} />,
+            label: business?.FAX?.Label || "Fax",
+            href: business?.FAX?.Link,
+            tooltip: "Fax Us"
+        },
+        {
+            icon: <Mail size={18} />,
+            label: business?.EMAIL?.Label || "Email",
+            href: business?.EMAIL?.Link,
+            tooltip: "Email Us"
+        }
     ];
 
-    const bottomImages: [string, string, any][] = [
-        ["https://www.provenwinners.com/", "We Sell Proven Winners - The #1 Plant Brand", ProvenWinners],
-        ["https://www.americanhort.org/", "Proud member of the AmericanHort", AmericanHort],
-        ["https://www.njnla.org/", "Proud member of the New Jersey Nursery and Landscape Association", NJNLA],
+    const partnerLogos = [
+        {
+            href: "https://www.provenwinners.com/",
+            alt: "We Sell Proven Winners - The #1 Plant Brand",
+            src: ProvenWinners
+        },
+        {
+            href: "https://www.americanhort.org/",
+            alt: "Proud member of the AmericanHort",
+            src: AmericanHort
+        },
+        {
+            href: "https://www.njnla.org/",
+            alt: "Proud member of the New Jersey Nursery and Landscape Association",
+            src: NJNLA
+        }
     ];
 
     return (
-        <Box sx={{
-            overflow: "hidden",
-            backgroundColor: palette.primary.dark,
-            color: palette.primary.contrastText,
-            position: "relative",
-            paddingBottom: "7vh",
-        }}>
-            <Grid container justifyContent='center' spacing={1}>
-                <Grid item xs={12} sm={6}>
-                    <List component="nav">
-                        <ListItem component="h3" >
-                            <ListItemText sx={{ textTransform: "uppercase" }} primary="Resources" />
-                        </ListItem>
-                        <ListItem button component="a" onClick={() => setLocation(APP_LINKS.About)} >
-                            <ListItemText primary="About Us" />
-                        </ListItem>
-                        <ListItem
-                            button
-                            component="a"
-                            href={`${getServerUrl()}/Credit_App-2010.doc`}
-                            target='_blank'
-                            rel="noopener noreferrer"
-                            download={`Commercial Credit Application - ${business?.BUSINESS_NAME?.Short}`}
+        <Box
+            component="footer"
+            sx={{
+                background: `linear-gradient(135deg, ${palette.mode === "light" ? "#1a4d3a" : "#0f2920"} 0%, ${palette.mode === "light" ? "#2d5a47" : "#1a3d33"} 100%)`,
+                color: palette.primary.contrastText,
+                py: { xs: 4, md: 6 },
+                pb: { xs: 12, md: 6 }, // Extra bottom padding on mobile for BottomNav
+                mt: "auto",
+            }}
+        >
+            <Container maxWidth="lg">
+                {/* Main Footer Content */}
+                <Grid container spacing={{ xs: 3, md: 4 }}>
+                    {/* Resources Section */}
+                    <Grid item xs={12} sm={6} md={3}>
+                        <Typography
+                            variant="h6"
+                            sx={{
+                                fontWeight: 600,
+                                mb: 2,
+                                fontSize: { xs: "1rem", md: "1.1rem" },
+                                textTransform: "uppercase",
+                                letterSpacing: 0.5,
+                            }}
                         >
-                            <ListItemText primary="Credit App" />
-                        </ListItem>
-                        <ListItem button component="a" onClick={() => printAvailability(session, business?.BUSINESS_NAME?.Long, business?.PHONE?.Label, business?.EMAIL?.Label)} >
-                            <ListItemText primary="Print Availability" />
-                        </ListItem>
-                        <ListItem button component="a" onClick={() => setLocation(APP_LINKS.Gallery)} >
-                            <ListItemText primary="Gallery" />
-                        </ListItem>
-                    </List>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                    <List component="nav">
-                        <ListItem component="h3" >
-                            <ListItemText sx={{ textTransform: "uppercase" }} primary="Contact" />
-                        </ListItem>
-                        {contactAPP_LINKS.map(([label, tooltip, src, text, Icon], key) => (
-                            <Tooltip key={key} title={tooltip} placement="left">
-                                <ListItem button component="a" aria-label={label} href={src ?? ""}>
-                                    <ListItemIcon>
-                                        <Icon fill={palette.primary.contrastText} ></Icon>
-                                    </ListItemIcon>
-                                    <ListItemText primary={text} />
-                                </ListItem>
-                            </Tooltip>
-                        ))}
-                    </List>
-                </Grid>
-                {bottomImages.map(([src, alt, img], key) => (
-                    <Grid key={key} item xs={4}>
-                        <Tooltip title={alt} placement="bottom">
-                            <ButtonBase sx={{
-                                maxWidth: "33vw",
-                                padding: 1,
-                            }}>
-                                <a href={src} target="_blank" rel="noopener noreferrer">
-                                    <Box
-                                        component="img"
-                                        alt={alt}
-                                        src={img}
-                                        sx={{
-                                            maxWidth: "100%",
-                                            maxHeight: 200,
-                                            background: palette.primary.contrastText,
-                                        }}
-                                    />
-                                </a>
-                            </ButtonBase>
-                        </Tooltip>
+                            Resources
+                        </Typography>
+                        <Stack spacing={1.5}>
+                            <Link
+                                component="button"
+                                onClick={() => setLocation(APP_LINKS.About)}
+                                sx={{
+                                    color: "inherit",
+                                    textDecoration: "none",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 1,
+                                    fontSize: "0.9rem",
+                                    transition: "all 0.3s ease",
+                                    "&:hover": {
+                                        color: palette.secondary.main,
+                                        transform: "translateX(4px)",
+                                    },
+                                }}
+                            >
+                                <Info size={16} />
+                                About Us
+                            </Link>
+                            <Link
+                                href={`${getServerUrl()}/Credit_App-2010.doc`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                download={`Commercial Credit Application - ${business?.BUSINESS_NAME?.Short}`}
+                                sx={{
+                                    color: "inherit",
+                                    textDecoration: "none",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 1,
+                                    fontSize: "0.9rem",
+                                    transition: "all 0.3s ease",
+                                    "&:hover": {
+                                        color: palette.secondary.main,
+                                        transform: "translateX(4px)",
+                                    },
+                                }}
+                            >
+                                <FileText size={16} />
+                                Credit App
+                                <ExternalLink size={12} />
+                            </Link>
+                            <Link
+                                component="button"
+                                onClick={() => printAvailability(session, business?.BUSINESS_NAME?.Long, business?.PHONE?.Label, business?.EMAIL?.Label)}
+                                sx={{
+                                    color: "inherit",
+                                    textDecoration: "none",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 1,
+                                    fontSize: "0.9rem",
+                                    transition: "all 0.3s ease",
+                                    "&:hover": {
+                                        color: palette.secondary.main,
+                                        transform: "translateX(4px)",
+                                    },
+                                }}
+                            >
+                                <Printer size={16} />
+                                Print Availability
+                            </Link>
+                            <Link
+                                component="button"
+                                onClick={() => setLocation(APP_LINKS.Gallery)}
+                                sx={{
+                                    color: "inherit",
+                                    textDecoration: "none",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 1,
+                                    fontSize: "0.9rem",
+                                    transition: "all 0.3s ease",
+                                    "&:hover": {
+                                        color: palette.secondary.main,
+                                        transform: "translateX(4px)",
+                                    },
+                                }}
+                            >
+                                <Camera size={16} />
+                                Gallery
+                            </Link>
+                            {/* Show login only when not logged in */}
+                            {(!isObject(session) || !session || Object.keys(session).length === 0) && (
+                                <Link
+                                    component="button"
+                                    onClick={() => setLocation(APP_LINKS.LogIn)}
+                                    sx={{
+                                        color: "inherit",
+                                        textDecoration: "none",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 1,
+                                        fontSize: "0.9rem",
+                                        transition: "all 0.3s ease",
+                                        "&:hover": {
+                                            color: palette.secondary.main,
+                                            transform: "translateX(4px)",
+                                        },
+                                    }}
+                                >
+                                    <LogIn size={16} />
+                                    Admin Login
+                                </Link>
+                            )}
+                        </Stack>
                     </Grid>
-                ))}
-            </Grid>
-            <CopyrightBreadcrumbs textColor={palette.primary.contrastText} sx={{ color: palette.primary.contrastText }} />
+
+                    {/* Contact Section */}
+                    <Grid item xs={12} sm={6} md={5}>
+                        <Typography
+                            variant="h6"
+                            sx={{
+                                fontWeight: 600,
+                                mb: 2,
+                                fontSize: { xs: "1rem", md: "1.1rem" },
+                                textTransform: "uppercase",
+                                letterSpacing: 0.5,
+                            }}
+                        >
+                            Contact
+                        </Typography>
+                        <Grid container spacing={1.5}>
+                            {contactLinks.map((contact, index) => (
+                                contact.href && contact.label ? (
+                                    <Grid item xs={12} sm={12} md={6} key={index}>
+                                        <Link
+                                            href={contact.href}
+                                            target={contact.href.startsWith("http") ? "_blank" : undefined}
+                                            rel={contact.href.startsWith("http") ? "noopener noreferrer" : undefined}
+                                            sx={{
+                                                color: "inherit",
+                                                textDecoration: "none",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: 1,
+                                                p: 1,
+                                                borderRadius: 1,
+                                                fontSize: "0.85rem",
+                                                transition: "all 0.3s ease",
+                                                "&:hover": {
+                                                    backgroundColor: "rgba(255, 255, 255, 0.1)",
+                                                    transform: "translateY(-2px)",
+                                                },
+                                            }}
+                                            title={contact.tooltip}
+                                        >
+                                            <Box sx={{ color: "#ffffff" }}>
+                                                {contact.icon}
+                                            </Box>
+                                            <Typography
+                                                variant="body2"
+                                                sx={{
+                                                    fontSize: "0.85rem",
+                                                    wordBreak: "break-word",
+                                                    overflowWrap: "break-word"
+                                                }}
+                                            >
+                                                {contact.label}
+                                            </Typography>
+                                        </Link>
+                                    </Grid>
+                                ) : null
+                            ))}
+                        </Grid>
+                    </Grid>
+
+                    {/* Partner Logos */}
+                    <Grid item xs={12} md={4}>
+                        <Typography
+                            variant="h6"
+                            sx={{
+                                fontWeight: 600,
+                                mb: 2,
+                                fontSize: { xs: "1rem", md: "1.1rem" },
+                                textTransform: "uppercase",
+                                letterSpacing: 0.5,
+                            }}
+                        >
+                            Partners
+                        </Typography>
+                        <Grid container spacing={2}>
+                            {partnerLogos.map((logo, index) => (
+                                <Grid item xs={4} md={12} key={index}>
+                                    <Link
+                                        href={logo.href}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        sx={{
+                                            display: "block",
+                                            p: { xs: 1.5, md: 2 },
+                                            borderRadius: 2,
+                                            backgroundColor: "rgba(255, 255, 255, 0.95)",
+                                            transition: "all 0.3s ease",
+                                            "&:hover": {
+                                                backgroundColor: "rgba(255, 255, 255, 1)",
+                                                transform: "translateY(-4px)",
+                                                boxShadow: "0 8px 20px rgba(0, 0, 0, 0.3)",
+                                            },
+                                        }}
+                                        title={logo.alt}
+                                    >
+                                        <Box
+                                            component="img"
+                                            src={logo.src}
+                                            alt={logo.alt}
+                                            sx={{
+                                                width: "100%",
+                                                height: { xs: 80, md: 90 },
+                                                objectFit: "contain",
+                                            }}
+                                        />
+                                    </Link>
+                                </Grid>
+                            ))}
+                        </Grid>
+                    </Grid>
+                </Grid>
+
+                {/* Copyright Section */}
+                <Box
+                    sx={{
+                        borderTop: `1px solid rgba(255, 255, 255, 0.2)`,
+                        mt: 4,
+                        pt: 3,
+                        textAlign: "center",
+                    }}
+                >
+                    <CopyrightBreadcrumbs
+                        textColor={palette.primary.contrastText}
+                        sx={{
+                            color: "rgba(255, 255, 255, 0.8)",
+                            fontSize: "0.8rem",
+                        }}
+                    />
+                </Box>
+            </Container>
         </Box>
     );
 };

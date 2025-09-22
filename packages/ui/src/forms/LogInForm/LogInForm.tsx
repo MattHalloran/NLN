@@ -26,7 +26,7 @@ const emailStartAdornment = {
 };
 
 export const LogInForm = () => {
-    const { spacing } = useTheme();
+    const { spacing, palette } = useTheme();
     const [, setLocation] = useLocation();
     const { verificationCode } = useMemo<{ verificationCode: string | undefined }>(() => {
         const searchParams = parseSearchParams();
@@ -60,7 +60,7 @@ export const LogInForm = () => {
                         PubSub.get().publishSnack({ message: "Account verified.", severity: SnackSeverity.Success });
                     }
                     PubSub.get().publishSession({ ...data, theme: (data.theme as "light" | "dark") || "light" });
-                    setLocation(APP_LINKS.Shopping);
+                    setLocation(APP_LINKS.Home);
                 },
                 onError: (response) => {
                     if (Array.isArray(response.graphQLErrors) && response.graphQLErrors.some(e => e.extensions?.code === CODE.MustResetPassword.code)) {
@@ -89,12 +89,9 @@ export const LogInForm = () => {
     ] as const;
 
     return (
-        <Box sx={{
-            width: "100%",
-            marginTop: spacing(3),
-        }}>
+        <Box sx={{ width: "100%" }}>
             <form onSubmit={formik.handleSubmit}>
-                <Grid container spacing={2}>
+                <Grid container spacing={3}>
                     <Grid item xs={12}>
                         <TextField
                             fullWidth
@@ -123,18 +120,22 @@ export const LogInForm = () => {
                             helperText={formik.touched.password ? formik.errors.password : null}
                         />
                     </Grid>
+                    <Grid item xs={12} sx={{ mt: 2 }}>
+                        <Button
+                            fullWidth
+                            disabled={loading}
+                            type="submit"
+                            color="primary"
+                            variant="contained"
+                            size="large"
+                        >
+                            {loading ? "Signing In..." : "Sign In"}
+                        </Button>
+                    </Grid>
                 </Grid>
-                <Box width="100%" display="flex" flexDirection="column" p={2}>
-                    <Button
-                        fullWidth
-                        disabled={loading}
-                        type="submit"
-                        color="secondary"
-                        variant='contained'
-                        sx={formSubmit}
-                    >
-                        Log In
-                    </Button>
+
+                {/* Navigation Links */}
+                <Box sx={{ textAlign: "center", mt: 4, pt: 3, borderTop: `1px solid ${palette.divider}` }}>
                     <BreadcrumbsBase
                         paths={breadcrumbPaths}
                         separator={"•"}
