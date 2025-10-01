@@ -10,7 +10,12 @@
 // To learn more about the benefits of this model and instructions on how to
 // opt-in, read https://cra.link/PWA
 
-function urlBase64ToUint8Array(base64String) {
+interface Config {
+    onSuccess?: (registration: ServiceWorkerRegistration) => void;
+    onUpdate?: (registration: ServiceWorkerRegistration) => void;
+}
+
+function urlBase64ToUint8Array(base64String: string): Uint8Array {
     const padding = "=".repeat((4 - base64String.length % 4) % 4);
     const base64 = (base64String + padding)
         .replace(/\-/g, "+")
@@ -25,7 +30,7 @@ function urlBase64ToUint8Array(base64String) {
     return outputArray;
 }
 
-export async function requestNotificationPermission() {
+export async function requestNotificationPermission(): Promise<NotificationPermission> {
     const permission = await Notification.requestPermission();
     if (permission === "granted") {
         console.info("Notification permission granted!");
@@ -35,7 +40,7 @@ export async function requestNotificationPermission() {
     return permission;
 }
 
-export async function subscribeUserToPush() {
+export async function subscribeUserToPush(): Promise<PushSubscription | null> {
     if (!("PushManager" in window)) {
         console.warn("Push notifications are not supported in this browser. This could be because the browser is too old or because it is running in a non-secure context (http instead of https).");
         return null;
@@ -51,11 +56,11 @@ export async function subscribeUserToPush() {
             { scope: import.meta.env.BASE_URL },
         );
         console.log("getting subscribeoptions", import.meta.env);
-        const subscribeOptions = {
+        const subscribeOptions: PushSubscriptionOptions = {
             userVisibleOnly: true,
             applicationServerKey: urlBase64ToUint8Array(
                 import.meta.env.VITE_VAPID_PUBLIC_KEY,
-            ),
+            ).buffer as ArrayBuffer,
         };
         console.log("push notification subscribeOptions: ", subscribeOptions);
         const pushSubscription = await registration.pushManager.subscribe(subscribeOptions);
@@ -78,7 +83,7 @@ const isLocalhost = Boolean(
     window.location.hostname.match(/^127(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$/),
 );
 
-export function register(config) {
+export function register(config?: Config): void {
     console.log("register 1", config, "serviceWorker" in navigator);
     if (import.meta.env.PROD && "serviceWorker" in navigator) {
         console.log("register 2");
@@ -95,7 +100,7 @@ export function register(config) {
 
         console.log("register 5");
         // Function for checking registration of service worker
-        const checkRegister = () => {
+        const checkRegister = (): void => {
             const swUrl = `${window.location.origin}/service-worker.js`;
             console.log("register 6 - checking register...", swUrl);
             if (isLocalhost) {
@@ -129,7 +134,7 @@ export function register(config) {
     }
 }
 
-function registerValidSW(swUrl, config) {
+function registerValidSW(swUrl: string, config?: Config): void {
     navigator.serviceWorker
         .register(swUrl)
         .then((registration) => {
@@ -177,7 +182,7 @@ function registerValidSW(swUrl, config) {
         });
 }
 
-function checkValidServiceWorker(swUrl, config) {
+function checkValidServiceWorker(swUrl: string, config?: Config): void {
     // Check if the service worker can be found. If it can't reload the page.
     fetch(swUrl, {
         headers: { "Service-Worker": "script" },
@@ -205,7 +210,7 @@ function checkValidServiceWorker(swUrl, config) {
         });
 }
 
-export function unregister() {
+export function unregister(): void {
     if ("serviceWorker" in navigator) {
         navigator.serviceWorker.ready
             .then((registration) => {
@@ -218,24 +223,24 @@ export function unregister() {
 }
 
 // Force cleanup of old service workers and caches
-export async function forceCleanup() {
+export async function forceCleanup(): Promise<boolean> {
     if (!("serviceWorker" in navigator)) {
-        return;
+        return false;
     }
-    
+
     try {
         // Get all registrations
         const registrations = await navigator.serviceWorker.getRegistrations();
         console.log("Found service worker registrations:", registrations.length);
-        
+
         // Unregister all existing service workers
         await Promise.all(
             registrations.map(async (registration) => {
                 console.log("Unregistering service worker:", registration.scope);
                 return registration.unregister();
-            })
+            }),
         );
-        
+
         // Clear all caches
         const cacheNames = await caches.keys();
         console.log("Found caches:", cacheNames);
@@ -243,9 +248,9 @@ export async function forceCleanup() {
             cacheNames.map(async (cacheName) => {
                 console.log("Deleting cache:", cacheName);
                 return caches.delete(cacheName);
-            })
+            }),
         );
-        
+
         console.log("Service worker cleanup completed");
         return true;
     } catch (error) {

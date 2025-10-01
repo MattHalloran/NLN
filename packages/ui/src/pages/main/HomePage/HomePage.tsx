@@ -7,7 +7,7 @@ import {
     AboutStory, 
     InteractiveElements, 
     LocationVisit,
-    ScrollAnimation 
+    ScrollAnimation, 
 } from "components";
 import { TopBar } from "components/navigation/TopBar/TopBar";
 

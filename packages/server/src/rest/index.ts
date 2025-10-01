@@ -28,9 +28,9 @@ router.get("/", (_req, res) => {
             v1: {
                 health: "/api/rest/v1/health",
                 landingPage: "/api/rest/v1/landing-page",
-                plants: "/api/rest/v1/plants"
-            }
-        }
+                plants: "/api/rest/v1/plants",
+            },
+        },
     });
 });
 

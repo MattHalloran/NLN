@@ -8,13 +8,19 @@ import { onlyPrimitives } from "../../utils/objectTools";
 
 // Validates email address, and returns customer data
 export async function customerFromEmail(email: string, prisma: PrismaType) {
-    if (!email) throw new CustomError(CODE.BadCredentials);
+    if (!email) {
+        throw new CustomError(CODE.BadCredentials);
+    }
     // Validate email address
     const emailRow = await prisma.email.findUnique({ where: { emailAddress: email } });
-    if (!emailRow || !emailRow.customerId) throw new CustomError(CODE.BadCredentials);
+    if (!emailRow || !emailRow.customerId) {
+        throw new CustomError(CODE.BadCredentials);
+    }
     // Find customer
     const customer = await prisma.customer.findUnique({ where: { id: emailRow.customerId } });
-    if (!customer) throw new CustomError(CODE.ErrorUnknown);
+    if (!customer) {
+        throw new CustomError(CODE.ErrorUnknown);
+    }
     return customer;
 }
 
@@ -30,7 +36,9 @@ export function getCustomerSelect(info: GraphQLResolveInfo) {
 // so it must be manually queried
 export async function getCart(prisma: PrismaType, info: GraphQLResolveInfo, customerId: string) {
     const selectInfo = new PrismaSelect(info).value.select.cart;
-    if (!selectInfo) return null;
+    if (!selectInfo) {
+        return null;
+    }
     const results = await prisma.order.findMany({
         where: { customerId, status: ORDER_STATUS.Draft },
         ...selectInfo,
@@ -39,17 +47,31 @@ export async function getCart(prisma: PrismaType, info: GraphQLResolveInfo, cust
 }
 
 /** Upsert a customer, with business, emails, phones, and roles */
-export async function upsertCustomer({ prisma, info, data }: { prisma: PrismaType, info: GraphQLResolveInfo, data: any }) {
+export async function upsertCustomer({
+    prisma,
+    info,
+    data,
+}: {
+    prisma: PrismaType;
+    info: GraphQLResolveInfo;
+    data: any;
+}) {
     const cleanedData: any = onlyPrimitives(data);
 
     // Check if any of the provided emails or phones are in use
-    for (const email of (data.emails ?? [])) {
-        const emailExists = await prisma.email.findUnique({ where: { emailAddress: email.emailAddress } });
-        if (emailExists && emailExists.id !== email.id) throw new CustomError(CODE.EmailInUse);
+    for (const email of data.emails ?? []) {
+        const emailExists = await prisma.email.findUnique({
+            where: { emailAddress: email.emailAddress },
+        });
+        if (emailExists && emailExists.id !== email.id) {
+            throw new CustomError(CODE.EmailInUse);
+        }
     }
-    for (const phone of (data.phones ?? [])) {
+    for (const phone of data.phones ?? []) {
         const phoneExists = await prisma.phone.findUnique({ where: { number: phone.number } });
-        if (phoneExists && phoneExists.id !== phone.id) throw new CustomError(CODE.PhoneInUse);
+        if (phoneExists && phoneExists.id !== phone.id) {
+            throw new CustomError(CODE.PhoneInUse);
+        }
     }
 
     // Check if customer exists
@@ -70,7 +92,7 @@ export async function upsertCustomer({ prisma, info, data }: { prisma: PrismaTyp
         }
 
         // Create a transaction to ensure all operations succeed or fail together
-        let transaction: any = [];
+        const transaction: any = [];
 
         // Upsert business
         if (data.business) {
@@ -81,24 +103,26 @@ export async function upsertCustomer({ prisma, info, data }: { prisma: PrismaTyp
                     data: {
                         ...data.business,
                         employees: { connect: { id: customerId } },
-                    }
+                    },
                 });
             } else {
                 upsertBusinessOperation = prisma.business.create({
                     data: {
                         ...data.business,
                         employees: { connect: { id: customerId } },
-                    }
+                    },
                 });
             }
             transaction.push(upsertBusinessOperation);
         }
 
         // Upsert emails
-        data.emails?.forEach(email => {
+        data.emails?.forEach((email: any) => {
             let upsertEmailOperation;
             if (!email.id) {
-                upsertEmailOperation = prisma.email.create({ data: { ...email, customerId: customerId } });
+                upsertEmailOperation = prisma.email.create({
+                    data: { ...email, customerId: customerId },
+                });
             } else {
                 upsertEmailOperation = prisma.email.update({
                     where: { id: email.id },
@@ -109,10 +133,12 @@ export async function upsertCustomer({ prisma, info, data }: { prisma: PrismaTyp
         });
 
         // Upsert phones
-        data.phones?.forEach(phone => {
+        data.phones?.forEach((phone: any) => {
             let upsertPhoneOperation;
             if (!phone.id) {
-                upsertPhoneOperation = prisma.phone.create({ data: { ...phone, customerId: customerId } });
+                upsertPhoneOperation = prisma.phone.create({
+                    data: { ...phone, customerId: customerId },
+                });
             } else {
                 upsertPhoneOperation = prisma.phone.update({
                     where: { id: phone.id },
@@ -123,10 +149,12 @@ export async function upsertCustomer({ prisma, info, data }: { prisma: PrismaTyp
         });
 
         // Upsert customer roles
-        data.roles?.forEach(role => {
-            if (!role.id) return;
+        data.roles?.forEach((role: any) => {
+            if (!role.id) {
+                return;
+            }
             const roleData = { customerId: customerId, roleId: role.id };
-            let upsertRoleOperation = prisma.customer_roles.upsert({
+            const upsertRoleOperation = prisma.customer_roles.upsert({
                 where: { customer_roles_customerid_roleid_unique: roleData },
                 create: roleData,
                 update: roleData,
@@ -143,7 +171,12 @@ export async function upsertCustomer({ prisma, info, data }: { prisma: PrismaTyp
     // Get GraphQL select info
     const prismaInfo = getCustomerSelect(info);
     const cart = await getCart(prisma, info, customerId);
-    const customerData: any = await prisma.customer.findUnique({ where: { id: customerId }, ...prismaInfo });
-    if (cart) customerData.cart = cart;
+    const customerData: any = await prisma.customer.findUnique({
+        where: { id: customerId },
+        ...prismaInfo,
+    });
+    if (cart) {
+        customerData.cart = cart;
+    }
     return customerData;
 }

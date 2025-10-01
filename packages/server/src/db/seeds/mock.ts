@@ -39,8 +39,14 @@ export async function seed(prisma: PrismaType) {
                 },
                 emails: {
                     create: [
-                        { emailAddress: "notarealemail@afakesite.com", receivesDeliveryUpdates: false },
-                        { emailAddress: "backupemailaddress@afakesite.com", receivesDeliveryUpdates: false },
+                        {
+                            emailAddress: "notarealemail@afakesite.com",
+                            receivesDeliveryUpdates: false,
+                        },
+                        {
+                            emailAddress: "backupemailaddress@afakesite.com",
+                            receivesDeliveryUpdates: false,
+                        },
                     ],
                 },
                 phones: {
@@ -50,9 +56,11 @@ export async function seed(prisma: PrismaType) {
                     ],
                 },
                 roles: {
-                    create: [{
-                        roleId: ownerRole.id,
-                    }],
+                    create: [
+                        {
+                            roleId: ownerRole.id,
+                        },
+                    ],
                 },
             },
         });
@@ -84,13 +92,18 @@ export async function seed(prisma: PrismaType) {
                 },
                 emails: {
                     create: [
-                        { emailAddress: "itsjohncena@afakesite.com", receivesDeliveryUpdates: false },
+                        {
+                            emailAddress: "itsjohncena@afakesite.com",
+                            receivesDeliveryUpdates: false,
+                        },
                     ],
                 },
                 roles: {
-                    create: [{
-                        roleId: customerRole.id,
-                    }],
+                    create: [
+                        {
+                            roleId: customerRole.id,
+                        },
+                    ],
                 },
             },
         });
@@ -120,7 +133,10 @@ export async function seed(prisma: PrismaType) {
                 },
                 emails: {
                     create: [
-                        { emailAddress: "spongebobmeboy@afakesite.com", receivesDeliveryUpdates: false },
+                        {
+                            emailAddress: "spongebobmeboy@afakesite.com",
+                            receivesDeliveryUpdates: false,
+                        },
                     ],
                 },
                 phones: {
@@ -130,9 +146,11 @@ export async function seed(prisma: PrismaType) {
                     ],
                 },
                 roles: {
-                    create: [{
-                        roleId: customerRole.id,
-                    }],
+                    create: [
+                        {
+                            roleId: customerRole.id,
+                        },
+                    ],
                 },
             },
         });

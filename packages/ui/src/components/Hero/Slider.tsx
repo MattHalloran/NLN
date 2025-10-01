@@ -25,7 +25,7 @@ export const Slider = ({
     const [slideIndex, setSlideIndex] = useState(0);
     const [translate, setTranslate] = useState(0);
     const [transition, setTransition] = useState(0);
-    const sliderRef = useRef();
+    const sliderRef = useRef<HTMLDivElement>(null);
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     // Play and wait have circular dependencies, so they must be memoized together

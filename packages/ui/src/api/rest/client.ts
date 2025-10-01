@@ -7,21 +7,21 @@ const REST_BASE_URL = `${getServerUrl()}/rest/v1`;
 export class ApiError extends Error {
     constructor(public status: number, message: string, public data?: any) {
         super(message);
-        this.name = 'ApiError';
+        this.name = "ApiError";
     }
 }
 
 // Generic fetch wrapper with error handling
 async function fetchApi<T>(
     endpoint: string,
-    options?: RequestInit
+    options?: RequestInit,
 ): Promise<T> {
     const url = `${REST_BASE_URL}${endpoint}`;
     
     const defaultOptions: RequestInit = {
-        credentials: 'include', // Include cookies for auth
+        credentials: "include", // Include cookies for auth
         headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
             ...options?.headers,
         },
         ...options,
@@ -35,7 +35,7 @@ async function fetchApi<T>(
             throw new ApiError(
                 response.status,
                 errorData?.error || `HTTP ${response.status}: ${response.statusText}`,
-                errorData
+                errorData,
             );
         }
         
@@ -48,7 +48,7 @@ async function fetchApi<T>(
         // Network or other errors
         throw new ApiError(
             0,
-            error instanceof Error ? error.message : 'Network error occurred'
+            error instanceof Error ? error.message : "Network error occurred",
         );
     }
 }
@@ -190,14 +190,14 @@ export const restApi = {
     // Landing page
     async getLandingPageContent(onlyActive = true): Promise<LandingPageContent> {
         return fetchApi<LandingPageContent>(
-            `/landing-page?onlyActive=${onlyActive}`
+            `/landing-page?onlyActive=${onlyActive}`,
         );
     },
 
     async invalidateLandingPageCache(): Promise<{ success: boolean }> {
         return fetchApi<{ success: boolean }>(
-            '/landing-page/invalidate-cache',
-            { method: 'POST' }
+            "/landing-page/invalidate-cache",
+            { method: "POST" },
         );
     },
 
@@ -212,23 +212,23 @@ export const restApi = {
         const queryParams = new URLSearchParams();
         
         if (params?.inStock !== undefined) {
-            queryParams.append('inStock', String(params.inStock));
+            queryParams.append("inStock", String(params.inStock));
         }
         if (params?.category) {
-            queryParams.append('category', params.category);
+            queryParams.append("category", params.category);
         }
         if (params?.searchTerm) {
-            queryParams.append('searchTerm', params.searchTerm);
+            queryParams.append("searchTerm", params.searchTerm);
         }
         if (params?.limit !== undefined) {
-            queryParams.append('limit', String(params.limit));
+            queryParams.append("limit", String(params.limit));
         }
         if (params?.offset !== undefined) {
-            queryParams.append('offset', String(params.offset));
+            queryParams.append("offset", String(params.offset));
         }
 
         const query = queryParams.toString();
-        return fetchApi<Plant[]>(`/plants${query ? `?${query}` : ''}`);
+        return fetchApi<Plant[]>(`/plants${query ? `?${query}` : ""}`);
     },
 
     async getPlant(id: string): Promise<Plant> {
@@ -241,11 +241,11 @@ export const restApi = {
         hours?: string;
     }): Promise<{ success: boolean; message: string; updated: { business: boolean; hours: boolean } }> {
         return fetchApi<{ success: boolean; message: string; updated: { business: boolean; hours: boolean } }>(
-            '/landing-page/contact-info',
+            "/landing-page/contact-info",
             {
-                method: 'PUT',
+                method: "PUT",
                 body: JSON.stringify(data),
-            }
+            },
         );
     },
 
@@ -331,11 +331,11 @@ export const restApi = {
         };
     }): Promise<{ success: boolean; message: string; updatedSections: string[] }> {
         return fetchApi<{ success: boolean; message: string; updatedSections: string[] }>(
-            '/landing-page',
+            "/landing-page",
             {
-                method: 'PUT',
+                method: "PUT",
                 body: JSON.stringify(data),
-            }
+            },
         );
     },
 };

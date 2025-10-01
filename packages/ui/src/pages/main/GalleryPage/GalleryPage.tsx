@@ -18,8 +18,16 @@ import {
     Tabs,
     Tab,
     Paper,
-    Divider
+    Divider,
 } from "@mui/material";
+import { imagesByLabelQuery } from "api/query";
+import { SnackSeverity } from "components";
+import { InformationalTabOption, InformationalTabs } from "components/breadcrumbs/InformationalTabs/InformationalTabs";
+import { TopBar } from "components/navigation/TopBar/TopBar";
+import { NoImageIcon } from "icons";
+import { useEffect, useState, useCallback } from "react";
+import { PubSub, getImageSrc, getServerUrl } from "utils";
+
 // Using inline SVG icons since @mui/icons-material may not be installed
 const CloseIcon = () => (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
@@ -33,13 +41,6 @@ const ZoomInIcon = () => (
         <path d="M12 10h-2v2H9v-2H7V9h2V7h1v2h2v1z"/>
     </svg>
 );
-import { imagesByLabelQuery } from "api/query";
-import { SnackSeverity } from "components";
-import { InformationalTabOption, InformationalTabs } from "components/breadcrumbs/InformationalTabs/InformationalTabs";
-import { TopBar } from "components/navigation/TopBar/TopBar";
-import { NoImageIcon } from "icons";
-import { useEffect, useState, useCallback } from "react";
-import { PubSub, getImageSrc, getServerUrl } from "utils";
 
 type ImageData = {
     id: string;
@@ -66,14 +67,14 @@ export const GalleryPage = () => {
     
     // Query for gallery images from the API
     const { data: imageData, error } = useQuery(imagesByLabelQuery, { 
-        variables: { input: { label: "gallery" } }
+        variables: { input: { label: "gallery" } },
     });
 
     if (error) {
         PubSub.get().publishSnack({ 
             message: "Failed to load gallery images. Please try again later.", 
             severity: SnackSeverity.Error, 
-            data: error 
+            data: error, 
         });
     }
 
@@ -91,7 +92,7 @@ export const GalleryPage = () => {
             category: "Gallery", // Default category since the seeded data doesn't have categories
             title: data.alt || `Gallery Image ${index + 1}`,
             description: data.description || undefined,
-            featured: index < 3 // Mark first 3 images as featured
+            featured: index < 3, // Mark first 3 images as featured
         })));
     }, [imageData]);
 
@@ -130,23 +131,23 @@ export const GalleryPage = () => {
                 sx={{
                     backgroundColor: theme.palette.grey[800],
                     py: 8,
-                    width: '100%',
+                    width: "100%",
                     borderBottom: `4px solid ${theme.palette.primary.main}`,
-                    mb: 6
+                    mb: 6,
                 }}
             >
                 <Container maxWidth="lg">
-                    <Box sx={{ textAlign: 'center' }}>
+                    <Box sx={{ textAlign: "center" }}>
                         <Typography 
                             variant="h1" 
                             component="h1" 
                             sx={{ 
-                                color: 'white',
+                                color: "white",
                                 fontWeight: 400,
                                 mb: 3,
-                                fontSize: { xs: '2.5rem', md: '3.2rem', lg: '3.8rem' },
-                                fontFamily: 'serif',
-                                letterSpacing: '0.02em'
+                                fontSize: { xs: "2.5rem", md: "3.2rem", lg: "3.8rem" },
+                                fontFamily: "serif",
+                                letterSpacing: "0.02em",
                             }}
                         >
                             Our Collection
@@ -156,8 +157,8 @@ export const GalleryPage = () => {
                                 width: 80, 
                                 height: 3, 
                                 backgroundColor: theme.palette.primary.main, 
-                                mx: 'auto', 
-                                mb: 4 
+                                mx: "auto", 
+                                mb: 4, 
                             }} 
                         />
                         <Typography 
@@ -166,11 +167,11 @@ export const GalleryPage = () => {
                             sx={{ 
                                 color: theme.palette.grey[200],
                                 fontWeight: 300,
-                                fontSize: { xs: '1.3rem', md: '1.6rem' },
-                                maxWidth: '700px',
-                                mx: 'auto',
+                                fontSize: { xs: "1.3rem", md: "1.6rem" },
+                                maxWidth: "700px",
+                                mx: "auto",
                                 lineHeight: 1.6,
-                                fontStyle: 'italic'
+                                fontStyle: "italic",
                             }}
                         >
                             Explore our extensive selection of trees, shrubs, and perennials cultivated with four decades of expertise
@@ -187,7 +188,7 @@ export const GalleryPage = () => {
                         elevation={0}
                         sx={{ 
                             borderBottom: `1px solid ${theme.palette.grey[300]}`,
-                            backgroundColor: 'transparent'
+                            backgroundColor: "transparent",
                         }}
                     >
                         <Tabs 
@@ -196,23 +197,23 @@ export const GalleryPage = () => {
                             variant="scrollable"
                             scrollButtons="auto"
                             sx={{
-                                '& .MuiTab-root': {
+                                "& .MuiTab-root": {
                                     fontWeight: 500,
-                                    fontSize: '1.05rem',
-                                    letterSpacing: '0.02em',
+                                    fontSize: "1.05rem",
+                                    letterSpacing: "0.02em",
                                     color: theme.palette.grey[600],
-                                    transition: 'all 0.2s ease',
-                                    '&.Mui-selected': {
-                                        color: theme.palette.primary.main
+                                    transition: "all 0.2s ease",
+                                    "&.Mui-selected": {
+                                        color: theme.palette.primary.main,
                                     },
-                                    '&:hover': {
-                                        color: theme.palette.grey[800]
-                                    }
+                                    "&:hover": {
+                                        color: theme.palette.grey[800],
+                                    },
                                 },
-                                '& .MuiTabs-indicator': {
+                                "& .MuiTabs-indicator": {
                                     height: 3,
-                                    backgroundColor: theme.palette.primary.main
-                                }
+                                    backgroundColor: theme.palette.primary.main,
+                                },
                             }}
                         >
                             {categories.map(category => (
@@ -223,13 +224,13 @@ export const GalleryPage = () => {
                 </Box>
 
                 {/* Gallery Stats */}
-                <Box sx={{ mb: 5, textAlign: 'center' }}>
+                <Box sx={{ mb: 5, textAlign: "center" }}>
                     <Typography 
                         variant="body1" 
                         sx={{ 
                             color: theme.palette.text.secondary,
-                            fontStyle: 'italic',
-                            letterSpacing: '0.02em'
+                            fontStyle: "italic",
+                            letterSpacing: "0.02em",
                         }}
                     >
                         Showing {filteredImages.length} of {images.length} items
@@ -243,20 +244,20 @@ export const GalleryPage = () => {
                             <Fade in timeout={500}>
                                 <Card 
                                     sx={{ 
-                                        cursor: 'pointer',
-                                        transition: 'all 0.3s ease',
+                                        cursor: "pointer",
+                                        transition: "all 0.3s ease",
                                         border: `1px solid ${theme.palette.grey[200]}`,
-                                        overflow: 'hidden',
-                                        position: 'relative',
-                                        '&:hover': {
+                                        overflow: "hidden",
+                                        position: "relative",
+                                        "&:hover": {
                                             borderColor: theme.palette.grey[400],
-                                            '& .image-overlay': {
-                                                opacity: 1
+                                            "& .image-overlay": {
+                                                opacity: 1,
                                             },
-                                            '& .MuiCardMedia-root': {
-                                                transform: 'scale(1.05)'
-                                            }
-                                        }
+                                            "& .MuiCardMedia-root": {
+                                                transform: "scale(1.05)",
+                                            },
+                                        },
                                     }}
                                     onClick={() => handleImageClick(image)}
                                     elevation={0}
@@ -264,44 +265,44 @@ export const GalleryPage = () => {
                                     {image.featured && (
                                         <Box
                                             sx={{
-                                                position: 'absolute',
+                                                position: "absolute",
                                                 top: 10,
                                                 left: 10,
                                                 zIndex: 2,
                                                 backgroundColor: theme.palette.primary.main,
-                                                color: 'white',
+                                                color: "white",
                                                 px: 2,
                                                 py: 0.5,
-                                                fontSize: '0.75rem',
+                                                fontSize: "0.75rem",
                                                 fontWeight: 600,
-                                                letterSpacing: '0.05em',
-                                                textTransform: 'uppercase'
+                                                letterSpacing: "0.05em",
+                                                textTransform: "uppercase",
                                             }}
                                         >
                                             Featured
                                         </Box>
                                     )}
-                                    <Box sx={{ position: 'relative', paddingTop: '75%' }}>
+                                    <Box sx={{ position: "relative", paddingTop: "75%" }}>
                                         {imageErrors.has(image.id) ? (
                                             <Box
                                                 sx={{
-                                                    position: 'absolute',
+                                                    position: "absolute",
                                                     top: 0,
                                                     left: 0,
-                                                    width: '100%',
-                                                    height: '100%',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    backgroundColor: theme.palette.grey[100]
+                                                    width: "100%",
+                                                    height: "100%",
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    justifyContent: "center",
+                                                    backgroundColor: theme.palette.grey[100],
                                                 }}
                                             >
                                                 <NoImageIcon 
                                                     style={{ 
-                                                        width: '60%', 
-                                                        height: '60%',
+                                                        width: "60%", 
+                                                        height: "60%",
                                                         opacity: 0.3,
-                                                        fill: theme.palette.grey[400]
+                                                        fill: theme.palette.grey[400],
                                                     }} 
                                                 />
                                             </Box>
@@ -312,30 +313,30 @@ export const GalleryPage = () => {
                                                 alt={image.alt}
                                                 onError={() => handleImageError(image.id)}
                                                 sx={{
-                                                    position: 'absolute',
+                                                    position: "absolute",
                                                     top: 0,
                                                     left: 0,
-                                                    width: '100%',
-                                                    height: '100%',
-                                                    objectFit: 'cover',
-                                                    transition: 'transform 0.3s ease'
+                                                    width: "100%",
+                                                    height: "100%",
+                                                    objectFit: "cover",
+                                                    transition: "transform 0.3s ease",
                                                 }}
                                             />
                                         )}
                                         <Box
                                             className="image-overlay"
                                             sx={{
-                                                position: 'absolute',
+                                                position: "absolute",
                                                 top: 0,
                                                 left: 0,
                                                 right: 0,
                                                 bottom: 0,
                                                 backgroundColor: alpha(theme.palette.common.black, 0.5),
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
                                                 opacity: 0,
-                                                transition: 'opacity 0.3s ease'
+                                                transition: "opacity 0.3s ease",
                                             }}
                                         >
                                             <ZoomInIcon />
@@ -348,8 +349,8 @@ export const GalleryPage = () => {
                                             sx={{ 
                                                 fontWeight: 500,
                                                 mb: 1,
-                                                fontFamily: 'serif',
-                                                color: theme.palette.grey[800]
+                                                fontFamily: "serif",
+                                                color: theme.palette.grey[800],
                                             }}
                                         >
                                             {image.title}
@@ -359,8 +360,8 @@ export const GalleryPage = () => {
                                                 variant="body2" 
                                                 sx={{ 
                                                     color: theme.palette.text.secondary,
-                                                    fontStyle: 'italic',
-                                                    mb: 2
+                                                    fontStyle: "italic",
+                                                    mb: 2,
                                                 }}
                                             >
                                                 {image.description}
@@ -368,14 +369,14 @@ export const GalleryPage = () => {
                                         )}
                                         <Box
                                             sx={{
-                                                display: 'inline-block',
+                                                display: "inline-block",
                                                 px: 2,
                                                 py: 0.5,
                                                 border: `1px solid ${theme.palette.grey[300]}`,
                                                 color: theme.palette.grey[600],
-                                                fontSize: '0.85rem',
+                                                fontSize: "0.85rem",
                                                 fontWeight: 500,
-                                                letterSpacing: '0.02em'
+                                                letterSpacing: "0.02em",
                                             }}
                                         >
                                             {image.category}
@@ -395,25 +396,25 @@ export const GalleryPage = () => {
                     fullWidth
                     PaperProps={{
                         sx: {
-                            backgroundColor: 'transparent',
-                            boxShadow: 'none',
-                            overflow: 'hidden'
-                        }
+                            backgroundColor: "transparent",
+                            boxShadow: "none",
+                            overflow: "hidden",
+                        },
                     }}
                 >
-                    <DialogContent sx={{ p: 0, position: 'relative' }}>
+                    <DialogContent sx={{ p: 0, position: "relative" }}>
                         <IconButton
                             onClick={handleCloseLightbox}
                             sx={{
-                                position: 'absolute',
+                                position: "absolute",
                                 right: 10,
                                 top: 10,
                                 backgroundColor: alpha(theme.palette.common.black, 0.5),
-                                color: 'white',
+                                color: "white",
                                 zIndex: 2,
-                                '&:hover': {
-                                    backgroundColor: alpha(theme.palette.common.black, 0.7)
-                                }
+                                "&:hover": {
+                                    backgroundColor: alpha(theme.palette.common.black, 0.7),
+                                },
                             }}
                         >
                             <CloseIcon />
@@ -423,20 +424,20 @@ export const GalleryPage = () => {
                                 {imageErrors.has(selectedImage.id) ? (
                                     <Box
                                         sx={{
-                                            width: '100%',
-                                            height: '400px',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            backgroundColor: theme.palette.grey[100]
+                                            width: "100%",
+                                            height: "400px",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            backgroundColor: theme.palette.grey[100],
                                         }}
                                     >
                                         <NoImageIcon 
                                             style={{ 
-                                                width: '200px', 
-                                                height: '200px',
+                                                width: "200px", 
+                                                height: "200px",
                                                 opacity: 0.3,
-                                                fill: theme.palette.grey[400]
+                                                fill: theme.palette.grey[400],
                                             }} 
                                         />
                                     </Box>
@@ -446,17 +447,17 @@ export const GalleryPage = () => {
                                         alt={selectedImage.alt}
                                         onError={() => handleImageError(selectedImage.id)}
                                         style={{
-                                            width: '100%',
-                                            height: 'auto',
-                                            display: 'block'
+                                            width: "100%",
+                                            height: "auto",
+                                            display: "block",
                                         }}
                                     />
                                 )}
                                 <Box
                                     sx={{
-                                        backgroundColor: 'white',
+                                        backgroundColor: "white",
                                         p: 3,
-                                        borderTop: `3px solid ${theme.palette.primary.main}`
+                                        borderTop: `3px solid ${theme.palette.primary.main}`,
                                     }}
                                 >
                                     <Typography 
@@ -464,7 +465,7 @@ export const GalleryPage = () => {
                                         sx={{ 
                                             fontWeight: 500,
                                             mb: 1,
-                                            fontFamily: 'serif'
+                                            fontFamily: "serif",
                                         }}
                                     >
                                         {selectedImage.title}
@@ -474,7 +475,7 @@ export const GalleryPage = () => {
                                             variant="body1" 
                                             sx={{ 
                                                 color: theme.palette.text.secondary,
-                                                fontStyle: 'italic'
+                                                fontStyle: "italic",
                                             }}
                                         >
                                             {selectedImage.description}

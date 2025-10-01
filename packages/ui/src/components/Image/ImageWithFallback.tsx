@@ -31,7 +31,7 @@ export const ImageWithFallback = ({
     onError,
     onClick,
     className,
-    component = "img"
+    component = "img",
 }: ImageWithFallbackProps) => {
     const [hasError, setHasError] = useState(false);
     const [fallbackError, setFallbackError] = useState(false);
@@ -60,24 +60,24 @@ export const ImageWithFallback = ({
                 className={className}
                 onClick={onClick}
                 sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backgroundColor: 'grey.100',
-                    width: '100%',
-                    height: '100%',
-                    ...sx
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: "grey.100",
+                    width: "100%",
+                    height: "100%",
+                    ...sx,
                 }}
                 style={style}
             >
                 <NoImageIcon 
                     style={{ 
-                        width: '50%', 
-                        height: '50%',
-                        maxWidth: '200px',
-                        maxHeight: '200px',
+                        width: "50%", 
+                        height: "50%",
+                        maxWidth: "200px",
+                        maxHeight: "200px",
                         opacity: 0.3,
-                        fill: '#9e9e9e'
+                        fill: "#9e9e9e",
                     }} 
                 />
             </Box>
@@ -111,10 +111,10 @@ export const ImageWithFallback = ({
             onError={handleError}
             onLoad={handleLoad}
             style={{
-                width: '100%',
-                height: 'auto',
-                objectFit: 'cover',
-                ...style
+                width: "100%",
+                height: "auto",
+                objectFit: "cover",
+                ...style,
             }}
         />
     );

@@ -9,37 +9,18 @@ import {
     Button, 
     Chip, 
     useTheme,
-    CardMedia,
     IconButton,
     Tab,
-    Tabs
+    Tabs,
 } from "@mui/material";
 import { useState, useEffect } from "react";
 import { useLandingPageContent } from "api/rest/hooks";
-import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
-import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
+import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
+import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import { Leaf, Lightbulb, Sprout, Flower, Snowflake, LucideIcon, Star } from "lucide-react";
 
-interface SeasonalPlant {
-    id: string;
-    name: string;
-    description: string;
-    season: string;
-    careLevel: string;
-    icon: string;
-    displayOrder: number;
-    isActive: boolean;
-}
-
-interface PlantTip {
-    id: string;
-    title: string;
-    description: string;
-    category: string;
-    season: string;
-    displayOrder: number;
-    isActive: boolean;
-}
+// SeasonalPlant and PlantTip interfaces are defined in the API
+// but commented out here since they're not used directly
 
 // Icon mapping for different plant types
 const getIconComponent = (iconName: string): LucideIcon => {
@@ -62,7 +43,7 @@ export const InteractiveElements = () => {
     const [subscribed, setSubscribed] = useState(false);
 
     // Fetch landing page content using REST API
-    const { data, loading, error } = useLandingPageContent(true);
+    const { data } = useLandingPageContent(true);
 
     const seasonalPlants = data?.seasonalPlants || [];
     const plantTips = data?.plantTips || [];
@@ -122,7 +103,7 @@ export const InteractiveElements = () => {
                             fontWeight: 700,
                             color: palette.primary.main,
                             mb: 2,
-                            fontSize: { xs: "2rem", md: "3rem" }
+                            fontSize: { xs: "2rem", md: "3rem" },
                         }}
                     >
                         Seasonal Highlights & Expert Tips
@@ -132,7 +113,7 @@ export const InteractiveElements = () => {
                         sx={{ 
                             color: palette.text.secondary,
                             maxWidth: "600px",
-                            mx: "auto"
+                            mx: "auto",
                         }}
                     >
                         Discover what's blooming now and get expert care advice for every season
@@ -149,7 +130,7 @@ export const InteractiveElements = () => {
                                     variant="h5" 
                                     sx={{ 
                                         fontWeight: 600,
-                                        color: palette.primary.main
+                                        color: palette.primary.main,
                                     }}
                                 >
                                     What's Blooming Now
@@ -160,14 +141,14 @@ export const InteractiveElements = () => {
                                 borderRadius: 3,
                                 boxShadow: 4,
                                 overflow: "hidden",
-                                position: "relative"
+                                position: "relative",
                             }}>
                                 <Box sx={{ 
                                     display: "flex", 
                                     alignItems: "center",
                                     minHeight: "300px",
                                     background: `linear-gradient(135deg, ${palette.primary.light} 0%, ${palette.secondary.light} 100%)`,
-                                    position: "relative"
+                                    position: "relative",
                                 }}>
                                     {/* Navigation Arrows */}
                                     <IconButton
@@ -178,8 +159,8 @@ export const InteractiveElements = () => {
                                             zIndex: 2,
                                             backgroundColor: "rgba(255, 255, 255, 0.9)",
                                             "&:hover": {
-                                                backgroundColor: "white"
-                                            }
+                                                backgroundColor: "white",
+                                            },
                                         }}
                                     >
                                         <ArrowBackIosIcon />
@@ -193,8 +174,8 @@ export const InteractiveElements = () => {
                                             zIndex: 2,
                                             backgroundColor: "rgba(255, 255, 255, 0.9)",
                                             "&:hover": {
-                                                backgroundColor: "white"
-                                            }
+                                                backgroundColor: "white",
+                                            },
                                         }}
                                     >
                                         <ArrowForwardIosIcon />
@@ -205,13 +186,13 @@ export const InteractiveElements = () => {
                                         width: "100%",
                                         textAlign: "center",
                                         p: 4,
-                                        color: "white"
+                                        color: "white",
                                     }}>
                                         <Box sx={{ 
                                             mb: 2,
                                             display: "flex",
                                             justifyContent: "center",
-                                            color: "white"
+                                            color: "white",
                                         }}>
                                             {seasonalPlants.length > 0 && (() => {
                                                 const IconComponent = getIconComponent(seasonalPlants[currentPlant]?.icon || "leaf");
@@ -226,7 +207,7 @@ export const InteractiveElements = () => {
                                                     sx={{ 
                                                         fontWeight: 600,
                                                         mb: 1,
-                                                        textShadow: "1px 1px 2px rgba(0,0,0,0.3)"
+                                                        textShadow: "1px 1px 2px rgba(0,0,0,0.3)",
                                                     }}
                                                 >
                                                     {seasonalPlants[currentPlant]?.name || "Loading..."}
@@ -242,7 +223,7 @@ export const InteractiveElements = () => {
                                                         label={seasonalPlants[currentPlant]?.careLevel || "Easy"}
                                                         sx={{
                                                             backgroundColor: getCareColor(seasonalPlants[currentPlant]?.careLevel || "Easy"),
-                                                            color: "white"
+                                                            color: "white",
                                                         }}
                                                         size="small"
                                                     />
@@ -253,7 +234,7 @@ export const InteractiveElements = () => {
                                                     sx={{ 
                                                         opacity: 0.9,
                                                         textShadow: "1px 1px 2px rgba(0,0,0,0.3)",
-                                                        lineHeight: 1.6
+                                                        lineHeight: 1.6,
                                                     }}
                                                 >
                                                     {seasonalPlants[currentPlant]?.description || "Loading plant information..."}
@@ -269,7 +250,7 @@ export const InteractiveElements = () => {
                                     justifyContent: "center", 
                                     gap: 1, 
                                     p: 2,
-                                    backgroundColor: "white"
+                                    backgroundColor: "white",
                                 }}>
                                     {seasonalPlants.map((_, index) => (
                                         <Box
@@ -284,8 +265,8 @@ export const InteractiveElements = () => {
                                                 transition: "all 0.3s ease-in-out",
                                                 "&:hover": {
                                                     backgroundColor: palette.primary.main,
-                                                    transform: "scale(1.2)"
-                                                }
+                                                    transform: "scale(1.2)",
+                                                },
                                             }}
                                         />
                                     ))}
@@ -303,7 +284,7 @@ export const InteractiveElements = () => {
                                     variant="h5" 
                                     sx={{ 
                                         fontWeight: 600,
-                                        color: palette.primary.main
+                                        color: palette.primary.main,
                                     }}
                                 >
                                     Expert Plant Care Tips
@@ -336,8 +317,8 @@ export const InteractiveElements = () => {
                                         transition: "all 0.3s ease-in-out",
                                         "&:hover": {
                                             boxShadow: 4,
-                                            transform: "translateX(4px)"
-                                        }
+                                            transform: "translateX(4px)",
+                                        },
                                     }}>
                                         <CardContent sx={{ p: 3 }}>
                                             <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 1 }}>
@@ -346,7 +327,7 @@ export const InteractiveElements = () => {
                                                     sx={{ 
                                                         fontWeight: 600,
                                                         color: palette.primary.main,
-                                                        flexGrow: 1
+                                                        flexGrow: 1,
                                                     }}
                                                 >
                                                     {tip.title}
@@ -370,7 +351,7 @@ export const InteractiveElements = () => {
                                                 variant="body2" 
                                                 sx={{ 
                                                     color: palette.text.secondary,
-                                                    lineHeight: 1.6
+                                                    lineHeight: 1.6,
                                                 }}
                                             >
                                                 {tip.description}
@@ -390,7 +371,7 @@ export const InteractiveElements = () => {
                     background: `linear-gradient(135deg, ${palette.secondary.main} 0%, ${palette.primary.main} 100%)`,
                     borderRadius: 3,
                     textAlign: "center",
-                    color: "white"
+                    color: "white",
                 }}>
                     <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 1, mb: 2 }}>
                         <Sprout size={24} color="white" />
@@ -411,7 +392,7 @@ export const InteractiveElements = () => {
                                 gap: 2,
                                 maxWidth: "500px",
                                 mx: "auto",
-                                flexDirection: { xs: "column", sm: "row" }
+                                flexDirection: { xs: "column", sm: "row" },
                             }}
                         >
                             <TextField
@@ -424,8 +405,8 @@ export const InteractiveElements = () => {
                                     flexGrow: 1,
                                     "& .MuiOutlinedInput-root": {
                                         backgroundColor: "white",
-                                        borderRadius: 2
-                                    }
+                                        borderRadius: 2,
+                                    },
                                 }}
                             />
                             <Button
@@ -438,7 +419,7 @@ export const InteractiveElements = () => {
                                     borderRadius: 2,
                                     textTransform: "none",
                                     fontWeight: 600,
-                                    minWidth: { xs: "100%", sm: "150px" }
+                                    minWidth: { xs: "100%", sm: "150px" },
                                 }}
                             >
                                 Subscribe

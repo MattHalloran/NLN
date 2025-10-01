@@ -32,7 +32,7 @@ export const ProfilePage = () => {
                                 sx={{ 
                                     fontWeight: 600,
                                     color: palette.text.primary,
-                                    mb: 1
+                                    mb: 1,
                                 }}
                             >
                                 Profile Information
@@ -41,7 +41,7 @@ export const ProfilePage = () => {
                                 variant="body2" 
                                 sx={{ 
                                     color: palette.text.secondary,
-                                    lineHeight: 1.6
+                                    lineHeight: 1.6,
                                 }}
                             >
                                 Update your personal information, business details, and account preferences.

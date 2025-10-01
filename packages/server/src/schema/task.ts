@@ -30,9 +30,15 @@ export const typeDef = /* GraphQL */ `
 export const resolvers = {
     TaskStatus: TASK_STATUS,
     Query: {
-        tasks: async (_parent: undefined, { status }: any, { prisma, req }: Context): Promise<RecursivePartial<any> | null> => {
+        tasks: async (
+            _parent: undefined,
+            { status }: any,
+            { prisma, req }: Context
+        ): Promise<RecursivePartial<any> | null> => {
             // Must be admin
-            if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
+            if (!req.isAdmin) {
+                throw new CustomError(CODE.Unauthorized);
+            }
             return await prisma.queue_task.findMany({
                 where: { status },
             });

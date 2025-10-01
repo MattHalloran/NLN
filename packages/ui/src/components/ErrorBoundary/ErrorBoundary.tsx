@@ -1,6 +1,4 @@
 import {
-    Alert,
-    AlertTitle,
     Avatar,
     Box,
     Button,
@@ -17,7 +15,7 @@ import {
     ThemeProvider,
     Typography,
     useMediaQuery,
-    useTheme
+    useTheme,
 } from "@mui/material";
 import {
     BugReport as BugReportIcon,
@@ -28,12 +26,12 @@ import {
     Feedback as FeedbackIcon,
     Home as HomeIcon,
     Refresh as RefreshIcon,
-    Warning as WarningIcon
+    Warning as WarningIcon,
 } from "@mui/icons-material";
 import { ErrorBoundaryProps } from "components/types";
-import { Component, ErrorInfo, ReactNode } from "react";
+import { Component, ErrorInfo } from "react";
 import { stringifySearchParams } from "route";
-import { themes } from "utils";
+import { } from "utils";
 
 interface ErrorContext {
     timestamp: string;
@@ -59,8 +57,8 @@ interface ErrorBoundaryState {
 }
 
 interface ErrorCategory {
-    type: 'network' | 'chunk' | 'runtime' | 'permission' | 'unknown';
-    severity: 'low' | 'medium' | 'high' | 'critical';
+    type: "network" | "chunk" | "runtime" | "permission" | "unknown";
+    severity: "low" | "medium" | "high" | "critical";
     recoverable: boolean;
     userMessage: string;
     technicalMessage: string;
@@ -96,7 +94,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             timestamp: new Date().toISOString(),
             userAgent: navigator.userAgent,
             url: window.location.href,
-            buildVersion: import.meta.env.VITE_BUILD_VERSION || 'unknown',
+            buildVersion: import.meta.env.VITE_BUILD_VERSION || "unknown",
             previousErrors: this.getPreviousErrorCount(),
         };
 
@@ -104,11 +102,11 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             hasError: false,
             error: null,
             errorInfo: null,
-            errorId: '',
+            errorId: "",
             context,
             showDetails: false,
             showFeedback: false,
-            feedbackText: '',
+            feedbackText: "",
             retryCount: 0,
             isRetrying: false,
         };
@@ -131,7 +129,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             context: {
                 ...this.state.context,
                 timestamp: new Date().toISOString(),
-            }
+            },
         });
 
         // Call optional error callback
@@ -162,76 +160,86 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
         const name = error.name.toLowerCase();
         
         // Chunk loading / Dynamic import errors (check BEFORE network errors)
-        if (message.includes('dynamically imported module') || 
-            message.includes('failed to fetch dynamically') ||
-            message.includes('chunk') || 
-            message.includes('loading css chunk') ||
-            message.includes('loading chunk') ||
-            name.includes('chunkloaderror')) {
+        if (message.includes("dynamically imported module") || 
+            message.includes("failed to fetch dynamically") ||
+            message.includes("chunk") || 
+            message.includes("loading css chunk") ||
+            message.includes("loading chunk") ||
+            name.includes("chunkloaderror")) {
             return {
-                type: 'chunk',
-                severity: 'medium',
+                type: "chunk",
+                severity: "medium",
                 recoverable: true,
-                userMessage: 'Failed to load application resources. Please refresh the page.',
-                technicalMessage: 'Dynamic module import failed. This often happens after deployments.'
+                userMessage: "Failed to load application resources. Please refresh the page.",
+                technicalMessage: "Dynamic module import failed. This often happens after deployments.",
             };
         }
         
         // Network-related errors (but NOT dynamic imports)
-        if ((message.includes('network') || message.includes('fetch')) && 
-            !message.includes('dynamically') && 
-            !message.includes('module')) {
+        if ((message.includes("network") || message.includes("fetch")) && 
+            !message.includes("dynamically") && 
+            !message.includes("module")) {
             return {
-                type: 'network',
-                severity: 'medium',
+                type: "network",
+                severity: "medium",
                 recoverable: true,
-                userMessage: 'Connection issue detected. Please check your internet connection.',
-                technicalMessage: 'Network request failed or timed out.'
+                userMessage: "Connection issue detected. Please check your internet connection.",
+                technicalMessage: "Network request failed or timed out.",
             };
         }
         
         // Permission errors
-        if (message.includes('permission') || message.includes('denied') || message.includes('unauthorized')) {
+        if (message.includes("permission") || message.includes("denied") || message.includes("unauthorized")) {
             return {
-                type: 'permission',
-                severity: 'high',
+                type: "permission",
+                severity: "high",
                 recoverable: false,
-                userMessage: 'You don\'t have permission to perform this action.',
-                technicalMessage: 'Access denied or insufficient permissions.'
+                userMessage: "You don't have permission to perform this action.",
+                technicalMessage: "Access denied or insufficient permissions.",
             };
         }
         
         // Critical runtime errors
-        if (name.includes('typeerror') || name.includes('referenceerror')) {
+        if (name.includes("typeerror") || name.includes("referenceerror")) {
             return {
-                type: 'runtime',
-                severity: 'critical',
+                type: "runtime",
+                severity: "critical",
                 recoverable: false,
-                userMessage: 'A critical error occurred in the application.',
-                technicalMessage: 'Runtime error in component or business logic.'
+                userMessage: "A critical error occurred in the application.",
+                technicalMessage: "Runtime error in component or business logic.",
             };
         }
         
         // Unknown errors
         return {
-            type: 'unknown',
-            severity: 'high',
+            type: "unknown",
+            severity: "high",
             recoverable: true,
-            userMessage: 'An unexpected error occurred.',
-            technicalMessage: 'Unclassified error requiring investigation.'
+            userMessage: "An unexpected error occurred.",
+            technicalMessage: "Unclassified error requiring investigation.",
         };
     }
 
     private logError(error: Error, errorInfo: ErrorInfo) {
         const category = this.categorizeError(error);
         
-        console.group(`🚨 Error Boundary: ${category.type.toUpperCase()} ERROR`);
-        console.error('Error ID:', this.state.errorId);
-        console.error('Error:', error);
-        console.error('Error Info:', errorInfo);
-        console.error('Context:', this.state.context);
-        console.error('Category:', category);
-        console.groupEnd();
+        // Only log errors in development mode
+        if (import.meta.env.DEV) {
+            // eslint-disable-next-line no-console
+            console.group(`🚨 Error Boundary: ${category.type.toUpperCase()} ERROR`);
+            // eslint-disable-next-line no-console
+            console.error("Error ID:", this.state.errorId);
+            // eslint-disable-next-line no-console
+            console.error("Error:", error);
+            // eslint-disable-next-line no-console
+            console.error("Error Info:", errorInfo);
+            // eslint-disable-next-line no-console
+            console.error("Context:", this.state.context);
+            // eslint-disable-next-line no-console
+            console.error("Category:", category);
+            // eslint-disable-next-line no-console
+            console.groupEnd();
+        }
     }
 
     private async reportError(error: Error, errorInfo: ErrorInfo) {
@@ -247,19 +255,20 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             };
             
             // In a real app, send to error reporting service (Sentry, LogRocket, etc.)
-            console.log('📊 Error report prepared for external service:', errorReport);
+            // eslint-disable-next-line no-console
+            if (import.meta.env.DEV) console.log("📊 Error report prepared for external service:", errorReport);
             
             // Example: await sendToErrorService(errorReport);
         } catch (reportingError) {
-            console.error('Failed to report error:', reportingError);
+            console.error("Failed to report error:", reportingError);
         }
     }
 
     private trackErrorOccurrence() {
         const errorCount = this.getPreviousErrorCount() + 1;
         try {
-            localStorage.setItem('errorBoundary_errorCount', errorCount.toString());
-            localStorage.setItem('errorBoundary_lastError', Date.now().toString());
+            localStorage.setItem("errorBoundary_errorCount", errorCount.toString());
+            localStorage.setItem("errorBoundary_lastError", Date.now().toString());
         } catch (e) {
             // Storage not available
         }
@@ -267,7 +276,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
     private getPreviousErrorCount(): number {
         try {
-            return parseInt(localStorage.getItem('errorBoundary_errorCount') || '0', 10);
+            return parseInt(localStorage.getItem("errorBoundary_errorCount") || "0", 10);
         } catch {
             return 0;
         }
@@ -292,7 +301,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     };
 
     private handleGoHome = () => {
-        window.location.assign('/');
+        window.location.assign("/");
     };
 
     private handleCopyError = async () => {
@@ -308,7 +317,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             await navigator.clipboard.writeText(JSON.stringify(errorReport, null, 2));
             // Could show a snack notification here
         } catch (e) {
-            console.error('Failed to copy error details:', e);
+            console.error("Failed to copy error details:", e);
         }
     };
 
@@ -325,9 +334,9 @@ ${JSON.stringify({
         }, null, 2)}`;
         
         const mailToUrl = `mailto:info@newlifenurseryinc.com${stringifySearchParams({ subject, body })}`;
-        window.open(mailToUrl, '_blank');
+        window.open(mailToUrl, "_blank");
         
-        this.setState({ showFeedback: false, feedbackText: '' });
+        this.setState({ showFeedback: false, feedbackText: "" });
     };
 
     private resetError = () => {
@@ -335,10 +344,10 @@ ${JSON.stringify({
             hasError: false,
             error: null,
             errorInfo: null,
-            errorId: '',
+            errorId: "",
             showDetails: false,
             showFeedback: false,
-            feedbackText: '',
+            feedbackText: "",
             isRetrying: false,
         });
     };
@@ -403,36 +412,22 @@ const ErrorBoundaryUI = ({
     onToggleFeedback,
     onFeedbackChange,
 }: ErrorBoundaryUIProps) => {
-    // Try to use the current theme, fallback to light theme if not available
-    let theme;
-    try {
-        theme = useTheme();
-    } catch {
-        theme = themes.light;
-    }
-    
-    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+    // Always call useTheme at the top level (React hooks rule)
+    const theme = useTheme();
+
+    const isMobile = useMediaQuery(theme.breakpoints.down("md"));
     const isDevelopment = import.meta.env.DEV;
 
-    const getSeverityColor = (severity: ErrorCategory['severity']) => {
-        // Use more muted, professional colors
-        switch (severity) {
-            case 'critical': return theme.palette.text.primary;
-            case 'high': return theme.palette.text.primary;
-            case 'medium': return theme.palette.text.secondary;
-            case 'low': return theme.palette.text.secondary;
-            default: return theme.palette.text.primary;
-        }
-    };
+    // Removed unused getSeverityColor function
 
     const getSeverityIcon = () => {
         // Use consistent neutral icon color
         const iconColor = theme.palette.text.secondary;
         switch (category.severity) {
-            case 'critical': return <BugReportIcon sx={{ fontSize: 48, color: iconColor }} />;
-            case 'high': return <WarningIcon sx={{ fontSize: 48, color: iconColor }} />;
-            case 'medium': return <WarningIcon sx={{ fontSize: 48, color: iconColor }} />;
-            case 'low': return <WarningIcon sx={{ fontSize: 48, color: iconColor }} />;
+            case "critical": return <BugReportIcon sx={{ fontSize: 48, color: iconColor }} />;
+            case "high": return <WarningIcon sx={{ fontSize: 48, color: iconColor }} />;
+            case "medium": return <WarningIcon sx={{ fontSize: 48, color: iconColor }} />;
+            case "low": return <WarningIcon sx={{ fontSize: 48, color: iconColor }} />;
             default: return <BugReportIcon sx={{ fontSize: 48, color: iconColor }} />;
         }
     };
@@ -441,10 +436,10 @@ const ErrorBoundaryUI = ({
         <ThemeProvider theme={theme}>
             <Box
                 sx={{
-                    minHeight: '100vh',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
+                    minHeight: "100vh",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
                     bgcolor: theme.palette.background.default,
                     p: 2,
                 }}
@@ -456,10 +451,10 @@ const ErrorBoundaryUI = ({
                     <Card
                         elevation={3}
                         sx={{
-                            maxWidth: '100%',
+                            maxWidth: "100%",
                             bgcolor: theme.palette.background.paper,
                             borderRadius: 3,
-                            overflow: 'hidden',
+                            overflow: "hidden",
                         }}
                     >
                         {/* Header */}
@@ -468,7 +463,7 @@ const ErrorBoundaryUI = ({
                                 bgcolor: theme.palette.background.paper,
                                 borderBottom: `1px solid ${theme.palette.divider}`,
                                 p: 4,
-                                textAlign: 'center',
+                                textAlign: "center",
                             }}
                         >
                             <Avatar
@@ -476,7 +471,7 @@ const ErrorBoundaryUI = ({
                                     bgcolor: theme.palette.grey[100],
                                     width: 80,
                                     height: 80,
-                                    mx: 'auto',
+                                    mx: "auto",
                                     mb: 2,
                                 }}
                             >
@@ -492,7 +487,7 @@ const ErrorBoundaryUI = ({
                                 sx={{
                                     borderColor: theme.palette.divider,
                                     color: theme.palette.text.secondary,
-                                    fontWeight: 'medium',
+                                    fontWeight: "medium",
                                 }}
                             />
                         </Box>
@@ -515,7 +510,7 @@ const ErrorBoundaryUI = ({
                                     {category.technicalMessage}
                                 </Typography>
                                 {state.retryCount > 0 && (
-                                    <Typography variant="body2" sx={{ mt: 1, color: 'text.secondary' }}>
+                                    <Typography variant="body2" sx={{ mt: 1, color: "text.secondary" }}>
                                         Previous retry attempts: {state.retryCount}
                                     </Typography>
                                 )}
@@ -523,7 +518,7 @@ const ErrorBoundaryUI = ({
 
                             {/* Action Buttons */}
                             <Stack
-                                direction={isMobile ? 'column' : 'row'}
+                                direction={isMobile ? "column" : "row"}
                                 spacing={2}
                                 sx={{ mb: 3 }}
                                 justifyContent="center"
@@ -539,12 +534,12 @@ const ErrorBoundaryUI = ({
                                             minWidth: 140,
                                             bgcolor: theme.palette.text.primary,
                                             color: theme.palette.background.paper,
-                                            '&:hover': {
+                                            "&:hover": {
                                                 bgcolor: theme.palette.text.secondary,
-                                            }
+                                            },
                                         }}
                                     >
-                                        {state.isRetrying ? 'Retrying...' : 'Try Again'}
+                                        {state.isRetrying ? "Retrying..." : "Try Again"}
                                     </Button>
                                 )}
                                 <Button
@@ -556,10 +551,10 @@ const ErrorBoundaryUI = ({
                                         minWidth: 140,
                                         borderColor: theme.palette.divider,
                                         color: theme.palette.text.primary,
-                                        '&:hover': {
+                                        "&:hover": {
                                             borderColor: theme.palette.text.secondary,
                                             bgcolor: theme.palette.action.hover,
-                                        }
+                                        },
                                     }}
                                 >
                                     Refresh Page
@@ -573,10 +568,10 @@ const ErrorBoundaryUI = ({
                                         minWidth: 140,
                                         borderColor: theme.palette.divider,
                                         color: theme.palette.text.primary,
-                                        '&:hover': {
+                                        "&:hover": {
                                             borderColor: theme.palette.text.secondary,
                                             bgcolor: theme.palette.action.hover,
-                                        }
+                                        },
                                     }}
                                 >
                                     Go Home
@@ -587,7 +582,7 @@ const ErrorBoundaryUI = ({
 
                             {/* Additional Actions */}
                             <Stack
-                                direction={isMobile ? 'column' : 'row'}
+                                direction={isMobile ? "column" : "row"}
                                 spacing={2}
                                 justifyContent="center"
                             >
@@ -617,7 +612,7 @@ const ErrorBoundaryUI = ({
                                         size="small"
                                         sx={{ color: theme.palette.text.secondary }}
                                     >
-                                        {state.showDetails ? 'Hide' : 'Show'} Technical Details
+                                        {state.showDetails ? "Hide" : "Show"} Technical Details
                                     </Button>
                                 )}
                             </Stack>
@@ -663,12 +658,12 @@ const ErrorBoundaryUI = ({
                                             onClick={onSendFeedback}
                                             disabled={!state.feedbackText.trim()}
                                             sx={{ 
-                                                alignSelf: 'flex-start',
+                                                alignSelf: "flex-start",
                                                 bgcolor: theme.palette.text.primary,
                                                 color: theme.palette.background.paper,
-                                                '&:hover': {
+                                                "&:hover": {
                                                     bgcolor: theme.palette.text.secondary,
-                                                }
+                                                },
                                             }}
                                         >
                                             Send Feedback
@@ -706,8 +701,8 @@ const ErrorBoundaryUI = ({
                                                         color: theme.palette.text.primary,
                                                         p: 1,
                                                         borderRadius: 1,
-                                                        overflow: 'auto',
-                                                        fontSize: '0.75rem',
+                                                        overflow: "auto",
+                                                        fontSize: "0.75rem",
                                                         border: `1px solid ${theme.palette.divider}`,
                                                     }}
                                                 >
@@ -727,8 +722,8 @@ const ErrorBoundaryUI = ({
                                                             bgcolor: theme.palette.grey[100],
                                                             p: 1,
                                                             borderRadius: 1,
-                                                            overflow: 'auto',
-                                                            fontSize: '0.7rem',
+                                                            overflow: "auto",
+                                                            fontSize: "0.7rem",
                                                             maxHeight: 200,
                                                         }}
                                                     >
@@ -749,8 +744,8 @@ const ErrorBoundaryUI = ({
                                                             bgcolor: theme.palette.grey[100],
                                                             p: 1,
                                                             borderRadius: 1,
-                                                            overflow: 'auto',
-                                                            fontSize: '0.7rem',
+                                                            overflow: "auto",
+                                                            fontSize: "0.7rem",
                                                             maxHeight: 200,
                                                         }}
                                                     >
@@ -771,8 +766,8 @@ const ErrorBoundaryUI = ({
                                                         color: theme.palette.text.primary,
                                                         p: 1,
                                                         borderRadius: 1,
-                                                        overflow: 'auto',
-                                                        fontSize: '0.7rem',
+                                                        overflow: "auto",
+                                                        fontSize: "0.7rem",
                                                         border: `1px solid ${theme.palette.divider}`,
                                                     }}
                                                 >

@@ -10,7 +10,7 @@ import {
     Box, 
     Chip, 
     Avatar,
-    Divider 
+    Divider, 
 } from "@mui/material";
 import { 
     Business as BusinessIcon, 
@@ -18,7 +18,7 @@ import {
     CheckCircle as ApprovedIcon,
     Schedule as PendingIcon,
     Block as BlockedIcon,
-    Delete as DeletedIcon
+    Delete as DeletedIcon,
 } from "@mui/icons-material";
 import { changeCustomerStatusVariables } from "api/generated/changeCustomerStatus";
 import { deleteCustomerVariables } from "api/generated/deleteCustomer";
@@ -46,7 +46,7 @@ export const CustomerCard = ({
     isMobile,
     onEdit,
 }: CustomerCardProps) => {
-    const { breakpoints, palette } = useTheme();
+    const { palette } = useTheme();
 
     const [changeCustomerStatus] = useMutation(changeCustomerStatusMutation);
     const [deleteCustomer] = useMutation(deleteCustomerMutation);
@@ -63,13 +63,6 @@ export const CustomerCard = ({
         if (emailLink) window.open(emailLink, "_blank", "noopener,noreferrer");
     };
 
-    const status_map = useMemo<{ [key in CustomerStatus]: string }>(() => ({
-        [CustomerStatus.Deleted]: "Deleted",
-        [CustomerStatus.Unlocked]: "Unlocked",
-        [CustomerStatus.WaitingApproval]: "Waiting Approval",
-        [CustomerStatus.SoftLock]: "Soft Locked",
-        [CustomerStatus.HardLock]: "Hard Locked",
-    }), []);
 
     const edit = () => {
         onEdit(customer);
@@ -152,30 +145,30 @@ export const CustomerCard = ({
         const currentStatus = customer?.accountApproved === false ? CustomerStatus.WaitingApproval : customer?.status as unknown as CustomerStatus;
         const statusConfig = {
             [CustomerStatus.Unlocked]: { 
-                label: 'Active', 
-                color: '#2e7d32', 
-                icon: <ApprovedIcon sx={{ fontSize: 14 }} /> 
+                label: "Active", 
+                color: "#2e7d32", 
+                icon: <ApprovedIcon sx={{ fontSize: 14 }} />, 
             },
             [CustomerStatus.WaitingApproval]: { 
-                label: 'Pending', 
-                color: '#ed6c02', 
-                icon: <PendingIcon sx={{ fontSize: 14 }} /> 
+                label: "Pending", 
+                color: "#ed6c02", 
+                icon: <PendingIcon sx={{ fontSize: 14 }} />, 
             },
             [CustomerStatus.SoftLock]: { 
-                label: 'Soft Locked', 
-                color: '#d32f2f', 
-                icon: <BlockedIcon sx={{ fontSize: 14 }} /> 
+                label: "Soft Locked", 
+                color: "#d32f2f", 
+                icon: <BlockedIcon sx={{ fontSize: 14 }} />, 
             },
             [CustomerStatus.HardLock]: { 
-                label: 'Hard Locked', 
-                color: '#d32f2f', 
-                icon: <BlockedIcon sx={{ fontSize: 14 }} /> 
+                label: "Hard Locked", 
+                color: "#d32f2f", 
+                icon: <BlockedIcon sx={{ fontSize: 14 }} />, 
             },
             [CustomerStatus.Deleted]: { 
-                label: 'Deleted', 
-                color: '#424242', 
-                icon: <DeletedIcon sx={{ fontSize: 14 }} /> 
-            }
+                label: "Deleted", 
+                color: "#424242", 
+                icon: <DeletedIcon sx={{ fontSize: 14 }} />, 
+            },
         };
         
         const config = statusConfig[currentStatus] || statusConfig[CustomerStatus.Unlocked];
@@ -187,13 +180,13 @@ export const CustomerCard = ({
                 size="small"
                 sx={{
                     bgcolor: config.color,
-                    color: 'white',
-                    fontSize: '0.75rem',
+                    color: "white",
+                    fontSize: "0.75rem",
                     height: 24,
-                    '& .MuiChip-icon': {
-                        color: 'white',
-                        marginLeft: 1
-                    }
+                    "& .MuiChip-icon": {
+                        color: "white",
+                        marginLeft: 1,
+                    },
                 }}
             />
         );
@@ -236,7 +229,7 @@ export const CustomerCard = ({
                     pb: 2,
                     flex: 1,
                     display: "flex",
-                    flexDirection: "column"
+                    flexDirection: "column",
                 }}
             >
                 {/* Header Section */}
@@ -244,7 +237,7 @@ export const CustomerCard = ({
                     <Box display="flex" alignItems="center" gap={1.5}>
                         <Avatar
                             sx={{
-                                bgcolor: customer?.business ? '#1976d2' : '#546e7a',
+                                bgcolor: customer?.business ? "#1976d2" : "#546e7a",
                                 width: 40,
                                 height: 40,
                                 "& > svg": {
@@ -286,10 +279,10 @@ export const CustomerCard = ({
                                     size="small"
                                     variant="outlined"
                                     sx={{
-                                        fontSize: '0.7rem',
+                                        fontSize: "0.7rem",
                                         height: 20,
                                         borderColor: palette.divider,
-                                        color: palette.text.secondary
+                                        color: palette.text.secondary,
                                     }}
                                 />
                             ))}
@@ -305,7 +298,7 @@ export const CustomerCard = ({
                 p: 2, 
                 pt: 1.5,
                 justifyContent: "space-between",
-                alignItems: "center"
+                alignItems: "center",
             }}>
                 <Box display="flex" gap={0.5}>
                     {actions?.slice(0, 3).map((action, index) =>
@@ -317,13 +310,13 @@ export const CustomerCard = ({
                                     color: palette.text.secondary,
                                     "&:hover": { 
                                         color: palette.primary.main,
-                                        bgcolor: palette.action.hover 
-                                    }
+                                        bgcolor: palette.action.hover, 
+                                    },
                                 }}
                             >
                                 {action[1]}
                             </IconButton>
-                        </Tooltip>
+                        </Tooltip>,
                     )}
                 </Box>
 
@@ -337,8 +330,8 @@ export const CustomerCard = ({
                                     color: palette.text.secondary,
                                     "&:hover": { 
                                         color: palette.primary.main,
-                                        bgcolor: palette.action.hover 
-                                    }
+                                        bgcolor: palette.action.hover, 
+                                    },
                                 }}
                             >
                                 <PhoneIcon fill="currentColor" />
@@ -354,8 +347,8 @@ export const CustomerCard = ({
                                     color: palette.text.secondary,
                                     "&:hover": { 
                                         color: palette.primary.main,
-                                        bgcolor: palette.action.hover 
-                                    }
+                                        bgcolor: palette.action.hover, 
+                                    },
                                 }}
                             >
                                 <EmailIcon fill="currentColor" />

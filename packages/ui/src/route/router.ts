@@ -101,8 +101,8 @@ const useNavigate = (options: NavigationalProps) => {
  * Part 2, Low Carb Router API: Router, Route, Link, Switch
  */
 
-export const Router = (props: RouterProps): FunctionComponent<Partial<RouterProps> & { children: ReactNode }> => {
-    const ref = useRef<any>();
+export const Router: FunctionComponent<RouterProps & { children: ReactNode }> = (props) => {
+    const ref = useRef<any>(null);
 
     // this little trick allows to avoid having unnecessary
     // calls to potentially expensive `buildRouter` method.
@@ -111,8 +111,8 @@ export const Router = (props: RouterProps): FunctionComponent<Partial<RouterProp
 
     return createElement(RouterCtx.Provider, {
         value,
-        children: (props as any).children,
-    }) as any;
+        children: props.children,
+    });
 };
 
 export type RouteProps = {
@@ -143,7 +143,7 @@ export const Route = ({ path, match, component, children }: RouteProps) => {
         const lastCurrentPath = sessionStorage.getItem("currentPath");
         const lastCurrentSearchParams = sessionStorage.getItem("currentSearchParams");
         // Store current data in sessionStorage if last data didn't exist
-        if (!lastCurrentPath) sessionStorage.setItem("currentPath", location.pathname);
+        if (!lastCurrentPath) sessionStorage.setItem("currentPath", window.location.pathname);
         if (!lastCurrentSearchParams) sessionStorage.setItem("currentSearchParams", JSON.stringify(parseSearchParams()));
     }, [path]);
 

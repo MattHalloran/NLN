@@ -42,7 +42,7 @@ export const Dropzone = ({
     const [files, setFiles] = useState<PreviewableFile[]>([]);
     const { getRootProps, getInputProps } = useDropzone({
         accept: acceptedFileTypes.reduce((acc, type) => {
-            if (type.includes('/')) {
+            if (type.includes("/")) {
                 acc[type] = [];
             } else {
                 acc[type] = [];

@@ -29,10 +29,11 @@ const ErrorGenerator = ({ errorType }: ErrorGeneratorProps) => {
             // Simulate permission error
             throw new Error("Permission denied - unauthorized access");
         
-        case "reference":
+        case "reference": {
             // Simulate reference error
             const obj: any = null;
             return <div>{obj.nonExistentProperty.value}</div>;
+        }
         
         default:
             return (
@@ -118,10 +119,10 @@ export const ErrorBoundaryTest = () => {
                     sx={{ 
                         p: 3, 
                         minHeight: 100, 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        justifyContent: 'center',
-                        bgcolor: 'background.default'
+                        display: "flex", 
+                        alignItems: "center", 
+                        justifyContent: "center",
+                        bgcolor: "background.default",
                     }}
                 >
                     <ErrorBoundary
@@ -135,7 +136,7 @@ export const ErrorBoundaryTest = () => {
                     </ErrorBoundary>
                 </Paper>
 
-                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 2 }}>
+                <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 2 }}>
                     💡 Open your browser's developer console to see detailed error logging.
                 </Typography>
             </Paper>

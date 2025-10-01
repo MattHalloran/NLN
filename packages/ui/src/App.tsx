@@ -39,7 +39,7 @@ export function App() {
     const { data: landingPageData } = useLandingPageContent(true);
     
     const [login] = useMutation(loginMutation);
-    const [, setLocation] = useLocation();
+    const [,] = useLocation();
 
     useEffect(() => () => {
         if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -51,7 +51,7 @@ export function App() {
             const { business, hours } = landingPageData.contactInfo;
             const data = {
                 ...business,
-                hours
+                hours,
             };
             setBusiness(data);
         }
@@ -59,7 +59,7 @@ export function App() {
 
     useEffect(() => {
         // Determine theme
-        if (session?.theme && (session.theme === 'light' || session.theme === 'dark')) {
+        if (session?.theme && (session.theme === "light" || session.theme === "dark")) {
             setTheme(themes[session.theme]);
         }
         //else if (session && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) setTheme(themes.dark);
@@ -92,7 +92,7 @@ export function App() {
         });
         const businessSub = PubSub.get().subscribeBusiness((data) => setBusiness(data as BusinessData));
         const themeSub = PubSub.get().subscribeTheme((theme) => {
-            if (theme && (theme === 'light' || theme === 'dark')) {
+            if (theme && (theme === "light" || theme === "dark")) {
                 setTheme(themes[theme]);
             } else {
                 setTheme(themes.light);

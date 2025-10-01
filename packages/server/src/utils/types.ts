@@ -17,5 +17,4 @@
 //     export function binaryToHex(s: string): string;
 // }
 
-export { };
-
+export {};

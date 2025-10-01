@@ -28,7 +28,7 @@ export const PasswordTextField = ({
     name = "password",
     onBlur = noop,
     onChange,
-    value
+    value,
 }: PasswordTextFieldProps) => {
     const { palette } = useTheme();
 

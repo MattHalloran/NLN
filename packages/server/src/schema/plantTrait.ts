@@ -1,4 +1,3 @@
-
 import { Context } from "../context.js";
 import { IWrap, RecursivePartial } from "../types.js";
 import { TraitOptions, TraitValuesInput } from "./types.js";
@@ -28,7 +27,11 @@ export const typeDef = /* GraphQL */ `
 
 export const resolvers = {
     Query: {
-        traitNames: async (_parent: undefined, _input: undefined, { prisma }: Context): Promise<string[] | null> => {
+        traitNames: async (
+            _parent: undefined,
+            _input: undefined,
+            { prisma }: Context
+        ): Promise<string[] | null> => {
             const traits = await prisma.plant_trait.findMany({
                 select: {
                     name: true,
@@ -36,7 +39,11 @@ export const resolvers = {
             });
             return traits.map((t) => t.name);
         },
-        traitValues: async (_parent: undefined, { input }: IWrap<TraitValuesInput>, { prisma }: Context): Promise<string[] | null> => {
+        traitValues: async (
+            _parent: undefined,
+            { input }: IWrap<TraitValuesInput>,
+            { prisma }: Context
+        ): Promise<string[] | null> => {
             const traits = await prisma.plant_trait.findMany({
                 where: { name: input.name },
                 select: {
@@ -46,13 +53,19 @@ export const resolvers = {
             return traits.map((t) => t.value);
         },
         // Returns all values previously entered for every trait
-        traitOptions: async (_parent: undefined, _data: IWrap<undefined>, { prisma }: Context): Promise<RecursivePartial<TraitOptions[]> | null> => {
+        traitOptions: async (
+            _parent: undefined,
+            _data: IWrap<undefined>,
+            { prisma }: Context
+        ): Promise<RecursivePartial<TraitOptions[]> | null> => {
             // Query all data
             const trait_data = await prisma.plant_trait.findMany();
             // Combine data into object
             const options: { [x: string]: any } = {};
             for (const row of trait_data) {
-                options[row.name] ? options[row.name].push(row.value) : options[row.name] = [row.value];
+                options[row.name]
+                    ? options[row.name].push(row.value)
+                    : (options[row.name] = [row.value]);
             }
             // Format object
             const trait_options: any[] = [];

@@ -130,11 +130,11 @@ export const EditPlantDialog = ({
                             hash: d.hash ?? "",
                             files: [{
                                 __typename: "ImageFile" as const,
-                                src: d.src ?? '',
+                                src: d.src ?? "",
                                 width: d.width ?? -1,
-                                height: d.height ?? -1
+                                height: d.height ?? -1,
                             }],
-                        }
+                        },
                     };
                 })]);
                 setImagesChanged(true);
@@ -154,7 +154,7 @@ export const EditPlantDialog = ({
                     description: d.image.description ?? "",
                     hash: d.image.hash ?? "",
                     files: d.image.files ?? [],
-                }
+                },
             })));
         } else {
             setImageData(null);
@@ -193,7 +193,7 @@ export const EditPlantDialog = ({
                 return { hash: d.image.hash, isDisplay: d.isDisplay ?? false };
             }) ?? [],
         };
-        console.log('plant dataaaaa', plant_data)
+        console.log("plant dataaaaa", plant_data);
         mutationWrapper<updatePlant_updatePlant, updatePlantVariables>({
             mutation: updatePlant,
             input: plant_data,

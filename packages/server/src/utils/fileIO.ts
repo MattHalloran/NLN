@@ -29,18 +29,27 @@ const UPLOAD_DIR = `${process.env.PROJECT_DIR}/assets`;
  * - ext - extension of file
  * - folder - path of file
  */
-export function clean(file: string, defaultFolder?: string): {
-    name?: string,
-    ext?: string,
-    folder?: string,
+export function clean(
+    file: string,
+    defaultFolder?: string
+): {
+    name?: string;
+    ext?: string;
+    folder?: string;
 } {
     const pathRegex = /([^a-z0-9 .\-_/]+)/gi;
     // First, remove any invalid characters
     const cleanPath = file.replace(pathRegex, "");
-    const folder = path.dirname(cleanPath)?.replace(".", "") || defaultFolder?.replace(pathRegex, "")?.replace(".", "");
-    if (!cleanPath || cleanPath.length === 0) return {};
+    const folder =
+        path.dirname(cleanPath)?.replace(".", "") ||
+        defaultFolder?.replace(pathRegex, "")?.replace(".", "");
+    if (!cleanPath || cleanPath.length === 0) {
+        return {};
+    }
     // If a directory was passed in, instead of a file
-    if (!cleanPath.includes(".")) return { folder: folder ?? defaultFolder };
+    if (!cleanPath.includes(".")) {
+        return { folder: folder ?? defaultFolder };
+    }
     const { name, ext } = path.parse(path.basename(cleanPath));
     return { name, ext, folder: folder ?? defaultFolder };
 }
@@ -52,19 +61,26 @@ export function clean(file: string, defaultFolder?: string): {
  * @returns The preferred file name, or the name with the lowest available number appended to it
  * (starting from 0)
  */
-export async function findFileName(file: string, defaultFolder?: string): Promise<{
-    name?: string,
-    ext?: string,
-    folder?: string,
+export async function findFileName(
+    file: string,
+    defaultFolder?: string
+): Promise<{
+    name?: string;
+    ext?: string;
+    folder?: string;
 }> {
     const { name, ext, folder } = clean(file, defaultFolder);
     // If file name is available, no need to append a number
-    if (!fs.existsSync(`${UPLOAD_DIR}/${folder}/${name}${ext}`)) return { name, ext, folder };
+    if (!fs.existsSync(`${UPLOAD_DIR}/${folder}/${name}${ext}`)) {
+        return { name, ext, folder };
+    }
     // If file name was not available, start appending a number until one works
     let curr = 0;
     while (curr < MAX_FILE_NAME_ATTEMPTS) {
         const currName = `${name}-${curr}${ext}`;
-        if (!fs.existsSync(`${UPLOAD_DIR}/${folder}/${currName}`)) return { name: `${currName}`, ext, folder };
+        if (!fs.existsSync(`${UPLOAD_DIR}/${folder}/${currName}`)) {
+            return { name: `${currName}`, ext, folder };
+        }
         curr++;
     }
     // If no valid name found after max tries, return null
@@ -77,17 +93,22 @@ export async function findFileName(file: string, defaultFolder?: string): Promis
  * @param numBytes Maximum number of bytes to read from stream
  * @returns Buffer of file's contents
  */
-function streamToBuffer(stream: fs.ReadStream, numBytes: number = MAX_BUFFER_SIZE): Promise<Buffer> {
+function streamToBuffer(
+    stream: fs.ReadStream,
+    numBytes: number = MAX_BUFFER_SIZE
+): Promise<Buffer> {
     return new Promise((resolve, reject) => {
         const _buf: Buffer[] = [];
 
-        stream.on("data", (chunk: Buffer) => {
-            _buf.push(chunk);
-            if (_buf.length >= numBytes) stream.destroy();
+        stream.on("data", (chunk: string | Buffer) => {
+            const buffer = typeof chunk === "string" ? Buffer.from(chunk) : chunk;
+            _buf.push(buffer);
+            if (_buf.length >= numBytes) {
+                stream.destroy();
+            }
         });
         stream.on("end", () => resolve(Buffer.concat(_buf)));
-        stream.on("error", err => reject(err));
-
+        stream.on("error", (err) => reject(err));
     });
 }
 
@@ -100,7 +121,9 @@ function streamToBuffer(stream: fs.ReadStream, numBytes: number = MAX_BUFFER_SIZ
 function resizeOptions(width: number, height: number): { [key: string]: number } {
     const sizes: { [key: string]: number } = {};
     for (const [key, value] of Object.entries(IMAGE_SIZE)) {
-        if (width >= value || height >= value) sizes[key] = value;
+        if (width >= value || height >= value) {
+            sizes[key] = value;
+        }
     }
     return sizes;
 }
@@ -116,12 +139,25 @@ function resizeOptions(width: number, height: number): { [key: string]: number }
  * - success - True if successful
  * - filename - Name of file that was saved (since naming conflicts might mean that a number was appended)
  */
-export async function saveFile(stream: any, filename: string, mimetype: any, overwrite?: boolean, acceptedTypes?: string[]) {
+export async function saveFile(
+    stream: any,
+    filename: string,
+    mimetype: any,
+    overwrite?: boolean,
+    acceptedTypes?: string[]
+) {
     try {
-        const { name, ext, folder } = await (overwrite ? clean(filename, "public") : findFileName(filename));
-        if (name === null) throw Error("Could not create a valid file name");
+        const { name, ext, folder } = await (overwrite
+            ? clean(filename, "public")
+            : findFileName(filename));
+        if (name === null) {
+            throw Error("Could not create a valid file name");
+        }
         if (acceptedTypes) {
-            if (Array.isArray(acceptedTypes) && !acceptedTypes.some(type => mimetype.startsWith(type) || ext === type)) {
+            if (
+                Array.isArray(acceptedTypes) &&
+                !acceptedTypes.some((type) => mimetype.startsWith(type) || ext === type)
+            ) {
                 throw Error("File type not accepted");
             }
         }
@@ -157,11 +193,11 @@ export async function deleteFile(file: string) {
 }
 
 interface SaveImageProps {
-    file: Promise<any>,
-    alt?: string | null,
-    description?: string | null,
-    labels?: string[] | null,
-    errorOnDuplicate?: boolean,
+    file: Promise<any>;
+    alt?: string | null;
+    description?: string | null;
+    labels?: string[] | null;
+    errorOnDuplicate?: boolean;
 }
 
 /**
@@ -170,41 +206,55 @@ interface SaveImageProps {
  * @param alt Alt text for image
  * @param description Description of image
  * @param labels Labels for image. Similar concept to tags, but longer
- * @param errorOnDuplicate If image previously updated, throw error 
+ * @param errorOnDuplicate If image previously updated, throw error
  * @returns Object of shape { success, src, hash }
  */
-export async function saveImage({ file, alt, description, labels, errorOnDuplicate = false }: SaveImageProps): Promise<AddImageResponse> {
+export async function saveImage({
+    file,
+    alt,
+    description,
+    labels,
+    errorOnDuplicate = false,
+}: SaveImageProps): Promise<AddImageResponse> {
     try {
         // Destructure data. Each file upload is a promise
         const { createReadStream, filename, mimetype } = await file;
         // Make sure that the file is actually an image
-        if (!mimetype.startsWith("image/")) throw Error("Invalid mimetype");
+        if (!mimetype.startsWith("image/")) {
+            throw Error("Invalid mimetype");
+        }
         // Make sure image type is supported
         let { ext: extCheck } = path.parse(filename);
-        if (Object.values(IMAGE_EXTENSION).indexOf(extCheck.toLowerCase()) <= 0) throw Error("Image type not supported");
+        if (Object.values(IMAGE_EXTENSION).indexOf(extCheck.toLowerCase()) <= 0) {
+            throw Error("Image type not supported");
+        }
         // Create a read stream
         const stream = createReadStream();
         const { name, ext, folder } = await findFileName(filename, "images");
-        if (name === null) throw Error("Could not create a valid file name");
+        if (name === null) {
+            throw Error("Could not create a valid file name");
+        }
         // Determine image dimensions
         let image_buffer = await streamToBuffer(stream);
         const dimensions = probe.sync(image_buffer);
-        if (dimensions === null) throw new Error("Could not determine image dimensions");
+        if (dimensions === null) {
+            throw new Error("Could not determine image dimensions");
+        }
         // If image is .heic or .heif, convert to jpg. Thanks, Apple
         if ([".heic", ".heif"].includes(extCheck.toLowerCase())) {
             try {
                 const converted_buffer = await convert({
                     buffer: image_buffer, // the HEIC file buffer
-                    format: "JPEG",       // output format
-                    quality: 1,           // the jpeg compression quality, between 0 and 1
+                    format: "JPEG", // output format
+                    quality: 1, // the jpeg compression quality, between 0 and 1
                 });
                 extCheck = "jpg";
                 image_buffer = Buffer.from(converted_buffer);
             } catch (heicError) {
-                logger.log(LogLevel.error, "HEIC conversion failed, skipping file", { 
-                    code: genErrorCode("0012"), 
+                logger.log(LogLevel.error, "HEIC conversion failed, skipping file", {
+                    code: genErrorCode("0012"),
                     error: heicError,
-                    filename 
+                    filename,
                 });
                 throw new Error("HEIC conversion not available in current environment");
             }
@@ -213,7 +263,9 @@ export async function saveImage({ file, alt, description, labels, errorOnDuplica
         const hash = await imghash.hash(image_buffer);
         // Check if hash already exists (image previously uploaded)
         const previously_uploaded = await prisma.image.findUnique({ where: { hash } });
-        if (previously_uploaded && errorOnDuplicate) throw Error("File has already been uploaded");
+        if (previously_uploaded && errorOnDuplicate) {
+            throw Error("File has already been uploaded");
+        }
         // Download the original image, and store metadata in database
         const full_size_filename = `${folder}/${name}-XXL${extCheck}`;
         await sharp(image_buffer).toFile(`${UPLOAD_DIR}/${full_size_filename}`);
@@ -239,7 +291,7 @@ export async function saveImage({ file, alt, description, labels, errorOnDuplica
                     data: {
                         label: labels[i],
                         index: i,
-                        image: { connect: { hash: hash as string } },
+                        image: { connect: { hash: hash } },
                     },
                 });
             }
@@ -248,7 +300,9 @@ export async function saveImage({ file, alt, description, labels, errorOnDuplica
         const sizes = resizeOptions(dimensions.width, dimensions.height);
         for (const [key, value] of Object.entries(sizes)) {
             // XXL reserved for original image
-            if (key === "XXL") continue;
+            if (key === "XXL") {
+                continue;
+            }
             // Use largest dimension for resize
             const sizing_dimension = dimensions.width > dimensions.height ? "width" : "height";
             const resize_filename = `${folder}/${name}-${key}${extCheck}`;
@@ -294,14 +348,18 @@ export async function deleteImage(hash: string) {
         where: { hash },
         select: { files: { select: { src: true } } },
     });
-    if (!imageData) return false;
+    if (!imageData) {
+        return false;
+    }
     // Delete database information for image
     await prisma.image.delete({ where: { hash } });
     // Delete image files
     let success = true;
     if (Array.isArray(imageData.files)) {
         for (const file of imageData.files) {
-            if (!await deleteFile(file.src)) success = false;
+            if (!(await deleteFile(file.src))) {
+                success = false;
+            }
         }
     }
     return success;
@@ -333,12 +391,22 @@ export function readFiles(files: string[]): (string | null)[] {
  * @param acceptedTypes String or array of accepted file types, in mimetype form (e.g. 'image/png', 'application/vnd.ms-excel')
  * @returns Array of each filename saved, or null if unsuccessful
  */
-export async function saveFiles(files: any, overwrite = true, acceptedTypes?: string[]): Promise<(string | null)[]> {
+export async function saveFiles(
+    files: any,
+    overwrite = true,
+    acceptedTypes?: string[]
+): Promise<(string | null)[]> {
     const data: (string | null)[] = [];
     for (const file of files) {
         const { createReadStream, filename, mimetype } = await file;
         const stream = createReadStream();
-        const { success, filename: finalFilename } = await saveFile(stream, filename, mimetype, overwrite, acceptedTypes);
+        const { success, filename: finalFilename } = await saveFile(
+            stream,
+            filename,
+            mimetype,
+            overwrite,
+            acceptedTypes
+        );
         data.push(success ? finalFilename : null);
     }
     return data;
@@ -355,7 +423,10 @@ export async function appendToFile(file: string, data: string) {
         fs.appendFileSync(`${UPLOAD_DIR}/${folder}/${name}${ext}`, data);
         return true;
     } catch (error) {
-        logger.log(LogLevel.error, "Failed to append to file", { code: genErrorCode("00010"), error });
+        logger.log(LogLevel.error, "Failed to append to file", {
+            code: genErrorCode("00010"),
+            error,
+        });
         return false;
     }
 }

@@ -11,16 +11,19 @@ import { schema } from "./schema/index.js";
 import { setupDatabase } from "./utils/setupDatabase.js";
 import restRouter from "./rest/index.js";
 
-const SERVER_URL = process.env.VITE_SERVER_LOCATION === "local" ?
-    "http://localhost:5331/api" :
-    "https://newlifenurseryinc.com/api";
+const SERVER_URL =
+    process.env.VITE_SERVER_LOCATION === "local"
+        ? "http://localhost:5331/api"
+        : "https://newlifenurseryinc.com/api";
 
 const main = async () => {
-    console.info("Starting server...");
+    logger.log(LogLevel.info, "Starting server...");
 
     // Check for required .env variables
-    if (["JWT_SECRET"].some(name => !process.env[name])) {
-        logger.log(LogLevel.error, "🚨 JWT_SECRET not in environment variables. Stopping server", { code: genErrorCode("0007") });
+    if (["JWT_SECRET"].some((name) => !process.env[name])) {
+        logger.log(LogLevel.error, "🚨 JWT_SECRET not in environment variables. Stopping server", {
+            code: genErrorCode("0007"),
+        });
         process.exit(1);
     }
 
@@ -49,21 +52,22 @@ const main = async () => {
         origins.push(
             /^http:\/\/localhost(?::[0-9]+)?$/,
             /^http:\/\/192.168.0.[0-9]{1,2}(?::[0-9]+)?$/,
-            "https://studio.apollographql.com",
+            "https://studio.apollographql.com"
         );
-    }
-    else {
+    } else {
         origins.push(
             "http://newlifenurseryinc.com",
             "http://www.newlifenurseryinc.com",
             "https://newlifenurseryinc.com",
-            "https://www.newlifenurseryinc.com",
+            "https://www.newlifenurseryinc.com"
         );
     }
-    app.use(cors({
-        credentials: true,
-        origin: true,
-    }));
+    app.use(
+        cors({
+            credentials: true,
+            origin: true,
+        })
+    );
     // app.use(cors({
     //     credentials: true,
     //     origin: true,
@@ -71,13 +75,17 @@ const main = async () => {
 
     // Set static folders
     app.use("/api", express.static(`${process.env.PROJECT_DIR}/assets/public`));
-    app.use("/api/private", auth.requireAdmin, express.static(`${process.env.PROJECT_DIR}/assets/private`));
+    app.use(
+        "/api/private",
+        auth.requireAdmin,
+        express.static(`${process.env.PROJECT_DIR}/assets/private`)
+    );
     app.use("/api/images", express.static(`${process.env.PROJECT_DIR}/assets/images`));
 
     // Mount REST API routes
     app.use(express.json()); // Enable JSON parsing for REST endpoints
     app.use("/api/rest", restRouter);
-    
+
     /**
      * AsyncLocalStorage for Express req/res
      */
@@ -92,26 +100,28 @@ const main = async () => {
             // Get Express req/res from AsyncLocalStorage
             const store: any = asyncLocalStorage.getStore();
             if (!store || !store.req || !store.res) {
-                console.error('Express request/response not available in context');
-                throw new Error('Express request/response not available');
+                logger.log(LogLevel.error, "Express request/response not available in context", {
+                    code: genErrorCode("0008"),
+                });
+                throw new Error("Express request/response not available");
             }
             return context({ req: store.req, res: store.res });
         },
         plugins: [
             useDepthLimit({
                 maxDepth: 8,
-                ignore: ['__schema', '__type'] // Ignore introspection fields
-            })
+                ignore: ["__schema", "__type"], // Ignore introspection fields
+            }),
         ],
         landingPage: process.env.NODE_ENV === "development",
-        graphqlEndpoint: '/api/v1',
+        graphqlEndpoint: "/api/v1",
         cors: false,
         multipart: true, // Enable file uploads
-        maskedErrors: process.env.NODE_ENV === "production"
+        maskedErrors: process.env.NODE_ENV === "production",
     });
 
     // Configure GraphQL Yoga with Express using AsyncLocalStorage
-    app.use('/api/v1', (req, res, next) => {
+    app.use("/api/v1", (req, res, next) => {
         // Store Express req/res in AsyncLocalStorage
         asyncLocalStorage.run({ req, res }, async () => {
             // Call yoga's handle method properly
@@ -122,26 +132,31 @@ const main = async () => {
             }
         });
     });
-    
+
     // Start Express server
     const server = app.listen(5331, () => {
-        console.info(`🚀 Server running at ${SERVER_URL}`);
+        logger.log(LogLevel.info, `🚀 Server running at ${SERVER_URL}`);
     });
 
-    server.on('error', (error: any) => {
-        if (error.code === 'EADDRINUSE') {
-            logger.log(LogLevel.error, `Port 5331 is already in use`, { code: genErrorCode("0015") });
+    server.on("error", (error: any) => {
+        if (error.code === "EADDRINUSE") {
+            logger.log(LogLevel.error, `Port 5331 is already in use`, {
+                code: genErrorCode("0015"),
+            });
         } else {
-            logger.log(LogLevel.error, `Server failed to start: ${error.message}`, { code: genErrorCode("0016"), error });
+            logger.log(LogLevel.error, `Server failed to start: ${error.message}`, {
+                code: genErrorCode("0016"),
+                error,
+            });
         }
         process.exit(1);
     });
 
     // Graceful shutdown
-    process.on('SIGINT', () => {
-        console.info('Shutting down server...');
+    process.on("SIGINT", () => {
+        logger.log(LogLevel.info, "Shutting down server...");
         server.close(() => {
-            console.info('Server shutdown complete');
+            logger.log(LogLevel.info, "Server shutdown complete");
             process.exit(0);
         });
     });

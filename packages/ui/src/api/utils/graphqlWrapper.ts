@@ -72,7 +72,7 @@ export const graphqlWrapperHelper = <Output extends object>({
         // Stop spinner
         if (spinnerDelay) PubSub.get().publishLoading(false);
         // Determine if error caused by bad response, or caught error
-        const isApolloError: boolean = data !== undefined && data !== null && data.hasOwnProperty("graphQLErrors");
+        const isApolloError: boolean = data !== undefined && data !== null && Object.prototype.hasOwnProperty.call(data, "graphQLErrors");
         // Determine message to display, if any
         const message: string | undefined = typeof errorMessage === "function" ?
             errorMessage(data) :
@@ -110,7 +110,7 @@ export const graphqlWrapperHelper = <Output extends object>({
             return;
         }
         if (successCondition(data)) {
-            if (successMessage) PubSub.get().publishSnack({ message: successMessage && successMessage(data), severity: SnackSeverity.Success });
+            if (successMessage) PubSub.get().publishSnack({ message: successMessage?.(data), severity: SnackSeverity.Success });
             if (spinnerDelay) PubSub.get().publishLoading(false);
             if (onSuccess && typeof onSuccess === "function") onSuccess(data);
         } else {
@@ -146,7 +146,7 @@ export const documentNodeWrapper = <Output extends object, Input extends InputTy
 export const mutationWrapper = <Output extends object, Input extends InputType>(props: MutationWrapperProps<Output, Input>) => {
     const { mutation, ...rest } = props;
     return graphqlWrapperHelper({
-        call: () => { console.log("in call", rest.input); return mutation({ variables: rest.input ? { input: rest.input } as Input : undefined }); },
+        call: () => mutation({ variables: rest.input ? { input: rest.input } as Input : undefined }),
         ...rest,
     });
 };

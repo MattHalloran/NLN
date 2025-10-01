@@ -1,10 +1,10 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
-import { restApi, ApiError, LandingPageContent, Plant } from './client';
+import { useEffect, useState, useCallback, useRef } from "react";
+import { restApi, LandingPageContent, Plant } from "./client";
 
 // Generic hook for REST API calls
 function useRestQuery<T>(
     queryFn: () => Promise<T>,
-    dependencies: any[] = []
+    dependencies: any[] = [],
 ) {
     const [data, setData] = useState<T | null>(null);
     const [loading, setLoading] = useState(true);
@@ -26,11 +26,11 @@ function useRestQuery<T>(
             setData(result);
             setError(null);
         } catch (err) {
-            if (err instanceof Error && err.name === 'AbortError') {
+            if (err instanceof Error && err.name === "AbortError") {
                 // Request was cancelled, ignore
                 return;
             }
-            setError(err instanceof Error ? err : new Error('Unknown error'));
+            setError(err instanceof Error ? err : new Error("Unknown error"));
             setData(null);
         } finally {
             setLoading(false);
@@ -56,7 +56,7 @@ function useRestQuery<T>(
 export function useLandingPageContent(onlyActive = true) {
     return useRestQuery<LandingPageContent>(
         () => restApi.getLandingPageContent(onlyActive),
-        [onlyActive]
+        [onlyActive],
     );
 }
 
@@ -69,23 +69,23 @@ export function usePlants(params?: {
 }) {
     return useRestQuery<Plant[]>(
         () => restApi.getPlants(params),
-        [JSON.stringify(params)] // Stringify to compare object values
+        [JSON.stringify(params)], // Stringify to compare object values
     );
 }
 
 export function usePlant(id: string | null) {
     return useRestQuery<Plant>(
         () => {
-            if (!id) throw new Error('Plant ID is required');
+            if (!id) throw new Error("Plant ID is required");
             return restApi.getPlant(id);
         },
-        [id]
+        [id],
     );
 }
 
 // Hook for mutations (POST, PUT, DELETE)
 export function useRestMutation<TArgs = any, TResult = any>(
-    mutationFn: (args: TArgs) => Promise<TResult>
+    mutationFn: (args: TArgs) => Promise<TResult>,
 ) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<Error | null>(null);
@@ -101,7 +101,7 @@ export function useRestMutation<TArgs = any, TResult = any>(
             setError(null);
             return result;
         } catch (err) {
-            const error = err instanceof Error ? err : new Error('Unknown error');
+            const error = err instanceof Error ? err : new Error("Unknown error");
             setError(error);
             throw error;
         } finally {
@@ -121,7 +121,7 @@ export function useRestMutation<TArgs = any, TResult = any>(
 // Example mutation hook
 export function useInvalidateLandingPageCache() {
     return useRestMutation(
-        () => restApi.invalidateLandingPageCache()
+        () => restApi.invalidateLandingPageCache(),
     );
 }
 
@@ -131,7 +131,7 @@ export function useUpdateContactInfo() {
         { business?: any; hours?: string },
         { success: boolean; message: string; updated: { business: boolean; hours: boolean } }
     >(
-        (data) => restApi.updateContactInfo(data)
+        (data) => restApi.updateContactInfo(data),
     );
 }
 
@@ -183,6 +183,6 @@ export function useUpdateLandingPageContent() {
         },
         { success: boolean; message: string; updatedSections: string[] }
     >(
-        (data) => restApi.updateLandingPageContent(data)
+        (data) => restApi.updateLandingPageContent(data),
     );
 }

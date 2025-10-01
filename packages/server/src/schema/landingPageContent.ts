@@ -147,13 +147,13 @@ const CACHE_KEY = "landing-page-content:v1";
 const CACHE_TTL = 3600; // 1 hour in seconds
 
 // Helper functions to read JSON files
-const readHeroBanners = (): { banners: HeroBanner[], settings: HeroSettings } => {
+const readHeroBanners = (): { banners: HeroBanner[]; settings: HeroSettings } => {
     try {
         const data = readFileSync(join(dataPath, "hero-banners.json"), "utf8");
         const parsed = JSON.parse(data);
         return {
             banners: parsed.banners || [],
-            settings: parsed.settings || {}
+            settings: parsed.settings || {},
         };
     } catch (error) {
         console.error("Error reading hero banners:", error);
@@ -250,22 +250,22 @@ const aggregateLandingPageContent = (onlyActive: boolean = true): LandingPageCon
     let seasonalPlants = readSeasonalPlants();
     let plantTips = readPlantTips();
     const settings = readLandingPageSettings();
-    
+
     // Read contact info
     const businessInfo = readBusinessInfo();
     const businessHours = readBusinessHours();
 
     // Filter active content if requested
     if (onlyActive) {
-        seasonalPlants = seasonalPlants.filter(p => p.isActive);
-        plantTips = plantTips.filter(t => t.isActive);
+        seasonalPlants = seasonalPlants.filter((p) => p.isActive);
+        plantTips = plantTips.filter((t) => t.isActive);
     }
 
     // Sort by display order
     const heroBanners = banners
-        .filter(b => onlyActive ? b.isActive : true)
+        .filter((b) => (onlyActive ? b.isActive : true))
         .sort((a, b) => a.displayOrder - b.displayOrder);
-    
+
     seasonalPlants.sort((a, b) => a.displayOrder - b.displayOrder);
     plantTips.sort((a, b) => a.displayOrder - b.displayOrder);
 
@@ -277,9 +277,9 @@ const aggregateLandingPageContent = (onlyActive: boolean = true): LandingPageCon
         settings,
         contactInfo: {
             business: businessInfo,
-            hours: businessHours
+            hours: businessHours,
         },
-        lastUpdated: new Date().toISOString()
+        lastUpdated: new Date().toISOString(),
     };
 };
 
@@ -409,7 +409,10 @@ export const typeDef = /* GraphQL */ `
 
 export const resolvers = {
     Query: {
-        landingPageContent: async (_: any, args: { onlyActive?: boolean }): Promise<LandingPageContent> => {
+        landingPageContent: async (
+            _: any,
+            args: { onlyActive?: boolean }
+        ): Promise<LandingPageContent> => {
             const onlyActive = args.onlyActive !== false; // Default to true
 
             // Try to get from cache first
@@ -422,15 +425,19 @@ export const resolvers = {
             // Generate fresh content if not in cache
             console.log("Generating fresh landing page content and caching it");
             const content = aggregateLandingPageContent(onlyActive);
-            
+
             // Cache the new content
             await setCachedContent(content);
-            
+
             return content;
         },
     },
     Mutation: {
-        invalidateLandingPageCache: async (_: any, _args: {}, context: Context): Promise<boolean> => {
+        invalidateLandingPageCache: async (
+            _: any,
+            _args: {},
+            context: Context
+        ): Promise<boolean> => {
             // Admin authorization check
             if (!context.req.isAdmin) {
                 throw new GraphQLError("Admin access required");

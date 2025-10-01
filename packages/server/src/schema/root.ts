@@ -64,7 +64,10 @@ export const resolvers = {
         },
     }),
     Query: {
-        readAssets: async (_parent: undefined, { input }: IWrap<ReadAssetsInput>): Promise<RecursivePartial<any> | null> => {
+        readAssets: async (
+            _parent: undefined,
+            { input }: IWrap<ReadAssetsInput>
+        ): Promise<RecursivePartial<any> | null> => {
             return await readFiles(input.files);
         },
     },
@@ -72,7 +75,7 @@ export const resolvers = {
         writeAssets: async (_parent: undefined, input: any): Promise<boolean> => {
             const data = await saveFiles(input.files);
             // Any failed writes will return null
-            return !data.some(d => d === null);
+            return !data.some((d) => d === null);
         },
     },
 };

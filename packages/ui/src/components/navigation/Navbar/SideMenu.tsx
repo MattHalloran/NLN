@@ -292,7 +292,7 @@ export const SideMenu = () => {
                         <Box sx={{ paddingLeft: 1 }}>
                             <ListItem
                                 button
-                                onClick={() => newTab(business?.SOCIAL?.Facebook || '')}
+                                onClick={() => newTab(business?.SOCIAL?.Facebook || "")}
                                 sx={menuItemStyle(palette)}
                             >
                                 <ListItemIcon sx={{ color: "#1877F2" }}>
@@ -307,7 +307,7 @@ export const SideMenu = () => {
                             </ListItem>
                             <ListItem
                                 button
-                                onClick={() => newTab(business?.SOCIAL?.Instagram || '')}
+                                onClick={() => newTab(business?.SOCIAL?.Instagram || "")}
                                 sx={menuItemStyle(palette)}
                             >
                                 <ListItemIcon sx={{ color: "#E4405F" }}>

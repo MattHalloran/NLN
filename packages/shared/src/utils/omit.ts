@@ -4,10 +4,10 @@
  * @param keys The keys to omit
  * @returns The object with the omitted keys
  */
-export function omit(object: { [x: string]: any }, keys: string[]): any {
-    return Object.keys(object).reduce((acc: any, key) => {
-        if (keys.indexOf(key) === -1) {
-            acc[key] = object[key];
+export function omit<T extends Record<string, unknown>>(object: T, keys: (keyof T)[]): Partial<T> {
+    return Object.keys(object).reduce((acc: Partial<T>, key) => {
+        if (!keys.includes(key as keyof T)) {
+            acc[key as keyof T] = object[key as keyof T];
         }
         return acc;
     }, {});

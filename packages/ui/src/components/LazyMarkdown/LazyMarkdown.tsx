@@ -14,10 +14,10 @@ export const LazyMarkdown = ({ children, options, ...props }: LazyMarkdownProps)
     return (
         <Suspense fallback={
             <Box sx={{ 
-                display: 'flex', 
-                justifyContent: 'center', 
-                alignItems: 'center', 
-                padding: 2 
+                display: "flex", 
+                justifyContent: "center", 
+                alignItems: "center", 
+                padding: 2, 
             }}>
                 <CircularProgress size={24} />
             </Box>

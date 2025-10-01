@@ -34,7 +34,8 @@ export async function init(prisma: PrismaType) {
         update: {},
         create: {
             title: "Owner",
-            description: "This role grants administrative access. This comes with the ability to \
+            description:
+                "This role grants administrative access. This comes with the ability to \
             approve new customers, change customer information, modify inventory and \
             contact hours, and more.",
         },
@@ -73,15 +74,19 @@ export async function init(prisma: PrismaType) {
                     },
                 },
                 emails: {
-                    create: [{
-                        emailAddress: process.env.ADMIN_EMAIL!,
-                        receivesDeliveryUpdates: false,
-                    }],
+                    create: [
+                        {
+                            emailAddress: process.env.ADMIN_EMAIL!,
+                            receivesDeliveryUpdates: false,
+                        },
+                    ],
                 },
                 roles: {
-                    create: [{
-                        roleId: adminRole.id,
-                    }],
+                    create: [
+                        {
+                            roleId: adminRole.id,
+                        },
+                    ],
                 },
             },
         });

@@ -87,9 +87,9 @@ export const CartTable = ({
         if (display_data) {
             display = <Box
                 component="img"
-                src={`${getServerUrl()}/${getImageSrc(display_data) ?? ''}`}
-                alt={display_data.alt || ''}
-                title={commonName ?? ''}
+                src={`${getServerUrl()}/${getImageSrc(display_data) ?? ""}`}
+                alt={display_data.alt || ""}
+                title={commonName ?? ""}
                 sx={{
                     minHeight: 100,
                     maxHeight: 100,

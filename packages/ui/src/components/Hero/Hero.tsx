@@ -1,9 +1,7 @@
 // Code inspired by https://github.com/rmolinamir/hero-slider
-import { APP_LINKS } from "@local/shared";
 import { Box, Button, Chip, Stack, Typography, useTheme } from "@mui/material";
 import { useLandingPageContent } from "api/rest/hooks";
 import { Award, Leaf, Users } from "lucide-react";
-import { useEffect, useState } from "react";
 import { useLocation } from "route";
 import { getShortBusinessHours } from "utils/businessHours";
 import { Slider } from "./Slider";
@@ -29,7 +27,7 @@ export const Hero = ({
     const { palette } = useTheme();
 
     // Fetch unified landing page content using REST API
-    const { data, loading } = useLandingPageContent(true);
+    const { data } = useLandingPageContent(true);
 
     const heroBanners = data?.heroBanners || [];
     const heroSettings = data?.heroSettings;
@@ -45,8 +43,8 @@ export const Hero = ({
             __typename: "ImageFile" as const,
             src: banner.src,
             width: banner.width,
-            height: banner.height
-        }]
+            height: banner.height,
+        }],
     }));
 
     return (
@@ -81,13 +79,13 @@ export const Hero = ({
                         pointerEvents: "auto",
                         flexWrap: "wrap",
                         justifyContent: "center",
-                        gap: 2
+                        gap: 2,
                     }}
                 >
                     {(settings?.hero?.trustBadges || [
                         { icon: "users", text: "Family Owned Since 1980" },
                         { icon: "award", text: "Licensed & Certified" },
-                        { icon: "leaf", text: "Expert Plant Care" }
+                        { icon: "leaf", text: "Expert Plant Care" },
                     ]).map((badge, index) => {
                         const IconComponent = badge.icon === "users" ? Users : 
                                            badge.icon === "award" ? Award : Leaf;
@@ -102,7 +100,7 @@ export const Hero = ({
                                     fontSize: "0.9rem",
                                     py: 2.5,
                                     px: 1,
-                                    "& .MuiChip-icon": { color: palette.primary.main }
+                                    "& .MuiChip-icon": { color: palette.primary.main },
                                 }}
                             />
                         );
@@ -151,12 +149,12 @@ export const Hero = ({
                         width: "100%",
                         maxWidth: "500px",
                         justifyContent: "center",
-                        alignItems: "center"
+                        alignItems: "center",
                     }}
                 >
                     {(settings?.hero?.buttons || [
                         { text: "Browse Plants", link: "https://newlife.online-orders.sbiteam.com/", type: "primary" },
-                        { text: "Visit Our Nursery", link: "/about", type: "secondary" }
+                        { text: "Visit Our Nursery", link: "/about", type: "secondary" },
                     ]).map((button, index) => (
                         <Button
                             key={index}
@@ -185,7 +183,7 @@ export const Hero = ({
                                     borderColor: button.type === "primary" ? undefined : "white",
                                     transform: "translateY(-2px)",
                                     boxShadow: "0 6px 20px 0 rgba(0,0,0,0.5)",
-                                }
+                                },
                             }}
                             variant={button.type === "primary" ? "contained" : "outlined"}
                             size="large"

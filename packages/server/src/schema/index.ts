@@ -21,11 +21,28 @@ import * as Task from "./task.js";
 
 const { merge } = pkg;
 
-const models = [Root, Address, Business, Customer, Discount,
-    Email, Feedback, Image, LandingPageContent, Order, OrderItem,
-    Phone, Plant, PlantTrait, Role, SeasonalContent, Sku, Task];
+const models = [
+    Root,
+    Address,
+    Business,
+    Customer,
+    Discount,
+    Email,
+    Feedback,
+    Image,
+    LandingPageContent,
+    Order,
+    OrderItem,
+    Phone,
+    Plant,
+    PlantTrait,
+    Role,
+    SeasonalContent,
+    Sku,
+    Task,
+];
 
 export const schema = makeExecutableSchema({
-    typeDefs: models.map(m => m.typeDef),
-    resolvers: merge(models.map(m => m.resolvers)),
+    typeDefs: models.map((m) => m.typeDef),
+    resolvers: merge(models.map((m) => m.resolvers)),
 });

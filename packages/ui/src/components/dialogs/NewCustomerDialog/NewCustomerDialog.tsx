@@ -17,11 +17,11 @@ import {
     useTheme,
     Paper,
     Avatar,
-    useMediaQuery
+    useMediaQuery,
 } from "@mui/material";
 import { 
     Close as CloseIcon,
-    PersonAdd as PersonAddIcon 
+    PersonAdd as PersonAddIcon, 
 } from "@mui/icons-material";
 import { addCustomerVariables, addCustomer_addCustomer } from "api/generated/addCustomer";
 import { addCustomerMutation } from "api/mutation";
@@ -39,7 +39,7 @@ export const NewCustomerDialog = ({
     onClose,
 }: NewCustomerDialogProps) => {
     const { palette } = useTheme();
-    const isMobile = useMediaQuery('(max-width:600px)');
+    const isMobile = useMediaQuery("(max-width:600px)");
 
     const [addCustomer, { loading }] = useMutation(addCustomerMutation);
 
@@ -86,13 +86,13 @@ export const NewCustomerDialog = ({
                 sx: {
                     borderRadius: isMobile ? 0 : 2,
                     bgcolor: palette.background.paper,
-                }
+                },
             }}
         >
             <DialogTitle sx={{ 
                 p: 3, 
                 bgcolor: palette.background.paper,
-                borderBottom: `1px solid ${palette.divider}`
+                borderBottom: `1px solid ${palette.divider}`,
             }}>
                 <Box display="flex" alignItems="center" justifyContent="space-between">
                     <Box display="flex" alignItems="center" gap={2}>
@@ -119,7 +119,7 @@ export const NewCustomerDialog = ({
                         onClick={onClose}
                         sx={{ 
                             color: palette.text.secondary,
-                            "&:hover": { bgcolor: palette.action.hover }
+                            "&:hover": { bgcolor: palette.action.hover },
                         }}
                     >
                         <CloseIcon />
@@ -136,7 +136,7 @@ export const NewCustomerDialog = ({
                             m: 3, 
                             p: 3, 
                             border: `1px solid ${palette.divider}`,
-                            borderRadius: 2
+                            borderRadius: 2,
                         }}
                     >
                         <Typography variant="h6" fontWeight="600" sx={{ mb: 2, color: palette.text.primary }}>
@@ -203,7 +203,7 @@ export const NewCustomerDialog = ({
                             m: 3, 
                             p: 3, 
                             border: `1px solid ${palette.divider}`,
-                            borderRadius: 2
+                            borderRadius: 2,
                         }}
                     >
                         <Typography variant="h6" fontWeight="600" sx={{ mb: 2, color: palette.text.primary }}>
@@ -234,7 +234,7 @@ export const NewCustomerDialog = ({
                             m: 3, 
                             p: 3, 
                             border: `1px solid ${palette.divider}`,
-                            borderRadius: 2
+                            borderRadius: 2,
                         }}
                     >
                         <Typography variant="h6" fontWeight="600" sx={{ mb: 2, color: palette.text.primary }}>
@@ -281,7 +281,7 @@ export const NewCustomerDialog = ({
                             m: 3, 
                             p: 3, 
                             border: `1px solid ${palette.divider}`,
-                            borderRadius: 2
+                            borderRadius: 2,
                         }}
                     >
                         <Typography variant="h6" fontWeight="600" sx={{ mb: 2, color: palette.text.primary }}>
@@ -320,7 +320,7 @@ export const NewCustomerDialog = ({
                 p: 3, 
                 bgcolor: palette.background.paper,
                 borderTop: `1px solid ${palette.divider}`,
-                gap: 1
+                gap: 1,
             }}>
                 <Button
                     onClick={() => {
@@ -342,7 +342,7 @@ export const NewCustomerDialog = ({
                     startIcon={<CreateIcon />}
                     disabled={loading || !formik.isValid}
                 >
-                    {loading ? 'Creating...' : 'Create Customer'}
+                    {loading ? "Creating..." : "Create Customer"}
                 </Button>
             </DialogActions>
         </Dialog>

@@ -77,7 +77,7 @@ export const AdminCustomerPage = () => {
                         <Card sx={{ 
                             bgcolor: palette.background.paper,
                             border: `1px solid ${palette.divider}`,
-                            borderRadius: 1
+                            borderRadius: 1,
                         }}>
                             <CardContent sx={{ p: 3 }}>
                                 <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -96,7 +96,7 @@ export const AdminCustomerPage = () => {
                         <Card sx={{ 
                             bgcolor: palette.background.paper,
                             border: `1px solid ${palette.divider}`,
-                            borderRadius: 1
+                            borderRadius: 1,
                         }}>
                             <CardContent sx={{ p: 3 }}>
                                 <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -119,7 +119,7 @@ export const AdminCustomerPage = () => {
                         <Card sx={{ 
                             bgcolor: palette.background.paper,
                             border: `1px solid ${palette.divider}`,
-                            borderRadius: 1
+                            borderRadius: 1,
                         }}>
                             <CardContent sx={{ p: 2.5 }}>
                                 <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -136,8 +136,8 @@ export const AdminCustomerPage = () => {
                                             sx={{ 
                                                 bgcolor: "#ed6c02", 
                                                 color: "white",
-                                                fontSize: '0.7rem',
-                                                height: 20
+                                                fontSize: "0.7rem",
+                                                height: 20,
                                             }} 
                                         />
                                     )}
@@ -149,7 +149,7 @@ export const AdminCustomerPage = () => {
                         <Card sx={{ 
                             bgcolor: palette.background.paper,
                             border: `1px solid ${palette.divider}`,
-                            borderRadius: 1
+                            borderRadius: 1,
                         }}>
                             <CardContent sx={{ p: 2.5 }}>
                                 <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -168,7 +168,7 @@ export const AdminCustomerPage = () => {
                         <Card sx={{ 
                             bgcolor: palette.background.paper,
                             border: `1px solid ${palette.divider}`,
-                            borderRadius: 1
+                            borderRadius: 1,
                         }}>
                             <CardContent sx={{ p: 2.5 }}>
                                 <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -193,7 +193,7 @@ export const AdminCustomerPage = () => {
                         mb: 3, 
                         borderRadius: 1,
                         bgcolor: palette.background.paper,
-                        border: `1px solid ${palette.divider}`
+                        border: `1px solid ${palette.divider}`,
                     }}
                 >
                     <Box display="flex" alignItems="center" justifyContent="space-between" mb={3}>
@@ -210,8 +210,8 @@ export const AdminCustomerPage = () => {
                                 color: palette.text.secondary,
                                 "&:hover": { 
                                     color: palette.primary.main,
-                                    bgcolor: palette.action.hover 
-                                }
+                                    bgcolor: palette.action.hover, 
+                                },
                             }}
                         >
                             <Refresh />
@@ -239,8 +239,8 @@ export const AdminCustomerPage = () => {
                                         fontWeight: 600,
                                         bgcolor: palette.primary.main,
                                         "&:hover": {
-                                            bgcolor: palette.primary.dark
-                                        }
+                                            bgcolor: palette.primary.dark,
+                                        },
                                     }}
                                 >
                                     Add New Customer

@@ -22,7 +22,7 @@ import {
     Typography,
     useTheme,
     Divider,
-    Alert
+    Alert,
 } from "@mui/material";
 import {
     AccessTime,
@@ -32,7 +32,7 @@ import {
     LocationOn,
     Phone,
     Schedule,
-    Add
+    Add,
 } from "@mui/icons-material";
 import { useUpdateContactInfo, useLandingPageContent } from "api/rest/hooks";
 import { AdminTabOption, AdminTabs, PageContainer } from "components";
@@ -59,12 +59,12 @@ interface BusinessNote {
     text: string;
 }
 
-const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const DAYS_OF_WEEK = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const TIME_OPTIONS = [
-    '6:00 AM', '6:30 AM', '7:00 AM', '7:30 AM', '8:00 AM', '8:30 AM', '9:00 AM', '9:30 AM',
-    '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM', '12:00 PM', '12:30 PM', '1:00 PM', '1:30 PM',
-    '2:00 PM', '2:30 PM', '3:00 PM', '3:30 PM', '4:00 PM', '4:30 PM', '5:00 PM', '5:30 PM',
-    '6:00 PM', '6:30 PM', '7:00 PM', '7:30 PM', '8:00 PM', '8:30 PM', '9:00 PM', '9:30 PM', '10:00 PM'
+    "6:00 AM", "6:30 AM", "7:00 AM", "7:30 AM", "8:00 AM", "8:30 AM", "9:00 AM", "9:30 AM",
+    "10:00 AM", "10:30 AM", "11:00 AM", "11:30 AM", "12:00 PM", "12:30 PM", "1:00 PM", "1:30 PM",
+    "2:00 PM", "2:30 PM", "3:00 PM", "3:30 PM", "4:00 PM", "4:30 PM", "5:00 PM", "5:30 PM",
+    "6:00 PM", "6:30 PM", "7:00 PM", "7:30 PM", "8:00 PM", "8:30 PM", "9:00 PM", "9:30 PM", "10:00 PM",
 ];
 
 export const AdminContactPage = () => {
@@ -84,10 +84,10 @@ export const AdminContactPage = () => {
             // Initialize with default hours
             const defaultHours = DAYS_OF_WEEK.map(day => ({
                 day,
-                enabled: day !== 'Sunday',
-                openTime: '8:00 AM',
-                closeTime: '5:00 PM',
-                closed: false
+                enabled: day !== "Sunday",
+                openTime: "8:00 AM",
+                closeTime: "5:00 PM",
+                closed: false,
             }));
             setDayHours(defaultHours);
             return;
@@ -97,20 +97,20 @@ export const AdminContactPage = () => {
         
         // Parse markdown table into structured data
         try {
-            const lines = landingPageData.contactInfo.hours.split('\n').filter(line => line.trim());
+            const lines = landingPageData.contactInfo.hours.split("\n").filter(line => line.trim());
             const parsedHours: DayHours[] = [];
             const parsedNotes: BusinessNote[] = [];
             
             for (const line of lines) {
-                if (line.includes('|') && !line.includes('---')) {
-                    const parts = line.split('|').map(p => p.trim()).filter(p => p);
+                if (line.includes("|") && !line.includes("---")) {
+                    const parts = line.split("|").map(p => p.trim()).filter(p => p);
                     if (parts.length >= 2) {
                         const day = parts[0];
                         const hours = parts[1];
                         
                         // Check if this is a range (e.g., "MON-FRI")
-                        if (day.includes('-') && !DAYS_OF_WEEK.includes(day)) {
-                            const rangeParts = day.split('-');
+                        if (day.includes("-") && !DAYS_OF_WEEK.includes(day)) {
+                            const rangeParts = day.split("-");
                             if (rangeParts.length === 2) {
                                 const startDay = rangeParts[0].trim();
                                 const endDay = rangeParts[1].trim();
@@ -121,33 +121,33 @@ export const AdminContactPage = () => {
                                 
                                 if (startIndex !== -1 && endIndex !== -1) {
                                     for (let i = startIndex; i <= endIndex; i++) {
-                                        if (hours.toLowerCase() === 'closed') {
+                                        if (hours.toLowerCase() === "closed") {
                                             parsedHours.push({
                                                 day: DAYS_OF_WEEK[i],
                                                 enabled: true,
-                                                openTime: '8:00 AM',
-                                                closeTime: '5:00 PM',
-                                                closed: true
+                                                openTime: "8:00 AM",
+                                                closeTime: "5:00 PM",
+                                                closed: true,
                                             });
                                         } else {
-                                            const timeParts = hours.split(' to ');
+                                            const timeParts = hours.split(" to ");
                                             if (timeParts.length === 2) {
                                                 parsedHours.push({
                                                     day: DAYS_OF_WEEK[i],
                                                     enabled: true,
                                                     openTime: timeParts[0].trim(),
                                                     closeTime: timeParts[1].trim(),
-                                                    closed: false
+                                                    closed: false,
                                                 });
                                             } else {
-                                                const dashParts = hours.split(' - ');
+                                                const dashParts = hours.split(" - ");
                                                 if (dashParts.length === 2) {
                                                     parsedHours.push({
                                                         day: DAYS_OF_WEEK[i],
                                                         enabled: true,
                                                         openTime: dashParts[0].trim(),
                                                         closeTime: dashParts[1].trim(),
-                                                        closed: false
+                                                        closed: false,
                                                     });
                                                 }
                                             }
@@ -156,33 +156,33 @@ export const AdminContactPage = () => {
                                 }
                             }
                         } else if (DAYS_OF_WEEK.includes(day)) {
-                            if (hours.toLowerCase() === 'closed') {
+                            if (hours.toLowerCase() === "closed") {
                                 parsedHours.push({
                                     day,
                                     enabled: true,
-                                    openTime: '8:00 AM',
-                                    closeTime: '5:00 PM',
-                                    closed: true
+                                    openTime: "8:00 AM",
+                                    closeTime: "5:00 PM",
+                                    closed: true,
                                 });
                             } else {
-                                const timeParts = hours.split(' to ');
+                                const timeParts = hours.split(" to ");
                                 if (timeParts.length === 2) {
                                     parsedHours.push({
                                         day,
                                         enabled: true,
                                         openTime: timeParts[0].trim(),
                                         closeTime: timeParts[1].trim(),
-                                        closed: false
+                                        closed: false,
                                     });
                                 } else {
-                                    const dashParts = hours.split(' - ');
+                                    const dashParts = hours.split(" - ");
                                     if (dashParts.length === 2) {
                                         parsedHours.push({
                                             day,
                                             enabled: true,
                                             openTime: dashParts[0].trim(),
                                             closeTime: dashParts[1].trim(),
-                                            closed: false
+                                            closed: false,
                                         });
                                     }
                                 }
@@ -191,7 +191,7 @@ export const AdminContactPage = () => {
                             // This is likely a note (e.g., "Note", "Special")
                             parsedNotes.push({
                                 id: Date.now().toString() + Math.random(),
-                                text: hours
+                                text: hours,
                             });
                         }
                     }
@@ -206,22 +206,22 @@ export const AdminContactPage = () => {
                 return existing || {
                     day,
                     enabled: false,
-                    openTime: '8:00 AM',
-                    closeTime: '5:00 PM',
-                    closed: false
+                    openTime: "8:00 AM",
+                    closeTime: "5:00 PM",
+                    closed: false,
                 };
             });
             
             setDayHours(finalHours);
         } catch (error) {
-            console.error('Error parsing hours:', error);
+            console.error("Error parsing hours:", error);
             // Fallback to default hours
             const defaultHours = DAYS_OF_WEEK.map(day => ({
                 day,
                 enabled: false,
-                openTime: '8:00 AM',
-                closeTime: '5:00 PM',
-                closed: false
+                openTime: "8:00 AM",
+                closeTime: "5:00 PM",
+                closed: false,
             }));
             setDayHours(defaultHours);
         }
@@ -240,7 +240,7 @@ export const AdminContactPage = () => {
             enabled: true,
             openTime: mondayHours.openTime,
             closeTime: mondayHours.closeTime,
-            closed: mondayHours.closed
+            closed: mondayHours.closed,
         }));
         setDayHours(newHours);
     };
@@ -280,7 +280,7 @@ export const AdminContactPage = () => {
                         days: currentGroup.map(h => h.day),
                         openTime: currentGroup[0].openTime,
                         closeTime: currentGroup[0].closeTime,
-                        closed: currentGroup[0].closed
+                        closed: currentGroup[0].closed,
                     });
                     currentGroup = [hour];
                 }
@@ -293,7 +293,7 @@ export const AdminContactPage = () => {
                 days: currentGroup.map(h => h.day),
                 openTime: currentGroup[0].openTime,
                 closeTime: currentGroup[0].closeTime,
-                closed: currentGroup[0].closed
+                closed: currentGroup[0].closed,
             });
         }
         
@@ -311,8 +311,8 @@ export const AdminContactPage = () => {
     };
 
     const generateMarkdown = () => {
-        let markdown = '| Day           | Hours |\n';
-        markdown += '| ------------- |:-------------:         |\n';
+        let markdown = "| Day           | Hours |\n";
+        markdown += "| ------------- |:-------------:         |\n";
         
         if (useRangeGrouping) {
             const groups = groupConsecutiveDays(dayHours);
@@ -348,14 +348,14 @@ export const AdminContactPage = () => {
     const addNote = () => {
         const newNote: BusinessNote = {
             id: Date.now().toString() + Math.random(),
-            text: ""
+            text: "",
         };
         setBusinessNotes([...businessNotes, newNote]);
     };
     
     const updateNote = (id: string, text: string) => {
         setBusinessNotes(businessNotes.map(note => 
-            note.id === id ? { ...note, text } : note
+            note.id === id ? { ...note, text } : note,
         ));
     };
     
@@ -368,7 +368,7 @@ export const AdminContactPage = () => {
             const markdown = showAdvancedMode ? markdownHours : generateMarkdown();
             
             await updateContactInfo({
-                hours: markdown
+                hours: markdown,
             });
             
             // Refetch the landing page data to get updated information
@@ -384,20 +384,20 @@ export const AdminContactPage = () => {
     const revertHours = () => {
         if (landingPageData?.contactInfo?.hours) {
             // Re-parse from original business hours using the same logic as useEffect
-            const lines = landingPageData.contactInfo.hours.split('\n').filter(line => line.trim());
+            const lines = landingPageData.contactInfo.hours.split("\n").filter(line => line.trim());
             const parsedHours: DayHours[] = [];
             const parsedNotes: BusinessNote[] = [];
             
             for (const line of lines) {
-                if (line.includes('|') && !line.includes('---')) {
-                    const parts = line.split('|').map(p => p.trim()).filter(p => p);
+                if (line.includes("|") && !line.includes("---")) {
+                    const parts = line.split("|").map(p => p.trim()).filter(p => p);
                     if (parts.length >= 2) {
                         const day = parts[0];
                         const hours = parts[1];
                         
                         // Check if this is a range (e.g., "MON-FRI")
-                        if (day.includes('-') && !DAYS_OF_WEEK.includes(day)) {
-                            const rangeParts = day.split('-');
+                        if (day.includes("-") && !DAYS_OF_WEEK.includes(day)) {
+                            const rangeParts = day.split("-");
                             if (rangeParts.length === 2) {
                                 const startDay = rangeParts[0].trim();
                                 const endDay = rangeParts[1].trim();
@@ -408,33 +408,33 @@ export const AdminContactPage = () => {
                                 
                                 if (startIndex !== -1 && endIndex !== -1) {
                                     for (let i = startIndex; i <= endIndex; i++) {
-                                        if (hours.toLowerCase() === 'closed') {
+                                        if (hours.toLowerCase() === "closed") {
                                             parsedHours.push({
                                                 day: DAYS_OF_WEEK[i],
                                                 enabled: true,
-                                                openTime: '8:00 AM',
-                                                closeTime: '5:00 PM',
-                                                closed: true
+                                                openTime: "8:00 AM",
+                                                closeTime: "5:00 PM",
+                                                closed: true,
                                             });
                                         } else {
-                                            const timeParts = hours.split(' to ');
+                                            const timeParts = hours.split(" to ");
                                             if (timeParts.length === 2) {
                                                 parsedHours.push({
                                                     day: DAYS_OF_WEEK[i],
                                                     enabled: true,
                                                     openTime: timeParts[0].trim(),
                                                     closeTime: timeParts[1].trim(),
-                                                    closed: false
+                                                    closed: false,
                                                 });
                                             } else {
-                                                const dashParts = hours.split(' - ');
+                                                const dashParts = hours.split(" - ");
                                                 if (dashParts.length === 2) {
                                                     parsedHours.push({
                                                         day: DAYS_OF_WEEK[i],
                                                         enabled: true,
                                                         openTime: dashParts[0].trim(),
                                                         closeTime: dashParts[1].trim(),
-                                                        closed: false
+                                                        closed: false,
                                                     });
                                                 }
                                             }
@@ -443,33 +443,33 @@ export const AdminContactPage = () => {
                                 }
                             }
                         } else if (DAYS_OF_WEEK.includes(day)) {
-                            if (hours.toLowerCase() === 'closed') {
+                            if (hours.toLowerCase() === "closed") {
                                 parsedHours.push({
                                     day,
                                     enabled: true,
-                                    openTime: '8:00 AM',
-                                    closeTime: '5:00 PM',
-                                    closed: true
+                                    openTime: "8:00 AM",
+                                    closeTime: "5:00 PM",
+                                    closed: true,
                                 });
                             } else {
-                                const timeParts = hours.split(' to ');
+                                const timeParts = hours.split(" to ");
                                 if (timeParts.length === 2) {
                                     parsedHours.push({
                                         day,
                                         enabled: true,
                                         openTime: timeParts[0].trim(),
                                         closeTime: timeParts[1].trim(),
-                                        closed: false
+                                        closed: false,
                                     });
                                 } else {
-                                    const dashParts = hours.split(' - ');
+                                    const dashParts = hours.split(" - ");
                                     if (dashParts.length === 2) {
                                         parsedHours.push({
                                             day,
                                             enabled: true,
                                             openTime: dashParts[0].trim(),
                                             closeTime: dashParts[1].trim(),
-                                            closed: false
+                                            closed: false,
                                         });
                                     }
                                 }
@@ -478,7 +478,7 @@ export const AdminContactPage = () => {
                             // This is likely a note (e.g., "Note", "Special")
                             parsedNotes.push({
                                 id: Date.now().toString() + Math.random(),
-                                text: hours
+                                text: hours,
                             });
                         }
                     }
@@ -490,9 +490,9 @@ export const AdminContactPage = () => {
                 return existing || {
                     day,
                     enabled: false,
-                    openTime: '8:00 AM',
-                    closeTime: '5:00 PM',
-                    closed: false
+                    openTime: "8:00 AM",
+                    closeTime: "5:00 PM",
+                    closed: false,
                 };
             });
             
@@ -548,7 +548,7 @@ export const AdminContactPage = () => {
                             <Card sx={{ 
                                 bgcolor: palette.background.paper,
                                 border: `1px solid ${palette.divider}`,
-                                borderRadius: 1
+                                borderRadius: 1,
                             }}>
                                 <CardContent sx={{ p: 3 }}>
                                     <Box display="flex" alignItems="center" justifyContent="space-between" mb={3}>
@@ -571,7 +571,7 @@ export const AdminContactPage = () => {
                                     
                                     <Divider sx={{ mb: 3 }} />
                                     
-                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                    <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
                                         {dayHours.map((hours, index) => (
                                             <Paper 
                                                 key={hours.day} 
@@ -580,7 +580,7 @@ export const AdminContactPage = () => {
                                                     p: 2, 
                                                     border: `1px solid ${palette.divider}`,
                                                     borderRadius: 1,
-                                                    bgcolor: hours.enabled ? palette.background.paper : palette.action.disabledBackground
+                                                    bgcolor: hours.enabled ? palette.background.paper : palette.action.disabledBackground,
                                                 }}
                                             >
                                                 <Grid container spacing={2} alignItems="center">
@@ -589,12 +589,12 @@ export const AdminContactPage = () => {
                                                             control={
                                                                 <Checkbox
                                                                     checked={hours.enabled}
-                                                                    onChange={(e) => updateDayHours(index, 'enabled', e.target.checked)}
+                                                                    onChange={(e) => updateDayHours(index, "enabled", e.target.checked)}
                                                                     color="primary"
                                                                 />
                                                             }
                                                             label={
-                                                                <Typography fontWeight={hours.day === 'Saturday' || hours.day === 'Sunday' ? 500 : 600}>
+                                                                <Typography fontWeight={hours.day === "Saturday" || hours.day === "Sunday" ? 500 : 600}>
                                                                     {hours.day}
                                                                 </Typography>
                                                             }
@@ -608,7 +608,7 @@ export const AdminContactPage = () => {
                                                                     control={
                                                                         <Checkbox
                                                                             checked={hours.closed}
-                                                                            onChange={(e) => updateDayHours(index, 'closed', e.target.checked)}
+                                                                            onChange={(e) => updateDayHours(index, "closed", e.target.checked)}
                                                                             color="error"
                                                                         />
                                                                     }
@@ -622,7 +622,7 @@ export const AdminContactPage = () => {
                                                                         <Select
                                                                             fullWidth
                                                                             value={hours.openTime}
-                                                                            onChange={(e) => updateDayHours(index, 'openTime', e.target.value)}
+                                                                            onChange={(e) => updateDayHours(index, "openTime", e.target.value)}
                                                                             size="small"
                                                                             startAdornment={
                                                                                 <InputAdornment position="start">
@@ -640,7 +640,7 @@ export const AdminContactPage = () => {
                                                                         <Select
                                                                             fullWidth
                                                                             value={hours.closeTime}
-                                                                            onChange={(e) => updateDayHours(index, 'closeTime', e.target.value)}
+                                                                            onChange={(e) => updateDayHours(index, "closeTime", e.target.value)}
                                                                             size="small"
                                                                             startAdornment={
                                                                                 <InputAdornment position="start">
@@ -683,7 +683,7 @@ export const AdminContactPage = () => {
                                         </Button>
                                     </Box>
                                     
-                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                    <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
                                         {businessNotes.map((note, index) => (
                                             <Paper 
                                                 key={note.id} 
@@ -692,7 +692,7 @@ export const AdminContactPage = () => {
                                                     p: 2, 
                                                     border: `1px solid ${palette.divider}`,
                                                     borderRadius: 1,
-                                                    bgcolor: palette.background.paper
+                                                    bgcolor: palette.background.paper,
                                                 }}
                                             >
                                                 <Grid container spacing={2} alignItems="center">
@@ -734,8 +734,8 @@ export const AdminContactPage = () => {
                                 bgcolor: palette.background.paper,
                                 border: `1px solid ${palette.divider}`,
                                 borderRadius: 1,
-                                position: 'sticky',
-                                top: 20
+                                position: "sticky",
+                                top: 20,
                             }}>
                                 <CardContent sx={{ p: 3 }}>
                                     <Box display="flex" alignItems="center" gap={1} mb={3}>
@@ -837,7 +837,7 @@ export const AdminContactPage = () => {
                             <Card sx={{ 
                                 bgcolor: palette.background.paper,
                                 border: `1px solid ${palette.divider}`,
-                                borderRadius: 1
+                                borderRadius: 1,
                             }}>
                                 <CardContent sx={{ p: 3 }}>
                                     <Typography variant="h6" fontWeight="600" mb={2}>
@@ -859,7 +859,7 @@ export const AdminContactPage = () => {
                                         value={markdownHours}
                                         onChange={(e) => setMarkdownHours(e.target.value)}
                                         variant="outlined"
-                                        sx={{ fontFamily: 'monospace' }}
+                                        sx={{ fontFamily: "monospace" }}
                                     />
                                 </CardContent>
                             </Card>
@@ -869,7 +869,7 @@ export const AdminContactPage = () => {
                             <Card sx={{ 
                                 bgcolor: palette.background.paper,
                                 border: `1px solid ${palette.divider}`,
-                                borderRadius: 1
+                                borderRadius: 1,
                             }}>
                                 <CardContent sx={{ p: 3 }}>
                                     <Typography variant="h6" fontWeight="600" mb={2}>
@@ -879,11 +879,11 @@ export const AdminContactPage = () => {
                                         border: `1px solid ${palette.divider}`,
                                         borderRadius: 1,
                                         p: 2,
-                                        bgcolor: palette.background.default
+                                        bgcolor: palette.background.default,
                                     }}>
                                         {/* This would render the markdown preview - using a simple table for now */}
                                         <div dangerouslySetInnerHTML={{ 
-                                            __html: markdownHours.replace(/\n/g, '<br>').replace(/\|/g, ' | ') 
+                                            __html: markdownHours.replace(/\n/g, "<br>").replace(/\|/g, " | "), 
                                         }} />
                                     </Box>
                                 </CardContent>
@@ -895,14 +895,14 @@ export const AdminContactPage = () => {
                 {/* Action Buttons */}
                 <Box 
                     sx={{ 
-                        display: 'flex', 
+                        display: "flex", 
                         gap: 2, 
-                        justifyContent: 'flex-end', 
+                        justifyContent: "flex-end", 
                         mt: 4,
                         p: 3,
                         bgcolor: palette.background.paper,
                         border: `1px solid ${palette.divider}`,
-                        borderRadius: 1
+                        borderRadius: 1,
                     }}
                 >
                     <Button
@@ -911,7 +911,7 @@ export const AdminContactPage = () => {
                         startIcon={<CancelIcon />}
                         sx={{
                             minWidth: 120,
-                            borderRadius: 1
+                            borderRadius: 1,
                         }}
                     >
                         Revert Changes
@@ -925,9 +925,9 @@ export const AdminContactPage = () => {
                             minWidth: 120,
                             borderRadius: 1,
                             bgcolor: palette.primary.main,
-                            '&:hover': {
-                                bgcolor: palette.primary.dark
-                            }
+                            "&:hover": {
+                                bgcolor: palette.primary.dark,
+                            },
                         }}
                     >
                         {updateLoading ? "Saving..." : "Save Changes"}

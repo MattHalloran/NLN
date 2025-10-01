@@ -13,10 +13,9 @@ import {
     Typography, 
     useTheme,
     Paper,
-    Divider,
     Chip,
     Avatar,
-    useMediaQuery
+    useMediaQuery,
 } from "@mui/material";
 import { 
     Close as CloseIcon,
@@ -25,7 +24,7 @@ import {
     CheckCircle as ApprovedIcon,
     Schedule as PendingIcon,
     Block as BlockedIcon,
-    Delete as DeletedIcon
+    Delete as DeletedIcon,
 } from "@mui/icons-material";
 import { customers_customers } from "api/generated/customers";
 import { deleteCustomerVariables } from "api/generated/deleteCustomer";
@@ -56,7 +55,7 @@ export const CustomerDialog = ({
     onClose,
 }: CustomerDialogProps) => {
     const { palette } = useTheme();
-    const isMobile = useMediaQuery('(max-width:600px)');
+    const isMobile = useMediaQuery("(max-width:600px)");
 
     // Stores the modified customer data before updating
     const [currCustomer, setCurrCustomer] = useState<customers_customers>(customer);
@@ -65,7 +64,7 @@ export const CustomerDialog = ({
         setCurrCustomer(customer);
     }, [customer]);
 
-    const revert = () => setCurrCustomer(customer);
+    // Removed unused revert function
 
     const [currLabel, toggleLabel, toggleValue, ToggleIcon] = useMemo<[string, string, AccountStatus | null, SvgComponent]>(() => {
         return (currCustomer?.status in statusToggle ? statusToggle[currCustomer.status] : ["", "", null, ErrorIcon]) as [string, string, AccountStatus | null, SvgComponent];
@@ -155,36 +154,36 @@ export const CustomerDialog = ({
     const changes_made = !isEqual(customer, currCustomer);
 
     const getStatusChip = () => {
-        const currentStatus = currCustomer?.accountApproved === false ? 'WaitingApproval' : currCustomer?.status;
+        const currentStatus = currCustomer?.accountApproved === false ? "WaitingApproval" : currCustomer?.status;
         const statusConfig = {
-            'Unlocked': { 
-                label: 'Active', 
-                color: '#2e7d32', 
-                icon: <ApprovedIcon sx={{ fontSize: 14 }} /> 
+            "Unlocked": { 
+                label: "Active", 
+                color: "#2e7d32", 
+                icon: <ApprovedIcon sx={{ fontSize: 14 }} />, 
             },
-            'WaitingApproval': { 
-                label: 'Pending Approval', 
-                color: '#ed6c02', 
-                icon: <PendingIcon sx={{ fontSize: 14 }} /> 
+            "WaitingApproval": { 
+                label: "Pending Approval", 
+                color: "#ed6c02", 
+                icon: <PendingIcon sx={{ fontSize: 14 }} />, 
             },
-            'SoftLock': { 
-                label: 'Soft Locked', 
-                color: '#d32f2f', 
-                icon: <BlockedIcon sx={{ fontSize: 14 }} /> 
+            "SoftLock": { 
+                label: "Soft Locked", 
+                color: "#d32f2f", 
+                icon: <BlockedIcon sx={{ fontSize: 14 }} />, 
             },
-            'HardLock': { 
-                label: 'Hard Locked', 
-                color: '#d32f2f', 
-                icon: <BlockedIcon sx={{ fontSize: 14 }} /> 
+            "HardLock": { 
+                label: "Hard Locked", 
+                color: "#d32f2f", 
+                icon: <BlockedIcon sx={{ fontSize: 14 }} />, 
             },
-            'Deleted': { 
-                label: 'Deleted', 
-                color: '#424242', 
-                icon: <DeletedIcon sx={{ fontSize: 14 }} /> 
-            }
+            "Deleted": { 
+                label: "Deleted", 
+                color: "#424242", 
+                icon: <DeletedIcon sx={{ fontSize: 14 }} />, 
+            },
         };
         
-        const config = statusConfig[currentStatus as keyof typeof statusConfig] || statusConfig['Unlocked'];
+        const config = statusConfig[currentStatus as keyof typeof statusConfig] || statusConfig["Unlocked"];
         
         return (
             <Chip
@@ -193,11 +192,11 @@ export const CustomerDialog = ({
                 size="small"
                 sx={{
                     bgcolor: config.color,
-                    color: 'white',
-                    fontSize: '0.75rem',
-                    '& .MuiChip-icon': {
-                        color: 'white'
-                    }
+                    color: "white",
+                    fontSize: "0.75rem",
+                    "& .MuiChip-icon": {
+                        color: "white",
+                    },
                 }}
             />
         );
@@ -216,19 +215,19 @@ export const CustomerDialog = ({
                 sx: {
                     borderRadius: isMobile ? 0 : 2,
                     bgcolor: palette.background.paper,
-                }
+                },
             }}
         >
             <DialogTitle sx={{ 
                 p: 3, 
                 bgcolor: palette.background.paper,
-                borderBottom: `1px solid ${palette.divider}`
+                borderBottom: `1px solid ${palette.divider}`,
             }}>
                 <Box display="flex" alignItems="center" justifyContent="space-between">
                     <Box display="flex" alignItems="center" gap={2}>
                         <Avatar
                             sx={{
-                                bgcolor: customer?.business ? '#1976d2' : '#546e7a',
+                                bgcolor: customer?.business ? "#1976d2" : "#546e7a",
                                 width: 48,
                                 height: 48,
                             }}
@@ -253,7 +252,7 @@ export const CustomerDialog = ({
                             onClick={onClose}
                             sx={{ 
                                 color: palette.text.secondary,
-                                "&:hover": { bgcolor: palette.action.hover }
+                                "&:hover": { bgcolor: palette.action.hover },
                             }}
                         >
                             <CloseIcon />
@@ -271,7 +270,7 @@ export const CustomerDialog = ({
                             m: 3, 
                             p: 3, 
                             border: `1px solid ${palette.divider}`,
-                            borderRadius: 2
+                            borderRadius: 2,
                         }}
                     >
                         <Typography variant="h6" fontWeight="600" sx={{ mb: 2, color: palette.text.primary }}>
@@ -317,7 +316,7 @@ export const CustomerDialog = ({
                                 m: 3, 
                                 p: 3, 
                                 border: `1px solid ${palette.divider}`,
-                                borderRadius: 2
+                                borderRadius: 2,
                             }}
                         >
                             <Typography variant="h6" fontWeight="600" sx={{ mb: 2, color: palette.text.primary }}>
@@ -344,7 +343,7 @@ export const CustomerDialog = ({
                             m: 3, 
                             p: 3, 
                             border: `1px solid ${palette.divider}`,
-                            borderRadius: 2
+                            borderRadius: 2,
                         }}
                     >
                         <Typography variant="h6" fontWeight="600" sx={{ mb: 2, color: palette.text.primary }}>
@@ -381,7 +380,7 @@ export const CustomerDialog = ({
                             m: 3, 
                             p: 3, 
                             border: `1px solid ${palette.divider}`,
-                            borderRadius: 2
+                            borderRadius: 2,
                         }}
                     >
                         <Typography variant="h6" fontWeight="600" sx={{ mb: 2, color: palette.text.primary }}>
@@ -409,8 +408,8 @@ export const CustomerDialog = ({
                                                 size="small"
                                                 variant="outlined"
                                                 sx={{
-                                                    fontSize: '0.75rem',
-                                                    borderColor: palette.divider
+                                                    fontSize: "0.75rem",
+                                                    borderColor: palette.divider,
                                                 }}
                                             />
                                         )) || (
@@ -430,7 +429,7 @@ export const CustomerDialog = ({
                 p: 3, 
                 bgcolor: palette.background.paper,
                 borderTop: `1px solid ${palette.divider}`,
-                gap: 1
+                gap: 1,
             }}>
                 <Button
                     onClick={onClose}

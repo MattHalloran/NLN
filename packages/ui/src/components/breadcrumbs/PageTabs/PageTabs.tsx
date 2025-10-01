@@ -139,6 +139,7 @@ export const PageTabs = <T, S extends boolean = true>({
                 tabsContainer.removeEventListener("scroll", handleScroll);
             };
         }
+        return undefined;
     }, [updateUnderline]);
 
     // Update underline on window resize

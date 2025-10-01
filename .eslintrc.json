@@ -1,0 +1,94 @@
+{
+    "root": true,
+    "ignorePatterns": [
+        "dist/",
+        "build/",
+        "coverage/",
+        "vite.config.ts",
+        "graphqlTypes.ts",
+        "generated/",
+        "node_modules/",
+        "*.js",
+        "*.cjs",
+        "*.mjs"
+    ],
+    "extends": [
+        "eslint:recommended"
+    ],
+    "env": {
+        "node": true,
+        "es2022": true
+    },
+    "parserOptions": {
+        "ecmaVersion": 2022,
+        "sourceType": "module"
+    },
+    "rules": {
+        "quotes": ["error", "double"],
+        "comma-dangle": ["error", "always-multiline"],
+        "semi": ["error", "always"],
+        "space-infix-ops": "error",
+        "keyword-spacing": "error",
+        "arrow-spacing": "error",
+        "prefer-const": "error",
+        "no-var": "error",
+        "no-empty-function": "off",
+        "object-shorthand": "error",
+        "eol-last": "error",
+        "no-console": ["warn", { "allow": ["warn", "error"] }],
+        "padding-line-between-statements": [
+            "error",
+            { "blankLine": "always", "prev": "import", "next": "*" },
+            { "blankLine": "never", "prev": "import", "next": "import" }
+        ]
+    },
+    "overrides": [
+        {
+            "files": ["**/*.ts", "**/*.tsx"],
+            "parser": "@typescript-eslint/parser",
+            "parserOptions": {
+                "project": ["./packages/*/tsconfig.json"]
+            },
+            "extends": [
+                "plugin:@typescript-eslint/recommended"
+            ],
+            "plugins": ["@typescript-eslint"],
+            "rules": {
+                "@typescript-eslint/no-explicit-any": "warn",
+                "@typescript-eslint/no-unused-vars": "error",
+                "@typescript-eslint/prefer-nullish-coalescing": "off",
+                "@typescript-eslint/prefer-optional-chain": "warn",
+                "@typescript-eslint/no-empty-function": "off"
+            }
+        },
+        {
+            "files": ["packages/ui/**/*.tsx", "packages/ui/**/*.ts"],
+            "env": {
+                "browser": true,
+                "node": false
+            },
+            "extends": [
+                "react-app",
+                "plugin:react-hooks/recommended"
+            ],
+            "rules": {
+                "react-hooks/exhaustive-deps": "warn",
+                "react-hooks/rules-of-hooks": "error"
+            }
+        },
+        {
+            "files": ["packages/server/**/*.ts"],
+            "env": {
+                "node": true,
+                "browser": false
+            }
+        },
+        {
+            "files": ["packages/shared/**/*.ts"],
+            "env": {
+                "node": true,
+                "browser": true
+            }
+        }
+    ]
+}

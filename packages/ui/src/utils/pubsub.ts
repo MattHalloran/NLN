@@ -21,7 +21,7 @@ export const Pubs = {
     Snack: "snack",
     Theme: "theme",
 };
-export type Pubs = ValueOf<typeof Pubs>;
+export type PubsKey = ValueOf<typeof Pubs>;
 
 export type SnackPub = {
     message?: string;
@@ -49,7 +49,7 @@ export class PubSub {
         return PubSub.instance;
     }
 
-    publish(key: Pubs, data?: unknown) {
+    publish(key: PubsKey, data?: unknown) {
         if (this.subscribers[key]) {
             this.subscribers[key].forEach(subscriber => subscriber[1](data));
         }
@@ -83,7 +83,7 @@ export class PubSub {
     }
 
     // eslint-disable-next-line @typescript-eslint/ban-types
-    subscribe(key: Pubs, subscriber: (data?: any) => void): symbol {
+    subscribe(key: PubsKey, subscriber: (data?: any) => void): symbol {
         // Create unique token, so we can unsubscribe later
         const token = Symbol(key);
         if (!this.subscribers[key]) {

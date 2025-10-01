@@ -67,7 +67,7 @@ export const OrderCard = ({
             </CardContent>
             <CardActions>
                 <Button variant="text" onClick={() => onEdit?.(order)} sx={{ color: palette.secondary.light }}>View</Button>
-                {phoneList && phoneList.length &&
+                {phoneList?.length &&
                     (<Tooltip title="View phone numbers" placement="bottom">
                         <IconButton onClick={() => setPhoneDialogOpen(true)}>
                             <PhoneIcon fill={palette.secondary.light} />

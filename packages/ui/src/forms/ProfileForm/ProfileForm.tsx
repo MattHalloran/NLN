@@ -108,7 +108,7 @@ export const ProfileForm = () => {
                         color: palette.text.primary,
                         mb: 3,
                         pb: 1,
-                        borderBottom: `1px solid ${palette.divider}`
+                        borderBottom: `1px solid ${palette.divider}`,
                     }}
                 >
                     Personal Information
@@ -215,7 +215,7 @@ export const ProfileForm = () => {
                         color: palette.text.primary,
                         mb: 3,
                         pb: 1,
-                        borderBottom: `1px solid ${palette.divider}`
+                        borderBottom: `1px solid ${palette.divider}`,
                     }}
                 >
                     Account Settings
@@ -229,7 +229,7 @@ export const ProfileForm = () => {
                                     sx={{ 
                                         fontWeight: 500,
                                         color: palette.text.primary,
-                                        mb: 1
+                                        mb: 1,
                                     }}
                                 >
                                     Theme Preference
@@ -265,7 +265,7 @@ export const ProfileForm = () => {
                                     sx={{ 
                                         fontWeight: 500,
                                         color: palette.text.primary,
-                                        mb: 1
+                                        mb: 1,
                                     }}
                                 >
                                     Customer Status
@@ -313,8 +313,8 @@ export const ProfileForm = () => {
                                         color: palette.text.secondary,
                                         fontSize: "0.875rem",
                                         lineHeight: 1.5,
-                                        mt: 0.25
-                                    }
+                                        mt: 0.25,
+                                    },
                                 }}
                             />
                         </Grid>
@@ -332,7 +332,7 @@ export const ProfileForm = () => {
                         color: palette.text.primary,
                         mb: 3,
                         pb: 1,
-                        borderBottom: `1px solid ${palette.divider}`
+                        borderBottom: `1px solid ${palette.divider}`,
                     }}
                 >
                     Change Password
@@ -393,7 +393,7 @@ export const ProfileForm = () => {
                     justifyContent: "flex-end",
                     pt: 2,
                     borderTop: `1px solid ${palette.divider}`,
-                    mt: 2
+                    mt: 2,
                 }}
             >
                 <Button
@@ -406,8 +406,8 @@ export const ProfileForm = () => {
                         borderColor: palette.divider,
                         "&:hover": {
                             borderColor: palette.text.secondary,
-                            backgroundColor: palette.action.hover
-                        }
+                            backgroundColor: palette.action.hover,
+                        },
                     }}
                 >
                     Cancel
@@ -421,8 +421,8 @@ export const ProfileForm = () => {
                         minWidth: 120,
                         backgroundColor: "#546e7a",
                         "&:hover": {
-                            backgroundColor: "#455a64"
-                        }
+                            backgroundColor: "#455a64",
+                        },
                     }}
                 >
                     Save Changes

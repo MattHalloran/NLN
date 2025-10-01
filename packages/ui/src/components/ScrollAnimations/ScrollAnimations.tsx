@@ -16,7 +16,7 @@ export const ScrollAnimation = ({
     delay = 0, 
     duration = 0.8,
     threshold = 0.1,
-    sx 
+    sx, 
 }: ScrollAnimationProps) => {
     const elementRef = useRef<HTMLDivElement>(null);
 
@@ -29,12 +29,12 @@ export const ScrollAnimation = ({
                 entries.forEach((entry) => {
                     if (entry.isIntersecting) {
                         setTimeout(() => {
-                            entry.target.classList.add('animate');
+                            entry.target.classList.add("animate");
                         }, delay);
                     }
                 });
             },
-            { threshold }
+            { threshold },
         );
 
         observer.observe(element);
@@ -47,31 +47,31 @@ export const ScrollAnimation = ({
             case "fadeIn":
                 return {
                     opacity: 0,
-                    transition: `opacity ${duration}s ease-out`
+                    transition: `opacity ${duration}s ease-out`,
                 };
             case "slideUp":
                 return {
                     opacity: 0,
                     transform: "translateY(30px)",
-                    transition: `all ${duration}s ease-out`
+                    transition: `all ${duration}s ease-out`,
                 };
             case "slideLeft":
                 return {
                     opacity: 0,
                     transform: "translateX(30px)",
-                    transition: `all ${duration}s ease-out`
+                    transition: `all ${duration}s ease-out`,
                 };
             case "slideRight":
                 return {
                     opacity: 0,
                     transform: "translateX(-30px)",
-                    transition: `all ${duration}s ease-out`
+                    transition: `all ${duration}s ease-out`,
                 };
             case "scaleUp":
                 return {
                     opacity: 0,
                     transform: "scale(0.8)",
-                    transition: `all ${duration}s ease-out`
+                    transition: `all ${duration}s ease-out`,
                 };
             default:
                 return {};
@@ -82,19 +82,19 @@ export const ScrollAnimation = ({
         switch (animation) {
             case "fadeIn":
                 return {
-                    opacity: 1
+                    opacity: 1,
                 };
             case "slideUp":
             case "slideLeft":
             case "slideRight":
                 return {
                     opacity: 1,
-                    transform: "translateY(0) translateX(0)"
+                    transform: "translateY(0) translateX(0)",
                 };
             case "scaleUp":
                 return {
                     opacity: 1,
-                    transform: "scale(1)"
+                    transform: "scale(1)",
                 };
             default:
                 return {};
@@ -106,8 +106,8 @@ export const ScrollAnimation = ({
             ref={elementRef}
             sx={{
                 ...getInitialStyles(),
-                '&.animate': getAnimatedStyles(),
-                ...sx
+                "&.animate": getAnimatedStyles(),
+                ...sx,
             }}
         >
             {children}
@@ -135,8 +135,8 @@ export const Parallax = ({ children, speed = 0.5, sx }: ParallaxProps) => {
             element.style.transform = `translateY(${rate}px)`;
         };
 
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
+        window.addEventListener("scroll", handleScroll);
+        return () => window.removeEventListener("scroll", handleScroll);
     }, [speed]);
 
     return (
@@ -144,7 +144,7 @@ export const Parallax = ({ children, speed = 0.5, sx }: ParallaxProps) => {
             ref={elementRef}
             sx={{
                 willChange: "transform",
-                ...sx
+                ...sx,
             }}
         >
             {children}
@@ -166,12 +166,12 @@ export const Floating = ({ children, duration = 3, delay = 0, sx }: FloatingProp
             sx={{
                 animation: `floating ${duration}s ease-in-out infinite`,
                 animationDelay: `${delay}s`,
-                '@keyframes floating': {
-                    '0%': { transform: 'translateY(0px)' },
-                    '50%': { transform: 'translateY(-10px)' },
-                    '100%': { transform: 'translateY(0px)' }
+                "@keyframes floating": {
+                    "0%": { transform: "translateY(0px)" },
+                    "50%": { transform: "translateY(-10px)" },
+                    "100%": { transform: "translateY(0px)" },
                 },
-                ...sx
+                ...sx,
             }}
         >
             {children}
@@ -191,12 +191,12 @@ export const Pulse = ({ children, duration = 2, sx }: PulseProps) => {
         <Box
             sx={{
                 animation: `pulse ${duration}s ease-in-out infinite`,
-                '@keyframes pulse': {
-                    '0%': { transform: 'scale(1)', opacity: 1 },
-                    '50%': { transform: 'scale(1.05)', opacity: 0.8 },
-                    '100%': { transform: 'scale(1)', opacity: 1 }
+                "@keyframes pulse": {
+                    "0%": { transform: "scale(1)", opacity: 1 },
+                    "50%": { transform: "scale(1.05)", opacity: 0.8 },
+                    "100%": { transform: "scale(1)", opacity: 1 },
                 },
-                ...sx
+                ...sx,
             }}
         >
             {children}
@@ -216,7 +216,7 @@ export const StaggerContainer = ({
     children, 
     staggerDelay = 0.1, 
     animation = "slideUp",
-    sx 
+    sx, 
 }: StaggerContainerProps) => {
     return (
         <Box sx={sx}>

@@ -8,7 +8,7 @@ import {
     PhotoLibrary as GalleryIcon,
     ContactMail as ContactIcon,
     TrendingUp,
-    Assessment
+    Assessment,
 } from "@mui/icons-material";
 import { useQuery } from "@apollo/client";
 import { dashboardStatsQuery } from "api/query";
@@ -36,7 +36,7 @@ const getCardData = (stats: any): AdminCardData[] => [
         icon: OrdersIcon,
         color: "#546e7a",
         stats: `${stats?.pendingOrders || 0} pending`,
-        badge: stats?.pendingOrders > 0 ? "Active" : undefined
+        badge: stats?.pendingOrders > 0 ? "Active" : undefined,
     },
     {
         title: "Customers", 
@@ -44,7 +44,7 @@ const getCardData = (stats: any): AdminCardData[] => [
         link: APP_LINKS.AdminCustomers,
         icon: CustomersIcon,
         color: "#546e7a",
-        stats: `${stats?.totalCustomers || 0} total`
+        stats: `${stats?.totalCustomers || 0} total`,
     },
     {
         title: "Inventory",
@@ -52,7 +52,7 @@ const getCardData = (stats: any): AdminCardData[] => [
         link: APP_LINKS.AdminInventory,
         icon: InventoryIcon,
         color: "#546e7a",
-        stats: `${stats?.totalProducts || 0} items`
+        stats: `${stats?.totalProducts || 0} items`,
     },
     {
         title: "Hero",
@@ -60,7 +60,7 @@ const getCardData = (stats: any): AdminCardData[] => [
         link: APP_LINKS.AdminHero,
         icon: HeroIcon,
         color: "#546e7a",
-        stats: "Manage slides"
+        stats: "Manage slides",
     },
     {
         title: "Gallery",
@@ -68,7 +68,7 @@ const getCardData = (stats: any): AdminCardData[] => [
         link: APP_LINKS.AdminGallery,
         icon: GalleryIcon,
         color: "#546e7a",
-        stats: "Manage images"
+        stats: "Manage images",
     },
     {
         title: "Contact Info",
@@ -76,7 +76,7 @@ const getCardData = (stats: any): AdminCardData[] => [
         link: APP_LINKS.AdminContactInfo,
         icon: ContactIcon,
         color: "#546e7a",
-        stats: "Update info"
+        stats: "Update info",
     },
 ];
 
@@ -144,7 +144,7 @@ const AdminPageCard = ({
                             sx={{ 
                                 fontWeight: 600,
                                 mb: 1,
-                                color: palette.background.textPrimary
+                                color: palette.background.textPrimary,
                             }}
                         >
                             {data.title}
@@ -154,7 +154,7 @@ const AdminPageCard = ({
                             sx={{ 
                                 color: palette.background.textSecondary,
                                 lineHeight: 1.5,
-                                mb: 2
+                                mb: 2,
                             }}
                         >
                             {data.description}
@@ -168,7 +168,7 @@ const AdminPageCard = ({
                                 variant="body2" 
                                 sx={{ 
                                     color: palette.text.secondary,
-                                    fontWeight: 500
+                                    fontWeight: 500,
                                 }}
                             >
                                 {data.stats}
@@ -177,7 +177,7 @@ const AdminPageCard = ({
                                 variant="body2" 
                                 sx={{ 
                                     color: palette.primary.main,
-                                    fontWeight: 500
+                                    fontWeight: 500,
                                 }}
                             >
                                 Manage →
@@ -201,7 +201,7 @@ export const AdminMainPage = () => {
         if (!data) return {
             totalProducts: 0,
             totalCustomers: 0,
-            pendingOrders: 0
+            pendingOrders: 0,
         };
         
         const customers = data.customers || [];
@@ -212,7 +212,7 @@ export const AdminMainPage = () => {
         const totalCustomers = customers.filter((customer: any) => customer.accountApproved).length;
         
         // Count pending orders  
-        const pendingOrders = orders.filter((order: any) => order.status === 'Pending').length;
+        const pendingOrders = orders.filter((order: any) => order.status === "Pending").length;
         
         // Count total products (plants with SKUs)
         const totalProducts = plants.reduce((count: number, plant: any) => {
@@ -222,7 +222,7 @@ export const AdminMainPage = () => {
         return {
             totalProducts,
             totalCustomers, 
-            pendingOrders
+            pendingOrders,
         };
     }, [data]);
     
@@ -253,7 +253,7 @@ export const AdminMainPage = () => {
                         <Card sx={{ 
                             bgcolor: palette.background.paper,
                             border: `1px solid ${palette.divider}`,
-                            borderRadius: 1
+                            borderRadius: 1,
                         }}>
                             <CardContent sx={{ p: 3 }}>
                                 <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -272,7 +272,7 @@ export const AdminMainPage = () => {
                         <Card sx={{ 
                             bgcolor: palette.background.paper,
                             border: `1px solid ${palette.divider}`,
-                            borderRadius: 1
+                            borderRadius: 1,
                         }}>
                             <CardContent sx={{ p: 3 }}>
                                 <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -296,7 +296,7 @@ export const AdminMainPage = () => {
                     sx={{ 
                         mb: 2,
                         fontWeight: 600,
-                        color: palette.background.textPrimary
+                        color: palette.background.textPrimary,
                     }}
                 >
                     Management Modules
@@ -305,7 +305,7 @@ export const AdminMainPage = () => {
                     variant="body1" 
                     sx={{ 
                         mb: 4,
-                        color: palette.background.textSecondary
+                        color: palette.background.textSecondary,
                     }}
                 >
                     Select a module below to manage different aspects of your nursery business.

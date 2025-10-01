@@ -1,0 +1,17 @@
+#!/usr/bin/env sh
+
+# Load nvm if available (for WSL/Linux)
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+
+# Try to find npx in common locations
+if command -v npx >/dev/null 2>&1; then
+  npx lint-staged
+elif [ -f "$NVM_DIR/versions/node/$(nvm version 2>/dev/null)/bin/npx" ]; then
+  "$NVM_DIR/versions/node/$(nvm version)/bin/npx" lint-staged
+elif command -v yarn >/dev/null 2>&1; then
+  yarn lint-staged
+else
+  echo "Error: Cannot find npx or yarn. Please ensure Node.js is installed."
+  exit 1
+fi

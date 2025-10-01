@@ -11,6 +11,7 @@ import { PlantDialogProps } from "../types";
 // Lazy load the carousel component and its styles
 const Carousel = lazy(() => import("react-gallery-carousel").then(module => {
     import("react-gallery-carousel/dist/index.css");
+
     return module;
 }));
 
@@ -192,10 +193,10 @@ export const PlantDialog = ({
                     {images.length > 0 && <Grid item lg={6} xs={12}>
                         <Suspense fallback={
                             <Box sx={{ 
-                                display: 'flex', 
-                                justifyContent: 'center', 
-                                alignItems: 'center', 
-                                minHeight: '400px' 
+                                display: "flex", 
+                                justifyContent: "center", 
+                                alignItems: "center", 
+                                minHeight: "400px", 
                             }}>
                                 <CircularProgress />
                             </Box>

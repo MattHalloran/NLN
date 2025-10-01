@@ -10,7 +10,7 @@ import {
     Photo as HeroIconMui,
     PhotoLibrary as GalleryIconMui,
     ContactMail as ContactIconMui,
-    Home as HomeIconMui
+    Home as HomeIconMui,
 } from "@mui/icons-material";
 import { SvgProps } from "icons/types";
 
@@ -27,9 +27,7 @@ const InventoryIcon = ({ fill, width = 24, height = 24, ...props }: SvgProps) =>
     <InventoryIconMui sx={{ color: fill, fontSize: width }} {...props} />
 );
 
-const HeroIcon = ({ fill, width = 24, height = 24, ...props }: SvgProps) => (
-    <HeroIconMui sx={{ color: fill, fontSize: width }} {...props} />
-);
+// Removed unused HeroIcon component
 
 const HomeIcon = ({ fill, width = 24, height = 24, ...props }: SvgProps) => (
     <HomeIconMui sx={{ color: fill, fontSize: width }} {...props} />

@@ -2,32 +2,42 @@
 // 2) Delete image rows in the database no longer associated with any image files
 import fs from 'fs';
 import { deleteFile } from "../src/utils";
-import pkg from '@prisma/client';
-const { PrismaClient } = pkg;
-const prisma = new PrismaClient()
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 const FOLDER = 'images';
-const PATH = `${process.env.PROJECT_DIR}/assets/${FOLDER}`
+const PATH = `${process.env.PROJECT_DIR}/assets/${FOLDER}`;
 console.info(`🧼 Cleaning image data in: ${PATH}...`);
 
-if (!fs.existsSync(PATH)){
+if (!fs.existsSync(PATH)) {
     fs.mkdirSync(PATH);
 }
 
 // Find all image files
 const files = fs.readdirSync(PATH).map(f => `${FOLDER}/${f}`);
+
 // Find all image files referenced in database
-const imageData = await prisma.image.findMany({ 
-    select: { 
+const imageData = await prisma.image.findMany({
+    select: {
         hash: true,
         files: { select: { src: true } }
     }
-})
-if (imageData === undefined || imageData.length === 0) console.warn('No image data found in database')
-const dbFiles = imageData.map(d => {
-    if (Array.isArray(d.files)) return d.files.map(f => f.src)
-    return null;
-}).filter(d => d !== null).flat(2);
+});
+
+if (imageData === undefined || imageData.length === 0) {
+    console.warn('No image data found in database');
+}
+
+const dbFiles = imageData
+    .map(d => {
+        if (Array.isArray(d.files)) {
+            return d.files.map(f => f.src);
+        }
+        return null;
+    })
+    .filter((d): d is string[] => d !== null)
+    .flat();
 
 // Delete images not referenced in database
 for (const file of files) {
@@ -41,9 +51,9 @@ for (const file of files) {
 for (const file of dbFiles) {
     if (!files.some(f => f === file)) {
         console.info(`Deleting image data for ${file}`);
-        await prisma.image.deleteMany({ where: { files: { some: { src: file }}}})
+        await prisma.image.deleteMany({ where: { files: { some: { src: file } } } });
     }
 }
 
-console.info('✅ Cleaning complete')
-process.exit(0)
+console.info('✅ Cleaning complete');
+process.exit(0);

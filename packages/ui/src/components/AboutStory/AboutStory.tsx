@@ -1,6 +1,6 @@
 import { Box, Container, Grid, Typography, Card, CardContent, useTheme, Button } from "@mui/material";
 import { useLocation } from "route";
-import { Star, Home, Heart, Globe, LucideIcon } from "lucide-react";
+import { Star, Home, Heart, Globe } from "lucide-react";
 
 export const AboutStory = () => {
     const { palette } = useTheme();
@@ -10,23 +10,23 @@ export const AboutStory = () => {
         {
             title: "Quality First",
             description: "We source only the healthiest plants and provide expert care guidance to ensure your success.",
-            icon: Star
+            icon: Star,
         },
         {
             title: "Local Expertise",
             description: "40+ years of experience with Southern New Jersey growing conditions and climate-appropriate plant selection.",
-            icon: Home
+            icon: Home,
         },
         {
             title: "Family Heritage",
             description: "Family-owned and operated by the Gianaris family, maintaining traditional values and expertise.",
-            icon: Heart
+            icon: Heart,
         },
         {
             title: "Sustainability",
             description: "Committed to environmentally responsible practices and promoting native plant species.",
-            icon: Globe
-        }
+            icon: Globe,
+        },
     ];
 
     return (
@@ -35,7 +35,7 @@ export const AboutStory = () => {
             backgroundColor: palette.primary.main,
             color: "white",
             position: "relative",
-            overflow: "hidden"
+            overflow: "hidden",
         }}>
             {/* Background Pattern */}
             <Box sx={{
@@ -46,7 +46,7 @@ export const AboutStory = () => {
                 bottom: 0,
                 opacity: 0.1,
                 backgroundImage: "url('data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"><circle cx=\"50\" cy=\"50\" r=\"2\" fill=\"white\"/></svg>')",
-                backgroundSize: "50px 50px"
+                backgroundSize: "50px 50px",
             }} />
             
             <Container maxWidth="lg" sx={{ position: "relative", zIndex: 1 }}>
@@ -59,7 +59,7 @@ export const AboutStory = () => {
                                 sx={{ 
                                     color: palette.secondary.main,
                                     fontWeight: 600,
-                                    letterSpacing: 2
+                                    letterSpacing: 2,
                                 }}
                             >
                                 Our Story
@@ -71,7 +71,7 @@ export const AboutStory = () => {
                                 sx={{ 
                                     fontWeight: 700,
                                     mb: 3,
-                                    fontSize: { xs: "2rem", md: "3rem" }
+                                    fontSize: { xs: "2rem", md: "3rem" },
                                 }}
                             >
                                 Growing Excellence Since 1980
@@ -83,7 +83,7 @@ export const AboutStory = () => {
                                     mb: 3,
                                     opacity: 0.9,
                                     lineHeight: 1.6,
-                                    fontSize: { xs: "1.1rem", md: "1.25rem" }
+                                    fontSize: { xs: "1.1rem", md: "1.25rem" },
                                 }}
                             >
                                 What started as a family vision has grown into Southern New Jersey's premier wholesale nursery.
@@ -95,7 +95,7 @@ export const AboutStory = () => {
                                     mb: 3,
                                     opacity: 0.8,
                                     lineHeight: 1.8,
-                                    fontSize: "1.1rem"
+                                    fontSize: "1.1rem",
                                 }}
                             >
                                 Founded by the Gianaris family in 1980, New Life Nursery Inc. began with a simple mission: 
@@ -110,7 +110,7 @@ export const AboutStory = () => {
                                     mb: 4,
                                     opacity: 0.8,
                                     lineHeight: 1.8,
-                                    fontSize: "1.1rem"
+                                    fontSize: "1.1rem",
                                 }}
                             >
                                 With over 70 acres in production in Bridgeton, New Jersey, we specialize in growing 
@@ -130,7 +130,7 @@ export const AboutStory = () => {
                                         py: 1.5,
                                         borderRadius: 2,
                                         textTransform: "none",
-                                        fontWeight: 600
+                                        fontWeight: 600,
                                     }}
                                 >
                                     Learn More About Us
@@ -149,8 +149,8 @@ export const AboutStory = () => {
                                         color: "white",
                                         "&:hover": {
                                             borderColor: "white",
-                                            backgroundColor: "rgba(255, 255, 255, 0.1)"
-                                        }
+                                            backgroundColor: "rgba(255, 255, 255, 0.1)",
+                                        },
                                     }}
                                 >
                                     Visit Our Nursery
@@ -167,7 +167,7 @@ export const AboutStory = () => {
                                 sx={{ 
                                     fontWeight: 600,
                                     mb: 4,
-                                    textAlign: { xs: "center", md: "left" }
+                                    textAlign: { xs: "center", md: "left" },
                                 }}
                             >
                                 What Makes Us Different
@@ -184,15 +184,15 @@ export const AboutStory = () => {
                                             transition: "all 0.3s ease-in-out",
                                             "&:hover": {
                                                 backgroundColor: "rgba(255, 255, 255, 0.15)",
-                                                transform: "translateY(-4px)"
-                                            }
+                                                transform: "translateY(-4px)",
+                                            },
                                         }}>
                                             <CardContent sx={{ p: 3, textAlign: "center" }}>
                                                 <Box sx={{ 
                                                     mb: 2,
                                                     display: "flex",
                                                     justifyContent: "center",
-                                                    color: "white"
+                                                    color: "white",
                                                 }}>
                                                     {(() => {
                                                         const IconComponent = value.icon;
@@ -205,7 +205,7 @@ export const AboutStory = () => {
                                                     sx={{ 
                                                         fontWeight: 600,
                                                         mb: 1,
-                                                        color: "white"
+                                                        color: "white",
                                                     }}
                                                 >
                                                     {value.title}
@@ -216,7 +216,7 @@ export const AboutStory = () => {
                                                     sx={{ 
                                                         opacity: 0.9,
                                                         lineHeight: 1.6,
-                                                        color: "white"
+                                                        color: "white",
                                                     }}
                                                 >
                                                     {value.description}
@@ -238,13 +238,13 @@ export const AboutStory = () => {
                     borderRadius: 3,
                     textAlign: "center",
                     backdropFilter: "blur(10px)",
-                    border: "1px solid rgba(255, 255, 255, 0.2)"
+                    border: "1px solid rgba(255, 255, 255, 0.2)",
                 }}>
                     <Typography 
                         variant="h5" 
                         sx={{ 
                             fontWeight: 600,
-                            mb: 2
+                            mb: 2,
                         }}
                     >
                         Our Mission
@@ -256,7 +256,7 @@ export const AboutStory = () => {
                             opacity: 0.9,
                             maxWidth: "800px",
                             mx: "auto",
-                            lineHeight: 1.6
+                            lineHeight: 1.6,
                         }}
                     >
                         "Growing top quality material for buyers who are interested in the best."
@@ -265,7 +265,7 @@ export const AboutStory = () => {
                         variant="body2" 
                         sx={{ 
                             mt: 2,
-                            opacity: 0.8
+                            opacity: 0.8,
                         }}
                     >
                         — The Gianaris Family

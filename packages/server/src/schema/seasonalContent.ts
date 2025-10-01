@@ -69,11 +69,7 @@ const writeSeasonalPlants = (plants: SeasonalPlant[]): void => {
 
 const writePlantTips = (tips: PlantTip[]): void => {
     try {
-        writeFileSync(
-            join(dataPath, "plant-tips.json"),
-            JSON.stringify({ tips }, null, 2),
-            "utf8"
-        );
+        writeFileSync(join(dataPath, "plant-tips.json"), JSON.stringify({ tips }, null, 2), "utf8");
     } catch (error) {
         console.error("Error writing plant tips:", error);
         throw new GraphQLError("Failed to save plant tips");
@@ -137,26 +133,29 @@ export const typeDef = /* GraphQL */ `
         upsertSeasonalPlant(input: SeasonalPlantInput!): SeasonalPlant!
         deleteSeasonalPlant(id: ID!): Boolean!
         reorderSeasonalPlants(ids: [ID!]!): [SeasonalPlant!]!
-        
+
         # Plant Tips
         upsertPlantTip(input: PlantTipInput!): PlantTip!
         deletePlantTip(id: ID!): Boolean!
         reorderPlantTips(ids: [ID!]!): [PlantTip!]!
-        
+
         # Bulk operations
-        updateSeasonalContent(plants: [SeasonalPlantInput!]!, tips: [PlantTipInput!]!): SeasonalContent!
+        updateSeasonalContent(
+            plants: [SeasonalPlantInput!]!
+            tips: [PlantTipInput!]!
+        ): SeasonalContent!
     }
 `;
 
 export const resolvers = {
     Query: {
-        seasonalContent: (_: any, args: { onlyActive?: boolean }): SeasonalContentData => {
+        seasonalContent: (_: unknown, args: { onlyActive?: boolean }): SeasonalContentData => {
             let plants = readSeasonalPlants();
             let tips = readPlantTips();
 
             if (args.onlyActive) {
-                plants = plants.filter(p => p.isActive);
-                tips = tips.filter(t => t.isActive);
+                plants = plants.filter((p) => p.isActive);
+                tips = tips.filter((t) => t.isActive);
             }
 
             // Sort by display order
@@ -168,7 +167,7 @@ export const resolvers = {
     },
     Mutation: {
         upsertSeasonalPlant: async (
-            _: any,
+            _: unknown,
             { input }: { input: SeasonalPlantInput },
             context: Context
         ): Promise<SeasonalPlant> => {
@@ -178,10 +177,10 @@ export const resolvers = {
             }
 
             const plants = readSeasonalPlants();
-            
+
             if (input.id) {
                 // Update existing
-                const index = plants.findIndex(p => p.id === input.id);
+                const index = plants.findIndex((p) => p.id === input.id);
                 if (index === -1) {
                     throw new GraphQLError("Plant not found");
                 }
@@ -206,15 +205,15 @@ export const resolvers = {
             }
 
             writeSeasonalPlants(plants);
-            
+
             // Invalidate landing page cache
             await invalidateLandingPageCache();
-            
-            return plants.find(p => p.id === input.id) || plants[plants.length - 1];
+
+            return plants.find((p) => p.id === input.id) || plants[plants.length - 1];
         },
 
         deleteSeasonalPlant: async (
-            _: any,
+            _: unknown,
             { id }: { id: string },
             context: Context
         ): Promise<boolean> => {
@@ -223,22 +222,22 @@ export const resolvers = {
             }
 
             const plants = readSeasonalPlants();
-            const filtered = plants.filter(p => p.id !== id);
-            
+            const filtered = plants.filter((p) => p.id !== id);
+
             if (filtered.length === plants.length) {
                 throw new GraphQLError("Plant not found");
             }
 
             writeSeasonalPlants(filtered);
-            
+
             // Invalidate landing page cache
             await invalidateLandingPageCache();
-            
+
             return true;
         },
 
         reorderSeasonalPlants: async (
-            _: any,
+            _: unknown,
             { ids }: { ids: string[] },
             context: Context
         ): Promise<SeasonalPlant[]> => {
@@ -248,21 +247,23 @@ export const resolvers = {
 
             const plants = readSeasonalPlants();
             const reordered = ids.map((id, index) => {
-                const plant = plants.find(p => p.id === id);
-                if (!plant) throw new GraphQLError(`Plant ${id} not found`);
+                const plant = plants.find((p) => p.id === id);
+                if (!plant) {
+                    throw new GraphQLError(`Plant ${id} not found`);
+                }
                 return { ...plant, displayOrder: index };
             });
 
             writeSeasonalPlants(reordered);
-            
+
             // Invalidate landing page cache
             await invalidateLandingPageCache();
-            
+
             return reordered;
         },
 
         upsertPlantTip: async (
-            _: any,
+            _: unknown,
             { input }: { input: PlantTipInput },
             context: Context
         ): Promise<PlantTip> => {
@@ -271,10 +272,10 @@ export const resolvers = {
             }
 
             const tips = readPlantTips();
-            
+
             if (input.id) {
                 // Update existing
-                const index = tips.findIndex(t => t.id === input.id);
+                const index = tips.findIndex((t) => t.id === input.id);
                 if (index === -1) {
                     throw new GraphQLError("Tip not found");
                 }
@@ -298,15 +299,15 @@ export const resolvers = {
             }
 
             writePlantTips(tips);
-            
+
             // Invalidate landing page cache
             await invalidateLandingPageCache();
-            
-            return tips.find(t => t.id === input.id) || tips[tips.length - 1];
+
+            return tips.find((t) => t.id === input.id) || tips[tips.length - 1];
         },
 
         deletePlantTip: async (
-            _: any,
+            _: unknown,
             { id }: { id: string },
             context: Context
         ): Promise<boolean> => {
@@ -315,22 +316,22 @@ export const resolvers = {
             }
 
             const tips = readPlantTips();
-            const filtered = tips.filter(t => t.id !== id);
-            
+            const filtered = tips.filter((t) => t.id !== id);
+
             if (filtered.length === tips.length) {
                 throw new GraphQLError("Tip not found");
             }
 
             writePlantTips(filtered);
-            
+
             // Invalidate landing page cache
             await invalidateLandingPageCache();
-            
+
             return true;
         },
 
         reorderPlantTips: async (
-            _: any,
+            _: unknown,
             { ids }: { ids: string[] },
             context: Context
         ): Promise<PlantTip[]> => {
@@ -340,22 +341,24 @@ export const resolvers = {
 
             const tips = readPlantTips();
             const reordered = ids.map((id, index) => {
-                const tip = tips.find(t => t.id === id);
-                if (!tip) throw new GraphQLError(`Tip ${id} not found`);
+                const tip = tips.find((t) => t.id === id);
+                if (!tip) {
+                    throw new GraphQLError(`Tip ${id} not found`);
+                }
                 return { ...tip, displayOrder: index };
             });
 
             writePlantTips(reordered);
-            
+
             // Invalidate landing page cache
             await invalidateLandingPageCache();
-            
+
             return reordered;
         },
 
         updateSeasonalContent: async (
-            _: any,
-            { plants, tips }: { plants: SeasonalPlantInput[], tips: PlantTipInput[] },
+            _: unknown,
+            { plants, tips }: { plants: SeasonalPlantInput[]; tips: PlantTipInput[] },
             context: Context
         ): Promise<SeasonalContentData> => {
             if (!context.req.isAdmin) {
@@ -387,7 +390,7 @@ export const resolvers = {
 
             writeSeasonalPlants(processedPlants);
             writePlantTips(processedTips);
-            
+
             // Invalidate landing page cache
             await invalidateLandingPageCache();
 

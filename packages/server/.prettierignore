@@ -1,0 +1,9 @@
+dist/
+node_modules/
+coverage/
+*.d.ts
+.env
+.env.*
+package-lock.json
+yarn.lock
+*.md

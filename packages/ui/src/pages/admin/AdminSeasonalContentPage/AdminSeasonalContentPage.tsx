@@ -1,9 +1,11 @@
 import { Box, Button, Card, CardContent, Chip, Container, Dialog, DialogActions, DialogContent, DialogTitle, Grid, IconButton, Paper, Stack, Tab, Tabs, TextField, ToggleButton, ToggleButtonGroup, Typography, useTheme } from "@mui/material";
 import { useLandingPageContent, useUpdateLandingPageContent } from "api/rest/hooks";
 import { AdminTabs, PageContainer, TopBar } from "components";
+import { AdminTabOption } from "components/breadcrumbs/AdminTabs/AdminTabs";
 import { Flower, Leaf, Lightbulb, Plus, Settings, Snowflake, Sprout, Star, Trash2, Edit3, Check, X } from "lucide-react";
 import { useState } from "react";
 import { PubSub } from "utils/pubsub";
+import { SnackSeverity } from "components/dialogs/Snack/Snack";
 
 interface SeasonalPlant {
     id: string;
@@ -54,11 +56,11 @@ export const AdminSeasonalContentPage = () => {
 
     const handleApiError = (error: any, defaultMessage: string) => {
         const message = error?.message || defaultMessage;
-        PubSub.publish("alertsCreate", { text: message, severity: "error" });
+        PubSub.get().publishSnack({ message, severity: SnackSeverity.Error });
     };
 
     const handleApiSuccess = (message: string) => {
-        PubSub.publish("alertsCreate", { text: message, severity: "success" });
+        PubSub.get().publishSnack({ message, severity: SnackSeverity.Success });
     };
 
     const handlePlantEdit = (plant?: SeasonalPlant) => {
@@ -70,7 +72,7 @@ export const AdminSeasonalContentPage = () => {
             careLevel: "Easy",
             icon: "leaf",
             displayOrder: data?.seasonalPlants?.length || 0,
-            isActive: true
+            isActive: true,
         });
         setPlantDialogOpen(true);
     };
@@ -83,7 +85,7 @@ export const AdminSeasonalContentPage = () => {
             category: "General",
             season: "Year-round",
             displayOrder: data?.plantTips?.length || 0,
-            isActive: true
+            isActive: true,
         });
         setTipDialogOpen(true);
     };
@@ -98,13 +100,13 @@ export const AdminSeasonalContentPage = () => {
             if (editingPlant.id) {
                 // Update existing plant
                 updatedPlants = currentPlants.map(plant => 
-                    plant.id === editingPlant.id ? editingPlant : plant
+                    plant.id === editingPlant.id ? editingPlant : plant,
                 );
             } else {
                 // Add new plant with generated ID
                 const newPlant = { 
                     ...editingPlant, 
-                    id: `plant-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` 
+                    id: `plant-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, 
                 };
                 updatedPlants = [...currentPlants, newPlant];
             }
@@ -129,13 +131,13 @@ export const AdminSeasonalContentPage = () => {
             if (editingTip.id) {
                 // Update existing tip
                 updatedTips = currentTips.map(tip => 
-                    tip.id === editingTip.id ? editingTip : tip
+                    tip.id === editingTip.id ? editingTip : tip,
                 );
             } else {
                 // Add new tip with generated ID
                 const newTip = { 
                     ...editingTip, 
-                    id: `tip-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` 
+                    id: `tip-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, 
                 };
                 updatedTips = [...currentTips, newTip];
             }
@@ -154,7 +156,7 @@ export const AdminSeasonalContentPage = () => {
     const tips = data?.plantTips || [];
 
     const handlePlantDelete = async (plant: SeasonalPlant) => {
-        if (!confirm(`Delete ${plant.name}?`)) return;
+        if (!window.confirm(`Delete ${plant.name}?`)) return;
         
         try {
             const updatedPlants = plants.filter(p => p.id !== plant.id);
@@ -167,7 +169,7 @@ export const AdminSeasonalContentPage = () => {
     };
 
     const handleTipDelete = async (tip: PlantTip) => {
-        if (!confirm(`Delete ${tip.title}?`)) return;
+        if (!window.confirm(`Delete ${tip.title}?`)) return;
         
         try {
             const updatedTips = tips.filter(t => t.id !== tip.id);
@@ -194,9 +196,9 @@ export const AdminSeasonalContentPage = () => {
             <TopBar
                 display="page"
                 title="Seasonal Content Management"
-                helpText="Manage seasonal plants and expert tips displayed on the home page"
+                help="Manage seasonal plants and expert tips displayed on the home page"
             />
-            <AdminTabs />
+            <AdminTabs defaultTab={AdminTabOption.Hero} />
 
             <Container maxWidth="lg" sx={{ mt: 4 }}>
                 {/* Statistics */}

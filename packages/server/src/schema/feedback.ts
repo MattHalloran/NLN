@@ -32,22 +32,45 @@ export const typeDef = /* GraphQL */ `
 
 export const resolvers = {
     Query: {
-        feedbacks: async (_parent: undefined, _data: IWrap<undefined>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
+        feedbacks: async (
+            _parent: undefined,
+            _data: IWrap<undefined>,
+            { prisma, req }: Context,
+            info: GraphQLResolveInfo
+        ): Promise<RecursivePartial<any> | null> => {
             // Must be admin
-            if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
-            return await prisma.feedback.findMany((new PrismaSelect(info).value));
+            if (!req.isAdmin) {
+                throw new CustomError(CODE.Unauthorized);
+            }
+            return await prisma.feedback.findMany(new PrismaSelect(info).value);
         },
     },
     Mutation: {
-        addFeedback: async (_parent: undefined, { input }: IWrap<FeedbackInput>, { prisma }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
-            return await prisma.feedback.create({ data: { ...input }, ...(new PrismaSelect(info).value) });
+        addFeedback: async (
+            _parent: undefined,
+            { input }: IWrap<FeedbackInput>,
+            { prisma }: Context,
+            info: GraphQLResolveInfo
+        ): Promise<RecursivePartial<any> | null> => {
+            return await prisma.feedback.create({
+                data: { ...input },
+                ...new PrismaSelect(info).value,
+            });
         },
-        deleteFeedbacks: async (_parent: undefined, { input }: IWrap<DeleteManyInput>, { prisma, req }: Context): Promise<Count | null> => {
+        deleteFeedbacks: async (
+            _parent: undefined,
+            { input }: IWrap<DeleteManyInput>,
+            { prisma, req }: Context
+        ): Promise<Count | null> => {
             // Must be admin, or deleting your own
             const specified = await prisma.feedback.findMany({ where: { id: { in: input.ids } } });
-            if (!specified) throw new CustomError(CODE.ErrorUnknown);
+            if (!specified) {
+                throw new CustomError(CODE.ErrorUnknown);
+            }
             const customer_ids = [...new Set(specified.map((s) => s.customerId))];
-            if (!req.isAdmin && (customer_ids.length > 1 || req.customerId !== customer_ids[0])) throw new CustomError(CODE.Unauthorized);
+            if (!req.isAdmin && (customer_ids.length > 1 || req.customerId !== customer_ids[0])) {
+                throw new CustomError(CODE.Unauthorized);
+            }
             return await prisma.feedback.deleteMany({ where: { id: { in: input.ids } } });
         },
     },

@@ -16,7 +16,7 @@ async function findCustomerRoles(customerId: string) {
         where: { id: customerId },
         select: { roles: { select: { role: { select: { title: true } } } } },
     });
-    return user?.roles?.map(r => r.role.title.toLowerCase()) || [];
+    return user?.roles?.map((r) => r.role.title.toLowerCase()) || [];
 }
 
 // Verifies if a user is authenticated, using an http cookie
@@ -68,12 +68,16 @@ export async function generateToken(res: Response, customerId: string, businessI
 
 // Middleware that restricts access to customers (or admins)
 export async function requireCustomer(req: Request, _: Response, next: NextFunction) {
-    if (!req.isCustomer) throw new CustomError(CODE.Unauthorized);
+    if (!req.isCustomer) {
+        throw new CustomError(CODE.Unauthorized);
+    }
     next();
 }
 
 // Middle ware that restricts access to admins
 export async function requireAdmin(req: Request, _: Response, next: NextFunction) {
-    if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
+    if (!req.isAdmin) {
+        throw new CustomError(CODE.Unauthorized);
+    }
     next();
 }

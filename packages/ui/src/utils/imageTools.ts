@@ -5,7 +5,7 @@ export const getImageFiles = (data: ImageInfo | Image | null | undefined): Image
     if (!data) return [];
     if ((data as Image).__typename === "Image") return (data as Image).files ?? [];
     return getImageFiles((data as ImageInfo).image);
-}
+};
 
 // Return the image name with the best-match size
 // Size is measured by width
@@ -21,11 +21,11 @@ export function getImageSrc(image: ImageInfo | Image, size?: number): string | n
     // Return largest size if size not specified
     if (!isNumber(size)) return files.sort((a, b) => b.width - a.width)[0].src;
     // Determine sizes >= requested
-    const largerSizes = files.filter(f => f.width >= size!);
+    const largerSizes = files.filter(f => f.width >= size);
     // If any images match, return the smallest one
     if (largerSizes.length > 0) return largerSizes.sort((a, b) => a.width - b.width)[0].src;
     // Determine sizes < requested
-    const smallerSizes = files.filter(f => f.width < size!);
+    const smallerSizes = files.filter(f => f.width < size);
     // If any images match, return the largest one
     if (smallerSizes.length > 0) return smallerSizes.sort((a, b) => b.width - a.width)[0].src;
     // This code is reached if the files contain no size data. In that case, return the first image

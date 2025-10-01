@@ -10,7 +10,7 @@ import { Path } from "route";
 export type Cart = Omit<orders_orders, "customer">;
 
 export type PlantImageInfo = plants_plants_images;
-export type ImageInfo = { index: number, image: PlantImageInfo['image'] };
+export type ImageInfo = { index: number, image: PlantImageInfo["image"] };
 
 export type Image = imagesByLabel_imagesByLabel
 export type ImageFile = { __typename: "ImageFile", src: string, width: number, height: number };
@@ -19,7 +19,7 @@ export type ImageFile = { __typename: "ImageFile", src: string, width: number, h
 export type Session = {
     id?: string | null;
     roles?: Array<{ role: { title: string } }>;
-    theme?: 'light' | 'dark';
+    theme?: "light" | "dark";
     cart?: Cart | null;
     firstName?: string | null;
     lastName?: string | null;
@@ -38,13 +38,13 @@ export type BusinessData = {
     },
     ADDRESS: BusinessLink;
     PHONE: BusinessLink;
-    FAX: BusinessLink;
+    FAX?: BusinessLink;
     EMAIL: BusinessLink;
-    SOCIAL: {
-        Facebook: string;
-        Instagram: string;
+    SOCIAL?: {
+        Facebook?: string;
+        Instagram?: string;
     },
-    WEBSITE: string;
+    WEBSITE?: string;
 }
 
 // Apollo GraphQL

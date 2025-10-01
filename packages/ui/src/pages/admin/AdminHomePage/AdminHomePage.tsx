@@ -10,6 +10,7 @@ import { Flower, Leaf, Lightbulb, Plus, Settings, Snowflake, Sprout, Star, Trash
 import { useCallback, useEffect, useState } from "react";
 import { pagePaddingBottom } from "styles";
 import { PubSub } from "utils/pubsub";
+import { SnackSeverity } from "components/dialogs/Snack/Snack";
 
 interface SeasonalPlant {
     id: string;
@@ -64,7 +65,7 @@ export const AdminHomePage = () => {
     const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: "success" | "error" }>({ 
         open: false, 
         message: "", 
-        severity: "success" 
+        severity: "success", 
     });
     const [isLoading, setIsLoading] = useState(false);
 
@@ -83,11 +84,11 @@ export const AdminHomePage = () => {
 
     const handleApiError = (error: any, defaultMessage: string) => {
         const message = error?.message || defaultMessage;
-        PubSub.publish("alertsCreate", { text: message, severity: "error" });
+        PubSub.get().publishSnack({ message, severity: SnackSeverity.Error });
     };
 
     const handleApiSuccess = (message: string) => {
-        PubSub.publish("alertsCreate", { text: message, severity: "success" });
+        PubSub.get().publishSnack({ message, severity: SnackSeverity.Success });
     };
 
     // Hero image handlers
@@ -109,9 +110,9 @@ export const AdminHomePage = () => {
                     reader.readAsDataURL(file);
                 });
                 
-                const img = new Image();
-                await new Promise((resolve) => {
-                    img.onload = resolve;
+                const img = new window.Image();
+                await new Promise<void>((resolve) => {
+                    img.onload = () => resolve();
                     img.src = base64;
                 });
                 
@@ -123,7 +124,7 @@ export const AdminHomePage = () => {
                     width: img.width,
                     height: img.height,
                     displayOrder: currentLength + newBanners.length + 1,
-                    isActive: true
+                    isActive: true,
                 };
                 newBanners.push(newBanner);
             }
@@ -133,13 +134,13 @@ export const AdminHomePage = () => {
             setSnackbar({ 
                 open: true, 
                 message: `Added ${acceptedFiles.length} image(s). Remember to save changes.`, 
-                severity: "success" 
+                severity: "success", 
             });
         } catch (error) {
             setSnackbar({ 
                 open: true, 
                 message: "Failed to add images", 
-                severity: "error" 
+                severity: "error", 
             });
         } finally {
             setIsLoading(false);
@@ -156,7 +157,7 @@ export const AdminHomePage = () => {
 
             return items.map((item, index) => ({
                 ...item,
-                displayOrder: index + 1
+                displayOrder: index + 1,
             }));
         });
         setHasChanges(true);
@@ -167,15 +168,15 @@ export const AdminHomePage = () => {
             .filter(b => b.id !== id)
             .map((item, index) => ({
                 ...item,
-                displayOrder: index + 1
-            }))
+                displayOrder: index + 1,
+            })),
         );
         setHasChanges(true);
     }, []);
 
     const handleFieldChange = useCallback((id: string, field: string, value: any) => {
         setHeroBanners(prev => prev.map(banner => 
-            banner.id === id ? { ...banner, [field]: value } : banner
+            banner.id === id ? { ...banner, [field]: value } : banner,
         ));
         setHasChanges(true);
     }, []);
@@ -190,19 +191,19 @@ export const AdminHomePage = () => {
                 autoPlayDelay: 5000,
                 showDots: true,
                 showArrows: true,
-                fadeTransition: true
+                fadeTransition: true,
             };
             
             const response = await restApi.updateLandingPageContent({ 
                 heroBanners,
-                heroSettings 
+                heroSettings, 
             });
             
             if (response.success) {
                 setSnackbar({ 
                     open: true, 
                     message: "Hero banners updated successfully", 
-                    severity: "success" 
+                    severity: "success", 
                 });
                 setHasChanges(false);
                 setOriginalHeroBanners([...heroBanners]);
@@ -215,7 +216,7 @@ export const AdminHomePage = () => {
             setSnackbar({ 
                 open: true, 
                 message: error.message || "Failed to save changes", 
-                severity: "error" 
+                severity: "error", 
             });
         } finally {
             setIsLoading(false);
@@ -237,7 +238,7 @@ export const AdminHomePage = () => {
             careLevel: "Easy",
             icon: "leaf",
             displayOrder: seasonalData?.seasonalPlants?.length || 0,
-            isActive: true
+            isActive: true,
         });
         setPlantDialogOpen(true);
     };
@@ -250,7 +251,7 @@ export const AdminHomePage = () => {
             category: "General",
             season: "Year-round",
             displayOrder: seasonalData?.plantTips?.length || 0,
-            isActive: true
+            isActive: true,
         });
         setTipDialogOpen(true);
     };
@@ -265,13 +266,13 @@ export const AdminHomePage = () => {
             if (editingPlant.id) {
                 // Update existing plant
                 updatedPlants = currentPlants.map((plant: SeasonalPlant) => 
-                    plant.id === editingPlant.id ? editingPlant : plant
+                    plant.id === editingPlant.id ? editingPlant : plant,
                 );
             } else {
                 // Add new plant with generated ID
                 const newPlant = { 
                     ...editingPlant, 
-                    id: `plant-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` 
+                    id: `plant-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, 
                 };
                 updatedPlants = [...currentPlants, newPlant];
             }
@@ -300,13 +301,13 @@ export const AdminHomePage = () => {
             if (editingTip.id) {
                 // Update existing tip
                 updatedTips = currentTips.map((tip: PlantTip) => 
-                    tip.id === editingTip.id ? editingTip : tip
+                    tip.id === editingTip.id ? editingTip : tip,
                 );
             } else {
                 // Add new tip with generated ID
                 const newTip = { 
                     ...editingTip, 
-                    id: `tip-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` 
+                    id: `tip-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, 
                 };
                 updatedTips = [...currentTips, newTip];
             }
@@ -331,7 +332,7 @@ export const AdminHomePage = () => {
     const activeTips = tips.filter((t: PlantTip) => t.isActive).length;
 
     const handlePlantDelete = async (plant: SeasonalPlant) => {
-        if (!confirm(`Delete ${plant.name}?`)) return;
+        if (!window.confirm(`Delete ${plant.name}?`)) return;
         
         try {
             const updatedPlants = plants.filter((p: SeasonalPlant) => p.id !== plant.id);
@@ -348,7 +349,7 @@ export const AdminHomePage = () => {
     };
 
     const handleTipDelete = async (tip: PlantTip) => {
-        if (!confirm(`Delete ${tip.title}?`)) return;
+        if (!window.confirm(`Delete ${tip.title}?`)) return;
         
         try {
             const updatedTips = tips.filter((t: PlantTip) => t.id !== tip.id);
@@ -375,7 +376,7 @@ export const AdminHomePage = () => {
             
             {/* Main Content Tabs */}
             <Paper sx={{ mx: 2, mt: 2 }}>
-                <Tabs value={selectedTab} onChange={(_, v) => setSelectedTab(v)} sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                <Tabs value={selectedTab} onChange={(_, v) => setSelectedTab(v)} sx={{ borderBottom: 1, borderColor: "divider" }}>
                     <Tab icon={<Image size={20} />} iconPosition="start" label="Hero Banner" />
                     <Tab icon={<Leaf size={20} />} iconPosition="start" label="Seasonal Content" />
                 </Tabs>
@@ -426,7 +427,7 @@ export const AdminHomePage = () => {
                                                     sx={{ 
                                                         mb: 2, 
                                                         opacity: snapshot.isDragging ? 0.5 : 1,
-                                                        backgroundColor: snapshot.isDragging ? "action.hover" : "background.paper"
+                                                        backgroundColor: snapshot.isDragging ? "action.hover" : "background.paper",
                                                     }}
                                                 >
                                                     <Box sx={{ display: "flex", alignItems: "stretch" }}>
@@ -437,7 +438,7 @@ export const AdminHomePage = () => {
                                                                 alignItems: "center", 
                                                                 px: 2, 
                                                                 cursor: "grab",
-                                                                backgroundColor: "action.hover"
+                                                                backgroundColor: "action.hover",
                                                             }}
                                                         >
                                                             <DragIcon />
@@ -446,7 +447,7 @@ export const AdminHomePage = () => {
                                                         <CardMedia
                                                             component="img"
                                                             height="200"
-                                                            image={banner.src.startsWith('http') ? banner.src : `${getServerUrl()}${banner.src}`}
+                                                            image={banner.src.startsWith("http") ? banner.src : `${getServerUrl()}${banner.src}`}
                                                             alt={banner.alt}
                                                             sx={{ width: 300, objectFit: "cover" }}
                                                         />

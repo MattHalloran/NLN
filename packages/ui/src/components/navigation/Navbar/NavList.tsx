@@ -36,8 +36,8 @@ export const NavList = () => {
     };
 
     // Create simple navigation options - no login/signup in topbar anymore
-    let nav_options: UserActions = [
-        ["Availability", "availability", "", () => window.open("https://newlife.online-orders.sbiteam.com/", "_blank"), null, 0]
+    const nav_options: UserActions = [
+        ["Availability", "availability", "", () => window.open("https://newlife.online-orders.sbiteam.com/", "_blank"), null, 0],
     ];
 
     let cart_button;

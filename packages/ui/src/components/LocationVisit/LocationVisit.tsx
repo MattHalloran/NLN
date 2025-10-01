@@ -8,10 +8,10 @@ import {
     Button, 
     useTheme,
     Chip,
-    Divider
+    Divider,
 } from "@mui/material";
 import { useLocation } from "route";
-import { Eye, Gift, Smartphone, Car, Clock, Phone, MapPin, Mail, Map, LucideIcon } from "lucide-react";
+import { Eye, Gift, Smartphone, Car, Clock, Phone, MapPin, Mail, Map } from "lucide-react";
 import { useLandingPageContent } from "api/rest/hooks";
 import { parseBusinessHours } from "utils/businessHours";
 
@@ -26,36 +26,36 @@ export const LocationVisit = () => {
         {
             title: "What to Expect",
             icon: Eye,
-            description: "Browse over 70 acres of top-quality trees and shrubs, carefully grown for landscape professionals"
+            description: "Browse over 70 acres of top-quality trees and shrubs, carefully grown for landscape professionals",
         },
         {
             title: "Wholesale Focus",
             icon: Gift,
-            description: "Specializing in 3 to 25-gallon container plants for landscapers, contractors, and garden centers"
+            description: "Specializing in 3 to 25-gallon container plants for landscapers, contractors, and garden centers",
         },
         {
             title: "Professional Service",
             icon: Smartphone,
-            description: "Expert horticultural advice from our experienced team with over 40 years in the industry"
+            description: "Expert horticultural advice from our experienced team with over 40 years in the industry",
         },
         {
             title: "Easy Access",
             icon: Car,
-            description: "Convenient location in Bridgeton with ample parking and loading facilities for commercial vehicles"
-        }
+            description: "Convenient location in Bridgeton with ample parking and loading facilities for commercial vehicles",
+        },
     ];
 
     // Get real business hours from API or use fallback
     const businessHours = data?.contactInfo?.hours ? parseBusinessHours(data.contactInfo.hours) : [];
     const hours = businessHours.length > 0 ? 
         businessHours.map(hour => {
-            const [day, time] = hour.split(': ');
+            const [day, time] = hour.split(": ");
             return { day, time };
         }) : [
             { day: "Monday - Friday", time: "8:00 AM - 3:00 PM" },
             { day: "Saturday", time: "Closed" },
             { day: "Sunday", time: "Closed" },
-            { day: "Note", time: "Closed daily 12:00 PM - 1:00 PM" }
+            { day: "Note", time: "Closed daily 12:00 PM - 1:00 PM" },
         ];
 
     const contactMethods = [
@@ -63,20 +63,20 @@ export const LocationVisit = () => {
             method: "Phone",
             value: "(856) 455-3601",
             description: "Call for availability and wholesale pricing",
-            icon: Phone
+            icon: Phone,
         },
         {
             method: "Address",
             value: "106 S Woodruff Rd, Bridgeton, NJ 08302",
             description: "Visit our 70+ acre wholesale nursery facility",
-            icon: MapPin
+            icon: MapPin,
         },
         {
             method: "Email",
             value: "info@newlifenurseryinc.com",
             description: "Email us for quotes and availability lists",
-            icon: Mail
-        }
+            icon: Mail,
+        },
     ];
 
     const getDirections = () => {
@@ -95,7 +95,7 @@ export const LocationVisit = () => {
                             fontWeight: 700,
                             color: palette.primary.main,
                             mb: 2,
-                            fontSize: { xs: "2rem", md: "3rem" }
+                            fontSize: { xs: "2rem", md: "3rem" },
                         }}
                     >
                         Visit Our Nursery
@@ -106,7 +106,7 @@ export const LocationVisit = () => {
                             color: palette.text.secondary,
                             maxWidth: "600px",
                             mx: "auto",
-                            mb: 3
+                            mb: 3,
                         }}
                     >
                         Southern New Jersey's premier wholesale nursery since 1980
@@ -125,7 +125,7 @@ export const LocationVisit = () => {
                             borderRadius: 3,
                             overflow: "hidden",
                             boxShadow: 4,
-                            mb: 3
+                            mb: 3,
                         }}>
                             {/* Map Placeholder */}
                             <Box sx={{
@@ -135,14 +135,14 @@ export const LocationVisit = () => {
                                 alignItems: "center",
                                 justifyContent: "center",
                                 color: "white",
-                                position: "relative"
+                                position: "relative",
                             }}>
                                 <Box sx={{ textAlign: "center" }}>
                                     <Box sx={{ 
                                         mb: 2,
                                         display: "flex",
                                         justifyContent: "center",
-                                        color: "white"
+                                        color: "white",
                                     }}>
                                         <Map size={64} />
                                     </Box>
@@ -158,7 +158,7 @@ export const LocationVisit = () => {
                                 <Box sx={{
                                     position: "absolute",
                                     bottom: 16,
-                                    right: 16
+                                    right: 16,
                                 }}>
                                     <Button
                                         variant="contained"
@@ -167,7 +167,7 @@ export const LocationVisit = () => {
                                         sx={{
                                             borderRadius: 2,
                                             textTransform: "none",
-                                            fontWeight: 600
+                                            fontWeight: 600,
                                         }}
                                     >
                                         Get Directions
@@ -188,8 +188,8 @@ export const LocationVisit = () => {
                                     transition: "all 0.3s ease-in-out",
                                     "&:hover": {
                                         boxShadow: 4,
-                                        transform: "translateY(-2px)"
-                                    }
+                                        transform: "translateY(-2px)",
+                                    },
                                 }}>
                                     <CardContent sx={{ p: 2 }}>
                                         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
@@ -197,7 +197,7 @@ export const LocationVisit = () => {
                                                 display: "flex",
                                                 alignItems: "center",
                                                 justifyContent: "center",
-                                                color: palette.primary.main
+                                                color: palette.primary.main,
                                             }}>
                                                 {(() => {
                                                     const IconComponent = contact.icon;
@@ -213,7 +213,7 @@ export const LocationVisit = () => {
                                                     sx={{ 
                                                         color: palette.primary.main, 
                                                         fontWeight: 600,
-                                                        mb: 0.5
+                                                        mb: 0.5,
                                                     }}
                                                 >
                                                     {contact.value}
@@ -240,7 +240,7 @@ export const LocationVisit = () => {
                             boxShadow: 4,
                             mb: 3,
                             background: `linear-gradient(135deg, ${palette.secondary.main} 0%, ${palette.primary.main} 100%)`,
-                            color: "white"
+                            color: "white",
                         }}>
                             <CardContent sx={{ p: 4 }}>
                                 <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 1, mb: 3 }}>
@@ -255,7 +255,7 @@ export const LocationVisit = () => {
                                             display: "flex",
                                             justifyContent: "space-between",
                                             alignItems: "center",
-                                            py: 1.5
+                                            py: 1.5,
                                         }}>
                                             <Typography variant="body1" sx={{ fontWeight: 500 }}>
                                                 {schedule.day}
@@ -275,7 +275,7 @@ export const LocationVisit = () => {
                                         sx={{
                                             backgroundColor: "rgba(255, 255, 255, 0.2)",
                                             color: "white",
-                                            fontWeight: 600
+                                            fontWeight: 600,
                                         }}
                                         size="small"
                                     />
@@ -297,15 +297,15 @@ export const LocationVisit = () => {
                                             transition: "all 0.3s ease-in-out",
                                             "&:hover": {
                                                 boxShadow: 4,
-                                                transform: "translateY(-4px)"
-                                            }
+                                                transform: "translateY(-4px)",
+                                            },
                                         }}>
                                             <CardContent sx={{ p: 3, textAlign: "center" }}>
                                                 <Box sx={{ 
                                                     mb: 1,
                                                     display: "flex",
                                                     justifyContent: "center",
-                                                    color: palette.primary.main
+                                                    color: palette.primary.main,
                                                 }}>
                                                     {(() => {
                                                         const IconComponent = info.icon;
@@ -317,7 +317,7 @@ export const LocationVisit = () => {
                                                     sx={{ 
                                                         fontWeight: 600,
                                                         color: palette.primary.main,
-                                                        mb: 1
+                                                        mb: 1,
                                                     }}
                                                 >
                                                     {info.title}
@@ -326,7 +326,7 @@ export const LocationVisit = () => {
                                                     variant="body2" 
                                                     sx={{ 
                                                         color: palette.text.secondary,
-                                                        lineHeight: 1.6
+                                                        lineHeight: 1.6,
                                                     }}
                                                 >
                                                     {info.description}
@@ -347,7 +347,7 @@ export const LocationVisit = () => {
                     backgroundColor: palette.grey[50],
                     borderRadius: 3,
                     textAlign: "center",
-                    border: `2px solid ${palette.primary.light}`
+                    border: `2px solid ${palette.primary.light}`,
                 }}>
                     <Typography variant="h5" sx={{ fontWeight: 600, mb: 2, color: palette.primary.main }}>
                         Ready to Visit?
@@ -359,7 +359,7 @@ export const LocationVisit = () => {
                         display: "flex", 
                         gap: 2, 
                         justifyContent: "center",
-                        flexWrap: "wrap"
+                        flexWrap: "wrap",
                     }}>
                         <Button
                             variant="contained"
@@ -371,7 +371,7 @@ export const LocationVisit = () => {
                                 py: 1.5,
                                 borderRadius: 2,
                                 textTransform: "none",
-                                fontWeight: 600
+                                fontWeight: 600,
                             }}
                         >
                             Get Directions
@@ -386,7 +386,7 @@ export const LocationVisit = () => {
                                 py: 1.5,
                                 borderRadius: 2,
                                 textTransform: "none",
-                                fontWeight: 600
+                                fontWeight: 600,
                             }}
                         >
                             Contact Us First
@@ -401,7 +401,7 @@ export const LocationVisit = () => {
                                 py: 1.5,
                                 borderRadius: 2,
                                 textTransform: "none",
-                                fontWeight: 600
+                                fontWeight: 600,
                             }}
                         >
                             Browse Online First

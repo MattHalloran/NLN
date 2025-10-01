@@ -6,7 +6,15 @@ import { Context } from "../context.js";
 import { CustomError } from "../error.js";
 import { IWrap, RecursivePartial } from "../types.js";
 import { deleteImage, saveImage } from "../utils/index.js";
-import { AddImageResponse, AddImagesInput, DeleteImagesByLabelInput, DeleteImagesInput, Image, ImagesByLabelInput, UpdateImagesInput } from "./types.js";
+import {
+    AddImageResponse,
+    AddImagesInput,
+    DeleteImagesByLabelInput,
+    DeleteImagesInput,
+    Image,
+    ImagesByLabelInput,
+    UpdateImagesInput,
+} from "./types.js";
 
 export const typeDef = /* GraphQL */ `
     enum ImageSize {
@@ -89,7 +97,12 @@ export const typeDef = /* GraphQL */ `
 export const resolvers = {
     ImageSize: IMAGE_SIZE,
     Query: {
-        imagesByLabel: async (_parent: undefined, { input }: IWrap<ImagesByLabelInput>, { prisma }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<Image[]> | null> => {
+        imagesByLabel: async (
+            _parent: undefined,
+            { input }: IWrap<ImagesByLabelInput>,
+            { prisma }: Context,
+            info: GraphQLResolveInfo
+        ): Promise<RecursivePartial<Image[]> | null> => {
             // Get all images with label
             let images = await prisma.image.findMany({
                 where: { image_labels: { some: { label: input.label } } },
@@ -103,33 +116,49 @@ export const resolvers = {
             });
             return await prisma.image.findMany({
                 where: { hash: { in: images.map((i) => i.hash) } },
-                ...(new PrismaSelect(info).value),
+                ...new PrismaSelect(info).value,
             });
         },
     },
     Mutation: {
-        addImages: async (_parent: undefined, { input }: IWrap<AddImagesInput>, { req }: Context): Promise<RecursivePartial<AddImageResponse[]> | null> => {
+        addImages: async (
+            _parent: undefined,
+            { input }: IWrap<AddImagesInput>,
+            { req }: Context
+        ): Promise<RecursivePartial<AddImageResponse[]> | null> => {
             // Must be admin
-            if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
+            if (!req.isAdmin) {
+                throw new CustomError(CODE.Unauthorized);
+            }
             // Check for valid arguments
             // If alts provided, must match length of files
-            if (input.alts && input.alts.length !== input.files.length) throw new CustomError(CODE.InvalidArgs);
+            if (input.alts && input.alts.length !== input.files.length) {
+                throw new CustomError(CODE.InvalidArgs);
+            }
             const results: AddImageResponse[] = [];
             // Loop through every image passed in
             for (let i = 0; i < input.files.length; i++) {
-                results.push(await saveImage({
-                    file: input.files[i],
-                    alt: input.alts ? input.alts[i] : undefined,
-                    description: input.descriptions ? input.descriptions[i] : undefined,
-                    labels: input.labels,
-                    errorOnDuplicate: false,
-                }));
+                results.push(
+                    await saveImage({
+                        file: input.files[i],
+                        alt: input.alts ? input.alts[i] : undefined,
+                        description: input.descriptions ? input.descriptions[i] : undefined,
+                        labels: input.labels,
+                        errorOnDuplicate: false,
+                    })
+                );
             }
             return results;
         },
-        updateImages: async (_parent: undefined, { input }: IWrap<UpdateImagesInput>, { prisma, req }: Context): Promise<boolean> => {
+        updateImages: async (
+            _parent: undefined,
+            { input }: IWrap<UpdateImagesInput>,
+            { prisma, req }: Context
+        ): Promise<boolean> => {
             // Must be admin
-            if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
+            if (!req.isAdmin) {
+                throw new CustomError(CODE.Unauthorized);
+            }
             // Loop through update data passed in
             for (let i = 0; i < input.data.length; i++) {
                 const curr = input.data[i];
@@ -149,25 +178,41 @@ export const resolvers = {
                     },
                 });
             }
-            if (!input.deleting) return true;
+            if (!input.deleting) {
+                return true;
+            }
             // Loop through delete data passed in
             for (const hash of input.deleting) {
                 await deleteImage(hash);
             }
             return true;
         },
-        deleteImages: async (_parent: undefined, { input }: IWrap<DeleteImagesInput>, { req }: Context): Promise<any> => {
+        deleteImages: async (
+            _parent: undefined,
+            { input }: IWrap<DeleteImagesInput>,
+            { req }: Context
+        ): Promise<any> => {
             // Must be admin
-            if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
+            if (!req.isAdmin) {
+                throw new CustomError(CODE.Unauthorized);
+            }
             let count = 0;
             for (const hash of input.hashes) {
-                if (await deleteImage(hash)) count++;
+                if (await deleteImage(hash)) {
+                    count++;
+                }
             }
             return count;
         },
-        deleteImagesByLabel: async (_parent: undefined, { input }: IWrap<DeleteImagesByLabelInput>, { prisma, req }: Context): Promise<any> => {
+        deleteImagesByLabel: async (
+            _parent: undefined,
+            { input }: IWrap<DeleteImagesByLabelInput>,
+            { prisma, req }: Context
+        ): Promise<any> => {
             // Must be admin
-            if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
+            if (!req.isAdmin) {
+                throw new CustomError(CODE.Unauthorized);
+            }
             const imagesToDelete = await prisma.image.findMany({
                 where: { image_labels: { every: { label: { in: input.labels } } } },
                 select: {
@@ -179,7 +224,9 @@ export const resolvers = {
             });
             let count = 0;
             for (const image of imagesToDelete) {
-                if (await deleteImage(image.hash)) count++;
+                if (await deleteImage(image.hash)) {
+                    count++;
+                }
             }
             return count;
         },

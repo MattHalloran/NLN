@@ -24,6 +24,7 @@ export const deleteArrayObject = <T>(array: T[], obj: (item: T) => boolean): T[]
         copy.splice(index, 1);
         return copy;
     }
+    return undefined;
 };
 
 export const findWithAttr = <T>(array: T[], attr: keyof T, value: T[keyof T]): number => {

@@ -1,1 +1,1 @@
-export * from './ImageWithFallback';
+export * from "./ImageWithFallback";

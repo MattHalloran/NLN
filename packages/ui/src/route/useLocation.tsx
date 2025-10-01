@@ -41,14 +41,14 @@ export const events = [eventPopstate, eventPushState, eventReplaceState];
 export default ({ base = "" } = {}): [Path, SetLocation] => {
     const [{ path, search }, update] = useState(() => ({
         path: currentPathname(base),
-        search: location.search,
+        search: window.location.search,
     })); // @see https://reactjs.org/docs/hooks-reference.html#lazy-initial-state
     const prevHash = useRef(path + search);
 
     useEffect(() => {
         const checkForUpdates = () => {
             const pathname = currentPathname(base);
-            const search = location.search;
+            const search = window.location.search;
             const hash = pathname + search;
 
             if (prevHash.current !== hash) {
@@ -57,14 +57,14 @@ export default ({ base = "" } = {}): [Path, SetLocation] => {
             }
         };
 
-        events.forEach((e) => addEventListener(e, checkForUpdates));
+        events.forEach((e) => window.addEventListener(e, checkForUpdates));
 
         // it's possible that an update has occurred between render and the effect handler,
         // so we run additional check on mount to catch these updates. Based on:
         // https://gist.github.com/bvaughn/e25397f70e8c65b0ae0d7c90b731b189
         checkForUpdates();
 
-        return () => events.forEach((e) => removeEventListener(e, checkForUpdates));
+        return () => events.forEach((e) => window.removeEventListener(e, checkForUpdates));
     }, [base]);
 
     // the 2nd argument of the `useLocation` return value is a function
@@ -94,7 +94,7 @@ export default ({ base = "" } = {}): [Path, SetLocation] => {
         sessionStorage.setItem("currentPath", currPath);
         sessionStorage.setItem("currentSearchParams", currSearchParams ?? JSON.stringify({}));
         // Update history
-        history[replace ? eventReplaceState : eventPushState](
+        window.history[replace ? eventReplaceState : eventPushState](
             null,
             "",
             // Combine path and search params
@@ -110,14 +110,14 @@ export default ({ base = "" } = {}): [Path, SetLocation] => {
 // is to monkey-patch these methods.
 //
 // See https://stackoverflow.com/a/4585031
-if (typeof history !== "undefined") {
+if (typeof window.history !== "undefined") {
     for (const type of [eventPushState, eventReplaceState]) {
-        const original = history[type as keyof History];
+        const original = window.history[type as keyof History];
 
-        (history as any)[type as keyof History] = function () {
-            const result = original.apply(this, arguments);
+        (window.history as any)[type as keyof History] = function (...args: any[]) {
+            const result = original.apply(this, args);
             const event: Event & { arguments?: any } = new Event(type);
-            event.arguments = arguments;
+            event.arguments = args;
 
             dispatchEvent(event);
             return result;
@@ -125,7 +125,7 @@ if (typeof history !== "undefined") {
     }
 }
 
-const currentPathname = (base: any, path = location.pathname) =>
+const currentPathname = (base: any, path = window.location.pathname) =>
     !path.toLowerCase().indexOf(base.toLowerCase())
         ? path.slice(base.length) || "/"
         : "~" + path;

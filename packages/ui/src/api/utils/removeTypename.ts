@@ -1,7 +1,7 @@
 type RemoveTypename<T> = T extends Array<infer U>
     ? Array<RemoveTypename<U>>
     : T extends object
-    ? { [K in keyof T as K extends '__typename' ? never : K]: RemoveTypename<T[K]> }
+    ? { [K in keyof T as K extends "__typename" ? never : K]: RemoveTypename<T[K]> }
     : T;
 
 export const removeTypename = <T>(value: T): RemoveTypename<T> => {

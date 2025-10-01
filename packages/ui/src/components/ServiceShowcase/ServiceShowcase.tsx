@@ -17,29 +17,29 @@ const services: Service[] = [
         description: "Browse our extensive collection of healthy plants, trees, and flowers. Check real-time availability and place orders online.",
         icon: Sprout,
         action: "Browse Plants",
-        url: "https://newlife.online-orders.sbiteam.com/"
+        url: "https://newlife.online-orders.sbiteam.com/",
     },
     {
         title: "Expert Plant Care Advice",
         description: "Get personalized guidance from our certified horticulturists. Learn proper care techniques for your specific plants.",
         icon: Leaf,
         action: "Get Advice",
-        url: "/contact"
+        url: "/contact",
     },
     {
         title: "Landscape Design Consultation",
         description: "Transform your outdoor space with professional landscape design. From concept to completion, we'll help bring your vision to life.",
         icon: Home,
         action: "Schedule Consultation",
-        url: "/contact"
+        url: "/contact",
     },
     {
         title: "Delivery & Installation",
         description: "Professional delivery and installation services available. Let our experienced team handle the heavy lifting and proper placement.",
         icon: Truck,
         action: "Learn More",
-        url: "/about"
-    }
+        url: "/about",
+    },
 ];
 
 export const ServiceShowcase = () => {
@@ -69,7 +69,7 @@ export const ServiceShowcase = () => {
                             fontWeight: 700,
                             color: palette.primary.main,
                             mb: 2,
-                            fontSize: { xs: "2rem", md: "3rem" }
+                            fontSize: { xs: "2rem", md: "3rem" },
                         }}
                     >
                         Our Services
@@ -80,7 +80,7 @@ export const ServiceShowcase = () => {
                             color: palette.text.secondary,
                             maxWidth: "600px",
                             mx: "auto",
-                            fontSize: { xs: "1.1rem", md: "1.25rem" }
+                            fontSize: { xs: "1.1rem", md: "1.25rem" },
                         }}
                     >
                         Everything you need to create and maintain your perfect garden
@@ -102,8 +102,8 @@ export const ServiceShowcase = () => {
                                     border: `1px solid ${palette.divider}`,
                                     "&:hover": {
                                         boxShadow: 8,
-                                        transform: "translateY(-8px)"
-                                    }
+                                        transform: "translateY(-8px)",
+                                    },
                                 }}
                                 onMouseEnter={() => setHoveredCard(index)}
                                 onMouseLeave={() => setHoveredCard(null)}
@@ -114,13 +114,13 @@ export const ServiceShowcase = () => {
                                     flexDirection: "column",
                                     alignItems: "center",
                                     textAlign: "center",
-                                    p: 3
+                                    p: 3,
                                 }}>
                                     <Box sx={{ 
                                         mb: 2,
                                         display: "flex",
                                         justifyContent: "center",
-                                        color: palette.primary.main
+                                        color: palette.primary.main,
                                     }}>
                                         {(() => {
                                             const IconComponent = service.icon;
@@ -137,7 +137,7 @@ export const ServiceShowcase = () => {
                                             mb: 2,
                                             minHeight: "2.5rem",
                                             display: "flex",
-                                            alignItems: "center"
+                                            alignItems: "center",
                                         }}
                                     >
                                         {service.title}
@@ -149,7 +149,7 @@ export const ServiceShowcase = () => {
                                             color: palette.text.secondary,
                                             flexGrow: 1,
                                             mb: 3,
-                                            lineHeight: 1.6
+                                            lineHeight: 1.6,
                                         }}
                                     >
                                         {service.description}
@@ -168,8 +168,8 @@ export const ServiceShowcase = () => {
                                             transition: "all 0.2s ease-in-out",
                                             "&:hover": {
                                                 backgroundColor: palette.primary.main,
-                                                color: "white"
-                                            }
+                                                color: "white",
+                                            },
                                         }}
                                     >
                                         {service.action}
@@ -187,7 +187,7 @@ export const ServiceShowcase = () => {
                     p: 4,
                     backgroundColor: palette.primary.main,
                     borderRadius: 3,
-                    color: "white"
+                    color: "white",
                 }}>
                     <Typography variant="h5" sx={{ fontWeight: 600, mb: 2 }}>
                         Ready to get started?
@@ -206,7 +206,7 @@ export const ServiceShowcase = () => {
                                 py: 1.5,
                                 borderRadius: 2,
                                 textTransform: "none",
-                                fontWeight: 600
+                                fontWeight: 600,
                             }}
                         >
                             Shop Online
@@ -225,8 +225,8 @@ export const ServiceShowcase = () => {
                                 color: "white",
                                 "&:hover": {
                                     borderColor: "white",
-                                    backgroundColor: "rgba(255, 255, 255, 0.1)"
-                                }
+                                    backgroundColor: "rgba(255, 255, 255, 0.1)",
+                                },
                             }}
                         >
                             Visit Us

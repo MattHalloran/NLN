@@ -15,7 +15,7 @@ import {
     FileText,
     Camera,
     ExternalLink,
-    LogIn
+    LogIn,
 } from "lucide-react";
 import { isObject } from "lodash-es";
 import { useContext } from "react";
@@ -33,44 +33,44 @@ export const Footer = () => {
             icon: <MapPin size={18} />,
             label: business?.ADDRESS?.Label || "Address",
             href: business?.ADDRESS?.Link,
-            tooltip: "View in Google Maps"
+            tooltip: "View in Google Maps",
         },
         {
             icon: <Phone size={18} />,
             label: business?.PHONE?.Label || "Phone",
             href: business?.PHONE?.Link,
-            tooltip: "Call Us"
+            tooltip: "Call Us",
         },
         {
             icon: <Printer size={18} />,
             label: business?.FAX?.Label || "Fax",
             href: business?.FAX?.Link,
-            tooltip: "Fax Us"
+            tooltip: "Fax Us",
         },
         {
             icon: <Mail size={18} />,
             label: business?.EMAIL?.Label || "Email",
             href: business?.EMAIL?.Link,
-            tooltip: "Email Us"
-        }
+            tooltip: "Email Us",
+        },
     ];
 
     const partnerLogos = [
         {
             href: "https://www.provenwinners.com/",
             alt: "We Sell Proven Winners - The #1 Plant Brand",
-            src: ProvenWinners
+            src: ProvenWinners,
         },
         {
             href: "https://www.americanhort.org/",
             alt: "Proud member of the AmericanHort",
-            src: AmericanHort
+            src: AmericanHort,
         },
         {
             href: "https://www.njnla.org/",
             alt: "Proud member of the New Jersey Nursery and Landscape Association",
-            src: NJNLA
-        }
+            src: NJNLA,
+        },
     ];
 
     return (
@@ -258,7 +258,7 @@ export const Footer = () => {
                                                 sx={{
                                                     fontSize: "0.85rem",
                                                     wordBreak: "break-word",
-                                                    overflowWrap: "break-word"
+                                                    overflowWrap: "break-word",
                                                 }}
                                             >
                                                 {contact.label}
@@ -325,7 +325,7 @@ export const Footer = () => {
                 {/* Copyright Section */}
                 <Box
                     sx={{
-                        borderTop: `1px solid rgba(255, 255, 255, 0.2)`,
+                        borderTop: "1px solid rgba(255, 255, 255, 0.2)",
                         mt: 4,
                         pt: 3,
                         textAlign: "center",

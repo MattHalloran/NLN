@@ -14,15 +14,20 @@ const createRedisClient = async () => {
     const url = `redis://${HOST}:${PORT}`;
     const redisClient = createClient({ url });
     redisClient.on("error", (error) => {
-        logger.log(LogLevel.error, "Error occured while connecting or accessing redis server", { code: genErrorCode("0002"), error });
+        logger.log(LogLevel.error, "Error occured while connecting or accessing redis server", {
+            code: genErrorCode("0002"),
+            error,
+        });
     });
     await redisClient.connect();
     return redisClient;
 };
 
 export const initializeRedis = async (): Promise<RedisClientType> => {
-    const _redisClient = redisClient ?? await createRedisClient();
-    if (!redisClient) redisClient = _redisClient;
+    const _redisClient = redisClient ?? (await createRedisClient());
+    if (!redisClient) {
+        redisClient = _redisClient;
+    }
 
     return _redisClient;
 };

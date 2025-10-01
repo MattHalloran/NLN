@@ -5,7 +5,7 @@ const stats = [
     { number: "44+", label: "Years of Excellence", subtext: "Since 1980" },
     { number: "70+", label: "Acres in Production", subtext: "Bridgeton, NJ" },
     { number: "3-25", label: "Gallon Sizes", subtext: "Full Range" },
-    { number: "500+", label: "Trade Partners", subtext: "Wholesale Only" }
+    { number: "500+", label: "Trade Partners", subtext: "Wholesale Only" },
 ];
 
 const strengths = [
@@ -13,45 +13,45 @@ const strengths = [
         icon: Users,
         title: "Family Heritage",
         description: "Owned and operated by the Gianaris family for over four decades, maintaining traditional values and personal service.",
-        highlight: "Family-Owned Since 1980"
+        highlight: "Family-Owned Since 1980",
     },
     {
         icon: TreePine,
         title: "Extensive Inventory",
         description: "With 70+ acres of growing space, we maintain one of Southern New Jersey's largest selections of quality nursery stock.",
-        highlight: "70+ Acres of Plants"
+        highlight: "70+ Acres of Plants",
     },
     {
         icon: Award,
         title: "Quality Commitment",
         description: "Our founding motto remains unchanged: Growing top quality material for buyers who are interested in the best.",
-        highlight: "Premium Quality Only"
+        highlight: "Premium Quality Only",
     },
     {
         icon: Clock,
         title: "Trade-Friendly Hours",
         description: "Opening at 7 AM Monday-Saturday, we help contractors get loaded and to job sites early.",
-        highlight: "Early 7 AM Opening"
+        highlight: "Early 7 AM Opening",
     },
     {
         icon: Truck,
         title: "Wholesale Expertise",
         description: "Specializing exclusively in wholesale, we understand the unique needs of landscapers and contractors.",
-        highlight: "Trade Professionals Only"
+        highlight: "Trade Professionals Only",
     },
     {
         icon: Shield,
         title: "Licensed & Certified",
         description: "Fully licensed New Jersey nursery meeting all state requirements for commercial plant production and sales.",
-        highlight: "NJ Licensed Nursery"
-    }
+        highlight: "NJ Licensed Nursery",
+    },
 ];
 
 const clientTypes = [
     { icon: Building2, label: "Landscape Contractors" },
     { icon: Sprout, label: "Garden Centers" },
     { icon: Users, label: "Property Developers" },
-    { icon: TreePine, label: "Municipalities" }
+    { icon: TreePine, label: "Municipalities" },
 ];
 
 export const SocialProof = () => {
@@ -69,7 +69,7 @@ export const SocialProof = () => {
                             fontWeight: 700,
                             color: palette.primary.main,
                             mb: 2,
-                            fontSize: { xs: "2rem", md: "3rem" }
+                            fontSize: { xs: "2rem", md: "3rem" },
                         }}
                     >
                         Why Choose New Life Nursery
@@ -80,7 +80,7 @@ export const SocialProof = () => {
                             color: palette.text.secondary,
                             maxWidth: "700px",
                             mx: "auto",
-                            fontSize: { xs: "1.1rem", md: "1.25rem" }
+                            fontSize: { xs: "1.1rem", md: "1.25rem" },
                         }}
                     >
                         Southern New Jersey's trusted wholesale nursery partner for over four decades
@@ -99,8 +99,8 @@ export const SocialProof = () => {
                                 transition: "all 0.3s ease-in-out",
                                 "&:hover": {
                                     boxShadow: 4,
-                                    transform: "translateY(-4px)"
-                                }
+                                    transform: "translateY(-4px)",
+                                },
                             }}>
                                 <Typography 
                                     variant="h3" 
@@ -108,7 +108,7 @@ export const SocialProof = () => {
                                         fontWeight: 800,
                                         color: palette.primary.main,
                                         fontSize: { xs: "2.5rem", md: "3rem" },
-                                        mb: 1
+                                        mb: 1,
                                     }}
                                 >
                                     {stat.number}
@@ -119,7 +119,7 @@ export const SocialProof = () => {
                                         color: palette.text.primary,
                                         fontWeight: 600,
                                         mb: 0.5,
-                                        fontSize: { xs: "1rem", md: "1.1rem" }
+                                        fontSize: { xs: "1rem", md: "1.1rem" },
                                     }}
                                 >
                                     {stat.label}
@@ -128,7 +128,7 @@ export const SocialProof = () => {
                                     variant="body2" 
                                     sx={{ 
                                         color: palette.text.secondary,
-                                        fontStyle: "italic"
+                                        fontStyle: "italic",
                                     }}
                                 >
                                     {stat.subtext}
@@ -147,7 +147,7 @@ export const SocialProof = () => {
                     borderRadius: 3,
                     textAlign: "center",
                     position: "relative",
-                    overflow: "hidden"
+                    overflow: "hidden",
                 }}>
                     <Box sx={{
                         position: "absolute",
@@ -157,7 +157,7 @@ export const SocialProof = () => {
                         bottom: 0,
                         opacity: 0.1,
                         backgroundImage: "url('data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"><circle cx=\"50\" cy=\"50\" r=\"2\" fill=\"white\"/></svg>')",
-                        backgroundSize: "50px 50px"
+                        backgroundSize: "50px 50px",
                     }} />
                     
                     <Typography 
@@ -166,7 +166,7 @@ export const SocialProof = () => {
                             mb: 3,
                             fontWeight: 600,
                             position: "relative",
-                            zIndex: 1
+                            zIndex: 1,
                         }}
                     >
                         Our Founding Mission Since 1980
@@ -182,7 +182,7 @@ export const SocialProof = () => {
                             maxWidth: "900px",
                             mx: "auto",
                             position: "relative",
-                            zIndex: 1
+                            zIndex: 1,
                         }}
                     >
                         "Growing top quality material for buyers who are interested in the best."
@@ -193,7 +193,7 @@ export const SocialProof = () => {
                             mt: 2,
                             opacity: 0.9,
                             position: "relative",
-                            zIndex: 1
+                            zIndex: 1,
                         }}
                     >
                         — The Gianaris Family
@@ -208,7 +208,7 @@ export const SocialProof = () => {
                         fontWeight: 600,
                         color: palette.primary.main,
                         mb: 4,
-                        textAlign: "center"
+                        textAlign: "center",
                     }}
                 >
                     What Sets Us Apart
@@ -223,8 +223,8 @@ export const SocialProof = () => {
                                 transition: "all 0.3s ease-in-out",
                                 "&:hover": {
                                     boxShadow: 6,
-                                    transform: "translateY(-4px)"
-                                }
+                                    transform: "translateY(-4px)",
+                                },
                             }}>
                                 <CardContent sx={{ p: 3 }}>
                                     <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2 }}>
@@ -234,7 +234,7 @@ export const SocialProof = () => {
                                             backgroundColor: palette.primary.main + "10",
                                             display: "flex",
                                             alignItems: "center",
-                                            justifyContent: "center"
+                                            justifyContent: "center",
                                         }}>
                                             {(() => {
                                                 const IconComponent = strength.icon;
@@ -247,7 +247,7 @@ export const SocialProof = () => {
                                                 sx={{ 
                                                     fontWeight: 600,
                                                     color: palette.primary.main,
-                                                    mb: 1
+                                                    mb: 1,
                                                 }}
                                             >
                                                 {strength.title}
@@ -263,7 +263,7 @@ export const SocialProof = () => {
                                                 variant="body2" 
                                                 sx={{ 
                                                     color: palette.text.secondary,
-                                                    lineHeight: 1.6
+                                                    lineHeight: 1.6,
                                                 }}
                                             >
                                                 {strength.description}
@@ -282,14 +282,14 @@ export const SocialProof = () => {
                     p: 4,
                     backgroundColor: "white",
                     borderRadius: 3,
-                    border: `1px solid ${palette.divider}`
+                    border: `1px solid ${palette.divider}`,
                 }}>
                     <Typography 
                         variant="h5" 
                         sx={{ 
                             fontWeight: 600,
                             color: palette.primary.main,
-                            mb: 3
+                            mb: 3,
                         }}
                     >
                         Proudly Serving Trade Professionals
@@ -302,14 +302,14 @@ export const SocialProof = () => {
                                     p: 2,
                                     transition: "all 0.3s ease-in-out",
                                     "&:hover": {
-                                        transform: "translateY(-4px)"
-                                    }
+                                        transform: "translateY(-4px)",
+                                    },
                                 }}>
                                     <Box sx={{ 
                                         mb: 1,
                                         display: "flex",
                                         justifyContent: "center",
-                                        color: palette.primary.main
+                                        color: palette.primary.main,
                                     }}>
                                         {(() => {
                                             const IconComponent = client.icon;
@@ -320,7 +320,7 @@ export const SocialProof = () => {
                                         variant="body1" 
                                         sx={{ 
                                             fontWeight: 500,
-                                            color: palette.text.primary
+                                            color: palette.text.primary,
                                         }}
                                     >
                                         {client.label}
@@ -337,7 +337,7 @@ export const SocialProof = () => {
                         sx={{ 
                             color: palette.text.secondary,
                             fontStyle: "italic",
-                            mb: 2
+                            mb: 2,
                         }}
                     >
                         References available upon request for qualified wholesale buyers
@@ -347,7 +347,7 @@ export const SocialProof = () => {
                         display: "flex", 
                         justifyContent: "center", 
                         gap: 2,
-                        flexWrap: "wrap"
+                        flexWrap: "wrap",
                     }}>
                         <Chip label="Licensed NJ Nursery" color="primary" />
                         <Chip label="Wholesale Only" color="primary" />

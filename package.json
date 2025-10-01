@@ -1,12 +1,18 @@
 {
-    "private": true,
-    "workspaces": [
-        "packages/*"
-    ],
-    "author": "New Life Nursery",
-    "license": "MIT",
-    "resolutions": {
-        "babel-loader": "8.1.0"
-    },
-    "version": "2.0.0"
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "author": "New Life Nursery",
+  "license": "MIT",
+  "resolutions": {
+    "babel-loader": "8.1.0"
+  },
+  "version": "2.0.0",
+  "scripts": {
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "eslint-config-react-app": "^7.0.1"
+  }
 }

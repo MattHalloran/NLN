@@ -85,34 +85,67 @@ const SORT_TO_QUERY = {
 };
 
 const toNumber = (str: string | null | undefined): number | null => {
-    if (!str) return null;
+    if (!str) {
+        return null;
+    }
     const num = parseFloat(str.replace(/[^\d.-]/g, ""));
-    if (isNaN(num)) return null;
+    if (isNaN(num)) {
+        return null;
+    }
     return num;
-}
+};
 
 export const resolvers = {
     SkuStatus: SKU_STATUS,
     SkuSortBy: SKU_SORT_OPTIONS,
     Query: {
         // Query all SKUs
-        skus: async (_parent: undefined, { input }: IWrap<SkusInput>, { prisma }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
+        skus: async (
+            _parent: undefined,
+            { input }: IWrap<SkusInput>,
+            { prisma }: Context,
+            info: GraphQLResolveInfo
+        ): Promise<RecursivePartial<any> | null> => {
             let idQuery;
-            if (Array.isArray(input.ids)) idQuery = { id: { in: input.ids } };
+            if (Array.isArray(input.ids)) {
+                idQuery = { id: { in: input.ids } };
+            }
             // Determine sort order
             let sortQuery;
-            if (input.sortBy) sortQuery = SORT_TO_QUERY[input.sortBy];
+            if (input.sortBy) {
+                sortQuery = SORT_TO_QUERY[input.sortBy];
+            }
             let searchQuery;
             if (input.searchString && input.searchString.length > 0) {
                 searchQuery = {
                     OR: [
-                        { plant: { latinName: { contains: input.searchString.trim(), mode: "insensitive" } } },
-                        { plant: { traits: { some: { value: { contains: input.searchString.trim(), mode: "insensitive" } } } } },
+                        {
+                            plant: {
+                                latinName: {
+                                    contains: input.searchString.trim(),
+                                    mode: "insensitive",
+                                },
+                            },
+                        },
+                        {
+                            plant: {
+                                traits: {
+                                    some: {
+                                        value: {
+                                            contains: input.searchString.trim(),
+                                            mode: "insensitive",
+                                        },
+                                    },
+                                },
+                            },
+                        },
                     ],
                 };
             }
             let onlyInStockQuery;
-            if (input.onlyInStock === true) onlyInStockQuery = { availability: { gt: 0 } };
+            if (input.onlyInStock === true) {
+                onlyInStockQuery = { availability: { gt: 0 } };
+            }
             return await prisma.sku.findMany({
                 where: {
                     ...idQuery,
@@ -121,7 +154,7 @@ export const resolvers = {
                     status: "Active",
                 },
                 orderBy: sortQuery,
-                ...(new PrismaSelect(info).value),
+                ...new PrismaSelect(info).value,
             });
         },
     },
@@ -130,25 +163,58 @@ export const resolvers = {
             const { createReadStream, mimetype } = await input.file;
             const stream = createReadStream();
             const filename = `private/availability-${Date.now()}.xls`;
-            const { success, filename: finalFileName } = await saveFile(stream, filename, mimetype, false, [".csv", ".xls", ".xlsx", "text/csv", "application/vnd.ms-excel", "application/csv", "text/x-csv", "application/x-csv", "text/comma-separated-values", "text/x-comma-separated-values"]);
-            if (success) uploadAvailability(finalFileName);
+            const { success, filename: finalFileName } = await saveFile(
+                stream,
+                filename,
+                mimetype,
+                false,
+                [
+                    ".csv",
+                    ".xls",
+                    ".xlsx",
+                    "text/csv",
+                    "application/vnd.ms-excel",
+                    "application/csv",
+                    "text/x-csv",
+                    "application/x-csv",
+                    "text/comma-separated-values",
+                    "text/x-comma-separated-values",
+                ]
+            );
+            if (success) {
+                uploadAvailability(finalFileName);
+            }
             return success;
         },
-        addSku: async (_parent: undefined, { input }: IWrap<SkuInput>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
+        addSku: async (
+            _parent: undefined,
+            { input }: IWrap<SkuInput>,
+            { prisma, req }: Context,
+            info: GraphQLResolveInfo
+        ): Promise<RecursivePartial<any> | null> => {
             // Must be admin
-            if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
+            if (!req.isAdmin) {
+                throw new CustomError(CODE.Unauthorized);
+            }
             return await prisma.sku.create({
                 data: {
                     ...input,
                     size: toNumber(input.size),
                     price: toNumber(input.price),
                 },
-                ...(new PrismaSelect(info).value)
+                ...new PrismaSelect(info).value,
             });
         },
-        updateSku: async (_parent: undefined, { input }: IWrap<SkuInput>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
+        updateSku: async (
+            _parent: undefined,
+            { input }: IWrap<SkuInput>,
+            { prisma, req }: Context,
+            info: GraphQLResolveInfo
+        ): Promise<RecursivePartial<any> | null> => {
             // Must be admin
-            if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
+            if (!req.isAdmin) {
+                throw new CustomError(CODE.Unauthorized);
+            }
             return await prisma.sku.update({
                 where: { id: input.id || undefined },
                 data: {
@@ -156,12 +222,18 @@ export const resolvers = {
                     size: toNumber(input.size),
                     price: toNumber(input.price),
                 },
-                ...(new PrismaSelect(info).value),
+                ...new PrismaSelect(info).value,
             });
         },
-        deleteSkus: async (_parent: undefined, { input }: IWrap<DeleteManyInput>, { prisma, req }: Context): Promise<Count | null> => {
+        deleteSkus: async (
+            _parent: undefined,
+            { input }: IWrap<DeleteManyInput>,
+            { prisma, req }: Context
+        ): Promise<Count | null> => {
             // Must be admin
-            if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
+            if (!req.isAdmin) {
+                throw new CustomError(CODE.Unauthorized);
+            }
             return await prisma.sku.deleteMany({ where: { id: { in: input.ids } } });
         },
     },

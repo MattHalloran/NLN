@@ -69,7 +69,7 @@ const PlantCardComponent = ({
         // On mobile, use Avatar (best for lists)
         if (isMobile) {
             display = <Avatar
-                src={display_data ? `${getServerUrl()}/${getImageSrc(display_data)}` : ''}
+                src={display_data ? `${getServerUrl()}/${getImageSrc(display_data)}` : ""}
                 alt={display_data?.alt ?? plant.latinName}
                 sx={{
                     backgroundColor: palette.primary.main,
@@ -89,8 +89,8 @@ const PlantCardComponent = ({
             if (display_data) {
                 display = <CardMedia
                     component="img"
-                    src={`${getServerUrl()}/${getImageSrc(display_data) || ''}`}
-                    alt={display_data?.alt || ''}
+                    src={`${getServerUrl()}/${getImageSrc(display_data) || ""}`}
+                    alt={display_data?.alt || ""}
                     title={plant.latinName}
                     sx={{
                         minHeight: 200,

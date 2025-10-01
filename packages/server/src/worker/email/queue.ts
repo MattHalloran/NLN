@@ -3,9 +3,18 @@ import fs from "fs";
 import { HOST, PORT } from "../../redisConn";
 import { emailProcess } from "./process.js";
 
-const { BUSINESS_NAME, WEBSITE }: { BUSINESS_NAME: { Long: string, Short: string }, WEBSITE: string } = JSON.parse(fs.readFileSync(`${process.env.PROJECT_DIR}/assets/public/business.json`, "utf8"));
+const {
+    BUSINESS_NAME,
+    WEBSITE,
+}: { BUSINESS_NAME: { Long: string; Short: string }; WEBSITE: string } = JSON.parse(
+    fs.readFileSync(`${process.env.PROJECT_DIR}/assets/public/business.json`, "utf8")
+);
 
-const welcomeTemplate = fs.readFileSync(`${process.env.PROJECT_DIR}/packages/server/src/worker/email/templates/welcome.html`).toString();
+const welcomeTemplate = fs
+    .readFileSync(
+        `${process.env.PROJECT_DIR}/packages/server/src/worker/email/templates/welcome.html`
+    )
+    .toString();
 
 const emailQueue = new Bull("email", { redis: { port: PORT, host: HOST } });
 emailQueue.process(emailProcess);

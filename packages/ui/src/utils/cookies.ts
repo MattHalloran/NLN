@@ -21,7 +21,7 @@ export const Cookies = {
     IsLeftHanded: "isLeftHanded",
     SideMenuState: "sideMenuState",
 };
-export type Cookies = ValueOf<typeof Cookies>;
+export type CookieKey = ValueOf<typeof Cookies>;
 
 /**
  * Preferences for the user's cookie settings
@@ -33,7 +33,7 @@ export type CookiePreferences = {
     targeting: boolean;
 }
 
-const getCookie = <T>(name: Cookies | string, typeCheck: (value: unknown) => value is T): T | undefined => {
+const getCookie = <T>(name: CookieKey | string, typeCheck: (value: unknown) => value is T): T | undefined => {
     const cookie = localStorage.getItem(name);
     // Try to parse
     try {
@@ -47,13 +47,13 @@ const getCookie = <T>(name: Cookies | string, typeCheck: (value: unknown) => val
     return undefined;
 };
 
-const setCookie = (name: Cookies | string, value: unknown) => { localStorage.setItem(name, JSON.stringify(value)); };
+const setCookie = (name: CookieKey | string, value: unknown) => { localStorage.setItem(name, JSON.stringify(value)); };
 
 /**
  * Gets a cookie if it exists, otherwise sets it to the default value. 
  * Assumes that you have already checked that the cookie is allowed.
  */
-export const getOrSetCookie = <T>(name: Cookies | string, typeCheck: (value: unknown) => value is T, defaultValue?: T): T | undefined => {
+export const getOrSetCookie = <T>(name: CookieKey | string, typeCheck: (value: unknown) => value is T, defaultValue?: T): T | undefined => {
     const cookie = getCookie(name, typeCheck);
     if (cookie !== null && cookie !== undefined) return cookie;
     if (defaultValue !== null && defaultValue !== undefined) setCookie(name, defaultValue);

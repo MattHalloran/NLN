@@ -1,5 +1,14 @@
-const reportWebVitals = (onPerfEntry) => {
-    if (onPerfEntry && onPerfEntry instanceof Function) {
+type PerformanceEntry = {
+    name: string;
+    value: number;
+    delta?: number;
+    id?: string;
+};
+
+type OnPerfEntry = (entry: PerformanceEntry) => void;
+
+const reportWebVitals = (onPerfEntry?: OnPerfEntry): void => {
+    if (onPerfEntry && typeof onPerfEntry === "function") {
         // TODO replace with a different library
         // import("web-vitals").then(({ getCLS, getFID, getFCP, getLCP, getTTFB }) => {
         //     getCLS(onPerfEntry);
@@ -12,4 +21,3 @@ const reportWebVitals = (onPerfEntry) => {
 };
 
 export default reportWebVitals;
-

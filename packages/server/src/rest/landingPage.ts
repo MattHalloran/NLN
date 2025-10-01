@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import { readFileSync, writeFileSync } from "fs";
 import { join } from "path";
+import { logger } from "../logger.js";
 import { initializeRedis } from "../redisConn.js";
 
 const router = Router();
@@ -17,10 +18,10 @@ const readHeroBanners = () => {
         const parsed = JSON.parse(data);
         return {
             banners: parsed.banners || [],
-            settings: parsed.settings || {}
+            settings: parsed.settings || {},
         };
     } catch (error) {
-        console.error("Error reading hero banners:", error);
+        logger.error("Error reading hero banners:", error);
         return { banners: [], settings: {} };
     }
 };
@@ -30,7 +31,7 @@ const readSeasonalPlants = () => {
         const data = readFileSync(join(dataPath, "seasonal-plants.json"), "utf8");
         return JSON.parse(data).plants || [];
     } catch (error) {
-        console.error("Error reading seasonal plants:", error);
+        logger.error("Error reading seasonal plants:", error);
         return [];
     }
 };
@@ -40,7 +41,7 @@ const readPlantTips = () => {
         const data = readFileSync(join(dataPath, "plant-tips.json"), "utf8");
         return JSON.parse(data).tips || [];
     } catch (error) {
-        console.error("Error reading plant tips:", error);
+        logger.error("Error reading plant tips:", error);
         return [];
     }
 };
@@ -50,7 +51,7 @@ const readLandingPageSettings = () => {
         const data = readFileSync(join(dataPath, "landing-page-settings.json"), "utf8");
         return JSON.parse(data);
     } catch (error) {
-        console.error("Error reading landing page settings:", error);
+        logger.error("Error reading landing page settings:", error);
         return {};
     }
 };
@@ -61,7 +62,7 @@ const readBusinessInfo = () => {
         const data = readFileSync(join(assetsPath, "business.json"), "utf8");
         return JSON.parse(data);
     } catch (error) {
-        console.error("Error reading business info:", error);
+        logger.error("Error reading business info:", error);
         return {};
     }
 };
@@ -71,7 +72,7 @@ const readBusinessHours = () => {
         const assetsPath = join(process.env.PROJECT_DIR || "", "assets", "public");
         return readFileSync(join(assetsPath, "hours.md"), "utf8");
     } catch (error) {
-        console.error("Error reading business hours:", error);
+        logger.error("Error reading business hours:", error);
         return "";
     }
 };
@@ -83,7 +84,7 @@ const getCachedContent = async () => {
         const cached = await redis.get(CACHE_KEY);
         return cached ? JSON.parse(cached) : null;
     } catch (error) {
-        console.error("Error reading from cache:", error);
+        logger.error("Error reading from cache:", error);
         return null;
     }
 };
@@ -92,9 +93,9 @@ const setCachedContent = async (content: any) => {
     try {
         const redis = await initializeRedis();
         await redis.setEx(CACHE_KEY, CACHE_TTL, JSON.stringify(content));
-        console.log("Landing page content cached");
+        logger.info("Landing page content cached");
     } catch (error) {
-        console.error("Error caching content:", error);
+        logger.error("Error caching content:", error);
     }
 };
 
@@ -102,9 +103,9 @@ const invalidateCache = async () => {
     try {
         const redis = await initializeRedis();
         await redis.del(CACHE_KEY);
-        console.log("Landing page cache invalidated");
+        logger.info("Landing page cache invalidated");
     } catch (error) {
-        console.error("Error invalidating cache:", error);
+        logger.error("Error invalidating cache:", error);
     }
 };
 
@@ -114,7 +115,7 @@ const aggregateLandingPageContent = (onlyActive: boolean = true) => {
     let seasonalPlants = readSeasonalPlants();
     let plantTips = readPlantTips();
     const settings = readLandingPageSettings();
-    
+
     // Read contact info
     const businessInfo = readBusinessInfo();
     const businessHours = readBusinessHours();
@@ -127,9 +128,9 @@ const aggregateLandingPageContent = (onlyActive: boolean = true) => {
 
     // Sort by display order
     const heroBanners = banners
-        .filter((b: any) => onlyActive ? b.isActive : true)
+        .filter((b: any) => (onlyActive ? b.isActive : true))
         .sort((a: any, b: any) => a.displayOrder - b.displayOrder);
-    
+
     seasonalPlants.sort((a: any, b: any) => a.displayOrder - b.displayOrder);
     plantTips.sort((a: any, b: any) => a.displayOrder - b.displayOrder);
 
@@ -141,9 +142,9 @@ const aggregateLandingPageContent = (onlyActive: boolean = true) => {
         settings,
         contactInfo: {
             business: businessInfo,
-            hours: businessHours
+            hours: businessHours,
         },
-        lastUpdated: new Date().toISOString()
+        lastUpdated: new Date().toISOString(),
     };
 };
 
@@ -156,38 +157,38 @@ router.get("/", async (req: Request, res: Response) => {
         // Try cache first
         const cached = await getCachedContent();
         if (cached) {
-            console.log("Returning cached landing page content");
-            
+            logger.info("Returning cached landing page content");
+
             // Set cache headers for browser caching
             res.set({
                 "Cache-Control": "public, max-age=300", // 5 minutes browser cache
-                "ETag": `"${Buffer.from(JSON.stringify(cached)).toString('base64').substring(0, 20)}"`,
-                "Last-Modified": cached.lastUpdated || new Date().toUTCString()
+                ETag: `"${Buffer.from(JSON.stringify(cached)).toString("base64").substring(0, 20)}"`,
+                "Last-Modified": cached.lastUpdated || new Date().toUTCString(),
             });
-            
+
             return res.json(cached);
         }
 
         // Generate fresh content
-        console.log("Generating fresh landing page content");
+        logger.info("Generating fresh landing page content");
         const content = aggregateLandingPageContent(onlyActive);
-        
+
         // Cache it
         await setCachedContent(content);
-        
+
         // Set cache headers
         res.set({
             "Cache-Control": "public, max-age=300",
-            "ETag": `"${Buffer.from(JSON.stringify(content)).toString('base64').substring(0, 20)}"`,
-            "Last-Modified": content.lastUpdated
+            ETag: `"${Buffer.from(JSON.stringify(content)).toString("base64").substring(0, 20)}"`,
+            "Last-Modified": content.lastUpdated,
         });
-        
-        res.json(content);
+
+        return res.json(content);
     } catch (error) {
-        console.error("Error fetching landing page content:", error);
-        res.status(500).json({ 
+        logger.error("Error fetching landing page content:", error);
+        return res.status(500).json({
             error: "Failed to fetch landing page content",
-            message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined
+            message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
         });
     }
 });
@@ -201,12 +202,12 @@ router.post("/invalidate-cache", async (req: Request, res: Response) => {
         }
 
         await invalidateCache();
-        res.json({ success: true, message: "Cache invalidated successfully" });
+        return res.json({ success: true, message: "Cache invalidated successfully" });
     } catch (error) {
-        console.error("Error invalidating cache:", error);
-        res.status(500).json({ 
+        logger.error("Error invalidating cache:", error);
+        return res.status(500).json({
             error: "Failed to invalidate cache",
-            message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined
+            message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
         });
     }
 });
@@ -219,14 +220,8 @@ router.put("/", async (req: Request, res: Response) => {
             return res.status(403).json({ error: "Admin access required" });
         }
 
-        const { 
-            heroBanners, 
-            heroSettings, 
-            seasonalPlants, 
-            plantTips, 
-            settings, 
-            contactInfo 
-        } = req.body;
+        const { heroBanners, heroSettings, seasonalPlants, plantTips, settings, contactInfo } =
+            req.body;
 
         const updatedSections: string[] = [];
 
@@ -236,13 +231,16 @@ router.put("/", async (req: Request, res: Response) => {
                 const heroData = { banners: heroBanners, settings: heroSettings || {} };
                 const heroPath = join(dataPath, "hero-banners.json");
                 writeFileSync(heroPath, JSON.stringify(heroData, null, 2), "utf8");
-                console.log("Hero banners updated successfully");
+                logger.info("Hero banners updated successfully");
                 updatedSections.push("heroBanners");
             } catch (error) {
-                console.error("Error updating hero banners:", error);
-                return res.status(500).json({ 
+                logger.error("Error updating hero banners:", error);
+                return res.status(500).json({
                     error: "Failed to update hero banners",
-                    message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined
+                    message:
+                        process.env.NODE_ENV === "development"
+                            ? (error as Error).message
+                            : undefined,
                 });
             }
         }
@@ -255,13 +253,16 @@ router.put("/", async (req: Request, res: Response) => {
                 const heroData = { banners, settings: heroSettings };
                 const heroPath = join(dataPath, "hero-banners.json");
                 writeFileSync(heroPath, JSON.stringify(heroData, null, 2), "utf8");
-                console.log("Hero settings updated successfully");
+                logger.info("Hero settings updated successfully");
                 updatedSections.push("heroSettings");
             } catch (error) {
-                console.error("Error updating hero settings:", error);
-                return res.status(500).json({ 
+                logger.error("Error updating hero settings:", error);
+                return res.status(500).json({
                     error: "Failed to update hero settings",
-                    message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined
+                    message:
+                        process.env.NODE_ENV === "development"
+                            ? (error as Error).message
+                            : undefined,
                 });
             }
         }
@@ -272,13 +273,16 @@ router.put("/", async (req: Request, res: Response) => {
                 const plantsData = { plants: seasonalPlants };
                 const plantsPath = join(dataPath, "seasonal-plants.json");
                 writeFileSync(plantsPath, JSON.stringify(plantsData, null, 2), "utf8");
-                console.log("Seasonal plants updated successfully");
+                logger.info("Seasonal plants updated successfully");
                 updatedSections.push("seasonalPlants");
             } catch (error) {
-                console.error("Error updating seasonal plants:", error);
-                return res.status(500).json({ 
+                logger.error("Error updating seasonal plants:", error);
+                return res.status(500).json({
                     error: "Failed to update seasonal plants",
-                    message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined
+                    message:
+                        process.env.NODE_ENV === "development"
+                            ? (error as Error).message
+                            : undefined,
                 });
             }
         }
@@ -289,13 +293,16 @@ router.put("/", async (req: Request, res: Response) => {
                 const tipsData = { tips: plantTips };
                 const tipsPath = join(dataPath, "plant-tips.json");
                 writeFileSync(tipsPath, JSON.stringify(tipsData, null, 2), "utf8");
-                console.log("Plant tips updated successfully");
+                logger.info("Plant tips updated successfully");
                 updatedSections.push("plantTips");
             } catch (error) {
-                console.error("Error updating plant tips:", error);
-                return res.status(500).json({ 
+                logger.error("Error updating plant tips:", error);
+                return res.status(500).json({
                     error: "Failed to update plant tips",
-                    message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined
+                    message:
+                        process.env.NODE_ENV === "development"
+                            ? (error as Error).message
+                            : undefined,
                 });
             }
         }
@@ -305,13 +312,16 @@ router.put("/", async (req: Request, res: Response) => {
             try {
                 const settingsPath = join(dataPath, "landing-page-settings.json");
                 writeFileSync(settingsPath, JSON.stringify(settings, null, 2), "utf8");
-                console.log("Landing page settings updated successfully");
+                logger.info("Landing page settings updated successfully");
                 updatedSections.push("settings");
             } catch (error) {
-                console.error("Error updating landing page settings:", error);
-                return res.status(500).json({ 
+                logger.error("Error updating landing page settings:", error);
+                return res.status(500).json({
                     error: "Failed to update landing page settings",
-                    message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined
+                    message:
+                        process.env.NODE_ENV === "development"
+                            ? (error as Error).message
+                            : undefined,
                 });
             }
         }
@@ -324,14 +334,21 @@ router.put("/", async (req: Request, res: Response) => {
             if (contactInfo.business) {
                 try {
                     const businessPath = join(assetsPath, "business.json");
-                    writeFileSync(businessPath, JSON.stringify(contactInfo.business, null, 2), "utf8");
-                    console.log("Business info updated successfully");
+                    writeFileSync(
+                        businessPath,
+                        JSON.stringify(contactInfo.business, null, 2),
+                        "utf8"
+                    );
+                    logger.info("Business info updated successfully");
                     updatedSections.push("contactInfo.business");
                 } catch (error) {
-                    console.error("Error updating business info:", error);
-                    return res.status(500).json({ 
+                    logger.error("Error updating business info:", error);
+                    return res.status(500).json({
                         error: "Failed to update business info",
-                        message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined
+                        message:
+                            process.env.NODE_ENV === "development"
+                                ? (error as Error).message
+                                : undefined,
                     });
                 }
             }
@@ -341,13 +358,16 @@ router.put("/", async (req: Request, res: Response) => {
                 try {
                     const hoursPath = join(assetsPath, "hours.md");
                     writeFileSync(hoursPath, contactInfo.hours, "utf8");
-                    console.log("Business hours updated successfully");
+                    logger.info("Business hours updated successfully");
                     updatedSections.push("contactInfo.hours");
                 } catch (error) {
-                    console.error("Error updating business hours:", error);
-                    return res.status(500).json({ 
+                    logger.error("Error updating business hours:", error);
+                    return res.status(500).json({
                         error: "Failed to update business hours",
-                        message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined
+                        message:
+                            process.env.NODE_ENV === "development"
+                                ? (error as Error).message
+                                : undefined,
                     });
                 }
             }
@@ -360,16 +380,16 @@ router.put("/", async (req: Request, res: Response) => {
         // Invalidate cache after successful updates
         await invalidateCache();
 
-        res.json({ 
-            success: true, 
+        return res.json({
+            success: true,
             message: "Landing page content updated successfully",
-            updatedSections
+            updatedSections,
         });
     } catch (error) {
-        console.error("Error updating landing page content:", error);
-        res.status(500).json({ 
+        logger.error("Error updating landing page content:", error);
+        return res.status(500).json({
             error: "Failed to update landing page content",
-            message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined
+            message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
         });
     }
 });
@@ -385,7 +405,9 @@ router.put("/contact-info", async (req: Request, res: Response) => {
         const { business, hours } = req.body;
 
         if (!business && !hours) {
-            return res.status(400).json({ error: "Either business or hours data must be provided" });
+            return res
+                .status(400)
+                .json({ error: "Either business or hours data must be provided" });
         }
 
         const assetsPath = join(process.env.PROJECT_DIR || "", "assets", "public");
@@ -395,12 +417,15 @@ router.put("/contact-info", async (req: Request, res: Response) => {
             try {
                 const businessPath = join(assetsPath, "business.json");
                 writeFileSync(businessPath, JSON.stringify(business, null, 2), "utf8");
-                console.log("Business info updated successfully");
+                logger.info("Business info updated successfully");
             } catch (error) {
-                console.error("Error updating business info:", error);
-                return res.status(500).json({ 
+                logger.error("Error updating business info:", error);
+                return res.status(500).json({
                     error: "Failed to update business info",
-                    message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined
+                    message:
+                        process.env.NODE_ENV === "development"
+                            ? (error as Error).message
+                            : undefined,
                 });
             }
         }
@@ -410,12 +435,15 @@ router.put("/contact-info", async (req: Request, res: Response) => {
             try {
                 const hoursPath = join(assetsPath, "hours.md");
                 writeFileSync(hoursPath, hours, "utf8");
-                console.log("Business hours updated successfully");
+                logger.info("Business hours updated successfully");
             } catch (error) {
-                console.error("Error updating business hours:", error);
-                return res.status(500).json({ 
+                logger.error("Error updating business hours:", error);
+                return res.status(500).json({
                     error: "Failed to update business hours",
-                    message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined
+                    message:
+                        process.env.NODE_ENV === "development"
+                            ? (error as Error).message
+                            : undefined,
                 });
             }
         }
@@ -423,19 +451,19 @@ router.put("/contact-info", async (req: Request, res: Response) => {
         // Invalidate cache after successful update
         await invalidateCache();
 
-        res.json({ 
-            success: true, 
+        return res.json({
+            success: true,
             message: "Contact information updated successfully",
             updated: {
                 business: !!business,
-                hours: !!hours
-            }
+                hours: !!hours,
+            },
         });
     } catch (error) {
-        console.error("Error updating contact info:", error);
-        res.status(500).json({ 
+        logger.error("Error updating contact info:", error);
+        return res.status(500).json({
             error: "Failed to update contact information",
-            message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined
+            message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
         });
     }
 });

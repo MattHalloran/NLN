@@ -76,7 +76,7 @@ export const AdminInventoryPage = () => {
                         <Card sx={{ 
                             bgcolor: palette.background.paper,
                             border: `1px solid ${palette.divider}`,
-                            borderRadius: 1
+                            borderRadius: 1,
                         }}>
                             <CardContent sx={{ p: 3 }}>
                                 <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -97,7 +97,7 @@ export const AdminInventoryPage = () => {
                         <Card sx={{ 
                             bgcolor: palette.background.paper,
                             border: `1px solid ${palette.divider}`,
-                            borderRadius: 1
+                            borderRadius: 1,
                         }}>
                             <CardContent sx={{ p: 3 }}>
                                 <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -118,7 +118,7 @@ export const AdminInventoryPage = () => {
                         <Card sx={{ 
                             bgcolor: palette.background.paper,
                             border: `1px solid ${palette.divider}`,
-                            borderRadius: 1
+                            borderRadius: 1,
                         }}>
                             <CardContent sx={{ p: 3 }}>
                                 <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -139,7 +139,7 @@ export const AdminInventoryPage = () => {
                         <Card sx={{ 
                             bgcolor: palette.background.paper,
                             border: `1px solid ${palette.divider}`,
-                            borderRadius: 1
+                            borderRadius: 1,
                         }}>
                             <CardContent sx={{ p: 3 }}>
                                 <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -166,7 +166,7 @@ export const AdminInventoryPage = () => {
                         mb: 3, 
                         borderRadius: 1,
                         bgcolor: palette.background.paper,
-                        border: `1px solid ${palette.divider}`
+                        border: `1px solid ${palette.divider}`,
                     }}
                 >
                     <Box display="flex" alignItems="center" mb={2}>
@@ -194,8 +194,8 @@ export const AdminInventoryPage = () => {
                                 "&:hover": {
                                     bgcolor: palette.action.selected,
                                     borderColor: palette.primary.main,
-                                }
-                            } 
+                                },
+                            }, 
                         }}
                     />
                 </Paper>
@@ -208,7 +208,7 @@ export const AdminInventoryPage = () => {
                         mb: 3, 
                         borderRadius: 1,
                         bgcolor: palette.background.paper,
-                        border: `1px solid ${palette.divider}`
+                        border: `1px solid ${palette.divider}`,
                     }}
                 >
                     <Box display="flex" alignItems="center" justifyContent="space-between" mb={3}>
@@ -225,8 +225,8 @@ export const AdminInventoryPage = () => {
                                 color: palette.text.secondary,
                                 "&:hover": { 
                                     color: palette.primary.main,
-                                    bgcolor: palette.action.hover 
-                                }
+                                    bgcolor: palette.action.hover, 
+                                },
                             }}
                         >
                             <Refresh />
@@ -265,8 +265,8 @@ export const AdminInventoryPage = () => {
                                                     ml: 1, 
                                                     bgcolor: showActive ? "#2e7d32" : "#ed6c02",
                                                     color: "white",
-                                                    fontSize: '0.7rem',
-                                                    height: 20
+                                                    fontSize: "0.7rem",
+                                                    height: 20,
                                                 }}
                                             />
                                         </Box>
@@ -290,7 +290,7 @@ export const AdminInventoryPage = () => {
             <Box px={3} pb={3}>
                 <Box display="flex" alignItems="center" justifyContent="space-between" mb={3}>
                     <Typography variant="h6" fontWeight="600">
-                        {showActive ? 'Active' : 'Inactive'} Plants ({showActive ? activePlants : inactivePlants})
+                        {showActive ? "Active" : "Inactive"} Plants ({showActive ? activePlants : inactivePlants})
                     </Typography>
                     {searchString && (
                         <Typography variant="body2" color="text.secondary">

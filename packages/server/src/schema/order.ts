@@ -77,35 +77,83 @@ const STATUS_TO_SORT = {
 export const resolvers = {
     OrderStatus: ORDER_STATUS,
     Query: {
-        orders: async (_parent: undefined, { input }: IWrap<OrdersInput>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
+        orders: async (
+            _parent: undefined,
+            { input }: IWrap<OrdersInput>,
+            { prisma, req }: Context,
+            info: GraphQLResolveInfo
+        ): Promise<RecursivePartial<any> | null> => {
             // Must be admin (customers query SKUs)
-            if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
+            if (!req.isAdmin) {
+                throw new CustomError(CODE.Unauthorized);
+            }
             let idQuery;
-            if (Array.isArray(input.ids)) { idQuery = { id: { in: input.ids } }; }
+            if (Array.isArray(input.ids)) {
+                idQuery = { id: { in: input.ids } };
+            }
             // Determine sort order
             let sortQuery: any = { updated_at: "desc" };
-            if (input.status) sortQuery = STATUS_TO_SORT[input.status];
+            if (input.status) {
+                sortQuery = STATUS_TO_SORT[input.status];
+            }
             // If search string provided, match it with customer or business name.
             // Maybe in the future, this could also be matched to sku names and such
             let searchQuery;
-            if (input.searchString !== undefined && input.searchString !== null && input.searchString.length > 0) {
+            if (
+                input.searchString !== undefined &&
+                input.searchString !== null &&
+                input.searchString.length > 0
+            ) {
                 // If there are two words, assume first is first name, last is last name
                 const words = input.searchString.trim().split(" ");
                 if (words.length === 2) {
                     searchQuery = {
                         OR: [
-                            { customer: { firstName: { contains: words[0], mode: "insensitive" } } },
+                            {
+                                customer: {
+                                    firstName: { contains: words[0], mode: "insensitive" },
+                                },
+                            },
                             { customer: { lastName: { contains: words[1], mode: "insensitive" } } },
-                            { business: { name: { contains: input.searchString.trim(), mode: "insensitive" } } },
+                            {
+                                business: {
+                                    name: {
+                                        contains: input.searchString.trim(),
+                                        mode: "insensitive",
+                                    },
+                                },
+                            },
                         ],
                     };
-                }
-                else {
+                } else {
                     searchQuery = {
                         OR: [
-                            { customer: { firstName: { contains: input.searchString.trim(), mode: "insensitive" } } },
-                            { customer: { lastName: { contains: input.searchString.trim(), mode: "insensitive" } } },
-                            { customer: { business: { name: { contains: input.searchString.trim(), mode: "insensitive" } } } },
+                            {
+                                customer: {
+                                    firstName: {
+                                        contains: input.searchString.trim(),
+                                        mode: "insensitive",
+                                    },
+                                },
+                            },
+                            {
+                                customer: {
+                                    lastName: {
+                                        contains: input.searchString.trim(),
+                                        mode: "insensitive",
+                                    },
+                                },
+                            },
+                            {
+                                customer: {
+                                    business: {
+                                        name: {
+                                            contains: input.searchString.trim(),
+                                            mode: "insensitive",
+                                        },
+                                    },
+                                },
+                            },
                         ],
                     };
                 }
@@ -117,34 +165,52 @@ export const resolvers = {
                     status: input.status ?? undefined,
                 },
                 orderBy: sortQuery,
-                ...(new PrismaSelect(info).value),
+                ...new PrismaSelect(info).value,
             });
         },
     },
     Mutation: {
-        updateOrder: async (_parent: undefined, { input }: IWrap<OrderInput>, { prisma, req }: Context, info: GraphQLResolveInfo): Promise<RecursivePartial<any> | null> => {
+        updateOrder: async (
+            _parent: undefined,
+            { input }: IWrap<OrderInput>,
+            { prisma, req }: Context,
+            info: GraphQLResolveInfo
+        ): Promise<RecursivePartial<any> | null> => {
             // Must be admin, or updating your own
             const curr: any = await prisma.order.findUnique({
                 where: { id: input.id as string },
-                select: { id: true, customerId: true, status: true, items: { select: { id: true } } },
+                select: {
+                    id: true,
+                    customerId: true,
+                    status: true,
+                    items: { select: { id: true } },
+                },
             });
-            if (!req.isAdmin && req.customerId !== curr.customerId) throw new CustomError(CODE.Unauthorized);
+            if (!req.isAdmin && req.customerId !== curr.customerId) {
+                throw new CustomError(CODE.Unauthorized);
+            }
             if (!req.isAdmin) {
                 // Customers can only update their own orders in certain states
                 const editable_order_statuses = [ORDER_STATUS.Draft, ORDER_STATUS.Pending];
-                if (!editable_order_statuses.includes(curr.status)) throw new CustomError(CODE.Unauthorized);
+                if (!editable_order_statuses.includes(curr.status)) {
+                    throw new CustomError(CODE.Unauthorized);
+                }
                 // Customers cannot edit order status
                 delete input.status;
             }
             // Determine which order item rows need to be updated, and which will be deleted
             if (Array.isArray(input.items)) {
                 const updatedItemIds = input.items.map((i: any) => i.id);
-                const deletingItemIds = curr.items.filter((i: any) => !updatedItemIds.includes(i.id)).map((i: any) => i.id);
+                const deletingItemIds = curr.items
+                    .filter((i: any) => !updatedItemIds.includes(i.id))
+                    .map((i: any) => i.id);
                 if (updatedItemIds.length > 0) {
-                    const updateMany = input.items.map((d: any) => prisma.order_item.updateMany({
-                        where: { id: d.id },
-                        data: { ...d },
-                    }));
+                    const updateMany = input.items.map((d: any) =>
+                        prisma.order_item.updateMany({
+                            where: { id: d.id },
+                            data: { ...d },
+                        })
+                    );
                     Promise.all(updateMany);
                 }
                 if (deletingItemIds.length > 0) {
@@ -154,15 +220,23 @@ export const resolvers = {
             return await prisma.order.update({
                 where: { id: curr.id },
                 data: { ...input, items: undefined },
-                ...(new PrismaSelect(info).value),
+                ...new PrismaSelect(info).value,
             });
         },
-        submitOrder: async (_parent: undefined, { input }: IWrap<FindByIdInput>, { prisma, req }: Context): Promise<boolean> => {
+        submitOrder: async (
+            _parent: undefined,
+            { input }: IWrap<FindByIdInput>,
+            { prisma, req }: Context
+        ): Promise<boolean> => {
             // Must be admin, or submitting your own
             const curr: any = await prisma.order.findUnique({ where: { id: input.id } });
-            if (!req.isAdmin && req.customerId !== curr.customerId) throw new CustomError(CODE.Unauthorized);
+            if (!req.isAdmin && req.customerId !== curr.customerId) {
+                throw new CustomError(CODE.Unauthorized);
+            }
             // Only orders in the draft state can be submitted
-            if (curr.status !== ORDER_STATUS.Draft) throw new CustomError(CODE.ErrorUnknown);
+            if (curr.status !== ORDER_STATUS.Draft) {
+                throw new CustomError(CODE.ErrorUnknown);
+            }
             await prisma.order.update({
                 where: { id: curr.id },
                 data: { status: ORDER_STATUS.Pending },
@@ -170,11 +244,19 @@ export const resolvers = {
             orderNotifyAdmin();
             return true;
         },
-        cancelOrder: async (_parent: undefined, { input }: IWrap<FindByIdInput>, { prisma, req }: Context): Promise<any> => {
+        cancelOrder: async (
+            _parent: undefined,
+            { input }: IWrap<FindByIdInput>,
+            { prisma, req }: Context
+        ): Promise<any> => {
             // Must be admin, or canceling your own
             const curr = await prisma.order.findUnique({ where: { id: input.id } });
-            if (!curr) throw new CustomError(CODE.NotFound);
-            if (!req.isAdmin && req.customerId !== curr.customerId) throw new CustomError(CODE.Unauthorized);
+            if (!curr) {
+                throw new CustomError(CODE.NotFound);
+            }
+            if (!req.isAdmin && req.customerId !== curr.customerId) {
+                throw new CustomError(CODE.Unauthorized);
+            }
             let order_status = curr.status;
             // Only pending orders can be fully cancelled by customer
             if (curr.status === ORDER_STATUS.Pending) {
@@ -190,9 +272,15 @@ export const resolvers = {
             });
             return order_status;
         },
-        deleteOrders: async (_parent: undefined, { input }: IWrap<DeleteManyInput>, { prisma, req }: Context): Promise<RecursivePartial<any> | null> => {
+        deleteOrders: async (
+            _parent: undefined,
+            { input }: IWrap<DeleteManyInput>,
+            { prisma, req }: Context
+        ): Promise<RecursivePartial<any> | null> => {
             // Must be admin
-            if (!req.isAdmin) throw new CustomError(CODE.Unauthorized);
+            if (!req.isAdmin) {
+                throw new CustomError(CODE.Unauthorized);
+            }
             return await prisma.order.deleteMany({ where: { id: { in: input.ids } } });
         },
     },

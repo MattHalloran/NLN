@@ -1,7 +1,7 @@
 import { Button, Popover, useTheme, ButtonProps } from "@mui/material";
 import { ReactNode, useState } from "react";
 
-interface PopupMenuProps extends Omit<ButtonProps, 'onClick'> {
+interface PopupMenuProps extends Omit<ButtonProps, "onClick"> {
     text?: string;
     children: ReactNode;
 }
