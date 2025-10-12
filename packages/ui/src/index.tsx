@@ -1,6 +1,4 @@
 /* eslint-disable no-undef */
-import { ApolloProvider } from "@apollo/client";
-import { initializeApollo } from "api/utils/initialize";
 import { ErrorBoundary } from "components";
 import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
@@ -8,17 +6,13 @@ import { Router, locationHook, makeMatcher } from "route";
 import { App } from "./App";
 import * as serviceWorkerRegistration from "./serviceWorkerRegistration";
 
-const client = initializeApollo();
-
 const root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement);
 
 const AppWrapper = (
     <Router hook={locationHook} base="" matcher={makeMatcher()}>
-        <ApolloProvider client={client}>
-            <ErrorBoundary>
-                <App />
-            </ErrorBoundary>
-        </ApolloProvider>
+        <ErrorBoundary>
+            <App />
+        </ErrorBoundary>
     </Router>
 );
 

@@ -1,6 +1,5 @@
-import { useQuery } from "@apollo/client";
 import { Box, styled, Typography, useTheme } from "@mui/material";
-import { readAssetsQuery } from "api/query/readAssets";
+import { useReadAssets } from "api/rest/hooks";
 import { LazyMarkdown, PageContainer } from "components";
 import { PolicyTabOption, PolicyTabs } from "components/breadcrumbs/PolicyTabs/PolicyTabs";
 import { TopBar } from "components/navigation/TopBar/TopBar";
@@ -107,12 +106,12 @@ export const PrivacyPolicyPage = () => {
     const { palette } = useTheme();
     const business = useContext(BusinessContext);
 
-    const [privacy, setPrivacy] = useState(null);
-    const { data: privacyData } = useQuery(readAssetsQuery, { variables: { input: { files: ["privacy.md"] } } });
+    const [privacy, setPrivacy] = useState<string | null>(null);
+    const { data: privacyData } = useReadAssets(["privacy.md"]);
 
     useEffect(() => {
-        if (privacyData === undefined) return;
-        let data = privacyData.readAssets[0];
+        if (!privacyData || !privacyData["privacy.md"]) return;
+        let data = privacyData["privacy.md"];
         // Replace variables
         const business_fields = Object.keys(convertToDot(business || {} as any));
         business_fields.forEach(f => data = data.replaceAll(`<${f}>`, valueFromDot(business || {} as any, f) || ""));

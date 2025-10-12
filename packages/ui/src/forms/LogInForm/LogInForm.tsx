@@ -1,9 +1,6 @@
-import { useMutation } from "@apollo/client";
 import { APP_LINKS, CODE, logInSchema } from "@local/shared";
 import { Box, Button, Grid, InputAdornment, TextField, useTheme } from "@mui/material";
-import { loginVariables, login_login } from "api/generated/login";
-import { loginMutation } from "api/mutation";
-import { mutationWrapper } from "api/utils";
+import { useLogin } from "api/rest/hooks";
 import { BreadcrumbsBase, SnackSeverity } from "components";
 import { PasswordTextField } from "components/inputs/PasswordTextField/PasswordTextField";
 import { useFormik } from "formik";
@@ -34,7 +31,7 @@ export const LogInForm = () => {
             verificationCode: typeof searchParams.code === "string" ? searchParams.code : undefined,
         };
     }, []);
-    const [login, { loading }] = useMutation(loginMutation);
+    const { mutate: login, loading } = useLogin();
 
     // If there's a verification code, show message to sign in to verify account
     useEffect(() => {
@@ -49,31 +46,31 @@ export const LogInForm = () => {
             password: "",
         },
         validationSchema: logInSchema,
-        onSubmit: (values) => {
-            mutationWrapper<login_login, loginVariables>({
-                mutation: login,
-                input: { ...values, verificationCode },
-                successCondition: (data) => data !== null,
-                onSuccess: (data) => {
-                    // If code provided, notify of account verification
-                    if (verificationCode) {
-                        PubSub.get().publishSnack({ message: "Account verified.", severity: SnackSeverity.Success });
-                    }
-                    PubSub.get().publishSession({ ...data, theme: (data.theme as "light" | "dark") || "light" });
-                    setLocation(APP_LINKS.Home);
-                },
-                onError: (response) => {
-                    if (Array.isArray(response.graphQLErrors) && response.graphQLErrors.some(e => e.extensions?.code === CODE.MustResetPassword.code)) {
-                        PubSub.get().publishAlertDialog({
-                            message: "Before signing in, please follow the link sent to your email to change your password.",
-                            buttons: [{
-                                text: "OK",
-                                onClick: () => setLocation(APP_LINKS.Home),
-                            }],
-                        });
-                    }
-                },
-            });
+        onSubmit: async (values) => {
+            try {
+                const data = await login({ ...values, verificationCode });
+                // If code provided, notify of account verification
+                if (verificationCode) {
+                    PubSub.get().publishSnack({ message: "Account verified.", severity: SnackSeverity.Success });
+                }
+                PubSub.get().publishSession({ ...data, theme: (data.theme as "light" | "dark") || "light" });
+                setLocation(APP_LINKS.Home);
+            } catch (error: any) {
+                if (error?.data?.code === CODE.MustResetPassword.code) {
+                    PubSub.get().publishAlertDialog({
+                        message: "Before signing in, please follow the link sent to your email to change your password.",
+                        buttons: [{
+                            text: "OK",
+                            onClick: () => setLocation(APP_LINKS.Home),
+                        }],
+                    });
+                } else {
+                    PubSub.get().publishSnack({
+                        message: error?.message || "Login failed. Please try again.",
+                        severity: SnackSeverity.Error
+                    });
+                }
+            }
         },
     });
 

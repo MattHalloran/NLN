@@ -1,16 +1,15 @@
-import { useMutation } from "@apollo/client";
 import { alpha, Box, CircularProgress, CssBaseline, GlobalStyles, StyledEngineProvider, ThemeProvider } from "@mui/material";
 import { Routes } from "Routes";
-import { loginMutation } from "api/mutation";
-// Using REST API for landing page content
-import { useLandingPageContent } from "api/rest/hooks";
+// Using REST API for landing page content and authentication
+import { useLandingPageContent, useLogin } from "api/rest/hooks";
 import { AlertDialog, BottomNav, Footer, PullToRefresh, SnackStack } from "components";
 import { SideMenu, sideMenuDisplayData } from "components/navigation/Navbar/SideMenu";
 import { BusinessContext } from "contexts/BusinessContext";
 import { SessionContext } from "contexts/SessionContext";
 import { ZIndexProvider } from "contexts/ZIndexContext";
 import { useWindowSize } from "hooks/useWindowSize";
-import { shoppingFilterSideMenuDisplayData } from "pages/main/shopping/ShoppingFilterSideMenu/ShoppingFilterSideMenu";
+// ARCHIVED: Shopping filter removed - functionality moved to external system
+// import { shoppingFilterSideMenuDisplayData } from "pages/main/shopping/ShoppingFilterSideMenu/ShoppingFilterSideMenu";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
@@ -19,7 +18,8 @@ import { BusinessData, Session } from "types";
 import { PubSub, SideMenuPub, themes } from "utils";
 
 const menusDisplayData: { [key in SideMenuPub["id"]]: { persistentOnDesktop: boolean, sideForRightHanded: "left" | "right" } } = {
-    "shopping-filter-side-menu": shoppingFilterSideMenuDisplayData,
+    // ARCHIVED: Shopping filter removed - functionality moved to external system
+    // "shopping-filter-side-menu": shoppingFilterSideMenuDisplayData,
     "side-menu": sideMenuDisplayData,
 };
 
@@ -37,8 +37,8 @@ export function App() {
     
     // Using REST API for landing page content
     const { data: landingPageData } = useLandingPageContent(true);
-    
-    const [login] = useMutation(loginMutation);
+
+    const { mutate: login } = useLogin();
     const [,] = useLocation();
 
     useEffect(() => () => {
@@ -71,10 +71,10 @@ export function App() {
             setSession(session);
             return;
         }
-        login({ variables: { input: {} } }).then((response) => {
-            setSession(response.data.login);
-        }).catch((response) => {
-            if (import.meta.env.DEV) console.error("Error: cannot login", response);
+        login({ email: "", password: "" }).then((response) => {
+            setSession(response as any);
+        }).catch(() => {
+            // Silent fail - expected 401 when no valid session cookie exists
             setSession({});
         });
     }, [login]);

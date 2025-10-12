@@ -1,9 +1,6 @@
-import { useMutation } from "@apollo/client";
 import { APP_LINKS, resetPasswordSchema } from "@local/shared";
 import { Box, Button, Grid, Typography, useTheme } from "@mui/material";
-import { resetPasswordVariables, resetPassword_resetPassword } from "api/generated/resetPassword";
-import { resetPasswordMutation } from "api/mutation";
-import { mutationWrapper } from "api/utils";
+import { useResetPassword } from "api/rest/hooks";
 import { SnackSeverity } from "components";
 import { PasswordTextField } from "components/inputs/PasswordTextField/PasswordTextField";
 import { useFormik } from "formik";
@@ -15,15 +12,15 @@ export const ResetPasswordForm = () => {
     const [, setLocation] = useLocation();
     const { spacing, palette } = useTheme();
 
-    const { id, code } = useMemo(() => {
+    const token = useMemo(() => {
         const url = new URL(window.location.href);
         const pathnameParts = url.pathname.split("/");
         const id = pathnameParts[2];
         const code = pathnameParts[3];
-        console.log("id", id, "code", code);
-        return { id, code };
+        // Combine id and code as token for REST API
+        return `${id}:${code}`;
     }, []);
-    const [resetPassword, { loading }] = useMutation(resetPasswordMutation);
+    const { mutate: resetPassword, loading } = useResetPassword();
 
     const formik = useFormik({
         initialValues: {
@@ -31,17 +28,22 @@ export const ResetPasswordForm = () => {
             confirmNewPassword: "",
         },
         validationSchema: resetPasswordSchema,
-        onSubmit: (values) => {
-            if (!id || !code) {
+        onSubmit: async (values) => {
+            if (!token || token === ":") {
                 PubSub.get().publishSnack({ message: "Could not parse URL", severity: SnackSeverity.Error });
                 return;
             }
-            mutationWrapper<resetPassword_resetPassword, resetPasswordVariables>({
-                mutation: resetPassword,
-                input: { id, code, newPassword: values.newPassword },
-                onSuccess: (data) => { PubSub.get().publishSession({ ...data, theme: (data.theme as "light" | "dark") || "light" }); setLocation(APP_LINKS.Home); },
-                successMessage: () => "Password reset.",
-            });
+            try {
+                const data = await resetPassword({ token, password: values.newPassword });
+                PubSub.get().publishSession({ ...data, theme: (data.theme as "light" | "dark") || "light" });
+                PubSub.get().publishSnack({ message: "Password reset.", severity: SnackSeverity.Success });
+                setLocation(APP_LINKS.Home);
+            } catch (error: any) {
+                PubSub.get().publishSnack({
+                    message: error?.message || "Password reset failed. Please try again.",
+                    severity: SnackSeverity.Error
+                });
+            }
         },
     });
 

@@ -1,7 +1,6 @@
-import { useMutation } from "@apollo/client";
 import { APP_LINKS } from "@local/shared";
 import { Badge, Box, Collapse, Divider, IconButton, List, ListItem, ListItemIcon, ListItemText, Palette, SwipeableDrawer, Typography, useTheme } from "@mui/material";
-import { logoutMutation } from "api";
+import { useLogout } from "api/rest/hooks";
 import { ContactInfo, CopyrightBreadcrumbs } from "components";
 import { BusinessContext } from "contexts/BusinessContext";
 import { SessionContext } from "contexts/SessionContext";
@@ -61,7 +60,7 @@ export const SideMenu = () => {
     const [contactOpen, setContactOpen] = useState(true);
     const [socialOpen, setSocialOpen] = useState(false);
 
-    const [logout] = useMutation(logoutMutation);
+    const { mutate: logout } = useLogout();
     const logoutCustomer = () => {
         logout().then(() => {
             PubSub.get().publishSession({});

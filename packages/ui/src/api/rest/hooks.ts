@@ -1,5 +1,14 @@
 import { useEffect, useState, useCallback, useRef } from "react";
-import { restApi, LandingPageContent, Plant } from "./client";
+import {
+    restApi,
+    LandingPageContent,
+    Plant,
+    CustomerSession,
+    CustomerContact,
+    Profile,
+    Image,
+    DashboardStats,
+} from "./client";
 
 // Generic hook for REST API calls
 function useRestQuery<T>(
@@ -184,5 +193,197 @@ export function useUpdateLandingPageContent() {
         { success: boolean; message: string; updatedSections: string[] }
     >(
         (data) => restApi.updateLandingPageContent(data),
+    );
+}
+
+// ============================================
+// Authentication Hooks
+// ============================================
+
+export function useLogin() {
+    const loginFn = useCallback(
+        (input: { email: string; password: string; verificationCode?: string }) =>
+            restApi.login(input),
+        []
+    );
+    return useRestMutation<
+        { email: string; password: string; verificationCode?: string },
+        CustomerSession
+    >(loginFn);
+}
+
+export function useLogout() {
+    return useRestMutation<void, { success: boolean }>(
+        () => restApi.logout(),
+    );
+}
+
+export function useSignUp() {
+    return useRestMutation<
+        {
+            firstName: string;
+            lastName: string;
+            pronouns?: string;
+            businessName?: string;
+            emails: Array<{ emailAddress: string; receivesDeliveryUpdates?: boolean }>;
+            phones?: Array<{ number: string; receivesDeliveryUpdates?: boolean }>;
+            password: string;
+        },
+        CustomerSession
+    >(
+        (input) => restApi.signUp(input),
+    );
+}
+
+export function useResetPassword() {
+    return useRestMutation<
+        { token: string; password: string },
+        CustomerSession
+    >(
+        (input) => restApi.resetPassword(input),
+    );
+}
+
+export function useRequestPasswordChange() {
+    return useRestMutation<
+        { email: string },
+        { success: boolean }
+    >(
+        (input) => restApi.requestPasswordChange(input),
+    );
+}
+
+// ============================================
+// ARCHIVED: Customer Management Hooks
+// Customer management moved to external system
+// ============================================
+
+// export function useProfile() {
+//     return useRestQuery<Profile>(
+//         () => restApi.getProfile(),
+//         [],
+//     );
+// }
+
+// export function useCustomers() {
+//     return useRestQuery<CustomerContact[]>(
+//         () => restApi.getCustomers(),
+//         [],
+//     );
+// }
+
+// export function useAddCustomer() {
+//     return useRestMutation<
+//         {
+//             firstName: string;
+//             lastName: string;
+//             pronouns?: string;
+//             businessName?: string;
+//             emails: Array<{ emailAddress: string; receivesDeliveryUpdates?: boolean }>;
+//             phones?: Array<{ number: string; receivesDeliveryUpdates?: boolean }>;
+//         },
+//         CustomerContact
+//     >(
+//         (input) => restApi.addCustomer(input),
+//     );
+// }
+
+// export function useUpdateCustomer() {
+//     return useRestMutation<
+//         {
+//             id: string;
+//             firstName?: string;
+//             lastName?: string;
+//             pronouns?: string;
+//             businessName?: string;
+//             theme?: string;
+//             emails?: Array<{ id?: string; emailAddress: string; receivesDeliveryUpdates?: boolean }>;
+//             phones?: Array<{ id?: string; number: string; receivesDeliveryUpdates?: boolean }>;
+//         },
+//         CustomerSession
+//     >(
+//         (input) => restApi.updateCustomer(input),
+//     );
+// }
+
+// export function useDeleteCustomer() {
+//     return useRestMutation<
+//         { id: string },
+//         { success: boolean }
+//     >(
+//         (input) => restApi.deleteCustomer(input),
+//     );
+// }
+
+// export function useChangeCustomerStatus() {
+//     return useRestMutation<
+//         { id: string; status: string },
+//         { success: boolean }
+//     >(
+//         (input) => restApi.changeCustomerStatus(input),
+//     );
+// }
+
+// ============================================
+// Image/Gallery Management Hooks
+// ============================================
+
+export function useImagesByLabel(label: string) {
+    return useRestQuery<Image[]>(
+        () => restApi.getImagesByLabel({ label }),
+        [label],
+    );
+}
+
+export function useAddImages() {
+    return useRestMutation<
+        { label: string; files: File[] },
+        Array<{ success: boolean; src: string; hash: string }>
+    >(
+        (input) => restApi.addImages(input),
+    );
+}
+
+export function useUpdateImages() {
+    return useRestMutation<
+        {
+            images: Array<{
+                hash: string;
+                alt?: string;
+                description?: string;
+                label?: string;
+            }>;
+        },
+        { success: boolean }
+    >(
+        (input) => restApi.updateImages(input),
+    );
+}
+
+// ============================================
+// Content/Assets Management Hooks
+// ============================================
+
+export function useReadAssets(files: string[]) {
+    return useRestQuery<Record<string, string>>(
+        () => restApi.readAssets({ files }),
+        [JSON.stringify(files)],
+    );
+}
+
+export function useWriteAssets() {
+    return useRestMutation<File[], { success: boolean }>(
+        (files) => restApi.writeAssets(files),
+    );
+}
+
+// ============================================
+// Dashboard Stats Hook
+// ============================================
+
+export function useDashboardStats() {
+    return useRestQuery<DashboardStats>(
+        () => restApi.getDashboardStats(),
+        [],
     );
 }

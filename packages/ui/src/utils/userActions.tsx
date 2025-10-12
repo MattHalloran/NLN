@@ -26,9 +26,10 @@ export function getUserActions(session: Session | undefined): UserActions {
         if (session?.roles && Array.isArray(session.roles) && session.roles.some(r => [ROLES.Owner, ROLES.Admin].includes(r?.role?.title))) {
             actions.push(["Manage", "admin", APP_LINKS.Admin, null, SettingsIcon, 0]);
         }
-        actions.push(["Availability", "availability", APP_LINKS.Shopping, null, ShopIcon, 0],
-            ["Profile", "profile", APP_LINKS.Profile, null, ProfileIcon, 0],
-            ["Cart", "cart", APP_LINKS.Cart, null, ShoppingCartIcon, session?.cart?.items?.length ?? 0]);
+        // ARCHIVED: Shopping and Cart functionality moved to external system
+        // actions.push(["Availability", "availability", APP_LINKS.Shopping, null, ShopIcon, 0]);
+        // actions.push(["Cart", "cart", APP_LINKS.Cart, null, ShoppingCartIcon, session?.cart?.items?.length ?? 0]);
+        actions.push(["Profile", "profile", APP_LINKS.Profile, null, ProfileIcon, 0]);
     }
 
     return actions;

@@ -1,5 +1,5 @@
-export * from "./CustomerCard/CustomerCard";
+// ARCHIVED: export * from "./CustomerCard/CustomerCard"; // Customer management moved to external system
 export * from "./ImageCard/ImageCard";
-export * from "./OrderCard/OrderCard";
-export * from "./PlantCard/PlantCard";
+// ARCHIVED: export * from "./OrderCard/OrderCard";
+// ARCHIVED: export * from "./PlantCard/PlantCard";
 

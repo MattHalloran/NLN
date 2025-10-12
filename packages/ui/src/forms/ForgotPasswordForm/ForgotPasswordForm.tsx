@@ -1,14 +1,13 @@
-import { useMutation } from "@apollo/client";
 import { APP_LINKS, requestPasswordChangeSchema } from "@local/shared";
 import { Box, Button, Grid, InputAdornment, TextField, Typography, useTheme } from "@mui/material";
-import { requestPasswordChangeVariables } from "api/generated/requestPasswordChange";
-import { requestPasswordChangeMutation } from "api/mutation";
-import { mutationWrapper } from "api/utils";
+import { useRequestPasswordChange } from "api/rest/hooks";
 import { BreadcrumbsBase } from "components/breadcrumbs/BreadcrumbsBase/BreadcrumbsBase";
+import { SnackSeverity } from "components";
 import { useFormik } from "formik";
 import { formSubmit } from "forms/styles";
 import { EmailIcon } from "icons/common";
 import { useLocation } from "route";
+import { PubSub } from "utils";
 
 const breadcrumbsStyle = {
     margin: "auto",
@@ -27,21 +26,24 @@ export const ForgotPasswordForm = () => {
     const { spacing, palette } = useTheme();
     const [, setLocation] = useLocation();
 
-    const [requestPasswordChange, { loading }] = useMutation(requestPasswordChangeMutation);
+    const { mutate: requestPasswordChange, loading } = useRequestPasswordChange();
 
     const formik = useFormik({
         initialValues: {
             email: "",
         },
         validationSchema: requestPasswordChangeSchema,
-        onSubmit: (values) => {
-            mutationWrapper<any, requestPasswordChangeVariables>({
-                mutation: requestPasswordChange,
-                input: { ...values },
-                successCondition: (success) => success === true,
-                onSuccess: () => setLocation(APP_LINKS.Home),
-                successMessage: () => "Request sent. Please check email.",
-            });
+        onSubmit: async (values) => {
+            try {
+                await requestPasswordChange({ email: values.email });
+                PubSub.get().publishSnack({ message: "Request sent. Please check email.", severity: SnackSeverity.Success });
+                setLocation(APP_LINKS.Home);
+            } catch (error: any) {
+                PubSub.get().publishSnack({
+                    message: error?.message || "Failed to send reset link. Please try again.",
+                    severity: SnackSeverity.Error
+                });
+            }
         },
     });
 

@@ -1,11 +1,11 @@
-export * from "./customers";
+// ARCHIVED: export * from "./customers";
 export * from "./dashboard";
 export * from "./imagesByLabel";
 export * from "./landingPageContent";
-export * from "./orders";
-export * from "./plants";
-export * from "./profile";
+// ARCHIVED: export * from "./orders";
+// ARCHIVED: export * from "./plants";
+// ARCHIVED: export * from "./profile";
 export * from "./seasonalContent";
-export * from "./skus";
-export * from "./traitOptions";
+// ARCHIVED: export * from "./skus";
+// ARCHIVED: export * from "./traitOptions";
 

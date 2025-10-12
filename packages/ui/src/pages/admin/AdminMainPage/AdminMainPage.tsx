@@ -10,8 +10,7 @@ import {
     TrendingUp,
     Assessment,
 } from "@mui/icons-material";
-import { useQuery } from "@apollo/client";
-import { dashboardStatsQuery } from "api/query";
+import { useDashboardStats } from "api/rest/hooks";
 import { CardGrid, PageContainer } from "components";
 import { TopBar } from "components/navigation/TopBar/TopBar";
 import { useLocation } from "route";
@@ -194,38 +193,23 @@ const AdminPageCard = ({
 export const AdminMainPage = () => {
     const [, setLocation] = useLocation();
     const { palette } = useTheme();
-    
-    const { data, loading, error } = useQuery(dashboardStatsQuery);
-    
+
+    const { data, loading, error } = useDashboardStats();
+
     const dashboardStats = useMemo(() => {
         if (!data) return {
             totalProducts: 0,
             totalCustomers: 0,
             pendingOrders: 0,
         };
-        
-        const customers = data.customers || [];
-        const orders = data.orders || [];
-        const plants = data.plants || [];
-        
-        // Count active customers
-        const totalCustomers = customers.filter((customer: any) => customer.accountApproved).length;
-        
-        // Count pending orders  
-        const pendingOrders = orders.filter((order: any) => order.status === "Pending").length;
-        
-        // Count total products (plants with SKUs)
-        const totalProducts = plants.reduce((count: number, plant: any) => {
-            return count + (plant.skus?.length || 0);
-        }, 0);
-            
+
         return {
-            totalProducts,
-            totalCustomers, 
-            pendingOrders,
+            totalProducts: data.totalSkus || 0,
+            totalCustomers: data.approvedCustomers || 0,
+            pendingOrders: data.pendingOrders || 0,
         };
     }, [data]);
-    
+
     const cardData = getCardData(dashboardStats);
     
     if (loading) {

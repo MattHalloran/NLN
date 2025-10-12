@@ -1,12 +1,11 @@
-import { useQuery } from "@apollo/client";
 import { IMAGE_SIZE } from "@local/shared";
-import { 
-    Box, 
-    Container, 
-    Typography, 
-    Grid, 
-    Card, 
-    CardMedia, 
+import {
+    Box,
+    Container,
+    Typography,
+    Grid,
+    Card,
+    CardMedia,
     CardContent,
     Chip,
     Dialog,
@@ -20,7 +19,7 @@ import {
     Paper,
     Divider,
 } from "@mui/material";
-import { imagesByLabelQuery } from "api/query";
+import { useImagesByLabel } from "api/rest/hooks";
 import { SnackSeverity } from "components";
 import { InformationalTabOption, InformationalTabs } from "components/breadcrumbs/InformationalTabs/InformationalTabs";
 import { TopBar } from "components/navigation/TopBar/TopBar";
@@ -66,25 +65,25 @@ export const GalleryPage = () => {
     const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
     
     // Query for gallery images from the API
-    const { data: imageData, error } = useQuery(imagesByLabelQuery, { 
-        variables: { input: { label: "gallery" } },
-    });
+    const { data: imageData, error } = useImagesByLabel("gallery");
 
-    if (error) {
-        PubSub.get().publishSnack({ 
-            message: "Failed to load gallery images. Please try again later.", 
-            severity: SnackSeverity.Error, 
-            data: error, 
-        });
-    }
+    useEffect(() => {
+        if (error) {
+            PubSub.get().publishSnack({
+                message: "Failed to load gallery images. Please try again later.",
+                severity: SnackSeverity.Error,
+                data: error,
+            });
+        }
+    }, [error]);
 
     // Process image data from API
     useEffect(() => {
-        if (!Array.isArray(imageData?.imagesByLabel)) {
+        if (!Array.isArray(imageData)) {
             setImages([]);
             return;
         }
-        setImages(imageData.imagesByLabel.map((data: any, index: number) => ({
+        setImages(imageData.map((data: any, index: number) => ({
             id: data.hash,
             alt: data.alt || `Gallery Image ${index + 1}`,
             src: `${getServerUrl()}/${getImageSrc(data)}`,

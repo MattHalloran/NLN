@@ -1,10 +1,7 @@
-import { useMutation } from "@apollo/client";
 import { APP_LINKS, CODE, DEFAULT_PRONOUNS, signUpSchema } from "@local/shared";
 import { Autocomplete } from "@mui/lab";
 import { Box, Button, Checkbox, FormControl, FormControlLabel, FormHelperText, Grid, InputAdornment, Radio, RadioGroup, TextField, Typography, useTheme } from "@mui/material";
-import { signUpVariables, signUp_signUp } from "api/generated/signUp";
-import { signUpMutation } from "api/mutation";
-import { mutationWrapper } from "api/utils";
+import { useSignUp } from "api/rest/hooks";
 import { BreadcrumbsBase, SnackSeverity } from "components";
 import { PasswordTextField } from "components/inputs/PasswordTextField/PasswordTextField";
 import { BusinessContext } from "contexts/BusinessContext";
@@ -32,7 +29,7 @@ export const SignUpForm = () => {
     const [, setLocation] = useLocation();
     const business = useContext(BusinessContext);
 
-    const [signUp, { loading }] = useMutation(signUpMutation);
+    const { mutate: signUp, loading } = useSignUp();
 
     const formik = useFormik({
         initialValues: {
@@ -48,53 +45,57 @@ export const SignUpForm = () => {
             confirmPassword: "",
         },
         validationSchema: signUpSchema,
-        onSubmit: (values, helpers) => {
-            const { confirmPassword, ...input } = values;
+        onSubmit: async (values, helpers) => {
+            const { confirmPassword, ...rest } = values;
             if (values.password !== confirmPassword) {
                 PubSub.get().publishSnack({ message: "Passwords don't match.", severity: SnackSeverity.Error });
                 helpers.setSubmitting(false);
                 return;
             }
-            mutationWrapper<signUp_signUp, signUpVariables>({
-                mutation: signUp,
-                input: {
-                    ...input,
-                    accountApproved: values.accountApproved,
-                    marketingEmails: values.marketingEmails,
-                    theme: palette.mode ?? "light",
-                },
-                onSuccess: (data) => {
-                    PubSub.get().publishSession({ ...data, theme: (data.theme as "light" | "dark") || "light" });
-                    if (data.accountApproved) {
-                        PubSub.get().publishAlertDialog({
-                            message: `Welcome to ${business?.BUSINESS_NAME?.Short}. You may now begin shopping. Please verify your email within 48 hours.`,
-                            buttons: [{
-                                text: "OK",
-                                onClick: () => setLocation(APP_LINKS.Home),
-                            }],
-                        });
-                    } else {
-                        PubSub.get().publishAlertDialog({
-                            message: `Welcome to ${business?.BUSINESS_NAME?.Short}. Please verify your email within 48 hours. Since you have never ordered from us before, we must approve your account before you can order. If this was a mistake, you can edit this in the /profile page.`,
-                            buttons: [{
-                                text: "OK",
-                                onClick: () => setLocation(APP_LINKS.Profile),
-                            }],
-                        });
-                    }
-                },
-                onError: (response) => {
-                    if (Array.isArray(response.graphQLErrors) && response.graphQLErrors.some(e => e.extensions?.code === CODE.EmailInUse.code)) {
-                        PubSub.get().publishAlertDialog({
-                            message: `${response.message}. Press OK if you would like to be redirected to the forgot password form.`,
-                            buttons: [{
-                                text: "OK",
-                                onClick: () => setLocation(APP_LINKS.ForgotPassword),
-                            }],
-                        });
-                    }
-                },
-            });
+            try {
+                const data = await signUp({
+                    firstName: rest.firstName,
+                    lastName: rest.lastName,
+                    pronouns: rest.pronouns,
+                    businessName: rest.business,
+                    emails: [{ emailAddress: rest.email }],
+                    phones: rest.phone ? [{ number: rest.phone }] : undefined,
+                    password: rest.password,
+                });
+                PubSub.get().publishSession({ ...data, theme: (data.theme as "light" | "dark") || "light" });
+                if (data.accountApproved) {
+                    PubSub.get().publishAlertDialog({
+                        message: `Welcome to ${business?.BUSINESS_NAME?.Short}. You may now begin shopping. Please verify your email within 48 hours.`,
+                        buttons: [{
+                            text: "OK",
+                            onClick: () => setLocation(APP_LINKS.Home),
+                        }],
+                    });
+                } else {
+                    PubSub.get().publishAlertDialog({
+                        message: `Welcome to ${business?.BUSINESS_NAME?.Short}. Please verify your email within 48 hours. Since you have never ordered from us before, we must approve your account before you can order.`,
+                        buttons: [{
+                            text: "OK",
+                            onClick: () => setLocation(APP_LINKS.Home),
+                        }],
+                    });
+                }
+            } catch (error: any) {
+                if (error?.data?.code === CODE.EmailInUse.code) {
+                    PubSub.get().publishAlertDialog({
+                        message: `${error.message}. Press OK if you would like to be redirected to the forgot password form.`,
+                        buttons: [{
+                            text: "OK",
+                            onClick: () => setLocation(APP_LINKS.ForgotPassword),
+                        }],
+                    });
+                } else {
+                    PubSub.get().publishSnack({
+                        message: error?.message || "Sign up failed. Please try again.",
+                        severity: SnackSeverity.Error
+                    });
+                }
+            }
         },
     });
 

@@ -1,6 +1,5 @@
-import { useQuery } from "@apollo/client";
 import { Box, styled, Typography, useTheme } from "@mui/material";
-import { readAssetsQuery } from "api/query/readAssets";
+import { useReadAssets } from "api/rest/hooks";
 import { LazyMarkdown, PageContainer } from "components";
 import { PolicyTabOption, PolicyTabs } from "components/breadcrumbs/PolicyTabs/PolicyTabs";
 import { TopBar } from "components/navigation/TopBar/TopBar";
@@ -108,11 +107,11 @@ export const TermsPage = () => {
     const business = useContext(BusinessContext);
 
     const [terms, setTerms] = useState<string>("");
-    const { data: termsData } = useQuery(readAssetsQuery, { variables: { input: { files: ["terms.md"] } } });
+    const { data: termsData } = useReadAssets(["terms.md"]);
 
     useEffect(() => {
-        if (termsData === undefined) return;
-        let data = termsData.readAssets[0];
+        if (!termsData || !termsData["terms.md"]) return;
+        let data = termsData["terms.md"];
         // Replace variables
         const business_fields = Object.keys(convertToDot(business || {} as any));
         business_fields.forEach(f => data = data.replaceAll(`<${f}>`, valueFromDot(business || {} as any, f) || ""));

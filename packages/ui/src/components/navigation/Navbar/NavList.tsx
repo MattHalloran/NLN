@@ -1,7 +1,6 @@
-import { useMutation } from "@apollo/client";
 import { APP_LINKS } from "@local/shared";
 import { Badge, Box, Button, IconButton, List, ListItem, ListItemIcon, ListItemText, Palette, useTheme } from "@mui/material";
-import { logoutMutation } from "api";
+import { useLogout } from "api/rest/hooks";
 import { ContactInfo, PopupMenu } from "components";
 import { SessionContext } from "contexts/SessionContext";
 import { useSideMenu } from "hooks/useSideMenu";
@@ -25,7 +24,7 @@ export const NavList = () => {
     const [, setLocation] = useLocation();
     const session = useContext(SessionContext);
 
-    const [logout] = useMutation(logoutMutation);
+    const { mutate: logout } = useLogout();
     const logoutCustomer = () => {
         logout().then(() => {
             PubSub.get().publishSession({});

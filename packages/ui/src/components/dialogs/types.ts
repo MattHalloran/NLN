@@ -1,7 +1,7 @@
 import { PopoverProps } from "@mui/material";
 import { customers_customers } from "api/generated/customers";
-import { orders_orders } from "api/generated/orders";
-import { plants_plants, plants_plants_skus } from "api/generated/plants";
+// ARCHIVED: import { orders_orders } from "api/generated/orders";
+// ARCHIVED: import { plants_plants, plants_plants_skus } from "api/generated/plants";
 import { TitleProps } from "components/text/types";
 import { SxType } from "types";
 import { SnackSeverity } from "./Snack/Snack";
@@ -21,14 +21,15 @@ export interface MenuTitleProps {
     title?: string;
 }
 
-export interface PlantDialogProps {
-    isAdminPage: boolean;
-    plant: plants_plants | undefined;
-    selectedSku: plants_plants_skus | undefined;
-    onAddToCart: (sku: plants_plants_skus, quantity: number) => void;
-    open: boolean;
-    onClose: () => void;
-}
+// ARCHIVED: PlantDialog component moved to /archived
+// export interface PlantDialogProps {
+//     isAdminPage: boolean;
+//     plant: plants_plants | undefined;
+//     selectedSku: plants_plants_skus | undefined;
+//     onAddToCart: (sku: plants_plants_skus, quantity: number) => void;
+//     open: boolean;
+//     onClose: () => void;
+// }
 
 export interface PopoverWithArrowProps extends Omit<PopoverProps, "open" | "sx"> {
     anchorEl: HTMLElement | null;
@@ -61,11 +62,12 @@ export interface CustomerDialogProps {
     onClose: () => void;
 }
 
-export interface OrderDialogProps {
-    order: orders_orders;
-    open?: boolean;
-    onClose: () => void;
-}
+// ARCHIVED: OrderDialog component moved to /archived
+// export interface OrderDialogProps {
+//     order: orders_orders;
+//     open?: boolean;
+//     onClose: () => void;
+// }
 
 export interface ListDialogProps {
     open?: boolean;

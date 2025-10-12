@@ -1,19 +1,12 @@
-import { customerSessionFields, orderFields, orderItemFields } from "api/fragment";
+import { customerSessionFields } from "api/fragment";
+// ARCHIVED: orderFields, orderItemFields - cart functionality moved to external system
 import { gql } from "graphql-tag";
 
 export const loginMutation = gql`
     ${customerSessionFields}
-    ${orderFields}
-    ${orderItemFields}
     mutation login($input: LoginInput!) {
         login(input: $input) {
             ...customerSessionFields
-            cart {
-                ...orderFields
-                items {
-                    ...orderItemFields
-                }
-            }
         }
     }
 `;

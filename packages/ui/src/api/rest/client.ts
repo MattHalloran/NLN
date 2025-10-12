@@ -185,6 +185,90 @@ export interface Plant {
     }>;
 }
 
+// Authentication & Customer types
+export interface Email {
+    id: string;
+    emailAddress: string;
+    receivesDeliveryUpdates: boolean;
+}
+
+export interface Phone {
+    id: string;
+    number: string;
+    receivesDeliveryUpdates: boolean;
+}
+
+export interface Business {
+    id: string;
+    name: string;
+}
+
+export interface Role {
+    title: string;
+    description?: string;
+}
+
+export interface CustomerSession {
+    id: string;
+    emailVerified: boolean;
+    accountApproved: boolean;
+    status: string;
+    theme: string;
+    roles: Array<{
+        role: Role;
+    }>;
+}
+
+export interface CustomerContact {
+    id: string;
+    firstName: string;
+    lastName: string;
+    pronouns?: string;
+    emails: Email[];
+    phones: Phone[];
+    business?: Business;
+    status: string;
+    accountApproved: boolean;
+    roles: Array<{
+        role: Role;
+    }>;
+}
+
+export interface Profile {
+    id: string;
+    firstName: string;
+    lastName: string;
+    pronouns?: string;
+    theme: string;
+    accountApproved: boolean;
+    business?: Business;
+    emails: Email[];
+    phones: Phone[];
+}
+
+// Image types
+export interface ImageFile {
+    src: string;
+    width: number;
+    height: number;
+}
+
+export interface Image {
+    hash: string;
+    alt: string;
+    description: string;
+    files: ImageFile[];
+}
+
+// Dashboard types
+export interface DashboardStats {
+    totalCustomers: number;
+    approvedCustomers: number;
+    pendingOrders: number;
+    totalProducts: number;
+    totalSkus: number;
+}
+
 // API client with typed methods
 export const restApi = {
     // Landing page
@@ -337,6 +421,184 @@ export const restApi = {
                 body: JSON.stringify(data),
             },
         );
+    },
+
+    // Authentication
+    async login(input: { email: string; password: string; verificationCode?: string }): Promise<CustomerSession> {
+        return fetchApi<CustomerSession>("/auth/login", {
+            method: "POST",
+            body: JSON.stringify(input),
+        });
+    },
+
+    async logout(): Promise<{ success: boolean }> {
+        return fetchApi<{ success: boolean }>("/auth/logout", {
+            method: "POST",
+        });
+    },
+
+    async signUp(input: {
+        firstName: string;
+        lastName: string;
+        pronouns?: string;
+        businessName?: string;
+        emails: Array<{ emailAddress: string; receivesDeliveryUpdates?: boolean }>;
+        phones?: Array<{ number: string; receivesDeliveryUpdates?: boolean }>;
+        password: string;
+    }): Promise<CustomerSession> {
+        return fetchApi<CustomerSession>("/auth/signup", {
+            method: "POST",
+            body: JSON.stringify(input),
+        });
+    },
+
+    async resetPassword(input: { token: string; password: string }): Promise<CustomerSession> {
+        return fetchApi<CustomerSession>("/auth/reset-password", {
+            method: "POST",
+            body: JSON.stringify(input),
+        });
+    },
+
+    async requestPasswordChange(input: { email: string }): Promise<{ success: boolean }> {
+        return fetchApi<{ success: boolean }>("/auth/request-password-change", {
+            method: "POST",
+            body: JSON.stringify(input),
+        });
+    },
+
+    // ARCHIVED: Customer management moved to external system
+    // async getProfile(): Promise<Profile> {
+    //     return fetchApi<Profile>("/customers/profile");
+    // },
+
+    // async getCustomers(): Promise<CustomerContact[]> {
+    //     return fetchApi<CustomerContact[]>("/customers");
+    // },
+
+    // async addCustomer(input: {
+    //     firstName: string;
+    //     lastName: string;
+    //     pronouns?: string;
+    //     businessName?: string;
+    //     emails: Array<{ emailAddress: string; receivesDeliveryUpdates?: boolean }>;
+    //     phones?: Array<{ number: string; receivesDeliveryUpdates?: boolean }>;
+    // }): Promise<CustomerContact> {
+    //     return fetchApi<CustomerContact>("/customers", {
+    //         method: "POST",
+    //         body: JSON.stringify(input),
+    //     });
+    // },
+
+    // async updateCustomer(input: {
+    //     id: string;
+    //     firstName?: string;
+    //     lastName?: string;
+    //     pronouns?: string;
+    //     businessName?: string;
+    //     theme?: string;
+    //     emails?: Array<{ id?: string; emailAddress: string; receivesDeliveryUpdates?: boolean }>;
+    //     phones?: Array<{ id?: string; number: string; receivesDeliveryUpdates?: boolean }>;
+    // }): Promise<CustomerSession> {
+    //     return fetchApi<CustomerSession>(`/customers/${input.id}`, {
+    //         method: "PUT",
+    //         body: JSON.stringify(input),
+    //     });
+    // },
+
+    // async deleteCustomer(input: { id: string }): Promise<{ success: boolean }> {
+    //     return fetchApi<{ success: boolean }>(`/customers/${input.id}`, {
+    //         method: "DELETE",
+    //     });
+    // },
+
+    // async changeCustomerStatus(input: { id: string; status: string }): Promise<{ success: boolean }> {
+    //     return fetchApi<{ success: boolean }>(`/customers/${input.id}/status`, {
+    //         method: "PUT",
+    //         body: JSON.stringify({ status: input.status }),
+    //     });
+    // },
+
+    // Image/Gallery Management
+    async getImagesByLabel(input: { label: string }): Promise<Image[]> {
+        return fetchApi<Image[]>(`/images?label=${encodeURIComponent(input.label)}`);
+    },
+
+    async addImages(input: { label: string; files: File[] }): Promise<Array<{ success: boolean; src: string; hash: string }>> {
+        const formData = new FormData();
+        formData.append("label", input.label);
+        input.files.forEach((file) => {
+            formData.append("files", file);
+        });
+
+        const url = `${REST_BASE_URL}/images`;
+        const response = await fetch(url, {
+            method: "POST",
+            credentials: "include",
+            body: formData, // Don't set Content-Type, browser will set it with boundary
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => null);
+            throw new ApiError(
+                response.status,
+                errorData?.error || `HTTP ${response.status}: ${response.statusText}`,
+                errorData,
+            );
+        }
+
+        return await response.json();
+    },
+
+    async updateImages(input: {
+        images: Array<{
+            hash: string;
+            alt?: string;
+            description?: string;
+            label?: string;
+        }>;
+    }): Promise<{ success: boolean }> {
+        return fetchApi<{ success: boolean }>("/images", {
+            method: "PUT",
+            body: JSON.stringify(input),
+        });
+    },
+
+    // Content/Assets Management
+    async readAssets(input: { files: string[] }): Promise<Record<string, string>> {
+        return fetchApi<Record<string, string>>("/assets/read", {
+            method: "POST",
+            body: JSON.stringify(input),
+        });
+    },
+
+    async writeAssets(files: File[]): Promise<{ success: boolean }> {
+        const formData = new FormData();
+        files.forEach((file) => {
+            formData.append("files", file);
+        });
+
+        const url = `${REST_BASE_URL}/assets/write`;
+        const response = await fetch(url, {
+            method: "POST",
+            credentials: "include",
+            body: formData,
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => null);
+            throw new ApiError(
+                response.status,
+                errorData?.error || `HTTP ${response.status}: ${response.statusText}`,
+                errorData,
+            );
+        }
+
+        return await response.json();
+    },
+
+    // Dashboard Stats
+    async getDashboardStats(): Promise<DashboardStats> {
+        return fetchApi<DashboardStats>("/dashboard/stats");
     },
 };
 

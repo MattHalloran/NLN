@@ -18,15 +18,35 @@ import {
     LogIn,
 } from "lucide-react";
 import { isObject } from "lodash-es";
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import { useLocation } from "route";
-import { getServerUrl, printAvailability } from "utils";
+// ARCHIVED: printAvailability functionality moved to external system
+import { getServerUrl } from "utils";
 
 export const Footer = () => {
     const [, setLocation] = useLocation();
     const { palette } = useTheme();
     const session = useContext(SessionContext);
     const business = useContext(BusinessContext);
+
+    // Load RapidScan compliance seal script
+    useEffect(() => {
+        const script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.src = 'https://www.rapidscansecure.com/siteseal/siteseal.js?code=158,A67D1E952FE47EAFCF2B0E9D0FABF9840AD29386';
+        script.async = true;
+
+        const sealContainer = document.getElementById('rapidscan-seal');
+        if (sealContainer) {
+            sealContainer.appendChild(script);
+        }
+
+        return () => {
+            if (sealContainer && script.parentNode === sealContainer) {
+                sealContainer.removeChild(script);
+            }
+        };
+    }, []);
 
     const contactLinks = [
         {
@@ -145,6 +165,7 @@ export const Footer = () => {
                                 Credit App
                                 <ExternalLink size={12} />
                             </Link>
+                            {/* ARCHIVED: Print Availability functionality moved to external system
                             <Link
                                 component="button"
                                 onClick={() => printAvailability(session, business?.BUSINESS_NAME?.Long, business?.PHONE?.Label, business?.EMAIL?.Label)}
@@ -165,6 +186,7 @@ export const Footer = () => {
                                 <Printer size={16} />
                                 Print Availability
                             </Link>
+                            */}
                             <Link
                                 component="button"
                                 onClick={() => setLocation(APP_LINKS.Gallery)}
@@ -336,6 +358,17 @@ export const Footer = () => {
                         sx={{
                             color: "rgba(255, 255, 255, 0.8)",
                             fontSize: "0.8rem",
+                        }}
+                    />
+
+                    {/* Security Compliance Seal */}
+                    <Box
+                        id="rapidscan-seal"
+                        sx={{
+                            mt: 2,
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
                         }}
                     />
                 </Box>

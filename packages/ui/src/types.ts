@@ -2,15 +2,17 @@ import { FetchResult } from "@apollo/client";
 import { Theme } from "@mui/material";
 import { SystemStyleObject } from "@mui/system";
 import { imagesByLabel_imagesByLabel } from "api/generated/imagesByLabel";
-import { orders_orders } from "api/generated/orders";
-import { plants_plants_images } from "api/generated/plants";
+// ARCHIVED: import { orders_orders } from "api/generated/orders";
+// ARCHIVED: import { plants_plants_images } from "api/generated/plants";
 import { SvgProps } from "icons/types";
 import { Path } from "route";
 
-export type Cart = Omit<orders_orders, "customer">;
+// ARCHIVED: Cart functionality moved to external system - keeping minimal type for backwards compatibility
+export type Cart = { items?: Array<any> };
 
-export type PlantImageInfo = plants_plants_images;
-export type ImageInfo = { index: number, image: PlantImageInfo["image"] };
+// ARCHIVED: export type PlantImageInfo = plants_plants_images;
+// ImageInfo is still used for general image management (not just plants)
+export type ImageInfo = { index: number, image: imagesByLabel_imagesByLabel };
 
 export type Image = imagesByLabel_imagesByLabel
 export type ImageFile = { __typename: "ImageFile", src: string, width: number, height: number };

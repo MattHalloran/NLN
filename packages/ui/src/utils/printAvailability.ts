@@ -1,3 +1,10 @@
+// ARCHIVED: printAvailability functionality moved to external system
+// This entire file is archived and not used
+// Export empty object to prevent module errors
+export {};
+
+/* ARCHIVED CODE - Entire implementation commented out
+
 import { SKU_SORT_OPTIONS } from "@local/shared";
 import { skusQuery } from "api/query";
 import { initializeApollo } from "api/utils/initialize";
@@ -116,3 +123,5 @@ export const printAvailability = async (
         PubSub.get().publishSnack({ message: "Failed to load inventory.", severity: SnackSeverity.Error, data: error });
     });
 };
+
+END ARCHIVED CODE */
