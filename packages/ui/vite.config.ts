@@ -27,10 +27,22 @@ export default defineConfig({
     server: {
         host: true,
         port: 3001,
+        strictPort: true, // Exit if port 3001 is in use instead of trying another port
     },
     optimizeDeps: {
         // Pre-bundle these dependencies to avoid issues with dynamic imports
-        include: ['markdown-to-jsx'],
+        include: [
+            'markdown-to-jsx',
+            'react',
+            'react-dom',
+            'react/jsx-runtime',
+            'formik',
+            'use-sync-external-store/shim',
+            'use-sync-external-store/shim/with-selector',
+            'react-dnd',
+            'react-dnd-html5-backend',
+            'dnd-core',
+        ],
     },
     resolve: {
         alias: [
@@ -71,51 +83,21 @@ export default defineConfig({
         },
         rollupOptions: {
             output: {
-                // Reduce small chunks by combining them
-                experimentalMinChunkSize: 1000,
                 // Create more compact output
                 compact: true,
-                // Manual chunk splitting for better caching
+                // Simplified manual chunk splitting - let Vite handle most of it
                 manualChunks: (id) => {
-                    // Vendor libraries - separate by size and usage
+                    // Exclude archived code from bundle
+                    if (id.includes('/archived/')) {
+                        return undefined;
+                    }
+
+                    // Only split out the largest vendor libraries
                     if (id.includes('node_modules')) {
-                        if (id.includes('react') || id.includes('react-dom')) {
-                            return 'vendor-react';
-                        }
                         if (id.includes('@mui') || id.includes('@emotion')) {
                             return 'vendor-mui';
                         }
-                        if (id.includes('@apollo/client') || id.includes('graphql')) {
-                            return 'vendor-apollo';
-                        }
-                        if (id.includes('jspdf') || id.includes('html2canvas')) {
-                            return 'vendor-pdf-canvas';
-                        }
-                        if (id.includes('workbox')) {
-                            return 'vendor-workbox';
-                        }
-                        if (id.includes('lodash-es') || id.includes('immutability-helper')) {
-                            return 'vendor-utils';
-                        }
-                        if (id.includes('react-dnd') || id.includes('react-dropzone') || id.includes('react-gallery-carousel')) {
-                            return 'vendor-react-ext';
-                        }
-                        // Other smaller vendor libraries
-                        return 'vendor-other';
-                    }
-                    
-                    // Route-based splitting
-                    if (id.includes('/pages/admin/')) {
-                        return 'pages-admin';
-                    }
-                    if (id.includes('/pages/main/')) {
-                        return 'pages-customer';
-                    }
-                    if (id.includes('/pages/legal/')) {
-                        return 'pages-legal';
-                    }
-                    if (id.includes('/forms/')) {
-                        return 'forms';
+                        // Let all other node_modules (including React, react-dnd, etc.) bundle together naturally
                     }
                 },
             }

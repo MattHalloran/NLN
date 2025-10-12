@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 import { visualizer } from 'rollup-plugin-visualizer';
 import { defineConfig } from 'vite';
 import baseConfig from './vite.config.js';
