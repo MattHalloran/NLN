@@ -12,7 +12,6 @@ export const typeDef = /* GraphQL */ `
         id: ID
         name: String!
         subscribedToNewsletters: Boolean
-        discountIds: [ID!]
         employeeIds: [ID!]
     }
 
@@ -24,7 +23,6 @@ export const typeDef = /* GraphQL */ `
         phones: [Phone!]!
         emails: [Email!]!
         employees: [Customer!]!
-        discounts: [Discount!]!
     }
 
     extend type Query {

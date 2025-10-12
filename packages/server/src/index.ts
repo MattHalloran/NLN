@@ -1,13 +1,13 @@
-import { createYoga } from "graphql-yoga";
-import { useDepthLimit } from "@envelop/depth-limit";
+// import { createYoga } from "graphql-yoga";
+// import { useDepthLimit } from "@envelop/depth-limit";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import express from "express";
-import { AsyncLocalStorage } from "async_hooks";
+// import { AsyncLocalStorage } from "async_hooks";
 import * as auth from "./auth.js";
-import { context } from "./context.js";
+// import { context } from "./context.js";
 import { genErrorCode, logger, LogLevel } from "./logger.js";
-import { schema } from "./schema/index.js";
+// import { schema } from "./schema/index.js";
 import { setupDatabase } from "./utils/setupDatabase.js";
 import restRouter from "./rest/index.js";
 
@@ -19,11 +19,17 @@ const SERVER_URL =
 const main = async () => {
     logger.log(LogLevel.info, "Starting server...");
 
-    // Check for required .env variables
-    if (["JWT_SECRET"].some((name) => !process.env[name])) {
-        logger.log(LogLevel.error, "🚨 JWT_SECRET not in environment variables. Stopping server", {
+    // Pre-flight checks: Verify all required environment variables
+    const requiredEnvVars = ["JWT_SECRET", "PROJECT_DIR", "ADMIN_EMAIL", "ADMIN_PASSWORD"];
+    const missingVars = requiredEnvVars.filter((name) => !process.env[name]);
+
+    if (missingVars.length > 0) {
+        const errorMsg = `Missing required environment variables: ${missingVars.join(", ")}`;
+        logger.log(LogLevel.error, `🚨 ${errorMsg}. Stopping server`, {
             code: genErrorCode("0007"),
         });
+        console.error(`\n❌ ${errorMsg}`);
+        console.error(`   Check your .env file in packages/server/\n`);
         process.exit(1);
     }
 
@@ -86,56 +92,77 @@ const main = async () => {
     app.use(express.json()); // Enable JSON parsing for REST endpoints
     app.use("/api/rest", restRouter);
 
-    /**
-     * AsyncLocalStorage for Express req/res
-     */
-    const asyncLocalStorage = new AsyncLocalStorage();
+    // GraphQL server has been disabled during REST migration
+    // /**
+    //  * AsyncLocalStorage for Express req/res
+    //  */
+    // const asyncLocalStorage = new AsyncLocalStorage();
 
-    /**
-     * GraphQL Yoga Server
-     */
-    const yoga = createYoga({
-        schema,
-        context: async () => {
-            // Get Express req/res from AsyncLocalStorage
-            const store: any = asyncLocalStorage.getStore();
-            if (!store || !store.req || !store.res) {
-                logger.log(LogLevel.error, "Express request/response not available in context", {
-                    code: genErrorCode("0008"),
-                });
-                throw new Error("Express request/response not available");
-            }
-            return context({ req: store.req, res: store.res });
-        },
-        plugins: [
-            useDepthLimit({
-                maxDepth: 8,
-                ignore: ["__schema", "__type"], // Ignore introspection fields
-            }),
-        ],
-        landingPage: process.env.NODE_ENV === "development",
-        graphqlEndpoint: "/api/v1",
-        cors: false,
-        multipart: true, // Enable file uploads
-        maskedErrors: process.env.NODE_ENV === "production",
-    });
+    // /**
+    //  * GraphQL Yoga Server
+    //  */
+    // const yoga = createYoga({
+    //     schema,
+    //     context: async () => {
+    //         // Get Express req/res from AsyncLocalStorage
+    //         const store: any = asyncLocalStorage.getStore();
+    //         if (!store || !store.req || !store.res) {
+    //             logger.log(LogLevel.error, "Express request/response not available in context", {
+    //                 code: genErrorCode("0008"),
+    //             });
+    //             throw new Error("Express request/response not available");
+    //         }
+    //         return context({ req: store.req, res: store.res });
+    //     },
+    //     plugins: [
+    //         useDepthLimit({
+    //             maxDepth: 8,
+    //             ignore: ["__schema", "__type"], // Ignore introspection fields
+    //         }),
+    //     ],
+    //     landingPage: process.env.NODE_ENV === "development",
+    //     graphqlEndpoint: "/api/v1",
+    //     cors: false,
+    //     multipart: true, // Enable file uploads
+    //     maskedErrors: process.env.NODE_ENV === "production",
+    // });
 
-    // Configure GraphQL Yoga with Express using AsyncLocalStorage
-    app.use("/api/v1", (req, res, next) => {
-        // Store Express req/res in AsyncLocalStorage
-        asyncLocalStorage.run({ req, res }, async () => {
-            // Call yoga's handle method properly
-            try {
-                await yoga.handle(req, res);
-            } catch (error) {
-                next(error);
-            }
-        });
-    });
+    // // Configure GraphQL Yoga with Express using AsyncLocalStorage
+    // app.use("/api/v1", (req, res, next) => {
+    //     // Store Express req/res in AsyncLocalStorage
+    //     asyncLocalStorage.run({ req, res }, async () => {
+    //         // Call yoga's handle method properly
+    //         try {
+    //             await yoga.handle(req, res);
+    //         } catch (error) {
+    //             next(error);
+    //         }
+    //     });
+    // });
 
     // Start Express server
-    const server = app.listen(5331, () => {
+    const server = app.listen(5331, async () => {
         logger.log(LogLevel.info, `🚀 Server running at ${SERVER_URL}`);
+
+        // Always log to console for visibility
+        console.log(`\n${"=".repeat(60)}`);
+        console.log(`✅ Server ready and accepting connections`);
+        console.log(`   Server URL: ${SERVER_URL}`);
+        console.log(`   Health check: http://localhost:5331/healthcheck`);
+        console.log(`   Environment: ${process.env.NODE_ENV || "development"}`);
+        console.log(`${"=".repeat(60)}\n`);
+
+        // Self health-check to verify server is responding
+        try {
+            const response = await fetch("http://localhost:5331/healthcheck");
+            if (response.ok) {
+                console.log("✅ Health check passed - server is responding\n");
+            } else {
+                console.error(`⚠️  Health check returned status: ${response.status}\n`);
+            }
+        } catch (error: any) {
+            console.error(`⚠️  Health check failed: ${error.message}\n`);
+        }
     });
 
     server.on("error", (error: any) => {

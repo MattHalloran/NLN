@@ -136,8 +136,6 @@ export const typeDef = /* GraphQL */ `
         accountApproved: Boolean!
         emailVerified: Boolean!
         status: AccountStatus!
-        cart: Order
-        orders: [Order!]!
         roles: [CustomerRole!]!
         feedback: [Feedback!]!
     }

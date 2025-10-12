@@ -35,7 +35,6 @@ export const typeDef = /* GraphQL */ `
         throughfare: String!
         premise: String
         business: Business!
-        orders: [Order!]!
     }
 
     extend type Query {
