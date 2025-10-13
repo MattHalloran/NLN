@@ -6,7 +6,7 @@ module.exports = {
         "!src/mocks/**",
     ],
     coveragePathIgnorePatterns: ["/node_modules/", "/dist/", "/rust/", "/generated/"],
-    testEnvironment: "jsdom",
+    testEnvironment: "node",
     testPathIgnorePatterns: ["/node_modules/", "/dist/", "/rust/", "/generated/"],
     modulePaths: ["<rootDir>/src"],
     transform: {
@@ -20,6 +20,7 @@ module.exports = {
     moduleNameMapper: {
         "^react-native$": "react-native-web",
         "^.+\\.module\\.(css|sass|scss)$": "identity-obj-proxy",
+        "^(\\.{1,2}/.*)\\.js$": "$1",
     },
     moduleFileExtensions: [
         // Place tsx and ts to beginning as suggestion from Jest team

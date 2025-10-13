@@ -10,7 +10,10 @@
   },
   "version": "2.0.0",
   "scripts": {
-    "prepare": "husky"
+    "prepare": "husky",
+    "test": "yarn workspaces run test",
+    "test:server": "yarn workspace server test",
+    "test:ui": "yarn workspace ui test"
   },
   "devDependencies": {
     "eslint-config-react-app": "^7.0.1"
