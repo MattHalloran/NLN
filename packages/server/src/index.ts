@@ -37,11 +37,13 @@ const main = async () => {
 
     const app = express();
 
-    // // For parsing application/json
-    // app.use(express.json());
-    // // For parsing application/xwww-
-    // app.use(express.urlencoded({ extended: false }));
+    // For parsing application/json and urlencoded data
+    app.use(express.json());
+    app.use(express.urlencoded({ extended: false }));
     app.use(cookieParser(process.env.JWT_SECRET));
+
+    // Attach Prisma client to request
+    app.use(auth.attachPrisma);
 
     // Set up health check endpoint
     app.get("/healthcheck", (_req, res) => {

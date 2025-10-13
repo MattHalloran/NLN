@@ -11,8 +11,13 @@ export async function customerFromEmail(email: string, prisma: PrismaType) {
     if (!email) {
         throw new CustomError(CODE.BadCredentials);
     }
-    // Validate email address
-    const emailRow = await prisma.email.findUnique({ where: { emailAddress: email } });
+    // Validate email address (case-insensitive by converting to lowercase)
+    const normalizedEmail = email.toLowerCase();
+    const emailRow = await prisma.email.findFirst({
+        where: {
+            emailAddress: normalizedEmail
+        }
+    });
     if (!emailRow || !emailRow.customerId) {
         throw new CustomError(CODE.BadCredentials);
     }

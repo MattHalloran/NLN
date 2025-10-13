@@ -9,6 +9,12 @@ const { PrismaClient } = pkg;
 const prisma = new PrismaClient();
 const SESSION_MILLI = 30 * 86400 * 1000;
 
+// Middleware that attaches Prisma client to request
+export async function attachPrisma(req: Request, _: Response, next: NextFunction) {
+    (req as any).prisma = prisma;
+    next();
+}
+
 // Return array of customer roles (ex: ['admin', 'customer'])
 async function findCustomerRoles(customerId: string) {
     // Query customer's roles
@@ -62,7 +68,9 @@ export async function generateToken(res: Response, customerId: string, businessI
     res.cookie(COOKIE.Jwt, token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
         maxAge: SESSION_MILLI,
+        path: "/",
     });
 }
 
