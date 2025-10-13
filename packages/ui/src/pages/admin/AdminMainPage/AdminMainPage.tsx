@@ -28,31 +28,31 @@ interface AdminCardData {
 }
 
 const getCardData = (stats: any): AdminCardData[] => [
-    {
-        title: "Orders",
-        description: "Approve, create, and edit customer's orders",
-        link: APP_LINKS.AdminOrders,
-        icon: OrdersIcon,
-        color: "#546e7a",
-        stats: `${stats?.pendingOrders || 0} pending`,
-        badge: stats?.pendingOrders > 0 ? "Active" : undefined,
-    },
-    {
-        title: "Customers", 
-        description: "Approve new customers, edit customer information",
-        link: APP_LINKS.AdminCustomers,
-        icon: CustomersIcon,
-        color: "#546e7a",
-        stats: `${stats?.totalCustomers || 0} total`,
-    },
-    {
-        title: "Inventory",
-        description: "Add, remove, and update inventory",
-        link: APP_LINKS.AdminInventory,
-        icon: InventoryIcon,
-        color: "#546e7a",
-        stats: `${stats?.totalProducts || 0} items`,
-    },
+    // {
+    //     title: "Orders",
+    //     description: "Approve, create, and edit customer's orders",
+    //     link: APP_LINKS.AdminOrders,
+    //     icon: OrdersIcon,
+    //     color: "#546e7a",
+    //     stats: `${stats?.pendingOrders || 0} pending`,
+    //     badge: stats?.pendingOrders > 0 ? "Active" : undefined,
+    // },
+    // {
+    //     title: "Customers",
+    //     description: "Approve new customers, edit customer information",
+    //     link: APP_LINKS.AdminCustomers,
+    //     icon: CustomersIcon,
+    //     color: "#546e7a",
+    //     stats: `${stats?.totalCustomers || 0} total`,
+    // },
+    // {
+    //     title: "Inventory",
+    //     description: "Add, remove, and update inventory",
+    //     link: APP_LINKS.AdminInventory,
+    //     icon: InventoryIcon,
+    //     color: "#546e7a",
+    //     stats: `${stats?.totalProducts || 0} items`,
+    // },
     {
         title: "Hero",
         description: "Add, remove, and rearrange hero (home page) images",
@@ -71,7 +71,7 @@ const getCardData = (stats: any): AdminCardData[] => [
     },
     {
         title: "Contact Info",
-        description: "Edit business hours and other contact information", 
+        description: "Edit business hours and other contact information",
         link: APP_LINKS.AdminContactInfo,
         icon: ContactIcon,
         color: "#546e7a",
@@ -231,10 +231,10 @@ export const AdminMainPage = () => {
             />
             
             {/* Dashboard Summary Cards */}
-            <Box px={3} py={2}>
+            {/* <Box px={3} py={2}>
                 <Grid container spacing={3} sx={{ mb: 4 }}>
                     <Grid item xs={12} sm={6}>
-                        <Card sx={{ 
+                        <Card sx={{
                             bgcolor: palette.background.paper,
                             border: `1px solid ${palette.divider}`,
                             borderRadius: 1,
@@ -253,7 +253,7 @@ export const AdminMainPage = () => {
                         </Card>
                     </Grid>
                     <Grid item xs={12} sm={6}>
-                        <Card sx={{ 
+                        <Card sx={{
                             bgcolor: palette.background.paper,
                             border: `1px solid ${palette.divider}`,
                             borderRadius: 1,
@@ -271,8 +271,8 @@ export const AdminMainPage = () => {
                             </CardContent>
                         </Card>
                     </Grid>
-                </Grid>
-
+                </Grid> */}
+            <Box px={3} py={2}>
                 {/* Main Title */}
                 <Typography 
                     variant="h5" 

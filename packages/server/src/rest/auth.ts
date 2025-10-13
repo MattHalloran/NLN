@@ -3,7 +3,7 @@ import bcrypt from "bcrypt";
 import { CODE, COOKIE, logInSchema, passwordSchema, requestPasswordChangeSchema, signUpSchema } from "@local/shared";
 import { generateToken } from "../auth.js";
 import { HASHING_ROUNDS } from "../consts.js";
-import { customerFromEmail, getCart, upsertCustomer } from "../db/models/customer.js";
+import { customerFromEmail, upsertCustomer } from "../db/models/customer.js";
 import { CustomError, validateArgs } from "../error.js";
 import { randomString } from "../utils/index.js";
 import { customerNotifyAdmin, sendResetPasswordLink, sendVerificationLink } from "../worker/email/queue.js";
@@ -30,7 +30,8 @@ router.post("/login", async (req: Request, res: Response) => {
         // If username and password wasn't passed, then use the session cookie data to validate
         if (!email || !password) {
             if ((req as any).customerId && (req as any).roles && (req as any).roles.length > 0) {
-                const cart = await getCart(prisma, null as any, (req as any).customerId);
+                // ARCHIVED: Shopping cart functionality removed
+                // const cart = await getCart(prisma, null as any, (req as any).customerId);
                 const userData: any = await prisma.customer.findUnique({
                     where: { id: (req as any).customerId },
                     select: {
@@ -52,9 +53,10 @@ router.post("/login", async (req: Request, res: Response) => {
                     },
                 });
                 if (userData) {
-                    if (cart) {
-                        userData.cart = cart;
-                    }
+                    // ARCHIVED: Shopping cart functionality removed
+                    // if (cart) {
+                    //     userData.cart = cart;
+                    // }
                     return res.json(userData);
                 }
                 res.clearCookie(COOKIE.Jwt);
