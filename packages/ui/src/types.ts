@@ -1,21 +1,33 @@
 import { FetchResult } from "@apollo/client";
 import { Theme } from "@mui/material";
 import { SystemStyleObject } from "@mui/system";
-import { imagesByLabel_imagesByLabel } from "api/generated/imagesByLabel";
-// ARCHIVED: import { orders_orders } from "api/generated/orders";
-// ARCHIVED: import { plants_plants_images } from "api/generated/plants";
 import { SvgProps } from "icons/types";
 import { Path } from "route";
 
 // ARCHIVED: Cart functionality moved to external system - keeping minimal type for backwards compatibility
 export type Cart = { items?: Array<any> };
 
-// ARCHIVED: export type PlantImageInfo = plants_plants_images;
-// ImageInfo is still used for general image management (not just plants)
-export type ImageInfo = { index: number, image: imagesByLabel_imagesByLabel };
+// Image types for image management
+export type ImageFile = {
+    __typename: "ImageFile",
+    src: string,
+    width: number,
+    height: number,
+    hash: string
+};
 
-export type Image = imagesByLabel_imagesByLabel
-export type ImageFile = { __typename: "ImageFile", src: string, width: number, height: number };
+export type Image = {
+    __typename?: "Image";
+    hash: string;
+    alt?: string | null;
+    description?: string | null;
+    files?: ImageFile[] | null;
+};
+
+export type ImageInfo = {
+    index: number,
+    image: Image
+};
 
 // Top-level props that can be passed into any routed component
 export type Session = {

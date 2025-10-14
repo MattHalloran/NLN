@@ -25,7 +25,7 @@
         "src",
         "fonts.d.ts",
         "types.d.ts",
-        "sw-template.js",
+        "sw-template.js"
     ],
     "exclude": [
         "node_modules"

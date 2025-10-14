@@ -1,13 +1,11 @@
 import { Box } from "@mui/material";
-import { 
-    FeaturedPlants, 
-    Hero, 
-    ServiceShowcase, 
-    SocialProof, 
-    AboutStory, 
-    InteractiveElements, 
+import {
+    Hero,
+    ServiceShowcase,
+    SocialProof,
+    AboutStory,
+    InteractiveElements,
     LocationVisit,
-    ScrollAnimation, 
 } from "components";
 import { TopBar } from "components/navigation/TopBar/TopBar";
 
@@ -18,38 +16,23 @@ export const HomePage = () => {
                 display="page"
             />
             <Box>
-                {/* Hero Section - No animation as it's the first thing users see */}
+                {/* Hero Section */}
                 <Hero text="Beautiful, healthy plants" subtext="At competitive prices" />
-                
+
                 {/* Service Showcase */}
-                <ScrollAnimation animation="fadeIn">
-                    <ServiceShowcase />
-                </ScrollAnimation>
-                
-                {/* Featured Plants */}
-                <ScrollAnimation animation="slideUp" delay={200}>
-                    <FeaturedPlants />
-                </ScrollAnimation>
-                
+                <ServiceShowcase />
+
                 {/* Social Proof */}
-                <ScrollAnimation animation="fadeIn" delay={300}>
-                    <SocialProof />
-                </ScrollAnimation>
-                
+                <SocialProof />
+
                 {/* About Story */}
-                <ScrollAnimation animation="slideUp" delay={400}>
-                    <AboutStory />
-                </ScrollAnimation>
-                
+                <AboutStory />
+
                 {/* Interactive Elements */}
-                <ScrollAnimation animation="fadeIn" delay={500}>
-                    <InteractiveElements />
-                </ScrollAnimation>
-                
+                <InteractiveElements />
+
                 {/* Location & Visit */}
-                <ScrollAnimation animation="slideUp" delay={600}>
-                    <LocationVisit />
-                </ScrollAnimation>
+                <LocationVisit />
             </Box>
         </>
     );

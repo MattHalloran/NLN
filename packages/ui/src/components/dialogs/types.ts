@@ -1,10 +1,16 @@
 import { PopoverProps } from "@mui/material";
-import { customers_customers } from "api/generated/customers";
-// ARCHIVED: import { orders_orders } from "api/generated/orders";
-// ARCHIVED: import { plants_plants, plants_plants_skus } from "api/generated/plants";
 import { TitleProps } from "components/text/types";
 import { SxType } from "types";
 import { SnackSeverity } from "./Snack/Snack";
+
+// Customer type for archived CustomerDialog component (kept for backwards compatibility)
+type Customer = {
+    id: string;
+    firstName: string;
+    lastName: string;
+    emails?: Array<{ emailAddress: string }>;
+    phones?: Array<{ number: string }>;
+};
 
 export interface DialogTitleProps extends Omit<TitleProps, "sxs"> {
     below?: JSX.Element | boolean | undefined;
@@ -57,7 +63,7 @@ export interface SnackProps {
 }
 
 export interface CustomerDialogProps {
-    customer: customers_customers;
+    customer: Customer;
     open?: boolean;
     onClose: () => void;
 }
