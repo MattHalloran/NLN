@@ -346,7 +346,7 @@ export const SideMenu = () => {
                                     "Cart": <ShoppingCart size={20} />,
                                     "Log Out": <LogOut size={20} />,
                                     "Sign Up": <UserPlus size={20} />,
-                                    "Profile": <User size={20} />,
+                                    "Manage": <User size={20} />,
                                     "Availability": <ShoppingCart size={20} />,
                                 };
                                 return (

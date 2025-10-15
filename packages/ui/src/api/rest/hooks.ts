@@ -5,7 +5,6 @@ import {
     Plant,
     CustomerSession,
     CustomerContact,
-    Profile,
     Image,
     DashboardStats,
 } from "./client";

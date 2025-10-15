@@ -87,7 +87,6 @@ export const FormPage = ({
                             {title === "Log In" && "Access your account to manage orders and preferences"}
                             {title === "Forgot Password" && "Enter your email to receive password reset instructions"}
                             {title === "Reset Password" && "Enter your new password to secure your account"}
-                            {title === "Profile" && "Update your account information and preferences"}
                         </Typography>
                     </Box>
 

@@ -234,18 +234,6 @@ export interface CustomerContact {
     }>;
 }
 
-export interface Profile {
-    id: string;
-    firstName: string;
-    lastName: string;
-    pronouns?: string;
-    theme: string;
-    accountApproved: boolean;
-    business?: Business;
-    emails: Email[];
-    phones: Phone[];
-}
-
 // Image types
 export interface ImageFile {
     src: string;

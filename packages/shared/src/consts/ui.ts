@@ -15,7 +15,6 @@ export const APP_LINKS = {
     Home: "/",
     LogIn: "/login",
     PrivacyPolicy: "/privacy-policy",
-    Profile: "/profile",
     Register: "/register",
     ResetPassword: "/password-reset",
     Shopping: "/shopping",

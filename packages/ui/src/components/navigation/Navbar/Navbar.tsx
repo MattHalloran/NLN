@@ -131,20 +131,20 @@ const NavListComponent = ({ isLeftHanded }: { isLeftHanded: boolean }) => {
 };
 
 /**
- * Navbar displayed at the top of the page. Has a few different 
+ * Navbar displayed at the top of the page. Has a few different
  * looks depending on data passed to it.
- * 
- * If the screen is large, the navbar is always displayed the same. In 
+ *
+ * If the screen is large, the navbar is always displayed the same. In
  * this case, the title and other content are displayed below the navbar.
- * 
- * Otherwise, the default look is logo & business name on the left, and 
- * account menu profile icon on the right.
- * 
- * If title data is passed in, the business name is hidden. The 
+ *
+ * Otherwise, the default look is logo & business name on the left, and
+ * account menu icon on the right.
+ *
+ * If title data is passed in, the business name is hidden. The
  * title is displayed in the middle, with a help icon if specified.
- * 
- * Content to display below the title (but still in the navbar) can also 
- * be passed in. This is useful for displaying a search bar, page tabs, etc. This 
+ *
+ * Content to display below the title (but still in the navbar) can also
+ * be passed in. This is useful for displaying a search bar, page tabs, etc. This
  * content is inside the navbar on small screens, and below the navbar on large screens.
  */
 export const Navbar = forwardRef(({
