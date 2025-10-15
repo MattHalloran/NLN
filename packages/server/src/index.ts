@@ -24,7 +24,7 @@ const main = async () => {
             code: genErrorCode("0007"),
         });
         console.error(`\n❌ ${errorMsg}`);
-        console.error(`   Check your .env file in packages/server/\n`);
+        console.error("   Check your .env file in packages/server/\n");
         process.exit(1);
     }
 
@@ -75,9 +75,9 @@ const main = async () => {
 
         // Always log to console for visibility
         console.log(`\n${"=".repeat(60)}`);
-        console.log(`✅ Server ready and accepting connections`);
+        console.log("✅ Server ready and accepting connections");
         console.log(`   Server URL: ${SERVER_URL}`);
-        console.log(`   Health check: http://localhost:5331/healthcheck`);
+        console.log("   Health check: http://localhost:5331/healthcheck");
         console.log(`   Environment: ${process.env.NODE_ENV || "development"}`);
         console.log(`${"=".repeat(60)}\n`);
 
@@ -89,14 +89,15 @@ const main = async () => {
             } else {
                 console.error(`⚠️  Health check returned status: ${response.status}\n`);
             }
-        } catch (error: any) {
-            console.error(`⚠️  Health check failed: ${error.message}\n`);
+        } catch (error) {
+            const err = error as Error;
+            console.error(`⚠️  Health check failed: ${err.message}\n`);
         }
     });
 
-    server.on("error", (error: any) => {
+    server.on("error", (error: Error & { code?: string }) => {
         if (error.code === "EADDRINUSE") {
-            logger.log(LogLevel.error, `Port 5331 is already in use`, {
+            logger.log(LogLevel.error, "Port 5331 is already in use", {
                 code: genErrorCode("0015"),
             });
         } else {

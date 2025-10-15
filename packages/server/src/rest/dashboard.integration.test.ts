@@ -71,10 +71,15 @@ describe("Dashboard API Integration Tests", () => {
         const hashedPassword = await bcrypt.hash("admin123", 10);
         const adminCustomer = await prisma.customer.create({
             data: {
-                name: "Admin User",
-                emails: ["admin@test.com"],
+                firstName: "Admin",
+                lastName: "User",
                 accountApproved: true,
                 password: hashedPassword,
+                emails: {
+                    create: {
+                        emailAddress: "admin@test.com",
+                    },
+                },
             },
         });
 
@@ -86,12 +91,17 @@ describe("Dashboard API Integration Tests", () => {
         });
 
         // Create regular user
-        const userCustomer = await prisma.customer.create({
+        await prisma.customer.create({
             data: {
-                name: "Regular User",
-                emails: ["user@test.com"],
+                firstName: "Regular",
+                lastName: "User",
                 accountApproved: true,
                 password: hashedPassword,
+                emails: {
+                    create: {
+                        emailAddress: "user@test.com",
+                    },
+                },
             },
         });
 
@@ -131,7 +141,11 @@ describe("Dashboard API Integration Tests", () => {
         await prisma.customer.deleteMany({
             where: {
                 emails: {
-                    hasSome: ["test1@test.com", "test2@test.com", "test3@test.com"],
+                    some: {
+                        emailAddress: {
+                            in: ["test1@test.com", "test2@test.com", "test3@test.com"],
+                        },
+                    },
                 },
             },
         });
@@ -169,28 +183,43 @@ describe("Dashboard API Integration Tests", () => {
             // Create test customers
             await prisma.customer.create({
                 data: {
-                    name: "Test Customer 1",
-                    emails: ["test1@test.com"],
+                    firstName: "Test",
+                    lastName: "Customer1",
                     accountApproved: true,
                     password: "hashedpass",
+                    emails: {
+                        create: {
+                            emailAddress: "test1@test.com",
+                        },
+                    },
                 },
             });
 
             await prisma.customer.create({
                 data: {
-                    name: "Test Customer 2",
-                    emails: ["test2@test.com"],
+                    firstName: "Test",
+                    lastName: "Customer2",
                     accountApproved: true,
                     password: "hashedpass",
+                    emails: {
+                        create: {
+                            emailAddress: "test2@test.com",
+                        },
+                    },
                 },
             });
 
             await prisma.customer.create({
                 data: {
-                    name: "Test Customer 3",
-                    emails: ["test3@test.com"],
+                    firstName: "Test",
+                    lastName: "Customer3",
                     accountApproved: false, // Not approved
                     password: "hashedpass",
+                    emails: {
+                        create: {
+                            emailAddress: "test3@test.com",
+                        },
+                    },
                 },
             });
 
@@ -226,7 +255,11 @@ describe("Dashboard API Integration Tests", () => {
                 where: {
                     customer: {
                         emails: {
-                            hasSome: ["test1@test.com", "test2@test.com", "test3@test.com"],
+                            some: {
+                                emailAddress: {
+                                    in: ["test1@test.com", "test2@test.com", "test3@test.com"],
+                                },
+                            },
                         },
                     },
                 },
@@ -235,7 +268,11 @@ describe("Dashboard API Integration Tests", () => {
             await prisma.customer.deleteMany({
                 where: {
                     emails: {
-                        hasSome: ["test1@test.com", "test2@test.com", "test3@test.com"],
+                        some: {
+                            emailAddress: {
+                                in: ["test1@test.com", "test2@test.com", "test3@test.com"],
+                            },
+                        },
                     },
                 },
             });
@@ -252,10 +289,15 @@ describe("Dashboard API Integration Tests", () => {
             // Create some test data
             await prisma.customer.create({
                 data: {
-                    name: "Test Customer 1",
-                    emails: ["test1@test.com"],
+                    firstName: "Test",
+                    lastName: "Customer1",
                     accountApproved: true,
                     password: "hashedpass",
+                    emails: {
+                        create: {
+                            emailAddress: "test1@test.com",
+                        },
+                    },
                 },
             });
 
@@ -289,10 +331,15 @@ describe("Dashboard API Integration Tests", () => {
             // Add a new customer
             await prisma.customer.create({
                 data: {
-                    name: "New Test Customer",
-                    emails: ["test1@test.com"],
+                    firstName: "New",
+                    lastName: "Customer",
                     accountApproved: true,
                     password: "hashedpass",
+                    emails: {
+                        create: {
+                            emailAddress: "test1@test.com",
+                        },
+                    },
                 },
             });
 
@@ -309,20 +356,30 @@ describe("Dashboard API Integration Tests", () => {
             // Create approved customer
             await prisma.customer.create({
                 data: {
-                    name: "Approved Customer",
-                    emails: ["test1@test.com"],
+                    firstName: "Approved",
+                    lastName: "Customer",
                     accountApproved: true,
                     password: "hashedpass",
+                    emails: {
+                        create: {
+                            emailAddress: "test1@test.com",
+                        },
+                    },
                 },
             });
 
             // Create unapproved customer
             await prisma.customer.create({
                 data: {
-                    name: "Unapproved Customer",
-                    emails: ["test2@test.com"],
+                    firstName: "Unapproved",
+                    lastName: "Customer",
                     accountApproved: false,
                     password: "hashedpass",
+                    emails: {
+                        create: {
+                            emailAddress: "test2@test.com",
+                        },
+                    },
                 },
             });
 

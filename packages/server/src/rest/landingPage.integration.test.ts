@@ -13,7 +13,7 @@ import bcrypt from "bcrypt";
 import { exec } from "child_process";
 import { promisify } from "util";
 import cookieParser from "cookie-parser";
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
+import { readFileSync, writeFileSync, existsSync } from "fs";
 import { join } from "path";
 import restRouter from "./index.js";
 import * as auth from "../auth.js";
@@ -99,10 +99,15 @@ describe("Landing Page API Integration Tests", () => {
         const hashedPassword = await bcrypt.hash("admin123", 10);
         const adminCustomer = await prisma.customer.create({
             data: {
-                name: "Admin User",
-                emails: ["admin@test.com"],
+                firstName: "Admin",
+                lastName: "User",
                 accountApproved: true,
                 password: hashedPassword,
+                emails: {
+                    create: {
+                        emailAddress: "admin@test.com",
+                    },
+                },
             },
         });
 
@@ -114,12 +119,17 @@ describe("Landing Page API Integration Tests", () => {
         });
 
         // Create regular user
-        const userCustomer = await prisma.customer.create({
+        await prisma.customer.create({
             data: {
-                name: "Regular User",
-                emails: ["user@test.com"],
+                firstName: "Regular",
+                lastName: "User",
                 accountApproved: true,
                 password: hashedPassword,
+                emails: {
+                    create: {
+                        emailAddress: "user@test.com",
+                    },
+                },
             },
         });
 
@@ -200,11 +210,7 @@ describe("Landing Page API Integration Tests", () => {
             JSON.stringify({ plants: mockSeasonalPlants }, null, 2),
             "utf8"
         );
-        writeFileSync(
-            PLANT_TIPS_FILE,
-            JSON.stringify({ tips: mockPlantTips }, null, 2),
-            "utf8"
-        );
+        writeFileSync(PLANT_TIPS_FILE, JSON.stringify({ tips: mockPlantTips }, null, 2), "utf8");
     });
 
     describe("GET /api/rest/v1/landing-page", () => {
@@ -295,9 +301,7 @@ describe("Landing Page API Integration Tests", () => {
 
     describe("PUT /api/rest/v1/landing-page", () => {
         it("should require admin authentication", async () => {
-            const res = await request(app)
-                .put("/api/rest/v1/landing-page")
-                .send(mockUpdateData);
+            const res = await request(app).put("/api/rest/v1/landing-page").send(mockUpdateData);
 
             expect(res.status).toBe(403);
         });
@@ -328,7 +332,13 @@ describe("Landing Page API Integration Tests", () => {
         });
 
         it("should update only hero settings without changing banners", async () => {
-            const newSettings = { autoPlay: false, autoPlayDelay: 10000, showDots: false, showArrows: false, fadeTransition: true };
+            const newSettings = {
+                autoPlay: false,
+                autoPlayDelay: 10000,
+                showDots: false,
+                showArrows: false,
+                fadeTransition: true,
+            };
 
             const res = await request(app)
                 .put("/api/rest/v1/landing-page")
