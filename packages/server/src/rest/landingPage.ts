@@ -377,8 +377,16 @@ router.put("/", async (req: Request, res: Response) => {
             return res.status(400).json({ error: "No valid content sections provided for update" });
         }
 
-        // Invalidate cache after successful updates
-        await invalidateCache();
+        // Write-through caching: Update cache immediately with fresh data
+        // This eliminates race conditions where refetch happens before cache invalidation completes
+        try {
+            const freshContent = aggregateLandingPageContent(false); // Get all content, not just active
+            await setCachedContent(freshContent);
+            logger.info("Cache updated with fresh content (write-through)");
+        } catch (error) {
+            logger.error("Error updating cache (non-fatal):", error);
+            // Continue even if cache update fails - DB write succeeded
+        }
 
         return res.json({
             success: true,
@@ -448,8 +456,15 @@ router.put("/contact-info", async (req: Request, res: Response) => {
             }
         }
 
-        // Invalidate cache after successful update
-        await invalidateCache();
+        // Write-through caching: Update cache immediately with fresh data
+        try {
+            const freshContent = aggregateLandingPageContent(false);
+            await setCachedContent(freshContent);
+            logger.info("Cache updated with fresh content (write-through)");
+        } catch (error) {
+            logger.error("Error updating cache (non-fatal):", error);
+            // Continue even if cache update fails - DB write succeeded
+        }
 
         return res.json({
             success: true,

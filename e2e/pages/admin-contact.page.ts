@@ -19,12 +19,12 @@ export class AdminContactPage {
   constructor(page: Page) {
     this.page = page;
 
-    this.saveButton = page.getByRole('button', { name: /save changes/i });
-    this.revertButton = page.getByRole('button', { name: /revert changes/i });
+    this.saveButton = page.getByTestId('save-changes-button');
+    this.revertButton = page.getByTestId('revert-changes-button');
     this.rangeGroupingToggle = page.getByLabel(/group ranges/i);
     this.advancedModeToggle = page.getByLabel(/advanced mode/i);
-    this.applyAllDaysButton = page.getByRole('button', { name: /apply monday to all days/i });
-    this.addNoteButton = page.getByRole('button', { name: /add note/i });
+    this.applyAllDaysButton = page.getByTestId('apply-monday-to-all');
+    this.addNoteButton = page.getByTestId('add-note-button');
   }
 
   async goto() {
@@ -36,9 +36,7 @@ export class AdminContactPage {
 
   // Day configuration
   async enableDay(day: string) {
-    // Wait for the day label to be visible
-    await this.page.waitForSelector(`text=${day}`, { timeout: 10000 });
-    const checkbox = this.page.getByLabel(new RegExp(`^${day}$`, 'i'));
+    const checkbox = this.page.getByTestId(`day-enabled-${day.toLowerCase()}`);
     await checkbox.waitFor({ state: 'visible', timeout: 10000 });
     if (!(await checkbox.isChecked())) {
       await checkbox.check();
@@ -47,7 +45,7 @@ export class AdminContactPage {
   }
 
   async disableDay(day: string) {
-    const checkbox = this.page.getByLabel(new RegExp(day, 'i'));
+    const checkbox = this.page.getByTestId(`day-enabled-${day.toLowerCase()}`);
     if (await checkbox.isChecked()) {
       await checkbox.uncheck();
     }
@@ -60,32 +58,48 @@ export class AdminContactPage {
     // Wait for the form to update
     await this.page.waitForTimeout(500);
 
-    // Find the row for this day - go up through the FormControlLabel structure
-    const dayLabel = this.page.locator(`label:has-text("${day}")`).first();
-    const dayRow = dayLabel.locator('..').locator('..').locator('..');
+    // Ensure the "Closed" checkbox is NOT checked
+    const closedCheckbox = this.page.getByTestId(`day-closed-${day.toLowerCase()}`);
+    await closedCheckbox.waitFor({ state: 'visible', timeout: 10000 });
 
-    // Wait for selects to be visible
-    await dayRow.locator('select').first().waitFor({ state: 'visible', timeout: 5000 });
+    // If it's checked, uncheck it to show the time selects
+    if (await closedCheckbox.isChecked()) {
+      await closedCheckbox.uncheck();
+      await this.page.waitForTimeout(500);
+    }
+
+    // Use data-testid to find the time selects
+    const openTimeSelect = this.page.getByTestId(`open-time-${day.toLowerCase()}`);
+    const closeTimeSelect = this.page.getByTestId(`close-time-${day.toLowerCase()}`);
+
+    await openTimeSelect.waitFor({ state: 'visible', timeout: 10000 });
 
     // Set opening time
-    const openSelect = dayRow.locator('select').first();
-    await openSelect.selectOption(openTime);
+    await openTimeSelect.click();
+    await this.page.waitForTimeout(300);
+    await this.page.locator(`[role="listbox"] [role="option"]:has-text("${openTime}")`).first().click();
+    await this.page.waitForTimeout(300);
 
     // Set closing time
-    const closeSelect = dayRow.locator('select').nth(1);
-    await closeSelect.selectOption(closeTime);
-
+    await closeTimeSelect.click();
+    await this.page.waitForTimeout(300);
+    await this.page.locator(`[role="listbox"] [role="option"]:has-text("${closeTime}")`).first().click();
     await this.page.waitForTimeout(300);
   }
 
   async markDayClosed(day: string) {
     await this.enableDay(day);
 
-    const dayRow = this.page.locator(`text=${day}`).locator('..').locator('..');
-    const closedCheckbox = dayRow.getByLabel(/closed/i);
+    // Wait for the UI to update after enabling
+    await this.page.waitForTimeout(500);
+
+    // Use data-testid to find the closed checkbox
+    const closedCheckbox = this.page.getByTestId(`day-closed-${day.toLowerCase()}`);
+    await closedCheckbox.waitFor({ state: 'visible', timeout: 10000 });
 
     if (!(await closedCheckbox.isChecked())) {
       await closedCheckbox.check();
+      await this.page.waitForTimeout(500);
     }
   }
 
@@ -116,8 +130,8 @@ export class AdminContactPage {
   }
 
   async removeNote(noteText: string) {
-    // Find the note input with this text
-    const noteInput = this.page.getByDisplayValue(noteText);
+    // Find the note input with this text using value attribute
+    const noteInput = this.page.locator(`input[value="${noteText}"]`);
     const noteRow = noteInput.locator('..').locator('..');
 
     // Click the delete button in this row
@@ -135,7 +149,8 @@ export class AdminContactPage {
   // Actions
   async saveChanges() {
     await this.saveButton.click();
-    await this.page.waitForSelector('text=/updated successfully|success/i', { timeout: 10000 });
+    // Don't wait for success message here - let tests check explicitly with expectSuccessMessage()
+    // This avoids the Snackbar auto-hide timing issue
   }
 
   async revertChanges() {
@@ -145,16 +160,20 @@ export class AdminContactPage {
 
   // Assertions
   async expectSuccessMessage() {
-    await expect(this.page.locator('text=/successfully|success/i').first()).toBeVisible({ timeout: 10000 });
+    await expect(this.page.locator('text=/successfully|success/i').first()).toBeVisible({ timeout: 15000 });
+    // Wait additional time for refetch to complete and UI to update
+    await this.page.waitForTimeout(1000);
+    // Wait for network to be idle to ensure refetch completed
+    await this.page.waitForLoadState('networkidle', { timeout: 10000 });
   }
 
   async expectDayEnabled(day: string) {
-    const checkbox = this.page.getByLabel(new RegExp(day, 'i'));
+    const checkbox = this.page.getByTestId(`day-enabled-${day.toLowerCase()}`);
     await expect(checkbox).toBeChecked();
   }
 
   async expectDayDisabled(day: string) {
-    const checkbox = this.page.getByLabel(new RegExp(day, 'i'));
+    const checkbox = this.page.getByTestId(`day-enabled-${day.toLowerCase()}`);
     await expect(checkbox).not.toBeChecked();
   }
 

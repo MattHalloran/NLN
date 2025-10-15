@@ -31,11 +31,11 @@ export class AdminHomePage {
     this.heroTab = page.getByRole('tab', { name: /hero banner/i });
     this.seasonalTab = page.getByRole('tab', { name: /seasonal content/i });
 
-    // Hero banner elements - more specific selectors
+    // Hero banner elements - using data-testid for reliability
     this.dropzone = page.locator('[class*="dropzone"], form').first();
-    this.saveButton = page.getByRole('button', { name: /save changes/i }).first();
-    this.cancelButton = page.getByRole('button', { name: /^cancel$/i }).first();
-    this.heroBannerItems = page.locator('div[class*="MuiCard"]').filter({ has: page.locator('img[alt]') });
+    this.saveButton = page.locator('[data-testid="hero-save-button"]');
+    this.cancelButton = page.locator('[data-testid="hero-cancel-button"]');
+    this.heroBannerItems = page.locator('[data-testid^="hero-banner-card-"]');
 
     // Seasonal content elements
     this.seasonalPlantsTab = page.getByRole('tab', { name: /seasonal plants/i });
@@ -77,29 +77,63 @@ export class AdminHomePage {
   }
 
   async updateBannerAltText(index: number, altText: string) {
-    // Find the text field with label containing "Alt Text"
-    const altInput = this.page.locator('input[id*="Alt"]').or(this.page.locator('label:has-text("Alt Text") + div input')).nth(index);
+    // Use data-testid for reliable selection - target the first visible input (MUI renders hidden copies)
+    const altInput = this.page.locator(`[data-testid="hero-alt-input-${index}"] input:not([aria-hidden="true"])`).first();
     await altInput.waitFor({ state: 'visible', timeout: 5000 });
+
+    // Focus the input
+    await altInput.focus();
+    await this.page.waitForTimeout(100);
+
+    // Use fill() which triggers proper React events
     await altInput.fill(altText);
+
+    // Manually trigger input and change events to ensure React picks them up
+    await altInput.dispatchEvent('input', { bubbles: true });
+    await altInput.dispatchEvent('change', { bubbles: true });
+    await this.page.waitForTimeout(200);
+
+    // Blur to finalize
+    await altInput.blur();
+    await this.page.waitForTimeout(500);
   }
 
   async updateBannerDescription(index: number, description: string) {
-    // Find the text field with label containing "Description"
-    const descInput = this.page.locator('textarea[id*="Description"]').or(this.page.locator('label:has-text("Description") + div textarea')).nth(index);
+    // Use data-testid for reliable selection - target the first visible textarea (MUI renders hidden copies)
+    const descInput = this.page.locator(`[data-testid="hero-description-input-${index}"] textarea:not([aria-hidden="true"])`).first();
     await descInput.waitFor({ state: 'visible', timeout: 5000 });
+
+    // Focus the textarea
+    await descInput.focus();
+    await this.page.waitForTimeout(100);
+
+    // Use fill() which triggers proper React events
     await descInput.fill(description);
+
+    // Manually trigger input and change events to ensure React picks them up
+    await descInput.dispatchEvent('input', { bubbles: true });
+    await descInput.dispatchEvent('change', { bubbles: true });
+    await this.page.waitForTimeout(200);
+
+    // Blur to finalize
+    await descInput.blur();
+    await this.page.waitForTimeout(500);
   }
 
   async toggleBannerActive(index: number) {
-    // Find the Switch input labeled "Active"
-    const switchControls = this.page.locator('label:has-text("Active") input[type="checkbox"]');
-    await switchControls.nth(index).click();
+    // Use data-testid for reliable selection - target the checkbox input within the Switch wrapper
+    const switchControl = this.page.locator(`[data-testid="hero-active-switch-${index}"] input[type="checkbox"]`);
+    await switchControl.click();
+    // Wait for onChange to process and React state to update
+    await this.page.waitForTimeout(500);
   }
 
   async deleteBanner(index: number) {
-    // Find the delete IconButton - more specific selector
-    const deleteButtons = this.page.locator('button[color="error"]').or(this.page.locator('button:has(svg)').filter({ hasText: '' }));
-    await deleteButtons.nth(index).click();
+    // Use data-testid for reliable selection
+    const deleteButton = this.page.locator(`[data-testid="hero-delete-button-${index}"]`);
+    await deleteButton.click();
+    // Wait for React state to update
+    await this.page.waitForTimeout(500);
   }
 
   async dragBanner(fromIndex: number, toIndex: number) {
@@ -107,13 +141,18 @@ export class AdminHomePage {
     const toBanner = this.heroBannerItems.nth(toIndex);
 
     await fromBanner.dragTo(toBanner);
+    // Wait for drag-and-drop to complete and React state to update
+    await this.page.waitForTimeout(1000);
   }
 
   async saveChanges() {
-    await this.saveButton.waitFor({ state: 'visible', timeout: 5000 });
+    // Wait for save button to become visible (indicates hasChanges=true)
+    await this.saveButton.waitFor({ state: 'visible', timeout: 10000 });
+    // Small delay to ensure button is interactive
+    await this.page.waitForTimeout(200);
     await this.saveButton.click();
-    // Wait for success message or snackbar
-    await this.page.locator('text=/updated successfully|saved successfully|success/i').first().waitFor({ state: 'visible', timeout: 15000 });
+    // Don't wait for success message here - let tests check explicitly with expectSuccessMessage()
+    // This avoids the Snackbar auto-hide timing issue
   }
 
   async cancelChanges() {
@@ -215,7 +254,11 @@ export class AdminHomePage {
 
   // Assertions
   async expectSuccessMessage() {
-    await expect(this.page.locator('text=/successfully|success/i').first()).toBeVisible({ timeout: 10000 });
+    await expect(this.page.locator('text=/successfully|success/i').first()).toBeVisible({ timeout: 15000 });
+    // Wait for network activity from the refetch
+    await this.page.waitForLoadState('networkidle', { timeout: 10000 });
+    // Small delay to ensure React state updates complete
+    await this.page.waitForTimeout(500);
   }
 
   async expectBannerCount(count: number) {

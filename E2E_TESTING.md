@@ -112,11 +112,13 @@ If you need to test without auth, use the regular `page` fixture.
 
 ## Test Data
 
-Test credentials (configured in your test database):
-- **Admin**: admin@test.com / admin123
-- **User**: user@test.com / user123
+Test credentials are pulled from environment variables:
+- **Admin Email**: `ADMIN_EMAIL` (from `.env`)
+- **Admin Password**: `ADMIN_PASSWORD` (from `.env`)
 
-These credentials are defined in `e2e/fixtures/test-data.ts`.
+These must match the credentials created by the database seed script (`packages/server/src/db/seeds/init.ts`).
+
+**Security Note**: Credentials are never hard-coded in test files. They are always loaded from environment variables to maintain security and flexibility across environments.
 
 ## Configuration
 

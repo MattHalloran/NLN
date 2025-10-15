@@ -85,6 +85,8 @@ describe("Landing Page API Integration Tests", () => {
 
         // Clean up seed data
         await prisma.customer_roles.deleteMany();
+        await prisma.email.deleteMany();
+        await prisma.phone.deleteMany();
         await prisma.customer.deleteMany();
         await prisma.role.deleteMany();
 
@@ -138,7 +140,11 @@ describe("Landing Page API Integration Tests", () => {
         app.use(express.json());
         app.use(express.urlencoded({ extended: false }));
         app.use(cookieParser(process.env.JWT_SECRET));
-        app.use(auth.attachPrisma);
+        // Attach TEST prisma instance, not the global one
+        app.use((req: any, _res, next) => {
+            req.prisma = prisma; // Use test prisma instance
+            next();
+        });
         app.use(auth.authenticate);
         app.use("/api/rest", restRouter);
 

@@ -57,6 +57,8 @@ describe("Dashboard API Integration Tests", () => {
 
         // Clean up seed data
         await prisma.customer_roles.deleteMany();
+        await prisma.email.deleteMany();
+        await prisma.phone.deleteMany();
         await prisma.customer.deleteMany();
         await prisma.role.deleteMany();
 
@@ -81,7 +83,23 @@ describe("Dashboard API Integration Tests", () => {
                     },
                 },
             },
+            include: {
+                emails: true,
+            },
         });
+
+        // Debug: Check if email was created
+        console.log("Created admin customer:", {
+            id: adminCustomer.id,
+            firstName: adminCustomer.firstName,
+            emails: (adminCustomer as any).emails,
+        });
+
+        // Verify email exists
+        const emailCheck = await prisma.email.findUnique({
+            where: { emailAddress: "admin@test.com" },
+        });
+        console.log("Email check:", emailCheck);
 
         await prisma.customer_roles.create({
             data: {
@@ -110,7 +128,11 @@ describe("Dashboard API Integration Tests", () => {
         app.use(express.json());
         app.use(express.urlencoded({ extended: false }));
         app.use(cookieParser(process.env.JWT_SECRET));
-        app.use(auth.attachPrisma);
+        // Attach TEST prisma instance, not the global one
+        app.use((req: any, _res, next) => {
+            req.prisma = prisma; // Use test prisma instance
+            next();
+        });
         app.use(auth.authenticate);
         app.use("/api/rest", restRouter);
 
@@ -118,6 +140,13 @@ describe("Dashboard API Integration Tests", () => {
         const adminLoginRes = await request(app)
             .post("/api/rest/v1/auth/login")
             .send({ email: "admin@test.com", password: "admin123" });
+
+        if (adminLoginRes.status !== 200) {
+            console.error("Admin login failed:", adminLoginRes.status, adminLoginRes.body);
+            throw new Error(
+                `Admin login failed with status ${adminLoginRes.status}: ${JSON.stringify(adminLoginRes.body)}`
+            );
+        }
 
         adminCookie = adminLoginRes.headers["set-cookie"][0];
 

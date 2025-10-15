@@ -1,12 +1,23 @@
 import { Router, Request, Response } from "express";
 import bcrypt from "bcrypt";
-import { CODE, COOKIE, logInSchema, passwordSchema, requestPasswordChangeSchema, signUpSchema } from "@local/shared";
+import {
+    CODE,
+    COOKIE,
+    logInSchema,
+    passwordSchema,
+    requestPasswordChangeSchema,
+    signUpSchema,
+} from "@local/shared";
 import { generateToken } from "../auth.js";
 import { HASHING_ROUNDS } from "../consts.js";
 import { customerFromEmail, upsertCustomer } from "../db/models/customer.js";
 import { CustomError, validateArgs } from "../error.js";
 import { randomString } from "../utils/index.js";
-import { customerNotifyAdmin, sendResetPasswordLink, sendVerificationLink } from "../worker/email/queue.js";
+import {
+    customerNotifyAdmin,
+    sendResetPasswordLink,
+    sendVerificationLink,
+} from "../worker/email/queue.js";
 import { AccountStatus } from "../schema/types.js";
 import { logger } from "../logger.js";
 
@@ -120,7 +131,7 @@ router.post("/login", async (req: Request, res: Response) => {
         // Now we can validate the password
         const validPassword = customer.password && bcrypt.compareSync(password, customer.password);
         if (validPassword) {
-            await generateToken(res, customer.id, customer.businessId ?? "");
+            await generateToken(res, customer.id, customer.businessId ?? "", prisma);
             await prisma.customer.update({
                 where: { id: customer.id },
                 data: {
@@ -201,7 +212,17 @@ router.post("/logout", async (_req: Request, res: Response) => {
  */
 router.post("/signup", async (req: Request, res: Response) => {
     try {
-        const { firstName, lastName, pronouns, business, email, phone, accountApproved, theme, marketingEmails, password } = req.body;
+        const {
+            firstName,
+            lastName,
+            pronouns,
+            business,
+            email,
+            phone,
+            accountApproved,
+            theme,
+            password,
+        } = req.body;
         const { prisma } = req as any;
 
         // Validate input format
@@ -231,7 +252,7 @@ router.post("/signup", async (req: Request, res: Response) => {
             },
         });
 
-        await generateToken(res, customer.id, customer.businessId ?? "");
+        await generateToken(res, customer.id, customer.businessId ?? "", prisma);
 
         // Send verification email
         sendVerificationLink(email, customer.id);
@@ -315,7 +336,8 @@ router.post("/reset-password", async (req: Request, res: Response) => {
             !customer.resetPasswordCode ||
             customer.resetPasswordCode !== code ||
             !customer.lastResetPasswordReqestAttempt ||
-            Date.now() - new Date(customer.lastResetPasswordReqestAttempt).getTime() > REQUEST_PASSWORD_RESET_DURATION_MS
+            Date.now() - new Date(customer.lastResetPasswordReqestAttempt).getTime() >
+                REQUEST_PASSWORD_RESET_DURATION_MS
         ) {
             // Generate new code
             const requestCode = randomString(32);

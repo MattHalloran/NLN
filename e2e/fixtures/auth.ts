@@ -1,6 +1,7 @@
 import { test as base, expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
 /**
  * Authentication Fixture
@@ -10,6 +11,8 @@ import path from 'path';
  * avoiding the need to login for every test.
  */
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const authFile = path.join(__dirname, '../.auth/admin.json');
 
 /**
@@ -40,9 +43,17 @@ export async function setupAuth(page: Page) {
 
   console.log('✓ Login page loaded');
 
+  // Get admin credentials from environment variables
+  const adminEmail = process.env.ADMIN_EMAIL;
+  const adminPassword = process.env.ADMIN_PASSWORD;
+
+  if (!adminEmail || !adminPassword) {
+    throw new Error('ADMIN_EMAIL and ADMIN_PASSWORD must be set in environment variables');
+  }
+
   // Fill in admin credentials
-  await page.fill('input[name="email"]', 'admin@test.com');
-  await page.fill('input[name="password"]', 'admin123');
+  await page.fill('input[name="email"]', adminEmail);
+  await page.fill('input[name="password"]', adminPassword);
 
   console.log('✓ Credentials filled');
 

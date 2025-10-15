@@ -15,6 +15,51 @@ export const mockHeroBanner = {
   isActive: true,
 };
 
+/**
+ * Full set of test hero banners for E2E testing
+ * These banners allow testing CRUD operations, reordering, and state management
+ */
+export const testHeroBanners = [
+  {
+    id: 'e2e-hero-1',
+    src: '/images/test-hero-1.jpg',
+    alt: 'E2E Test Banner 1',
+    description: 'Beautiful spring flowers in full bloom',
+    width: 1920,
+    height: 1080,
+    displayOrder: 1,
+    isActive: true,
+  },
+  {
+    id: 'e2e-hero-2',
+    src: '/images/test-hero-2.jpg',
+    alt: 'E2E Test Banner 2',
+    description: 'Summer garden with vibrant colors',
+    width: 1920,
+    height: 1080,
+    displayOrder: 2,
+    isActive: true,
+  },
+  {
+    id: 'e2e-hero-3',
+    src: '/images/test-hero-3.jpg',
+    alt: 'E2E Test Banner 3',
+    description: 'Fall foliage and seasonal plants',
+    width: 1920,
+    height: 1080,
+    displayOrder: 3,
+    isActive: true,
+  },
+];
+
+export const testHeroSettings = {
+  autoPlay: true,
+  autoPlayDelay: 5000,
+  showDots: true,
+  showArrows: true,
+  fadeTransition: true,
+};
+
 export const mockSeasonalPlant = {
   id: `plant-test-${Date.now()}`,
   name: 'Test Seasonal Plant',

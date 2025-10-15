@@ -1,4 +1,31 @@
-import { Box, Tab, Tabs, Card, CardContent, CardMedia, CardActions, Chip, Dialog, DialogActions, DialogContent, DialogTitle, Grid, IconButton, Paper, Stack, TextField, ToggleButton, ToggleButtonGroup, Typography, useTheme, Button, Snackbar, Alert, Switch, FormControlLabel } from "@mui/material";
+import {
+    Box,
+    Tab,
+    Tabs,
+    Card,
+    CardContent,
+    CardMedia,
+    CardActions,
+    Chip,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    Grid,
+    IconButton,
+    Paper,
+    Stack,
+    TextField,
+    ToggleButton,
+    ToggleButtonGroup,
+    Typography,
+    useTheme,
+    Button,
+    Snackbar,
+    Alert,
+    Switch,
+    FormControlLabel,
+} from "@mui/material";
 import { Delete as DeleteIcon, DragIndicator as DragIcon } from "@mui/icons-material";
 import { useLandingPageContent } from "api/rest/hooks";
 import { restApi } from "api/rest/client";
@@ -6,7 +33,19 @@ import { AdminTabOption, AdminTabs, Dropzone, PageContainer } from "components";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { getServerUrl } from "utils/serverUrl";
 import { TopBar } from "components/navigation/TopBar/TopBar";
-import { Flower, Leaf, Lightbulb, Plus, Settings, Snowflake, Sprout, Star, Trash2, Edit3, Image, Home } from "lucide-react";
+import {
+    Flower,
+    Leaf,
+    Lightbulb,
+    Plus,
+    Settings,
+    Snowflake,
+    Sprout,
+    Star,
+    Trash2,
+    Edit3,
+    Image,
+} from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { pagePaddingBottom } from "styles";
 import { PubSub } from "utils/pubsub";
@@ -43,11 +82,12 @@ const iconOptions = [
 ];
 
 const getIconComponent = (iconName: string) => {
-    const option = iconOptions.find(opt => opt.value === iconName);
+    const option = iconOptions.find((opt) => opt.value === iconName);
     return option ? option.icon : Leaf;
 };
 
-const helpText = "Manage your homepage content including the hero banner images and seasonal content sections.";
+const helpText =
+    "Manage your homepage content including the hero banner images and seasonal content sections.";
 
 export const AdminHomePage = () => {
     const { palette } = useTheme();
@@ -62,24 +102,30 @@ export const AdminHomePage = () => {
     const [heroBanners, setHeroBanners] = useState<any[]>([]);
     const [originalHeroBanners, setOriginalHeroBanners] = useState<any[]>([]);
     const [hasChanges, setHasChanges] = useState(false);
-    const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: "success" | "error" }>({ 
-        open: false, 
-        message: "", 
-        severity: "success", 
+    const [snackbar, setSnackbar] = useState<{
+        open: boolean;
+        message: string;
+        severity: "success" | "error";
+    }>({
+        open: false,
+        message: "",
+        severity: "success",
     });
     const [isLoading, setIsLoading] = useState(false);
 
     // Landing page content state
     const { data: landingPageContent, refetch } = useLandingPageContent(false);
-    
+
     useEffect(() => {
         if (landingPageContent?.heroBanners && !hasChanges) {
-            const sorted = [...landingPageContent.heroBanners].sort((a: any, b: any) => a.displayOrder - b.displayOrder);
+            const sorted = [...landingPageContent.heroBanners].sort(
+                (a: any, b: any) => a.displayOrder - b.displayOrder,
+            );
             setHeroBanners(sorted);
             setOriginalHeroBanners(sorted);
         }
     }, [landingPageContent, hasChanges]);
-    
+
     const seasonalData = landingPageContent;
 
     const handleApiError = (error: any, defaultMessage: string) => {
@@ -96,26 +142,26 @@ export const AdminHomePage = () => {
         try {
             setIsLoading(true);
             const newBanners: any[] = [];
-            
+
             let currentLength = 0;
-            setHeroBanners(prev => {
+            setHeroBanners((prev) => {
                 currentLength = prev.length;
                 return prev;
             });
-            
+
             for (const file of acceptedFiles) {
-                const reader = new FileReader();
+                const reader = new window.FileReader();
                 const base64 = await new Promise<string>((resolve) => {
                     reader.onload = (e) => resolve(e.target?.result as string);
                     reader.readAsDataURL(file);
                 });
-                
+
                 const img = new window.Image();
                 await new Promise<void>((resolve) => {
                     img.onload = () => resolve();
                     img.src = base64;
                 });
-                
+
                 const newBanner = {
                     id: `hero-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                     src: `/images/${file.name}`,
@@ -128,19 +174,19 @@ export const AdminHomePage = () => {
                 };
                 newBanners.push(newBanner);
             }
-            
-            setHeroBanners(prev => [...prev, ...newBanners]);
+
+            setHeroBanners((prev) => [...prev, ...newBanners]);
             setHasChanges(true);
-            setSnackbar({ 
-                open: true, 
-                message: `Added ${acceptedFiles.length} image(s). Remember to save changes.`, 
-                severity: "success", 
+            setSnackbar({
+                open: true,
+                message: `Added ${acceptedFiles.length} image(s). Remember to save changes.`,
+                severity: "success",
             });
-        } catch (error) {
-            setSnackbar({ 
-                open: true, 
-                message: "Failed to add images", 
-                severity: "error", 
+        } catch {
+            setSnackbar({
+                open: true,
+                message: "Failed to add images",
+                severity: "error",
             });
         } finally {
             setIsLoading(false);
@@ -150,7 +196,7 @@ export const AdminHomePage = () => {
     const handleDragEnd = useCallback((result: any) => {
         if (!result.destination) return;
 
-        setHeroBanners(prev => {
+        setHeroBanners((prev) => {
             const items = Array.from(prev);
             const [reorderedItem] = items.splice(result.source.index, 1);
             items.splice(result.destination.index, 0, reorderedItem);
@@ -164,27 +210,28 @@ export const AdminHomePage = () => {
     }, []);
 
     const handleDeleteBanner = useCallback((id: string) => {
-        setHeroBanners(prev => prev
-            .filter(b => b.id !== id)
-            .map((item, index) => ({
-                ...item,
-                displayOrder: index + 1,
-            })),
+        setHeroBanners((prev) =>
+            prev
+                .filter((b) => b.id !== id)
+                .map((item, index) => ({
+                    ...item,
+                    displayOrder: index + 1,
+                })),
         );
         setHasChanges(true);
     }, []);
 
     const handleFieldChange = useCallback((id: string, field: string, value: any) => {
-        setHeroBanners(prev => prev.map(banner => 
-            banner.id === id ? { ...banner, [field]: value } : banner,
-        ));
+        setHeroBanners((prev) =>
+            prev.map((banner) => (banner.id === id ? { ...banner, [field]: value } : banner)),
+        );
         setHasChanges(true);
     }, []);
 
     const handleSaveHeroBanners = useCallback(async () => {
         try {
             setIsLoading(true);
-            
+
             // Include heroSettings to prevent them from being lost
             const heroSettings = landingPageContent?.heroSettings || {
                 autoPlay: true,
@@ -193,30 +240,31 @@ export const AdminHomePage = () => {
                 showArrows: true,
                 fadeTransition: true,
             };
-            
-            const response = await restApi.updateLandingPageContent({ 
+
+            const response = await restApi.updateLandingPageContent({
                 heroBanners,
-                heroSettings, 
+                heroSettings,
             });
-            
+
             if (response.success) {
-                setSnackbar({ 
-                    open: true, 
-                    message: "Hero banners updated successfully", 
-                    severity: "success", 
+                // Refetch data FIRST to ensure UI is updated
+                await refetch();
+                // THEN show success and update state
+                setSnackbar({
+                    open: true,
+                    message: "Hero banners updated successfully",
+                    severity: "success",
                 });
                 setHasChanges(false);
                 setOriginalHeroBanners([...heroBanners]);
-                // Note: Cache invalidation is handled automatically by the server
-                await refetch();
             } else {
                 throw new Error("Failed to update");
             }
         } catch (error: any) {
-            setSnackbar({ 
-                open: true, 
-                message: error.message || "Failed to save changes", 
-                severity: "error", 
+            setSnackbar({
+                open: true,
+                message: error.message || "Failed to save changes",
+                severity: "error",
             });
         } finally {
             setIsLoading(false);
@@ -230,29 +278,33 @@ export const AdminHomePage = () => {
 
     // Seasonal content handlers
     const handlePlantEdit = (plant?: SeasonalPlant) => {
-        setEditingPlant(plant || {
-            id: "",
-            name: "",
-            description: "",
-            season: "Spring",
-            careLevel: "Easy",
-            icon: "leaf",
-            displayOrder: seasonalData?.seasonalPlants?.length || 0,
-            isActive: true,
-        });
+        setEditingPlant(
+            plant || {
+                id: "",
+                name: "",
+                description: "",
+                season: "Spring",
+                careLevel: "Easy",
+                icon: "leaf",
+                displayOrder: seasonalData?.seasonalPlants?.length || 0,
+                isActive: true,
+            },
+        );
         setPlantDialogOpen(true);
     };
 
     const handleTipEdit = (tip?: PlantTip) => {
-        setEditingTip(tip || {
-            id: "",
-            title: "",
-            description: "",
-            category: "General",
-            season: "Year-round",
-            displayOrder: seasonalData?.plantTips?.length || 0,
-            isActive: true,
-        });
+        setEditingTip(
+            tip || {
+                id: "",
+                title: "",
+                description: "",
+                category: "General",
+                season: "Year-round",
+                displayOrder: seasonalData?.plantTips?.length || 0,
+                isActive: true,
+            },
+        );
         setTipDialogOpen(true);
     };
 
@@ -262,27 +314,31 @@ export const AdminHomePage = () => {
         try {
             const currentPlants = seasonalData?.seasonalPlants || [];
             let updatedPlants;
-            
+
             if (editingPlant.id) {
                 // Update existing plant
-                updatedPlants = currentPlants.map((plant: SeasonalPlant) => 
+                updatedPlants = currentPlants.map((plant: SeasonalPlant) =>
                     plant.id === editingPlant.id ? editingPlant : plant,
                 );
             } else {
                 // Add new plant with generated ID
-                const newPlant = { 
-                    ...editingPlant, 
-                    id: `plant-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, 
+                const newPlant = {
+                    ...editingPlant,
+                    id: `plant-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                 };
                 updatedPlants = [...currentPlants, newPlant];
             }
 
-            const response = await restApi.updateLandingPageContent({ seasonalPlants: updatedPlants });
+            const response = await restApi.updateLandingPageContent({
+                seasonalPlants: updatedPlants,
+            });
             if (response.success) {
+                // Refetch data FIRST to ensure UI is updated
+                await refetch();
+                // THEN show success and close dialog
                 handleApiSuccess("Plant saved successfully!");
                 setPlantDialogOpen(false);
                 setEditingPlant(null);
-                await refetch();
             } else {
                 throw new Error("Failed to save");
             }
@@ -297,27 +353,29 @@ export const AdminHomePage = () => {
         try {
             const currentTips = seasonalData?.plantTips || [];
             let updatedTips;
-            
+
             if (editingTip.id) {
                 // Update existing tip
-                updatedTips = currentTips.map((tip: PlantTip) => 
+                updatedTips = currentTips.map((tip: PlantTip) =>
                     tip.id === editingTip.id ? editingTip : tip,
                 );
             } else {
                 // Add new tip with generated ID
-                const newTip = { 
-                    ...editingTip, 
-                    id: `tip-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, 
+                const newTip = {
+                    ...editingTip,
+                    id: `tip-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                 };
                 updatedTips = [...currentTips, newTip];
             }
 
             const response = await restApi.updateLandingPageContent({ plantTips: updatedTips });
             if (response.success) {
+                // Refetch data FIRST to ensure UI is updated
+                await refetch();
+                // THEN show success and close dialog
                 handleApiSuccess("Tip saved successfully!");
                 setTipDialogOpen(false);
                 setEditingTip(null);
-                await refetch();
             } else {
                 throw new Error("Failed to save");
             }
@@ -333,13 +391,17 @@ export const AdminHomePage = () => {
 
     const handlePlantDelete = async (plant: SeasonalPlant) => {
         if (!window.confirm(`Delete ${plant.name}?`)) return;
-        
+
         try {
             const updatedPlants = plants.filter((p: SeasonalPlant) => p.id !== plant.id);
-            const response = await restApi.updateLandingPageContent({ seasonalPlants: updatedPlants });
+            const response = await restApi.updateLandingPageContent({
+                seasonalPlants: updatedPlants,
+            });
             if (response.success) {
-                handleApiSuccess("Plant deleted successfully!");
+                // Refetch data FIRST to ensure UI is updated
                 await refetch();
+                // THEN show success message
+                handleApiSuccess("Plant deleted successfully!");
             } else {
                 throw new Error("Failed to delete");
             }
@@ -350,13 +412,15 @@ export const AdminHomePage = () => {
 
     const handleTipDelete = async (tip: PlantTip) => {
         if (!window.confirm(`Delete ${tip.title}?`)) return;
-        
+
         try {
             const updatedTips = tips.filter((t: PlantTip) => t.id !== tip.id);
             const response = await restApi.updateLandingPageContent({ plantTips: updatedTips });
             if (response.success) {
-                handleApiSuccess("Tip deleted successfully!");
+                // Refetch data FIRST to ensure UI is updated
                 await refetch();
+                // THEN show success message
+                handleApiSuccess("Tip deleted successfully!");
             } else {
                 throw new Error("Failed to delete");
             }
@@ -373,10 +437,14 @@ export const AdminHomePage = () => {
                 title="Homepage Management"
                 below={<AdminTabs defaultTab={AdminTabOption.Hero} />}
             />
-            
+
             {/* Main Content Tabs */}
             <Paper sx={{ mx: 2, mt: 2 }}>
-                <Tabs value={selectedTab} onChange={(_, v) => setSelectedTab(v)} sx={{ borderBottom: 1, borderColor: "divider" }}>
+                <Tabs
+                    value={selectedTab}
+                    onChange={(_, v) => setSelectedTab(v)}
+                    sx={{ borderBottom: 1, borderColor: "divider" }}
+                >
                     <Tab icon={<Image size={20} />} iconPosition="start" label="Hero Banner" />
                     <Tab icon={<Leaf size={20} />} iconPosition="start" label="Seasonal Content" />
                 </Tabs>
@@ -388,15 +456,29 @@ export const AdminHomePage = () => {
                     <Dropzone
                         dropzoneText={"Drag 'n' drop new images here or click"}
                         onUpload={uploadImages}
-                        uploadText='Upload Images'
+                        uploadText="Upload Images"
                         sxs={{ root: { maxWidth: "min(100%, 700px)", margin: "auto" } }}
                     />
-                    
-                    <Box sx={{ mt: 4, mb: 2, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <Typography variant="h5" data-testid="hero-banners-title">Hero Banners</Typography>
+
+                    <Box
+                        sx={{
+                            mt: 4,
+                            mb: 2,
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                        }}
+                    >
+                        <Typography variant="h5" data-testid="hero-banners-title">
+                            Hero Banners
+                        </Typography>
                         {hasChanges && (
                             <Box data-testid="hero-actions-container">
-                                <Button onClick={handleCancelChanges} sx={{ mr: 1 }} data-testid="hero-cancel-button">
+                                <Button
+                                    onClick={handleCancelChanges}
+                                    sx={{ mr: 1 }}
+                                    data-testid="hero-cancel-button"
+                                >
                                     Cancel
                                 </Button>
                                 <Button
@@ -420,7 +502,11 @@ export const AdminHomePage = () => {
                                     sx={{ pb: pagePaddingBottom }}
                                 >
                                     {heroBanners.map((banner, index) => (
-                                        <Draggable key={banner.id} draggableId={banner.id} index={index}>
+                                        <Draggable
+                                            key={banner.id}
+                                            draggableId={banner.id}
+                                            index={index}
+                                        >
                                             {(provided, snapshot) => (
                                                 <Card
                                                     ref={provided.innerRef}
@@ -429,39 +515,59 @@ export const AdminHomePage = () => {
                                                     sx={{
                                                         mb: 2,
                                                         opacity: snapshot.isDragging ? 0.5 : 1,
-                                                        backgroundColor: snapshot.isDragging ? "action.hover" : "background.paper",
+                                                        backgroundColor: snapshot.isDragging
+                                                            ? "action.hover"
+                                                            : "background.paper",
                                                     }}
                                                 >
-                                                    <Box sx={{ display: "flex", alignItems: "stretch" }}>
+                                                    <Box
+                                                        sx={{
+                                                            display: "flex",
+                                                            alignItems: "stretch",
+                                                        }}
+                                                    >
                                                         <Box
                                                             {...provided.dragHandleProps}
-                                                            sx={{ 
-                                                                display: "flex", 
-                                                                alignItems: "center", 
-                                                                px: 2, 
+                                                            sx={{
+                                                                display: "flex",
+                                                                alignItems: "center",
+                                                                px: 2,
                                                                 cursor: "grab",
                                                                 backgroundColor: "action.hover",
                                                             }}
                                                         >
                                                             <DragIcon />
                                                         </Box>
-                                                        
+
                                                         <CardMedia
                                                             component="img"
                                                             height="200"
-                                                            image={banner.src.startsWith("http") ? banner.src : `${getServerUrl()}${banner.src}`}
+                                                            image={
+                                                                banner.src.startsWith("http")
+                                                                    ? banner.src
+                                                                    : `${getServerUrl()}${banner.src}`
+                                                            }
                                                             alt={banner.alt}
                                                             sx={{ width: 300, objectFit: "cover" }}
                                                         />
-                                                        
+
                                                         <Box sx={{ flex: 1, p: 2 }}>
-                                                            <Typography variant="subtitle2" gutterBottom>
+                                                            <Typography
+                                                                variant="subtitle2"
+                                                                gutterBottom
+                                                            >
                                                                 Order: {banner.displayOrder}
                                                             </Typography>
                                                             <TextField
                                                                 label="Alt Text"
                                                                 value={banner.alt}
-                                                                onChange={(e) => handleFieldChange(banner.id, "alt", e.target.value)}
+                                                                onChange={(e) =>
+                                                                    handleFieldChange(
+                                                                        banner.id,
+                                                                        "alt",
+                                                                        e.target.value,
+                                                                    )
+                                                                }
                                                                 fullWidth
                                                                 size="small"
                                                                 sx={{ mb: 1 }}
@@ -470,7 +576,13 @@ export const AdminHomePage = () => {
                                                             <TextField
                                                                 label="Description"
                                                                 value={banner.description}
-                                                                onChange={(e) => handleFieldChange(banner.id, "description", e.target.value)}
+                                                                onChange={(e) =>
+                                                                    handleFieldChange(
+                                                                        banner.id,
+                                                                        "description",
+                                                                        e.target.value,
+                                                                    )
+                                                                }
                                                                 fullWidth
                                                                 size="small"
                                                                 multiline
@@ -481,7 +593,13 @@ export const AdminHomePage = () => {
                                                                 control={
                                                                     <Switch
                                                                         checked={banner.isActive}
-                                                                        onChange={(e) => handleFieldChange(banner.id, "isActive", e.target.checked)}
+                                                                        onChange={(e) =>
+                                                                            handleFieldChange(
+                                                                                banner.id,
+                                                                                "isActive",
+                                                                                e.target.checked,
+                                                                            )
+                                                                        }
                                                                         data-testid={`hero-active-switch-${index}`}
                                                                     />
                                                                 }
@@ -489,10 +607,12 @@ export const AdminHomePage = () => {
                                                                 sx={{ mt: 1 }}
                                                             />
                                                         </Box>
-                                                        
+
                                                         <CardActions>
                                                             <IconButton
-                                                                onClick={() => handleDeleteBanner(banner.id)}
+                                                                onClick={() =>
+                                                                    handleDeleteBanner(banner.id)
+                                                                }
                                                                 color="error"
                                                                 data-testid={`hero-delete-button-${index}`}
                                                             >
@@ -560,7 +680,10 @@ export const AdminHomePage = () => {
 
                     {/* Seasonal Sub-tabs */}
                     <Paper sx={{ mb: 4 }}>
-                        <Tabs value={selectedSeasonalTab} onChange={(_, v) => setSelectedSeasonalTab(v)}>
+                        <Tabs
+                            value={selectedSeasonalTab}
+                            onChange={(_, v) => setSelectedSeasonalTab(v)}
+                        >
                             <Tab label="Seasonal Plants" />
                             <Tab label="Plant Care Tips" />
                         </Tabs>
@@ -575,27 +698,49 @@ export const AdminHomePage = () => {
                                     variant="contained"
                                     startIcon={<Plus size={20} />}
                                     onClick={() => handlePlantEdit()}
+                                    data-testid="add-plant-button"
                                 >
                                     Add Plant
                                 </Button>
                             </Box>
 
                             <Grid container spacing={3}>
-                                {plants.map((plant: SeasonalPlant) => {
+                                {plants.map((plant: SeasonalPlant, index: number) => {
                                     const IconComponent = getIconComponent(plant.icon);
                                     return (
                                         <Grid item xs={12} sm={6} md={4} key={plant.id}>
-                                            <Card sx={{ height: "100%" }}>
+                                            <Card
+                                                sx={{ height: "100%" }}
+                                                data-testid={`plant-card-${index}`}
+                                            >
                                                 <CardContent>
-                                                    <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
-                                                        <IconComponent size={32} color={palette.primary.main} />
+                                                    <Box
+                                                        sx={{
+                                                            display: "flex",
+                                                            justifyContent: "space-between",
+                                                            mb: 2,
+                                                        }}
+                                                    >
+                                                        <IconComponent
+                                                            size={32}
+                                                            color={palette.primary.main}
+                                                        />
                                                         <Stack direction="row" spacing={1}>
-                                                            <IconButton size="small" onClick={() => handlePlantEdit(plant)}>
+                                                            <IconButton
+                                                                size="small"
+                                                                onClick={() =>
+                                                                    handlePlantEdit(plant)
+                                                                }
+                                                                data-testid={`edit-plant-${index}`}
+                                                            >
                                                                 <Edit3 size={18} />
                                                             </IconButton>
-                                                            <IconButton 
-                                                                size="small" 
-                                                                onClick={() => handlePlantDelete(plant)}
+                                                            <IconButton
+                                                                size="small"
+                                                                onClick={() =>
+                                                                    handlePlantDelete(plant)
+                                                                }
+                                                                data-testid={`delete-plant-${index}`}
                                                             >
                                                                 <Trash2 size={18} />
                                                             </IconButton>
@@ -604,16 +749,39 @@ export const AdminHomePage = () => {
                                                     <Typography variant="h6" sx={{ mb: 1 }}>
                                                         {plant.name}
                                                     </Typography>
-                                                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                                    <Typography
+                                                        variant="body2"
+                                                        color="text.secondary"
+                                                        sx={{ mb: 2 }}
+                                                    >
                                                         {plant.description}
                                                     </Typography>
-                                                    <Stack direction="row" spacing={1} flexWrap="wrap">
-                                                        <Chip label={plant.season} size="small" color="primary" />
-                                                        <Chip label={plant.careLevel} size="small" />
-                                                        <Chip 
-                                                            label={plant.isActive ? "Active" : "Inactive"} 
-                                                            size="small" 
-                                                            color={plant.isActive ? "success" : "default"}
+                                                    <Stack
+                                                        direction="row"
+                                                        spacing={1}
+                                                        flexWrap="wrap"
+                                                    >
+                                                        <Chip
+                                                            label={plant.season}
+                                                            size="small"
+                                                            color="primary"
+                                                        />
+                                                        <Chip
+                                                            label={plant.careLevel}
+                                                            size="small"
+                                                        />
+                                                        <Chip
+                                                            label={
+                                                                plant.isActive
+                                                                    ? "Active"
+                                                                    : "Inactive"
+                                                            }
+                                                            size="small"
+                                                            color={
+                                                                plant.isActive
+                                                                    ? "success"
+                                                                    : "default"
+                                                            }
                                                         />
                                                     </Stack>
                                                 </CardContent>
@@ -634,41 +802,65 @@ export const AdminHomePage = () => {
                                     variant="contained"
                                     startIcon={<Plus size={20} />}
                                     onClick={() => handleTipEdit()}
+                                    data-testid="add-tip-button"
                                 >
                                     Add Tip
                                 </Button>
                             </Box>
 
                             <Grid container spacing={3}>
-                                {tips.map((tip: PlantTip) => (
+                                {tips.map((tip: PlantTip, index: number) => (
                                     <Grid item xs={12} md={6} key={tip.id}>
-                                        <Card>
+                                        <Card data-testid={`tip-card-${index}`}>
                                             <CardContent>
-                                                <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
+                                                <Box
+                                                    sx={{
+                                                        display: "flex",
+                                                        justifyContent: "space-between",
+                                                        mb: 2,
+                                                    }}
+                                                >
                                                     <Typography variant="h6">
                                                         {tip.title}
                                                     </Typography>
                                                     <Stack direction="row" spacing={1}>
-                                                        <IconButton size="small" onClick={() => handleTipEdit(tip)}>
+                                                        <IconButton
+                                                            size="small"
+                                                            onClick={() => handleTipEdit(tip)}
+                                                            data-testid={`edit-tip-${index}`}
+                                                        >
                                                             <Edit3 size={18} />
                                                         </IconButton>
-                                                        <IconButton 
+                                                        <IconButton
                                                             size="small"
                                                             onClick={() => handleTipDelete(tip)}
+                                                            data-testid={`delete-tip-${index}`}
                                                         >
                                                             <Trash2 size={18} />
                                                         </IconButton>
                                                     </Stack>
                                                 </Box>
-                                                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                                <Typography
+                                                    variant="body2"
+                                                    color="text.secondary"
+                                                    sx={{ mb: 2 }}
+                                                >
                                                     {tip.description}
                                                 </Typography>
                                                 <Stack direction="row" spacing={1}>
-                                                    <Chip label={tip.category} size="small" color="primary" />
-                                                    <Chip label={tip.season} size="small" color="secondary" />
-                                                    <Chip 
-                                                        label={tip.isActive ? "Active" : "Inactive"} 
-                                                        size="small" 
+                                                    <Chip
+                                                        label={tip.category}
+                                                        size="small"
+                                                        color="primary"
+                                                    />
+                                                    <Chip
+                                                        label={tip.season}
+                                                        size="small"
+                                                        color="secondary"
+                                                    />
+                                                    <Chip
+                                                        label={tip.isActive ? "Active" : "Inactive"}
+                                                        size="small"
                                                         color={tip.isActive ? "success" : "default"}
                                                     />
                                                 </Stack>
@@ -683,7 +875,12 @@ export const AdminHomePage = () => {
             )}
 
             {/* Plant Edit Dialog */}
-            <Dialog open={plantDialogOpen} onClose={() => setPlantDialogOpen(false)} maxWidth="sm" fullWidth>
+            <Dialog
+                open={plantDialogOpen}
+                onClose={() => setPlantDialogOpen(false)}
+                maxWidth="sm"
+                fullWidth
+            >
                 <DialogTitle>{editingPlant?.id ? "Edit Plant" : "Add Plant"}</DialogTitle>
                 <DialogContent>
                     <Box sx={{ pt: 2 }}>
@@ -691,8 +888,11 @@ export const AdminHomePage = () => {
                             fullWidth
                             label="Name"
                             value={editingPlant?.name || ""}
-                            onChange={(e) => setEditingPlant(prev => ({ ...prev!, name: e.target.value }))}
+                            onChange={(e) =>
+                                setEditingPlant((prev) => ({ ...prev!, name: e.target.value }))
+                            }
                             sx={{ mb: 2 }}
+                            data-testid="plant-name-input"
                         />
                         <TextField
                             fullWidth
@@ -700,8 +900,14 @@ export const AdminHomePage = () => {
                             rows={3}
                             label="Description"
                             value={editingPlant?.description || ""}
-                            onChange={(e) => setEditingPlant(prev => ({ ...prev!, description: e.target.value }))}
+                            onChange={(e) =>
+                                setEditingPlant((prev) => ({
+                                    ...prev!,
+                                    description: e.target.value,
+                                }))
+                            }
                             sx={{ mb: 2 }}
+                            data-testid="plant-description-input"
                         />
                         <Grid container spacing={2}>
                             <Grid item xs={6}>
@@ -710,8 +916,14 @@ export const AdminHomePage = () => {
                                     select
                                     label="Season"
                                     value={editingPlant?.season || "Spring"}
-                                    onChange={(e) => setEditingPlant(prev => ({ ...prev!, season: e.target.value }))}
+                                    onChange={(e) =>
+                                        setEditingPlant((prev) => ({
+                                            ...prev!,
+                                            season: e.target.value,
+                                        }))
+                                    }
                                     SelectProps={{ native: true }}
+                                    data-testid="plant-season-select"
                                 >
                                     <option value="Spring">Spring</option>
                                     <option value="Summer">Summer</option>
@@ -725,8 +937,14 @@ export const AdminHomePage = () => {
                                     select
                                     label="Care Level"
                                     value={editingPlant?.careLevel || "Easy"}
-                                    onChange={(e) => setEditingPlant(prev => ({ ...prev!, careLevel: e.target.value }))}
+                                    onChange={(e) =>
+                                        setEditingPlant((prev) => ({
+                                            ...prev!,
+                                            careLevel: e.target.value,
+                                        }))
+                                    }
                                     SelectProps={{ native: true }}
+                                    data-testid="plant-care-level-select"
                                 >
                                     <option value="Easy">Easy</option>
                                     <option value="Medium">Medium</option>
@@ -734,14 +952,19 @@ export const AdminHomePage = () => {
                                 </TextField>
                             </Grid>
                         </Grid>
-                        <Typography variant="body2" sx={{ mt: 2, mb: 1 }}>Icon</Typography>
+                        <Typography variant="body2" sx={{ mt: 2, mb: 1 }}>
+                            Icon
+                        </Typography>
                         <ToggleButtonGroup
                             value={editingPlant?.icon || "leaf"}
                             exclusive
-                            onChange={(_, value) => value && setEditingPlant(prev => ({ ...prev!, icon: value }))}
+                            onChange={(_, value) =>
+                                value && setEditingPlant((prev) => ({ ...prev!, icon: value }))
+                            }
                             sx={{ mb: 2 }}
+                            data-testid="plant-icon-group"
                         >
-                            {iconOptions.map(option => {
+                            {iconOptions.map((option) => {
                                 const IconComp = option.icon;
                                 return (
                                     <ToggleButton key={option.value} value={option.value}>
@@ -754,8 +977,14 @@ export const AdminHomePage = () => {
                             <ToggleButton
                                 value="check"
                                 selected={editingPlant?.isActive}
-                                onChange={() => setEditingPlant(prev => ({ ...prev!, isActive: !prev?.isActive }))}
+                                onChange={() =>
+                                    setEditingPlant((prev) => ({
+                                        ...prev!,
+                                        isActive: !prev?.isActive,
+                                    }))
+                                }
                                 sx={{ mt: 2 }}
+                                data-testid="plant-active-toggle"
                             >
                                 {editingPlant?.isActive ? "Active" : "Inactive"}
                             </ToggleButton>
@@ -763,11 +992,17 @@ export const AdminHomePage = () => {
                     </Box>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setPlantDialogOpen(false)}>Cancel</Button>
-                    <Button 
-                        variant="contained" 
+                    <Button
+                        onClick={() => setPlantDialogOpen(false)}
+                        data-testid="plant-cancel-button"
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        variant="contained"
                         onClick={handlePlantSave}
                         disabled={isLoading}
+                        data-testid="plant-save-button"
                     >
                         {isLoading ? "Saving..." : "Save"}
                     </Button>
@@ -775,7 +1010,12 @@ export const AdminHomePage = () => {
             </Dialog>
 
             {/* Tip Edit Dialog */}
-            <Dialog open={tipDialogOpen} onClose={() => setTipDialogOpen(false)} maxWidth="sm" fullWidth>
+            <Dialog
+                open={tipDialogOpen}
+                onClose={() => setTipDialogOpen(false)}
+                maxWidth="sm"
+                fullWidth
+            >
                 <DialogTitle>{editingTip?.id ? "Edit Tip" : "Add Tip"}</DialogTitle>
                 <DialogContent>
                     <Box sx={{ pt: 2 }}>
@@ -783,8 +1023,11 @@ export const AdminHomePage = () => {
                             fullWidth
                             label="Title"
                             value={editingTip?.title || ""}
-                            onChange={(e) => setEditingTip(prev => ({ ...prev!, title: e.target.value }))}
+                            onChange={(e) =>
+                                setEditingTip((prev) => ({ ...prev!, title: e.target.value }))
+                            }
                             sx={{ mb: 2 }}
+                            data-testid="tip-title-input"
                         />
                         <TextField
                             fullWidth
@@ -792,8 +1035,11 @@ export const AdminHomePage = () => {
                             rows={3}
                             label="Description"
                             value={editingTip?.description || ""}
-                            onChange={(e) => setEditingTip(prev => ({ ...prev!, description: e.target.value }))}
+                            onChange={(e) =>
+                                setEditingTip((prev) => ({ ...prev!, description: e.target.value }))
+                            }
                             sx={{ mb: 2 }}
+                            data-testid="tip-description-input"
                         />
                         <Grid container spacing={2}>
                             <Grid item xs={6}>
@@ -802,8 +1048,14 @@ export const AdminHomePage = () => {
                                     select
                                     label="Category"
                                     value={editingTip?.category || "General"}
-                                    onChange={(e) => setEditingTip(prev => ({ ...prev!, category: e.target.value }))}
+                                    onChange={(e) =>
+                                        setEditingTip((prev) => ({
+                                            ...prev!,
+                                            category: e.target.value,
+                                        }))
+                                    }
                                     SelectProps={{ native: true }}
+                                    data-testid="tip-category-select"
                                 >
                                     <option value="Watering">Watering</option>
                                     <option value="Fertilizing">Fertilizing</option>
@@ -818,8 +1070,14 @@ export const AdminHomePage = () => {
                                     select
                                     label="Season"
                                     value={editingTip?.season || "Year-round"}
-                                    onChange={(e) => setEditingTip(prev => ({ ...prev!, season: e.target.value }))}
+                                    onChange={(e) =>
+                                        setEditingTip((prev) => ({
+                                            ...prev!,
+                                            season: e.target.value,
+                                        }))
+                                    }
                                     SelectProps={{ native: true }}
+                                    data-testid="tip-season-select"
                                 >
                                     <option value="Spring">Spring</option>
                                     <option value="Summer">Summer</option>
@@ -833,8 +1091,14 @@ export const AdminHomePage = () => {
                             <ToggleButton
                                 value="check"
                                 selected={editingTip?.isActive}
-                                onChange={() => setEditingTip(prev => ({ ...prev!, isActive: !prev?.isActive }))}
+                                onChange={() =>
+                                    setEditingTip((prev) => ({
+                                        ...prev!,
+                                        isActive: !prev?.isActive,
+                                    }))
+                                }
                                 sx={{ mt: 2 }}
+                                data-testid="tip-active-toggle"
                             >
                                 {editingTip?.isActive ? "Active" : "Inactive"}
                             </ToggleButton>
@@ -842,23 +1106,29 @@ export const AdminHomePage = () => {
                     </Box>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setTipDialogOpen(false)}>Cancel</Button>
-                    <Button 
-                        variant="contained" 
+                    <Button onClick={() => setTipDialogOpen(false)} data-testid="tip-cancel-button">
+                        Cancel
+                    </Button>
+                    <Button
+                        variant="contained"
                         onClick={handleTipSave}
                         disabled={isLoading}
+                        data-testid="tip-save-button"
                     >
                         {isLoading ? "Saving..." : "Save"}
                     </Button>
                 </DialogActions>
             </Dialog>
-            
+
             <Snackbar
                 open={snackbar.open}
                 autoHideDuration={6000}
                 onClose={() => setSnackbar({ ...snackbar, open: false })}
             >
-                <Alert severity={snackbar.severity} onClose={() => setSnackbar({ ...snackbar, open: false })}>
+                <Alert
+                    severity={snackbar.severity}
+                    onClose={() => setSnackbar({ ...snackbar, open: false })}
+                >
                     {snackbar.message}
                 </Alert>
             </Snackbar>

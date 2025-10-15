@@ -1,8 +1,41 @@
-import { Box, Button, Card, CardContent, Chip, Container, Dialog, DialogActions, DialogContent, DialogTitle, Grid, IconButton, Paper, Stack, Tab, Tabs, TextField, ToggleButton, ToggleButtonGroup, Typography, useTheme } from "@mui/material";
+import {
+    Box,
+    Button,
+    Card,
+    CardContent,
+    Chip,
+    Container,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    Grid,
+    IconButton,
+    Paper,
+    Stack,
+    Tab,
+    Tabs,
+    TextField,
+    ToggleButton,
+    ToggleButtonGroup,
+    Typography,
+    useTheme,
+} from "@mui/material";
 import { useLandingPageContent, useUpdateLandingPageContent } from "api/rest/hooks";
 import { AdminTabs, PageContainer, TopBar } from "components";
 import { AdminTabOption } from "components/breadcrumbs/AdminTabs/AdminTabs";
-import { Flower, Leaf, Lightbulb, Plus, Settings, Snowflake, Sprout, Star, Trash2, Edit3, Check, X } from "lucide-react";
+import {
+    Flower,
+    Leaf,
+    Lightbulb,
+    Plus,
+    Settings,
+    Snowflake,
+    Sprout,
+    Star,
+    Trash2,
+    Edit3,
+} from "lucide-react";
 import { useState } from "react";
 import { PubSub } from "utils/pubsub";
 import { SnackSeverity } from "components/dialogs/Snack/Snack";
@@ -38,7 +71,7 @@ const iconOptions = [
 ];
 
 const getIconComponent = (iconName: string) => {
-    const option = iconOptions.find(opt => opt.value === iconName);
+    const option = iconOptions.find((opt) => opt.value === iconName);
     return option ? option.icon : Leaf;
 };
 
@@ -51,7 +84,7 @@ export const AdminSeasonalContentPage = () => {
     const [tipDialogOpen, setTipDialogOpen] = useState(false);
 
     // REST API queries and mutations
-    const { data, loading, error, refetch } = useLandingPageContent(false);
+    const { data, refetch } = useLandingPageContent(false);
     const updateLandingPageContent = useUpdateLandingPageContent();
 
     const handleApiError = (error: any, defaultMessage: string) => {
@@ -64,29 +97,33 @@ export const AdminSeasonalContentPage = () => {
     };
 
     const handlePlantEdit = (plant?: SeasonalPlant) => {
-        setEditingPlant(plant || {
-            id: "",
-            name: "",
-            description: "",
-            season: "Spring",
-            careLevel: "Easy",
-            icon: "leaf",
-            displayOrder: data?.seasonalPlants?.length || 0,
-            isActive: true,
-        });
+        setEditingPlant(
+            plant || {
+                id: "",
+                name: "",
+                description: "",
+                season: "Spring",
+                careLevel: "Easy",
+                icon: "leaf",
+                displayOrder: data?.seasonalPlants?.length || 0,
+                isActive: true,
+            },
+        );
         setPlantDialogOpen(true);
     };
 
     const handleTipEdit = (tip?: PlantTip) => {
-        setEditingTip(tip || {
-            id: "",
-            title: "",
-            description: "",
-            category: "General",
-            season: "Year-round",
-            displayOrder: data?.plantTips?.length || 0,
-            isActive: true,
-        });
+        setEditingTip(
+            tip || {
+                id: "",
+                title: "",
+                description: "",
+                category: "General",
+                season: "Year-round",
+                displayOrder: data?.plantTips?.length || 0,
+                isActive: true,
+            },
+        );
         setTipDialogOpen(true);
     };
 
@@ -96,26 +133,28 @@ export const AdminSeasonalContentPage = () => {
         try {
             const currentPlants = data?.seasonalPlants || [];
             let updatedPlants;
-            
+
             if (editingPlant.id) {
                 // Update existing plant
-                updatedPlants = currentPlants.map(plant => 
+                updatedPlants = currentPlants.map((plant) =>
                     plant.id === editingPlant.id ? editingPlant : plant,
                 );
             } else {
                 // Add new plant with generated ID
-                const newPlant = { 
-                    ...editingPlant, 
-                    id: `plant-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, 
+                const newPlant = {
+                    ...editingPlant,
+                    id: `plant-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                 };
                 updatedPlants = [...currentPlants, newPlant];
             }
 
             await updateLandingPageContent.mutate({ seasonalPlants: updatedPlants });
+            // Refetch data FIRST to ensure UI is updated
+            await refetch();
+            // THEN show success and close dialog
             handleApiSuccess("Plant saved successfully!");
             setPlantDialogOpen(false);
             setEditingPlant(null);
-            await refetch();
         } catch (error) {
             handleApiError(error, "Failed to save plant");
         }
@@ -127,26 +166,28 @@ export const AdminSeasonalContentPage = () => {
         try {
             const currentTips = data?.plantTips || [];
             let updatedTips;
-            
+
             if (editingTip.id) {
                 // Update existing tip
-                updatedTips = currentTips.map(tip => 
+                updatedTips = currentTips.map((tip) =>
                     tip.id === editingTip.id ? editingTip : tip,
                 );
             } else {
                 // Add new tip with generated ID
-                const newTip = { 
-                    ...editingTip, 
-                    id: `tip-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, 
+                const newTip = {
+                    ...editingTip,
+                    id: `tip-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                 };
                 updatedTips = [...currentTips, newTip];
             }
 
             await updateLandingPageContent.mutate({ plantTips: updatedTips });
+            // Refetch data FIRST to ensure UI is updated
+            await refetch();
+            // THEN show success and close dialog
             handleApiSuccess("Tip saved successfully!");
             setTipDialogOpen(false);
             setEditingTip(null);
-            await refetch();
         } catch (error) {
             handleApiError(error, "Failed to save tip");
         }
@@ -157,12 +198,14 @@ export const AdminSeasonalContentPage = () => {
 
     const handlePlantDelete = async (plant: SeasonalPlant) => {
         if (!window.confirm(`Delete ${plant.name}?`)) return;
-        
+
         try {
-            const updatedPlants = plants.filter(p => p.id !== plant.id);
+            const updatedPlants = plants.filter((p) => p.id !== plant.id);
             await updateLandingPageContent.mutate({ seasonalPlants: updatedPlants });
-            handleApiSuccess("Plant deleted successfully!");
+            // Refetch data FIRST to ensure UI is updated
             await refetch();
+            // THEN show success message
+            handleApiSuccess("Plant deleted successfully!");
         } catch (error) {
             handleApiError(error, "Failed to delete plant");
         }
@@ -170,12 +213,14 @@ export const AdminSeasonalContentPage = () => {
 
     const handleTipDelete = async (tip: PlantTip) => {
         if (!window.confirm(`Delete ${tip.title}?`)) return;
-        
+
         try {
-            const updatedTips = tips.filter(t => t.id !== tip.id);
+            const updatedTips = tips.filter((t) => t.id !== tip.id);
             await updateLandingPageContent.mutate({ plantTips: updatedTips });
-            handleApiSuccess("Tip deleted successfully!");
+            // Refetch data FIRST to ensure UI is updated
             await refetch();
+            // THEN show success message
+            handleApiSuccess("Tip deleted successfully!");
         } catch (error) {
             handleApiError(error, "Failed to delete tip");
         }
@@ -208,7 +253,7 @@ export const AdminSeasonalContentPage = () => {
                             <CardContent sx={{ textAlign: "center" }}>
                                 <Leaf size={32} color={palette.primary.main} />
                                 <Typography variant="h5" sx={{ mt: 1 }}>
-                                    {plants.filter(p => p.isActive).length}
+                                    {plants.filter((p) => p.isActive).length}
                                 </Typography>
                                 <Typography variant="body2" color="text.secondary">
                                     Active Plants
@@ -221,7 +266,7 @@ export const AdminSeasonalContentPage = () => {
                             <CardContent sx={{ textAlign: "center" }}>
                                 <Lightbulb size={32} color={palette.secondary.main} />
                                 <Typography variant="h5" sx={{ mt: 1 }}>
-                                    {tips.filter(t => t.isActive).length}
+                                    {tips.filter((t) => t.isActive).length}
                                 </Typography>
                                 <Typography variant="body2" color="text.secondary">
                                     Active Tips
@@ -244,6 +289,7 @@ export const AdminSeasonalContentPage = () => {
                                     size="small"
                                     onClick={handleInvalidateCache}
                                     sx={{ textTransform: "none" }}
+                                    data-testid="clear-cache-button"
                                 >
                                     Clear Cache
                                 </Button>
@@ -269,27 +315,45 @@ export const AdminSeasonalContentPage = () => {
                                 variant="contained"
                                 startIcon={<Plus size={20} />}
                                 onClick={() => handlePlantEdit()}
+                                data-testid="add-plant-button"
                             >
                                 Add Plant
                             </Button>
                         </Box>
 
                         <Grid container spacing={3}>
-                            {plants.map((plant) => {
+                            {plants.map((plant, index) => {
                                 const IconComponent = getIconComponent(plant.icon);
                                 return (
                                     <Grid item xs={12} sm={6} md={4} key={plant.id}>
-                                        <Card sx={{ height: "100%" }}>
+                                        <Card
+                                            sx={{ height: "100%" }}
+                                            data-testid={`plant-card-${index}`}
+                                        >
                                             <CardContent>
-                                                <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
-                                                    <IconComponent size={32} color={palette.primary.main} />
+                                                <Box
+                                                    sx={{
+                                                        display: "flex",
+                                                        justifyContent: "space-between",
+                                                        mb: 2,
+                                                    }}
+                                                >
+                                                    <IconComponent
+                                                        size={32}
+                                                        color={palette.primary.main}
+                                                    />
                                                     <Stack direction="row" spacing={1}>
-                                                        <IconButton size="small" onClick={() => handlePlantEdit(plant)}>
+                                                        <IconButton
+                                                            size="small"
+                                                            onClick={() => handlePlantEdit(plant)}
+                                                            data-testid={`edit-plant-${index}`}
+                                                        >
                                                             <Edit3 size={18} />
                                                         </IconButton>
-                                                        <IconButton 
-                                                            size="small" 
+                                                        <IconButton
+                                                            size="small"
                                                             onClick={() => handlePlantDelete(plant)}
+                                                            data-testid={`delete-plant-${index}`}
                                                         >
                                                             <Trash2 size={18} />
                                                         </IconButton>
@@ -298,16 +362,28 @@ export const AdminSeasonalContentPage = () => {
                                                 <Typography variant="h6" sx={{ mb: 1 }}>
                                                     {plant.name}
                                                 </Typography>
-                                                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                                <Typography
+                                                    variant="body2"
+                                                    color="text.secondary"
+                                                    sx={{ mb: 2 }}
+                                                >
                                                     {plant.description}
                                                 </Typography>
                                                 <Stack direction="row" spacing={1} flexWrap="wrap">
-                                                    <Chip label={plant.season} size="small" color="primary" />
+                                                    <Chip
+                                                        label={plant.season}
+                                                        size="small"
+                                                        color="primary"
+                                                    />
                                                     <Chip label={plant.careLevel} size="small" />
-                                                    <Chip 
-                                                        label={plant.isActive ? "Active" : "Inactive"} 
-                                                        size="small" 
-                                                        color={plant.isActive ? "success" : "default"}
+                                                    <Chip
+                                                        label={
+                                                            plant.isActive ? "Active" : "Inactive"
+                                                        }
+                                                        size="small"
+                                                        color={
+                                                            plant.isActive ? "success" : "default"
+                                                        }
                                                     />
                                                 </Stack>
                                             </CardContent>
@@ -328,41 +404,63 @@ export const AdminSeasonalContentPage = () => {
                                 variant="contained"
                                 startIcon={<Plus size={20} />}
                                 onClick={() => handleTipEdit()}
+                                data-testid="add-tip-button"
                             >
                                 Add Tip
                             </Button>
                         </Box>
 
                         <Grid container spacing={3}>
-                            {tips.map((tip) => (
+                            {tips.map((tip, index) => (
                                 <Grid item xs={12} md={6} key={tip.id}>
-                                    <Card>
+                                    <Card data-testid={`tip-card-${index}`}>
                                         <CardContent>
-                                            <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
-                                                <Typography variant="h6">
-                                                    {tip.title}
-                                                </Typography>
+                                            <Box
+                                                sx={{
+                                                    display: "flex",
+                                                    justifyContent: "space-between",
+                                                    mb: 2,
+                                                }}
+                                            >
+                                                <Typography variant="h6">{tip.title}</Typography>
                                                 <Stack direction="row" spacing={1}>
-                                                    <IconButton size="small" onClick={() => handleTipEdit(tip)}>
+                                                    <IconButton
+                                                        size="small"
+                                                        onClick={() => handleTipEdit(tip)}
+                                                        data-testid={`edit-tip-${index}`}
+                                                    >
                                                         <Edit3 size={18} />
                                                     </IconButton>
-                                                    <IconButton 
+                                                    <IconButton
                                                         size="small"
                                                         onClick={() => handleTipDelete(tip)}
+                                                        data-testid={`delete-tip-${index}`}
                                                     >
                                                         <Trash2 size={18} />
                                                     </IconButton>
                                                 </Stack>
                                             </Box>
-                                            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                            <Typography
+                                                variant="body2"
+                                                color="text.secondary"
+                                                sx={{ mb: 2 }}
+                                            >
                                                 {tip.description}
                                             </Typography>
                                             <Stack direction="row" spacing={1}>
-                                                <Chip label={tip.category} size="small" color="primary" />
-                                                <Chip label={tip.season} size="small" color="secondary" />
-                                                <Chip 
-                                                    label={tip.isActive ? "Active" : "Inactive"} 
-                                                    size="small" 
+                                                <Chip
+                                                    label={tip.category}
+                                                    size="small"
+                                                    color="primary"
+                                                />
+                                                <Chip
+                                                    label={tip.season}
+                                                    size="small"
+                                                    color="secondary"
+                                                />
+                                                <Chip
+                                                    label={tip.isActive ? "Active" : "Inactive"}
+                                                    size="small"
                                                     color={tip.isActive ? "success" : "default"}
                                                 />
                                             </Stack>
@@ -376,7 +474,12 @@ export const AdminSeasonalContentPage = () => {
             </Container>
 
             {/* Plant Edit Dialog */}
-            <Dialog open={plantDialogOpen} onClose={() => setPlantDialogOpen(false)} maxWidth="sm" fullWidth>
+            <Dialog
+                open={plantDialogOpen}
+                onClose={() => setPlantDialogOpen(false)}
+                maxWidth="sm"
+                fullWidth
+            >
                 <DialogTitle>{editingPlant?.id ? "Edit Plant" : "Add Plant"}</DialogTitle>
                 <DialogContent>
                     <Box sx={{ pt: 2 }}>
@@ -384,8 +487,11 @@ export const AdminSeasonalContentPage = () => {
                             fullWidth
                             label="Name"
                             value={editingPlant?.name || ""}
-                            onChange={(e) => setEditingPlant(prev => ({ ...prev!, name: e.target.value }))}
+                            onChange={(e) =>
+                                setEditingPlant((prev) => ({ ...prev!, name: e.target.value }))
+                            }
                             sx={{ mb: 2 }}
+                            data-testid="plant-name-input"
                         />
                         <TextField
                             fullWidth
@@ -393,8 +499,14 @@ export const AdminSeasonalContentPage = () => {
                             rows={3}
                             label="Description"
                             value={editingPlant?.description || ""}
-                            onChange={(e) => setEditingPlant(prev => ({ ...prev!, description: e.target.value }))}
+                            onChange={(e) =>
+                                setEditingPlant((prev) => ({
+                                    ...prev!,
+                                    description: e.target.value,
+                                }))
+                            }
                             sx={{ mb: 2 }}
+                            data-testid="plant-description-input"
                         />
                         <Grid container spacing={2}>
                             <Grid item xs={6}>
@@ -403,8 +515,14 @@ export const AdminSeasonalContentPage = () => {
                                     select
                                     label="Season"
                                     value={editingPlant?.season || "Spring"}
-                                    onChange={(e) => setEditingPlant(prev => ({ ...prev!, season: e.target.value }))}
+                                    onChange={(e) =>
+                                        setEditingPlant((prev) => ({
+                                            ...prev!,
+                                            season: e.target.value,
+                                        }))
+                                    }
                                     SelectProps={{ native: true }}
+                                    data-testid="plant-season-select"
                                 >
                                     <option value="Spring">Spring</option>
                                     <option value="Summer">Summer</option>
@@ -418,8 +536,14 @@ export const AdminSeasonalContentPage = () => {
                                     select
                                     label="Care Level"
                                     value={editingPlant?.careLevel || "Easy"}
-                                    onChange={(e) => setEditingPlant(prev => ({ ...prev!, careLevel: e.target.value }))}
+                                    onChange={(e) =>
+                                        setEditingPlant((prev) => ({
+                                            ...prev!,
+                                            careLevel: e.target.value,
+                                        }))
+                                    }
                                     SelectProps={{ native: true }}
+                                    data-testid="plant-care-level-select"
                                 >
                                     <option value="Easy">Easy</option>
                                     <option value="Medium">Medium</option>
@@ -427,14 +551,19 @@ export const AdminSeasonalContentPage = () => {
                                 </TextField>
                             </Grid>
                         </Grid>
-                        <Typography variant="body2" sx={{ mt: 2, mb: 1 }}>Icon</Typography>
+                        <Typography variant="body2" sx={{ mt: 2, mb: 1 }}>
+                            Icon
+                        </Typography>
                         <ToggleButtonGroup
                             value={editingPlant?.icon || "leaf"}
                             exclusive
-                            onChange={(_, value) => value && setEditingPlant(prev => ({ ...prev!, icon: value }))}
+                            onChange={(_, value) =>
+                                value && setEditingPlant((prev) => ({ ...prev!, icon: value }))
+                            }
                             sx={{ mb: 2 }}
+                            data-testid="plant-icon-group"
                         >
-                            {iconOptions.map(option => {
+                            {iconOptions.map((option) => {
                                 const IconComp = option.icon;
                                 return (
                                     <ToggleButton key={option.value} value={option.value}>
@@ -447,8 +576,14 @@ export const AdminSeasonalContentPage = () => {
                             <ToggleButton
                                 value="check"
                                 selected={editingPlant?.isActive}
-                                onChange={() => setEditingPlant(prev => ({ ...prev!, isActive: !prev?.isActive }))}
+                                onChange={() =>
+                                    setEditingPlant((prev) => ({
+                                        ...prev!,
+                                        isActive: !prev?.isActive,
+                                    }))
+                                }
                                 sx={{ mt: 2 }}
+                                data-testid="plant-active-toggle"
                             >
                                 {editingPlant?.isActive ? "Active" : "Inactive"}
                             </ToggleButton>
@@ -456,11 +591,17 @@ export const AdminSeasonalContentPage = () => {
                     </Box>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setPlantDialogOpen(false)}>Cancel</Button>
-                    <Button 
-                        variant="contained" 
+                    <Button
+                        onClick={() => setPlantDialogOpen(false)}
+                        data-testid="plant-cancel-button"
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        variant="contained"
                         onClick={handlePlantSave}
                         disabled={updateLandingPageContent.loading}
+                        data-testid="plant-save-button"
                     >
                         {updateLandingPageContent.loading ? "Saving..." : "Save"}
                     </Button>
@@ -468,7 +609,12 @@ export const AdminSeasonalContentPage = () => {
             </Dialog>
 
             {/* Tip Edit Dialog */}
-            <Dialog open={tipDialogOpen} onClose={() => setTipDialogOpen(false)} maxWidth="sm" fullWidth>
+            <Dialog
+                open={tipDialogOpen}
+                onClose={() => setTipDialogOpen(false)}
+                maxWidth="sm"
+                fullWidth
+            >
                 <DialogTitle>{editingTip?.id ? "Edit Tip" : "Add Tip"}</DialogTitle>
                 <DialogContent>
                     <Box sx={{ pt: 2 }}>
@@ -476,8 +622,11 @@ export const AdminSeasonalContentPage = () => {
                             fullWidth
                             label="Title"
                             value={editingTip?.title || ""}
-                            onChange={(e) => setEditingTip(prev => ({ ...prev!, title: e.target.value }))}
+                            onChange={(e) =>
+                                setEditingTip((prev) => ({ ...prev!, title: e.target.value }))
+                            }
                             sx={{ mb: 2 }}
+                            data-testid="tip-title-input"
                         />
                         <TextField
                             fullWidth
@@ -485,8 +634,11 @@ export const AdminSeasonalContentPage = () => {
                             rows={3}
                             label="Description"
                             value={editingTip?.description || ""}
-                            onChange={(e) => setEditingTip(prev => ({ ...prev!, description: e.target.value }))}
+                            onChange={(e) =>
+                                setEditingTip((prev) => ({ ...prev!, description: e.target.value }))
+                            }
                             sx={{ mb: 2 }}
+                            data-testid="tip-description-input"
                         />
                         <Grid container spacing={2}>
                             <Grid item xs={6}>
@@ -495,8 +647,14 @@ export const AdminSeasonalContentPage = () => {
                                     select
                                     label="Category"
                                     value={editingTip?.category || "General"}
-                                    onChange={(e) => setEditingTip(prev => ({ ...prev!, category: e.target.value }))}
+                                    onChange={(e) =>
+                                        setEditingTip((prev) => ({
+                                            ...prev!,
+                                            category: e.target.value,
+                                        }))
+                                    }
                                     SelectProps={{ native: true }}
+                                    data-testid="tip-category-select"
                                 >
                                     <option value="Watering">Watering</option>
                                     <option value="Fertilizing">Fertilizing</option>
@@ -511,8 +669,14 @@ export const AdminSeasonalContentPage = () => {
                                     select
                                     label="Season"
                                     value={editingTip?.season || "Year-round"}
-                                    onChange={(e) => setEditingTip(prev => ({ ...prev!, season: e.target.value }))}
+                                    onChange={(e) =>
+                                        setEditingTip((prev) => ({
+                                            ...prev!,
+                                            season: e.target.value,
+                                        }))
+                                    }
                                     SelectProps={{ native: true }}
+                                    data-testid="tip-season-select"
                                 >
                                     <option value="Spring">Spring</option>
                                     <option value="Summer">Summer</option>
@@ -526,8 +690,14 @@ export const AdminSeasonalContentPage = () => {
                             <ToggleButton
                                 value="check"
                                 selected={editingTip?.isActive}
-                                onChange={() => setEditingTip(prev => ({ ...prev!, isActive: !prev?.isActive }))}
+                                onChange={() =>
+                                    setEditingTip((prev) => ({
+                                        ...prev!,
+                                        isActive: !prev?.isActive,
+                                    }))
+                                }
                                 sx={{ mt: 2 }}
+                                data-testid="tip-active-toggle"
                             >
                                 {editingTip?.isActive ? "Active" : "Inactive"}
                             </ToggleButton>
@@ -535,11 +705,14 @@ export const AdminSeasonalContentPage = () => {
                     </Box>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setTipDialogOpen(false)}>Cancel</Button>
-                    <Button 
-                        variant="contained" 
+                    <Button onClick={() => setTipDialogOpen(false)} data-testid="tip-cancel-button">
+                        Cancel
+                    </Button>
+                    <Button
+                        variant="contained"
                         onClick={handleTipSave}
                         disabled={updateLandingPageContent.loading}
+                        data-testid="tip-save-button"
                     >
                         {updateLandingPageContent.loading ? "Saving..." : "Save"}
                     </Button>
