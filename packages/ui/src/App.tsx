@@ -8,8 +8,6 @@ import { BusinessContext } from "contexts/BusinessContext";
 import { SessionContext } from "contexts/SessionContext";
 import { ZIndexProvider } from "contexts/ZIndexContext";
 import { useWindowSize } from "hooks/useWindowSize";
-// ARCHIVED: Shopping filter removed - functionality moved to external system
-// import { shoppingFilterSideMenuDisplayData } from "pages/main/shopping/ShoppingFilterSideMenu/ShoppingFilterSideMenu";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
@@ -18,8 +16,6 @@ import { BusinessData, Session } from "types";
 import { PubSub, SideMenuPub, themes } from "utils";
 
 const menusDisplayData: { [key in SideMenuPub["id"]]: { persistentOnDesktop: boolean, sideForRightHanded: "left" | "right" } } = {
-    // ARCHIVED: Shopping filter removed - functionality moved to external system
-    // "shopping-filter-side-menu": shoppingFilterSideMenuDisplayData,
     "side-menu": sideMenuDisplayData,
 };
 

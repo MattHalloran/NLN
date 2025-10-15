@@ -1,17 +1,18 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { genErrorCode } from "./logger";
 import { randomString } from "./utils/random";
 
 // Mock the randomString function
-jest.mock("./utils/random", () => ({
-    randomString: jest.fn(),
+vi.mock("./utils/random", () => ({
+    randomString: vi.fn(),
 }));
 
 describe("logger", () => {
     describe("genErrorCode", () => {
-        const mockRandomString = randomString as jest.MockedFunction<typeof randomString>;
+        const mockRandomString = randomString as ReturnType<typeof vi.fn>;
 
         beforeEach(() => {
-            jest.clearAllMocks();
+            vi.clearAllMocks();
         });
 
         it("should generate error code with location code and random string", () => {

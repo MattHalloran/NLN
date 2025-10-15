@@ -27,15 +27,6 @@ export interface MenuTitleProps {
     title?: string;
 }
 
-// ARCHIVED: PlantDialog component moved to /archived
-// export interface PlantDialogProps {
-//     isAdminPage: boolean;
-//     plant: plants_plants | undefined;
-//     selectedSku: plants_plants_skus | undefined;
-//     onAddToCart: (sku: plants_plants_skus, quantity: number) => void;
-//     open: boolean;
-//     onClose: () => void;
-// }
 
 export interface PopoverWithArrowProps extends Omit<PopoverProps, "open" | "sx"> {
     anchorEl: HTMLElement | null;
@@ -68,21 +59,4 @@ export interface CustomerDialogProps {
     onClose: () => void;
 }
 
-// ARCHIVED: OrderDialog component moved to /archived
-// export interface OrderDialogProps {
-//     order: orders_orders;
-//     open?: boolean;
-//     onClose: () => void;
-// }
 
-export interface ListDialogProps {
-    open?: boolean;
-    onClose: (value?: string) => void;
-    title?: string;
-    data?: Array<[string, string]>;
-}
-
-export interface NewCustomerDialogProps {
-    open?: boolean;
-    onClose: () => void;
-}

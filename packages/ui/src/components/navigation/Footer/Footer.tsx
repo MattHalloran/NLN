@@ -20,7 +20,6 @@ import {
 import { isObject } from "lodash-es";
 import { useContext, useEffect } from "react";
 import { useLocation } from "route";
-// ARCHIVED: printAvailability functionality moved to external system
 import { getServerUrl } from "utils";
 
 export const Footer = () => {
@@ -165,28 +164,6 @@ export const Footer = () => {
                                 Credit App
                                 <ExternalLink size={12} />
                             </Link>
-                            {/* ARCHIVED: Print Availability functionality moved to external system
-                            <Link
-                                component="button"
-                                onClick={() => printAvailability(session, business?.BUSINESS_NAME?.Long, business?.PHONE?.Label, business?.EMAIL?.Label)}
-                                sx={{
-                                    color: "inherit",
-                                    textDecoration: "none",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: 1,
-                                    fontSize: "0.9rem",
-                                    transition: "all 0.3s ease",
-                                    "&:hover": {
-                                        color: palette.secondary.main,
-                                        transform: "translateX(4px)",
-                                    },
-                                }}
-                            >
-                                <Printer size={16} />
-                                Print Availability
-                            </Link>
-                            */}
                             <Link
                                 component="button"
                                 onClick={() => setLocation(APP_LINKS.Gallery)}

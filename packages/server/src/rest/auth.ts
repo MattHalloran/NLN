@@ -175,7 +175,7 @@ router.post("/login", async (req: Request, res: Response) => {
     } catch (error: any) {
         logger.error("Login error:", error);
         if (error instanceof CustomError) {
-            return res.status(401).json({ error: error.message, code: error.extensions?.code });
+            return res.status(401).json({ error: error.message, code: error.code });
         }
         return res.status(500).json({ error: "Login failed" });
     }
@@ -231,7 +231,7 @@ router.post("/signup", async (req: Request, res: Response) => {
             },
         });
 
-        await generateToken(res, customer.id, customer.businessId);
+        await generateToken(res, customer.id, customer.businessId ?? "");
 
         // Send verification email
         sendVerificationLink(email, customer.id);
@@ -265,7 +265,7 @@ router.post("/signup", async (req: Request, res: Response) => {
     } catch (error: any) {
         logger.error("Signup error:", error);
         if (error instanceof CustomError) {
-            return res.status(400).json({ error: error.message, code: error.extensions?.code });
+            return res.status(400).json({ error: error.message, code: error.code });
         }
         return res.status(500).json({ error: "Signup failed" });
     }
@@ -371,7 +371,7 @@ router.post("/reset-password", async (req: Request, res: Response) => {
     } catch (error: any) {
         logger.error("Reset password error:", error);
         if (error instanceof CustomError) {
-            return res.status(400).json({ error: error.message, code: error.extensions?.code });
+            return res.status(400).json({ error: error.message, code: error.code });
         }
         return res.status(500).json({ error: "Password reset failed" });
     }
@@ -411,7 +411,7 @@ router.post("/request-password-change", async (req: Request, res: Response) => {
     } catch (error: any) {
         logger.error("Request password change error:", error);
         if (error instanceof CustomError) {
-            return res.status(400).json({ error: error.message, code: error.extensions?.code });
+            return res.status(400).json({ error: error.message, code: error.code });
         }
         return res.status(500).json({ error: "Request failed" });
     }

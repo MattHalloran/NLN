@@ -393,16 +393,17 @@ export const AdminHomePage = () => {
                     />
                     
                     <Box sx={{ mt: 4, mb: 2, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <Typography variant="h5">Hero Banners</Typography>
+                        <Typography variant="h5" data-testid="hero-banners-title">Hero Banners</Typography>
                         {hasChanges && (
-                            <Box>
-                                <Button onClick={handleCancelChanges} sx={{ mr: 1 }}>
+                            <Box data-testid="hero-actions-container">
+                                <Button onClick={handleCancelChanges} sx={{ mr: 1 }} data-testid="hero-cancel-button">
                                     Cancel
                                 </Button>
-                                <Button 
-                                    variant="contained" 
+                                <Button
+                                    variant="contained"
                                     onClick={handleSaveHeroBanners}
                                     disabled={isLoading}
+                                    data-testid="hero-save-button"
                                 >
                                     Save Changes
                                 </Button>
@@ -424,8 +425,9 @@ export const AdminHomePage = () => {
                                                 <Card
                                                     ref={provided.innerRef}
                                                     {...provided.draggableProps}
-                                                    sx={{ 
-                                                        mb: 2, 
+                                                    data-testid={`hero-banner-card-${index}`}
+                                                    sx={{
+                                                        mb: 2,
                                                         opacity: snapshot.isDragging ? 0.5 : 1,
                                                         backgroundColor: snapshot.isDragging ? "action.hover" : "background.paper",
                                                     }}
@@ -463,6 +465,7 @@ export const AdminHomePage = () => {
                                                                 fullWidth
                                                                 size="small"
                                                                 sx={{ mb: 1 }}
+                                                                data-testid={`hero-alt-input-${index}`}
                                                             />
                                                             <TextField
                                                                 label="Description"
@@ -472,12 +475,14 @@ export const AdminHomePage = () => {
                                                                 size="small"
                                                                 multiline
                                                                 rows={2}
+                                                                data-testid={`hero-description-input-${index}`}
                                                             />
                                                             <FormControlLabel
                                                                 control={
                                                                     <Switch
                                                                         checked={banner.isActive}
                                                                         onChange={(e) => handleFieldChange(banner.id, "isActive", e.target.checked)}
+                                                                        data-testid={`hero-active-switch-${index}`}
                                                                     />
                                                                 }
                                                                 label="Active"
@@ -486,9 +491,10 @@ export const AdminHomePage = () => {
                                                         </Box>
                                                         
                                                         <CardActions>
-                                                            <IconButton 
+                                                            <IconButton
                                                                 onClick={() => handleDeleteBanner(banner.id)}
                                                                 color="error"
+                                                                data-testid={`hero-delete-button-${index}`}
                                                             >
                                                                 <DeleteIcon />
                                                             </IconButton>

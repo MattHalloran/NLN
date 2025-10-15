@@ -44,9 +44,10 @@ services:
       NODE_ENV: "development"
       JWT_SECRET: "${JWT_SECRET}"
       PROJECT_DIR: "${PROJECT_DIR:-/srv/app}"
+      PORT_SERVER: "${PORT_SERVER:-5331}"
       VITE_SERVER_LOCATION: "${SERVER_LOCATION}"
       VITE_PORT_SERVER: "${PORT_SERVER:-5331}"
-      REDIS_CONN: "redis:${PORT_REDIS:-6380}"
+      REDIS_CONN: "redis:6379"
       DB_CONN: "db:${PORT_DB:-5433}"
       DB_URL: "postgresql://${DB_USER}:${DB_PASSWORD}@db:5433/${DB_NAME}"
       CREATE_MOCK_DATA: "${CREATE_MOCK_DATA}"
@@ -70,6 +71,7 @@ services:
       - proxy
       - app
     volumes:
+      - ./node_modules:${PROJECT_DIR:-/srv/app}/node_modules
       - ./packages/server:${PROJECT_DIR:-/srv/app}/packages/server:z
       - ./packages/shared:${PROJECT_DIR:-/srv/app}/packages/shared:z
       - ./scripts:${PROJECT_DIR:-/srv/app}/scripts:z

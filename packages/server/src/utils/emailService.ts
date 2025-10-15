@@ -103,10 +103,20 @@ export class EmailService {
             return;
         }
 
+        // Read SMTP configuration from environment variables with sensible defaults
+        const smtpHost = process.env.SMTP_HOST || "smtp.gmail.com";
+        const smtpPort = parseInt(process.env.SMTP_PORT || "465", 10);
+        const smtpSecure = process.env.SMTP_SECURE !== "false"; // Default to true
+
+        logger.log(
+            LogLevel.info,
+            `📧 Configuring SMTP transport: ${smtpHost}:${smtpPort} (secure: ${smtpSecure})`
+        );
+
         this.transporter = nodemailer.createTransport({
-            host: "smtp.gmail.com",
-            port: 465,
-            secure: true,
+            host: smtpHost,
+            port: smtpPort,
+            secure: smtpSecure,
             auth: {
                 user: process.env.SITE_EMAIL_USERNAME,
                 pass: process.env.SITE_EMAIL_PASSWORD,

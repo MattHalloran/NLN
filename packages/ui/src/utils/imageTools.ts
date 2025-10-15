@@ -3,8 +3,12 @@ import { Image, ImageFile, ImageInfo } from "types";
 
 export const getImageFiles = (data: ImageInfo | Image | null | undefined): ImageFile[] => {
     if (!data) return [];
-    if ((data as Image).__typename === "Image") return (data as Image).files ?? [];
-    return getImageFiles((data as ImageInfo).image);
+    // If it has 'image' property, it's ImageInfo
+    if ("image" in data && data.image) {
+        return getImageFiles(data.image);
+    }
+    // Otherwise it's an Image
+    return (data as Image).files ?? [];
 };
 
 // Return the image name with the best-match size

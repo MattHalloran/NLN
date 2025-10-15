@@ -53,19 +53,14 @@ else
     exit 1
 fi
 
-# Check for required variables
-check_var() {
-    if [ -z "${!1}" ]; then
-        error "Variable ${1} is not set. Exiting..."
-        exit 1
-    else
-        info "Variable ${1} is set to ${!1}"
-    fi
-}
-check_var SERVER_LOCATION
-check_var PORT_SERVER
-check_var SERVER_URL
-check_var SITE_IP
+# Validate environment configuration
+header "Validating environment configuration"
+"${HERE}/validate-env.sh" "${ENV_FILE}"
+if [ $? -ne 0 ]; then
+    error "Environment validation failed. Please fix the errors and try again."
+    exit 1
+fi
+success "Environment configuration is valid"
 
 # Extract the current version number from the package.json file
 CURRENT_VERSION=$(cat ${HERE}/../packages/ui/package.json | grep version | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[[:space:]]')
@@ -164,19 +159,6 @@ sed -i'' "s|<UI_URL>|${UI_URL}|g" "${HERE}/../packages/ui/dist/manifest.light.js
 sed -i'' "s|\*.<DOMAIN>|*.${DOMAIN}|g" "${HERE}/../packages/ui/dist/manifest.light.json"
 sed -i'' "s|<UI_URL>|${UI_URL}|g" "${HERE}/../packages/ui/dist/robots.txt"
 sed -i'' "s|<UI_URL>|${UI_URL}|g" "${HERE}/../packages/ui/dist/search.xml"
-
-# Create brave-rewards-verification.txt file
-if [ -z "${BRAVE_REWARDS_TOKEN}" ]; then
-    error "BRAVE_REWARDS_TOKEN is not set. Not creating dist/.well-known/brave-rewards-verification.txt file."
-else
-    info "Creating dist/.well-known/brave-rewards-verification.txt file..."
-    mkdir dist/.well-known
-    cd ${HERE}/../packages/ui/dist/.well-known
-    echo "This is a Brave Rewards publisher verification file.\n" >brave-rewards-verification.txt
-    echo "Domain: newlifenurseryinc.com" >>brave-rewards-verification.txt
-    echo "Token: ${BRAVE_REWARDS_TOKEN}" >>brave-rewards-verification.txt
-    cd ../..
-fi
 
 # Compress multiple build locations
 info "Compressing build..."

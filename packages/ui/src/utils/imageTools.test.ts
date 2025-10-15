@@ -20,49 +20,49 @@ describe("imageTools", () => {
 
         it("extracts files from Image type", () => {
             const image: Image = {
-                __typename: "Image",
+                hash: "test-hash",
                 files: mockImageFiles,
-            } as Image;
+            };
 
             expect(getImageFiles(image)).toEqual(mockImageFiles);
         });
 
         it("extracts files from ImageInfo type", () => {
             const imageInfo: ImageInfo = {
+                index: 0,
                 image: {
-                    __typename: "Image",
+                    hash: "test-hash",
                     files: mockImageFiles,
-                } as Image,
-            } as ImageInfo;
+                },
+            };
 
             expect(getImageFiles(imageInfo)).toEqual(mockImageFiles);
         });
 
         it("returns empty array when Image has no files", () => {
             const image: Image = {
-                __typename: "Image",
+                hash: "test-hash",
                 files: undefined,
-            } as Image;
+            };
 
             expect(getImageFiles(image)).toEqual([]);
         });
 
         it("returns empty array when Image has null files", () => {
             const image: Image = {
-                __typename: "Image",
+                hash: "test-hash",
                 files: null,
-            } as any;
+            };
 
             expect(getImageFiles(image)).toEqual([]);
         });
     });
 
     describe("getImageSrc", () => {
-        const createImage = (files: ImageFile[]): Image =>
-            ({
-                __typename: "Image",
-                files,
-            }) as Image;
+        const createImage = (files: ImageFile[]): Image => ({
+            hash: "test-hash",
+            files,
+        });
 
         it("returns null when no files", () => {
             const image = createImage([]);

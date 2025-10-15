@@ -466,58 +466,6 @@ export const restApi = {
         });
     },
 
-    // ARCHIVED: Customer management moved to external system
-    // async getProfile(): Promise<Profile> {
-    //     return fetchApi<Profile>("/customers/profile");
-    // },
-
-    // async getCustomers(): Promise<CustomerContact[]> {
-    //     return fetchApi<CustomerContact[]>("/customers");
-    // },
-
-    // async addCustomer(input: {
-    //     firstName: string;
-    //     lastName: string;
-    //     pronouns?: string;
-    //     businessName?: string;
-    //     emails: Array<{ emailAddress: string; receivesDeliveryUpdates?: boolean }>;
-    //     phones?: Array<{ number: string; receivesDeliveryUpdates?: boolean }>;
-    // }): Promise<CustomerContact> {
-    //     return fetchApi<CustomerContact>("/customers", {
-    //         method: "POST",
-    //         body: JSON.stringify(input),
-    //     });
-    // },
-
-    // async updateCustomer(input: {
-    //     id: string;
-    //     firstName?: string;
-    //     lastName?: string;
-    //     pronouns?: string;
-    //     businessName?: string;
-    //     theme?: string;
-    //     emails?: Array<{ id?: string; emailAddress: string; receivesDeliveryUpdates?: boolean }>;
-    //     phones?: Array<{ id?: string; number: string; receivesDeliveryUpdates?: boolean }>;
-    // }): Promise<CustomerSession> {
-    //     return fetchApi<CustomerSession>(`/customers/${input.id}`, {
-    //         method: "PUT",
-    //         body: JSON.stringify(input),
-    //     });
-    // },
-
-    // async deleteCustomer(input: { id: string }): Promise<{ success: boolean }> {
-    //     return fetchApi<{ success: boolean }>(`/customers/${input.id}`, {
-    //         method: "DELETE",
-    //     });
-    // },
-
-    // async changeCustomerStatus(input: { id: string; status: string }): Promise<{ success: boolean }> {
-    //     return fetchApi<{ success: boolean }>(`/customers/${input.id}/status`, {
-    //         method: "PUT",
-    //         body: JSON.stringify({ status: input.status }),
-    //     });
-    // },
-
     // Image/Gallery Management
     async getImagesByLabel(input: { label: string }): Promise<Image[]> {
         return fetchApi<Image[]>(`/images?label=${encodeURIComponent(input.label)}`);

@@ -1,10 +1,11 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { CustomError, validateArgs } from "./error";
 import { logger, LogLevel } from "./logger";
 
 // Mock the logger
-jest.mock("./logger", () => ({
+vi.mock("./logger", () => ({
     logger: {
-        log: jest.fn(),
+        log: vi.fn(),
     },
     LogLevel: {
         error: "error",
@@ -14,7 +15,7 @@ jest.mock("./logger", () => ({
 
 describe("error", () => {
     beforeEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     });
 
     describe("CustomError", () => {
@@ -79,7 +80,7 @@ describe("error", () => {
 
     describe("validateArgs", () => {
         const mockSchema = {
-            validate: jest.fn(),
+            validate: vi.fn(),
         };
 
         beforeEach(() => {

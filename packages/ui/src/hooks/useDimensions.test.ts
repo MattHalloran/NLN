@@ -2,7 +2,7 @@ import { renderHook, act } from "@testing-library/react";
 import { useDimensions } from "./useDimensions";
 
 describe("useDimensions", () => {
-    let mockElement: Partial<HTMLDivElement>;
+    let mockElement: { clientWidth?: number; clientHeight?: number };
 
     beforeEach(() => {
         // Create mock element with clientWidth and clientHeight

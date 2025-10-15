@@ -17,12 +17,9 @@ const {
 } = lazily(() => import("./pages/main"));
 const {
     AdminContactPage,
-    // AdminCustomerPage, // ARCHIVED: Moved to /archived/frontend/pages/admin/
     AdminGalleryPage,
     AdminHomePage,
     AdminMainPage,
-    // AdminInventoryPage, // ARCHIVED: Moved to /archived/frontend/pages/admin/
-    // AdminOrderPage,     // ARCHIVED: Moved to /archived/frontend/pages/admin/
 } = lazily(() => import("./pages/admin"));
 const {
     PrivacyPolicyPage,
@@ -145,20 +142,6 @@ export const Routes = () => {
                     </Suspense>
                 </Route>
                 {/* END PUBLIC PAGES */}
-                {/* ARCHIVED: Customer pages moved to external system
-                <Route
-                    path={APP_LINKS.Profile}
-                    sitemapIndex
-                    priority={0.4}>
-                    <Suspense fallback={Fallback}>
-                        <Page restrictedToRoles={Object.values(ROLES)}>
-                            <FormPage title="Profile">
-                                <ProfileForm />
-                            </FormPage>
-                        </Page>
-                    </Suspense>
-                </Route>
-                */}
                 {/* START ADMIN PAGES */}
                 <Route
                     path={APP_LINKS.Admin}>
@@ -176,15 +159,6 @@ export const Routes = () => {
                         </Page>
                     </Suspense>
                 </Route>
-                {/* ARCHIVED: Customer management moved to external system
-                <Route path={APP_LINKS.AdminCustomers}>
-                    <Suspense fallback={Fallback}>
-                        <Page restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
-                            <AdminCustomerPage />
-                        </Page>
-                    </Suspense>
-                </Route>
-                */}
                 <Route path={APP_LINKS.AdminGallery}>
                     <Suspense fallback={Fallback}>
                         <Page excludePageContainer restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
@@ -199,22 +173,6 @@ export const Routes = () => {
                         </Page>
                     </Suspense>
                 </Route>
-                {/* ARCHIVED: Inventory and Orders routes removed - functionality moved to external system
-                <Route path={APP_LINKS.AdminInventory}>
-                    <Suspense fallback={Fallback}>
-                        <Page restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
-                            <AdminInventoryPage />
-                        </Page>
-                    </Suspense>
-                </Route>
-                <Route path={APP_LINKS.AdminOrders}>
-                    <Suspense fallback={Fallback}>
-                        <Page restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
-                            <AdminOrderPage />
-                        </Page>
-                    </Suspense>
-                </Route>
-                */}
                 {/* END ADMIN PAGES */}
                 {/* 404 page */}
                 <Route>

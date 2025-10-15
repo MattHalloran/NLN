@@ -61,7 +61,7 @@ router.post("/write", async (req: Request, res: Response) => {
     } catch (error: any) {
         logger.error("Write assets error:", error);
         if (error instanceof CustomError) {
-            return res.status(401).json({ error: error.message, code: error.extensions?.code });
+            return res.status(401).json({ error: error.message, code: error.code });
         }
         return res.status(500).json({ error: "Failed to write assets" });
     }

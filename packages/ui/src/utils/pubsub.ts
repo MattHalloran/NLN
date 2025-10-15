@@ -33,7 +33,6 @@ export type SnackPub = {
 }
 
 export type SideMenuPub = {
-    // ARCHIVED: "shopping-filter-side-menu" removed - functionality moved to external system
     id: "side-menu";
     isOpen: boolean;
 }

@@ -42,35 +42,12 @@ const ContactIcon = ({ fill, width = 24, height = 24, ...props }: SvgProps) => (
 );
 
 export enum AdminTabOption {
-    // Orders = "Orders",       // ARCHIVED: Moved to external system
-    // Customers = "Customers", // ARCHIVED: Moved to external system
-    // Inventory = "Inventory", // ARCHIVED: Moved to external system
     Hero = "Hero",
     Gallery = "Gallery",
     ContactInfo = "ContactInfo",
 }
 
 export const adminTabParams = [
-    /* ARCHIVED: Orders, Customers, and Inventory moved to external system
-    {
-        title: "Orders",
-        href: APP_LINKS.AdminOrders,
-        tabType: AdminTabOption.Orders,
-        Icon: OrdersIcon,
-    },
-    {
-        title: "Customers",
-        href: APP_LINKS.AdminCustomers,
-        tabType: AdminTabOption.Customers,
-        Icon: CustomersIcon,
-    },
-    {
-        title: "Inventory",
-        href: APP_LINKS.AdminInventory,
-        tabType: AdminTabOption.Inventory,
-        Icon: InventoryIcon,
-    },
-    */
     {
         title: "Homepage",
         href: APP_LINKS.AdminHero,

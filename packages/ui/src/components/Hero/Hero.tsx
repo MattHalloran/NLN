@@ -35,12 +35,10 @@ export const Hero = ({
 
     // Convert hero banners to the format expected by Slider
     const images = heroBanners.map(banner => ({
-        __typename: "Image" as const,
         hash: banner.id,
         alt: banner.alt,
         description: banner.description,
         files: [{
-            __typename: "ImageFile" as const,
             src: banner.src,
             width: banner.width,
             height: banner.height,

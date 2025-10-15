@@ -163,6 +163,7 @@ data/postgres/
 data/redis/
 data/stats/
 data/uploads/
+data/migration-backups/
 
 #Assets
 assets/images/
@@ -200,3 +201,8 @@ scripts/tests/tmp
 # Backups and archives
 /backups/
 *.tar.gz
+
+# Playwright E2E Testing
+test-results/
+playwright-report/
+e2e/.auth/

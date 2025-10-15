@@ -36,7 +36,7 @@ services:
   server:
     build:
       context: .
-      dockerfile: ./packages/server/Dockerfile
+      dockerfile: ./packages/server/Dockerfile-prod
       args:
         PROJECT_DIR: "${PROJECT_DIR:-/srv/app}"
     container_name: nln_server
@@ -46,6 +46,7 @@ services:
       NODE_ENV: "production"
       JWT_SECRET: "${JWT_SECRET}"
       PROJECT_DIR: "${PROJECT_DIR:-/srv/app}"
+      PORT_SERVER: "${PORT_SERVER:-5331}"
       VITE_SERVER_LOCATION: "${SERVER_LOCATION}"
       REDIS_CONN: "redis:${PORT_REDIS}"
       DB_CONN: "db:${PORT_DB}"
@@ -69,12 +70,15 @@ services:
       - proxy
       - app
     volumes:
-      - ./packages/server:${PROJECT_DIR:-/srv/app}/packages/server:z
-      - ./packages/shared:${PROJECT_DIR:-/srv/app}/packages/shared:z
+      # Production: Only mount built artifacts, data, and assets (not source code)
+      - ./packages/server/dist:${PROJECT_DIR:-/srv/app}/packages/server/dist:z
+      - ./packages/shared/dist:${PROJECT_DIR:-/srv/app}/packages/shared/dist:z
       - ./data/logs:${PROJECT_DIR:-/srv/app}/data/logs:z
       - ./assets:${PROJECT_DIR:-/srv/app}/assets:z
       - ./data/uploads:${PROJECT_DIR:-/srv/app}/data/uploads:z
-      - ./packages/server/src/db/migrations:${PROJECT_DIR:-/srv/app}/packages/server/src/db/migrations
+      - ./data/migration-backups:${PROJECT_DIR:-/srv/app}/data/migration-backups:z
+      # Migrations are needed for prisma migrate deploy
+      - ./packages/server/src/db/migrations:${PROJECT_DIR:-/srv/app}/packages/server/src/db/migrations:ro
     depends_on:
       redis:
         condition: service_healthy
@@ -125,7 +129,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    command: /bin/sh -c "mkdir -p ${PROJECT_DIR:-/srv/app}/data/redis/appendonlydir && rm -f ${PROJECT_DIR:-/srv/app}/data/redis/dump.rdb && redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru --appendonly yes --dbfilename dump.rdb --dir ${PROJECT_DIR}/data/redis/"
+    command: /bin/sh -c "mkdir -p ${PROJECT_DIR:-/srv/app}/data/redis/appendonlydir && redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru --appendonly yes --dbfilename dump.rdb --dir ${PROJECT_DIR:-/srv/app}/data/redis/"
 
 networks:
   proxy:
