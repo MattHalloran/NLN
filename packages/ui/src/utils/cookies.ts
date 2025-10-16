@@ -35,9 +35,13 @@ export type CookiePreferences = {
 
 const getCookie = <T>(name: CookieKey | string, typeCheck: (value: unknown) => value is T): T | undefined => {
     const cookie = localStorage.getItem(name);
+    // If cookie doesn't exist, return undefined without logging
+    if (cookie === null || cookie === undefined) {
+        return undefined;
+    }
     // Try to parse
     try {
-        const parsed = JSON.parse(cookie ?? "");
+        const parsed = JSON.parse(cookie);
         if (typeCheck(parsed)) {
             return parsed;
         }
@@ -62,11 +66,20 @@ export const getOrSetCookie = <T>(name: CookieKey | string, typeCheck: (value: u
 
 /**
  * Finds the user's cookie preferences.
- * @returns CookiePreferences object, or null if not set
+ * @returns CookiePreferences object with defaults if not set
  */
-export const getCookiePreferences = (): CookiePreferences | null => {
+export const getCookiePreferences = (): CookiePreferences => {
     const cookie = getCookie(Cookies.Preferences, (value: unknown): value is CookiePreferences => typeof value === "object");
-    if (!cookie) return null;
+    if (!cookie) {
+        // Return default preferences that allow functional cookies
+        // Users can change these via a cookie consent banner if implemented
+        return {
+            strictlyNecessary: true,
+            performance: false,
+            functional: true, // Allow functional cookies by default (theme, menu state, etc.)
+            targeting: false,
+        };
+    }
     return {
         strictlyNecessary: cookie.strictlyNecessary || true,
         performance: cookie.performance || false,
@@ -93,7 +106,7 @@ export const setCookiePreferences = (preferences: CookiePreferences) => {
  */
 const ifAllowed = (cookieType: keyof CookiePreferences, callback: () => unknown, fallback?: any) => {
     const preferences = getCookiePreferences();
-    if (cookieType === "strictlyNecessary" || preferences?.[cookieType]) {
+    if (cookieType === "strictlyNecessary" || preferences[cookieType]) {
         return callback();
     }
     else {

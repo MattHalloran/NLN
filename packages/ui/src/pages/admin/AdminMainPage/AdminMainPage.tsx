@@ -1,6 +1,6 @@
 import { APP_LINKS } from "@local/shared";
 import { Box, Button, Card, CardContent, Grid, Typography, useTheme, Avatar, Chip, CircularProgress } from "@mui/material";
-import { 
+import {
     ShoppingCart as OrdersIcon,
     People as CustomersIcon,
     Inventory as InventoryIcon,
@@ -9,6 +9,7 @@ import {
     ContactMail as ContactIcon,
     TrendingUp,
     Assessment,
+    BusinessCenter as BackOfficeIcon,
 } from "@mui/icons-material";
 import { useDashboardStats } from "api/rest/hooks";
 import { CardGrid, PageContainer } from "components";
@@ -25,6 +26,7 @@ interface AdminCardData {
     color: string;
     stats?: string;
     badge?: string;
+    isExternal?: boolean;
 }
 
 const getCardData = (stats: any): AdminCardData[] => [
@@ -54,12 +56,21 @@ const getCardData = (stats: any): AdminCardData[] => [
     //     stats: `${stats?.totalProducts || 0} items`,
     // },
     {
-        title: "Hero",
-        description: "Add, remove, and rearrange hero (home page) images",
+        title: "Back Office",
+        description: "View and manage orders in Horizon back office system",
+        link: "https://horizon.sbiteam.com/portal/webclient/#/home",
+        icon: BackOfficeIcon,
+        color: "#546e7a",
+        stats: "View orders",
+        isExternal: true,
+    },
+    {
+        title: "Homepage",
+        description: "Manage hero banner, seasonal content, and other homepage elements",
         link: APP_LINKS.AdminHero,
         icon: HeroIcon,
         color: "#546e7a",
-        stats: "Manage slides",
+        stats: "Manage content",
     },
     {
         title: "Gallery",
@@ -303,7 +314,13 @@ export const AdminMainPage = () => {
                         <Grid item xs={12} sm={6} lg={4} key={index}>
                             <AdminPageCard
                                 data={card}
-                                onClick={() => setLocation(card.link)}
+                                onClick={() => {
+                                    if (card.isExternal) {
+                                        window.open(card.link, "_blank", "noopener,noreferrer");
+                                    } else {
+                                        setLocation(card.link);
+                                    }
+                                }}
                             />
                         </Grid>
                     ))}

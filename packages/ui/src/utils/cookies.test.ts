@@ -50,8 +50,14 @@ describe("cookies", () => {
     });
 
     describe("getCookiePreferences", () => {
-        it("returns null when no preferences set", () => {
-            expect(getCookiePreferences()).toBeNull();
+        it("returns default preferences when no preferences set", () => {
+            const result = getCookiePreferences();
+            expect(result).toEqual({
+                strictlyNecessary: true,
+                performance: false,
+                functional: true,
+                targeting: false,
+            });
         });
 
         it("returns cookie preferences when set", () => {
@@ -77,13 +83,18 @@ describe("cookies", () => {
             localStorage.setItem(Cookies.Preferences, JSON.stringify(prefs));
 
             const result = getCookiePreferences();
-            expect(result?.strictlyNecessary).toBe(true);
+            expect(result.strictlyNecessary).toBe(true);
         });
 
-        it("handles invalid JSON gracefully", () => {
+        it("handles invalid JSON gracefully by returning defaults", () => {
             localStorage.setItem(Cookies.Preferences, "invalid json");
             const result = getCookiePreferences();
-            expect(result).toBeNull();
+            expect(result).toEqual({
+                strictlyNecessary: true,
+                performance: false,
+                functional: true,
+                targeting: false,
+            });
         });
     });
 

@@ -31,6 +31,7 @@ import { AdminTabOption, AdminTabs, Dropzone, PageContainer } from "components";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { getServerUrl } from "utils/serverUrl";
 import { TopBar } from "components/navigation/TopBar/TopBar";
+import { useLocation } from "route";
 import {
     Flower,
     Leaf,
@@ -89,6 +90,7 @@ const helpText =
 
 export const AdminHomePage = () => {
     const { palette } = useTheme();
+    const [location, setLocation] = useLocation();
     const [selectedTab, setSelectedTab] = useState(0);
     const [selectedSeasonalTab, setSelectedSeasonalTab] = useState(0);
     const [editingPlant, setEditingPlant] = useState<SeasonalPlant | null>(null);
@@ -102,6 +104,9 @@ export const AdminHomePage = () => {
     const [hasChanges, setHasChanges] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
+    // Track the safe location (last location without unsaved changes)
+    const [safeLocation, setSafeLocation] = useState(location);
+
     // Landing page content state
     const { data: landingPageContent, refetch } = useLandingPageContent(false);
 
@@ -114,6 +119,50 @@ export const AdminHomePage = () => {
             setOriginalHeroBanners(sorted);
         }
     }, [landingPageContent, hasChanges]);
+
+    // Warn before leaving page with unsaved changes (external navigation)
+    useEffect(() => {
+        if (!hasChanges) return;
+
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            e.preventDefault();
+            // Modern browsers require returnValue to be set
+            e.returnValue = "";
+            return "";
+        };
+
+        window.addEventListener("beforeunload", handleBeforeUnload);
+
+        return () => {
+            window.removeEventListener("beforeunload", handleBeforeUnload);
+        };
+    }, [hasChanges]);
+
+    // Block internal navigation when there are unsaved changes
+    useEffect(() => {
+        // If location changed and we have unsaved changes, confirm before allowing navigation
+        if (location !== safeLocation && hasChanges) {
+            const message = "You have unsaved changes. Are you sure you want to leave?";
+            if (!window.confirm(message)) {
+                // User cancelled - navigate back to safe location
+                setLocation(safeLocation, { replace: true });
+                return;
+            }
+            // User confirmed - discard changes and update safe location
+            setHasChanges(false);
+            setSafeLocation(location);
+        } else if (location !== safeLocation && !hasChanges) {
+            // Location changed but no unsaved changes - update safe location
+            setSafeLocation(location);
+        }
+    }, [location, safeLocation, hasChanges, setLocation]);
+
+    // Update safe location when changes are saved or cancelled
+    useEffect(() => {
+        if (!hasChanges) {
+            setSafeLocation(location);
+        }
+    }, [hasChanges, location]);
 
     const seasonalData = landingPageContent;
 
@@ -130,6 +179,14 @@ export const AdminHomePage = () => {
     const uploadImages = useCallback(async (acceptedFiles: File[]) => {
         try {
             setIsLoading(true);
+
+            // First, upload the files to the server
+            const uploadResult = await restApi.writeAssets(acceptedFiles);
+
+            if (!uploadResult.success) {
+                throw new Error("Failed to upload images to server");
+            }
+
             const newBanners: any[] = [];
 
             let currentLength = 0;
@@ -153,7 +210,7 @@ export const AdminHomePage = () => {
 
                 const newBanner = {
                     id: `hero-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-                    src: `/images/${file.name}`,
+                    src: `/${file.name}`,
                     alt: file.name.replace(/\.[^/.]+$/, ""),
                     description: "",
                     width: img.width,

@@ -93,8 +93,7 @@ export const Dropzone = ({
                 display: "inline-flex",
                 flexDirection: "column",
                 alignItems: "center",
-                marginBottom: 1,
-                marginLeft: 1,
+                margin: 1,
                 width: 100,
                 height: 100,
                 boxSizing: "border-box",
@@ -162,6 +161,18 @@ export const Dropzone = ({
                         <Button
                             disabled={disabled || files.length === 0}
                             fullWidth
+                            onClick={cancel}
+                            sx={{
+                                marginTop: spacing(1),
+                                marginBottom: spacing(1),
+                            }}
+                            variant="outlined"
+                        >{cancelText}</Button>
+                    </Grid>
+                    <Grid item xs={6}>
+                        <Button
+                            disabled={disabled || files.length === 0}
+                            fullWidth
                             onClick={upload}
                             sx={{
                                 marginTop: spacing(1),
@@ -169,18 +180,6 @@ export const Dropzone = ({
                             }}
                             variant="contained"
                         >{uploadText}</Button>
-                    </Grid>
-                    <Grid item xs={6}>
-                        <Button
-                            disabled={disabled || files.length === 0}
-                            fullWidth
-                            onClick={cancel}
-                            sx={{
-                                marginTop: spacing(1),
-                                marginBottom: spacing(1),
-                            }}
-                            variant="contained"
-                        >{cancelText}</Button>
                     </Grid>
                 </Grid>}
             </Box>
