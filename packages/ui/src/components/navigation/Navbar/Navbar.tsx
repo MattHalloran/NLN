@@ -49,34 +49,21 @@ const LogoComponent = ({
                 }}
             >
                 {/* Logo */}
-                <Box sx={{
-                    display: "flex",
-                    padding: 0,
-                    cursor: "pointer",
-                    marginTop: { xs: "4px", md: "8px" },
-                    marginBottom: { xs: "4px", md: "8px" },
-                    marginRight: "auto",
-                    background: palette.mode === "light" ? alpha(palette.background.paper, 0.26) : "radial-gradient(circle at center, #757565 0, #757565, white 100%)",
-                    borderRadius: "100%",
-                    height: "48px",
-                    width: "48px",
-                }}>
-                    {/* icon */}
-                    <Box
-                        component="img"
-                        src={Logo}
-                        alt={`${business?.BUSINESS_NAME?.Short ?? "Business"} logo`}
-                        sx={{
-                            "-webkit-filter": `drop-shadow(0.5px 0.5px 0 ${hexToRGB(palette.primary.dark, 0.9)})
-                        drop-shadow(-0.5px -0.5px 0 ${hexToRGB(palette.primary.dark, 0.9)})`,
-                            filter: `drop-shadow(0.5px 0.5px 0 ${hexToRGB(palette.primary.dark, 0.9)}) 
-                drop-shadow(-0.5px -0.5px 0 ${hexToRGB(palette.primary.dark, 0.9)})`,
-                            verticalAlign: "middle",
-                            fill: "black",
-                            height: "48px",
-                            transform: "rotate(20deg)",
-                        }} />
-                </Box>
+                <Box
+                    component="img"
+                    src={Logo}
+                    alt={`${business?.BUSINESS_NAME?.Short ?? "Business"} logo`}
+                    sx={{
+                        cursor: "pointer",
+                        marginTop: { xs: "4px", md: "8px" },
+                        marginBottom: { xs: "4px", md: "8px" },
+                        marginRight: "auto",
+                        borderRadius: "50%",
+                        height: "48px",
+                        width: "48px",
+                        objectFit: "cover",
+                    }}
+                />
                 {/* Business name */}
                 {state === "full" && <Typography
                     variant="h6"
