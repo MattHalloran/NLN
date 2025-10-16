@@ -5,7 +5,7 @@ import { logger } from "../logger.js";
 import { initializeRedis } from "../redisConn.js";
 
 const router = Router();
-const dataPath = join(__dirname, "../data");
+const dataPath = join(process.env.PROJECT_DIR || "", "packages/server/src/data");
 
 // Cache configuration (same as GraphQL)
 const CACHE_KEY = "landing-page-content:v1";
@@ -377,15 +377,14 @@ router.put("/", async (req: Request, res: Response) => {
             return res.status(400).json({ error: "No valid content sections provided for update" });
         }
 
-        // Write-through caching: Update cache immediately with fresh data
-        // This eliminates race conditions where refetch happens before cache invalidation completes
+        // Invalidate cache to ensure fresh data is served on next request
+        // This avoids complexity with onlyActive parameter mismatches
         try {
-            const freshContent = aggregateLandingPageContent(false); // Get all content, not just active
-            await setCachedContent(freshContent);
-            logger.info("Cache updated with fresh content (write-through)");
+            await invalidateCache();
+            logger.info("Cache invalidated after content update");
         } catch (error) {
-            logger.error("Error updating cache (non-fatal):", error);
-            // Continue even if cache update fails - DB write succeeded
+            logger.error("Error invalidating cache (non-fatal):", error);
+            // Continue even if cache invalidation fails - DB write succeeded
         }
 
         return res.json({
@@ -456,14 +455,13 @@ router.put("/contact-info", async (req: Request, res: Response) => {
             }
         }
 
-        // Write-through caching: Update cache immediately with fresh data
+        // Invalidate cache to ensure fresh data is served on next request
         try {
-            const freshContent = aggregateLandingPageContent(false);
-            await setCachedContent(freshContent);
-            logger.info("Cache updated with fresh content (write-through)");
+            await invalidateCache();
+            logger.info("Cache invalidated after content update");
         } catch (error) {
-            logger.error("Error updating cache (non-fatal):", error);
-            // Continue even if cache update fails - DB write succeeded
+            logger.error("Error invalidating cache (non-fatal):", error);
+            // Continue even if cache invalidation fails - DB write succeeded
         }
 
         return res.json({

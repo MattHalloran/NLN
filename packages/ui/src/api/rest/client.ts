@@ -263,6 +263,7 @@ export const restApi = {
     async getLandingPageContent(onlyActive = true): Promise<LandingPageContent> {
         return fetchApi<LandingPageContent>(
             `/landing-page?onlyActive=${onlyActive}`,
+            { cache: "no-store" }, // Bypass browser cache to always get fresh data
         );
     },
 

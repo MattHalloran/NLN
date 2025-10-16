@@ -45,16 +45,18 @@ const main = async () => {
         res.status(200).send("OK");
     });
 
-    // For authentication
-    app.use(auth.authenticate);
-
     // Cross-Origin access. Accepts requests from localhost and dns
+    // IMPORTANT: CORS must be configured BEFORE authentication middleware
+    // to properly handle preflight requests and cross-origin credentials
     app.use(
         cors({
             credentials: true,
             origin: true,
         })
     );
+
+    // For authentication
+    app.use(auth.authenticate);
 
     // Set static folders
     app.use("/api", express.static(`${process.env.PROJECT_DIR}/assets/public`));

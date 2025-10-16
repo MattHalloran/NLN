@@ -81,21 +81,21 @@ export class AdminHomePage {
     const altInput = this.page.locator(`[data-testid="hero-alt-input-${index}"] input:not([aria-hidden="true"])`).first();
     await altInput.waitFor({ state: 'visible', timeout: 5000 });
 
-    // Focus the input
-    await altInput.focus();
+    // Click to focus the input
+    await altInput.click();
     await this.page.waitForTimeout(100);
 
-    // Use fill() which triggers proper React events
-    await altInput.fill(altText);
+    // Select all existing text using keyboard shortcut
+    await this.page.keyboard.press('Control+A');
+    await this.page.waitForTimeout(50);
 
-    // Manually trigger input and change events to ensure React picks them up
-    await altInput.dispatchEvent('input', { bubbles: true });
-    await altInput.dispatchEvent('change', { bubbles: true });
+    // Type the new text - this triggers proper React onChange events for MUI
+    await this.page.keyboard.type(altText);
     await this.page.waitForTimeout(200);
 
-    // Blur to finalize
+    // Blur to finalize the change
     await altInput.blur();
-    await this.page.waitForTimeout(500);
+    await this.page.waitForTimeout(300);
   }
 
   async updateBannerDescription(index: number, description: string) {
@@ -103,44 +103,75 @@ export class AdminHomePage {
     const descInput = this.page.locator(`[data-testid="hero-description-input-${index}"] textarea:not([aria-hidden="true"])`).first();
     await descInput.waitFor({ state: 'visible', timeout: 5000 });
 
-    // Focus the textarea
-    await descInput.focus();
+    // Click to focus the textarea
+    await descInput.click();
     await this.page.waitForTimeout(100);
 
-    // Use fill() which triggers proper React events
-    await descInput.fill(description);
+    // Select all existing text using keyboard shortcut
+    await this.page.keyboard.press('Control+A');
+    await this.page.waitForTimeout(50);
 
-    // Manually trigger input and change events to ensure React picks them up
-    await descInput.dispatchEvent('input', { bubbles: true });
-    await descInput.dispatchEvent('change', { bubbles: true });
+    // Type the new text - this triggers proper React onChange events for MUI
+    await this.page.keyboard.type(description);
     await this.page.waitForTimeout(200);
 
-    // Blur to finalize
+    // Blur to finalize the change
     await descInput.blur();
-    await this.page.waitForTimeout(500);
+    await this.page.waitForTimeout(300);
   }
 
   async toggleBannerActive(index: number) {
     // Use data-testid for reliable selection - target the checkbox input within the Switch wrapper
     const switchControl = this.page.locator(`[data-testid="hero-active-switch-${index}"] input[type="checkbox"]`);
-    await switchControl.click();
+    await switchControl.waitFor({ state: 'visible', timeout: 5000 });
+
+    // Click the switch to toggle it
+    await switchControl.click({ force: true }); // force: true helps with MUI Switch which has overlays
+
     // Wait for onChange to process and React state to update
-    await this.page.waitForTimeout(500);
+    await this.page.waitForTimeout(800);
   }
 
   async deleteBanner(index: number) {
     // Use data-testid for reliable selection
     const deleteButton = this.page.locator(`[data-testid="hero-delete-button-${index}"]`);
+    await deleteButton.waitFor({ state: 'visible', timeout: 5000 });
+
+    // Click the delete button
     await deleteButton.click();
-    // Wait for React state to update
-    await this.page.waitForTimeout(500);
+
+    // Wait for React state to update (deletion + reordering)
+    await this.page.waitForTimeout(800);
   }
 
   async dragBanner(fromIndex: number, toIndex: number) {
+    // Get the specific banner cards
     const fromBanner = this.heroBannerItems.nth(fromIndex);
     const toBanner = this.heroBannerItems.nth(toIndex);
 
-    await fromBanner.dragTo(toBanner);
+    // Wait for both banners to be visible
+    await fromBanner.waitFor({ state: 'visible', timeout: 5000 });
+    await toBanner.waitFor({ state: 'visible', timeout: 5000 });
+
+    // Get the bounding boxes for precise dragging
+    const fromBox = await fromBanner.boundingBox();
+    const toBox = await toBanner.boundingBox();
+
+    if (!fromBox || !toBox) {
+      throw new Error('Could not get bounding boxes for drag operation');
+    }
+
+    // Perform drag from center of source to center of target
+    await this.page.mouse.move(fromBox.x + fromBox.width / 2, fromBox.y + fromBox.height / 2);
+    await this.page.mouse.down();
+    await this.page.waitForTimeout(100);
+
+    // Move to target position
+    await this.page.mouse.move(toBox.x + toBox.width / 2, toBox.y + toBox.height / 2, { steps: 10 });
+    await this.page.waitForTimeout(100);
+
+    await this.page.mouse.up();
+
     // Wait for drag-and-drop to complete and React state to update
     await this.page.waitForTimeout(1000);
   }
