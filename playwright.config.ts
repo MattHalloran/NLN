@@ -80,16 +80,31 @@ export default defineConfig({
 
   // Configure projects for major browsers
   projects: [
-    // Setup project - runs once before all tests
+    // Data backup - runs FIRST before everything
+    {
+      name: 'data-backup',
+      testMatch: /setup\/data-backup\.setup\.ts/,
+    },
+
+    // Auth setup project - runs after data backup
     {
       name: 'setup',
       testMatch: /.*\.setup\.ts/,
+      testIgnore: /setup\/data-backup\.setup\.ts/,
+      dependencies: ['data-backup'],
     },
 
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
       dependencies: ['setup'],
+    },
+
+    // Data restore - runs LAST after all tests
+    {
+      name: 'data-restore',
+      testMatch: /teardown\/data-restore\.teardown\.ts/,
+      dependencies: ['chromium'],
     },
 
     // Uncomment to test on other browsers

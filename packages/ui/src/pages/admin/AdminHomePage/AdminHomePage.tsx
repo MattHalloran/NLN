@@ -21,8 +21,6 @@ import {
     Typography,
     useTheme,
     Button,
-    Snackbar,
-    Alert,
     Switch,
     FormControlLabel,
 } from "@mui/material";
@@ -102,15 +100,6 @@ export const AdminHomePage = () => {
     const [heroBanners, setHeroBanners] = useState<any[]>([]);
     const [originalHeroBanners, setOriginalHeroBanners] = useState<any[]>([]);
     const [hasChanges, setHasChanges] = useState(false);
-    const [snackbar, setSnackbar] = useState<{
-        open: boolean;
-        message: string;
-        severity: "success" | "error";
-    }>({
-        open: false,
-        message: "",
-        severity: "success",
-    });
     const [isLoading, setIsLoading] = useState(false);
 
     // Landing page content state
@@ -128,14 +117,14 @@ export const AdminHomePage = () => {
 
     const seasonalData = landingPageContent;
 
-    const handleApiError = (error: any, defaultMessage: string) => {
+    const handleApiError = useCallback((error: any, defaultMessage: string) => {
         const message = error?.message || defaultMessage;
         PubSub.get().publishSnack({ message, severity: SnackSeverity.Error });
-    };
+    }, []);
 
-    const handleApiSuccess = (message: string) => {
+    const handleApiSuccess = useCallback((message: string) => {
         PubSub.get().publishSnack({ message, severity: SnackSeverity.Success });
-    };
+    }, []);
 
     // Hero image handlers
     const uploadImages = useCallback(async (acceptedFiles: File[]) => {
@@ -177,21 +166,13 @@ export const AdminHomePage = () => {
 
             setHeroBanners((prev) => [...prev, ...newBanners]);
             setHasChanges(true);
-            setSnackbar({
-                open: true,
-                message: `Added ${acceptedFiles.length} image(s). Remember to save changes.`,
-                severity: "success",
-            });
-        } catch {
-            setSnackbar({
-                open: true,
-                message: "Failed to add images",
-                severity: "error",
-            });
+            handleApiSuccess(`Added ${acceptedFiles.length} image(s). Remember to save changes.`);
+        } catch (error) {
+            handleApiError(error, "Failed to add images");
         } finally {
             setIsLoading(false);
         }
-    }, []);
+    }, [handleApiSuccess, handleApiError]);
 
     const handleDragEnd = useCallback((result: any) => {
         if (!result.destination) return;
@@ -250,26 +231,18 @@ export const AdminHomePage = () => {
                 // Refetch data FIRST to ensure UI is updated
                 await refetch();
                 // THEN show success and update state
-                setSnackbar({
-                    open: true,
-                    message: "Hero banners updated successfully",
-                    severity: "success",
-                });
+                handleApiSuccess("Hero banners updated successfully!");
                 setHasChanges(false);
                 setOriginalHeroBanners([...heroBanners]);
             } else {
                 throw new Error("Failed to update");
             }
         } catch (error: any) {
-            setSnackbar({
-                open: true,
-                message: error.message || "Failed to save changes",
-                severity: "error",
-            });
+            handleApiError(error, "Failed to save changes");
         } finally {
             setIsLoading(false);
         }
-    }, [heroBanners, landingPageContent, refetch]);
+    }, [heroBanners, landingPageContent, refetch, handleApiSuccess, handleApiError]);
 
     const handleCancelChanges = useCallback(() => {
         setHeroBanners([...originalHeroBanners]);
@@ -1119,19 +1092,6 @@ export const AdminHomePage = () => {
                     </Button>
                 </DialogActions>
             </Dialog>
-
-            <Snackbar
-                open={snackbar.open}
-                autoHideDuration={6000}
-                onClose={() => setSnackbar({ ...snackbar, open: false })}
-            >
-                <Alert
-                    severity={snackbar.severity}
-                    onClose={() => setSnackbar({ ...snackbar, open: false })}
-                >
-                    {snackbar.message}
-                </Alert>
-            </Snackbar>
         </PageContainer>
     );
 };

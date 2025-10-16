@@ -95,7 +95,9 @@ export const Snack = ({
     }, [severity]);
 
     return (
-        <Box sx={{
+        <Box
+            role="alert"
+            sx={{
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",

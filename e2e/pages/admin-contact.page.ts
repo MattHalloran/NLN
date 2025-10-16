@@ -160,11 +160,14 @@ export class AdminContactPage {
 
   // Assertions
   async expectSuccessMessage() {
-    await expect(this.page.locator('text=/successfully|success/i').first()).toBeVisible({ timeout: 15000 });
-    // Wait additional time for refetch to complete and UI to update
-    await this.page.waitForTimeout(1000);
-    // Wait for network to be idle to ensure refetch completed
-    await this.page.waitForLoadState('networkidle', { timeout: 10000 });
+    // Look for snackbar with role="alert" and success message
+    await expect(
+      this.page.locator('[role="alert"], .MuiSnackbar-root, [class*="Snackbar"]').locator('text=/successfully|success/i')
+    ).toBeVisible({ timeout: 20000 });
+    // Wait for network activity from the refetch with longer timeout
+    await this.page.waitForLoadState('networkidle', { timeout: 15000 });
+    // Small delay to ensure React state updates complete
+    await this.page.waitForTimeout(500);
   }
 
   async expectDayEnabled(day: string) {

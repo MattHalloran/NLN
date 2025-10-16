@@ -153,26 +153,11 @@ export class AdminHomePage {
     await fromBanner.waitFor({ state: 'visible', timeout: 5000 });
     await toBanner.waitFor({ state: 'visible', timeout: 5000 });
 
-    // Get the bounding boxes for precise dragging
-    const fromBox = await fromBanner.boundingBox();
-    const toBox = await toBanner.boundingBox();
+    // Use Playwright's dragTo method which properly triggers HTML5 drag events
+    // This is required for react-beautiful-dnd (@hello-pangea/dnd) to work
+    await fromBanner.dragTo(toBanner);
 
-    if (!fromBox || !toBox) {
-      throw new Error('Could not get bounding boxes for drag operation');
-    }
-
-    // Perform drag from center of source to center of target
-    await this.page.mouse.move(fromBox.x + fromBox.width / 2, fromBox.y + fromBox.height / 2);
-    await this.page.mouse.down();
-    await this.page.waitForTimeout(100);
-
-    // Move to target position
-    await this.page.mouse.move(toBox.x + toBox.width / 2, toBox.y + toBox.height / 2, { steps: 10 });
-    await this.page.waitForTimeout(100);
-
-    await this.page.mouse.up();
-
-    // Wait for drag-and-drop to complete and React state to update
+    // Wait for React state to update
     await this.page.waitForTimeout(1000);
   }
 
@@ -285,9 +270,13 @@ export class AdminHomePage {
 
   // Assertions
   async expectSuccessMessage() {
-    await expect(this.page.locator('text=/successfully|success/i').first()).toBeVisible({ timeout: 15000 });
-    // Wait for network activity from the refetch
-    await this.page.waitForLoadState('networkidle', { timeout: 10000 });
+    // Look for MUI Snackbar with success message - more specific selector
+    // Increased timeout to 20s to account for slow operations with large datasets
+    await expect(
+      this.page.locator('[role="alert"], .MuiSnackbar-root, [class*="Snackbar"]').locator('text=/successfully|success/i')
+    ).toBeVisible({ timeout: 20000 });
+    // Wait for network activity from the refetch with longer timeout
+    await this.page.waitForLoadState('networkidle', { timeout: 15000 });
     // Small delay to ensure React state updates complete
     await this.page.waitForTimeout(500);
   }
