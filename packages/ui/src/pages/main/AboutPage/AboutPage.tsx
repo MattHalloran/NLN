@@ -1,14 +1,29 @@
 import { Box, Card, CardContent, Container, Divider, Grid, IconButton, Paper, Stack, Tooltip, Typography, useTheme, alpha } from "@mui/material";
 import GianarisSignature from "assets/img/gianaris-signature.png";
 import { InformationalTabOption, InformationalTabs } from "components/breadcrumbs/InformationalTabs/InformationalTabs";
+import { ContactInfo } from "components/ContactInfo/ContactInfo";
 import { TopBar } from "components/navigation/TopBar/TopBar";
 import { BusinessContext } from "contexts/BusinessContext";
 import { FacebookIcon, InstagramIcon } from "icons";
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 
 export const AboutPage = () => {
     const business = useContext(BusinessContext);
     const theme = useTheme();
+
+    // Handle scroll to anchor on mount and when hash changes
+    useEffect(() => {
+        const hash = window.location.hash;
+        if (hash) {
+            // Wait for the page to render
+            setTimeout(() => {
+                const element = document.querySelector(hash);
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }, 100);
+        }
+    }, []);
 
     const SocialLink = ({ platform, Icon, url }: { platform: string; Icon: any; url: string }) => (
         <Tooltip title={`Follow us on ${platform}`} placement="top">
@@ -604,6 +619,72 @@ export const AboutPage = () => {
                                 </Stack>
                             </Grid>
                         </Grid>
+
+                        {/* Contact Section */}
+                        <Box
+                            id="contact"
+                            sx={{
+                                mt: { xs: 6, md: 10 },
+                                pt: { xs: 4, md: 6 },
+                                borderTop: `2px solid ${theme.palette.divider}`,
+                            }}
+                        >
+                            <Box sx={{ textAlign: "center", mb: { xs: 4, md: 6 } }}>
+                                <Typography
+                                    variant="h3"
+                                    component="h2"
+                                    sx={{
+                                        color: theme.palette.grey[800],
+                                        fontWeight: 500,
+                                        fontSize: { xs: "2rem", md: "2.5rem" },
+                                        mb: 2,
+                                        fontFamily: "serif",
+                                    }}
+                                >
+                                    Get in Touch
+                                </Typography>
+                                <Divider sx={{ width: { xs: 80, sm: 120 }, mx: "auto", mb: 3 }} />
+                                <Typography
+                                    variant="h6"
+                                    sx={{
+                                        color: theme.palette.text.secondary,
+                                        maxWidth: "600px",
+                                        mx: "auto",
+                                        fontSize: { xs: "1rem", md: "1.1rem" },
+                                        fontWeight: 400,
+                                    }}
+                                >
+                                    Contact our team for availability, pricing, and expert horticultural advice
+                                </Typography>
+                            </Box>
+
+                            <Grid container spacing={{ xs: 4, md: 6 }} justifyContent="center">
+                                <Grid item xs={12} md={8} lg={6}>
+                                    <Box
+                                        sx={{
+                                            border: `1px solid ${theme.palette.grey[200]}`,
+                                            borderRadius: 2,
+                                            p: { xs: 3, md: 4 },
+                                            backgroundColor: theme.palette.grey[50],
+                                        }}
+                                    >
+                                        <ContactInfo sx={{ width: "100%" }} />
+                                    </Box>
+                                </Grid>
+                            </Grid>
+
+                            <Box sx={{ textAlign: "center", mt: 4 }}>
+                                <Typography
+                                    variant="body2"
+                                    sx={{
+                                        color: theme.palette.text.secondary,
+                                        fontStyle: "italic",
+                                    }}
+                                >
+                                    Wholesale Only - Trade Customers Welcome
+                                </Typography>
+                            </Box>
+                        </Box>
                     </Stack>
                 </Container>
                 </Box>

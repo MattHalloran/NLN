@@ -121,24 +121,9 @@ export const AboutStory = () => {
 
                             <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
                                 <Button
-                                    variant="contained"
-                                    color="secondary"
-                                    size="large"
-                                    onClick={() => setLocation("/about")}
-                                    sx={{
-                                        px: 4,
-                                        py: 1.5,
-                                        borderRadius: 2,
-                                        textTransform: "none",
-                                        fontWeight: 600,
-                                    }}
-                                >
-                                    Learn More About Us
-                                </Button>
-                                <Button
                                     variant="outlined"
                                     size="large"
-                                    onClick={() => setLocation("/contact")}
+                                    onClick={() => setLocation("/about#contact")}
                                     sx={{
                                         px: 4,
                                         py: 1.5,

@@ -1,11 +1,11 @@
-import { 
-    Box, 
-    Container, 
-    Grid, 
-    Typography, 
-    Card, 
-    CardContent, 
-    Button, 
+import {
+    Box,
+    Container,
+    Grid,
+    Typography,
+    Card,
+    CardContent,
+    Button,
     useTheme,
     Chip,
     Divider,
@@ -14,11 +14,14 @@ import { useLocation } from "route";
 import { Eye, Gift, Smartphone, Car, Clock, Phone, MapPin, Mail, Map } from "lucide-react";
 import { useLandingPageContent } from "api/rest/hooks";
 import { parseBusinessHours } from "utils/businessHours";
+import { BusinessContext } from "contexts/BusinessContext";
+import { useContext } from "react";
 
 export const LocationVisit = () => {
     const { palette } = useTheme();
     const [, setLocation] = useLocation();
-    
+    const business = useContext(BusinessContext);
+
     // Fetch business hours from API
     const { data } = useLandingPageContent(true);
 
@@ -61,26 +64,31 @@ export const LocationVisit = () => {
     const contactMethods = [
         {
             method: "Phone",
-            value: "(856) 455-3601",
+            value: business?.PHONE?.Label || "(856) 455-3601",
+            href: business?.PHONE?.Link || "tel:+18564553601",
             description: "Call for availability and wholesale pricing",
             icon: Phone,
         },
         {
             method: "Address",
-            value: "106 S Woodruff Rd, Bridgeton, NJ 08302",
+            value: business?.ADDRESS?.Label || "106 S Woodruff Rd, Bridgeton, NJ 08302",
+            href: business?.ADDRESS?.Link || "https://maps.google.com/?q=106+S+Woodruff+Rd+Bridgeton+NJ+08302",
             description: "Visit our 70+ acre wholesale nursery facility",
             icon: MapPin,
         },
         {
             method: "Email",
-            value: "info@newlifenurseryinc.com",
+            value: business?.EMAIL?.Label || "info@newlifenurseryinc.com",
+            href: business?.EMAIL?.Link || "mailto:info@newlifenurseryinc.com",
             description: "Email us for quotes and availability lists",
             icon: Mail,
         },
     ];
 
     const getDirections = () => {
-        window.open("https://maps.google.com/?q=106+S+Woodruff+Rd+Bridgeton+NJ+08302", "_blank");
+        // Use the dynamic link from business context, or fallback to hardcoded address
+        const mapLink = business?.ADDRESS?.Link || "https://maps.google.com/?q=106+S+Woodruff+Rd+Bridgeton+NJ+08302";
+        window.open(mapLink, "_blank");
     };
 
     return (
@@ -138,7 +146,7 @@ export const LocationVisit = () => {
                                 position: "relative",
                             }}>
                                 <Box sx={{ textAlign: "center" }}>
-                                    <Box sx={{ 
+                                    <Box sx={{
                                         mb: 2,
                                         display: "flex",
                                         justifyContent: "center",
@@ -147,10 +155,10 @@ export const LocationVisit = () => {
                                         <Map size={64} />
                                     </Box>
                                     <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
-                                        New Life Nursery Inc.
+                                        {business?.BUSINESS_NAME?.Short || "New Life Nursery Inc."}
                                     </Typography>
                                     <Typography variant="body1" sx={{ opacity: 0.9 }}>
-                                        106 S Woodruff Rd, Bridgeton, NJ
+                                        {business?.ADDRESS?.Label || "106 S Woodruff Rd, Bridgeton, NJ"}
                                     </Typography>
                                 </Box>
                                 
@@ -182,18 +190,27 @@ export const LocationVisit = () => {
                                 Get in Touch
                             </Typography>
                             {contactMethods.map((contact, index) => (
-                                <Card key={index} sx={{
-                                    mb: 2,
-                                    borderRadius: 2,
-                                    transition: "all 0.3s ease-in-out",
-                                    "&:hover": {
-                                        boxShadow: 4,
-                                        transform: "translateY(-2px)",
-                                    },
-                                }}>
+                                <Card
+                                    key={index}
+                                    component="a"
+                                    href={contact.href}
+                                    target={contact.href.startsWith("http") ? "_blank" : undefined}
+                                    rel={contact.href.startsWith("http") ? "noopener noreferrer" : undefined}
+                                    sx={{
+                                        mb: 2,
+                                        borderRadius: 2,
+                                        transition: "all 0.3s ease-in-out",
+                                        textDecoration: "none",
+                                        cursor: "pointer",
+                                        "&:hover": {
+                                            boxShadow: 4,
+                                            transform: "translateY(-2px)",
+                                        },
+                                    }}
+                                >
                                     <CardContent sx={{ p: 2 }}>
                                         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                                            <Box sx={{ 
+                                            <Box sx={{
                                                 display: "flex",
                                                 alignItems: "center",
                                                 justifyContent: "center",
@@ -208,18 +225,18 @@ export const LocationVisit = () => {
                                                 <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
                                                     {contact.method}
                                                 </Typography>
-                                                <Typography 
-                                                    variant="body2" 
-                                                    sx={{ 
-                                                        color: palette.primary.main, 
+                                                <Typography
+                                                    variant="body2"
+                                                    sx={{
+                                                        color: palette.primary.main,
                                                         fontWeight: 600,
                                                         mb: 0.5,
                                                     }}
                                                 >
                                                     {contact.value}
                                                 </Typography>
-                                                <Typography 
-                                                    variant="caption" 
+                                                <Typography
+                                                    variant="caption"
                                                     sx={{ color: palette.text.secondary }}
                                                 >
                                                     {contact.description}
@@ -380,7 +397,7 @@ export const LocationVisit = () => {
                             variant="outlined"
                             color="primary"
                             size="large"
-                            onClick={() => setLocation("/contact")}
+                            onClick={() => setLocation("/about#contact")}
                             sx={{
                                 px: 4,
                                 py: 1.5,

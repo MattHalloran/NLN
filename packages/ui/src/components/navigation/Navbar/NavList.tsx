@@ -1,7 +1,7 @@
 import { APP_LINKS } from "@local/shared";
 import { Badge, Box, Button, IconButton, List, ListItem, ListItemIcon, ListItemText, Palette, useTheme } from "@mui/material";
 import { useLogout } from "api/rest/hooks";
-import { ContactInfo, PopupMenu } from "components";
+import { PopupMenu } from "components";
 import { SessionContext } from "contexts/SessionContext";
 import { useSideMenu } from "hooks/useSideMenu";
 import { useWindowSize } from "hooks/useWindowSize";
@@ -142,14 +142,14 @@ export const NavList = () => {
             right: "0px",
             padding: "0px",
         }}>
-            {!isMobile && !isSideMenuOpen && <PopupMenu
-                text="Contact"
+            {!isMobile && !isSideMenuOpen && <Button
                 variant="text"
                 size="large"
+                onClick={() => setLocation("/about#contact")}
                 sx={navItemStyle(palette)}
             >
-                <ContactInfo sx={{ width: "calc(min(100vw, 500px))" }} />
-            </PopupMenu>}
+                Contact
+            </Button>}
             {!isMobile && !isSideMenuOpen && <PopupMenu
                 text="About"
                 variant="text"

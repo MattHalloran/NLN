@@ -364,8 +364,8 @@ export const InteractiveElements = () => {
                     </Grid>
                 </Grid>
 
-                {/* Newsletter Signup */}
-                <Box sx={{
+                {/* Newsletter Signup - Hidden */}
+                {/* <Box sx={{
                     mt: 8,
                     p: 4,
                     background: `linear-gradient(135deg, ${palette.secondary.main} 0%, ${palette.primary.main} 100%)`,
@@ -382,7 +382,7 @@ export const InteractiveElements = () => {
                     <Typography variant="body1" sx={{ mb: 3, opacity: 0.9 }}>
                         {settings?.newsletter?.description || "Get seasonal care tips, new arrival notifications, and exclusive offers delivered to your inbox"}
                     </Typography>
-                    
+
                     {!subscribed ? (
                         <Box
                             component="form"
@@ -435,11 +435,11 @@ export const InteractiveElements = () => {
                             </Typography>
                         </Box>
                     )}
-                    
+
                     <Typography variant="caption" sx={{ display: "block", mt: 2, opacity: 0.8 }}>
                         {settings?.newsletter?.disclaimer || "No spam, just helpful gardening tips. Unsubscribe anytime."}
                     </Typography>
-                </Box>
+                </Box> */}
             </Container>
         </Box>
     );

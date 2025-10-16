@@ -24,14 +24,14 @@ const services: Service[] = [
         description: "Get personalized guidance from our certified horticulturists. Learn proper care techniques for your specific plants.",
         icon: Leaf,
         action: "Get Advice",
-        url: "/contact",
+        url: "/about#contact",
     },
     {
         title: "Landscape Design Consultation",
         description: "Transform your outdoor space with professional landscape design. From concept to completion, we'll help bring your vision to life.",
         icon: Home,
         action: "Schedule Consultation",
-        url: "/contact",
+        url: "/about#contact",
     },
     {
         title: "Delivery & Installation",
@@ -214,7 +214,7 @@ export const ServiceShowcase = () => {
                         <Button
                             variant="outlined"
                             size="large"
-                            onClick={() => setLocation("/contact")}
+                            onClick={() => setLocation("/about#contact")}
                             sx={{
                                 px: 4,
                                 py: 1.5,
