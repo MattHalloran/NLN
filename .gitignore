@@ -2,9 +2,6 @@
 # Edit at https://www.toptal.com/developers/gitignore?templates=react,node
 # NOTE: Currently identical to the `.cursorignore` file. If you change one, consider changing the other
 
-# Business hours data
-assets/public/hours.md
-
 ### Node ###
 # Logs
 logs

@@ -45,6 +45,8 @@ interface DayHours {
     openTime: string;
     closeTime: string;
     closed: boolean;
+    isSplitShift: boolean;
+    splitShiftHours: string; // Full text like "8:00 AM to 12:00 PM, 1:00 PM to 3:00 PM"
 }
 
 interface BusinessNote {
@@ -110,6 +112,8 @@ export const AdminContactPage = () => {
                 openTime: "8:00 AM",
                 closeTime: "5:00 PM",
                 closed: false,
+                isSplitShift: false,
+                splitShiftHours: "",
             }));
             // eslint-disable-next-line react-hooks/set-state-in-effect
             setDayHours(defaultHours);
@@ -136,6 +140,11 @@ export const AdminContactPage = () => {
                         const day = parts[0];
                         const hours = parts[1];
 
+                        // Skip header row
+                        if (day.toLowerCase() === "day" && hours.toLowerCase() === "hours") {
+                            continue;
+                        }
+
                         // Check if this is a range (e.g., "MON-FRI")
                         if (day.includes("-") && !DAYS_OF_WEEK.includes(day)) {
                             const rangeParts = day.split("-");
@@ -160,6 +169,19 @@ export const AdminContactPage = () => {
                                                 openTime: "8:00 AM",
                                                 closeTime: "5:00 PM",
                                                 closed: true,
+                                                isSplitShift: false,
+                                                splitShiftHours: "",
+                                            });
+                                        } else if (hours.includes(",")) {
+                                            // Split shift detected (e.g., "8:00 AM to 12:00 PM, 1:00 PM to 3:00 PM")
+                                            parsedHours.push({
+                                                day: DAYS_OF_WEEK[i],
+                                                enabled: true,
+                                                openTime: "8:00 AM",
+                                                closeTime: "5:00 PM",
+                                                closed: false,
+                                                isSplitShift: true,
+                                                splitShiftHours: hours.trim(),
                                             });
                                         } else {
                                             const timeParts = hours.split(" to ");
@@ -170,6 +192,8 @@ export const AdminContactPage = () => {
                                                     openTime: timeParts[0].trim(),
                                                     closeTime: timeParts[1].trim(),
                                                     closed: false,
+                                                    isSplitShift: false,
+                                                    splitShiftHours: "",
                                                 });
                                             } else {
                                                 const dashParts = hours.split(" - ");
@@ -180,6 +204,8 @@ export const AdminContactPage = () => {
                                                         openTime: dashParts[0].trim(),
                                                         closeTime: dashParts[1].trim(),
                                                         closed: false,
+                                                        isSplitShift: false,
+                                                        splitShiftHours: "",
                                                     });
                                                 }
                                             }
@@ -195,6 +221,19 @@ export const AdminContactPage = () => {
                                     openTime: "8:00 AM",
                                     closeTime: "5:00 PM",
                                     closed: true,
+                                    isSplitShift: false,
+                                    splitShiftHours: "",
+                                });
+                            } else if (hours.includes(",")) {
+                                // Split shift detected (e.g., "8:00 AM to 12:00 PM, 1:00 PM to 3:00 PM")
+                                parsedHours.push({
+                                    day,
+                                    enabled: true,
+                                    openTime: "8:00 AM",
+                                    closeTime: "5:00 PM",
+                                    closed: false,
+                                    isSplitShift: true,
+                                    splitShiftHours: hours.trim(),
                                 });
                             } else {
                                 const timeParts = hours.split(" to ");
@@ -205,6 +244,8 @@ export const AdminContactPage = () => {
                                         openTime: timeParts[0].trim(),
                                         closeTime: timeParts[1].trim(),
                                         closed: false,
+                                        isSplitShift: false,
+                                        splitShiftHours: "",
                                     });
                                 } else {
                                     const dashParts = hours.split(" - ");
@@ -215,6 +256,8 @@ export const AdminContactPage = () => {
                                             openTime: dashParts[0].trim(),
                                             closeTime: dashParts[1].trim(),
                                             closed: false,
+                                            isSplitShift: false,
+                                            splitShiftHours: "",
                                         });
                                     }
                                 }
@@ -242,6 +285,8 @@ export const AdminContactPage = () => {
                         openTime: "8:00 AM",
                         closeTime: "5:00 PM",
                         closed: false,
+                        isSplitShift: false,
+                        splitShiftHours: "",
                     }
                 );
             });
@@ -256,6 +301,8 @@ export const AdminContactPage = () => {
                 openTime: "8:00 AM",
                 closeTime: "5:00 PM",
                 closed: false,
+                isSplitShift: false,
+                splitShiftHours: "",
             }));
             setDayHours(defaultHours);
         }
@@ -275,6 +322,8 @@ export const AdminContactPage = () => {
             openTime: mondayHours.openTime,
             closeTime: mondayHours.closeTime,
             closed: mondayHours.closed,
+            isSplitShift: mondayHours.isSplitShift,
+            splitShiftHours: mondayHours.splitShiftHours,
         }));
         setDayHours(newHours);
     };
@@ -286,6 +335,8 @@ export const AdminContactPage = () => {
             openTime: string;
             closeTime: string;
             closed: boolean;
+            isSplitShift: boolean;
+            splitShiftHours: string;
         }> = [];
 
         let currentGroup: DayHours[] = [];
@@ -299,7 +350,9 @@ export const AdminContactPage = () => {
                 const sameSchedule =
                     hour.openTime === lastHour.openTime &&
                     hour.closeTime === lastHour.closeTime &&
-                    hour.closed === lastHour.closed;
+                    hour.closed === lastHour.closed &&
+                    hour.isSplitShift === lastHour.isSplitShift &&
+                    hour.splitShiftHours === lastHour.splitShiftHours;
 
                 // Check if this day is consecutive to the last day
                 const lastDayIndex = DAYS_OF_WEEK.indexOf(lastHour.day);
@@ -315,6 +368,8 @@ export const AdminContactPage = () => {
                         openTime: currentGroup[0].openTime,
                         closeTime: currentGroup[0].closeTime,
                         closed: currentGroup[0].closed,
+                        isSplitShift: currentGroup[0].isSplitShift,
+                        splitShiftHours: currentGroup[0].splitShiftHours,
                     });
                     currentGroup = [hour];
                 }
@@ -328,6 +383,8 @@ export const AdminContactPage = () => {
                 openTime: currentGroup[0].openTime,
                 closeTime: currentGroup[0].closeTime,
                 closed: currentGroup[0].closed,
+                isSplitShift: currentGroup[0].isSplitShift,
+                splitShiftHours: currentGroup[0].splitShiftHours,
             });
         }
 
@@ -355,6 +412,8 @@ export const AdminContactPage = () => {
                 const dayRange = formatDayRange(group.days);
                 if (group.closed) {
                     markdown += `| ${dayRange}     | CLOSED    |\n`;
+                } else if (group.isSplitShift) {
+                    markdown += `| ${dayRange}      | ${group.splitShiftHours}     |\n`;
                 } else {
                     markdown += `| ${dayRange}      | ${group.openTime} to ${group.closeTime}     |\n`;
                 }
@@ -364,6 +423,8 @@ export const AdminContactPage = () => {
                 if (hours.enabled) {
                     if (hours.closed) {
                         markdown += `| ${hours.day} | CLOSED |\n`;
+                    } else if (hours.isSplitShift) {
+                        markdown += `| ${hours.day} | ${hours.splitShiftHours} |\n`;
                     } else {
                         markdown += `| ${hours.day} | ${hours.openTime} to ${hours.closeTime} |\n`;
                     }
@@ -439,6 +500,11 @@ export const AdminContactPage = () => {
                         const day = parts[0];
                         const hours = parts[1];
 
+                        // Skip header row
+                        if (day.toLowerCase() === "day" && hours.toLowerCase() === "hours") {
+                            continue;
+                        }
+
                         // Check if this is a range (e.g., "MON-FRI")
                         if (day.includes("-") && !DAYS_OF_WEEK.includes(day)) {
                             const rangeParts = day.split("-");
@@ -463,6 +529,19 @@ export const AdminContactPage = () => {
                                                 openTime: "8:00 AM",
                                                 closeTime: "5:00 PM",
                                                 closed: true,
+                                                isSplitShift: false,
+                                                splitShiftHours: "",
+                                            });
+                                        } else if (hours.includes(",")) {
+                                            // Split shift detected (e.g., "8:00 AM to 12:00 PM, 1:00 PM to 3:00 PM")
+                                            parsedHours.push({
+                                                day: DAYS_OF_WEEK[i],
+                                                enabled: true,
+                                                openTime: "8:00 AM",
+                                                closeTime: "5:00 PM",
+                                                closed: false,
+                                                isSplitShift: true,
+                                                splitShiftHours: hours.trim(),
                                             });
                                         } else {
                                             const timeParts = hours.split(" to ");
@@ -473,6 +552,8 @@ export const AdminContactPage = () => {
                                                     openTime: timeParts[0].trim(),
                                                     closeTime: timeParts[1].trim(),
                                                     closed: false,
+                                                    isSplitShift: false,
+                                                    splitShiftHours: "",
                                                 });
                                             } else {
                                                 const dashParts = hours.split(" - ");
@@ -483,6 +564,8 @@ export const AdminContactPage = () => {
                                                         openTime: dashParts[0].trim(),
                                                         closeTime: dashParts[1].trim(),
                                                         closed: false,
+                                                        isSplitShift: false,
+                                                        splitShiftHours: "",
                                                     });
                                                 }
                                             }
@@ -498,6 +581,19 @@ export const AdminContactPage = () => {
                                     openTime: "8:00 AM",
                                     closeTime: "5:00 PM",
                                     closed: true,
+                                    isSplitShift: false,
+                                    splitShiftHours: "",
+                                });
+                            } else if (hours.includes(",")) {
+                                // Split shift detected (e.g., "8:00 AM to 12:00 PM, 1:00 PM to 3:00 PM")
+                                parsedHours.push({
+                                    day,
+                                    enabled: true,
+                                    openTime: "8:00 AM",
+                                    closeTime: "5:00 PM",
+                                    closed: false,
+                                    isSplitShift: true,
+                                    splitShiftHours: hours.trim(),
                                 });
                             } else {
                                 const timeParts = hours.split(" to ");
@@ -508,6 +604,8 @@ export const AdminContactPage = () => {
                                         openTime: timeParts[0].trim(),
                                         closeTime: timeParts[1].trim(),
                                         closed: false,
+                                        isSplitShift: false,
+                                        splitShiftHours: "",
                                     });
                                 } else {
                                     const dashParts = hours.split(" - ");
@@ -518,6 +616,8 @@ export const AdminContactPage = () => {
                                             openTime: dashParts[0].trim(),
                                             closeTime: dashParts[1].trim(),
                                             closed: false,
+                                            isSplitShift: false,
+                                            splitShiftHours: "",
                                         });
                                     }
                                 }
@@ -542,6 +642,8 @@ export const AdminContactPage = () => {
                         openTime: "8:00 AM",
                         closeTime: "5:00 PM",
                         closed: false,
+                        isSplitShift: false,
+                        splitShiftHours: "",
                     }
                 );
             });
@@ -700,77 +802,174 @@ export const AdminContactPage = () => {
 
                                                             {!hours.closed && (
                                                                 <>
-                                                                    <Grid item xs={12} sm={3}>
-                                                                        <Select
-                                                                            fullWidth
-                                                                            value={hours.openTime}
-                                                                            onChange={(e) =>
-                                                                                updateDayHours(
-                                                                                    index,
-                                                                                    "openTime",
-                                                                                    e.target.value,
-                                                                                )
+                                                                    <Grid item xs={12} sm={2}>
+                                                                        <FormControlLabel
+                                                                            control={
+                                                                                <Checkbox
+                                                                                    checked={
+                                                                                        hours.isSplitShift
+                                                                                    }
+                                                                                    onChange={(e) => {
+                                                                                        const isChecked =
+                                                                                            e.target
+                                                                                                .checked;
+                                                                                        const newHours = [
+                                                                                            ...dayHours,
+                                                                                        ];
+                                                                                        newHours[index] = {
+                                                                                            ...newHours[
+                                                                                                index
+                                                                                            ],
+                                                                                            isSplitShift:
+                                                                                                isChecked,
+                                                                                            splitShiftHours:
+                                                                                                isChecked
+                                                                                                    ? `${hours.openTime} to 12:00 PM, 1:00 PM to ${hours.closeTime}`
+                                                                                                    : "",
+                                                                                        };
+                                                                                        setDayHours(
+                                                                                            newHours,
+                                                                                        );
+                                                                                    }}
+                                                                                    color="primary"
+                                                                                    data-testid={`day-split-${hours.day.toLowerCase()}`}
+                                                                                />
                                                                             }
-                                                                            size="small"
-                                                                            data-testid={`open-time-${hours.day.toLowerCase()}`}
-                                                                            startAdornment={
-                                                                                <InputAdornment position="start">
-                                                                                    <AccessTime
-                                                                                        sx={{
-                                                                                            fontSize: 18,
-                                                                                        }}
-                                                                                    />
-                                                                                </InputAdornment>
-                                                                            }
-                                                                        >
-                                                                            {TIME_OPTIONS.map(
-                                                                                (time) => (
-                                                                                    <MenuItem
-                                                                                        key={time}
-                                                                                        value={time}
-                                                                                    >
-                                                                                        {time}
-                                                                                    </MenuItem>
-                                                                                ),
-                                                                            )}
-                                                                        </Select>
+                                                                            label="Split"
+                                                                            sx={{
+                                                                                fontSize: 14,
+                                                                            }}
+                                                                        />
                                                                     </Grid>
+                                                                    {hours.isSplitShift ? (
+                                                                        <Grid
+                                                                            item
+                                                                            xs={12}
+                                                                            sm={7}
+                                                                        >
+                                                                            <TextField
+                                                                                fullWidth
+                                                                                value={
+                                                                                    hours.splitShiftHours
+                                                                                }
+                                                                                onChange={(e) =>
+                                                                                    updateDayHours(
+                                                                                        index,
+                                                                                        "splitShiftHours",
+                                                                                        e.target
+                                                                                            .value,
+                                                                                    )
+                                                                                }
+                                                                                placeholder="8:00 AM to 12:00 PM, 1:00 PM to 5:00 PM"
+                                                                                size="small"
+                                                                                data-testid={`split-shift-hours-${hours.day.toLowerCase()}`}
+                                                                            />
+                                                                        </Grid>
+                                                                    ) : (
+                                                                        <>
+                                                                            <Grid
+                                                                                item
+                                                                                xs={12}
+                                                                                sm={3.5}
+                                                                            >
+                                                                                <Select
+                                                                                    fullWidth
+                                                                                    value={
+                                                                                        hours.openTime
+                                                                                    }
+                                                                                    onChange={(e) =>
+                                                                                        updateDayHours(
+                                                                                            index,
+                                                                                            "openTime",
+                                                                                            e.target
+                                                                                                .value,
+                                                                                        )
+                                                                                    }
+                                                                                    size="small"
+                                                                                    data-testid={`open-time-${hours.day.toLowerCase()}`}
+                                                                                    startAdornment={
+                                                                                        <InputAdornment position="start">
+                                                                                            <AccessTime
+                                                                                                sx={{
+                                                                                                    fontSize: 18,
+                                                                                                }}
+                                                                                            />
+                                                                                        </InputAdornment>
+                                                                                    }
+                                                                                >
+                                                                                    {TIME_OPTIONS.map(
+                                                                                        (
+                                                                                            time,
+                                                                                        ) => (
+                                                                                            <MenuItem
+                                                                                                key={
+                                                                                                    time
+                                                                                                }
+                                                                                                value={
+                                                                                                    time
+                                                                                                }
+                                                                                            >
+                                                                                                {
+                                                                                                    time
+                                                                                                }
+                                                                                            </MenuItem>
+                                                                                        ),
+                                                                                    )}
+                                                                                </Select>
+                                                                            </Grid>
 
-                                                                    <Grid item xs={12} sm={3}>
-                                                                        <Select
-                                                                            fullWidth
-                                                                            value={hours.closeTime}
-                                                                            onChange={(e) =>
-                                                                                updateDayHours(
-                                                                                    index,
-                                                                                    "closeTime",
-                                                                                    e.target.value,
-                                                                                )
-                                                                            }
-                                                                            size="small"
-                                                                            data-testid={`close-time-${hours.day.toLowerCase()}`}
-                                                                            startAdornment={
-                                                                                <InputAdornment position="start">
-                                                                                    <AccessTime
-                                                                                        sx={{
-                                                                                            fontSize: 18,
-                                                                                        }}
-                                                                                    />
-                                                                                </InputAdornment>
-                                                                            }
-                                                                        >
-                                                                            {TIME_OPTIONS.map(
-                                                                                (time) => (
-                                                                                    <MenuItem
-                                                                                        key={time}
-                                                                                        value={time}
-                                                                                    >
-                                                                                        {time}
-                                                                                    </MenuItem>
-                                                                                ),
-                                                                            )}
-                                                                        </Select>
-                                                                    </Grid>
+                                                                            <Grid
+                                                                                item
+                                                                                xs={12}
+                                                                                sm={3.5}
+                                                                            >
+                                                                                <Select
+                                                                                    fullWidth
+                                                                                    value={
+                                                                                        hours.closeTime
+                                                                                    }
+                                                                                    onChange={(e) =>
+                                                                                        updateDayHours(
+                                                                                            index,
+                                                                                            "closeTime",
+                                                                                            e.target
+                                                                                                .value,
+                                                                                        )
+                                                                                    }
+                                                                                    size="small"
+                                                                                    data-testid={`close-time-${hours.day.toLowerCase()}`}
+                                                                                    startAdornment={
+                                                                                        <InputAdornment position="start">
+                                                                                            <AccessTime
+                                                                                                sx={{
+                                                                                                    fontSize: 18,
+                                                                                                }}
+                                                                                            />
+                                                                                        </InputAdornment>
+                                                                                    }
+                                                                                >
+                                                                                    {TIME_OPTIONS.map(
+                                                                                        (
+                                                                                            time,
+                                                                                        ) => (
+                                                                                            <MenuItem
+                                                                                                key={
+                                                                                                    time
+                                                                                                }
+                                                                                                value={
+                                                                                                    time
+                                                                                                }
+                                                                                            >
+                                                                                                {
+                                                                                                    time
+                                                                                                }
+                                                                                            </MenuItem>
+                                                                                        ),
+                                                                                    )}
+                                                                                </Select>
+                                                                            </Grid>
+                                                                        </>
+                                                                    )}
                                                                 </>
                                                             )}
                                                         </>
@@ -925,6 +1124,8 @@ export const AdminContactPage = () => {
                                                                             >
                                                                                 CLOSED
                                                                             </Typography>
+                                                                        ) : group.isSplitShift ? (
+                                                                            group.splitShiftHours
                                                                         ) : (
                                                                             `${group.openTime} to ${group.closeTime}`
                                                                         )}
@@ -971,6 +1172,8 @@ export const AdminContactPage = () => {
                                                                             >
                                                                                 CLOSED
                                                                             </Typography>
+                                                                        ) : hours.isSplitShift ? (
+                                                                            hours.splitShiftHours
                                                                         ) : (
                                                                             `${hours.openTime} to ${hours.closeTime}`
                                                                         )}
