@@ -8,7 +8,6 @@
     "main": "dist/index.js",
     "typings": "src/types.d.ts",
     "sideEffects": false,
-    "type": "module",
     "scripts": {
         "build": "tsc"
     },
@@ -18,9 +17,6 @@
         "yup": "^0.32.9"
     },
     "devDependencies": {
-        "@types/node": "^18.14.1",
-        "@types/uuid": "^9.0.1",
-        "@typescript-eslint/eslint-plugin": "^5.59.0",
-        "@typescript-eslint/parser": "^5.59.0"
+        "@types/uuid": "^9.0.1"
     }
 }

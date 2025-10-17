@@ -1,4 +1,3 @@
-
 import pkg from "@prisma/client";
 
 const { PrismaClient } = pkg;
@@ -11,6 +10,9 @@ export const setupDatabase = async () => {
     // Seed database
     try {
         await init(prisma);
+        // Temporarily disabled due to error
+        // const { seed } = await import("../db/seeds/mock.js");
+        // await seed(prisma);
     } catch (error) {
         logger.error("Caught error in setupDatabase", { trace: "0011", error });
         // Don't let the app start if the database setup fails

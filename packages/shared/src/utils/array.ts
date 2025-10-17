@@ -4,8 +4,8 @@
  * @param array2
  * @returns The difference of the two arrays.
  */
-export function difference(array1: any[], array2: any[]): any[] {
-    return array1.filter(item => array2.indexOf(item) === -1);
+export function difference<T>(array1: T[], array2: T[]): T[] {
+    return array1.filter(item => !array2.includes(item));
 }
 
 /**
@@ -13,8 +13,10 @@ export function difference(array1: any[], array2: any[]): any[] {
  * @param array The array to flatten
  * @returns The flattened array.
  */
-export function flatten(array: any[]): any[] {
-    return array.reduce((acc, item) => acc.concat(item), []);
+export function flatten<T>(array: (T | T[])[]): T[] {
+    return array.reduce<T[]>((acc, item) =>
+        acc.concat(Array.isArray(item) ? item : [item]),
+    []);
 }
 
 /**
@@ -23,7 +25,7 @@ export function flatten(array: any[]): any[] {
  * @param iteratee Iteratee to use to find unique items.
  * @returns Array of unique items.
  */
-export function uniqBy(array: any[], iteratee: (item: any) => any): any[] {
+export function uniqBy<T, K>(array: T[], iteratee: (item: T) => K): T[] {
     return array.filter((item, index, self) => {
         return self.findIndex(i => iteratee(i) === iteratee(item)) === index;
     });

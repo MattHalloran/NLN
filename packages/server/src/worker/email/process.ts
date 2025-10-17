@@ -1,33 +1,42 @@
-import nodemailer from "nodemailer";
-import { genErrorCode, logger, LogLevel } from "../../logger";
-
-const HOST = "smtp.gmail.com";
-const PORT = 465;
-const transporter = nodemailer.createTransport({
-    host: HOST,
-    port: PORT,
-    auth: {
-        user: process.env.SITE_EMAIL_USERNAME,
-        pass: process.env.SITE_EMAIL_PASSWORD,
-    },
-});
+import { genErrorCode, logger, LogLevel } from "../../logger.js";
+import { EmailService } from "../../utils/emailService.js";
 
 export async function emailProcess(job: any) {
-    transporter.sendMail({
-        from: `"${process.env.SITE_EMAIL_FROM}" <${process.env.SITE_EMAIL_ALIAS ?? process.env.SITE_EMAIL_USERNAME}>`,
-        to: job.data.to.join(", "),
-        subject: job.data.subject,
-        text: job.data.text,
-        html: job.data.html,
-    }).then((info: any) => {
+    try {
+        const emailService = EmailService.getInstance();
+
+        const result = await emailService.sendEmail({
+            to: job.data.to,
+            subject: job.data.subject,
+            text: job.data.text,
+            html: job.data.html,
+        });
+
+        if (result.devInfo) {
+            logger.log(
+                LogLevel.info,
+                `📧 Email processed in ${result.devInfo.mode} mode: ${result.devInfo.action}`,
+                {
+                    originalRecipients: result.devInfo.originalRecipients,
+                    actualRecipients: result.devInfo.actualRecipients,
+                    filePath: result.devInfo.filePath,
+                }
+            );
+        }
+
         return {
-            "success": info.rejected.length === 0,
-            info,
+            success: result.success,
+            info: result.info,
+            devInfo: result.devInfo,
         };
-    }).catch((error: any) => {
-        logger.log(LogLevel.error, "Caught error using email transporter", { code: genErrorCode("00012"), error });
+    } catch (error: any) {
+        logger.log(LogLevel.error, "Caught error in email process", {
+            code: genErrorCode("00012"),
+            error,
+        });
         return {
-            "success": false,
+            success: false,
+            error: error.message,
         };
-    });
+    }
 }

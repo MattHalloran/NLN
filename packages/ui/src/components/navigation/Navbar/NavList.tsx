@@ -1,13 +1,12 @@
-import { useMutation } from "@apollo/client";
 import { APP_LINKS } from "@local/shared";
 import { Badge, Box, Button, IconButton, List, ListItem, ListItemIcon, ListItemText, Palette, useTheme } from "@mui/material";
-import { logoutMutation } from "api";
-import { ContactInfo, PopupMenu } from "components";
+import { useLogout } from "api/rest/hooks";
+import { PopupMenu } from "components";
 import { SessionContext } from "contexts/SessionContext";
 import { useSideMenu } from "hooks/useSideMenu";
 import { useWindowSize } from "hooks/useWindowSize";
-import { CreateAccountIcon, InfoIcon, MenuIcon, PhotoLibraryIcon, ShoppingCartIcon } from "icons";
-import _ from "lodash";
+import { Menu as MenuIcon, ShoppingCart, Store, Info, Camera } from "lucide-react";
+import { isObject } from "lodash-es";
 import { useCallback, useContext } from "react";
 import { useLocation } from "route";
 import { PubSub, UserActions, getUserActions, updateArray } from "utils";
@@ -25,7 +24,7 @@ export const NavList = () => {
     const [, setLocation] = useLocation();
     const session = useContext(SessionContext);
 
-    const [logout] = useMutation(logoutMutation);
+    const { mutate: logout } = useLogout();
     const logoutCustomer = () => {
         logout().then(() => {
             PubSub.get().publishSession({});
@@ -35,66 +34,99 @@ export const NavList = () => {
         });
     };
 
-    let nav_options = getUserActions(session);
+    // Create simple navigation options - no login/signup in topbar anymore
+    const nav_options: UserActions = [
+        ["Availability", "availability", "", () => window.open("https://newlife.online-orders.sbiteam.com/", "_blank"), null, 0],
+    ];
 
     let cart_button;
-    // If someone is not logged in, display sign up/log in APP_LINKS
-    if (!_.isObject(session) || Object.keys(session).length === 0) {
-        nav_options.push(["Sign Up", "signup", APP_LINKS.Register, null, CreateAccountIcon, 0]);
-    } else {
-        // Cart option is rendered differently, so we must take it out of the array
-        const cart_index = nav_options.length - 1;
-        const cart_option = nav_options[cart_index];
-        // Replace cart option with log out option
-        nav_options = updateArray(nav_options, cart_index, ["Log Out", "logout", APP_LINKS.Home, logoutCustomer]);
+    // If someone is logged in, show additional options and cart
+    if (isObject(session) && Object.keys(session).length > 0) {
+        const userActions = getUserActions(session);
+        // Filter out Login (shouldn't be there for logged-in users anyway) and Availability (we handle it above)
+        const filteredActions = userActions.filter(([label]) => label !== "Log In" && label !== "Availability");
+
+        // Add logout option
+        nav_options.push(...filteredActions);
+        nav_options.push(["Log Out", "logout", APP_LINKS.Home, logoutCustomer, null, 0]);
+
+        // Cart option for logged-in users
+        const cartData = session?.cart?.items?.length ?? 0;
         cart_button = (
             <IconButton
                 edge="start"
                 color="inherit"
-                aria-label={cart_option[1]}
-                onClick={() => setLocation(APP_LINKS.Cart)}
+                aria-label="cart"
+                onClick={() => window.open("https://newlife.online-orders.sbiteam.com/orders", "_blank")}
                 sx={{ margin: 0 }}
             >
-                <Badge badgeContent={cart_option[5]} color="error">
-                    <ShoppingCartIcon />
+                <Badge badgeContent={cartData} color="error">
+                    <ShoppingCart size={24} />
                 </Badge>
             </IconButton>
         );
     }
 
     const about_options: UserActions = [
-        ["About Us", "about", APP_LINKS.About, null, InfoIcon, 0],
-        ["Gallery", "gallery", APP_LINKS.Gallery, null, PhotoLibraryIcon, 0],
+        ["About Us", "about", APP_LINKS.About, null, null, 0],
+        ["Gallery", "gallery", APP_LINKS.Gallery, null, null, 0],
     ];
 
     const isMobile = useWindowSize(({ width }) => width <= breakpoints.values.md);
     const { isOpen: isSideMenuOpen } = useSideMenu("side-menu", isMobile);
     const openSideMenu = useCallback(() => { PubSub.get().publishSideMenu({ id: "side-menu", isOpen: true }); }, []);
 
-    const optionsToList = (options) => {
-        return options.map(([label, value, link, onClick, Icon], index) => (
-            <ListItem
-                button
-                key={index}
-                onClick={() => { if (onClick) onClick(); setLocation(link); }}
-                sx={{ color: palette.primary.contrastText }}
-            >
-                {Icon ?
-                    (<ListItemIcon>
-                        <Icon fill={palette.primary.contrastText} />
-                    </ListItemIcon>) : null}
-                <ListItemText primary={label} />
-            </ListItem>
-        ));
+    const optionsToList = (options: UserActions): JSX.Element[] => {
+        return options.map(([label, value, link, onClick, _Icon, _badgeNum], index) => {
+            // Map labels to lucide icons
+            const getIcon = (label: string) => {
+                switch (label) {
+                    case "About Us":
+                        return <Info size={20} color={palette.primary.contrastText} />;
+                    case "Gallery":
+                        return <Camera size={20} color={palette.primary.contrastText} />;
+                    case "Availability":
+                        return <Store size={20} color={palette.primary.contrastText} />;
+                    default:
+                        return null;
+                }
+            };
+
+            return (
+                <ListItem
+                    button
+                    key={index}
+                    onClick={() => {
+                        if (onClick) {
+                            onClick();
+                        } else if (link) {
+                            setLocation(link);
+                        }
+                    }}
+                    sx={{ color: palette.primary.contrastText }}
+                >
+                    <ListItemIcon>
+                        {getIcon(label)}
+                    </ListItemIcon>
+                    <ListItemText primary={label} />
+                </ListItem>
+            );
+        });
     };
 
-    const optionsToMenu = (options) => {
-        return options.map(([label, value, link, onClick], index) => (
+    const optionsToMenu = (options: UserActions): JSX.Element[] => {
+        return options.map(([label, value, link, onClick, _Icon, _badgeNum], index) => (
             <Button
                 key={index}
                 variant="text"
                 size="large"
-                onClick={() => { if (onClick) onClick(); setLocation(link); }}
+                onClick={() => {
+                    if (onClick) {
+                        onClick();
+                    } else if (link) {
+                        setLocation(link);
+                    }
+                }}
                 sx={navItemStyle(palette)}
             >
                 {label}
@@ -110,14 +142,14 @@ export const NavList = () => {
             right: "0px",
             padding: "0px",
         }}>
-            {!isMobile && !isSideMenuOpen && <PopupMenu
-                text="Contact"
+            {!isMobile && !isSideMenuOpen && <Button
                 variant="text"
                 size="large"
+                onClick={() => setLocation("/about#contact")}
                 sx={navItemStyle(palette)}
             >
-                <ContactInfo sx={{ width: "calc(min(100vw, 500px))" }} />
-            </PopupMenu>}
+                Contact
+            </Button>}
             {!isMobile && !isSideMenuOpen && <PopupMenu
                 text="About"
                 variant="text"
@@ -130,8 +162,19 @@ export const NavList = () => {
             </PopupMenu>}
             {!isMobile && !isSideMenuOpen && optionsToMenu(nav_options)}
             {!isMobile && !isSideMenuOpen && cart_button}
-            {isMobile && <IconButton edge="start" color="inherit" aria-label="menu" onClick={openSideMenu}>
-                <MenuIcon />
+            {isMobile && <IconButton
+                edge="start"
+                color="inherit"
+                aria-label="menu"
+                onClick={openSideMenu}
+                sx={{
+                    transition: "all 0.3s ease",
+                    "&:hover": {
+                        transform: "scale(1.1)",
+                    },
+                }}
+            >
+                <MenuIcon size={28} />
             </IconButton>}
         </Box>
     );

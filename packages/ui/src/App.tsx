@@ -1,15 +1,13 @@
-import { useMutation, useQuery } from "@apollo/client";
-import { Box, CircularProgress, CssBaseline, GlobalStyles, StyledEngineProvider, ThemeProvider } from "@mui/material";
+import { alpha, Box, CircularProgress, CssBaseline, GlobalStyles, StyledEngineProvider, ThemeProvider } from "@mui/material";
 import { Routes } from "Routes";
-import { loginMutation } from "api/mutation";
-import { readAssetsQuery } from "api/query/readAssets";
+// Using REST API for landing page content and authentication
+import { useLandingPageContent, useLogin } from "api/rest/hooks";
 import { AlertDialog, BottomNav, Footer, PullToRefresh, SnackStack } from "components";
 import { SideMenu, sideMenuDisplayData } from "components/navigation/Navbar/SideMenu";
 import { BusinessContext } from "contexts/BusinessContext";
 import { SessionContext } from "contexts/SessionContext";
 import { ZIndexProvider } from "contexts/ZIndexContext";
 import { useWindowSize } from "hooks/useWindowSize";
-import { shoppingFilterSideMenuDisplayData } from "pages/main/shopping/ShoppingFilterSideMenu/ShoppingFilterSideMenu";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
@@ -18,7 +16,6 @@ import { BusinessData, Session } from "types";
 import { PubSub, SideMenuPub, themes } from "utils";
 
 const menusDisplayData: { [key in SideMenuPub["id"]]: { persistentOnDesktop: boolean, sideForRightHanded: "left" | "right" } } = {
-    "shopping-filter-side-menu": shoppingFilterSideMenuDisplayData,
     "side-menu": sideMenuDisplayData,
 };
 
@@ -33,9 +30,12 @@ export function App() {
     const [business, setBusiness] = useState<BusinessData | undefined>(undefined);
     const [contentMargins, setContentMargins] = useState<{ paddingLeft?: string, paddingRight?: string }>({}); // Adds margins to content when a persistent drawer is open
     const isMobile = useWindowSize(({ width }) => width <= theme.breakpoints.values.md);
-    const { data: businessData } = useQuery(readAssetsQuery, { variables: { input: { files: ["hours.md", "business.json"] } } });
-    const [login] = useMutation(loginMutation);
-    const [, setLocation] = useLocation();
+    
+    // Using REST API for landing page content
+    const { data: landingPageData } = useLandingPageContent(true);
+
+    const { mutate: login } = useLogin();
+    const [,] = useLocation();
 
     useEffect(() => () => {
         if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -43,16 +43,21 @@ export function App() {
     }, []);
 
     useEffect(() => {
-        if (businessData === undefined) return;
-        const data = businessData.readAssets[1] ? JSON.parse(businessData.readAssets[1]) : {};
-        const hoursRaw = businessData.readAssets[0];
-        data.hours = hoursRaw;
-        setBusiness(data);
-    }, [businessData]);
+        if (landingPageData?.contactInfo) {
+            const { business, hours } = landingPageData.contactInfo;
+            const data = {
+                ...business,
+                hours,
+            };
+            setBusiness(data);
+        }
+    }, [landingPageData]);
 
     useEffect(() => {
         // Determine theme
-        if (session?.theme) setTheme(themes[session?.theme]);
+        if (session?.theme && (session.theme === "light" || session.theme === "dark")) {
+            setTheme(themes[session.theme]);
+        }
         //else if (session && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) setTheme(themes.dark);
         else setTheme(themes.light);
     }, [session]);
@@ -62,10 +67,10 @@ export function App() {
             setSession(session);
             return;
         }
-        login({ variables: { input: {} } }).then((response) => {
-            setSession(response.data.login);
-        }).catch((response) => {
-            if (import.meta.env.DEV) console.error("Error: cannot login", response);
+        login({ email: "", password: "" }).then((response) => {
+            setSession(response as any);
+        }).catch(() => {
+            // Silent fail - expected 401 when no valid session cookie exists
             setSession({});
         });
     }, [login]);
@@ -81,8 +86,14 @@ export function App() {
                 setLoading(Boolean(delay));
             }
         });
-        const businessSub = PubSub.get().subscribeBusiness((data) => setBusiness(data));
-        const themeSub = PubSub.get().subscribeTheme((theme) => setTheme(themes[theme as any] ?? themes.light));
+        const businessSub = PubSub.get().subscribeBusiness((data) => setBusiness(data as BusinessData));
+        const themeSub = PubSub.get().subscribeTheme((theme) => {
+            if (theme && (theme === "light" || theme === "dark")) {
+                setTheme(themes[theme]);
+            } else {
+                setTheme(themes.light);
+            }
+        });
         // Handle session updates
         const sessionSub = PubSub.get().subscribeSession((session) => {
             // If undefined or empty, set session to published data
@@ -138,7 +149,7 @@ export function App() {
                                 backgroundColor: "transparent", // Set initial color as transparent
                             },
                             "&:hover::-webkit-scrollbar-thumb": {
-                                backgroundColor: "#1b5e2085",  // Change color on hover
+                                backgroundColor: alpha(theme.palette.primary.main, 0.52),
                             },
                         },
                         body: {
@@ -146,7 +157,7 @@ export function App() {
                             overflowY: "auto",
                             // Scrollbar should always be visible for the body
                             "&::-webkit-scrollbar-thumb": {
-                                backgroundColor: "#1b5e2085",
+                                backgroundColor: alpha(theme.palette.primary.main, 0.52),
                             },
                         },
                         // Custom IconButton hover highlighting, which doesn't hide background color
@@ -172,15 +183,15 @@ export function App() {
                                     // Style visited, active, and hovered links
                                     "& span, p": {
                                         "& a": {
-                                            color: theme.palette.mode === "light" ? "#001cd3" : "#dd86db",
+                                            color: theme.palette.primary.dark,
                                             "&:visited": {
-                                                color: theme.palette.mode === "light" ? "#001cd3" : "#f551ef",
+                                                color: theme.palette.primary.dark,
                                             },
                                             "&:active": {
-                                                color: theme.palette.mode === "light" ? "#001cd3" : "#f551ef",
+                                                color: theme.palette.primary.dark,
                                             },
                                             "&:hover": {
-                                                color: theme.palette.mode === "light" ? "#5a6ff6" : "#f3d4f2",
+                                                color: alpha(theme.palette.primary.light, 0.8),
                                             },
                                             // Remove underline on links
                                             textDecoration: "none",

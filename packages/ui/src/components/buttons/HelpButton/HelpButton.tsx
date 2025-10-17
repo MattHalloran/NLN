@@ -1,7 +1,7 @@
 import { Box, IconButton, Menu, Tooltip, useTheme } from "@mui/material";
+import { LazyMarkdown } from "components";
 import { MenuTitle } from "components/dialogs";
 import { HelpIcon } from "icons";
-import Markdown from "markdown-to-jsx";
 import { useCallback, useState } from "react";
 import { HelpButtonProps } from "../types";
 
@@ -16,7 +16,7 @@ export const HelpButton = ({
     const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
     const open = Boolean(anchorEl);
 
-    const openMenu = useCallback((event) => {
+    const openMenu = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
         if (onClick) onClick(event);
         if (!anchorEl) setAnchorEl(event.currentTarget);
     }, [anchorEl, onClick]);
@@ -83,7 +83,7 @@ export const HelpButton = ({
                     >
                         <MenuTitle onClose={closeMenu} />
                         <Box sx={{ padding: 2 }}>
-                            <Markdown>{markdown}</Markdown>
+                            <LazyMarkdown>{markdown}</LazyMarkdown>
                         </Box>
                     </Menu>
                 </IconButton>

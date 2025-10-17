@@ -1,0 +1,58 @@
+{
+  "tips": [
+    {
+      "id": "deep-watering",
+      "title": "Deep Watering Technique",
+      "description": "Water plants deeply but less frequently to encourage strong root development. Aim for 1-2 inches per week.",
+      "category": "Watering",
+      "season": "Year-round",
+      "displayOrder": 1,
+      "isActive": true
+    },
+    {
+      "id": "spring-fertilizing",
+      "title": "Spring Fertilizing Schedule",
+      "description": "Begin fertilizing in early spring when new growth appears. Use a balanced, slow-release fertilizer for best results.",
+      "category": "Fertilizing",
+      "season": "Spring",
+      "displayOrder": 2,
+      "isActive": true
+    },
+    {
+      "id": "winter-protection",
+      "title": "Winter Plant Protection",
+      "description": "Wrap tender plants in burlap and mulch around the base to protect from freezing temperatures.",
+      "category": "General",
+      "season": "Winter",
+      "displayOrder": 3,
+      "isActive": true
+    },
+    {
+      "id": "summer-pruning",
+      "title": "Summer Pruning Tips",
+      "description": "Prune spring-flowering shrubs right after blooming ends. This ensures next year's flower buds have time to develop.",
+      "category": "Pruning",
+      "season": "Summer",
+      "displayOrder": 4,
+      "isActive": true
+    },
+    {
+      "id": "natural-pest-control",
+      "title": "Natural Pest Control",
+      "description": "Encourage beneficial insects with native plants. Ladybugs, lacewings, and birds are natural pest controllers.",
+      "category": "Pest Control",
+      "season": "Year-round",
+      "displayOrder": 5,
+      "isActive": true
+    },
+    {
+      "id": "fall-cleanup",
+      "title": "Fall Garden Cleanup",
+      "description": "Remove diseased plant material and fallen leaves to prevent pest and disease issues next season.",
+      "category": "General",
+      "season": "Fall",
+      "displayOrder": 6,
+      "isActive": true
+    }
+  ]
+}

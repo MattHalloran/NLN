@@ -1,5 +1,5 @@
 import { APP_LINKS } from "@local/shared";
-import { AppBar, Box, Stack, Typography, useTheme } from "@mui/material";
+import { alpha, AppBar, Box, Stack, Typography, useTheme } from "@mui/material";
 import Logo from "assets/img/nln-logo-colorized.png";
 import { Title } from "components/text";
 import { NavbarProps } from "components/types";
@@ -49,34 +49,21 @@ const LogoComponent = ({
                 }}
             >
                 {/* Logo */}
-                <Box sx={{
-                    display: "flex",
-                    padding: 0,
-                    cursor: "pointer",
-                    marginTop: { xs: "4px", md: "8px" },
-                    marginBottom: { xs: "4px", md: "8px" },
-                    marginRight: "auto",
-                    background: palette.mode === "light" ? "#ffffff42" : "radial-gradient(circle at center, #757565 0, #757565, white 100%)",
-                    borderRadius: "100%",
-                    height: "48px",
-                    width: "48px",
-                }}>
-                    {/* icon */}
-                    <Box
-                        component="img"
-                        src={Logo}
-                        alt={`${business?.BUSINESS_NAME?.Short ?? "Business"} logo`}
-                        sx={{
-                            "-webkit-filter": `drop-shadow(0.5px 0.5px 0 ${hexToRGB(palette.primary.dark, 0.9)})
-                        drop-shadow(-0.5px -0.5px 0 ${hexToRGB(palette.primary.dark, 0.9)})`,
-                            filter: `drop-shadow(0.5px 0.5px 0 ${hexToRGB(palette.primary.dark, 0.9)}) 
-                drop-shadow(-0.5px -0.5px 0 ${hexToRGB(palette.primary.dark, 0.9)})`,
-                            verticalAlign: "middle",
-                            fill: "black",
-                            height: "48px",
-                            transform: "rotate(20deg)",
-                        }} />
-                </Box>
+                <Box
+                    component="img"
+                    src={Logo}
+                    alt={`${business?.BUSINESS_NAME?.Short ?? "Business"} logo`}
+                    sx={{
+                        cursor: "pointer",
+                        marginTop: { xs: "4px", md: "8px" },
+                        marginBottom: { xs: "4px", md: "8px" },
+                        marginRight: "auto",
+                        borderRadius: "50%",
+                        height: "48px",
+                        width: "48px",
+                        objectFit: "cover",
+                    }}
+                />
                 {/* Business name */}
                 {state === "full" && <Typography
                     variant="h6"
@@ -95,7 +82,15 @@ const LogoComponent = ({
     );
 };
 
-const TitleDisplay = ({ isMobile, title, titleComponent, help, options, shouldHideTitle, showOnMobile }) => {
+const TitleDisplay = ({ isMobile, title, titleComponent, help, options, shouldHideTitle, showOnMobile }: {
+    isMobile: boolean;
+    title?: string;
+    titleComponent?: JSX.Element;
+    help?: string;
+    options?: any;
+    shouldHideTitle?: boolean;
+    showOnMobile?: boolean;
+}) => {
     // Check if title should be displayed here, based on screen size
     if ((isMobile && !showOnMobile) || (!isMobile && showOnMobile)) return null;
     // Desktop title can be hidden
@@ -112,7 +107,7 @@ const TitleDisplay = ({ isMobile, title, titleComponent, help, options, shouldHi
     return null;
 };
 
-const NavListComponent = ({ isLeftHanded }) => {
+const NavListComponent = ({ isLeftHanded }: { isLeftHanded: boolean }) => {
     return <Box sx={{
         marginLeft: isLeftHanded ? 0 : "auto",
         marginRight: isLeftHanded ? "auto" : 0,
@@ -123,20 +118,20 @@ const NavListComponent = ({ isLeftHanded }) => {
 };
 
 /**
- * Navbar displayed at the top of the page. Has a few different 
+ * Navbar displayed at the top of the page. Has a few different
  * looks depending on data passed to it.
- * 
- * If the screen is large, the navbar is always displayed the same. In 
+ *
+ * If the screen is large, the navbar is always displayed the same. In
  * this case, the title and other content are displayed below the navbar.
- * 
- * Otherwise, the default look is logo & business name on the left, and 
- * account menu profile icon on the right.
- * 
- * If title data is passed in, the business name is hidden. The 
+ *
+ * Otherwise, the default look is logo & business name on the left, and
+ * account menu icon on the right.
+ *
+ * If title data is passed in, the business name is hidden. The
  * title is displayed in the middle, with a help icon if specified.
- * 
- * Content to display below the title (but still in the navbar) can also 
- * be passed in. This is useful for displaying a search bar, page tabs, etc. This 
+ *
+ * Content to display below the title (but still in the navbar) can also
+ * be passed in. This is useful for displaying a search bar, page tabs, etc. This
  * content is inside the navbar on small screens, and below the navbar on large screens.
  */
 export const Navbar = forwardRef(({

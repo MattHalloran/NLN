@@ -1,10 +1,11 @@
 import bcrypt from "bcrypt";
 import { HASHING_ROUNDS } from "../../consts";
+import { logger, LogLevel } from "../../logger.js";
 import { AccountStatus } from "../../schema/types";
 import { PrismaType } from "../../types";
 
 export async function init(prisma: PrismaType) {
-    console.info("🌱 Starting database intial seed...");
+    logger.log(LogLevel.info, "🌱 Starting database intial seed...");
 
     // // Make sure auto-increment fields have the correct starting value
     // // plant_trait
@@ -34,7 +35,8 @@ export async function init(prisma: PrismaType) {
         update: {},
         create: {
             title: "Owner",
-            description: "This role grants administrative access. This comes with the ability to \
+            description:
+                "This role grants administrative access. This comes with the ability to \
             approve new customers, change customer information, modify inventory and \
             contact hours, and more.",
         },
@@ -59,11 +61,18 @@ export async function init(prisma: PrismaType) {
     });
     // Create admin account if it doesn't exist
     if (!admin) {
+        const adminEmail = process.env.ADMIN_EMAIL;
+        const adminPassword = process.env.ADMIN_PASSWORD;
+
+        if (!adminEmail || !adminPassword) {
+            throw new Error("ADMIN_EMAIL and ADMIN_PASSWORD must be set in environment variables");
+        }
+
         await prisma.customer.create({
             data: {
                 firstName: "admin",
                 lastName: "account",
-                password: bcrypt.hashSync(process.env.ADMIN_PASSWORD!, HASHING_ROUNDS),
+                password: bcrypt.hashSync(adminPassword, HASHING_ROUNDS),
                 accountApproved: true,
                 emailVerified: true,
                 status: AccountStatus.Unlocked,
@@ -73,15 +82,19 @@ export async function init(prisma: PrismaType) {
                     },
                 },
                 emails: {
-                    create: [{
-                        emailAddress: process.env.ADMIN_EMAIL!,
-                        receivesDeliveryUpdates: false,
-                    }],
+                    create: [
+                        {
+                            emailAddress: adminEmail,
+                            receivesDeliveryUpdates: false,
+                        },
+                    ],
                 },
                 roles: {
-                    create: [{
-                        roleId: adminRole.id,
-                    }],
+                    create: [
+                        {
+                            roleId: adminRole.id,
+                        },
+                    ],
                 },
             },
         });
@@ -98,5 +111,5 @@ export async function init(prisma: PrismaType) {
         });
     }
 
-    console.info("✅ Database seeding complete.");
+    logger.log(LogLevel.info, "✅ Database seeding complete.");
 }

@@ -83,7 +83,7 @@ export const keyComboToString = (...keys: KeyComboOption[]): string => {
     for (const key of keys) {
         // If the key is a WindowsKey, convert it to the correct key for the device's operating system
         if (key in WindowsKey) {
-            result += deviceOS === DeviceOS.MacOS ? MacKeyFromWindows[key] : key;
+            result += deviceOS === DeviceOS.MacOS ? MacKeyFromWindows[key as keyof typeof MacKeyFromWindows] : key;
         } else {
             result += key;
         }

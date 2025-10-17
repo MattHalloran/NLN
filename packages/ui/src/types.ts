@@ -1,25 +1,34 @@
-import { FetchResult } from "@apollo/client";
 import { Theme } from "@mui/material";
 import { SystemStyleObject } from "@mui/system";
-import { imagesByLabel_imagesByLabel } from "api/generated/imagesByLabel";
-import { orders_orders } from "api/generated/orders";
-import { plants_plants_images } from "api/generated/plants";
 import { SvgProps } from "icons/types";
 import { Path } from "route";
 
-export type Cart = Omit<orders_orders, "customer">;
+export type Cart = { items?: Array<any> };
 
-export type PlantImageInfo = plants_plants_images;
-export type ImageInfo = { index: number, image: PlantImageInfo['image'] };
+// Image types for image management
+export type ImageFile = {
+    src: string,
+    width: number,
+    height: number,
+};
 
-export type Image = imagesByLabel_imagesByLabel
-export type ImageFile = { __typename: "ImageFile", src: string, width: number, height: number };
+export type Image = {
+    hash: string;
+    alt?: string | null;
+    description?: string | null;
+    files?: ImageFile[] | null;
+};
+
+export type ImageInfo = {
+    index: number,
+    image: Image
+};
 
 // Top-level props that can be passed into any routed component
 export type Session = {
     id?: string | null;
-    roles?: any
-    theme?: string;
+    roles?: Array<{ role: { title: string } }>;
+    theme?: "light" | "dark";
     cart?: Cart | null;
     firstName?: string | null;
     lastName?: string | null;
@@ -31,32 +40,20 @@ type BusinessLink = {
     Link: string;
 }
 export type BusinessData = {
-    hours?: any;
+    hours?: string;
     BUSINESS_NAME: {
         Short: string;
         Long: string;
     },
     ADDRESS: BusinessLink;
     PHONE: BusinessLink;
-    FAX: BusinessLink;
+    FAX?: BusinessLink;
     EMAIL: BusinessLink;
-    SOCIAL: {
-        Facebook: string;
-        Instagram: string;
+    SOCIAL?: {
+        Facebook?: string;
+        Instagram?: string;
     },
-    WEBSITE: string;
-}
-
-// Apollo GraphQL
-export type ApolloResponse = FetchResult<any, Record<string, any>, Record<string, any>>;
-export type ApolloError = {
-    message?: string;
-    graphQLErrors?: {
-        message: string;
-        extensions?: {
-            code: string;
-        };
-    }[];
+    WEBSITE?: string;
 }
 
 // Miscellaneous types

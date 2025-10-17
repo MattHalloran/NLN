@@ -7,8 +7,6 @@ export * from "./makeID";
 export * from "./objectTools";
 export * from "./opacityHex";
 export * from "./openLink";
-export * from "./plantTools";
-export * from "./printAvailability";
 export * from "./pubsub";
 export * from "./serverUrl";
 export * from "./stringTools";

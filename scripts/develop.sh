@@ -1,7 +1,7 @@
 #!/bin/bash
 # Starts the development environment, using sensible defaults.
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-. "${HERE}/prettify.sh"
+. "${HERE}/utils.sh"
 
 # Default values
 BUILD=""
@@ -41,6 +41,11 @@ for arg in "$@"; do
     esac
 done
 
+NODE_ENV="development"
+if $PROD_FLAG_FOUND; then
+    NODE_ENV="production"
+fi
+
 # Running setup.sh
 info "Running setup.sh..."
 . "${HERE}/setup.sh" -r n "${SETUP_ARGS[@]}"
@@ -49,6 +54,16 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
+info "Getting ${NODE_ENV} secrets..."
+readarray -t secrets <"${HERE}/secrets_list.txt"
+TMP_FILE=$(mktemp) && { "${HERE}/getSecrets.sh" ${NODE_ENV} ${TMP_FILE} "${secrets[@]}" 2>/dev/null && . "$TMP_FILE"; } || echo "Failed to get secrets."
+rm "$TMP_FILE"
+export DB_URL="postgresql://${DB_USER}:${DB_PASSWORD}@db:${PORT_DB:-5433}"
+export REDIS_URL="redis://:${REDIS_PASSWORD}@redis:${PORT_REDIS:-6380}"
+# Not sure why, but these need to be exported for the server to read them.
+# This is not the case for the other secrets.
+export JWT_PRIV
+export JWT_PUB
 export SERVER_LOCATION=$("${HERE}/domainCheck.sh" $SITE_IP $SERVER_URL | tail -n 1)
 if [ $? -ne 0 ]; then
     echo $SERVER_LOCATION
@@ -63,9 +78,11 @@ info "Docker compose file: ${DOCKER_COMPOSE_FILE}"
 
 docker-compose down
 
-# If server is not local, set up reverse proxy
-if [[ "$SERVER_LOCATION" != "local" ]]; then
-    . "${HERE}/proxySetup.sh" -n "${NGINX_LOCATION}"
+# Start the reverse proxy
+"${HERE}/proxySetup.sh"
+if [ $? -ne 0 ]; then
+    error "Failed to set up proxy"
+    exit 1
 fi
 
 # Start the development environment

@@ -2,7 +2,7 @@
 /* eslint-disable no-restricted-globals */
 /* global importScripts workbox */
 // Import the necessary Workbox scripts using importScripts
-importScripts("https://storage.googleapis.com/workbox-cdn/releases/7.0.0/workbox-sw.js");
+importScripts("https://storage.googleapis.com/workbox-cdn/releases/7.3.0/workbox-sw.js");
 
 // This service worker can be customized!
 // See https://developers.google.com/web/tools/workbox/modules
@@ -17,7 +17,7 @@ const { registerRoute } = (workbox.routing);
 const { CacheFirst } = (workbox.strategies);
 
 const CACHE_NAME = "nln-cache";
-const CURRENT_CACHE_VERSION = "2024-07-17-a"; // Change this value to force a cache update
+const CURRENT_CACHE_VERSION = "2024-09-08-workbox-7.3"; // Change this value to force a cache update
 
 // eslint-disable-next-line no-magic-numbers
 const DAYS_30_SECONDS = 30 * 24 * 60 * 60;
@@ -88,15 +88,11 @@ registerRoute(
     }),
 );
 
-// Listen to events sent from the main application (`index.jsx`)
+// Listen to events sent from the main application (`index.tsx`)
 self.addEventListener("message", (event) => {
     if (event.data && event.data.type === "SKIP_WAITING") {
         self.skipWaiting();
     }
-    // if (event.data && event.data.type === "SW_UPDATE_CHECK") {
-    //     console.log("post received from client: SW_UPDATE_CHECK");
-    //     event.source.postMessage({ type: "SW_UPDATE_START" });
-    // }
 });
 
 // Listen for the install event
@@ -110,18 +106,31 @@ self.addEventListener("install", (event) => {
 });
 
 self.addEventListener("activate", (event) => {
+    console.log("Service worker activating...", event);
     event.waitUntil(
+        // Clear all caches that don't match current version
         caches.keys().then((cacheNames) => {
+            console.log("Found cache names:", cacheNames);
             return Promise.all(
                 cacheNames.map((cacheName) => {
-                    if (cacheName !== CURRENT_CACHE_VERSION) {
+                    // Delete any cache that doesn't match current version or standard Workbox caches
+                    if (cacheName !== CURRENT_CACHE_VERSION && 
+                        cacheName !== CACHE_NAME && 
+                        !cacheName.startsWith('workbox-precache')) {
                         console.log(`Deleting old cache: ${cacheName}`);
                         return caches.delete(cacheName);
                     }
+                    // Also delete old NLN caches with different versioning schemes
+                    if (cacheName.includes('nln-cache') && cacheName !== CACHE_NAME) {
+                        console.log(`Deleting old NLN cache: ${cacheName}`);
+                        return caches.delete(cacheName);
+                    }
+                    return null;
                 }),
             );
         }).then(() => {
-            self.clients.claim();
+            console.log("Service worker taking control of all clients");
+            return self.clients.claim();
         }),
     );
 });
@@ -176,14 +185,8 @@ self.addEventListener("notificationclick", (event) => {
 
 self.addEventListener("periodicsync", (event) => {
     console.log("periodicsync", event);
-    // if (event.tag === UPDATE_CHECK) {
-    //     event.waitUntil(checkForUpdates());
-    // }
 });
 
 self.addEventListener("message", (event) => {
     console.log("message", event);
-    // if (event.data === UPDATE_CHECK) {
-    //     event.waitUntil(checkForUpdates());
-    // }
 });

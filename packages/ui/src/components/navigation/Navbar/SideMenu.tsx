@@ -1,21 +1,46 @@
-import { useMutation } from "@apollo/client";
 import { APP_LINKS } from "@local/shared";
-import { Badge, Collapse, Divider, IconButton, List, ListItem, ListItemIcon, ListItemText, Palette, SwipeableDrawer, useTheme } from "@mui/material";
-import { logoutMutation } from "api";
+import { Badge, Box, Collapse, Divider, IconButton, List, ListItem, ListItemIcon, ListItemText, Palette, SwipeableDrawer, Typography, useTheme } from "@mui/material";
+import { useLogout } from "api/rest/hooks";
 import { ContactInfo, CopyrightBreadcrumbs } from "components";
 import { BusinessContext } from "contexts/BusinessContext";
 import { SessionContext } from "contexts/SessionContext";
 import { useSideMenu } from "hooks/useSideMenu";
 import { useWindowSize } from "hooks/useWindowSize";
-import { CloseIcon, ContactSupportIcon, ExpandLessIcon, ExpandMoreIcon, FacebookIcon, HomeIcon, InfoIcon, InstagramIcon, LogOutIcon, PhotoLibraryIcon, ShareIcon } from "icons";
-import _ from "lodash";
+import {
+    X,
+    Phone,
+    ChevronUp,
+    ChevronDown,
+    Facebook,
+    Home,
+    Info,
+    Instagram,
+    LogOut,
+    Camera,
+    Share2,
+    ShoppingCart,
+    UserPlus,
+    User,
+    Store,
+} from "lucide-react";
+import { isObject } from "lodash-es";
 import { useContext, useState } from "react";
 import { useLocation } from "route";
-import { PubSub, getUserActions, noop } from "utils";
+import { PubSub, getUserActions, noop, UserActions } from "utils";
 
 const menuItemStyle = (palette: Palette) => ({
     color: palette.background.textPrimary,
-    borderBottom: `1px solid ${palette.background.textPrimary}`,
+    transition: "all 0.3s ease",
+    borderRadius: "8px",
+    marginX: 1,
+    marginY: 0.5,
+    "&:hover": {
+        backgroundColor: palette.mode === "light" ? "rgba(0, 0, 0, 0.05)" : "rgba(255, 255, 255, 0.05)",
+        transform: "translateX(4px)",
+    },
+    "& .MuiListItemIcon-root": {
+        minWidth: 42,
+    },
 });
 
 export const sideMenuDisplayData = {
@@ -35,7 +60,7 @@ export const SideMenu = () => {
     const [contactOpen, setContactOpen] = useState(true);
     const [socialOpen, setSocialOpen] = useState(false);
 
-    const [logout] = useMutation(logoutMutation);
+    const { mutate: logout } = useLogout();
     const logoutCustomer = () => {
         logout().then(() => {
             PubSub.get().publishSession({});
@@ -55,11 +80,11 @@ export const SideMenu = () => {
         setSocialOpen(!socialOpen);
     };
 
-    const newTab = (link) => {
+    const newTab = (link: string): void => {
         window.open(link, "_blank");
     };
 
-    const optionsToList = (options) => {
+    const optionsToList = (options: UserActions): JSX.Element[] => {
         return options.map(([label, _value, link, onClick, Icon, badgeNum], index) => (
             <ListItem
                 key={index}
@@ -81,15 +106,17 @@ export const SideMenu = () => {
         ));
     };
 
-    const nav_options = [
-        ["Home", "home", APP_LINKS.Home, null, HomeIcon],
-        ["About Us", "about", APP_LINKS.About, null, InfoIcon],
-        ["Gallery", "gallery", APP_LINKS.Gallery, null, PhotoLibraryIcon],
+    const nav_options: UserActions = [
+        ["Home", "home", APP_LINKS.Home, null, null, 0],
+        ["Availability", "availability", APP_LINKS.Shopping, () => window.location.href = "https://newlife.online-orders.sbiteam.com/", null, 0],
+        ["About Us", "about", APP_LINKS.About, null, null, 0],
+        ["Gallery", "gallery", APP_LINKS.Gallery, null, null, 0],
     ];
 
-    const customer_actions = getUserActions(session);
-    if (_.isObject(session) && Object.entries(session).length > 0) {
-        customer_actions.push(["Log Out", "logout", APP_LINKS.Home, logoutCustomer, LogOutIcon, 0]);
+    // Filter out the availability option from customer actions since we moved it to nav_options
+    const customer_actions = getUserActions(session).filter(([label]) => label !== "Availability");
+    if (isObject(session) && Object.entries(session).length > 0) {
+        customer_actions.push(["Log Out", "logout", APP_LINKS.Home, logoutCustomer, null, 0]);
     }
 
     return (
@@ -102,67 +129,282 @@ export const SideMenu = () => {
             variant={isMobile ? "temporary" : "persistent"}
             sx={{
                 "& .MuiDrawer-paper": {
-                    background: palette.background.default,
+                    background: palette.mode === "light"
+                        ? "linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%)"
+                        : "linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)",
                     color: palette.background.textPrimary,
+                    boxShadow: "-4px 0 20px rgba(0, 0, 0, 0.1)",
+                    width: isMobile ? "85vw" : "320px",
+                    maxWidth: "400px",
                 },
             }}
         >
-            <IconButton
-                onClick={close}
+            {/* Header */}
+            <Box
                 sx={{
-                    background: palette.primary.dark,
-                    borderRadius: 0,
-                    borderBottom: `1px solid ${palette.divider}`,
-                    justifyContent: "end",
-                    direction: "rtl",
-                    height: "64px",
+                    background: `linear-gradient(135deg, ${palette.primary.dark} 0%, ${palette.primary.main} 100%)`,
+                    padding: 2,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    minHeight: "80px",
+                    boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
                 }}
             >
-                <CloseIcon fill={palette.primary.contrastText} />
-            </IconButton>
-            <List>
-                {/* Collapsible contact information */}
-                <ListItem button onClick={handleContactClick} sx={menuItemStyle(palette)}>
-                    <ListItemIcon><ContactSupportIcon fill={palette.background.textPrimary} /></ListItemIcon>
-                    <ListItemText primary="Contact Us" />
-                    {contactOpen ? <ExpandLessIcon fill={palette.background.textPrimary} /> : <ExpandMoreIcon fill={palette.background.textPrimary} />}
-                </ListItem>
-                <Collapse in={contactOpen} timeout="auto" unmountOnExit sx={menuItemStyle(palette)}>
-                    <ContactInfo />
-                </Collapse>
-                {/* Collapsible social media APP_LINKS */}
-                <ListItem button onClick={handleSocialClick} sx={menuItemStyle(palette)}>
-                    <ListItemIcon><ShareIcon fill={palette.background.textPrimary} /></ListItemIcon>
-                    <ListItemText primary="Socials" />
-                    {socialOpen ? <ExpandLessIcon fill={palette.background.textPrimary} /> : <ExpandMoreIcon fill={palette.background.textPrimary} />}
-                </ListItem>
-                <Collapse in={socialOpen} timeout="auto" unmountOnExit>
-                    <ListItem button onClick={() => newTab(business?.SOCIAL?.Facebook)} sx={menuItemStyle(palette)}>
-                        <ListItemIcon>
-                            <FacebookIcon fill={palette.background.textPrimary} />
+                <Typography
+                    variant="h6"
+                    sx={{
+                        color: palette.primary.contrastText,
+                        fontWeight: 600,
+                        letterSpacing: 0.5,
+                    }}
+                >
+                    Menu
+                </Typography>
+                <IconButton
+                    onClick={close}
+                    sx={{
+                        color: palette.primary.contrastText,
+                        padding: 1,
+                        "&:hover": {
+                            backgroundColor: "rgba(255, 255, 255, 0.1)",
+                            transform: "rotate(90deg)",
+                        },
+                        transition: "all 0.3s ease",
+                    }}
+                >
+                    <X size={24} />
+                </IconButton>
+            </Box>
+            <List sx={{ padding: 1, flex: 1, overflowY: "auto" }}>
+                {/* Main Navigation Section */}
+                <Box sx={{ marginBottom: 1 }}>
+                    <Typography
+                        variant="caption"
+                        sx={{
+                            color: palette.text.secondary,
+                            paddingX: 2,
+                            paddingY: 1,
+                            display: "block",
+                            fontWeight: 600,
+                            textTransform: "uppercase",
+                            letterSpacing: 1,
+                        }}
+                    >
+                        Navigation
+                    </Typography>
+                    {nav_options.map(([label, _value, link, onClick, _Icon, _badgeNum], index) => {
+                        const iconMap: { [key: string]: JSX.Element } = {
+                            "Home": <Home size={20} />,
+                            "Availability": <Store size={20} />,
+                            "About Us": <Info size={20} />,
+                            "Gallery": <Camera size={20} />,
+                        };
+                        return (
+                            <ListItem
+                                key={index}
+                                button
+                                sx={menuItemStyle(palette)}
+                                onClick={() => {
+                                    if (onClick) onClick();
+                                    close();
+                                    setLocation(link);
+                                }}
+                            >
+                                <ListItemIcon sx={{ color: palette.primary.main }}>
+                                    {iconMap[label] || <Home size={20} />}
+                                </ListItemIcon>
+                                <ListItemText
+                                    primary={label}
+                                    primaryTypographyProps={{
+                                        fontSize: "0.95rem",
+                                        fontWeight: 500,
+                                    }}
+                                />
+                            </ListItem>
+                        );
+                    })}
+                </Box>
+
+                <Divider sx={{ marginY: 2, marginX: 1 }} />
+
+                {/* Contact Section */}
+                <Box sx={{ marginBottom: 1 }}>
+                    <ListItem
+                        button
+                        onClick={handleContactClick}
+                        sx={{
+                            ...menuItemStyle(palette),
+                            backgroundColor: contactOpen
+                                ? palette.mode === "light"
+                                    ? "rgba(0, 0, 0, 0.03)"
+                                    : "rgba(255, 255, 255, 0.03)"
+                                : "transparent",
+                        }}
+                    >
+                        <ListItemIcon sx={{ color: palette.primary.main }}>
+                            <Phone size={20} />
                         </ListItemIcon>
-                        <ListItemText primary="Facebook" />
+                        <ListItemText
+                            primary="Contact Us"
+                            primaryTypographyProps={{
+                                fontSize: "0.95rem",
+                                fontWeight: 500,
+                            }}
+                        />
+                        {contactOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                     </ListItem>
-                    <ListItem button onClick={() => newTab(business?.SOCIAL?.Instagram)} sx={menuItemStyle(palette)}>
-                        <ListItemIcon>
-                            <InstagramIcon fill={palette.background.textPrimary} />
+                    <Collapse in={contactOpen} timeout="auto" unmountOnExit>
+                        <Box sx={{ paddingX: 2, paddingY: 1 }}>
+                            <ContactInfo />
+                        </Box>
+                    </Collapse>
+                </Box>
+
+                {/* Social Media Section */}
+                <Box sx={{ marginBottom: 1 }}>
+                    <ListItem
+                        button
+                        onClick={handleSocialClick}
+                        sx={{
+                            ...menuItemStyle(palette),
+                            backgroundColor: socialOpen
+                                ? palette.mode === "light"
+                                    ? "rgba(0, 0, 0, 0.03)"
+                                    : "rgba(255, 255, 255, 0.03)"
+                                : "transparent",
+                        }}
+                    >
+                        <ListItemIcon sx={{ color: palette.primary.main }}>
+                            <Share2 size={20} />
                         </ListItemIcon>
-                        <ListItemText primary="Instagram" />
+                        <ListItemText
+                            primary="Follow Us"
+                            primaryTypographyProps={{
+                                fontSize: "0.95rem",
+                                fontWeight: 500,
+                            }}
+                        />
+                        {socialOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                     </ListItem>
-                </Collapse>
-                {optionsToList(nav_options)}
-                <Divider />
-                {optionsToList(customer_actions)}
+                    <Collapse in={socialOpen} timeout="auto" unmountOnExit>
+                        <Box sx={{ paddingLeft: 1 }}>
+                            <ListItem
+                                button
+                                onClick={() => newTab(business?.SOCIAL?.Facebook || "")}
+                                sx={menuItemStyle(palette)}
+                            >
+                                <ListItemIcon sx={{ color: "#1877F2" }}>
+                                    <Facebook size={20} />
+                                </ListItemIcon>
+                                <ListItemText
+                                    primary="Facebook"
+                                    primaryTypographyProps={{
+                                        fontSize: "0.9rem",
+                                    }}
+                                />
+                            </ListItem>
+                            <ListItem
+                                button
+                                onClick={() => newTab(business?.SOCIAL?.Instagram || "")}
+                                sx={menuItemStyle(palette)}
+                            >
+                                <ListItemIcon sx={{ color: "#E4405F" }}>
+                                    <Instagram size={20} />
+                                </ListItemIcon>
+                                <ListItemText
+                                    primary="Instagram"
+                                    primaryTypographyProps={{
+                                        fontSize: "0.9rem",
+                                    }}
+                                />
+                            </ListItem>
+                        </Box>
+                    </Collapse>
+                </Box>
+
+                {customer_actions.length > 0 && (
+                    <>
+                        <Divider sx={{ marginY: 2, marginX: 1 }} />
+                        <Box>
+                            <Typography
+                                variant="caption"
+                                sx={{
+                                    color: palette.text.secondary,
+                                    paddingX: 2,
+                                    paddingY: 1,
+                                    display: "block",
+                                    fontWeight: 600,
+                                    textTransform: "uppercase",
+                                    letterSpacing: 1,
+                                }}
+                            >
+                                Account
+                            </Typography>
+                            {customer_actions.map(([label, value, link, onClick, _Icon, badgeNum], index) => {
+                                const iconMap: { [key: string]: JSX.Element } = {
+                                    "Cart": <ShoppingCart size={20} />,
+                                    "Log Out": <LogOut size={20} />,
+                                    "Sign Up": <UserPlus size={20} />,
+                                    "Manage": <User size={20} />,
+                                    "Availability": <ShoppingCart size={20} />,
+                                };
+                                return (
+                                    <ListItem
+                                        key={index}
+                                        button
+                                        sx={menuItemStyle(palette)}
+                                        onClick={() => {
+                                            // Redirect to external URLs for availability and cart
+                                            if (value === "availability") {
+                                                window.location.href = "https://newlife.online-orders.sbiteam.com/";
+                                            } else if (value === "cart") {
+                                                window.location.href = "https://newlife.online-orders.sbiteam.com/orders";
+                                            } else {
+                                                if (onClick) onClick();
+                                                close();
+                                                setLocation(link);
+                                            }
+                                        }}
+                                    >
+                                        <ListItemIcon sx={{ color: palette.primary.main }}>
+                                            <Badge badgeContent={badgeNum ?? 0} color="error">
+                                                {iconMap[label] || <User size={20} />}
+                                            </Badge>
+                                        </ListItemIcon>
+                                        <ListItemText
+                                            primary={label}
+                                            primaryTypographyProps={{
+                                                fontSize: "0.95rem",
+                                                fontWeight: 500,
+                                            }}
+                                        />
+                                    </ListItem>
+                                );
+                            })}
+                        </Box>
+                    </>
+                )}
             </List>
-            <CopyrightBreadcrumbs
+            {/* Footer */}
+            <Box
                 sx={{
-                    color: palette.background.textPrimary,
-                    padding: 5,
-                    display: "block",
-                    marginLeft: "auto",
-                    marginRight: "auto",
+                    borderTop: `1px solid ${palette.divider}`,
+                    padding: 2,
+                    backgroundColor: palette.mode === "light"
+                        ? "rgba(0, 0, 0, 0.02)"
+                        : "rgba(255, 255, 255, 0.02)",
                 }}
-            />
+            >
+                <CopyrightBreadcrumbs
+                    sx={{
+                        color: palette.text.secondary,
+                        fontSize: "0.8rem",
+                        display: "block",
+                        textAlign: "center",
+                    }}
+                />
+            </Box>
         </SwipeableDrawer>
     );
 };

@@ -1,14 +1,48 @@
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { defineConfig } from "vite";
+import viteCompression from "vite-plugin-compression";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-    plugins: [react()],
+    plugins: [
+        react(),
+        // Add gzip and brotli compression for production builds
+        viteCompression({
+            verbose: true,
+            disable: false,
+            threshold: 10240,
+            algorithm: 'gzip',
+            ext: '.gz',
+        }),
+        viteCompression({
+            verbose: true,
+            disable: false,
+            threshold: 10240,
+            algorithm: 'brotliCompress',
+            ext: '.br',
+        }),
+    ],
     assetsInclude: ["**/*.md"],
     server: {
         host: true,
-        port: 3000,
+        port: 3001,
+        strictPort: true, // Exit if port 3001 is in use instead of trying another port
+    },
+    optimizeDeps: {
+        // Pre-bundle these dependencies to avoid issues with dynamic imports
+        include: [
+            'markdown-to-jsx',
+            'react',
+            'react-dom',
+            'react/jsx-runtime',
+            'formik',
+            'use-sync-external-store/shim',
+            'use-sync-external-store/shim/with-selector',
+            'react-dnd',
+            'react-dnd-html5-backend',
+            'dnd-core',
+        ],
     },
     resolve: {
         alias: [
@@ -31,7 +65,42 @@ export default defineConfig({
         ]
     },
     build: {
-        // Enable source maps for debugging. Can be disabled in production, but it only saves a few seconds
-        sourcemap: false,
+        // Enable source maps for better debugging and performance monitoring
+        sourcemap: true,
+        // Report compressed size of modules
+        reportCompressedSize: true,
+        // Chunk size warnings
+        chunkSizeWarningLimit: 1000,
+        // Optimize asset inlining
+        assetsInlineLimit: 4096,
+        // Minification options
+        minify: 'esbuild',
+        esbuild: {
+            // Remove console logs and debugger statements in production
+            drop: ['console', 'debugger'],
+            // Optimize for modern browsers
+            target: 'esnext',
+        },
+        rollupOptions: {
+            output: {
+                // Create more compact output
+                compact: true,
+                // Simplified manual chunk splitting - let Vite handle most of it
+                manualChunks: (id) => {
+                    // Exclude archived code from bundle
+                    if (id.includes('/archived/')) {
+                        return undefined;
+                    }
+
+                    // Only split out the largest vendor libraries
+                    if (id.includes('node_modules')) {
+                        if (id.includes('@mui') || id.includes('@emotion')) {
+                            return 'vendor-mui';
+                        }
+                        // Let all other node_modules (including React, react-dnd, etc.) bundle together naturally
+                    }
+                },
+            }
+        }
     }
 })

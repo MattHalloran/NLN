@@ -1,8 +1,6 @@
 # Created by https://www.toptal.com/developers/gitignore/api/react,node
 # Edit at https://www.toptal.com/developers/gitignore?templates=react,node
-
-# Business hours data
-assets/public/hours.md
+# NOTE: Currently identical to the `.cursorignore` file. If you change one, consider changing the other
 
 ### Node ###
 # Logs
@@ -162,6 +160,7 @@ data/postgres/
 data/redis/
 data/stats/
 data/uploads/
+data/migration-backups/
 
 #Assets
 assets/images/
@@ -172,3 +171,36 @@ assets/private/availability-*.*
 package-lock.json
 *dump.rdb
 *nohup.out
+
+# Sitemaps
+packages/ui/public/sitemap.xml
+packages/ui/public/sitemaps/
+
+# 0x flame graph data
+**/*.0x/
+
+# JWT keys
+jwt_pub.pem
+jwt_priv.pem
+
+# Vault keys
+.vault*
+
+# Upload keys (for Google Play Store)
+upload_certificate.pem
+upload-keystore.jks
+
+# Bats test helpers (e.g. bats-core)
+scripts/tests/helpers
+scripts/tests/tmp
+.claude/settings.local.json
+
+# Backups and archives
+/backups/
+*.tar.gz
+
+# Playwright E2E Testing
+test-results/
+playwright-report/
+e2e/.auth/
+.e2e-backup/

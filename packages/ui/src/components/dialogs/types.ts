@@ -1,8 +1,16 @@
 import { PopoverProps } from "@mui/material";
-import { plants_plants, plants_plants_skus } from "api/generated/plants";
 import { TitleProps } from "components/text/types";
 import { SxType } from "types";
 import { SnackSeverity } from "./Snack/Snack";
+
+// Customer type for archived CustomerDialog component (kept for backwards compatibility)
+type Customer = {
+    id: string;
+    firstName: string;
+    lastName: string;
+    emails?: Array<{ emailAddress: string }>;
+    phones?: Array<{ number: string }>;
+};
 
 export interface DialogTitleProps extends Omit<TitleProps, "sxs"> {
     below?: JSX.Element | boolean | undefined;
@@ -19,14 +27,6 @@ export interface MenuTitleProps {
     title?: string;
 }
 
-export interface PlantDialogProps {
-    isAdminPage: boolean;
-    plant: plants_plants | undefined;
-    selectedSku: plants_plants_skus | undefined;
-    onAddToCart: (sku: plants_plants_skus, quantity: number) => void;
-    open: boolean;
-    onClose: () => void;
-}
 
 export interface PopoverWithArrowProps extends Omit<PopoverProps, "open" | "sx"> {
     anchorEl: HTMLElement | null;
@@ -52,3 +52,11 @@ export interface SnackProps {
     message?: string;
     severity?: SnackSeverity;
 }
+
+export interface CustomerDialogProps {
+    customer: Customer;
+    open?: boolean;
+    onClose: () => void;
+}
+
+

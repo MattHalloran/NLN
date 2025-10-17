@@ -1,6 +1,6 @@
 # Stage 0. Copy required files
-# NOTE: Using alpine3.16 because of this issue: https://github.com/prisma/prisma/issues/16553
-FROM node:16-alpine3.16 as stage0
+# Updated to Node 20 for compatibility with latest packages
+FROM node:20-alpine as stage0
 
 # Set working directory
 ARG PROJECT_DIR
@@ -23,7 +23,7 @@ COPY --chown=node:node scripts/* scripts/
 RUN chown -R node:node .
 
 # Stage 1. Copy files from stage 0, and install yarn packages
-FROM node:16-alpine3.16 as stage1
+FROM node:20-alpine as stage1
 
 # Set working directory
 ARG PROJECT_DIR
@@ -36,10 +36,11 @@ COPY --from=stage0 ${PROJECT_DIR} ./
 RUN yarn install
 
 # Install global packages
-RUN yarn global add typescript ts-node nodemon prisma@4.12.0
+# Note: Prisma version must match package.json (currently 6.1.0)
+RUN yarn global add typescript ts-node nodemon prisma@6.1.0
 
 # Stage 2. Copy files from stage 1, and install required unix tools
-FROM node:16-alpine3.16 as stage2
+FROM node:20-alpine as stage2
 
 # Set working directory
 ARG PROJECT_DIR
@@ -51,9 +52,12 @@ COPY --from=stage1 ${PROJECT_DIR} ./
 # Copy global yarn packages from stage 3
 COPY --from=stage1 /usr/local/share/.config/yarn/global /usr/local/share/.config/yarn/global
 
-# Update and install unix packages
-RUN apk update
-RUN apk add netcat-openbsd
+# Update and install unix packages including OpenSSL for Prisma compatibility
+RUN apk update && apk add --no-cache \
+    openssl \
+    openssl-dev \
+    libc6-compat \
+    netcat-openbsd
 
 # Set port
 EXPOSE ${VIRTUAL_PORT} 9229

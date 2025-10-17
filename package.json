@@ -1,12 +1,39 @@
 {
-    "private": true,
-    "workspaces": [
-        "packages/*"
-    ],
-    "author": "New Life Nursery",
-    "license": "MIT",
-    "resolutions": {
-        "babel-loader": "8.1.0"
-    },
-    "version": "2.0.0"
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "author": "New Life Nursery",
+  "license": "MIT",
+  "resolutions": {
+    "babel-loader": "8.1.0",
+    "vite": "5.4.20"
+  },
+  "version": "2.0.0",
+  "scripts": {
+    "prepare": "husky",
+    "test": "yarn workspaces run test",
+    "test:server": "yarn workspace server test",
+    "test:ui": "yarn workspace ui test",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:debug": "playwright test --debug",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:report": "playwright show-report",
+    "test:e2e:codegen": "playwright codegen http://localhost:3001"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.0",
+    "@typescript-eslint/eslint-plugin": "^8.46.1",
+    "@typescript-eslint/parser": "^8.46.1",
+    "dotenv": "^17.2.3",
+    "eslint": "^9.37.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "eslint-plugin-react-hooks": "^7.0.0"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0"
+  }
 }

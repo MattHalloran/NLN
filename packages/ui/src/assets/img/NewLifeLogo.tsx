@@ -1,5 +1,14 @@
 
-export const NewLifeLogo = (props: any) => (
+interface NewLifeLogoProps {
+    style?: React.CSSProperties;
+    className?: string;
+    width?: string | number;
+    height?: string | number;
+    onClick?: () => void;
+    iconTitle?: string;
+}
+
+export const NewLifeLogo = (props: NewLifeLogoProps) => (
     <svg xmlns="http://www.w3.org/2000/svg"
         style={props.style}
         viewBox="0 0 1125 1125"

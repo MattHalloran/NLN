@@ -13,17 +13,17 @@ services:
     environment:
       NODE_ENV: "production"
       VITE_SERVER_LOCATION: "${SERVER_LOCATION}"
-      VITE_PORT_SERVER: "${PORT_SERVER:-5330}"
+      VITE_PORT_SERVER: "${PORT_SERVER:-5331}"
       VITE_SERVER_URL: "${SERVER_URL}"
       VITE_SITE_IP: "${SITE_IP}"
       PROJECT_DIR: "${PROJECT_DIR}"
       VIRTUAL_HOST: "${VIRTUAL_HOST}"
       VIRTUAL_PATH: "/"
-      VIRTUAL_PORT: "${PORT_UI:-3000}"
+      VIRTUAL_PORT: "${PORT_UI:-3001}"
       LETSENCRYPT_HOST: "${VIRTUAL_HOST}"
       LETSENCRYPT_EMAIL: "${LETSENCRYPT_EMAIL}"
     ports:
-      - ${PORT_UI:-3000}:${PORT_UI:-3000}
+      - ${PORT_UI:-3001}:${PORT_UI:-3001}
     networks:
       - proxy
       - app
@@ -36,7 +36,7 @@ services:
   server:
     build:
       context: .
-      dockerfile: ./packages/server/Dockerfile
+      dockerfile: ./packages/server/Dockerfile-prod
       args:
         PROJECT_DIR: "${PROJECT_DIR:-/srv/app}"
     container_name: nln_server
@@ -46,10 +46,11 @@ services:
       NODE_ENV: "production"
       JWT_SECRET: "${JWT_SECRET}"
       PROJECT_DIR: "${PROJECT_DIR:-/srv/app}"
+      PORT_SERVER: "${PORT_SERVER:-5331}"
       VITE_SERVER_LOCATION: "${SERVER_LOCATION}"
       REDIS_CONN: "redis:${PORT_REDIS}"
       DB_CONN: "db:${PORT_DB}"
-      DB_URL: "postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}"
+      DB_URL: "postgresql://${DB_USER}:${DB_PASSWORD}@db:5433/${DB_NAME}"
       CREATE_MOCK_DATA: "${CREATE_MOCK_DATA}"
       DB_PULL: "${DB_PULL}"
       SITE_EMAIL_FROM: "${SITE_EMAIL_FROM}"
@@ -59,29 +60,32 @@ services:
       SITE_EMAIL_PASSWORD: "${SITE_EMAIL_PASSWORD}"
       SITE_EMAIL_ALIAS: "${SITE_EMAIL_ALIAS}"
       VIRTUAL_HOST: "${VIRTUAL_HOST}"
-      VIRTUAL_PORT: "${PORT_SERVER:-5330}"
+      VIRTUAL_PORT: "${PORT_SERVER:-5331}"
       VIRTUAL_PATH: "/api"
       LETSENCRYPT_HOST: "${VIRTUAL_HOST}"
       LETSENCRYPT_EMAIL: "${LETSENCRYPT_EMAIL}"
     ports:
-      - ${PORT_SERVER:-5330}:${PORT_SERVER:-5330}
+      - ${PORT_SERVER:-5331}:${PORT_SERVER:-5331}
     networks:
       - proxy
       - app
     volumes:
-      - ./packages/server:${PROJECT_DIR:-/srv/app}/packages/server:z
-      - ./packages/shared:${PROJECT_DIR:-/srv/app}/packages/shared:z
+      # Production: Only mount built artifacts, data, and assets (not source code)
+      - ./packages/server/dist:${PROJECT_DIR:-/srv/app}/packages/server/dist:z
+      - ./packages/shared/dist:${PROJECT_DIR:-/srv/app}/packages/shared/dist:z
       - ./data/logs:${PROJECT_DIR:-/srv/app}/data/logs:z
       - ./assets:${PROJECT_DIR:-/srv/app}/assets:z
       - ./data/uploads:${PROJECT_DIR:-/srv/app}/data/uploads:z
-      - ./packages/server/src/db/migrations:${PROJECT_DIR:-/srv/app}/packages/server/src/db/migrations
+      - ./data/migration-backups:${PROJECT_DIR:-/srv/app}/data/migration-backups:z
+      # Migrations are needed for prisma migrate deploy
+      - ./packages/server/src/db/migrations:${PROJECT_DIR:-/srv/app}/packages/server/src/db/migrations:ro
     depends_on:
       redis:
         condition: service_healthy
       db:
         condition: service_healthy
     healthcheck:
-      test: [ "CMD-SHELL", "node -e \"require('http').request({hostname: 'localhost', port: process.env.PORT_SERVER || 5330, path: '/healthcheck'}, res => { if (res.statusCode === 200) { process.exit(0) } else { process.exit(1) } }).on('error', err => { process.exit(1) }).end()\"" ]
+      test: [ "CMD-SHELL", "node -e \"require('http').request({hostname: 'localhost', port: process.env.PORT_SERVER || 5331, path: '/healthcheck'}, res => { if (res.statusCode === 200) { process.exit(0) } else { process.exit(1) } }).on('error', err => { process.exit(1) }).end()\"" ]
       start_period: 90s
       interval: 20s
       timeout: 5s
@@ -96,8 +100,9 @@ services:
       POSTGRES_USER: "${DB_USER}"
       POSTGRES_PASSWORD: "${DB_PASSWORD}"
       PROJECT_DIR: "${PROJECT_DIR:-/srv/app}"
+      PGPORT: "${PORT_DB:-5433}"
     expose:
-      - ${PORT_DB:-5432}
+      - ${PORT_DB:-5433}
     networks:
       - app
     volumes:
@@ -118,13 +123,13 @@ services:
     volumes:
       - ./data/redis:${PROJECT_DIR:-/srv/app}/data/redis:z
     expose:
-      - ${PORT_REDIS:-6379}
+      - ${PORT_REDIS:-6380}
     healthcheck:
       test: [ "CMD", "redis-cli", "ping" ]
       interval: 10s
       timeout: 5s
       retries: 5
-    command: /bin/sh -c "mkdir -p ${PROJECT_DIR:-/srv/app}/data/redis/appendonlydir && rm -f ${PROJECT_DIR:-/srv/app}/data/redis/dump.rdb && redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru --appendonly yes --dbfilename dump.rdb --dir ${PROJECT_DIR}/data/redis/"
+    command: /bin/sh -c "mkdir -p ${PROJECT_DIR:-/srv/app}/data/redis/appendonlydir && redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru --appendonly yes --dbfilename dump.rdb --dir ${PROJECT_DIR:-/srv/app}/data/redis/"
 
 networks:
   proxy:

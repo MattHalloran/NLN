@@ -43,5 +43,6 @@ export const useHotkeys = (hotkeys: HotkeyConfig[], condition = true, targetRef:
                 targetElement.removeEventListener("keydown", handleKeyDown);
             };
         }
+        return undefined;
     }, [hotkeys, condition, targetRef]);
 };

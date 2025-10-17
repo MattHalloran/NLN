@@ -41,7 +41,14 @@ export const Dropzone = ({
 
     const [files, setFiles] = useState<PreviewableFile[]>([]);
     const { getRootProps, getInputProps } = useDropzone({
-        accept: acceptedFileTypes,
+        accept: acceptedFileTypes.reduce((acc, type) => {
+            if (type.includes("/")) {
+                acc[type] = [];
+            } else {
+                acc[type] = [];
+            }
+            return acc;
+        }, {} as Record<string, string[]>),
         maxFiles,
         onDrop: acceptedFiles => {
             if (acceptedFiles.length <= 0) {
@@ -64,7 +71,7 @@ export const Dropzone = ({
         },
     });
 
-    const upload = (e) => {
+    const upload = (e: React.MouseEvent<HTMLButtonElement>) => {
         e.stopPropagation();
         if (files.length === 0) {
             PubSub.get().publishSnack({ message: "No files selected", severity: SnackSeverity.Error });
@@ -74,7 +81,7 @@ export const Dropzone = ({
         setFiles([]);
     };
 
-    const cancel = (e) => {
+    const cancel = (e: React.MouseEvent<HTMLButtonElement>) => {
         e.stopPropagation();
         setFiles([]);
     };
@@ -86,8 +93,7 @@ export const Dropzone = ({
                 display: "inline-flex",
                 flexDirection: "column",
                 alignItems: "center",
-                marginBottom: 1,
-                marginLeft: 1,
+                margin: 1,
                 width: 100,
                 height: 100,
                 boxSizing: "border-box",
@@ -155,6 +161,18 @@ export const Dropzone = ({
                         <Button
                             disabled={disabled || files.length === 0}
                             fullWidth
+                            onClick={cancel}
+                            sx={{
+                                marginTop: spacing(1),
+                                marginBottom: spacing(1),
+                            }}
+                            variant="outlined"
+                        >{cancelText}</Button>
+                    </Grid>
+                    <Grid item xs={6}>
+                        <Button
+                            disabled={disabled || files.length === 0}
+                            fullWidth
                             onClick={upload}
                             sx={{
                                 marginTop: spacing(1),
@@ -162,18 +180,6 @@ export const Dropzone = ({
                             }}
                             variant="contained"
                         >{uploadText}</Button>
-                    </Grid>
-                    <Grid item xs={6}>
-                        <Button
-                            disabled={disabled || files.length === 0}
-                            fullWidth
-                            onClick={cancel}
-                            sx={{
-                                marginTop: spacing(1),
-                                marginBottom: spacing(1),
-                            }}
-                            variant="contained"
-                        >{cancelText}</Button>
                     </Grid>
                 </Grid>}
             </Box>

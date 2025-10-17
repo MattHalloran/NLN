@@ -1,4 +1,3 @@
-import { SvgProps } from "icons/types";
 import { ReactNode } from "react";
 import { SvgComponent, SxType } from "types";
 
@@ -10,28 +9,28 @@ export interface CardGridProps {
     sx?: SxType;
 }
 
-export interface ContentCollapseProps {
-    children?: React.ReactNode;
-    helpText?: string;
-    id?: string;
-    isOpen?: boolean;
-    onOpenChange?: (isOpen: boolean) => unknown;
-    sxs?: {
-        titleContainer?: SxType;
-        root?: SxType;
-        helpButton?: SvgProps;
-    }
-    title?: string | null;
-    titleComponent?: "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "p" | "span" | "legend";
-    titleVariant?: "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
-}
-
 export interface ErrorBoundaryProps {
     children: React.ReactNode;
+    /** 
+     * Optional fallback component to render instead of default error UI 
+     */
+    fallback?: React.ComponentType<{
+        error: Error;
+        errorInfo: React.ErrorInfo;
+        resetError: () => void;
+    }>;
+    /**
+     * Callback fired when an error is caught
+     */
+    onError?: (error: Error, errorInfo: React.ErrorInfo) => void;
+    /**
+     * Whether to enable error reporting to external services
+     */
+    enableReporting?: boolean;
 }
 
 export interface PageContainerProps {
-    children: boolean | null | undefined | JSX.Element | (boolean | null | undefined | JSX.Element)[];
+    children?: boolean | null | undefined | JSX.Element | (boolean | null | undefined | JSX.Element)[];
     sx?: { [x: string]: any };
 }
 

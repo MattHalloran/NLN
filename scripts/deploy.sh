@@ -15,7 +15,7 @@
 # -n: Nginx proxy location (e.g. "/root/NginxSSLReverseProxy")
 # -h: Show this help message
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-. "${HERE}/prettify.sh"
+. "${HERE}/utils.sh"
 
 # Read arguments
 SETUP_ARGS=()
@@ -105,6 +105,21 @@ fi
 
 TMP_DIR="/var/tmp/${VERSION}"
 
+# Validate environment configuration from the temporary directory
+if [ -f "${TMP_DIR}/.env-prod" ]; then
+    header "Validating environment configuration"
+    "${HERE}/validate-env.sh" "${TMP_DIR}/.env-prod"
+    if [ $? -ne 0 ]; then
+        error "Environment validation failed. Deployment aborted."
+        exit 1
+    fi
+    success "Environment configuration is valid"
+else
+    error "Environment file not found at ${TMP_DIR}/.env-prod"
+    error "This should have been created by build.sh. Aborting deployment."
+    exit 1
+fi
+
 # Copy current database =to a safe location, under a temporary directory.
 cd ${HERE}/..
 DB_TMP="${TMP_DIR}/postgres"
@@ -168,8 +183,13 @@ info "Pulling latest changes from repository..."
 git fetch
 git pull
 if [ $? -ne 0 ]; then
-    warning "Could not pull latest changes from repository. You likely have uncommitted changes. This may cause issues."
+    error "Could not pull latest changes from repository."
+    error "This usually means you have uncommitted changes or merge conflicts."
+    error "Please resolve these issues and try again."
+    error "Deployment aborted to prevent inconsistencies."
+    exit 1
 fi
+success "Repository updated successfully"
 
 # Running setup.sh
 info "Running setup.sh..."
@@ -200,4 +220,92 @@ docker-compose --env-file ${TMP_DIR}/.env-prod down
 info "Restarting docker containers..."
 docker-compose --env-file ${TMP_DIR}/.env-prod -f ${HERE}/../docker-compose-prod.yml up -d
 
-success "Done! You may need to wait a few minutes for the Docker containers to finish starting up."
+# Wait for containers to become healthy
+info "Waiting for containers to become healthy..."
+TIMEOUT=300  # 5 minutes timeout
+ELAPSED=0
+CHECK_INTERVAL=5
+
+# Get list of containers that should be running
+EXPECTED_CONTAINERS=("nln_ui" "nln_server" "nln_db" "nln_redis")
+
+while [ $ELAPSED -lt $TIMEOUT ]; do
+    ALL_HEALTHY=true
+    CONTAINER_STATUS=""
+
+    for container in "${EXPECTED_CONTAINERS[@]}"; do
+        # Check if container exists and is running
+        if ! docker ps --format '{{.Names}}' | grep -q "^${container}$"; then
+            ALL_HEALTHY=false
+            CONTAINER_STATUS="${CONTAINER_STATUS}\n  ${container}: NOT RUNNING"
+            continue
+        fi
+
+        # Get container health status
+        HEALTH=$(docker inspect --format='{{.State.Health.Status}}' ${container} 2>/dev/null || echo "no-healthcheck")
+
+        if [ "$HEALTH" = "healthy" ]; then
+            CONTAINER_STATUS="${CONTAINER_STATUS}\n  ${container}: ✓ healthy"
+        elif [ "$HEALTH" = "no-healthcheck" ]; then
+            # For containers without health checks (like redis in some configs), check if running
+            STATE=$(docker inspect --format='{{.State.Status}}' ${container})
+            if [ "$STATE" = "running" ]; then
+                CONTAINER_STATUS="${CONTAINER_STATUS}\n  ${container}: ✓ running (no health check)"
+            else
+                ALL_HEALTHY=false
+                CONTAINER_STATUS="${CONTAINER_STATUS}\n  ${container}: ✗ ${STATE}"
+            fi
+        elif [ "$HEALTH" = "starting" ]; then
+            ALL_HEALTHY=false
+            CONTAINER_STATUS="${CONTAINER_STATUS}\n  ${container}: ⏳ starting..."
+        else
+            ALL_HEALTHY=false
+            CONTAINER_STATUS="${CONTAINER_STATUS}\n  ${container}: ✗ ${HEALTH}"
+        fi
+    done
+
+    if [ "$ALL_HEALTHY" = true ]; then
+        echo -e "${CONTAINER_STATUS}"
+        success "✅ All containers are healthy!"
+        break
+    fi
+
+    # Print status every 15 seconds
+    if [ $((ELAPSED % 15)) -eq 0 ]; then
+        echo -e "Container status after ${ELAPSED}s:${CONTAINER_STATUS}"
+    fi
+
+    sleep $CHECK_INTERVAL
+    ELAPSED=$((ELAPSED + CHECK_INTERVAL))
+done
+
+if [ $ELAPSED -ge $TIMEOUT ]; then
+    error "❌ Timeout waiting for containers to become healthy after ${TIMEOUT} seconds"
+    echo -e "Final container status:${CONTAINER_STATUS}"
+    echo ""
+    error "Deployment may have failed. Please check container logs:"
+    for container in "${EXPECTED_CONTAINERS[@]}"; do
+        echo "  docker logs ${container}"
+    done
+    exit 1
+fi
+
+# Additional verification: Check if server is responding
+info "Verifying server is responding..."
+SERVER_HEALTHY=false
+for i in {1..10}; do
+    if docker exec nln_server wget -q --spider http://localhost:${PORT_SERVER:-5331}/healthcheck 2>/dev/null; then
+        SERVER_HEALTHY=true
+        break
+    fi
+    sleep 2
+done
+
+if [ "$SERVER_HEALTHY" = false ]; then
+    warning "Server healthcheck endpoint not responding. Server may still be initializing."
+    warning "Please verify manually by checking: docker logs nln_server"
+else
+    success "✅ Server healthcheck endpoint is responding"
+fi
+
+success "Done! Deployment completed successfully."

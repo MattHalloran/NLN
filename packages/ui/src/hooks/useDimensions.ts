@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 type Dimensions = { width: number, height: number };
 type UseDimensionsReturn<T extends HTMLElement> = {
     dimensions: Dimensions;
-    ref: React.RefObject<T>;
+    ref: React.RefObject<T | null>;
     refreshDimensions: () => void;
 }
 

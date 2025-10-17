@@ -1,5 +1,12 @@
 import { Box } from "@mui/material";
-import { FeaturedPlants, Hero } from "components";
+import {
+    Hero,
+    ServiceShowcase,
+    SocialProof,
+    AboutStory,
+    InteractiveElements,
+    LocationVisit,
+} from "components";
 import { TopBar } from "components/navigation/TopBar/TopBar";
 
 export const HomePage = () => {
@@ -9,8 +16,23 @@ export const HomePage = () => {
                 display="page"
             />
             <Box>
+                {/* Hero Section */}
                 <Hero text="Beautiful, healthy plants" subtext="At competitive prices" />
-                <FeaturedPlants />
+
+                {/* Service Showcase */}
+                <ServiceShowcase />
+
+                {/* Social Proof */}
+                <SocialProof />
+
+                {/* About Story */}
+                <AboutStory />
+
+                {/* Interactive Elements */}
+                <InteractiveElements />
+
+                {/* Location & Visit */}
+                <LocationVisit />
             </Box>
         </>
     );

@@ -1,6 +1,6 @@
 #!/bin/sh
 HERE=$(dirname $0)
-. "${HERE}/prettify.sh"
+. "${HERE}/utils.sh"
 
 # If in development mode, convert shared packages to typescript
 # In production, this should already be done

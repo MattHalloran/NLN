@@ -7,7 +7,7 @@
 # -r: Run on remote server (y/N) - If set to "y", will run additional commands to set up the remote server
 ORIGINAL_DIR=$(pwd)
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-. "${HERE}/prettify.sh"
+. "${HERE}/utils.sh"
 
 # Read arguments
 REINSTALL_MODULES=""
@@ -142,8 +142,8 @@ curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
 . ~/.nvm/nvm.sh
 
 header "Installing Node (includes npm)"
-nvm install 16.16.0
-nvm alias default v16.16.0
+nvm install 20.18.1
+nvm alias default v20.18.1
 
 header "Installing Yarn"
 npm install -g yarn

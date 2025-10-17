@@ -1,7 +1,16 @@
-import { customers_customers } from "api/generated/customers";
+// Customer type for archived CustomerCard component (kept for backwards compatibility)
+type Customer = {
+    id: string;
+    firstName: string;
+    lastName: string;
+    emails?: Array<{ emailAddress: string }>;
+    phones?: Array<{ number: string }>;
+};
 
 export interface CustomerCardProps {
-    customer: customers_customers;
+    customer: Customer;
     isMobile: boolean;
-    onEdit: (customer: customers_customers) => void;
+    onEdit: (customer: Customer) => void;
 }
+
+

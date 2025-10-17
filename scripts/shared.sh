@@ -1,6 +1,6 @@
 #!/bin/bash
 HERE=$(dirname $0)
-. "${HERE}/prettify.sh"
+. "${HERE}/utils.sh"
 
 # Loop through shared folder and convert typescript to javascript
 header 'Converting shared typescript to javascript'

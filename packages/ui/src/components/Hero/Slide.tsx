@@ -1,8 +1,14 @@
 import { Box } from "@mui/material";
 import { memo } from "react";
+import { Image } from "types";
 import { getImageSrc, getServerUrl } from "utils";
 
-export const Slide = memo<any>(({ image, width }) => {
+interface SlideProps {
+    image: Image;
+    width: number;
+}
+
+export const Slide = memo<SlideProps>(({ image, width }) => {
     if (!image) return null;
     return (
         // Make sure image fills full height of slider
@@ -11,7 +17,7 @@ export const Slide = memo<any>(({ image, width }) => {
             height: "100%",
             backgroundSize: "cover",
             backgroundPosition: "center",
-            backgroundImage: `url(${getServerUrl()}/${getImageSrc(image, width)})`,
+            backgroundImage: `url(${getServerUrl()}${getImageSrc(image, width)})`,
         }} />
     );
 });
