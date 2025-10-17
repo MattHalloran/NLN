@@ -24,6 +24,9 @@ RUN modclean --run
 # Stage 1: Copy files from stage 0, copy RSA keys, and set port
 FROM node:20-alpine as stage1
 
+# Install bash and lsof for production scripts
+RUN apk add --no-cache bash lsof
+
 # Set working directory
 ARG PROJECT_DIR
 ARG VIRTUAL_PORT
