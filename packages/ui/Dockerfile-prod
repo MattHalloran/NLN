@@ -16,6 +16,7 @@ COPY --chown=node:node package.json yarn.lock ./
 COPY --chown=node:node packages/ui/package.json packages/ui/serve.json packages/ui/
 COPY --chown=node:node packages/ui/dist packages/ui/dist
 COPY --chown=node:node scripts/* scripts/
+COPY --chown=node:node packages/ui/scripts/* packages/ui/scripts/
 
 # Set port
 EXPOSE ${VIRTUAL_PORT}

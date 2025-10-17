@@ -30,7 +30,7 @@
     "build": "tsc && vite build && node workbox-build.js",
     "build:analyze": "tsc && vite build --config analyze-bundle.js",
     "start-development": "vite",
-    "start-production": "bash ../../scripts/start-production.sh",
+    "start-production": "bash scripts/start-production.sh",
     "analyze": "npm run build:analyze && open dist/bundle-stats.html",
     "analyze:legacy": "source-map-explorer --html \"source-tree-$(date '+%Y%m%d%H%M%S').html\" --no-border-checks dist/assets/*",
     "lint": "eslint src",

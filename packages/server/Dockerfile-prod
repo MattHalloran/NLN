@@ -37,6 +37,7 @@ COPY --from=stage0 --chown=node:node ${PROJECT_DIR} ./
 
 # Copy required script files
 COPY --chown=node:node scripts/* scripts/
+COPY --chown=node:node packages/server/scripts/* packages/server/scripts/
 
 # Set port
 EXPOSE ${VIRTUAL_PORT}

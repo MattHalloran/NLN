@@ -22,7 +22,7 @@
         "start-development-wasm": "yarn pre-build && yarn build && nodemon --max-old-space-size=4096 --wasm-max-initial-code-space-reservation=1048576 dist/index.js",
         "dev": "yarn pre-build && yarn build && node --max-old-space-size=4096 --wasm-max-initial-code-space-reservation=1048576 dist/index.js",
         "start-development-debug": "yarn pre-build && yarn build && nodemon --max-old-space-size=4096 --wasm-max-initial-code-space-reservation=1048576 --inspect=0.0.0.0:9229 dist/index.js",
-        "start-production": "bash ../../scripts/start-production.sh",
+        "start-production": "bash scripts/start-production.sh",
         "prisma-generate": "prisma generate",
         "graphql-generate": "graphql-codegen && mv generatedTypes.ts src/schema/types.ts",
         "lint": "eslint src",
