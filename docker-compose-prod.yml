@@ -126,11 +126,11 @@ services:
     expose:
       - ${PORT_REDIS:-6380}
     healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
+      test: [ "CMD", "redis-cli", "-p", "${PORT_REDIS:-6380}", "ping" ]
       interval: 10s
       timeout: 5s
       retries: 5
-    command: /bin/sh -c "mkdir -p ${PROJECT_DIR:-/srv/app}/data/redis/appendonlydir && redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru --appendonly yes --dbfilename dump.rdb --dir ${PROJECT_DIR:-/srv/app}/data/redis/"
+    command: /bin/sh -c "mkdir -p ${PROJECT_DIR:-/srv/app}/data/redis/appendonlydir && redis-server --port ${PORT_REDIS:-6380} --maxmemory 256mb --maxmemory-policy allkeys-lru --appendonly yes --dbfilename dump.rdb --dir ${PROJECT_DIR:-/srv/app}/data/redis/"
 
 networks:
   proxy:

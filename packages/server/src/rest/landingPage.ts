@@ -5,7 +5,11 @@ import { logger } from "../logger.js";
 import { initializeRedis } from "../redisConn.js";
 
 const router = Router();
-const dataPath = join(process.env.PROJECT_DIR || "", "packages/server/src/data");
+// In production, data files are in dist folder, in development they're in src
+const dataPath = join(
+    process.env.PROJECT_DIR || "",
+    process.env.NODE_ENV === "production" ? "packages/server/dist/data" : "packages/server/src/data"
+);
 
 // Cache configuration (same as GraphQL)
 const CACHE_KEY = "landing-page-content:v1";
