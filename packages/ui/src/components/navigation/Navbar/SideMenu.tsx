@@ -1,5 +1,19 @@
 import { APP_LINKS } from "@local/shared";
-import { Badge, Box, Collapse, Divider, IconButton, List, ListItem, ListItemIcon, ListItemText, Palette, SwipeableDrawer, Typography, useTheme } from "@mui/material";
+import {
+    Badge,
+    Box,
+    Collapse,
+    Divider,
+    IconButton,
+    List,
+    ListItem,
+    ListItemIcon,
+    ListItemText,
+    Palette,
+    SwipeableDrawer,
+    Typography,
+    useTheme,
+} from "@mui/material";
 import { useLogout } from "api/rest/hooks";
 import { ContactInfo, CopyrightBreadcrumbs } from "components";
 import { BusinessContext } from "contexts/BusinessContext";
@@ -24,7 +38,7 @@ import {
     Store,
 } from "lucide-react";
 import { isObject } from "lodash-es";
-import { useContext, useState } from "react";
+import React, { useContext, useState } from "react";
 import { useLocation } from "route";
 import { PubSub, getUserActions, noop, UserActions } from "utils";
 
@@ -35,7 +49,8 @@ const menuItemStyle = (palette: Palette) => ({
     marginX: 1,
     marginY: 0.5,
     "&:hover": {
-        backgroundColor: palette.mode === "light" ? "rgba(0, 0, 0, 0.05)" : "rgba(255, 255, 255, 0.05)",
+        backgroundColor:
+            palette.mode === "light" ? "rgba(0, 0, 0, 0.05)" : "rgba(255, 255, 255, 0.05)",
         transform: "translateX(4px)",
     },
     "& .MuiListItemIcon-root": {
@@ -62,12 +77,14 @@ export const SideMenu = () => {
 
     const { mutate: logout } = useLogout();
     const logoutCustomer = () => {
-        logout().then(() => {
-            PubSub.get().publishSession({});
-            setLocation(APP_LINKS.Home);
-        }).catch((error) => {
-            console.error("Caught error logging out", error);
-        });
+        logout()
+            .then(() => {
+                PubSub.get().publishSession({});
+                setLocation(APP_LINKS.Home);
+            })
+            .catch((error) => {
+                console.error("Caught error logging out", error);
+            });
     };
 
     const { isOpen, close } = useSideMenu(id, isMobile);
@@ -84,31 +101,16 @@ export const SideMenu = () => {
         window.open(link, "_blank");
     };
 
-    const optionsToList = (options: UserActions): JSX.Element[] => {
-        return options.map(([label, _value, link, onClick, Icon, badgeNum], index) => (
-            <ListItem
-                key={index}
-                button
-                sx={menuItemStyle(palette)}
-                onClick={() => {
-                    if (onClick) onClick();
-                    close();
-                    setLocation(link);
-                }}>
-                {Icon ?
-                    (<ListItemIcon>
-                        <Badge badgeContent={badgeNum ?? 0} color="error">
-                            <Icon fill={palette.background.textPrimary} />
-                        </Badge>
-                    </ListItemIcon>) : null}
-                <ListItemText primary={label} />
-            </ListItem>
-        ));
-    };
-
     const nav_options: UserActions = [
         ["Home", "home", APP_LINKS.Home, null, null, 0],
-        ["Availability", "availability", APP_LINKS.Shopping, () => window.location.href = "https://newlife.online-orders.sbiteam.com/", null, 0],
+        [
+            "Availability",
+            "availability",
+            "",
+            () => window.open("https://newlife.online-orders.sbiteam.com/", "_blank"),
+            null,
+            0,
+        ],
         ["About Us", "about", APP_LINKS.About, null, null, 0],
         ["Gallery", "gallery", APP_LINKS.Gallery, null, null, 0],
     ];
@@ -129,9 +131,10 @@ export const SideMenu = () => {
             variant={isMobile ? "temporary" : "persistent"}
             sx={{
                 "& .MuiDrawer-paper": {
-                    background: palette.mode === "light"
-                        ? "linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%)"
-                        : "linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)",
+                    background:
+                        palette.mode === "light"
+                            ? "linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%)"
+                            : "linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)",
                     color: palette.background.textPrimary,
                     boxShadow: "-4px 0 20px rgba(0, 0, 0, 0.1)",
                     width: isMobile ? "85vw" : "320px",
@@ -193,12 +196,12 @@ export const SideMenu = () => {
                     >
                         Navigation
                     </Typography>
-                    {nav_options.map(([label, _value, link, onClick, _Icon, _badgeNum], index) => {
-                        const iconMap: { [key: string]: JSX.Element } = {
-                            "Home": <Home size={20} />,
-                            "Availability": <Store size={20} />,
+                    {nav_options.map(([label, , link, onClick], index) => {
+                        const iconMap: { [key: string]: React.JSX.Element } = {
+                            Home: <Home size={20} />,
+                            Availability: <Store size={20} />,
                             "About Us": <Info size={20} />,
-                            "Gallery": <Camera size={20} />,
+                            Gallery: <Camera size={20} />,
                         };
                         return (
                             <ListItem
@@ -341,47 +344,57 @@ export const SideMenu = () => {
                             >
                                 Account
                             </Typography>
-                            {customer_actions.map(([label, value, link, onClick, _Icon, badgeNum], index) => {
-                                const iconMap: { [key: string]: JSX.Element } = {
-                                    "Cart": <ShoppingCart size={20} />,
-                                    "Log Out": <LogOut size={20} />,
-                                    "Sign Up": <UserPlus size={20} />,
-                                    "Manage": <User size={20} />,
-                                    "Availability": <ShoppingCart size={20} />,
-                                };
-                                return (
-                                    <ListItem
-                                        key={index}
-                                        button
-                                        sx={menuItemStyle(palette)}
-                                        onClick={() => {
-                                            // Redirect to external URLs for availability and cart
-                                            if (value === "availability") {
-                                                window.location.href = "https://newlife.online-orders.sbiteam.com/";
-                                            } else if (value === "cart") {
-                                                window.location.href = "https://newlife.online-orders.sbiteam.com/orders";
-                                            } else {
-                                                if (onClick) onClick();
-                                                close();
-                                                setLocation(link);
-                                            }
-                                        }}
-                                    >
-                                        <ListItemIcon sx={{ color: palette.primary.main }}>
-                                            <Badge badgeContent={badgeNum ?? 0} color="error">
-                                                {iconMap[label] || <User size={20} />}
-                                            </Badge>
-                                        </ListItemIcon>
-                                        <ListItemText
-                                            primary={label}
-                                            primaryTypographyProps={{
-                                                fontSize: "0.95rem",
-                                                fontWeight: 500,
+                            {customer_actions.map(
+                                ([label, value, link, onClick, , badgeNum], index) => {
+                                    const iconMap: { [key: string]: React.JSX.Element } = {
+                                        Cart: <ShoppingCart size={20} />,
+                                        "Log Out": <LogOut size={20} />,
+                                        "Sign Up": <UserPlus size={20} />,
+                                        Manage: <User size={20} />,
+                                        Availability: <ShoppingCart size={20} />,
+                                    };
+                                    return (
+                                        <ListItem
+                                            key={index}
+                                            button
+                                            sx={menuItemStyle(palette)}
+                                            onClick={() => {
+                                                // Redirect to external URLs for availability and cart
+                                                if (value === "availability") {
+                                                    window.open(
+                                                        "https://newlife.online-orders.sbiteam.com/",
+                                                        "_blank",
+                                                    );
+                                                    close();
+                                                } else if (value === "cart") {
+                                                    window.open(
+                                                        "https://newlife.online-orders.sbiteam.com/orders",
+                                                        "_blank",
+                                                    );
+                                                    close();
+                                                } else {
+                                                    if (onClick) onClick();
+                                                    close();
+                                                    setLocation(link);
+                                                }
                                             }}
-                                        />
-                                    </ListItem>
-                                );
-                            })}
+                                        >
+                                            <ListItemIcon sx={{ color: palette.primary.main }}>
+                                                <Badge badgeContent={badgeNum ?? 0} color="error">
+                                                    {iconMap[label] || <User size={20} />}
+                                                </Badge>
+                                            </ListItemIcon>
+                                            <ListItemText
+                                                primary={label}
+                                                primaryTypographyProps={{
+                                                    fontSize: "0.95rem",
+                                                    fontWeight: 500,
+                                                }}
+                                            />
+                                        </ListItem>
+                                    );
+                                },
+                            )}
                         </Box>
                     </>
                 )}
@@ -391,9 +404,10 @@ export const SideMenu = () => {
                 sx={{
                     borderTop: `1px solid ${palette.divider}`,
                     padding: 2,
-                    backgroundColor: palette.mode === "light"
-                        ? "rgba(0, 0, 0, 0.02)"
-                        : "rgba(255, 255, 255, 0.02)",
+                    backgroundColor:
+                        palette.mode === "light"
+                            ? "rgba(0, 0, 0, 0.02)"
+                            : "rgba(255, 255, 255, 0.02)",
                 }}
             >
                 <CopyrightBreadcrumbs
