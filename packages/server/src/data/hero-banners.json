@@ -1,33 +1,43 @@
 {
   "banners": [
     {
-      "id": "hero-2",
-      "src": "/images/hero-rainbow-XL.jpg",
-      "alt": "Interior view of New Life Nursery garden center",
-      "description": "Well-organized garden center with wide selection of plants",
-      "width": 1920,
-      "height": 1080,
+      "id": "hero-butterfly-prod",
+      "src": "/hero-butterfly-XXL.jpg",
+      "alt": "Butterfly at New Life Nursery",
+      "description": "Beautiful butterfly visiting our nursery",
+      "width": 1901,
+      "height": 1426,
       "displayOrder": 1,
       "isActive": true
     },
     {
-      "id": "hero-1",
-      "src": "/images/hero-plants-XL.jpg",
-      "alt": "New Life Nursery spring display with vibrant flowers and plants",
-      "description": "Beautiful spring display showcasing colorful annuals and perennials",
-      "width": 1920,
-      "height": 1080,
+      "id": "hero-chicks-prod",
+      "src": "/hero-chicks-XXL.jpg",
+      "alt": "Baby chicks at New Life Nursery",
+      "description": "Adorable baby chicks",
+      "width": 1008,
+      "height": 756,
       "displayOrder": 2,
       "isActive": true
     },
     {
-      "id": "hero-3",
-      "src": "/images/hero-butterfly-XXL.jpg",
-      "alt": "Outdoor plant displays at New Life Nursery",
-      "description": "Extensive outdoor plant displays and growing areas",
-      "width": 1920,
-      "height": 1080,
+      "id": "hero-plants-prod",
+      "src": "/hero-plants-XXL.jpg",
+      "alt": "Plant selection at New Life Nursery",
+      "description": "Wide variety of plants available",
+      "width": 4032,
+      "height": 3024,
       "displayOrder": 3,
+      "isActive": true
+    },
+    {
+      "id": "hero-rainbow-prod",
+      "src": "/hero-rainbow-XXL.jpg",
+      "alt": "Rainbow over New Life Nursery",
+      "description": "Beautiful rainbow at the nursery",
+      "width": 2560,
+      "height": 1920,
+      "displayOrder": 4,
       "isActive": true
     }
   ],

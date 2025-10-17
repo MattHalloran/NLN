@@ -91,7 +91,7 @@ export const GalleryPage = () => {
             category: "Gallery", // Default category since the seeded data doesn't have categories
             title: data.alt || `Gallery Image ${index + 1}`,
             description: data.description || undefined,
-            featured: index < 3, // Mark first 3 images as featured
+            featured: false, // Can be enabled later: index < 3
         })));
     }, [imageData]);
 
