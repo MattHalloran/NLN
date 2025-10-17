@@ -77,8 +77,9 @@ services:
       - ./assets:${PROJECT_DIR:-/srv/app}/assets:z
       - ./data/uploads:${PROJECT_DIR:-/srv/app}/data/uploads:z
       - ./data/migration-backups:${PROJECT_DIR:-/srv/app}/data/migration-backups:z
-      # Migrations are needed for prisma migrate deploy
+      # Migrations and schema are needed for prisma migrate deploy
       - ./packages/server/src/db/migrations:${PROJECT_DIR:-/srv/app}/packages/server/src/db/migrations:ro
+      - ./packages/server/src/db/schema.prisma:${PROJECT_DIR:-/srv/app}/packages/server/src/db/schema.prisma:ro
     depends_on:
       redis:
         condition: service_healthy
