@@ -19,6 +19,7 @@ import { TopBar } from "components/navigation/TopBar/TopBar";
 import { BusinessContext } from "contexts/BusinessContext";
 import { FacebookIcon, InstagramIcon } from "icons";
 import { useContext, useEffect } from "react";
+import { COMPANY_INFO } from "@local/shared";
 
 const SocialLink = ({
     platform,
@@ -375,7 +376,7 @@ export const AboutPage = () => {
                                             letterSpacing: "0.05em",
                                         }}
                                     >
-                                        Our Founding Motto Since 1980
+                                        Our Founding Motto Since {COMPANY_INFO.FoundedYear}
                                     </Typography>
                                 </Box>
                             </Box>

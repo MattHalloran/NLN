@@ -1,6 +1,7 @@
 import { Box, Container, Grid, Typography, Card, CardContent, useTheme, Button } from "@mui/material";
 import { useLocation } from "route";
 import { Star, Home, Heart, Globe } from "lucide-react";
+import { COMPANY_INFO } from "@local/shared";
 
 export const AboutStory = () => {
     const { palette } = useTheme();
@@ -74,7 +75,7 @@ export const AboutStory = () => {
                                     fontSize: { xs: "2rem", md: "3rem" },
                                 }}
                             >
-                                Growing Excellence Since 1980
+                                Growing Excellence Since {COMPANY_INFO.FoundedYear}
                             </Typography>
                             
                             <Typography 
@@ -98,7 +99,7 @@ export const AboutStory = () => {
                                     fontSize: "1.1rem",
                                 }}
                             >
-                                Founded by the Gianaris family in 1980, New Life Nursery Inc. began with a simple mission: 
+                                Founded by the Gianaris family in {COMPANY_INFO.FoundedYear}, New Life Nursery Inc. began with a simple mission: 
                                 to grow top quality material for buyers who are interested in the best. 
                                 Today, after more than four decades, we continue as a family-owned and operated business, 
                                 maintaining the traditional values and horticultural expertise that built our reputation.

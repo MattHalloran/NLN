@@ -119,3 +119,7 @@ export const ROLES = {
     Owner: "Owner",
     Admin: "Admin",
 };
+export const COMPANY_INFO = {
+    FoundedYear: 1981,
+    Name: "New Life Nursery Inc.",
+};

@@ -126,7 +126,7 @@ export const mockLandingPageSettings = {
         isActive: true,
     },
     companyInfo: {
-        foundedYear: 1980,
+        foundedYear: 1981,
         description: "Test company description",
     },
     features: {

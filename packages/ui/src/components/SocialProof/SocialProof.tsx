@@ -13,9 +13,10 @@ import { Building2, Users, TreePine, Clock, Award, Truck, Shield, Sprout } from 
 import { useContext, useMemo } from "react";
 import { BusinessContext } from "contexts/BusinessContext";
 import { getEarliestOpeningTime } from "utils/businessHours";
+import { COMPANY_INFO } from "@local/shared";
 
 const stats = [
-    { number: "44+", label: "Years of Excellence", subtext: "Since 1980" },
+    { number: `${new Date().getFullYear() - COMPANY_INFO.FoundedYear}+`, label: "Years of Excellence", subtext: `Since ${COMPANY_INFO.FoundedYear}` },
     { number: "100+", label: "Plant Varieties", subtext: "Extensive Selection" },
     { number: "3-25", label: "Gallon Sizes", subtext: "Full Range" },
     { number: "500+", label: "Trade Partners", subtext: "Wholesale Only" },
@@ -44,7 +45,7 @@ export const SocialProof = () => {
                 title: "Family Heritage",
                 description:
                     "Owned and operated by the Gianaris family for over four decades, maintaining traditional values and personal service.",
-                highlight: "Family-Owned Since 1980",
+                highlight: `Family-Owned Since ${COMPANY_INFO.FoundedYear}`,
             },
             {
                 icon: TreePine,
@@ -208,7 +209,7 @@ export const SocialProof = () => {
                             zIndex: 1,
                         }}
                     >
-                        Our Founding Mission Since 1980
+                        Our Founding Mission Since {COMPANY_INFO.FoundedYear}
                     </Typography>
                     <Typography
                         variant="h4"
@@ -407,7 +408,7 @@ export const SocialProof = () => {
                     >
                         <Chip label="Licensed NJ Nursery" color="primary" />
                         <Chip label="Wholesale Only" color="primary" />
-                        <Chip label="Est. 1980" color="primary" />
+                        <Chip label={`Est. ${COMPANY_INFO.FoundedYear}`} color="primary" />
                     </Box>
                 </Box>
             </Container>

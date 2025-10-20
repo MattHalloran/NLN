@@ -16,6 +16,7 @@ import { useLandingPageContent } from "api/rest/hooks";
 import { parseBusinessHours } from "utils/businessHours";
 import { BusinessContext } from "contexts/BusinessContext";
 import { useContext } from "react";
+import { COMPANY_INFO } from "@local/shared";
 
 export const LocationVisit = () => {
     const { palette } = useTheme();
@@ -129,7 +130,7 @@ export const LocationVisit = () => {
                             mb: 3,
                         }}
                     >
-                        Southern New Jersey's premier wholesale nursery since 1980
+                        Southern New Jersey's premier wholesale nursery since {COMPANY_INFO.FoundedYear}
                     </Typography>
                     <Chip
                         label="Wholesale Only - Trade Customers Welcome"

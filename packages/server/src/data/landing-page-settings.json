@@ -2,12 +2,12 @@
   "hero": {
     "title": "Beautiful, healthy plants",
     "subtitle": "At competitive prices",
-    "description": "Serving the community for over 30 years with the finest selection of plants, trees, and expert gardening advice",
+    "description": "Serving landscape professionals for over 40 years with the finest selection of wholesale plants, trees, and shrubs",
     "businessHours": "OPEN 7 DAYS A WEEK | Mon-Sat 8AM-6PM | Sun 9AM-5PM",
     "trustBadges": [
       {
         "icon": "users",
-        "text": "Family Owned Since 1980"
+        "text": "Family Owned Since 1981"
       },
       {
         "icon": "award", 
@@ -38,7 +38,7 @@
     "isActive": true
   },
   "companyInfo": {
-    "foundedYear": 1980,
+    "foundedYear": 1981,
     "description": "Expert plant care and community service"
   },
   "colors": {

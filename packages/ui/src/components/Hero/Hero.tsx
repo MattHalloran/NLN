@@ -5,6 +5,7 @@ import { Award, Leaf, Users } from "lucide-react";
 import { useLocation } from "route";
 import { getShortBusinessHours } from "utils/businessHours";
 import { Slider } from "./Slider";
+import { COMPANY_INFO } from "@local/shared";
 
 interface HeroProps {
     text: string;
@@ -86,7 +87,7 @@ export const Hero = ({ text, subtext }: HeroProps) => {
                 >
                     {(
                         settings?.hero?.trustBadges || [
-                            { icon: "users", text: "Family Owned Since 1980" },
+                            { icon: "users", text: `Family Owned Since ${COMPANY_INFO.FoundedYear}` },
                             { icon: "award", text: "Licensed & Certified" },
                             { icon: "leaf", text: "Expert Plant Care" },
                         ]
