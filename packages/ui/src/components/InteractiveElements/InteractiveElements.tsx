@@ -364,82 +364,84 @@ export const InteractiveElements = () => {
                     </Grid>
                 </Grid>
 
-                {/* Newsletter Signup - Hidden */}
-                {/* <Box sx={{
-                    mt: 8,
-                    p: 4,
-                    background: `linear-gradient(135deg, ${palette.secondary.main} 0%, ${palette.primary.main} 100%)`,
-                    borderRadius: 3,
-                    textAlign: "center",
-                    color: "white",
-                }}>
-                    <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 1, mb: 2 }}>
-                        <Sprout size={24} color="white" />
-                        <Typography variant="h5" sx={{ fontWeight: 600 }}>
-                            {settings?.newsletter?.title || "Stay in the Grow"}
+                {/* Newsletter Signup */}
+                {settings?.newsletter?.isActive && (
+                    <Box sx={{
+                        mt: 8,
+                        p: 4,
+                        background: `linear-gradient(135deg, ${palette.secondary.main} 0%, ${palette.primary.main} 100%)`,
+                        borderRadius: 3,
+                        textAlign: "center",
+                        color: "white",
+                    }}>
+                        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 1, mb: 2 }}>
+                            <Sprout size={24} color="white" />
+                            <Typography variant="h5" sx={{ fontWeight: 600 }}>
+                                {settings?.newsletter?.title || "Stay in the Grow"}
+                            </Typography>
+                        </Box>
+                        <Typography variant="body1" sx={{ mb: 3, opacity: 0.9 }}>
+                            {settings?.newsletter?.description || "Get seasonal care tips, new arrival notifications, and exclusive offers delivered to your inbox"}
                         </Typography>
-                    </Box>
-                    <Typography variant="body1" sx={{ mb: 3, opacity: 0.9 }}>
-                        {settings?.newsletter?.description || "Get seasonal care tips, new arrival notifications, and exclusive offers delivered to your inbox"}
-                    </Typography>
 
-                    {!subscribed ? (
-                        <Box
-                            component="form"
-                            onSubmit={handleNewsletterSubmit}
-                            sx={{
-                                display: "flex",
-                                gap: 2,
-                                maxWidth: "500px",
-                                mx: "auto",
-                                flexDirection: { xs: "column", sm: "row" },
-                            }}
-                        >
-                            <TextField
-                                type="email"
-                                placeholder="Enter your email address"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                required
+                        {!subscribed ? (
+                            <Box
+                                component="form"
+                                onSubmit={handleNewsletterSubmit}
                                 sx={{
-                                    flexGrow: 1,
-                                    "& .MuiOutlinedInput-root": {
-                                        backgroundColor: "white",
-                                        borderRadius: 2,
-                                    },
-                                }}
-                            />
-                            <Button
-                                type="submit"
-                                variant="contained"
-                                color="secondary"
-                                size="large"
-                                sx={{
-                                    px: 4,
-                                    borderRadius: 2,
-                                    textTransform: "none",
-                                    fontWeight: 600,
-                                    minWidth: { xs: "100%", sm: "150px" },
+                                    display: "flex",
+                                    gap: 2,
+                                    maxWidth: "500px",
+                                    mx: "auto",
+                                    flexDirection: { xs: "column", sm: "row" },
                                 }}
                             >
-                                Subscribe
-                            </Button>
-                        </Box>
-                    ) : (
-                        <Box>
-                            <Typography variant="h6" sx={{ color: palette.secondary.main, fontWeight: 600 }}>
-                                ✅ Thank you for subscribing!
-                            </Typography>
-                            <Typography variant="body2" sx={{ opacity: 0.9, mt: 1 }}>
-                                You'll receive our next seasonal guide in your inbox soon.
-                            </Typography>
-                        </Box>
-                    )}
+                                <TextField
+                                    type="email"
+                                    placeholder="Enter your email address"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    required
+                                    sx={{
+                                        flexGrow: 1,
+                                        "& .MuiOutlinedInput-root": {
+                                            backgroundColor: "white",
+                                            borderRadius: 2,
+                                        },
+                                    }}
+                                />
+                                <Button
+                                    type="submit"
+                                    variant="contained"
+                                    color="secondary"
+                                    size="large"
+                                    sx={{
+                                        px: 4,
+                                        borderRadius: 2,
+                                        textTransform: "none",
+                                        fontWeight: 600,
+                                        minWidth: { xs: "100%", sm: "150px" },
+                                    }}
+                                >
+                                    Subscribe
+                                </Button>
+                            </Box>
+                        ) : (
+                            <Box>
+                                <Typography variant="h6" sx={{ color: palette.secondary.main, fontWeight: 600 }}>
+                                    ✅ Thank you for subscribing!
+                                </Typography>
+                                <Typography variant="body2" sx={{ opacity: 0.9, mt: 1 }}>
+                                    You'll receive our next seasonal guide in your inbox soon.
+                                </Typography>
+                            </Box>
+                        )}
 
-                    <Typography variant="caption" sx={{ display: "block", mt: 2, opacity: 0.8 }}>
-                        {settings?.newsletter?.disclaimer || "No spam, just helpful gardening tips. Unsubscribe anytime."}
-                    </Typography>
-                </Box> */}
+                        <Typography variant="caption" sx={{ display: "block", mt: 2, opacity: 0.8 }}>
+                            {settings?.newsletter?.disclaimer || "No spam, just helpful gardening tips. Unsubscribe anytime."}
+                        </Typography>
+                    </Box>
+                )}
             </Container>
         </Box>
     );

@@ -26,6 +26,8 @@ export const LocationVisit = () => {
     // Fetch business hours from API
     const { data } = useLandingPageContent(true);
 
+    const foundedYear = data?.settings?.companyInfo?.foundedYear || COMPANY_INFO.FoundedYear;
+
     const visitInfo = [
         {
             title: "What to Expect",
@@ -130,7 +132,7 @@ export const LocationVisit = () => {
                             mb: 3,
                         }}
                     >
-                        Southern New Jersey's premier wholesale nursery since {COMPANY_INFO.FoundedYear}
+                        Southern New Jersey's premier wholesale nursery since {foundedYear}
                     </Typography>
                     <Chip
                         label="Wholesale Only - Trade Customers Welcome"

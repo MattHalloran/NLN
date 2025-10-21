@@ -14,6 +14,7 @@ export * from "./ScrollToTop/ScrollToTop";
 export * from "./ServiceShowcase/ServiceShowcase";
 export * from "./SocialProof/SocialProof";
 export * from "./breadcrumbs";
+export * from "./buttons";
 export * from "./cards";
 export * from "./dialogs";
 export * from "./inputs";

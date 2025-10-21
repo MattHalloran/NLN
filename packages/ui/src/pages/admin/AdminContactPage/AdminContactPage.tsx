@@ -1,3 +1,4 @@
+import { APP_LINKS } from "@local/shared";
 import {
     Box,
     Button,
@@ -26,7 +27,7 @@ import {
 } from "@mui/material";
 import { AccessTime, Business, Delete, Schedule, Add } from "@mui/icons-material";
 import { useUpdateContactInfo, useLandingPageContent } from "api/rest/hooks";
-import { AdminTabOption, AdminTabs, PageContainer } from "components";
+import { BackButton, PageContainer } from "components";
 import { TopBar } from "components/navigation/TopBar/TopBar";
 import { CancelIcon, SaveIcon } from "icons";
 import { useEffect, useState } from "react";
@@ -660,7 +661,7 @@ export const AdminContactPage = () => {
                 display="page"
                 help={helpText}
                 title="Contact Information"
-                below={<AdminTabs defaultTab={AdminTabOption.ContactInfo} />}
+                startComponent={<BackButton to={APP_LINKS.Admin} ariaLabel="Back to Admin Dashboard" />}
             />
 
             <Box sx={{ p: 3 }}>

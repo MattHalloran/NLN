@@ -67,7 +67,7 @@ const getCardData = (stats: any): AdminCardData[] => [
     {
         title: "Homepage",
         description: "Manage hero banner, seasonal content, and other homepage elements",
-        link: APP_LINKS.AdminHero,
+        link: APP_LINKS.AdminHomepage,
         icon: HeroIcon,
         color: "#546e7a",
         stats: "Manage content",

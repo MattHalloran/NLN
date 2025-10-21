@@ -7,6 +7,10 @@ import {
     CustomerContact,
     Image,
     DashboardStats,
+    ABTest,
+    ABTestCreate,
+    SectionConfiguration,
+    AnalyticsEvent,
 } from "./client";
 
 // Generic hook for REST API calls
@@ -313,5 +317,87 @@ export function useDashboardStats() {
     return useRestQuery<DashboardStats>(
         () => restApi.getDashboardStats(),
         [],
+    );
+}
+
+// ============================================
+// Section Management Hooks
+// ============================================
+
+export function useUpdateSectionConfiguration() {
+    return useRestMutation<
+        SectionConfiguration,
+        { success: boolean; message: string }
+    >(
+        (sections) => restApi.updateSectionConfiguration(sections),
+    );
+}
+
+export function useUpdateLandingPageSettings() {
+    return useRestMutation<
+        Record<string, any>,
+        { success: boolean; message: string; updatedFields: string[] }
+    >(
+        (settings) => restApi.updateLandingPageSettings(settings),
+    );
+}
+
+// ============================================
+// A/B Testing Hooks
+// ============================================
+
+export function useABTests() {
+    return useRestQuery<ABTest[]>(
+        () => restApi.getABTests(),
+        [],
+    );
+}
+
+export function useABTest(id: string | null) {
+    return useRestQuery<ABTest>(
+        () => {
+            if (!id) throw new Error("Test ID is required");
+            return restApi.getABTest(id);
+        },
+        [id],
+    );
+}
+
+export function useCreateABTest() {
+    return useRestMutation<ABTestCreate, ABTest>(
+        (test) => restApi.createABTest(test),
+    );
+}
+
+export function useUpdateABTest() {
+    return useRestMutation<
+        { id: string; test: Partial<ABTest> },
+        ABTest
+    >(
+        ({ id, test }) => restApi.updateABTest(id, test),
+    );
+}
+
+export function useDeleteABTest() {
+    return useRestMutation<string, { success: boolean }>(
+        (id) => restApi.deleteABTest(id),
+    );
+}
+
+export function useStartABTest() {
+    return useRestMutation<string, ABTest>(
+        (id) => restApi.startABTest(id),
+    );
+}
+
+export function useStopABTest() {
+    return useRestMutation<string, ABTest>(
+        (id) => restApi.stopABTest(id),
+    );
+}
+
+export function useTrackAnalyticsEvent() {
+    return useRestMutation<AnalyticsEvent, { success: boolean }>(
+        (event) => restApi.trackAnalyticsEvent(event),
     );
 }

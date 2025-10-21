@@ -485,4 +485,380 @@ router.put("/contact-info", async (req: Request, res: Response) => {
     }
 });
 
+// Helper functions for A/B testing
+const readABTests = () => {
+    try {
+        const data = readFileSync(join(dataPath, "ab-tests.json"), "utf8");
+        return JSON.parse(data).tests || [];
+    } catch (error) {
+        logger.error("Error reading A/B tests:", error);
+        return [];
+    }
+};
+
+const writeABTests = (tests: any[]) => {
+    try {
+        const testsPath = join(dataPath, "ab-tests.json");
+        writeFileSync(testsPath, JSON.stringify({ tests }, null, 2), "utf8");
+        logger.info("A/B tests updated successfully");
+    } catch (error) {
+        logger.error("Error writing A/B tests:", error);
+        throw error;
+    }
+};
+
+// Helper function to deep merge objects
+const deepMerge = (target: any, source: any): any => {
+    const output = { ...target };
+    if (isObject(target) && isObject(source)) {
+        Object.keys(source).forEach((key) => {
+            if (isObject(source[key])) {
+                if (!(key in target)) {
+                    output[key] = source[key];
+                } else {
+                    output[key] = deepMerge(target[key], source[key]);
+                }
+            } else {
+                output[key] = source[key];
+            }
+        });
+    }
+    return output;
+};
+
+const isObject = (item: any): boolean => {
+    return item && typeof item === "object" && !Array.isArray(item);
+};
+
+// PUT endpoint to update landing page settings with deep merge (admin only)
+router.put("/settings", async (req: Request, res: Response) => {
+    try {
+        if (!(req as any).isAdmin) {
+            return res.status(403).json({ error: "Admin access required" });
+        }
+
+        const updates = req.body;
+
+        if (!updates || Object.keys(updates).length === 0) {
+            return res.status(400).json({ error: "No settings provided for update" });
+        }
+
+        // Read current settings
+        const currentSettings = readLandingPageSettings();
+
+        // Deep merge the updates
+        const updatedSettings = deepMerge(currentSettings, updates);
+
+        // Write back
+        const settingsPath = join(dataPath, "landing-page-settings.json");
+        writeFileSync(settingsPath, JSON.stringify(updatedSettings, null, 2), "utf8");
+
+        // Invalidate cache
+        await invalidateCache();
+
+        return res.json({
+            success: true,
+            message: "Landing page settings updated successfully",
+            updatedFields: Object.keys(updates),
+        });
+    } catch (error) {
+        logger.error("Error updating landing page settings:", error);
+        return res.status(500).json({
+            error: "Failed to update landing page settings",
+            message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
+        });
+    }
+});
+
+// PUT endpoint to update section configuration (admin only)
+router.put("/sections", async (req: Request, res: Response) => {
+    try {
+        if (!(req as any).isAdmin) {
+            return res.status(403).json({ error: "Admin access required" });
+        }
+
+        const { sections } = req.body;
+
+        if (!sections || !sections.order || !sections.enabled) {
+            return res.status(400).json({ error: "Invalid section configuration" });
+        }
+
+        // Read current settings
+        const currentSettings = readLandingPageSettings();
+
+        // Update sections
+        currentSettings.sections = sections;
+
+        // Write back
+        const settingsPath = join(dataPath, "landing-page-settings.json");
+        writeFileSync(settingsPath, JSON.stringify(currentSettings, null, 2), "utf8");
+
+        // Invalidate cache
+        await invalidateCache();
+
+        return res.json({
+            success: true,
+            message: "Section configuration updated successfully",
+        });
+    } catch (error) {
+        logger.error("Error updating section configuration:", error);
+        return res.status(500).json({
+            error: "Failed to update section configuration",
+            message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
+        });
+    }
+});
+
+// GET endpoint to retrieve all A/B tests (admin only)
+router.get("/ab-tests", async (req: Request, res: Response) => {
+    try {
+        if (!(req as any).isAdmin) {
+            return res.status(403).json({ error: "Admin access required" });
+        }
+
+        const tests = readABTests();
+        return res.json(tests);
+    } catch (error) {
+        logger.error("Error fetching A/B tests:", error);
+        return res.status(500).json({
+            error: "Failed to fetch A/B tests",
+            message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
+        });
+    }
+});
+
+// GET endpoint to retrieve a specific A/B test (admin only)
+router.get("/ab-tests/:id", async (req: Request, res: Response) => {
+    try {
+        if (!(req as any).isAdmin) {
+            return res.status(403).json({ error: "Admin access required" });
+        }
+
+        const tests = readABTests();
+        const test = tests.find((t: any) => t.id === req.params.id);
+
+        if (!test) {
+            return res.status(404).json({ error: "A/B test not found" });
+        }
+
+        return res.json(test);
+    } catch (error) {
+        logger.error("Error fetching A/B test:", error);
+        return res.status(500).json({
+            error: "Failed to fetch A/B test",
+            message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
+        });
+    }
+});
+
+// POST endpoint to create a new A/B test (admin only)
+router.post("/ab-tests", async (req: Request, res: Response) => {
+    try {
+        if (!(req as any).isAdmin) {
+            return res.status(403).json({ error: "Admin access required" });
+        }
+
+        const { name, description, variantA, variantB } = req.body;
+
+        if (!name || !variantA || !variantB) {
+            return res.status(400).json({ error: "Missing required fields" });
+        }
+
+        const tests = readABTests();
+
+        const newTest = {
+            id: `test-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+            name,
+            description,
+            status: "draft",
+            variantA,
+            variantB,
+            metrics: {
+                variantA: {
+                    views: 0,
+                    bounces: 0,
+                    avgTimeOnPage: 0,
+                    interactions: 0,
+                    conversions: 0,
+                },
+                variantB: {
+                    views: 0,
+                    bounces: 0,
+                    avgTimeOnPage: 0,
+                    interactions: 0,
+                    conversions: 0,
+                },
+            },
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+        };
+
+        tests.push(newTest);
+        writeABTests(tests);
+
+        return res.status(201).json(newTest);
+    } catch (error) {
+        logger.error("Error creating A/B test:", error);
+        return res.status(500).json({
+            error: "Failed to create A/B test",
+            message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
+        });
+    }
+});
+
+// PUT endpoint to update an A/B test (admin only)
+router.put("/ab-tests/:id", async (req: Request, res: Response) => {
+    try {
+        if (!(req as any).isAdmin) {
+            return res.status(403).json({ error: "Admin access required" });
+        }
+
+        const tests = readABTests();
+        const testIndex = tests.findIndex((t: any) => t.id === req.params.id);
+
+        if (testIndex === -1) {
+            return res.status(404).json({ error: "A/B test not found" });
+        }
+
+        // Update the test
+        tests[testIndex] = {
+            ...tests[testIndex],
+            ...req.body,
+            id: req.params.id, // Ensure ID doesn't change
+            updatedAt: new Date().toISOString(),
+        };
+
+        writeABTests(tests);
+
+        return res.json(tests[testIndex]);
+    } catch (error) {
+        logger.error("Error updating A/B test:", error);
+        return res.status(500).json({
+            error: "Failed to update A/B test",
+            message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
+        });
+    }
+});
+
+// DELETE endpoint to delete an A/B test (admin only)
+router.delete("/ab-tests/:id", async (req: Request, res: Response) => {
+    try {
+        if (!(req as any).isAdmin) {
+            return res.status(403).json({ error: "Admin access required" });
+        }
+
+        const tests = readABTests();
+        const testIndex = tests.findIndex((t: any) => t.id === req.params.id);
+
+        if (testIndex === -1) {
+            return res.status(404).json({ error: "A/B test not found" });
+        }
+
+        // Check if test is active
+        const settings = readLandingPageSettings();
+        if (settings.abTesting?.activeTestId === req.params.id) {
+            return res.status(400).json({ error: "Cannot delete an active test. Stop it first." });
+        }
+
+        tests.splice(testIndex, 1);
+        writeABTests(tests);
+
+        return res.json({ success: true });
+    } catch (error) {
+        logger.error("Error deleting A/B test:", error);
+        return res.status(500).json({
+            error: "Failed to delete A/B test",
+            message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
+        });
+    }
+});
+
+// POST endpoint to start an A/B test (admin only)
+router.post("/ab-tests/:id/start", async (req: Request, res: Response) => {
+    try {
+        if (!(req as any).isAdmin) {
+            return res.status(403).json({ error: "Admin access required" });
+        }
+
+        const tests = readABTests();
+        const testIndex = tests.findIndex((t: any) => t.id === req.params.id);
+
+        if (testIndex === -1) {
+            return res.status(404).json({ error: "A/B test not found" });
+        }
+
+        // Update settings to enable A/B testing and set active test
+        const settings = readLandingPageSettings();
+        settings.abTesting = {
+            enabled: true,
+            activeTestId: req.params.id,
+        };
+
+        const settingsPath = join(dataPath, "landing-page-settings.json");
+        writeFileSync(settingsPath, JSON.stringify(settings, null, 2), "utf8");
+
+        // Update test status
+        tests[testIndex].status = "active";
+        tests[testIndex].startDate = new Date().toISOString();
+        tests[testIndex].updatedAt = new Date().toISOString();
+
+        writeABTests(tests);
+
+        // Invalidate cache
+        await invalidateCache();
+
+        return res.json(tests[testIndex]);
+    } catch (error) {
+        logger.error("Error starting A/B test:", error);
+        return res.status(500).json({
+            error: "Failed to start A/B test",
+            message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
+        });
+    }
+});
+
+// POST endpoint to stop an A/B test (admin only)
+router.post("/ab-tests/:id/stop", async (req: Request, res: Response) => {
+    try {
+        if (!(req as any).isAdmin) {
+            return res.status(403).json({ error: "Admin access required" });
+        }
+
+        const tests = readABTests();
+        const testIndex = tests.findIndex((t: any) => t.id === req.params.id);
+
+        if (testIndex === -1) {
+            return res.status(404).json({ error: "A/B test not found" });
+        }
+
+        // Update settings to disable A/B testing
+        const settings = readLandingPageSettings();
+        settings.abTesting = {
+            enabled: false,
+            activeTestId: null,
+        };
+
+        const settingsPath = join(dataPath, "landing-page-settings.json");
+        writeFileSync(settingsPath, JSON.stringify(settings, null, 2), "utf8");
+
+        // Update test status
+        tests[testIndex].status = "completed";
+        tests[testIndex].endDate = new Date().toISOString();
+        tests[testIndex].updatedAt = new Date().toISOString();
+
+        writeABTests(tests);
+
+        // Invalidate cache
+        await invalidateCache();
+
+        return res.json(tests[testIndex]);
+    } catch (error) {
+        logger.error("Error stopping A/B test:", error);
+        return res.status(500).json({
+            error: "Failed to stop A/B test",
+            message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
+        });
+    }
+});
+
 export default router;

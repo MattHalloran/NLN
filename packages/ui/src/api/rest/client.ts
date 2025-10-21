@@ -113,6 +113,17 @@ export interface LandingPageContent {
             disclaimer: string;
             isActive: boolean;
         };
+        services?: {
+            title: string;
+            subtitle: string;
+            items: Array<{
+                title: string;
+                description: string;
+                icon: string;
+                action: string;
+                url: string;
+            }>;
+        };
         companyInfo: {
             foundedYear: number;
             description: string;
@@ -127,6 +138,14 @@ export interface LandingPageContent {
             showNewsletter: boolean;
             showSocialProof: boolean;
             enableAnimations: boolean;
+        };
+        sections?: {
+            order: string[];
+            enabled: Record<string, boolean>;
+        };
+        abTesting?: {
+            enabled: boolean;
+            activeTestId: string | null;
         };
     };
     contactInfo: {
@@ -162,6 +181,65 @@ export interface LandingPageContent {
         hours: string;
     };
     lastUpdated: string;
+}
+
+// A/B Testing types
+export interface ABTestMetrics {
+    views: number;
+    bounces: number;
+    avgTimeOnPage: number;
+    interactions: number;
+    conversions: number;
+}
+
+export interface SectionConfiguration {
+    order: string[];
+    enabled: Record<string, boolean>;
+}
+
+export interface ABTest {
+    id: string;
+    name: string;
+    description: string;
+    status: "draft" | "active" | "paused" | "completed";
+    variantA: {
+        name: string;
+        sections: SectionConfiguration;
+    };
+    variantB: {
+        name: string;
+        sections: SectionConfiguration;
+    };
+    metrics: {
+        variantA: ABTestMetrics;
+        variantB: ABTestMetrics;
+    };
+    startDate?: string;
+    endDate?: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface ABTestCreate {
+    name: string;
+    description: string;
+    variantA: {
+        name: string;
+        sections: SectionConfiguration;
+    };
+    variantB: {
+        name: string;
+        sections: SectionConfiguration;
+    };
+}
+
+export interface AnalyticsEvent {
+    eventType: "page_view" | "bounce" | "interaction" | "conversion";
+    variantId?: string;
+    testId?: string;
+    sessionId: string;
+    timestamp: number;
+    metadata?: Record<string, any>;
 }
 
 export interface Plant {
@@ -536,6 +614,77 @@ export const restApi = {
     // Dashboard Stats
     async getDashboardStats(): Promise<DashboardStats> {
         return fetchApi<DashboardStats>("/dashboard/stats");
+    },
+
+    // Section Management
+    async updateSectionConfiguration(sections: SectionConfiguration): Promise<{ success: boolean; message: string }> {
+        return fetchApi<{ success: boolean; message: string }>(
+            "/landing-page/sections",
+            {
+                method: "PUT",
+                body: JSON.stringify({ sections }),
+            },
+        );
+    },
+
+    // Landing Page Settings Management
+    async updateLandingPageSettings(settings: Record<string, any>): Promise<{ success: boolean; message: string; updatedFields: string[] }> {
+        return fetchApi<{ success: boolean; message: string; updatedFields: string[] }>(
+            "/landing-page/settings",
+            {
+                method: "PUT",
+                body: JSON.stringify(settings),
+            },
+        );
+    },
+
+    // A/B Testing
+    async getABTests(): Promise<ABTest[]> {
+        return fetchApi<ABTest[]>("/landing-page/ab-tests");
+    },
+
+    async getABTest(id: string): Promise<ABTest> {
+        return fetchApi<ABTest>(`/landing-page/ab-tests/${id}`);
+    },
+
+    async createABTest(test: ABTestCreate): Promise<ABTest> {
+        return fetchApi<ABTest>("/landing-page/ab-tests", {
+            method: "POST",
+            body: JSON.stringify(test),
+        });
+    },
+
+    async updateABTest(id: string, test: Partial<ABTest>): Promise<ABTest> {
+        return fetchApi<ABTest>(`/landing-page/ab-tests/${id}`, {
+            method: "PUT",
+            body: JSON.stringify(test),
+        });
+    },
+
+    async deleteABTest(id: string): Promise<{ success: boolean }> {
+        return fetchApi<{ success: boolean }>(`/landing-page/ab-tests/${id}`, {
+            method: "DELETE",
+        });
+    },
+
+    async startABTest(id: string): Promise<ABTest> {
+        return fetchApi<ABTest>(`/landing-page/ab-tests/${id}/start`, {
+            method: "POST",
+        });
+    },
+
+    async stopABTest(id: string): Promise<ABTest> {
+        return fetchApi<ABTest>(`/landing-page/ab-tests/${id}/stop`, {
+            method: "POST",
+        });
+    },
+
+    // Analytics (public endpoint)
+    async trackAnalyticsEvent(event: AnalyticsEvent): Promise<{ success: boolean }> {
+        return fetchApi<{ success: boolean }>("/analytics/track", {
+            method: "POST",
+            body: JSON.stringify(event),
+        });
     },
 };
 

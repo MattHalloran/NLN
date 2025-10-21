@@ -18,7 +18,14 @@ const {
 const {
     AdminContactPage,
     AdminGalleryPage,
-    AdminHomePage,
+    AdminHomepageABTesting,
+    AdminHomepageBranding,
+    AdminHomepageHeroBanner,
+    AdminHomepageHub,
+    AdminHomepageNewsletter,
+    AdminHomepageSeasonal,
+    AdminHomepageSections,
+    AdminHomepageServices,
     AdminMainPage,
 } = lazily(() => import("./pages/admin"));
 const {
@@ -166,10 +173,59 @@ export const Routes = () => {
                         </Page>
                     </Suspense>
                 </Route>
-                <Route path={APP_LINKS.AdminHero}>
+                <Route path={APP_LINKS.AdminHomepage}>
                     <Suspense fallback={Fallback}>
                         <Page excludePageContainer restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
-                            <AdminHomePage />
+                            <AdminHomepageHub />
+                        </Page>
+                    </Suspense>
+                </Route>
+                <Route path={APP_LINKS.AdminHomepageSections}>
+                    <Suspense fallback={Fallback}>
+                        <Page excludePageContainer restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
+                            <AdminHomepageSections />
+                        </Page>
+                    </Suspense>
+                </Route>
+                <Route path={APP_LINKS.AdminHomepageABTesting}>
+                    <Suspense fallback={Fallback}>
+                        <Page excludePageContainer restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
+                            <AdminHomepageABTesting />
+                        </Page>
+                    </Suspense>
+                </Route>
+                <Route path={APP_LINKS.AdminHomepageHeroBanner}>
+                    <Suspense fallback={Fallback}>
+                        <Page excludePageContainer restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
+                            <AdminHomepageHeroBanner />
+                        </Page>
+                    </Suspense>
+                </Route>
+                <Route path={APP_LINKS.AdminHomepageSeasonal}>
+                    <Suspense fallback={Fallback}>
+                        <Page excludePageContainer restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
+                            <AdminHomepageSeasonal />
+                        </Page>
+                    </Suspense>
+                </Route>
+                <Route path={APP_LINKS.AdminHomepageNewsletter}>
+                    <Suspense fallback={Fallback}>
+                        <Page excludePageContainer restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
+                            <AdminHomepageNewsletter />
+                        </Page>
+                    </Suspense>
+                </Route>
+                <Route path={APP_LINKS.AdminHomepageServices}>
+                    <Suspense fallback={Fallback}>
+                        <Page excludePageContainer restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
+                            <AdminHomepageServices />
+                        </Page>
+                    </Suspense>
+                </Route>
+                <Route path={APP_LINKS.AdminHomepageBranding}>
+                    <Suspense fallback={Fallback}>
+                        <Page excludePageContainer restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
+                            <AdminHomepageBranding />
                         </Page>
                     </Suspense>
                 </Route>

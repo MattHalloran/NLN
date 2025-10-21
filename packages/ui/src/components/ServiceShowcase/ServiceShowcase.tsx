@@ -10,22 +10,34 @@ import {
 } from "@mui/material";
 import { useState } from "react";
 import { useLocation } from "route";
-import { Sprout, Leaf, Home, Truck, LucideIcon } from "lucide-react";
+import { Sprout, Leaf, Home, Truck, Package, Wrench, LucideIcon } from "lucide-react";
+import { useLandingPageContent } from "api/rest/hooks";
 
 interface Service {
     title: string;
     description: string;
-    icon: LucideIcon;
+    icon: string;
     action: string;
     url?: string;
 }
 
-const services: Service[] = [
+// Icon mapping for service cards
+const SERVICE_ICONS: Record<string, LucideIcon> = {
+    sprout: Sprout,
+    leaf: Leaf,
+    home: Home,
+    truck: Truck,
+    package: Package,
+    wrench: Wrench,
+};
+
+// Default services as fallback
+const defaultServices: Service[] = [
     {
         title: "Plant Selection & Availability",
         description:
             "Browse our extensive collection of healthy plants, trees, and flowers. Check real-time availability and place orders online.",
-        icon: Sprout,
+        icon: "sprout",
         action: "Browse Plants",
         url: "https://newlife.online-orders.sbiteam.com/",
     },
@@ -33,7 +45,7 @@ const services: Service[] = [
         title: "Expert Plant Care Advice",
         description:
             "Get personalized guidance from our certified horticulturists. Learn proper care techniques for your specific plants.",
-        icon: Leaf,
+        icon: "leaf",
         action: "Get Advice",
         url: "/about#contact",
     },
@@ -41,7 +53,7 @@ const services: Service[] = [
         title: "Landscape Design Consultation",
         description:
             "Transform your outdoor space with professional landscape design. From concept to completion, we'll help bring your vision to life.",
-        icon: Home,
+        icon: "home",
         action: "Schedule Consultation",
         url: "/about#contact",
     },
@@ -49,7 +61,7 @@ const services: Service[] = [
         title: "Delivery & Installation",
         description:
             "Professional delivery and installation services available. Let our experienced team handle the heavy lifting and proper placement.",
-        icon: Truck,
+        icon: "truck",
         action: "Learn More",
         url: "/about",
     },
@@ -59,6 +71,14 @@ export const ServiceShowcase = () => {
     const { palette } = useTheme();
     const [, setLocation] = useLocation();
     const [hoveredCard, setHoveredCard] = useState<number | null>(null);
+    const { data: landingPageData } = useLandingPageContent(true);
+
+    // Get services from settings or use defaults
+    const servicesConfig = landingPageData?.settings?.services;
+    const services = servicesConfig?.items || defaultServices;
+    const sectionTitle = servicesConfig?.title || "Our Services";
+    const sectionSubtitle =
+        servicesConfig?.subtitle || "Everything you need to create and maintain your perfect garden";
 
     const handleAction = (service: Service) => {
         if (service.url?.startsWith("http")) {
@@ -87,7 +107,7 @@ export const ServiceShowcase = () => {
                             fontSize: { xs: "2rem", md: "3rem" },
                         }}
                     >
-                        Our Services
+                        {sectionTitle}
                     </Typography>
                     <Typography
                         variant="h6"
@@ -98,12 +118,12 @@ export const ServiceShowcase = () => {
                             fontSize: { xs: "1.1rem", md: "1.25rem" },
                         }}
                     >
-                        Everything you need to create and maintain your perfect garden
+                        {sectionSubtitle}
                     </Typography>
                 </Box>
 
                 <Grid container spacing={4}>
-                    {services.map((service, index) => (
+                    {services.map((service: Service, index: number) => (
                         <Grid item xs={12} sm={6} md={3} key={index}>
                             <Card
                                 sx={{
@@ -145,7 +165,7 @@ export const ServiceShowcase = () => {
                                         }}
                                     >
                                         {(() => {
-                                            const IconComponent = service.icon;
+                                            const IconComponent = SERVICE_ICONS[service.icon] || Sprout;
                                             return <IconComponent size={48} />;
                                         })()}
                                     </Box>

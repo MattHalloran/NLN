@@ -1,6 +1,7 @@
+import { APP_LINKS } from "@local/shared";
 import { Box } from "@mui/material";
 import { useImagesByLabel, useAddImages, useUpdateImages } from "api/rest/hooks";
-import { AdminTabOption, AdminTabs, Dropzone, PageContainer, SnackSeverity, WrappedImageList } from "components";
+import { BackButton, Dropzone, PageContainer, SnackSeverity, WrappedImageList } from "components";
 import { TopBar } from "components/navigation/TopBar/TopBar";
 import { useCallback, useEffect, useState } from "react";
 import { pagePaddingBottom } from "styles";
@@ -66,7 +67,7 @@ export const AdminGalleryPage = () => {
                 display="page"
                 help={helpText}
                 title="Gallery"
-                below={<AdminTabs defaultTab={AdminTabOption.Gallery} />}
+                startComponent={<BackButton to={APP_LINKS.Admin} ariaLabel="Back to Admin Dashboard" />}
             />
             <Box p={2}>
                 <Dropzone

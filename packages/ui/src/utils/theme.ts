@@ -8,9 +8,11 @@ declare module "@mui/material/styles/createPalette" {
     }
     interface Palette {
         admin: PaletteAdmin;
+        accent: PaletteColor;
     }
     interface PaletteOptions {
         admin: PaletteAdmin;
+        accent?: PaletteColorOptions;
     }
 }
 
@@ -82,6 +84,12 @@ const lightPalette = {
         light: "#63a4ff",
         main: "#1976d2",
         dark: "#004ba0",
+        contrastText: "#ffffff",
+    },
+    accent: {
+        light: "#80e27e",
+        main: "#4caf50",
+        dark: "#087f23",
         contrastText: "#ffffff",
     },
     background: {
@@ -157,6 +165,12 @@ const darkPalette = {
         dark: "#344eb5",
         contrastText: "#ffffff",
     },
+    accent: {
+        light: "#81c784",
+        main: "#66bb6a",
+        dark: "#388e3c",
+        contrastText: "#ffffff",
+    },
     background: {
         default: "#181818",
         paper: "#2e2e2e",
@@ -219,4 +233,74 @@ const darkTheme = createTheme({
 export const themes = {
     "light": lightTheme,
     "dark": darkTheme,
+};
+
+// Create a dynamic theme with custom colors from settings
+export const createDynamicTheme = (mode: "light" | "dark", customColors?: { primary?: string; secondary?: string; accent?: string }) => {
+    const baseTheme = mode === "light" ? lightPalette : darkPalette;
+
+    if (!customColors) {
+        return mode === "light" ? lightTheme : darkTheme;
+    }
+
+    const dynamicPalette = {
+        ...baseTheme,
+        primary: customColors.primary ? {
+            light: lighten(customColors.primary, 0.3),
+            main: customColors.primary,
+            dark: lighten(customColors.primary, -0.3),
+            contrastText: "#ffffff",
+        } : baseTheme.primary,
+        secondary: customColors.secondary ? {
+            light: lighten(customColors.secondary, 0.3),
+            main: customColors.secondary,
+            dark: lighten(customColors.secondary, -0.3),
+            contrastText: "#ffffff",
+        } : baseTheme.secondary,
+        accent: customColors.accent ? {
+            light: lighten(customColors.accent, 0.3),
+            main: customColors.accent,
+            dark: lighten(customColors.accent, -0.3),
+            contrastText: "#ffffff",
+        } : baseTheme.accent,
+    };
+
+    return createTheme({
+        ...commonTheme,
+        palette: dynamicPalette,
+        components: {
+            MuiButton: {
+                variants: [
+                    {
+                        props: { variant: "text" },
+                        style: {
+                            color: dynamicPalette.secondary.main,
+                        },
+                    },
+                    {
+                        props: { variant: "outlined" },
+                        style: {
+                            color: dynamicPalette.secondary.main,
+                            borderColor: dynamicPalette.secondary.main,
+                        },
+                    },
+                    {
+                        props: { variant: "contained" },
+                        style: {
+                            backgroundColor: dynamicPalette.secondary.main,
+                            color: dynamicPalette.secondary.contrastText,
+                            "&:hover": {
+                                backgroundColor: lighten(dynamicPalette.secondary.main, 0.1),
+                            },
+                        },
+                    },
+                ],
+            },
+            MuiIconButton: {
+                defaultProps: {
+                    disableRipple: true,
+                },
+            },
+        },
+    });
 };

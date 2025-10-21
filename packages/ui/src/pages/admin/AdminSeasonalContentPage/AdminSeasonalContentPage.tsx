@@ -1,3 +1,4 @@
+import { APP_LINKS } from "@local/shared";
 import {
     Box,
     Button,
@@ -22,8 +23,7 @@ import {
     useTheme,
 } from "@mui/material";
 import { useLandingPageContent, useUpdateLandingPageContent } from "api/rest/hooks";
-import { AdminTabs, PageContainer, TopBar } from "components";
-import { AdminTabOption } from "components/breadcrumbs/AdminTabs/AdminTabs";
+import { BackButton, PageContainer, TopBar } from "components";
 import {
     Flower,
     Leaf,
@@ -242,8 +242,8 @@ export const AdminSeasonalContentPage = () => {
                 display="page"
                 title="Seasonal Content Management"
                 help="Manage seasonal plants and expert tips displayed on the home page"
+                startComponent={<BackButton to={APP_LINKS.AdminHomepage} ariaLabel="Back to Homepage Management" />}
             />
-            <AdminTabs defaultTab={AdminTabOption.Hero} />
 
             <Container maxWidth="lg" sx={{ mt: 4 }}>
                 {/* Statistics */}

@@ -1,16 +1,29 @@
 // Code inspired by https://github.com/rmolinamir/hero-slider
 import { Box, Button, Chip, Stack, Typography, useTheme } from "@mui/material";
 import { useLandingPageContent } from "api/rest/hooks";
-import { Award, Leaf, Users } from "lucide-react";
+import { Award, Leaf, Users, Package, Shield, Heart } from "lucide-react";
 import { useLocation } from "route";
 import { getShortBusinessHours } from "utils/businessHours";
 import { Slider } from "./Slider";
 import { COMPANY_INFO } from "@local/shared";
 
+// Icon mapping for trust badges (matches AdminHomepageHeroBanner)
+const TRUST_BADGE_ICONS = {
+    users: Users,
+    award: Award,
+    leaf: Leaf,
+    package: Package,
+    shield: Shield,
+    heart: Heart,
+};
+
 interface HeroProps {
-    text: string;
-    subtext: string;
+    text?: string;
+    subtext?: string;
 }
+
+const DEFAULT_HERO_TEXT = "Beautiful, healthy plants";
+const DEFAULT_HERO_SUBTEXT = "At competitive prices";
 
 const textPopStyle = {
     padding: "0",
@@ -20,7 +33,7 @@ const textPopStyle = {
     textShadow: "2px 2px 4px rgba(0,0,0,0.8), 0px 0px 20px rgba(0,0,0,0.5)",
 };
 
-export const Hero = ({ text, subtext }: HeroProps) => {
+export const Hero = ({ text = DEFAULT_HERO_TEXT, subtext = DEFAULT_HERO_SUBTEXT }: HeroProps = {}) => {
     const [, setLocation] = useLocation();
     const { palette } = useTheme();
 
@@ -54,7 +67,14 @@ export const Hero = ({ text, subtext }: HeroProps) => {
                 minHeight: "80vh",
             }}
         >
-            <Slider images={images} autoPlay={heroSettings?.autoPlay ?? true} />
+            <Slider
+                images={images}
+                autoPlay={heroSettings?.autoPlay ?? true}
+                slidingDelay={heroSettings?.autoPlayDelay ?? 3000}
+                showDots={heroSettings?.showDots ?? true}
+                showArrows={heroSettings?.showArrows ?? false}
+                fadeTransition={heroSettings?.fadeTransition ?? false}
+            />
             <Box
                 sx={{
                     position: "absolute",
@@ -87,13 +107,12 @@ export const Hero = ({ text, subtext }: HeroProps) => {
                 >
                     {(
                         settings?.hero?.trustBadges || [
-                            { icon: "users", text: `Family Owned Since ${COMPANY_INFO.FoundedYear}` },
+                            { icon: "users", text: `Family Owned Since ${settings?.companyInfo?.foundedYear || COMPANY_INFO.FoundedYear}` },
                             { icon: "award", text: "Licensed & Certified" },
                             { icon: "leaf", text: "Expert Plant Care" },
                         ]
                     ).map((badge, index) => {
-                        const IconComponent =
-                            badge.icon === "users" ? Users : badge.icon === "award" ? Award : Leaf;
+                        const IconComponent = TRUST_BADGE_ICONS[badge.icon as keyof typeof TRUST_BADGE_ICONS] || Leaf;
                         return (
                             <Chip
                                 key={index}
@@ -248,7 +267,7 @@ export const Hero = ({ text, subtext }: HeroProps) => {
                             letterSpacing: "0.02em",
                         }}
                     >
-                        {data?.contactInfo?.hours
+                        {(settings?.hero as any)?.useContactInfoHours && data?.contactInfo?.hours
                             ? getShortBusinessHours(data.contactInfo.hours)
                             : settings?.hero?.businessHours || "Contact us for hours"}
                     </Typography>

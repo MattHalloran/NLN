@@ -1,6 +1,7 @@
-import { Box } from "@mui/material";
+import { Box, IconButton } from "@mui/material";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Image } from "types";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Dots } from "./Dots";
 import { Slide } from "./Slide";
 import { SliderContent } from "./SliderContent";
@@ -13,6 +14,9 @@ interface SliderProps {
     autoPlay?: boolean;
     slidingDelay?: number;
     slidingDuration?: number;
+    showDots?: boolean;
+    showArrows?: boolean;
+    fadeTransition?: boolean;
 }
 
 export const Slider = ({
@@ -20,6 +24,9 @@ export const Slider = ({
     autoPlay = true,
     slidingDelay = DEFAULT_DELAY,
     slidingDuration = DEFAULT_DURATION,
+    showDots = true,
+    showArrows = false,
+    fadeTransition = false,
 }: SliderProps) => {
     const [width, setWidth] = useState(window.innerWidth);
     const [slideIndex, setSlideIndex] = useState(0);
@@ -57,14 +64,34 @@ export const Slider = ({
 
     const slides = useMemo(() => {
         if (images?.length > 0) {
-            const copy = [...images, images[0]];
+            const copy = fadeTransition ? images : [...images, images[0]];
             return copy.map((s, i) => (
                 <Slide width={width} key={"slide-" + i} image={s} />
             ));
         } else {
             return [];
         }
-    }, [width, images]);
+    }, [width, images, fadeTransition]);
+
+    const goToSlide = (index: number) => {
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        setSlideIndex(index);
+        setTransition(slidingDuration);
+        setTranslate(width * index);
+        if (autoPlay) {
+            timeoutRef.current = setTimeout(() => wait(index === images.length - 1 ? 0 : index + 1), slidingDelay);
+        }
+    };
+
+    const previousSlide = () => {
+        const newIndex = slideIndex === 0 ? images.length - 1 : slideIndex - 1;
+        goToSlide(newIndex);
+    };
+
+    const nextSlide = () => {
+        const newIndex = slideIndex === images.length - 1 ? 0 : slideIndex + 1;
+        goToSlide(newIndex);
+    };
 
     return (
         <Box
@@ -85,7 +112,45 @@ export const Slider = ({
             >
                 {slides}
             </SliderContent>
-            <Dots quantity={images.length} activeIndex={slideIndex} />
+
+            {showDots && <Dots quantity={images.length} activeIndex={slideIndex} />}
+
+            {showArrows && images.length > 1 && (
+                <>
+                    <IconButton
+                        onClick={previousSlide}
+                        sx={{
+                            position: "absolute",
+                            left: 16,
+                            top: "50%",
+                            transform: "translateY(-50%)",
+                            zIndex: 2,
+                            backgroundColor: "rgba(255, 255, 255, 0.9)",
+                            "&:hover": {
+                                backgroundColor: "white",
+                            },
+                        }}
+                    >
+                        <ChevronLeft size={32} />
+                    </IconButton>
+                    <IconButton
+                        onClick={nextSlide}
+                        sx={{
+                            position: "absolute",
+                            right: 16,
+                            top: "50%",
+                            transform: "translateY(-50%)",
+                            zIndex: 2,
+                            backgroundColor: "rgba(255, 255, 255, 0.9)",
+                            "&:hover": {
+                                backgroundColor: "white",
+                            },
+                        }}
+                    >
+                        <ChevronRight size={32} />
+                    </IconButton>
+                </>
+            )}
         </Box>
     );
 };

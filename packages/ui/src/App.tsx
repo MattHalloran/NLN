@@ -13,7 +13,7 @@ import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { useLocation } from "route";
 import { BusinessData, Session } from "types";
-import { PubSub, SideMenuPub, themes } from "utils";
+import { PubSub, SideMenuPub, themes, createDynamicTheme } from "utils";
 
 const menusDisplayData: { [key in SideMenuPub["id"]]: { persistentOnDesktop: boolean, sideForRightHanded: "left" | "right" } } = {
     "side-menu": sideMenuDisplayData,
@@ -54,13 +54,17 @@ export function App() {
     }, [landingPageData]);
 
     useEffect(() => {
-        // Determine theme
-        if (session?.theme && (session.theme === "light" || session.theme === "dark")) {
-            setTheme(themes[session.theme]);
-        }
-        //else if (session && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) setTheme(themes.dark);
-        else setTheme(themes.light);
-    }, [session]);
+        // Determine theme mode
+        const themeMode = session?.theme && (session.theme === "light" || session.theme === "dark")
+            ? session.theme
+            : "light";
+
+        // Apply custom brand colors from settings if available
+        const customColors = landingPageData?.settings?.colors;
+        const dynamicTheme = createDynamicTheme(themeMode, customColors);
+
+        setTheme(dynamicTheme);
+    }, [session, landingPageData?.settings?.colors]);
 
     const checkLogin = useCallback((session?: Session) => {
         if (session) {

@@ -13,14 +13,8 @@ import { Building2, Users, TreePine, Clock, Award, Truck, Shield, Sprout } from 
 import { useContext, useMemo } from "react";
 import { BusinessContext } from "contexts/BusinessContext";
 import { getEarliestOpeningTime } from "utils/businessHours";
+import { useLandingPageContent } from "api/rest/hooks";
 import { COMPANY_INFO } from "@local/shared";
-
-const stats = [
-    { number: `${new Date().getFullYear() - COMPANY_INFO.FoundedYear}+`, label: "Years of Excellence", subtext: `Since ${COMPANY_INFO.FoundedYear}` },
-    { number: "100+", label: "Plant Varieties", subtext: "Extensive Selection" },
-    { number: "3-25", label: "Gallon Sizes", subtext: "Full Range" },
-    { number: "500+", label: "Trade Partners", subtext: "Wholesale Only" },
-];
 
 const clientTypes = [
     { icon: Building2, label: "Landscape Contractors" },
@@ -32,6 +26,16 @@ const clientTypes = [
 export const SocialProof = () => {
     const { palette } = useTheme();
     const business = useContext(BusinessContext);
+    const { data } = useLandingPageContent(true);
+
+    const foundedYear = data?.settings?.companyInfo?.foundedYear || COMPANY_INFO.FoundedYear;
+
+    const stats = useMemo(() => [
+        { number: `${new Date().getFullYear() - foundedYear}+`, label: "Years of Excellence", subtext: `Since ${foundedYear}` },
+        { number: "100+", label: "Plant Varieties", subtext: "Extensive Selection" },
+        { number: "3-25", label: "Gallon Sizes", subtext: "Full Range" },
+        { number: "500+", label: "Trade Partners", subtext: "Wholesale Only" },
+    ], [foundedYear]);
 
     const earliestOpeningTime = useMemo(() => {
         if (!business?.hours) return null;
@@ -45,7 +49,7 @@ export const SocialProof = () => {
                 title: "Family Heritage",
                 description:
                     "Owned and operated by the Gianaris family for over four decades, maintaining traditional values and personal service.",
-                highlight: `Family-Owned Since ${COMPANY_INFO.FoundedYear}`,
+                highlight: `Family-Owned Since ${foundedYear}`,
             },
             {
                 icon: TreePine,
@@ -86,7 +90,7 @@ export const SocialProof = () => {
                 highlight: "NJ Licensed Nursery",
             },
         ],
-        [earliestOpeningTime],
+        [earliestOpeningTime, foundedYear],
     );
 
     return (
@@ -209,7 +213,7 @@ export const SocialProof = () => {
                             zIndex: 1,
                         }}
                     >
-                        Our Founding Mission Since {COMPANY_INFO.FoundedYear}
+                        Our Founding Mission Since {foundedYear}
                     </Typography>
                     <Typography
                         variant="h4"
@@ -408,7 +412,7 @@ export const SocialProof = () => {
                     >
                         <Chip label="Licensed NJ Nursery" color="primary" />
                         <Chip label="Wholesale Only" color="primary" />
-                        <Chip label={`Est. ${COMPANY_INFO.FoundedYear}`} color="primary" />
+                        <Chip label={`Est. ${foundedYear}`} color="primary" />
                     </Box>
                 </Box>
             </Container>
