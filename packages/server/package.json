@@ -48,7 +48,7 @@
         "jsonwebtoken": "^9.0.0",
         "lodash": "^4.17.21",
         "multer": "^2.0.2",
-        "nodemailer": "^6.6.0",
+        "nodemailer": "^7.0.7",
         "prisma": "6.1.0",
         "probe-image-size": "^7.2.1",
         "redis": "4.4.0",
