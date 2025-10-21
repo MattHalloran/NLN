@@ -3,6 +3,19 @@ import { readFileSync, writeFileSync } from "fs";
 import { join } from "path";
 import { logger } from "../logger.js";
 import { initializeRedis } from "../redisConn.js";
+import type {
+    LandingPageContent,
+    HeroBanner,
+    SeasonalPlant,
+    PlantTip,
+    HeroSettings,
+    BusinessContactData,
+} from "../types/landingPage.js";
+
+// Extend Express Request to include auth properties
+interface AuthenticatedRequest extends Request {
+    isAdmin?: boolean;
+}
 
 const router = Router();
 // In production, data files are in dist folder, in development they're in src
@@ -16,28 +29,77 @@ const CACHE_KEY = "landing-page-content:v1";
 const CACHE_TTL = 3600; // 1 hour
 
 // Helper function to read the consolidated landing page content
-const readLandingPageContent = () => {
+const readLandingPageContent = (): LandingPageContent => {
     try {
         const data = readFileSync(join(dataPath, "landing-page-content.json"), "utf8");
-        return JSON.parse(data);
+        return JSON.parse(data) as LandingPageContent;
     } catch (error) {
         logger.error("Error reading landing page content:", error);
         return {
-            metadata: {},
-            content: {},
-            contact: {},
-            theme: {},
-            layout: {},
-            experiments: {},
+            metadata: { version: "2.0", lastUpdated: new Date().toISOString() },
+            content: {
+                hero: {
+                    banners: [],
+                    settings: {
+                        autoPlay: false,
+                        autoPlayDelay: 5000,
+                        showDots: true,
+                        showArrows: true,
+                        fadeTransition: false,
+                    },
+                    text: {
+                        title: "",
+                        subtitle: "",
+                        description: "",
+                        businessHours: "",
+                        trustBadges: [],
+                        buttons: [],
+                    },
+                },
+                services: { title: "", subtitle: "", items: [] },
+                seasonal: { plants: [], tips: [] },
+                newsletter: { title: "", description: "", disclaimer: "", isActive: false },
+                company: { foundedYear: new Date().getFullYear(), description: "" },
+            },
+            contact: {
+                name: "",
+                address: { street: "", city: "", state: "", zip: "", full: "", googleMapsUrl: "" },
+                phone: { display: "", link: "" },
+                email: { address: "", link: "" },
+                socialMedia: {},
+                hours: {
+                    monday: "",
+                    tuesday: "",
+                    wednesday: "",
+                    thursday: "",
+                    friday: "",
+                    saturday: "",
+                    sunday: "",
+                },
+            },
+            theme: {
+                colors: {
+                    light: { primary: "", secondary: "", accent: "", background: "", paper: "" },
+                    dark: { primary: "", secondary: "", accent: "", background: "", paper: "" },
+                },
+                features: {
+                    showSeasonalContent: true,
+                    showNewsletter: true,
+                    showSocialProof: true,
+                    enableAnimations: true,
+                },
+            },
+            layout: { sections: [] },
+            experiments: { tests: [] },
         };
     }
 };
 
 // Helper function to write the consolidated landing page content
-const writeLandingPageContent = (content: any) => {
+const writeLandingPageContent = (content: LandingPageContent): void => {
     try {
         const contentPath = join(dataPath, "landing-page-content.json");
-        const dataToWrite = {
+        const dataToWrite: LandingPageContent = {
             ...content,
             metadata: {
                 ...content.metadata,
@@ -53,18 +115,18 @@ const writeLandingPageContent = (content: any) => {
 };
 
 // Cache management
-const getCachedContent = async () => {
+const getCachedContent = async (): Promise<LandingPageContent | null> => {
     try {
         const redis = await initializeRedis();
         const cached = await redis.get(CACHE_KEY);
-        return cached ? JSON.parse(cached) : null;
+        return cached ? (JSON.parse(cached) as LandingPageContent) : null;
     } catch (error) {
         logger.error("Error reading from cache:", error);
         return null;
     }
 };
 
-const setCachedContent = async (content: any) => {
+const setCachedContent = async (content: LandingPageContent): Promise<void> => {
     try {
         const redis = await initializeRedis();
         await redis.setEx(CACHE_KEY, CACHE_TTL, JSON.stringify(content));
@@ -85,29 +147,31 @@ const invalidateCache = async () => {
 };
 
 // Aggregate content from the new structure and return it in the new format
-const aggregateLandingPageContent = (onlyActive: boolean = true) => {
+const aggregateLandingPageContent = (onlyActive: boolean = true): LandingPageContent => {
     const landingPageData = readLandingPageContent();
 
     // Clone the data so we don't modify the original
-    const result = JSON.parse(JSON.stringify(landingPageData));
+    const result: LandingPageContent = JSON.parse(
+        JSON.stringify(landingPageData)
+    ) as LandingPageContent;
 
     // Filter active content if requested
     if (onlyActive && result.content?.hero?.banners) {
         result.content.hero.banners = result.content.hero.banners
-            .filter((b: any) => b.isActive)
-            .sort((a: any, b: any) => a.displayOrder - b.displayOrder);
+            .filter((b: HeroBanner) => b.isActive)
+            .sort((a: HeroBanner, b: HeroBanner) => a.displayOrder - b.displayOrder);
     }
 
     if (onlyActive && result.content?.seasonal?.plants) {
         result.content.seasonal.plants = result.content.seasonal.plants
-            .filter((p: any) => p.isActive)
-            .sort((a: any, b: any) => a.displayOrder - b.displayOrder);
+            .filter((p: SeasonalPlant) => p.isActive)
+            .sort((a: SeasonalPlant, b: SeasonalPlant) => a.displayOrder - b.displayOrder);
     }
 
     if (onlyActive && result.content?.seasonal?.tips) {
         result.content.seasonal.tips = result.content.seasonal.tips
-            .filter((t: any) => t.isActive)
-            .sort((a: any, b: any) => a.displayOrder - b.displayOrder);
+            .filter((t: PlantTip) => t.isActive)
+            .sort((a: PlantTip, b: PlantTip) => a.displayOrder - b.displayOrder);
     }
 
     return result;
@@ -128,7 +192,7 @@ router.get("/", async (req: Request, res: Response) => {
             res.set({
                 "Cache-Control": "public, max-age=300", // 5 minutes browser cache
                 ETag: `"${Buffer.from(JSON.stringify(cached)).toString("base64").substring(0, 20)}"`,
-                "Last-Modified": cached.lastUpdated || new Date().toUTCString(),
+                "Last-Modified": cached.metadata.lastUpdated || new Date().toUTCString(),
             });
 
             return res.json(cached);
@@ -145,7 +209,7 @@ router.get("/", async (req: Request, res: Response) => {
         res.set({
             "Cache-Control": "public, max-age=300",
             ETag: `"${Buffer.from(JSON.stringify(content)).toString("base64").substring(0, 20)}"`,
-            "Last-Modified": content.lastUpdated,
+            "Last-Modified": content.metadata.lastUpdated,
         });
 
         return res.json(content);
@@ -159,10 +223,10 @@ router.get("/", async (req: Request, res: Response) => {
 });
 
 // POST endpoint to invalidate cache (admin only)
-router.post("/invalidate-cache", async (req: Request, res: Response) => {
+router.post("/invalidate-cache", async (req: AuthenticatedRequest, res: Response) => {
     try {
         // Check admin access (using the auth middleware)
-        if (!(req as any).isAdmin) {
+        if (!req.isAdmin) {
             return res.status(403).json({ error: "Admin access required" });
         }
 
@@ -178,15 +242,22 @@ router.post("/invalidate-cache", async (req: Request, res: Response) => {
 });
 
 // PUT endpoint to update entire landing page content (admin only)
-router.put("/", async (req: Request, res: Response) => {
+router.put("/", async (req: AuthenticatedRequest, res: Response) => {
     try {
         // Check admin access (using the auth middleware)
-        if (!(req as any).isAdmin) {
+        if (!req.isAdmin) {
             return res.status(403).json({ error: "Admin access required" });
         }
 
         const { heroBanners, heroSettings, seasonalPlants, plantTips, settings, contactInfo } =
-            req.body;
+            req.body as {
+                heroBanners?: HeroBanner[];
+                heroSettings?: HeroSettings;
+                seasonalPlants?: SeasonalPlant[];
+                plantTips?: PlantTip[];
+                settings?: Record<string, unknown>;
+                contactInfo?: { business?: BusinessContactData; hours?: string };
+            };
 
         const updatedSections: string[] = [];
 
@@ -195,85 +266,292 @@ router.put("/", async (req: Request, res: Response) => {
 
         // Update hero banners if provided
         if (heroBanners) {
-            currentContent.content = currentContent.content || {};
-            currentContent.content.hero = currentContent.content.hero || {};
+            currentContent.content = currentContent.content || {
+                hero: {
+                    banners: [],
+                    settings: {
+                        autoPlay: false,
+                        autoPlayDelay: 5000,
+                        showDots: true,
+                        showArrows: true,
+                        fadeTransition: false,
+                    },
+                    text: {
+                        title: "",
+                        subtitle: "",
+                        description: "",
+                        businessHours: "",
+                        trustBadges: [],
+                        buttons: [],
+                    },
+                },
+                services: { title: "", subtitle: "", items: [] },
+                seasonal: { plants: [], tips: [] },
+                newsletter: { title: "", description: "", disclaimer: "", isActive: false },
+                company: { foundedYear: new Date().getFullYear(), description: "" },
+            };
+            currentContent.content.hero = currentContent.content.hero || {
+                banners: [],
+                settings: {
+                    autoPlay: false,
+                    autoPlayDelay: 5000,
+                    showDots: true,
+                    showArrows: true,
+                    fadeTransition: false,
+                },
+                text: {
+                    title: "",
+                    subtitle: "",
+                    description: "",
+                    businessHours: "",
+                    trustBadges: [],
+                    buttons: [],
+                },
+            };
             currentContent.content.hero.banners = heroBanners;
             updatedSections.push("heroBanners");
         }
 
         // Update hero settings if provided
         if (heroSettings) {
-            currentContent.content = currentContent.content || {};
-            currentContent.content.hero = currentContent.content.hero || {};
+            currentContent.content = currentContent.content || {
+                hero: {
+                    banners: [],
+                    settings: {
+                        autoPlay: false,
+                        autoPlayDelay: 5000,
+                        showDots: true,
+                        showArrows: true,
+                        fadeTransition: false,
+                    },
+                    text: {
+                        title: "",
+                        subtitle: "",
+                        description: "",
+                        businessHours: "",
+                        trustBadges: [],
+                        buttons: [],
+                    },
+                },
+                services: { title: "", subtitle: "", items: [] },
+                seasonal: { plants: [], tips: [] },
+                newsletter: { title: "", description: "", disclaimer: "", isActive: false },
+                company: { foundedYear: new Date().getFullYear(), description: "" },
+            };
+            currentContent.content.hero = currentContent.content.hero || {
+                banners: [],
+                settings: {
+                    autoPlay: false,
+                    autoPlayDelay: 5000,
+                    showDots: true,
+                    showArrows: true,
+                    fadeTransition: false,
+                },
+                text: {
+                    title: "",
+                    subtitle: "",
+                    description: "",
+                    businessHours: "",
+                    trustBadges: [],
+                    buttons: [],
+                },
+            };
             currentContent.content.hero.settings = heroSettings;
             updatedSections.push("heroSettings");
         }
 
         // Update seasonal plants if provided
         if (seasonalPlants) {
-            currentContent.content = currentContent.content || {};
-            currentContent.content.seasonal = currentContent.content.seasonal || {};
+            currentContent.content = currentContent.content || {
+                hero: {
+                    banners: [],
+                    settings: {
+                        autoPlay: false,
+                        autoPlayDelay: 5000,
+                        showDots: true,
+                        showArrows: true,
+                        fadeTransition: false,
+                    },
+                    text: {
+                        title: "",
+                        subtitle: "",
+                        description: "",
+                        businessHours: "",
+                        trustBadges: [],
+                        buttons: [],
+                    },
+                },
+                services: { title: "", subtitle: "", items: [] },
+                seasonal: { plants: [], tips: [] },
+                newsletter: { title: "", description: "", disclaimer: "", isActive: false },
+                company: { foundedYear: new Date().getFullYear(), description: "" },
+            };
+            currentContent.content.seasonal = currentContent.content.seasonal || {
+                plants: [],
+                tips: [],
+            };
             currentContent.content.seasonal.plants = seasonalPlants;
             updatedSections.push("seasonalPlants");
         }
 
         // Update plant tips if provided
         if (plantTips) {
-            currentContent.content = currentContent.content || {};
-            currentContent.content.seasonal = currentContent.content.seasonal || {};
+            currentContent.content = currentContent.content || {
+                hero: {
+                    banners: [],
+                    settings: {
+                        autoPlay: false,
+                        autoPlayDelay: 5000,
+                        showDots: true,
+                        showArrows: true,
+                        fadeTransition: false,
+                    },
+                    text: {
+                        title: "",
+                        subtitle: "",
+                        description: "",
+                        businessHours: "",
+                        trustBadges: [],
+                        buttons: [],
+                    },
+                },
+                services: { title: "", subtitle: "", items: [] },
+                seasonal: { plants: [], tips: [] },
+                newsletter: { title: "", description: "", disclaimer: "", isActive: false },
+                company: { foundedYear: new Date().getFullYear(), description: "" },
+            };
+            currentContent.content.seasonal = currentContent.content.seasonal || {
+                plants: [],
+                tips: [],
+            };
             currentContent.content.seasonal.tips = plantTips;
             updatedSections.push("plantTips");
         }
 
         // Update general settings if provided
         if (settings) {
-            currentContent.content = currentContent.content || {};
-            currentContent.theme = currentContent.theme || {};
-            currentContent.layout = currentContent.layout || {};
-            currentContent.experiments = currentContent.experiments || {};
+            const settingsData = settings;
+            currentContent.content = currentContent.content || {
+                hero: {
+                    banners: [],
+                    settings: {
+                        autoPlay: false,
+                        autoPlayDelay: 5000,
+                        showDots: true,
+                        showArrows: true,
+                        fadeTransition: false,
+                    },
+                    text: {
+                        title: "",
+                        subtitle: "",
+                        description: "",
+                        businessHours: "",
+                        trustBadges: [],
+                        buttons: [],
+                    },
+                },
+                services: { title: "", subtitle: "", items: [] },
+                seasonal: { plants: [], tips: [] },
+                newsletter: { title: "", description: "", disclaimer: "", isActive: false },
+                company: { foundedYear: new Date().getFullYear(), description: "" },
+            };
+            currentContent.theme = currentContent.theme || {
+                colors: {
+                    light: { primary: "", secondary: "", accent: "", background: "", paper: "" },
+                    dark: { primary: "", secondary: "", accent: "", background: "", paper: "" },
+                },
+                features: {
+                    showSeasonalContent: true,
+                    showNewsletter: true,
+                    showSocialProof: true,
+                    enableAnimations: true,
+                },
+            };
+            currentContent.layout = currentContent.layout || { sections: [] };
+            currentContent.experiments = currentContent.experiments || { tests: [] };
 
-            if (settings.hero) {
-                currentContent.content.hero = currentContent.content.hero || {};
-                currentContent.content.hero.text = settings.hero;
+            if (settingsData.hero) {
+                currentContent.content.hero = currentContent.content.hero || {
+                    banners: [],
+                    settings: {
+                        autoPlay: false,
+                        autoPlayDelay: 5000,
+                        showDots: true,
+                        showArrows: true,
+                        fadeTransition: false,
+                    },
+                    text: {
+                        title: "",
+                        subtitle: "",
+                        description: "",
+                        businessHours: "",
+                        trustBadges: [],
+                        buttons: [],
+                    },
+                };
+                currentContent.content.hero.text =
+                    settingsData.hero as typeof currentContent.content.hero.text;
             }
-            if (settings.newsletter) {
-                currentContent.content.newsletter = settings.newsletter;
+            if (settingsData.newsletter) {
+                currentContent.content.newsletter =
+                    settingsData.newsletter as typeof currentContent.content.newsletter;
             }
-            if (settings.companyInfo) {
-                currentContent.content.company = settings.companyInfo;
+            if (settingsData.companyInfo) {
+                currentContent.content.company =
+                    settingsData.companyInfo as typeof currentContent.content.company;
             }
-            if (settings.services) {
-                currentContent.content.services = settings.services;
+            if (settingsData.services) {
+                currentContent.content.services =
+                    settingsData.services as typeof currentContent.content.services;
             }
-            if (settings.colors) {
-                currentContent.theme.colors = settings.colors;
+            if (settingsData.colors) {
+                currentContent.theme.colors =
+                    settingsData.colors as typeof currentContent.theme.colors;
             }
-            if (settings.features) {
-                currentContent.layout.features = settings.features;
+            if (settingsData.features) {
+                currentContent.theme.features =
+                    settingsData.features as typeof currentContent.theme.features;
             }
-            if (settings.sections) {
-                currentContent.layout.sections = settings.sections;
+            if (settingsData.sections) {
+                currentContent.layout.sections =
+                    settingsData.sections as typeof currentContent.layout.sections;
             }
-            if (settings.abTesting) {
-                currentContent.experiments.abTesting = settings.abTesting;
+            if (settingsData.abTesting) {
+                currentContent.experiments.abTesting = settingsData.abTesting;
             }
             updatedSections.push("settings");
         }
 
         // Update contact info if provided
         if (contactInfo) {
-            currentContent.contact = currentContent.contact || {};
+            currentContent.contact = currentContent.contact || {
+                name: "",
+                address: { street: "", city: "", state: "", zip: "", full: "", googleMapsUrl: "" },
+                phone: { display: "", link: "" },
+                email: { address: "", link: "" },
+                socialMedia: {},
+                hours: {
+                    monday: "",
+                    tuesday: "",
+                    wednesday: "",
+                    thursday: "",
+                    friday: "",
+                    saturday: "",
+                    sunday: "",
+                },
+            };
 
             if (contactInfo.business) {
                 const business = contactInfo.business;
                 if (business.BUSINESS_NAME) {
-                    currentContent.contact.name = business.BUSINESS_NAME.Short || business.BUSINESS_NAME.Long;
+                    currentContent.contact.name =
+                        business.BUSINESS_NAME.Short || business.BUSINESS_NAME.Long || "";
                 }
                 if (business.ADDRESS) {
                     const addressParts = business.ADDRESS.Label.split(" ");
-                    const zip = addressParts[addressParts.length - 1];
-                    const state = addressParts[addressParts.length - 2];
-                    const city = addressParts[addressParts.length - 3];
+                    const zip = addressParts[addressParts.length - 1] || "";
+                    const state = addressParts[addressParts.length - 2] || "";
+                    const city = addressParts[addressParts.length - 3] || "";
                     const street = addressParts.slice(0, addressParts.length - 3).join(" ");
 
                     currentContent.contact.address = {
@@ -291,26 +569,11 @@ router.put("/", async (req: Request, res: Response) => {
                         link: business.PHONE.Link,
                     };
                 }
-                if (business.FAX) {
-                    currentContent.contact.fax = {
-                        display: business.FAX.Label,
-                        link: business.FAX.Link,
-                    };
-                }
                 if (business.EMAIL) {
                     currentContent.contact.email = {
-                        display: business.EMAIL.Label,
+                        address: business.EMAIL.Label,
                         link: business.EMAIL.Link,
                     };
-                }
-                if (business.SOCIAL) {
-                    currentContent.contact.social = {
-                        facebook: business.SOCIAL.Facebook,
-                        instagram: business.SOCIAL.Instagram,
-                    };
-                }
-                if (business.WEBSITE) {
-                    currentContent.contact.website = business.WEBSITE;
                 }
                 updatedSections.push("contactInfo.business");
             }
@@ -383,7 +646,8 @@ router.put("/contact-info", async (req: Request, res: Response) => {
         // Update business info if provided
         if (business) {
             if (business.BUSINESS_NAME) {
-                currentContent.contact.name = business.BUSINESS_NAME.Short || business.BUSINESS_NAME.Long;
+                currentContent.contact.name =
+                    business.BUSINESS_NAME.Short || business.BUSINESS_NAME.Long;
             }
             if (business.ADDRESS) {
                 const addressParts = business.ADDRESS.Label.split(" ");
@@ -415,7 +679,7 @@ router.put("/contact-info", async (req: Request, res: Response) => {
             }
             if (business.EMAIL) {
                 currentContent.contact.email = {
-                    display: business.EMAIL.Label,
+                    address: business.EMAIL.Label,
                     link: business.EMAIL.Link,
                 };
             }
@@ -541,28 +805,52 @@ router.put("/settings", async (req: Request, res: Response) => {
         // Map old settings format to new structure
         if (updates.hero) {
             currentContent.content.hero = currentContent.content.hero || {};
-            currentContent.content.hero.text = deepMerge(currentContent.content.hero.text || {}, updates.hero);
+            currentContent.content.hero.text = deepMerge(
+                currentContent.content.hero.text || {},
+                updates.hero
+            );
         }
         if (updates.newsletter) {
-            currentContent.content.newsletter = deepMerge(currentContent.content.newsletter || {}, updates.newsletter);
+            currentContent.content.newsletter = deepMerge(
+                currentContent.content.newsletter || {},
+                updates.newsletter
+            );
         }
         if (updates.companyInfo) {
-            currentContent.content.company = deepMerge(currentContent.content.company || {}, updates.companyInfo);
+            currentContent.content.company = deepMerge(
+                currentContent.content.company || {},
+                updates.companyInfo
+            );
         }
         if (updates.services) {
-            currentContent.content.services = deepMerge(currentContent.content.services || {}, updates.services);
+            currentContent.content.services = deepMerge(
+                currentContent.content.services || {},
+                updates.services
+            );
         }
         if (updates.colors) {
-            currentContent.theme.colors = deepMerge(currentContent.theme.colors || {}, updates.colors);
+            currentContent.theme.colors = deepMerge(
+                currentContent.theme.colors || {},
+                updates.colors
+            );
         }
         if (updates.features) {
-            currentContent.layout.features = deepMerge(currentContent.layout.features || {}, updates.features);
+            currentContent.layout.features = deepMerge(
+                currentContent.layout.features || {},
+                updates.features
+            );
         }
         if (updates.sections) {
-            currentContent.layout.sections = deepMerge(currentContent.layout.sections || {}, updates.sections);
+            currentContent.layout.sections = deepMerge(
+                currentContent.layout.sections || {},
+                updates.sections
+            );
         }
         if (updates.abTesting) {
-            currentContent.experiments.abTesting = deepMerge(currentContent.experiments.abTesting || {}, updates.abTesting);
+            currentContent.experiments.abTesting = deepMerge(
+                currentContent.experiments.abTesting || {},
+                updates.abTesting
+            );
         }
 
         // Write updated content
@@ -789,7 +1077,10 @@ router.delete("/ab-tests/:id", async (req: Request, res: Response) => {
 
         // Check if test is active
         const currentContent = readLandingPageContent();
-        if (currentContent.experiments?.abTesting?.activeTestId === req.params.id) {
+        const abTesting = currentContent.experiments?.abTesting as
+            | { activeTestId?: string }
+            | undefined;
+        if (abTesting?.activeTestId === req.params.id) {
             return res.status(400).json({ error: "Cannot delete an active test. Stop it first." });
         }
 

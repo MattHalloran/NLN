@@ -12,12 +12,12 @@ import {
 } from "@mui/material";
 import { GripVertical, Eye, EyeOff, Save, RotateCcw } from "lucide-react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import { useUpdateSectionConfiguration } from "api/rest/hooks";
 import { SectionConfiguration } from "api/rest/client";
+import { useUpdateSectionConfiguration } from "api/rest/hooks";
 import { BackButton, PageContainer } from "components";
 import { TopBar } from "components/navigation/TopBar/TopBar";
-import { useLandingPageContent } from "api/rest/hooks";
-import { useCallback, useEffect, useState } from "react";
+import { useLandingPage } from "hooks/useLandingPage";
+import { useCallback as _useCallback, useEffect, useState } from "react";
 
 // Section metadata for section configuration
 const SECTION_METADATA: Record<string, { name: string; description: string; required?: boolean }> = {
@@ -50,7 +50,7 @@ const SECTION_METADATA: Record<string, { name: string; description: string; requ
 
 export const AdminHomepageSections = () => {
     const updateSections = useUpdateSectionConfiguration();
-    const { data: landingPageContent, refetch } = useLandingPageContent(false);
+    const { data: landingPageContent, refetch } = useLandingPage();
 
     const [sectionConfig, setSectionConfig] = useState<SectionConfiguration>({
         order: ["hero", "services", "social-proof", "about", "seasonal", "location"],

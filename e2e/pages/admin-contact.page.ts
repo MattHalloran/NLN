@@ -1,4 +1,4 @@
-import { Page, Locator, expect } from '@playwright/test';
+import { Page, Locator, expect } from "@playwright/test";
 
 /**
  * Page Object Model for Admin Contact Info Page
@@ -19,25 +19,25 @@ export class AdminContactPage {
   constructor(page: Page) {
     this.page = page;
 
-    this.saveButton = page.getByTestId('save-changes-button');
-    this.revertButton = page.getByTestId('revert-changes-button');
+    this.saveButton = page.getByTestId("save-changes-button");
+    this.revertButton = page.getByTestId("revert-changes-button");
     this.rangeGroupingToggle = page.getByLabel(/group ranges/i);
     this.advancedModeToggle = page.getByLabel(/advanced mode/i);
-    this.applyAllDaysButton = page.getByTestId('apply-monday-to-all');
-    this.addNoteButton = page.getByTestId('add-note-button');
+    this.applyAllDaysButton = page.getByTestId("apply-monday-to-all");
+    this.addNoteButton = page.getByTestId("add-note-button");
   }
 
   async goto() {
-    await this.page.goto('/admin/contact-info');
-    await this.page.waitForLoadState('networkidle');
+    await this.page.goto("/admin/contact-info");
+    await this.page.waitForLoadState("networkidle");
     // Wait for the form to be ready by checking for day checkboxes
-    await this.page.waitForSelector('text=/Monday|Tuesday|Wednesday/i', { timeout: 20000 });
+    await this.page.waitForSelector("text=/Monday|Tuesday|Wednesday/i", { timeout: 20000 });
   }
 
   // Day configuration
   async enableDay(day: string) {
     const checkbox = this.page.getByTestId(`day-enabled-${day.toLowerCase()}`);
-    await checkbox.waitFor({ state: 'visible', timeout: 10000 });
+    await checkbox.waitFor({ state: "visible", timeout: 10000 });
     if (!(await checkbox.isChecked())) {
       await checkbox.check();
       await this.page.waitForTimeout(300); // Brief wait for state update
@@ -60,7 +60,7 @@ export class AdminContactPage {
 
     // Ensure the "Closed" checkbox is NOT checked
     const closedCheckbox = this.page.getByTestId(`day-closed-${day.toLowerCase()}`);
-    await closedCheckbox.waitFor({ state: 'visible', timeout: 10000 });
+    await closedCheckbox.waitFor({ state: "visible", timeout: 10000 });
 
     // If it's checked, uncheck it to show the time selects
     if (await closedCheckbox.isChecked()) {
@@ -72,7 +72,7 @@ export class AdminContactPage {
     const openTimeSelect = this.page.getByTestId(`open-time-${day.toLowerCase()}`);
     const closeTimeSelect = this.page.getByTestId(`close-time-${day.toLowerCase()}`);
 
-    await openTimeSelect.waitFor({ state: 'visible', timeout: 10000 });
+    await openTimeSelect.waitFor({ state: "visible", timeout: 10000 });
 
     // Set opening time
     await openTimeSelect.click();
@@ -95,7 +95,7 @@ export class AdminContactPage {
 
     // Use data-testid to find the closed checkbox
     const closedCheckbox = this.page.getByTestId(`day-closed-${day.toLowerCase()}`);
-    await closedCheckbox.waitFor({ state: 'visible', timeout: 10000 });
+    await closedCheckbox.waitFor({ state: "visible", timeout: 10000 });
 
     if (!(await closedCheckbox.isChecked())) {
       await closedCheckbox.check();
@@ -132,17 +132,17 @@ export class AdminContactPage {
   async removeNote(noteText: string) {
     // Find the note input with this text using value attribute
     const noteInput = this.page.locator(`input[value="${noteText}"]`);
-    const noteRow = noteInput.locator('..').locator('..');
+    const noteRow = noteInput.locator("..").locator("..");
 
     // Click the delete button in this row
-    await noteRow.getByRole('button', { name: /delete/i }).click();
+    await noteRow.getByRole("button", { name: /delete/i }).click();
   }
 
   // Advanced mode (markdown editor)
   async setMarkdownHours(markdown: string) {
     await this.toggleAdvancedMode();
 
-    const markdownEditor = this.page.locator('textarea').first();
+    const markdownEditor = this.page.locator("textarea").first();
     await markdownEditor.fill(markdown);
   }
 
@@ -162,10 +162,10 @@ export class AdminContactPage {
   async expectSuccessMessage() {
     // Look for snackbar with role="alert" and success message
     await expect(
-      this.page.locator('[role="alert"], .MuiSnackbar-root, [class*="Snackbar"]').locator('text=/successfully|success/i')
+      this.page.locator("[role=\"alert\"], .MuiSnackbar-root, [class*=\"Snackbar\"]").locator("text=/successfully|success/i"),
     ).toBeVisible({ timeout: 20000 });
     // Wait for network activity from the refetch with longer timeout
-    await this.page.waitForLoadState('networkidle', { timeout: 15000 });
+    await this.page.waitForLoadState("networkidle", { timeout: 15000 });
     // Small delay to ensure React state updates complete
     await this.page.waitForTimeout(500);
   }
@@ -181,7 +181,7 @@ export class AdminContactPage {
   }
 
   async expectPreviewContains(text: string) {
-    const preview = this.page.locator('table').first();
+    const preview = this.page.locator("table").first();
     await expect(preview).toContainText(text);
   }
 }

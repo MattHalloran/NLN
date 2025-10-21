@@ -1,6 +1,5 @@
 import { CODE, ORDER_STATUS } from "@local/shared";
 import { PrismaSelect } from "@paljs/plugins";
-
 import { GraphQLResolveInfo } from "graphql";
 import { Context } from "../context.js";
 import { CustomError } from "../error.js";
@@ -38,7 +37,7 @@ export const resolvers = {
             _parent: undefined,
             { input }: IWrap<UpsertOrderItemInput>,
             { prisma, req }: Context,
-            info: GraphQLResolveInfo
+            info: GraphQLResolveInfo,
         ): Promise<RecursivePartial<any> | null> => {
             // Must be signed in
             if (!req.customerId) {
@@ -75,7 +74,7 @@ export const resolvers = {
                 }
             }
             // Add to existing order item, or create a new one
-            const updatedOrderItem = await prisma.order_item.upsert({
+            const _updatedOrderItem = await prisma.order_item.upsert({
                 where: {
                     order_item_orderid_skuid_unique: { orderId: order.id, skuId: input.skuId },
                 },
@@ -91,7 +90,7 @@ export const resolvers = {
         deleteOrderItems: async (
             _parent: undefined,
             { input }: IWrap<DeleteManyInput>,
-            { prisma, req }: Context
+            { prisma, req }: Context,
         ): Promise<Count | null> => {
             // Must be admin, or deleting your own
             // Find customerIds associated with orders that have the given order item ids

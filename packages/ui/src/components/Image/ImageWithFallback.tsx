@@ -36,7 +36,7 @@ export const ImageWithFallback = ({
     const [hasError, setHasError] = useState(false);
     const [fallbackError, setFallbackError] = useState(false);
 
-    const handleError = (e: SyntheticEvent<HTMLImageElement>) => {
+    const handleError = (_e: SyntheticEvent<HTMLImageElement>) => {
         if (!hasError && fallbackSrc) {
             // Try fallback image first
             setHasError(true);

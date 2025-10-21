@@ -1,7 +1,7 @@
 /**
  * Mock Express request, response, and next function for testing
  */
-import { vi } from 'vitest';
+import { vi } from "vitest";
 import { Request, Response, NextFunction } from "express";
 
 export const createMockRequest = (overrides: Partial<Request> = {}): Partial<Request> => ({

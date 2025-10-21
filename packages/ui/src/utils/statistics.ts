@@ -34,7 +34,7 @@ export function chiSquareTest(
     viewsA: number,
     conversionsA: number,
     viewsB: number,
-    conversionsB: number
+    conversionsB: number,
 ): {
     chiSquare: number;
     pValue: number;
@@ -136,7 +136,7 @@ function erf(x: number): number {
 export function conversionRateConfidenceInterval(
     conversions: number,
     views: number,
-    confidenceLevel: number = 0.95
+    confidenceLevel: number = 0.95,
 ): {
     rate: number;
     lower: number;
@@ -174,8 +174,8 @@ export function conversionRateConfidenceInterval(
 export function minimumSampleSize(
     baselineRate: number,
     minimumDetectableEffect: number, // e.g., 0.02 for 2% absolute lift
-    alpha: number = 0.05, // significance level (1 - confidence)
-    beta: number = 0.20 // power = 1 - beta = 80%
+    _alpha: number = 0.05, // significance level (1 - confidence)
+    _beta: number = 0.20, // power = 1 - beta = 80%
 ): number {
     const z_alpha = 1.96; // for alpha = 0.05 (95% confidence)
     const z_beta = 0.84; // for beta = 0.20 (80% power)
@@ -188,7 +188,7 @@ export function minimumSampleSize(
         Math.pow(
             z_alpha * Math.sqrt(2 * p_avg * (1 - p_avg)) +
                 z_beta * Math.sqrt(p1 * (1 - p1) + p2 * (1 - p2)),
-            2
+            2,
         ) / Math.pow(p2 - p1, 2);
 
     return Math.ceil(n);
@@ -199,7 +199,7 @@ export function minimumSampleSize(
  */
 export function determineWinner(
     metricsA: { conversions: number; views: number },
-    metricsB: { conversions: number; views: number }
+    metricsB: { conversions: number; views: number },
 ): {
     winner: "variantA" | "variantB" | "tie";
     confidence: number;
@@ -213,7 +213,7 @@ export function determineWinner(
         metricsA.views,
         metricsA.conversions,
         metricsB.views,
-        metricsB.conversions
+        metricsB.conversions,
     );
 
     let winner: "variantA" | "variantB" | "tie";
@@ -256,7 +256,7 @@ export function getConfidenceDescription(confidence: number): string {
 export function getTestRecommendation(
     winner: "variantA" | "variantB" | "tie",
     confidence: number,
-    views: number
+    views: number,
 ): string {
     if (views < 100) {
         return "Keep testing - need more data (minimum 100 views per variant recommended)";

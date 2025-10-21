@@ -16,7 +16,7 @@ describe("consts", () => {
             });
         });
 
-        it('includes "All" filter as first option', () => {
+        it("includes \"All\" filter as first option", () => {
             expect(ORDER_FILTERS[0].label).toBe("All");
             expect(ORDER_FILTERS[0].value).toBe("All");
         });

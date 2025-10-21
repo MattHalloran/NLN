@@ -1,6 +1,6 @@
 import { Button, Dialog, DialogActions, DialogContent, TextField, useTheme } from "@mui/material";
 import { CancelIcon, SaveIcon } from "icons";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ImageInfo } from "types";
 import { DialogTitle } from "../DialogTitle/DialogTitle";
 
@@ -15,14 +15,19 @@ export const EditImageDialog = ({
     onClose: () => unknown;
     onSave: (data: ImageInfo) => unknown;
 }) => {
-    const { palette } = useTheme();
+    const { palette: _palette } = useTheme();
 
     const [alt, setAlt] = useState("");
     const [description, setDescription] = useState("");
+    const prevDataRef = useRef<ImageInfo | null>(null);
 
     useEffect(() => {
-        setAlt(data?.image?.alt ?? "");
-        setDescription(data?.image?.description ?? "");
+        // Only update state if data actually changed
+        if (data !== prevDataRef.current) {
+            setAlt(data?.image?.alt ?? "");
+            setDescription(data?.image?.description ?? "");
+            prevDataRef.current = data;
+        }
     }, [data]);
 
     return (

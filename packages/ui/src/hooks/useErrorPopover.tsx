@@ -36,7 +36,7 @@ export const useErrorPopover = ({
     // Errors as a markdown list
     const errorMessage = useMemo<string>(() => {
         // Filter out null and undefined errors
-        const filteredErrors = Object.entries(errors ?? {}).filter(([key, value]) => value !== null && value !== undefined) as [string, string | string[]][];
+        const filteredErrors = Object.entries(errors ?? {}).filter(([_key, value]) => value !== null && value !== undefined) as [string, string | string[]][];
         // Helper to convert string to markdown list item
         const toListItem = (str: string, level: number) => { return `${"  ".repeat(level)}* ${str}`; };
         // Convert errors to markdown list

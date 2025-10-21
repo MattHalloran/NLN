@@ -1,3 +1,4 @@
+import React from "react";
 import { Theme } from "@mui/material";
 import { SystemStyleObject } from "@mui/system";
 import { SvgProps } from "icons/types";
@@ -68,4 +69,4 @@ export type SxType = NonNullable<SystemStyleObject<Theme>> & {
  */
 export type ViewDisplayType = "dialog" | "page";
 
-export type SvgComponent = (props: SvgProps) => JSX.Element;
+export type SvgComponent = (props: SvgProps) => React.JSX.Element;

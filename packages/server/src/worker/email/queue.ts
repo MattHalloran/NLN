@@ -5,9 +5,7 @@ import { emailProcess } from "./process.js";
 import { logger, LogLevel } from "../../logger.js";
 
 let emailQueue: Bull.Queue | null = null;
-let BUSINESS_NAME: { Long: string; Short: string } | null = null;
 let WEBSITE: string | null = null;
-let welcomeTemplate: string | null = null;
 
 // Lazy initialization to prevent crashes at module import time
 function getEmailQueue(): Bull.Queue {
@@ -17,46 +15,45 @@ function getEmailQueue(): Bull.Queue {
 
     try {
         // Load business config
-        const businessConfig: { BUSINESS_NAME: { Long: string; Short: string }; WEBSITE: string } = JSON.parse(
-            fs.readFileSync(`${process.env.PROJECT_DIR}/assets/public/business.json`, "utf8")
+        const businessConfigStr = fs.readFileSync(
+            `${process.env.PROJECT_DIR}/assets/public/business.json`,
+            "utf8"
         );
-        BUSINESS_NAME = businessConfig.BUSINESS_NAME;
+        const businessConfig = JSON.parse(businessConfigStr) as {
+            BUSINESS_NAME: { Long: string; Short: string };
+            WEBSITE: string;
+        };
         WEBSITE = businessConfig.WEBSITE;
-
-        // Load welcome template
-        welcomeTemplate = fs
-            .readFileSync(
-                `${process.env.PROJECT_DIR}/packages/server/src/worker/email/templates/welcome.html`
-            )
-            .toString();
 
         // Initialize Bull queue
         emailQueue = new Bull("email", { redis: { port: PORT, host: HOST } });
-        emailQueue.process(emailProcess);
+        void emailQueue.process(emailProcess);
 
         logger.log(LogLevel.info, "Email queue initialized successfully");
         return emailQueue;
-    } catch (error: any) {
-        logger.log(LogLevel.error, "Failed to initialize email queue", { error: error.message });
+    } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        logger.log(LogLevel.error, "Failed to initialize email queue", { error: errorMessage });
         throw error;
     }
 }
 
-export function sendMail(to = [], subject = "", text = "", html = ""): void {
+export function sendMail(to: string[] = [], subject = "", text = "", html = ""): void {
     try {
         const queue = getEmailQueue();
-        queue.add({
+        void queue.add({
             to,
             subject,
             text,
             html,
         });
-    } catch (error: any) {
-        logger.log(LogLevel.error, "Failed to send email", { error: error.message });
+    } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        logger.log(LogLevel.error, "Failed to send email", { error: errorMessage });
     }
 }
 
-export function customerNotifyAdmin(name: string): void {
+export function customerNotifyAdmin(_name: string): void {
     // Temporarily disabled for E2E testing
     logger.log(LogLevel.info, "customerNotifyAdmin called (disabled for testing)");
     return;
@@ -69,24 +66,33 @@ export function orderNotifyAdmin(): void {
             throw new Error("Business config not loaded");
         }
         const website = WEBSITE;
-        queue.add({
-            to: [process.env.SITE_EMAIL_USERNAME],
+        const emailUsername = process.env.SITE_EMAIL_USERNAME;
+        if (!emailUsername) {
+            throw new Error("SITE_EMAIL_USERNAME not configured");
+        }
+        void queue.add({
+            to: [emailUsername],
             subject: "New Order Received!",
             text: `A new order has been submitted. It can be viewed at ${website}/admin/orders`,
             html: `<p>A new order has been submitted. It can be viewed at <a href="${website}/admin/orders">${website}/admin/orders</a></p>`,
         });
-    } catch (error: any) {
-        logger.log(LogLevel.error, "Failed to notify admin of new order", { error: error.message });
+    } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        logger.log(LogLevel.error, "Failed to notify admin of new order", { error: errorMessage });
     }
 }
 
-export function sendResetPasswordLink(email: string, userId: string | number, code: string): void {
+export function sendResetPasswordLink(
+    _email: string,
+    _userId: string | number,
+    _code: string
+): void {
     // Temporarily disabled for E2E testing
     logger.log(LogLevel.info, "sendResetPasswordLink called (disabled for testing)");
     return;
 }
 
-export function sendVerificationLink(email: string, userId: string | number): void {
+export function sendVerificationLink(_email: string, _userId: string | number): void {
     // Temporarily disabled for E2E testing
     logger.log(LogLevel.info, "sendVerificationLink called (disabled for testing)");
     return;
@@ -95,12 +101,17 @@ export function sendVerificationLink(email: string, userId: string | number): vo
 export function feedbackNotifyAdmin(text: string, from?: string): void {
     try {
         const queue = getEmailQueue();
-        queue.add({
-            to: [process.env.SITE_EMAIL_USERNAME],
+        const emailUsername = process.env.SITE_EMAIL_USERNAME;
+        if (!emailUsername) {
+            throw new Error("SITE_EMAIL_USERNAME not configured");
+        }
+        void queue.add({
+            to: [emailUsername],
             subject: "You've received feedback!",
             text: `Feedback from ${from ?? "anonymous"}: ${text}`,
         });
-    } catch (error: any) {
-        logger.log(LogLevel.error, "Failed to notify admin of feedback", { error: error.message });
+    } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        logger.log(LogLevel.error, "Failed to notify admin of feedback", { error: errorMessage });
     }
 }

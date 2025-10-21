@@ -10,9 +10,14 @@ import { useABTestSession } from "./useABTestSession";
 export function useAnalyticsTracking() {
     const session = useABTestSession();
     const { mutate: trackEvent } = useTrackAnalyticsEvent();
-    const startTimeRef = useRef(Date.now());
+    const startTimeRef = useRef<number>(0);
     const hasTrackedPageViewRef = useRef(false);
     const hasTrackedBounceRef = useRef(false);
+
+    // Initialize start time on first render
+    if (startTimeRef.current === 0) {
+        startTimeRef.current = Date.now();
+    }
 
     // Track page view on mount
     useEffect(() => {
@@ -107,7 +112,7 @@ export function useAnalyticsTracking() {
                 },
             });
         },
-        [session, trackEvent]
+        [session, trackEvent],
     );
 
     /**
@@ -132,7 +137,7 @@ export function useAnalyticsTracking() {
                 },
             });
         },
-        [session, trackEvent]
+        [session, trackEvent],
     );
 
     return {

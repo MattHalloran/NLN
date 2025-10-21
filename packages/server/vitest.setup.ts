@@ -5,7 +5,7 @@
  */
 
 // Polyfill File API for testcontainers (undici dependency)
-if (typeof globalThis.File === 'undefined') {
+if (typeof globalThis.File === "undefined") {
     // @ts-ignore
     globalThis.File = class File {
         constructor(bits: any[], name: string, options?: any) {

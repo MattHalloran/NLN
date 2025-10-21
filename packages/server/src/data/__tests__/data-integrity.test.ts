@@ -47,19 +47,31 @@ describe("Data File Integrity Tests", () => {
                 expect(banner, `Banner ${index} missing id`).toHaveProperty("id");
                 expect(banner, `Banner ${index} missing src`).toHaveProperty("src");
                 expect(banner, `Banner ${index} missing alt`).toHaveProperty("alt");
-                expect(banner, `Banner ${index} missing displayOrder`).toHaveProperty("displayOrder");
+                expect(banner, `Banner ${index} missing displayOrder`).toHaveProperty(
+                    "displayOrder"
+                );
                 expect(banner, `Banner ${index} missing isActive`).toHaveProperty("isActive");
 
                 // Type validation
                 expect(typeof banner.id, `Banner ${index} id should be string`).toBe("string");
                 expect(typeof banner.src, `Banner ${index} src should be string`).toBe("string");
                 expect(typeof banner.alt, `Banner ${index} alt should be string`).toBe("string");
-                expect(typeof banner.displayOrder, `Banner ${index} displayOrder should be number`).toBe("number");
-                expect(typeof banner.isActive, `Banner ${index} isActive should be boolean`).toBe("boolean");
+                expect(
+                    typeof banner.displayOrder,
+                    `Banner ${index} displayOrder should be number`
+                ).toBe("number");
+                expect(typeof banner.isActive, `Banner ${index} isActive should be boolean`).toBe(
+                    "boolean"
+                );
 
                 // Value validation
-                expect(banner.id.length, `Banner ${index} id should not be empty`).toBeGreaterThan(0);
-                expect(banner.displayOrder, `Banner ${index} displayOrder should be positive`).toBeGreaterThan(0);
+                expect(banner.id.length, `Banner ${index} id should not be empty`).toBeGreaterThan(
+                    0
+                );
+                expect(
+                    banner.displayOrder,
+                    `Banner ${index} displayOrder should be positive`
+                ).toBeGreaterThan(0);
             });
         });
 
@@ -193,7 +205,13 @@ describe("Data File Integrity Tests", () => {
             const data = JSON.parse(readFileSync(filePath, "utf8"));
 
             const validSeasons = ["Spring", "Summer", "Fall", "Winter", "Year-round"];
-            const validCategories = ["Watering", "Fertilizing", "Pruning", "Pest Control", "General"];
+            const validCategories = [
+                "Watering",
+                "Fertilizing",
+                "Pruning",
+                "Pest Control",
+                "General",
+            ];
 
             data.content.seasonal.tips.forEach((tip: any, index: number) => {
                 expect(tip, `Tip ${index} missing id`).toHaveProperty("id");
@@ -410,12 +428,18 @@ describe("Data File Integrity Tests", () => {
 
             const lines = content
                 .split("\n")
-                .filter((l: string) => l.trim() && l.includes("|") && !l.includes("---") && !l.includes("Day"));
+                .filter(
+                    (l: string) =>
+                        l.trim() && l.includes("|") && !l.includes("---") && !l.includes("Day")
+                );
 
             const timePattern = /\d{1,2}:\d{2}\s*(AM|PM)/i;
 
             lines.forEach((line: string, index: number) => {
-                const parts = line.split("|").map((p: string) => p.trim()).filter((p: string) => p);
+                const parts = line
+                    .split("|")
+                    .map((p: string) => p.trim())
+                    .filter((p: string) => p);
 
                 if (parts.length >= 2) {
                     const hours = parts[1];
@@ -443,7 +467,9 @@ describe("Data File Integrity Tests", () => {
             data.content.hero.banners.forEach((banner: any) => {
                 // Images should either be absolute URLs or start with /
                 const isValid = banner.src.startsWith("http") || banner.src.startsWith("/");
-                expect(isValid, `Banner ${banner.id} has invalid src path: ${banner.src}`).toBe(true);
+                expect(isValid, `Banner ${banner.id} has invalid src path: ${banner.src}`).toBe(
+                    true
+                );
             });
         });
 
@@ -451,7 +477,9 @@ describe("Data File Integrity Tests", () => {
             const filePath = join(DATA_PATH, "landing-page-content.json");
             const data = JSON.parse(readFileSync(filePath, "utf8"));
 
-            const orders = data.content.hero.banners.map((b: any) => b.displayOrder).sort((a: number, b: number) => a - b);
+            const orders = data.content.hero.banners
+                .map((b: any) => b.displayOrder)
+                .sort((a: number, b: number) => a - b);
 
             // Check if it starts from 1 and increments by 1
             orders.forEach((order: number, index: number) => {

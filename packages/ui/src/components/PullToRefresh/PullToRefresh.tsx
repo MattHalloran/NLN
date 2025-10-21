@@ -18,7 +18,7 @@ export const PullToRefresh = () => {
 
     // Detect scroll
     useEffect(() => {
-        const handleScroll = (e: Event) => {
+        const handleScroll = (_e: Event) => {
             // Find scroll y position
             const scrollY = window.scrollY;
             // If scrolled far enough upwards, then indicate that the user wants to refresh

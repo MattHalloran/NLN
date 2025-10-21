@@ -21,9 +21,10 @@ export const useDimensions = <T extends HTMLElement>(): UseDimensionsReturn<T> =
         const width = ref.current?.clientWidth ?? 0;
         const height = ref.current?.clientHeight ?? 0;
         setDimensions({ width, height });
-    }, [setDimensions]);
+    }, []);
 
     useEffect(() => {
+        // Initial calculation
         calculateDimensions();
     }, [calculateDimensions]);
 

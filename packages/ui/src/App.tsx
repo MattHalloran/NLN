@@ -1,19 +1,20 @@
 import { alpha, Box, CircularProgress, CssBaseline, GlobalStyles, StyledEngineProvider, ThemeProvider } from "@mui/material";
 import { Routes } from "Routes";
 // Using REST API for landing page content and authentication
-import { useLandingPageContent, useLogin } from "api/rest/hooks";
+import { useLogin } from "api/rest/hooks";
 import { AlertDialog, BottomNav, Footer, PullToRefresh, SnackStack } from "components";
 import { SideMenu, sideMenuDisplayData } from "components/navigation/Navbar/SideMenu";
 import { BusinessContext } from "contexts/BusinessContext";
 import { SessionContext } from "contexts/SessionContext";
 import { ZIndexProvider } from "contexts/ZIndexContext";
 import { useWindowSize } from "hooks/useWindowSize";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { useLocation } from "route";
+import { useLandingPageStore } from "stores/landingPageStore";
 import { BusinessData, Session } from "types";
-import { PubSub, SideMenuPub, themes, createDynamicTheme } from "utils";
+import { PubSub, SideMenuPub, createDynamicTheme } from "utils";
 
 const menusDisplayData: { [key in SideMenuPub["id"]]: { persistentOnDesktop: boolean, sideForRightHanded: "left" | "right" } } = {
     "side-menu": sideMenuDisplayData,
@@ -23,52 +24,46 @@ export function App() {
     // Session cookie should automatically expire in time determined by server,
     // so no need to validate session on first load
     const [session, setSession] = useState<Session | undefined>(undefined);
-    const [theme, setTheme] = useState(themes.light);
     const isLeftHanded = false; // useIsLeftHanded();
     const [loading, setLoading] = useState(false);
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-    const [business, setBusiness] = useState<BusinessData | undefined>(undefined);
     const [contentMargins, setContentMargins] = useState<{ paddingLeft?: string, paddingRight?: string }>({}); // Adds margins to content when a persistent drawer is open
-    const isMobile = useWindowSize(({ width }) => width <= theme.breakpoints.values.md);
-    
-    // Using REST API for landing page content
-    const { data: landingPageData, refetch: refetchLandingPage } = useLandingPageContent(true);
+
+    // Using Zustand store for landing page content (single source of truth)
+    const landingPageData = useLandingPageStore((state) => state.data);
+    const fetchLandingPage = useLandingPageStore((state) => state.fetchLandingPage);
+    const refetchLandingPage = useLandingPageStore((state) => state.refetch);
 
     const { mutate: login } = useLogin();
     const [,] = useLocation();
 
-    useEffect(() => () => {
-        if (timeoutRef.current) clearTimeout(timeoutRef.current);
-        setLoading(false);
-    }, []);
+    // Derive business data from landing page data
+    const business = useMemo<BusinessData | undefined>(() => {
+        if (!landingPageData?.contact) return undefined;
 
-    useEffect(() => {
-        if (landingPageData?.contact) {
-            // Extract business data from new contact structure
-            const data = {
-                BUSINESS_NAME: {
-                    Short: landingPageData.contact.name,
-                    Long: landingPageData.contact.name, // Same as short for now
-                },
-                ADDRESS: {
-                    Label: landingPageData.contact.address?.full || "",
-                    Link: landingPageData.contact.address?.googleMapsUrl || "",
-                },
-                PHONE: {
-                    Label: landingPageData.contact.phone?.display || "",
-                    Link: landingPageData.contact.phone?.link || "",
-                },
-                EMAIL: {
-                    Label: landingPageData.contact.email?.display || "",
-                    Link: landingPageData.contact.email?.link || "",
-                },
-                hours: landingPageData.contact.hours,
-            };
-            setBusiness(data);
-        }
+        return {
+            BUSINESS_NAME: {
+                Short: landingPageData.contact.name,
+                Long: landingPageData.contact.name, // Same as short for now
+            },
+            ADDRESS: {
+                Label: landingPageData.contact.address?.full || "",
+                Link: landingPageData.contact.address?.googleMapsUrl || "",
+            },
+            PHONE: {
+                Label: landingPageData.contact.phone?.display || "",
+                Link: landingPageData.contact.phone?.link || "",
+            },
+            EMAIL: {
+                Label: landingPageData.contact.email?.display || "",
+                Link: landingPageData.contact.email?.link || "",
+            },
+            hours: landingPageData.contact.hours,
+        };
     }, [landingPageData]);
 
-    useEffect(() => {
+    // Derive theme from session and landing page data
+    const theme = useMemo(() => {
         // Determine theme mode
         const themeMode = session?.theme && (session.theme === "light" || session.theme === "dark")
             ? session.theme
@@ -77,11 +72,23 @@ export function App() {
         // Apply custom brand colors from theme if available
         const themeColors = landingPageData?.theme?.colors;
         // Extract colors for the current theme mode (new format supports light/dark separately)
-        const customColors = themeColors?.[themeMode] || themeColors;
-        const dynamicTheme = createDynamicTheme(themeMode, customColors);
+        const customColors = themeColors?.[themeMode] as {
+            primary?: string;
+            secondary?: string;
+            accent?: string;
+            background?: string;
+            paper?: string;
+        } | undefined;
 
-        setTheme(dynamicTheme);
+        return createDynamicTheme(themeMode, customColors);
     }, [session, landingPageData?.theme?.colors]);
+
+    const isMobile = useWindowSize(({ width }) => width <= theme.breakpoints.values.md);
+
+    useEffect(() => () => {
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        setLoading(false);
+    }, []);
 
     const checkLogin = useCallback((session?: Session) => {
         if (session) {
@@ -89,15 +96,22 @@ export function App() {
             return;
         }
         login({ email: "", password: "" }).then((response) => {
-            setSession(response as any);
+            setSession(response as Session);
         }).catch(() => {
             // Silent fail - expected 401 when no valid session cookie exists
             setSession({});
         });
     }, [login]);
 
+    // Initial data fetch - only runs once on mount
     useEffect(() => {
         checkLogin();
+        fetchLandingPage();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    // Handle subscriptions and UI updates
+    useEffect(() => {
         // Handle loading spinner, which can have a delay
         const loadingSub = PubSub.get().subscribeLoading((delay) => {
             if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -105,14 +119,6 @@ export function App() {
                 timeoutRef.current = setTimeout(() => setLoading(true), Math.abs(delay as number));
             } else {
                 setLoading(Boolean(delay));
-            }
-        });
-        const businessSub = PubSub.get().subscribeBusiness((data) => setBusiness(data as BusinessData));
-        const themeSub = PubSub.get().subscribeTheme((theme) => {
-            if (theme && (theme === "light" || theme === "dark")) {
-                setTheme(themes[theme]);
-            } else {
-                setTheme(themes.light);
             }
         });
         // Handle landing page content updates (e.g., when branding settings change)
@@ -148,13 +154,11 @@ export function App() {
         });
         return (() => {
             PubSub.get().unsubscribe(loadingSub);
-            PubSub.get().unsubscribe(businessSub);
-            PubSub.get().unsubscribe(themeSub);
             PubSub.get().unsubscribe(landingPageSub);
             PubSub.get().unsubscribe(sessionSub);
             PubSub.get().unsubscribe(sideMenuPub);
         });
-    }, [checkLogin, isLeftHanded, isMobile]);
+    }, [isLeftHanded, isMobile, refetchLandingPage]);
 
     return (
         <StyledEngineProvider injectFirst>

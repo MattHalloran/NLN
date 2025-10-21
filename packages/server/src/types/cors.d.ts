@@ -1,5 +1,5 @@
-declare module 'cors' {
-    import { RequestHandler } from 'express';
+declare module "cors" {
+    import { RequestHandler } from "express";
 
     interface CorsOptions {
         origin?: boolean | string | RegExp | (string | RegExp)[] | ((origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => void);

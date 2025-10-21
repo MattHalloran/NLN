@@ -1,5 +1,5 @@
-import { defineConfig, devices } from '@playwright/test';
-import * as dotenv from 'dotenv';
+import { defineConfig, devices } from "@playwright/test";
+import * as dotenv from "dotenv";
 
 // Load environment variables from .env file
 dotenv.config();
@@ -13,18 +13,18 @@ dotenv.config();
  * @see https://playwright.dev/docs/test-configuration
  */
 export default defineConfig({
-  testDir: './e2e',
+  testDir: "./e2e",
 
   // Only match .spec.ts files in e2e directory
-  testMatch: '*.spec.ts',
+  testMatch: "*.spec.ts",
 
   // Explicitly ignore everything outside e2e
   testIgnore: [
-    '../**',
-    '../../**',
-    '**/node_modules/**',
-    '**/packages/**',
-    '**/dist/**',
+    "../**",
+    "../../**",
+    "**/node_modules/**",
+    "**/packages/**",
+    "**/dist/**",
   ],
 
   // Maximum time one test can run
@@ -32,7 +32,7 @@ export default defineConfig({
 
   // Expect timeout for assertions
   expect: {
-    timeout: 10000
+    timeout: 10000,
   },
 
   // Run tests in files in parallel
@@ -49,24 +49,24 @@ export default defineConfig({
 
   // Reporter to use
   reporter: [
-    ['html', { outputFolder: 'playwright-report', open: 'never' }],
-    ['list'],
-    ['json', { outputFile: 'test-results/results.json' }]
+    ["html", { outputFolder: "playwright-report", open: "never" }],
+    ["list"],
+    ["json", { outputFile: "test-results/results.json" }],
   ],
 
   // Shared settings for all the projects below
   use: {
     // Base URL to use in actions like `await page.goto('/')`
-    baseURL: 'http://localhost:3001',
+    baseURL: "http://localhost:3001",
 
     // Collect trace when retrying the failed test
-    trace: 'on-first-retry',
+    trace: "on-first-retry",
 
     // Screenshot on failure
-    screenshot: 'only-on-failure',
+    screenshot: "only-on-failure",
 
     // Video on failure
-    video: 'retain-on-failure',
+    video: "retain-on-failure",
 
     // Maximum time each action such as `click()` can take
     actionTimeout: 15 * 1000,
@@ -82,29 +82,29 @@ export default defineConfig({
   projects: [
     // Data backup - runs FIRST before everything
     {
-      name: 'data-backup',
+      name: "data-backup",
       testMatch: /setup\/data-backup\.setup\.ts/,
     },
 
     // Auth setup project - runs after data backup
     {
-      name: 'setup',
+      name: "setup",
       testMatch: /.*\.setup\.ts/,
       testIgnore: /setup\/data-backup\.setup\.ts/,
-      dependencies: ['data-backup'],
+      dependencies: ["data-backup"],
     },
 
     {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
-      dependencies: ['setup'],
+      name: "chromium",
+      use: { ...devices["Desktop Chrome"] },
+      dependencies: ["setup"],
     },
 
     // Data restore - runs LAST after all tests
     {
-      name: 'data-restore',
+      name: "data-restore",
       testMatch: /teardown\/data-restore\.teardown\.ts/,
-      dependencies: ['chromium'],
+      dependencies: ["chromium"],
     },
 
     // Uncomment to test on other browsers
@@ -126,11 +126,11 @@ export default defineConfig({
 
   // Run your local dev server before starting the tests
   webServer: {
-    command: 'cd packages/ui && yarn start-development',
-    url: 'http://localhost:3001',
+    command: "cd packages/ui && yarn start-development",
+    url: "http://localhost:3001",
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
-    stdout: 'ignore',
-    stderr: 'pipe',
+    stdout: "ignore",
+    stderr: "pipe",
   },
 });

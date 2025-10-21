@@ -1,6 +1,5 @@
 import { CODE, SKU_SORT_OPTIONS, SKU_STATUS } from "@local/shared";
 import { PrismaSelect } from "@paljs/plugins";
-
 import { GraphQLResolveInfo } from "graphql";
 import { Context } from "../context.js";
 import { CustomError } from "../error.js";
@@ -104,7 +103,7 @@ export const resolvers = {
             _parent: undefined,
             { input }: IWrap<SkusInput>,
             { prisma }: Context,
-            info: GraphQLResolveInfo
+            info: GraphQLResolveInfo,
         ): Promise<RecursivePartial<any> | null> => {
             let idQuery;
             if (Array.isArray(input.ids)) {
@@ -179,7 +178,7 @@ export const resolvers = {
                     "application/x-csv",
                     "text/comma-separated-values",
                     "text/x-comma-separated-values",
-                ]
+                ],
             );
             if (success) {
                 uploadAvailability(finalFileName);
@@ -190,7 +189,7 @@ export const resolvers = {
             _parent: undefined,
             { input }: IWrap<SkuInput>,
             { prisma, req }: Context,
-            info: GraphQLResolveInfo
+            info: GraphQLResolveInfo,
         ): Promise<RecursivePartial<any> | null> => {
             // Must be admin
             if (!req.isAdmin) {
@@ -209,7 +208,7 @@ export const resolvers = {
             _parent: undefined,
             { input }: IWrap<SkuInput>,
             { prisma, req }: Context,
-            info: GraphQLResolveInfo
+            info: GraphQLResolveInfo,
         ): Promise<RecursivePartial<any> | null> => {
             // Must be admin
             if (!req.isAdmin) {
@@ -228,7 +227,7 @@ export const resolvers = {
         deleteSkus: async (
             _parent: undefined,
             { input }: IWrap<DeleteManyInput>,
-            { prisma, req }: Context
+            { prisma, req }: Context,
         ): Promise<Count | null> => {
             // Must be admin
             if (!req.isAdmin) {

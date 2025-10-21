@@ -1,10 +1,11 @@
 /**
- * Simple pub/sub implementation, with typescript support. 
+ * Simple pub/sub implementation, with typescript support.
  * Uses a singleton instance to publish and subscribe to events.
  * example:
  *      import { PubSub } from 'utils';
  *      PubSub.get().publishSnack({ message: 'Hello World' });
  */
+import React from "react";
 import { COOKIE, ValueOf } from "@local/shared";
 import { AlertDialogState, SnackSeverity } from "components";
 import { Session } from "types";
@@ -41,7 +42,7 @@ export type SideMenuPub = {
 export class PubSub {
     private static instance: PubSub;
     private subscribers: { [key: string]: [symbol, (data?: any) => void][] } = {};
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
+     
     private constructor() { }
     static get(): PubSub {
         if (!PubSub.instance) {

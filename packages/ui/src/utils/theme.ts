@@ -1,4 +1,4 @@
-import { createTheme, lighten, alpha, PaletteColor, PaletteColorOptions } from "@mui/material";
+import { createTheme, lighten, darken, alpha, PaletteColor, PaletteColorOptions } from "@mui/material";
 
 // Define custom theme properties
 declare module "@mui/material/styles/createPalette" {
@@ -254,19 +254,19 @@ export const createDynamicTheme = (mode: "light" | "dark", customColors?: {
         primary: customColors.primary ? {
             light: lighten(customColors.primary, 0.3),
             main: customColors.primary,
-            dark: lighten(customColors.primary, -0.3),
+            dark: darken(customColors.primary, 0.3),
             contrastText: "#ffffff",
         } : baseTheme.primary,
         secondary: customColors.secondary ? {
             light: lighten(customColors.secondary, 0.3),
             main: customColors.secondary,
-            dark: lighten(customColors.secondary, -0.3),
+            dark: darken(customColors.secondary, 0.3),
             contrastText: "#ffffff",
         } : baseTheme.secondary,
         accent: customColors.accent ? {
             light: lighten(customColors.accent, 0.3),
             main: customColors.accent,
-            dark: lighten(customColors.accent, -0.3),
+            dark: darken(customColors.accent, 0.3),
             contrastText: "#ffffff",
         } : baseTheme.accent,
         background: {

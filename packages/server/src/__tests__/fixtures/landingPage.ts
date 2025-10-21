@@ -116,9 +116,7 @@ export const mockLandingPageSettings = {
             { icon: "award", text: "Test Badge 1" },
             { icon: "leaf", text: "Test Badge 2" },
         ],
-        buttons: [
-            { text: "Test Button", link: "/test", type: "primary" },
-        ],
+        buttons: [{ text: "Test Button", link: "/test", type: "primary" }],
     },
     newsletter: {
         title: "Test Newsletter",

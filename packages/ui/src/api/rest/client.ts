@@ -5,7 +5,7 @@ const REST_BASE_URL = `${getServerUrl()}/rest/v1`;
 
 // Error class for API errors
 export class ApiError extends Error {
-    constructor(public status: number, message: string, public data?: any) {
+    constructor(public status: number, message: string, public data?: unknown) {
         super(message);
         this.name = "ApiError";
     }
@@ -263,7 +263,7 @@ export interface AnalyticsEvent {
     testId?: string;
     sessionId: string;
     timestamp: number;
-    metadata?: Record<string, any>;
+    metadata?: Record<string, unknown>;
 }
 
 export interface Plant {
@@ -412,7 +412,7 @@ export const restApi = {
 
     // Contact info updates
     async updateContactInfo(data: {
-        business?: any;
+        business?: Record<string, unknown>;
         hours?: string;
     }): Promise<{ success: boolean; message: string; updated: { business: boolean; hours: boolean } }> {
         return fetchApi<{ success: boolean; message: string; updated: { business: boolean; hours: boolean } }>(
@@ -512,7 +512,7 @@ export const restApi = {
             };
         };
         contactInfo?: {
-            business?: any;
+            business?: Record<string, unknown>;
             hours?: string;
         };
     }): Promise<{ success: boolean; message: string; updatedSections: string[] }> {
@@ -663,7 +663,7 @@ export const restApi = {
     },
 
     // Landing Page Settings Management
-    async updateLandingPageSettings(settings: Record<string, any>): Promise<{ success: boolean; message: string; updatedFields: string[] }> {
+    async updateLandingPageSettings(settings: Record<string, unknown>): Promise<{ success: boolean; message: string; updatedFields: string[] }> {
         return fetchApi<{ success: boolean; message: string; updatedFields: string[] }>(
             "/landing-page/settings",
             {
@@ -725,7 +725,7 @@ export const restApi = {
 
 // React Query hooks wrapper (if you want to use React Query)
 export const useRestApi = {
-    useLandingPageContent: (onlyActive = true) => {
+    useLandingPageContent: (_onlyActive = true) => {
         // This would be implemented with React Query
         // For now, just a placeholder
         return {

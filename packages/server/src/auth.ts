@@ -2,7 +2,6 @@ import { CODE, COOKIE } from "@local/shared";
 import pkg from "@prisma/client";
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
-
 import { CustomError } from "./error.js";
 import { JWTPayload } from "./types/express.js";
 
@@ -21,7 +20,7 @@ export function attachPrisma(req: Request, _: Response, next: NextFunction): voi
 // Return array of customer roles (ex: ['admin', 'customer'])
 async function findCustomerRoles(
     customerId: string,
-    prismaClient?: PrismaClientType,
+    prismaClient?: PrismaClientType
 ): Promise<string[]> {
     const client = prismaClient || prisma;
     // Query customer's roles
@@ -34,7 +33,7 @@ async function findCustomerRoles(
 
 // Verifies if a user is authenticated, using an http cookie
 export function authenticate(req: Request, _: Response, next: NextFunction): void {
-    const { cookies } = req;
+    const cookies = req.cookies as Record<string, string | undefined>;
     // First, check if a valid session cookie was supplied
     const token = cookies[COOKIE.Jwt];
     if (token === null || token === undefined) {
@@ -64,7 +63,7 @@ export function authenticate(req: Request, _: Response, next: NextFunction): voi
             req.isCustomer = payload.isCustomer;
             req.isAdmin = payload.isAdmin;
             next();
-        },
+        }
     );
 }
 
@@ -73,7 +72,7 @@ export async function generateToken(
     res: Response,
     customerId: string,
     businessId: string,
-    prismaClient?: PrismaClientType,
+    prismaClient?: PrismaClientType
 ): Promise<void> {
     const customerRoles = await findCustomerRoles(customerId, prismaClient);
     const tokenContents: JWTPayload = {
@@ -82,9 +81,7 @@ export async function generateToken(
         customerId,
         businessId,
         roles: customerRoles,
-        isCustomer:
-            customerRoles.includes("customer") ||
-            customerRoles.includes("admin"),
+        isCustomer: customerRoles.includes("customer") || customerRoles.includes("admin"),
         isAdmin: customerRoles.includes("admin"),
         exp: Date.now() + SESSION_MILLI,
     };
@@ -99,11 +96,7 @@ export async function generateToken(
 }
 
 // Middleware that restricts access to customers (or admins)
-export function requireCustomer(
-    req: Request,
-    _: Response,
-    next: NextFunction,
-): void {
+export function requireCustomer(req: Request, _: Response, next: NextFunction): void {
     if (!req.isCustomer) {
         throw new CustomError(CODE.Unauthorized);
     }
@@ -111,11 +104,7 @@ export function requireCustomer(
 }
 
 // Middleware that restricts access to admins
-export function requireAdmin(
-    req: Request,
-    _: Response,
-    next: NextFunction,
-): void {
+export function requireAdmin(req: Request, _: Response, next: NextFunction): void {
     if (!req.isAdmin) {
         throw new CustomError(CODE.Unauthorized);
     }

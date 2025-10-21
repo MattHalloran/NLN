@@ -1,6 +1,5 @@
 import { CODE, ORDER_STATUS } from "@local/shared";
 import { PrismaSelect } from "@paljs/plugins";
-
 import { GraphQLResolveInfo } from "graphql";
 import { Context } from "../context.js";
 import { CustomError } from "../error.js";
@@ -81,7 +80,7 @@ export const resolvers = {
             _parent: undefined,
             { input }: IWrap<OrdersInput>,
             { prisma, req }: Context,
-            info: GraphQLResolveInfo
+            info: GraphQLResolveInfo,
         ): Promise<RecursivePartial<any> | null> => {
             // Must be admin (customers query SKUs)
             if (!req.isAdmin) {
@@ -174,7 +173,7 @@ export const resolvers = {
             _parent: undefined,
             { input }: IWrap<OrderInput>,
             { prisma, req }: Context,
-            info: GraphQLResolveInfo
+            info: GraphQLResolveInfo,
         ): Promise<RecursivePartial<any> | null> => {
             // Must be admin, or updating your own
             const curr: any = await prisma.order.findUnique({
@@ -209,7 +208,7 @@ export const resolvers = {
                         prisma.order_item.updateMany({
                             where: { id: d.id },
                             data: { ...d },
-                        })
+                        }),
                     );
                     Promise.all(updateMany);
                 }
@@ -226,7 +225,7 @@ export const resolvers = {
         submitOrder: async (
             _parent: undefined,
             { input }: IWrap<FindByIdInput>,
-            { prisma, req }: Context
+            { prisma, req }: Context,
         ): Promise<boolean> => {
             // Must be admin, or submitting your own
             const curr: any = await prisma.order.findUnique({ where: { id: input.id } });
@@ -247,7 +246,7 @@ export const resolvers = {
         cancelOrder: async (
             _parent: undefined,
             { input }: IWrap<FindByIdInput>,
-            { prisma, req }: Context
+            { prisma, req }: Context,
         ): Promise<any> => {
             // Must be admin, or canceling your own
             const curr = await prisma.order.findUnique({ where: { id: input.id } });
@@ -275,7 +274,7 @@ export const resolvers = {
         deleteOrders: async (
             _parent: undefined,
             { input }: IWrap<DeleteManyInput>,
-            { prisma, req }: Context
+            { prisma, req }: Context,
         ): Promise<RecursivePartial<any> | null> => {
             // Must be admin
             if (!req.isAdmin) {

@@ -1,6 +1,6 @@
 import { DialogTitle } from "components/dialogs/DialogTitle/DialogTitle";
 import { TitleProps } from "components/text/types";
-import { forwardRef } from "react";
+import { forwardRef, useId } from "react";
 import { ViewDisplayType } from "types";
 import { Navbar } from "../Navbar/Navbar";
 
@@ -23,11 +23,12 @@ export const TopBar = forwardRef(({
     hideTitleOnDesktop,
     ...titleData
 }: TopBarProps, ref) => {
+    const generatedId = useId();
 
     if (display === "dialog") return (
         <DialogTitle
             ref={ref}
-            id={titleData?.titleId ?? Math.random().toString(36).substring(2, 15)}
+            id={titleData?.titleId ?? generatedId}
             {...titleData}
         />
     );

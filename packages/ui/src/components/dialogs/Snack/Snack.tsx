@@ -47,7 +47,7 @@ export const Snack = ({
     buttonText,
     data,
     handleClose,
-    id,
+    id: _id,
     message,
     severity,
 }: SnackProps) => {
@@ -77,7 +77,7 @@ export const Snack = ({
         // Log snack errors if in development
         if (import.meta.env.DEV && data) {
             if (severity === SnackSeverity.Error) console.error("Snack data", data);
-            else console.info("Snack data", data);
+            else console.warn("Snack data", data);
         }
     }, [data, severity]);
 

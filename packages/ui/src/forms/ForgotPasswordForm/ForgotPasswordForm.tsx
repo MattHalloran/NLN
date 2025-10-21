@@ -4,7 +4,7 @@ import { useRequestPasswordChange } from "api/rest/hooks";
 import { BreadcrumbsBase } from "components/breadcrumbs/BreadcrumbsBase/BreadcrumbsBase";
 import { SnackSeverity } from "components";
 import { useFormik } from "formik";
-import { formSubmit } from "forms/styles";
+import { formSubmit as _formSubmit } from "forms/styles";
 import { EmailIcon } from "icons/common";
 import { useLocation } from "route";
 import { PubSub } from "utils";
@@ -23,7 +23,7 @@ const emailStartAdornment = {
 
 
 export const ForgotPasswordForm = () => {
-    const { spacing, palette } = useTheme();
+    const { spacing: _spacing, palette } = useTheme();
     const [, setLocation] = useLocation();
 
     const { mutate: requestPasswordChange, loading } = useRequestPasswordChange();
@@ -41,7 +41,7 @@ export const ForgotPasswordForm = () => {
             } catch (error: any) {
                 PubSub.get().publishSnack({
                     message: error?.message || "Failed to send reset link. Please try again.",
-                    severity: SnackSeverity.Error
+                    severity: SnackSeverity.Error,
                 });
             }
         },

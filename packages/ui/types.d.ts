@@ -1,12 +1,9 @@
-/// <reference types="react" />
-/// <reference types="react-dom" />
-
-import React from 'react';
+import type React from "react";
 
 declare global {
   namespace JSX {
-    interface Element extends React.ReactElement<any, any> { }
-    interface ElementClass extends React.Component<any> {
+    type Element = React.ReactElement;
+    interface ElementClass extends React.Component {
       render(): React.ReactNode;
     }
     interface IntrinsicElements extends React.JSX.IntrinsicElements { }
@@ -14,3 +11,4 @@ declare global {
 }
 
 export {};
+

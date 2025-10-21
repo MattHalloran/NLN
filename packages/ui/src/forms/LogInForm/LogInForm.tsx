@@ -4,7 +4,7 @@ import { useLogin } from "api/rest/hooks";
 import { BreadcrumbsBase, SnackSeverity } from "components";
 import { PasswordTextField } from "components/inputs/PasswordTextField/PasswordTextField";
 import { useFormik } from "formik";
-import { formSubmit } from "forms/styles";
+import { formSubmit as _formSubmit } from "forms/styles";
 import { EmailIcon } from "icons/common";
 import { useEffect, useMemo } from "react";
 import { parseSearchParams, useLocation } from "route";
@@ -23,7 +23,7 @@ const emailStartAdornment = {
 };
 
 export const LogInForm = () => {
-    const { spacing, palette } = useTheme();
+    const { spacing: _spacing, palette } = useTheme();
     const [, setLocation] = useLocation();
     const { verificationCode } = useMemo<{ verificationCode: string | undefined }>(() => {
         const searchParams = parseSearchParams();
@@ -67,7 +67,7 @@ export const LogInForm = () => {
                 } else {
                     PubSub.get().publishSnack({
                         message: error?.message || "Login failed. Please try again.",
-                        severity: SnackSeverity.Error
+                        severity: SnackSeverity.Error,
                     });
                 }
             }

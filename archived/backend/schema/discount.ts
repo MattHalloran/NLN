@@ -1,6 +1,5 @@
 import { CODE } from "@local/shared";
 import { PrismaSelect } from "@paljs/plugins";
-
 import { GraphQLResolveInfo } from "graphql";
 import { Context } from "../context.js";
 import { CustomError } from "../error.js";
@@ -45,7 +44,7 @@ export const resolvers = {
             _parent: undefined,
             _input: undefined,
             { prisma, req }: Context,
-            info: GraphQLResolveInfo
+            info: GraphQLResolveInfo,
         ): Promise<RecursivePartial<Discount>[]> => {
             // Must be admin
             if (!req.isAdmin) {
@@ -59,7 +58,7 @@ export const resolvers = {
             _parent: undefined,
             { input }: IWrap<DiscountInput>,
             { prisma, req }: Context,
-            info: GraphQLResolveInfo
+            info: GraphQLResolveInfo,
         ): Promise<RecursivePartial<any> | null> => {
             // Must be admin
             if (!req.isAdmin) {
@@ -74,7 +73,7 @@ export const resolvers = {
             _parent: undefined,
             { input }: IWrap<DiscountInput>,
             { prisma, req }: Context,
-            info: GraphQLResolveInfo
+            info: GraphQLResolveInfo,
         ): Promise<RecursivePartial<any> | null> => {
             // Must be admin
             if (!req.isAdmin) {
@@ -89,7 +88,7 @@ export const resolvers = {
         deleteDiscounts: async (
             _parent: undefined,
             { input }: IWrap<DeleteManyInput>,
-            { prisma, req }: Context
+            { prisma, req }: Context,
         ): Promise<Count | null> => {
             // Must be admin
             if (!req.isAdmin) {

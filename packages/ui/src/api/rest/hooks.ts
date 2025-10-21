@@ -4,7 +4,7 @@ import {
     LandingPageContent,
     Plant,
     CustomerSession,
-    CustomerContact,
+    CustomerContact as _CustomerContact,
     Image,
     DashboardStats,
     ABTest,
@@ -16,7 +16,7 @@ import {
 // Generic hook for REST API calls
 function useRestQuery<T>(
     queryFn: () => Promise<T>,
-    dependencies: any[] = [],
+    dependencies: unknown[] = [],
 ) {
     const [data, setData] = useState<T | null>(null);
     const [loading, setLoading] = useState(true);
@@ -96,7 +96,7 @@ export function usePlant(id: string | null) {
 }
 
 // Hook for mutations (POST, PUT, DELETE)
-export function useRestMutation<TArgs = any, TResult = any>(
+export function useRestMutation<TArgs = unknown, TResult = unknown>(
     mutationFn: (args: TArgs) => Promise<TResult>,
 ) {
     const [loading, setLoading] = useState(false);
@@ -140,7 +140,7 @@ export function useInvalidateLandingPageCache() {
 // Contact info update hook
 export function useUpdateContactInfo() {
     return useRestMutation<
-        { business?: any; hours?: string },
+        { business?: Record<string, unknown>; hours?: string },
         { success: boolean; message: string; updated: { business: boolean; hours: boolean } }
     >(
         (data) => restApi.updateContactInfo(data),
@@ -187,9 +187,57 @@ export function useUpdateLandingPageContent() {
                 displayOrder: number;
                 isActive: boolean;
             }>;
-            settings?: any;
+            settings?: {
+                hero: {
+                    title: string;
+                    subtitle: string;
+                    description: string;
+                    businessHours: string;
+                    trustBadges: Array<{
+                        icon: string;
+                        text: string;
+                    }>;
+                    buttons: Array<{
+                        text: string;
+                        link: string;
+                        type: string;
+                    }>;
+                };
+                newsletter: {
+                    title: string;
+                    description: string;
+                    disclaimer: string;
+                    isActive: boolean;
+                };
+                companyInfo: {
+                    foundedYear: number;
+                    description: string;
+                };
+                colors: {
+                    light: {
+                        primary: string;
+                        secondary: string;
+                        accent: string;
+                        background: string;
+                        paper: string;
+                    };
+                    dark: {
+                        primary: string;
+                        secondary: string;
+                        accent: string;
+                        background: string;
+                        paper: string;
+                    };
+                };
+                features: {
+                    showSeasonalContent: boolean;
+                    showNewsletter: boolean;
+                    showSocialProof: boolean;
+                    enableAnimations: boolean;
+                };
+            };
             contactInfo?: {
-                business?: any;
+                business?: Record<string, unknown>;
                 hours?: string;
             };
         },
@@ -207,7 +255,7 @@ export function useLogin() {
     const loginFn = useCallback(
         (input: { email: string; password: string; verificationCode?: string }) =>
             restApi.login(input),
-        []
+        [],
     );
     return useRestMutation<
         { email: string; password: string; verificationCode?: string },
@@ -335,7 +383,7 @@ export function useUpdateSectionConfiguration() {
 
 export function useUpdateLandingPageSettings() {
     return useRestMutation<
-        Record<string, any>,
+        Record<string, unknown>,
         { success: boolean; message: string; updatedFields: string[] }
     >(
         (settings) => restApi.updateLandingPageSettings(settings),

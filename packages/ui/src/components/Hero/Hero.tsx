@@ -1,6 +1,6 @@
 // Code inspired by https://github.com/rmolinamir/hero-slider
 import { Box, Button, Chip, Stack, Typography, useTheme } from "@mui/material";
-import { useLandingPageContent } from "api/rest/hooks";
+import { useLandingPage } from "hooks/useLandingPage";
 import { Award, Leaf, Users, Package, Shield, Heart } from "lucide-react";
 import { useLocation } from "route";
 import { getShortBusinessHours } from "utils/businessHours";
@@ -38,7 +38,7 @@ export const Hero = ({ text = DEFAULT_HERO_TEXT, subtext = DEFAULT_HERO_SUBTEXT 
     const { palette } = useTheme();
 
     // Fetch unified landing page content using REST API
-    const { data } = useLandingPageContent(true);
+    const { data } = useLandingPage();
 
     const heroBanners = data?.content?.hero?.banners || [];
     const heroSettings = data?.content?.hero?.settings;

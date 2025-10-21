@@ -6,7 +6,7 @@
  */
 export function getServerUrl(): string {
     // Get port from environment variable with fallback to 5331
-    const serverPort = import.meta.env.VITE_PORT_SERVER || '5331';
+    const serverPort = import.meta.env.VITE_PORT_SERVER || "5331";
 
     // If running locally
     if (window.location.host.includes("localhost") || window.location.host.includes("192.168.0.")) {

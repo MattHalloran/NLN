@@ -22,7 +22,8 @@ import {
     Typography,
     useTheme,
 } from "@mui/material";
-import { useLandingPageContent, useUpdateLandingPageContent } from "api/rest/hooks";
+import { useLandingPage } from "hooks/useLandingPage";
+import { useUpdateLandingPageContent } from "api/rest/hooks";
 import { BackButton, PageContainer, TopBar } from "components";
 import {
     Flower,
@@ -84,7 +85,7 @@ export const AdminSeasonalContentPage = () => {
     const [tipDialogOpen, setTipDialogOpen] = useState(false);
 
     // REST API queries and mutations
-    const { data, refetch } = useLandingPageContent(false);
+    const { data, refetch } = useLandingPage();
     const updateLandingPageContent = useUpdateLandingPageContent();
 
     const handleApiError = (error: any, defaultMessage: string) => {

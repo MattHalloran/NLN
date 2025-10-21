@@ -1,13 +1,13 @@
 import { Box, Container, Grid, Typography, Card, CardContent, useTheme, Button } from "@mui/material";
 import { useLocation } from "route";
 import { Star, Home, Heart, Globe } from "lucide-react";
-import { useLandingPageContent } from "api/rest/hooks";
+import { useLandingPage } from "hooks/useLandingPage";
 import { COMPANY_INFO } from "@local/shared";
 
 export const AboutStory = () => {
     const { palette } = useTheme();
     const [, setLocation] = useLocation();
-    const { data } = useLandingPageContent(true);
+    const { data } = useLandingPage();
 
     const foundedYear = data?.content?.company?.foundedYear || COMPANY_INFO.FoundedYear;
 

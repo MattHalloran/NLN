@@ -1,21 +1,21 @@
 import { APP_LINKS } from "@local/shared";
-import { Box, Button, Card, CardContent, Grid, Typography, useTheme, Avatar, Chip, CircularProgress } from "@mui/material";
+import { Box, Button as _Button, Card, CardContent, Grid, Typography, useTheme, Avatar, Chip, CircularProgress } from "@mui/material";
 import {
-    ShoppingCart as OrdersIcon,
-    People as CustomersIcon,
-    Inventory as InventoryIcon,
+    ShoppingCart as _OrdersIcon,
+    People as _CustomersIcon,
+    Inventory as _InventoryIcon,
     Photo as HeroIcon,
     PhotoLibrary as GalleryIcon,
     ContactMail as ContactIcon,
-    TrendingUp,
-    Assessment,
+    TrendingUp as _TrendingUp,
+    Assessment as _Assessment,
     BusinessCenter as BackOfficeIcon,
 } from "@mui/icons-material";
 import { useDashboardStats } from "api/rest/hooks";
-import { CardGrid, PageContainer } from "components";
+import { CardGrid as _CardGrid, PageContainer } from "components";
 import { TopBar } from "components/navigation/TopBar/TopBar";
 import { useLocation } from "route";
-import { designTokens } from "utils";
+import { designTokens as _designTokens } from "utils";
 import { useMemo } from "react";
 
 interface AdminCardData {
@@ -29,7 +29,7 @@ interface AdminCardData {
     isExternal?: boolean;
 }
 
-const getCardData = (stats: any): AdminCardData[] => [
+const getCardData = (_stats: any): AdminCardData[] => [
     // {
     //     title: "Orders",
     //     description: "Approve, create, and edit customer's orders",
@@ -205,7 +205,7 @@ export const AdminMainPage = () => {
     const [, setLocation] = useLocation();
     const { palette } = useTheme();
 
-    const { data, loading, error } = useDashboardStats();
+    const { data, loading, error: _error } = useDashboardStats();
 
     const dashboardStats = useMemo(() => {
         if (!data) return {

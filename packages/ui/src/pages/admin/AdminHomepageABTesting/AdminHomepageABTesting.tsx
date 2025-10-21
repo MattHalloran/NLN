@@ -495,7 +495,7 @@ export const AdminHomepageABTesting = () => {
                                                         {getTestRecommendation(
                                                             winner.winner,
                                                             winner.confidence,
-                                                            test.metrics.variantA.views + test.metrics.variantB.views
+                                                            test.metrics.variantA.views + test.metrics.variantB.views,
                                                         )}
                                                     </Typography>
                                                 </Alert>

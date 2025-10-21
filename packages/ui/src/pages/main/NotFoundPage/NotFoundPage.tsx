@@ -2,7 +2,7 @@ import { APP_LINKS } from "@local/shared";
 import { Box, Button, Container, Stack, Typography, useTheme } from "@mui/material";
 import { PageContainer } from "components";
 import { TopBar } from "components/navigation/TopBar/TopBar";
-import { Home, Search, ShoppingBag } from "lucide-react";
+import { Home, Search, ShoppingBag as _ShoppingBag } from "lucide-react";
 import { Link } from "route";
 import PageNotFoundGif from "assets/img/PageNotFound.gif";
 

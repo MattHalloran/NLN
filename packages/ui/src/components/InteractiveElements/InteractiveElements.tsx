@@ -13,8 +13,8 @@ import {
     Tab,
     Tabs,
 } from "@mui/material";
-import { useState, useEffect } from "react";
-import { useLandingPageContent } from "api/rest/hooks";
+import { useState, useMemo } from "react";
+import { useLandingPage } from "hooks/useLandingPage";
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import { Leaf, Lightbulb, Sprout, Flower, Snowflake, LucideIcon, Star } from "lucide-react";
@@ -43,7 +43,7 @@ export const InteractiveElements = () => {
     const [subscribed, setSubscribed] = useState(false);
 
     // Fetch landing page content using REST API
-    const { data } = useLandingPageContent(true);
+    const { data } = useLandingPage();
 
     const seasonalPlants = data?.content?.seasonal?.plants || [];
     const plantTips = data?.content?.seasonal?.tips || [];
@@ -52,19 +52,19 @@ export const InteractiveElements = () => {
     // Get unique categories from tips
     const tipCategories = ["All", ...Array.from(new Set(plantTips.map(tip => tip.category)))];
     
-    const filteredTips = selectedTipCategory === 0 
-        ? plantTips 
+    const filteredTips = selectedTipCategory === 0
+        ? plantTips
         : plantTips.filter(tip => tip.category === tipCategories[selectedTipCategory]);
 
-    // Reset current plant if index is out of bounds
-    useEffect(() => {
-        if (currentPlant >= seasonalPlants.length && seasonalPlants.length > 0) {
-            setCurrentPlant(0);
-        }
-    }, [seasonalPlants.length, currentPlant]);
+    // Compute safe current plant index (clamps to valid bounds)
+    const safeCurrentPlant = useMemo(() => {
+        if (seasonalPlants.length === 0) return 0;
+        if (currentPlant >= seasonalPlants.length) return 0;
+        return currentPlant;
+    }, [currentPlant, seasonalPlants.length]);
 
     const nextPlant = () => {
-        setCurrentPlant((prev) => (prev + 1) % seasonalPlants.length);
+        setCurrentPlant((prev) => (prev + 1) % Math.max(1, seasonalPlants.length));
     };
 
     const prevPlant = () => {
@@ -195,49 +195,49 @@ export const InteractiveElements = () => {
                                             color: "white",
                                         }}>
                                             {seasonalPlants.length > 0 && (() => {
-                                                const IconComponent = getIconComponent(seasonalPlants[currentPlant]?.icon || "leaf");
+                                                const IconComponent = getIconComponent(seasonalPlants[safeCurrentPlant]?.icon || "leaf");
                                                 return <IconComponent size={64} />;
                                             })()}
                                         </Box>
-                                        
+
                                         {seasonalPlants.length > 0 && (
                                             <>
-                                                <Typography 
-                                                    variant="h5" 
-                                                    sx={{ 
+                                                <Typography
+                                                    variant="h5"
+                                                    sx={{
                                                         fontWeight: 600,
                                                         mb: 1,
                                                         textShadow: "1px 1px 2px rgba(0,0,0,0.3)",
                                                     }}
                                                 >
-                                                    {seasonalPlants[currentPlant]?.name || "Loading..."}
+                                                    {seasonalPlants[safeCurrentPlant]?.name || "Loading..."}
                                                 </Typography>
-                                                
+
                                                 <Box sx={{ display: "flex", justifyContent: "center", gap: 1, mb: 2 }}>
-                                                    <Chip 
-                                                        label={seasonalPlants[currentPlant]?.season || "Season"}
+                                                    <Chip
+                                                        label={seasonalPlants[safeCurrentPlant]?.season || "Season"}
                                                         color="secondary"
                                                         size="small"
                                                     />
-                                                    <Chip 
-                                                        label={seasonalPlants[currentPlant]?.careLevel || "Easy"}
+                                                    <Chip
+                                                        label={seasonalPlants[safeCurrentPlant]?.careLevel || "Easy"}
                                                         sx={{
-                                                            backgroundColor: getCareColor(seasonalPlants[currentPlant]?.careLevel || "Easy"),
+                                                            backgroundColor: getCareColor(seasonalPlants[safeCurrentPlant]?.careLevel || "Easy"),
                                                             color: "white",
                                                         }}
                                                         size="small"
                                                     />
                                                 </Box>
-                                                
-                                                <Typography 
-                                                    variant="body1" 
-                                                    sx={{ 
+
+                                                <Typography
+                                                    variant="body1"
+                                                    sx={{
                                                         opacity: 0.9,
                                                         textShadow: "1px 1px 2px rgba(0,0,0,0.3)",
                                                         lineHeight: 1.6,
                                                     }}
                                                 >
-                                                    {seasonalPlants[currentPlant]?.description || "Loading plant information..."}
+                                                    {seasonalPlants[safeCurrentPlant]?.description || "Loading plant information..."}
                                                 </Typography>
                                             </>
                                         )}
@@ -260,7 +260,7 @@ export const InteractiveElements = () => {
                                                 width: 12,
                                                 height: 12,
                                                 borderRadius: "50%",
-                                                backgroundColor: index === currentPlant ? palette.primary.main : palette.grey[300],
+                                                backgroundColor: index === safeCurrentPlant ? palette.primary.main : palette.grey[300],
                                                 cursor: "pointer",
                                                 transition: "all 0.3s ease-in-out",
                                                 "&:hover": {

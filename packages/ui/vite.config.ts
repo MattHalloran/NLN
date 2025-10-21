@@ -12,15 +12,15 @@ export default defineConfig({
             verbose: true,
             disable: false,
             threshold: 10240,
-            algorithm: 'gzip',
-            ext: '.gz',
+            algorithm: "gzip",
+            ext: ".gz",
         }),
         viteCompression({
             verbose: true,
             disable: false,
             threshold: 10240,
-            algorithm: 'brotliCompress',
-            ext: '.br',
+            algorithm: "brotliCompress",
+            ext: ".br",
         }),
     ],
     assetsInclude: ["**/*.md"],
@@ -32,16 +32,16 @@ export default defineConfig({
     optimizeDeps: {
         // Pre-bundle these dependencies to avoid issues with dynamic imports
         include: [
-            'markdown-to-jsx',
-            'react',
-            'react-dom',
-            'react/jsx-runtime',
-            'formik',
-            'use-sync-external-store/shim',
-            'use-sync-external-store/shim/with-selector',
-            'react-dnd',
-            'react-dnd-html5-backend',
-            'dnd-core',
+            "markdown-to-jsx",
+            "react",
+            "react-dom",
+            "react/jsx-runtime",
+            "formik",
+            "use-sync-external-store/shim",
+            "use-sync-external-store/shim/with-selector",
+            "react-dnd",
+            "react-dnd-html5-backend",
+            "dnd-core",
         ],
     },
     resolve: {
@@ -56,13 +56,14 @@ export default defineConfig({
             { find: "icons", replacement: path.resolve(__dirname, "./src/icons") },
             { find: "pages", replacement: path.resolve(__dirname, "./src/pages") },
             { find: "route", replacement: path.resolve(__dirname, "./src/route") },
+            { find: "stores", replacement: path.resolve(__dirname, "./src/stores") },
             { find: "utils", replacement: path.resolve(__dirname, "./src/utils") },
             { find: "Routes", replacement: path.resolve(__dirname, "./src/Routes") },
             { find: "serviceWorkerRegistration", replacement: path.resolve(__dirname, "./src/serviceWorkerRegistration") },
             { find: "styles", replacement: path.resolve(__dirname, "./src/styles") },
             // Imports from the shared folder
             { find: "@local/shared", replacement: path.resolve(__dirname, "../shared/src") },
-        ]
+        ],
     },
     build: {
         // Enable source maps for better debugging and performance monitoring
@@ -74,12 +75,12 @@ export default defineConfig({
         // Optimize asset inlining
         assetsInlineLimit: 4096,
         // Minification options
-        minify: 'esbuild',
+        minify: "esbuild",
         esbuild: {
             // Remove console logs and debugger statements in production
-            drop: ['console', 'debugger'],
+            drop: ["console", "debugger"],
             // Optimize for modern browsers
-            target: 'esnext',
+            target: "esnext",
         },
         rollupOptions: {
             output: {
@@ -88,19 +89,19 @@ export default defineConfig({
                 // Simplified manual chunk splitting - let Vite handle most of it
                 manualChunks: (id) => {
                     // Exclude archived code from bundle
-                    if (id.includes('/archived/')) {
+                    if (id.includes("/archived/")) {
                         return undefined;
                     }
 
                     // Only split out the largest vendor libraries
-                    if (id.includes('node_modules')) {
-                        if (id.includes('@mui') || id.includes('@emotion')) {
-                            return 'vendor-mui';
+                    if (id.includes("node_modules")) {
+                        if (id.includes("@mui") || id.includes("@emotion")) {
+                            return "vendor-mui";
                         }
                         // Let all other node_modules (including React, react-dnd, etc.) bundle together naturally
                     }
                 },
-            }
-        }
-    }
-})
+            },
+        },
+    },
+});

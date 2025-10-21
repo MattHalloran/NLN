@@ -339,7 +339,7 @@ export const AboutPage = () => {
                                             position: "relative",
                                             px: { xs: 3, sm: 0 },
                                             "&::before": {
-                                                content: '""',
+                                                content: "\"\"",
                                                 position: "absolute",
                                                 left: { xs: "-20px", sm: "-40px" },
                                                 top: { xs: "-10px", sm: "-20px" },
@@ -348,7 +348,7 @@ export const AboutPage = () => {
                                                 fontFamily: "serif",
                                             },
                                             "&::after": {
-                                                content: '""',
+                                                content: "\"\"",
                                                 position: "absolute",
                                                 right: { xs: "-20px", sm: "-40px" },
                                                 bottom: { xs: "-10px", sm: "-20px" },

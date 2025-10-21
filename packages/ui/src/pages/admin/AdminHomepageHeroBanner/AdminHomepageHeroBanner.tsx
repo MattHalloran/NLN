@@ -26,7 +26,8 @@ import {
     Add as AddIcon,
 } from "@mui/icons-material";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import { useLandingPageContent, useUpdateLandingPageSettings } from "api/rest/hooks";
+import { useLandingPage } from "hooks/useLandingPage";
+import { useUpdateLandingPageSettings } from "api/rest/hooks";
 import { restApi } from "api/rest/client";
 import { BackButton, Dropzone, PageContainer } from "components";
 import { TopBar } from "components/navigation/TopBar/TopBar";
@@ -106,7 +107,7 @@ export const AdminHomepageHeroBanner = () => {
     const [originalCtaButtons, setOriginalCtaButtons] = useState<CTAButton[]>(ctaButtons);
     const [isLoading, setIsLoading] = useState(false);
 
-    const { data: landingPageContent, refetch } = useLandingPageContent(false);
+    const { data: landingPageContent, refetch } = useLandingPage();
     const updateSettings = useUpdateLandingPageSettings();
 
     // Load all hero-related content
@@ -190,7 +191,7 @@ export const AdminHomepageHeroBanner = () => {
             }
 
             const newBanners: any[] = [];
-            let currentLength = heroBanners.length;
+            const currentLength = heroBanners.length;
 
             for (const file of acceptedFiles) {
                 const reader = new window.FileReader();

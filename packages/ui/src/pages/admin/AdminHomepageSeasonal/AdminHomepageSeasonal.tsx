@@ -33,7 +33,7 @@ import {
     Edit3,
     Trash2,
 } from "lucide-react";
-import { useLandingPageContent } from "api/rest/hooks";
+import { useLandingPage } from "hooks/useLandingPage";
 import { restApi } from "api/rest/client";
 import { BackButton, PageContainer } from "components";
 import { TopBar } from "components/navigation/TopBar/TopBar";
@@ -85,7 +85,7 @@ export const AdminHomepageSeasonal = () => {
     const [tipDialogOpen, setTipDialogOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
-    const { data: seasonalData, refetch } = useLandingPageContent(false);
+    const { data: seasonalData, refetch } = useLandingPage();
 
     const handleApiError = useCallback((error: any, defaultMessage: string) => {
         const message = error?.message || defaultMessage;

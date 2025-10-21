@@ -1,7 +1,15 @@
 import { genErrorCode, logger, LogLevel } from "../../logger.js";
 import { EmailService } from "../../utils/emailService.js";
+import type Bull from "bull";
 
-export async function emailProcess(job: any) {
+interface EmailJobData {
+    to: string[];
+    subject: string;
+    text?: string;
+    html?: string;
+}
+
+export async function emailProcess(job: Bull.Job<EmailJobData>) {
     try {
         const emailService = EmailService.getInstance();
 
@@ -29,14 +37,15 @@ export async function emailProcess(job: any) {
             info: result.info,
             devInfo: result.devInfo,
         };
-    } catch (error: any) {
+    } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
         logger.log(LogLevel.error, "Caught error in email process", {
             code: genErrorCode("00012"),
             error,
         });
         return {
             success: false,
-            error: error.message,
+            error: errorMessage,
         };
     }
 }

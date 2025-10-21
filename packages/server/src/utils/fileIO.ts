@@ -230,7 +230,7 @@ export async function saveImage({
         }
         // Create a read stream
         const stream = createReadStream();
-        const { name, ext, folder } = await findFileName(filename, "images");
+        const { name, folder } = await findFileName(filename, "images");
         if (name === null) {
             throw Error("Could not create a valid file name");
         }
@@ -291,7 +291,7 @@ export async function saveImage({
                     data: {
                         label: labels[i],
                         index: i,
-                        image: { connect: { hash: hash } },
+                        image: { connect: { hash } },
                     },
                 });
             }

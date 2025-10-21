@@ -44,7 +44,7 @@ interface UpsertCustomerData {
 
 interface UpsertCustomerParams {
     prisma: PrismaClient;
-    info: any;
+    info: unknown;
     data: UpsertCustomerData;
 }
 

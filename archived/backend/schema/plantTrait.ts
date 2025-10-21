@@ -30,7 +30,7 @@ export const resolvers = {
         traitNames: async (
             _parent: undefined,
             _input: undefined,
-            { prisma }: Context
+            { prisma }: Context,
         ): Promise<string[] | null> => {
             const traits = await prisma.plant_trait.findMany({
                 select: {
@@ -42,7 +42,7 @@ export const resolvers = {
         traitValues: async (
             _parent: undefined,
             { input }: IWrap<TraitValuesInput>,
-            { prisma }: Context
+            { prisma }: Context,
         ): Promise<string[] | null> => {
             const traits = await prisma.plant_trait.findMany({
                 where: { name: input.name },
@@ -56,16 +56,18 @@ export const resolvers = {
         traitOptions: async (
             _parent: undefined,
             _data: IWrap<undefined>,
-            { prisma }: Context
+            { prisma }: Context,
         ): Promise<RecursivePartial<TraitOptions[]> | null> => {
             // Query all data
             const trait_data = await prisma.plant_trait.findMany();
             // Combine data into object
             const options: { [x: string]: any } = {};
             for (const row of trait_data) {
-                options[row.name]
-                    ? options[row.name].push(row.value)
-                    : (options[row.name] = [row.value]);
+                if (options[row.name]) {
+                    options[row.name].push(row.value);
+                } else {
+                    options[row.name] = [row.value];
+                }
             }
             // Format object
             const trait_options: any[] = [];

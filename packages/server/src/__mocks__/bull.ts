@@ -19,6 +19,6 @@ export const createMockQueue = (): MockQueue => ({
     getJobs: jest.fn().mockResolvedValue([]),
 });
 
-const Bull = jest.fn((name: string, options: any) => createMockQueue());
+const Bull = jest.fn((_name: string, _options: any) => createMockQueue());
 
 export default Bull;

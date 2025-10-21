@@ -14,6 +14,8 @@ export default [
             "**/coverage/**",
             "**/node_modules/**",
             "**/generated/**",
+            "**/archived/**",
+            "packages/server/**",
             "vite.config.ts",
             "graphqlTypes.ts",
             "**/*.js",
@@ -88,7 +90,14 @@ export default [
         rules: {
             ...tseslint.configs.recommended.rules,
             "@typescript-eslint/no-explicit-any": "warn",
-            "@typescript-eslint/no-unused-vars": "error",
+            "@typescript-eslint/no-unused-vars": [
+                "error",
+                {
+                    "argsIgnorePattern": "^_",
+                    "varsIgnorePattern": "^_",
+                    "caughtErrorsIgnorePattern": "^_",
+                },
+            ],
             "@typescript-eslint/prefer-nullish-coalescing": "off",
             "@typescript-eslint/prefer-optional-chain": "off",
             "@typescript-eslint/no-empty-function": "off",
@@ -114,6 +123,35 @@ export default [
                 FormData: "readonly",
                 Blob: "readonly",
                 File: "readonly",
+                NodeJS: "readonly",
+                Notification: "readonly",
+                caches: "readonly",
+                ServiceWorkerRegistration: "readonly",
+                React: "readonly",
+                JSX: "readonly",
+                HTMLElement: "readonly",
+                HTMLDivElement: "readonly",
+                HTMLButtonElement: "readonly",
+                HTMLImageElement: "readonly",
+                HTMLInputElement: "readonly",
+                HTMLFormElement: "readonly",
+                MouseEvent: "readonly",
+                Event: "readonly",
+                KeyboardEvent: "readonly",
+                RequestInit: "readonly",
+                AbortController: "readonly",
+                performance: "readonly",
+                requestAnimationFrame: "readonly",
+                cancelAnimationFrame: "readonly",
+                getComputedStyle: "readonly",
+                ResizeObserver: "readonly",
+                FocusEvent: "readonly",
+                HTMLAnchorElement: "readonly",
+                History: "readonly",
+                dispatchEvent: "readonly",
+                NotificationPermission: "readonly",
+                PushSubscription: "readonly",
+                PushSubscriptionOptions: "readonly",
             },
         },
         plugins: {
@@ -123,6 +161,12 @@ export default [
             ...reactHooks.configs.recommended.rules,
             "react-hooks/exhaustive-deps": "warn",
             "react-hooks/rules-of-hooks": "error",
+            "react-hooks/set-state-in-effect": "warn",
+            "react-hooks/refs": "warn",
+            "react-hooks/purity": "warn",
+            "react-hooks/immutability": "warn",
+            "no-unsafe-optional-chaining": "warn",
+            "no-useless-escape": "warn",
         },
     },
 
@@ -156,6 +200,50 @@ export default [
                 window: "readonly",
                 document: "readonly",
             },
+        },
+    },
+
+    // Test files
+    {
+        files: ["**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "**/*.spec.tsx", "**/setupTests.ts"],
+        languageOptions: {
+            globals: {
+                describe: "readonly",
+                it: "readonly",
+                expect: "readonly",
+                beforeEach: "readonly",
+                afterEach: "readonly",
+                beforeAll: "readonly",
+                afterAll: "readonly",
+                test: "readonly",
+                jest: "readonly",
+                vi: "readonly",
+                fail: "readonly",
+            },
+        },
+        rules: {
+            "@typescript-eslint/no-explicit-any": "off",
+        },
+    },
+
+    // Mock files
+    {
+        files: ["**/__mocks__/**/*.ts"],
+        languageOptions: {
+            globals: {
+                jest: "readonly",
+            },
+        },
+        rules: {
+            "@typescript-eslint/no-explicit-any": "off",
+        },
+    },
+
+    // E2E setup and teardown files - allow console statements
+    {
+        files: ["e2e/setup/**/*.ts", "e2e/teardown/**/*.ts", "e2e/fixtures/**/*.ts", "e2e/**/*.setup.ts"],
+        rules: {
+            "no-console": "off",
         },
     },
 ];

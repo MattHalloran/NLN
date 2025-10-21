@@ -15,8 +15,9 @@ import {
 import { Save, RotateCcw, Mail } from "lucide-react";
 import { BackButton, PageContainer } from "components";
 import { TopBar } from "components/navigation/TopBar/TopBar";
-import { useLandingPageContent, useUpdateLandingPageSettings } from "api/rest/hooks";
-import { useCallback, useEffect, useState, useMemo } from "react";
+import { useLandingPage } from "hooks/useLandingPage";
+import { useUpdateLandingPageSettings } from "api/rest/hooks";
+import { useCallback as _useCallback, useEffect, useState, useMemo } from "react";
 
 interface NewsletterSettings {
     title: string;
@@ -27,7 +28,7 @@ interface NewsletterSettings {
 
 export const AdminHomepageNewsletter = () => {
     const updateSettings = useUpdateLandingPageSettings();
-    const { data: landingPageContent, refetch } = useLandingPageContent(false);
+    const { data: landingPageContent, refetch } = useLandingPage();
 
     const [newsletter, setNewsletter] = useState<NewsletterSettings>({
         title: "Stay in the Grow",
@@ -54,7 +55,7 @@ export const AdminHomepageNewsletter = () => {
     // Check for unsaved changes using useMemo for derived state
     const hasChanges = useMemo(
         () => JSON.stringify(newsletter) !== JSON.stringify(originalNewsletter),
-        [newsletter, originalNewsletter]
+        [newsletter, originalNewsletter],
     );
 
     const handleSave = async () => {

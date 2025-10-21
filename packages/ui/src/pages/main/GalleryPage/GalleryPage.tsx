@@ -7,7 +7,7 @@ import {
     Card,
     CardMedia,
     CardContent,
-    Chip,
+    Chip as _Chip,
     Dialog,
     DialogContent,
     IconButton,
@@ -17,7 +17,7 @@ import {
     Tabs,
     Tab,
     Paper,
-    Divider,
+    Divider as _Divider,
 } from "@mui/material";
 import { useImagesByLabel } from "api/rest/hooks";
 import { SnackSeverity } from "components";

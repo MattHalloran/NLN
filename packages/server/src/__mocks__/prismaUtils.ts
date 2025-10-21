@@ -10,6 +10,7 @@ type WhereCondition = {
     contains?: string;
     [key: string]: unknown;
 };
+// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
 type WhereClause = Record<string, unknown | WhereCondition>;
 
 function mockFindUnique<T extends Record<string, unknown>>(

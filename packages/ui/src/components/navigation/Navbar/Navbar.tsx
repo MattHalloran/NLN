@@ -1,5 +1,5 @@
 import { APP_LINKS } from "@local/shared";
-import { alpha, AppBar, Box, Stack, Typography, useTheme } from "@mui/material";
+import { alpha as _alpha, AppBar, Box, Stack, Typography, useTheme } from "@mui/material";
 import Logo from "assets/img/nln-logo-colorized.png";
 import { Title } from "components/text";
 import { NavbarProps } from "components/types";
@@ -9,7 +9,7 @@ import { useWindowSize } from "hooks/useWindowSize";
 import { forwardRef, useCallback, useContext, useEffect, useMemo } from "react";
 import { useLocation } from "route";
 import { noSelect } from "styles";
-import { hexToRGB } from "utils";
+import { hexToRGB as _hexToRGB } from "utils";
 import { HideOnScroll } from "../HideOnScroll/HideOnScroll";
 import { NavList } from "./NavList";
 

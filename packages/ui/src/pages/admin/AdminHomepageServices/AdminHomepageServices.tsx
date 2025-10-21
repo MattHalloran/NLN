@@ -17,8 +17,9 @@ import {
 import { Save, RotateCcw, Plus, Trash2, GripVertical } from "lucide-react";
 import { BackButton, PageContainer } from "components";
 import { TopBar } from "components/navigation/TopBar/TopBar";
-import { useLandingPageContent, useUpdateLandingPageSettings } from "api/rest/hooks";
-import { useCallback, useEffect, useState, useMemo } from "react";
+import { useLandingPage } from "hooks/useLandingPage";
+import { useUpdateLandingPageSettings } from "api/rest/hooks";
+import { useCallback as _useCallback, useEffect, useState, useMemo } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
 interface Service {
@@ -47,7 +48,7 @@ const SERVICE_ICONS = [
 
 export const AdminHomepageServices = () => {
     const updateSettings = useUpdateLandingPageSettings();
-    const { data: landingPageContent, refetch } = useLandingPageContent(false);
+    const { data: landingPageContent, refetch } = useLandingPage();
 
     const [services, setServices] = useState<ServicesSettings>({
         title: "Our Services",
@@ -110,7 +111,7 @@ export const AdminHomepageServices = () => {
     // Check for unsaved changes using useMemo for derived state
     const hasChanges = useMemo(
         () => JSON.stringify(services) !== JSON.stringify(originalServices),
-        [services, originalServices]
+        [services, originalServices],
     );
 
     const handleSave = async () => {

@@ -26,7 +26,8 @@ import {
     Alert,
 } from "@mui/material";
 import { AccessTime, Business, Delete, Schedule, Add } from "@mui/icons-material";
-import { useUpdateContactInfo, useLandingPageContent } from "api/rest/hooks";
+import { useLandingPage } from "hooks/useLandingPage";
+import { useUpdateContactInfo } from "api/rest/hooks";
 import { BackButton, PageContainer } from "components";
 import { TopBar } from "components/navigation/TopBar/TopBar";
 import { CancelIcon, SaveIcon } from "icons";
@@ -94,7 +95,7 @@ const TIME_OPTIONS = [
 
 export const AdminContactPage = () => {
     const { palette } = useTheme();
-    const { data: landingPageData, refetch } = useLandingPageContent(false); // Get all data, not just active
+    const { data: landingPageData, refetch } = useLandingPage(); // Get all data, not just active
     const { mutate: updateContactInfo, loading: updateLoading } = useUpdateContactInfo();
 
     const [dayHours, setDayHours] = useState<DayHours[]>([]);

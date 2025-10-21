@@ -45,7 +45,7 @@ const getCookie = <T>(name: CookieKey | string, typeCheck: (value: unknown) => v
         if (typeCheck(parsed)) {
             return parsed;
         }
-    } catch (e) {
+    } catch (_e) {
         console.warn(`Failed to parse cookie ${name}`, cookie);
     }
     return undefined;

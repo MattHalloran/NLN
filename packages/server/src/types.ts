@@ -2,6 +2,7 @@ import pkg from "@prisma/client";
 
 // Request type
 declare global {
+    // eslint-disable-next-line @typescript-eslint/no-namespace
     namespace Express {
         interface Request {
             businessId?: string | null;

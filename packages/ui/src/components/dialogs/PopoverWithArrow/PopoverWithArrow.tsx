@@ -50,7 +50,7 @@ const getOffsetModifier = (placement: string) => {
 export const PopoverWithArrow = ({
     anchorEl,
     children,
-    disableScrollLock = false,
+    disableScrollLock: _disableScrollLock = false,
     handleClose,
     placement = "top",
     sxs,

@@ -36,7 +36,12 @@ const writeABTests = (tests: any[]) => {
     }
 };
 
-const updateTestMetrics = (testId: string, variantId: string, eventType: string, metadata?: any) => {
+const updateTestMetrics = (
+    testId: string,
+    variantId: string,
+    eventType: string,
+    metadata?: any
+) => {
     try {
         const tests = readABTests();
         const testIndex = tests.findIndex((t: any) => t.id === testId);

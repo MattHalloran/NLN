@@ -10,7 +10,7 @@ interface FormPageProps {
 
 export const FormPage = ({
     title,
-    autocomplete = "on",
+    autocomplete: _autocomplete = "on",
     children,
 }: FormPageProps) => {
     const { palette } = useTheme();

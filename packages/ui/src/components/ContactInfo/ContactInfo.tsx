@@ -11,8 +11,8 @@ export const ContactInfo = ({
     const business = useContext(BusinessContext);
 
     const openLink = (e: React.MouseEvent, link: string) => {
-        window.location.href = link;
         e.preventDefault();
+        window.open(link, "_blank", "noopener,noreferrer");
     };
 
     const hours = parseBusinessHours(business?.hours || "");

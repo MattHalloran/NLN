@@ -10,7 +10,7 @@ import { PubSub } from "utils";
 
 export const ResetPasswordForm = () => {
     const [, setLocation] = useLocation();
-    const { spacing, palette } = useTheme();
+    const { spacing: _spacing, palette } = useTheme();
 
     const token = useMemo(() => {
         const url = new URL(window.location.href);
@@ -41,7 +41,7 @@ export const ResetPasswordForm = () => {
             } catch (error: any) {
                 PubSub.get().publishSnack({
                     message: error?.message || "Password reset failed. Please try again.",
-                    severity: SnackSeverity.Error
+                    severity: SnackSeverity.Error,
                 });
             }
         },

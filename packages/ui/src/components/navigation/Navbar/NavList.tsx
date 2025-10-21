@@ -9,7 +9,7 @@ import { Menu as MenuIcon, ShoppingCart, Store, Info, Camera } from "lucide-reac
 import { isObject } from "lodash-es";
 import { useCallback, useContext } from "react";
 import { useLocation } from "route";
-import { PubSub, UserActions, getUserActions, updateArray } from "utils";
+import { PubSub, UserActions, getUserActions, updateArray as _updateArray } from "utils";
 
 const navItemStyle = (palette: Palette) => ({
     background: "transparent",
@@ -77,7 +77,7 @@ export const NavList = () => {
     const openSideMenu = useCallback(() => { PubSub.get().publishSideMenu({ id: "side-menu", isOpen: true }); }, []);
 
     const optionsToList = (options: UserActions): JSX.Element[] => {
-        return options.map(([label, value, link, onClick, _Icon, _badgeNum], index) => {
+        return options.map(([label, _value, link, onClick, _Icon, _badgeNum], index) => {
             // Map labels to lucide icons
             const getIcon = (label: string) => {
                 switch (label) {
@@ -115,7 +115,7 @@ export const NavList = () => {
     };
 
     const optionsToMenu = (options: UserActions): JSX.Element[] => {
-        return options.map(([label, value, link, onClick, _Icon, _badgeNum], index) => (
+        return options.map(([label, _value, link, onClick, _Icon, _badgeNum], index) => (
             <Button
                 key={index}
                 variant="text"

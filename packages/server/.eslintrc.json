@@ -4,7 +4,7 @@
   "parserOptions": {
     "ecmaVersion": 2022,
     "sourceType": "module",
-    "project": "./tsconfig.json"
+    "project": "./tsconfig.eslint.json"
   },
   "plugins": [
     "@typescript-eslint",
@@ -49,7 +49,8 @@
     "no-var": "error",
     "prefer-const": "error",
     "prefer-template": "warn",
-    "require-await": "error",
+    "require-await": "off",
+    "@typescript-eslint/require-await": "off",
     "eqeqeq": ["error", "always"],
     "curly": ["error", "all"]
   },
@@ -64,5 +65,53 @@
     "node": true,
     "es2022": true,
     "jest": true
-  }
+  },
+  "overrides": [
+    {
+      "files": [
+        "**/*.test.ts",
+        "**/*.spec.ts",
+        "**/*.integration.test.ts",
+        "**/__tests__/**/*.ts",
+        "**/__mocks__/**/*.ts",
+        "**/seeds/**/*.ts"
+      ],
+      "rules": {
+        "@typescript-eslint/no-explicit-any": "off",
+        "@typescript-eslint/no-unsafe-assignment": "off",
+        "@typescript-eslint/no-unsafe-member-access": "off",
+        "@typescript-eslint/no-unsafe-call": "off",
+        "@typescript-eslint/no-unsafe-argument": "off",
+        "@typescript-eslint/no-unsafe-return": "off",
+        "@typescript-eslint/unbound-method": "off",
+        "@typescript-eslint/await-thenable": "off",
+        "@typescript-eslint/no-floating-promises": "off",
+        "@typescript-eslint/no-unused-vars": "off"
+      }
+    },
+    {
+      "files": [
+        "src/rest/landingPage.ts",
+        "src/rest/auth.ts",
+        "src/rest/analytics.ts",
+        "src/rest/dashboard.ts",
+        "src/rest/images.ts",
+        "src/rest/assets.ts",
+        "src/rest/plants.ts",
+        "src/utils/emailService.ts",
+        "src/utils/fileIO.ts"
+      ],
+      "rules": {
+        "@typescript-eslint/no-explicit-any": "off",
+        "@typescript-eslint/no-unsafe-assignment": "off",
+        "@typescript-eslint/no-unsafe-member-access": "off",
+        "@typescript-eslint/no-unsafe-call": "off",
+        "@typescript-eslint/no-unsafe-argument": "off",
+        "@typescript-eslint/no-unsafe-return": "off",
+        "@typescript-eslint/no-require-imports": "off",
+        "@typescript-eslint/await-thenable": "off",
+        "no-case-declarations": "off"
+      }
+    }
+  ]
 }

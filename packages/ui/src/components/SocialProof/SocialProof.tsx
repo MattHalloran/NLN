@@ -13,7 +13,7 @@ import { Building2, Users, TreePine, Clock, Award, Truck, Shield, Sprout } from 
 import { useContext, useMemo } from "react";
 import { BusinessContext } from "contexts/BusinessContext";
 import { getEarliestOpeningTime } from "utils/businessHours";
-import { useLandingPageContent } from "api/rest/hooks";
+import { useLandingPage } from "hooks/useLandingPage";
 import { COMPANY_INFO } from "@local/shared";
 
 const clientTypes = [
@@ -26,7 +26,7 @@ const clientTypes = [
 export const SocialProof = () => {
     const { palette } = useTheme();
     const business = useContext(BusinessContext);
-    const { data } = useLandingPageContent(true);
+    const { data } = useLandingPage();
 
     const foundedYear = data?.content?.company?.foundedYear || COMPANY_INFO.FoundedYear;
 
@@ -199,7 +199,7 @@ export const SocialProof = () => {
                             bottom: 0,
                             opacity: 0.1,
                             backgroundImage:
-                                'url(\'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="2" fill="white"/></svg>\')',
+                                "url('data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"><circle cx=\"50\" cy=\"50\" r=\"2\" fill=\"white\"/></svg>')",
                             backgroundSize: "50px 50px",
                         }}
                     />

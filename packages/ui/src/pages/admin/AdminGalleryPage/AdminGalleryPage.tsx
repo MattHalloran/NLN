@@ -20,13 +20,13 @@ export const AdminGalleryPage = () => {
             await addImages({ label: "gallery", files: acceptedFiles });
             PubSub.get().publishSnack({
                 message: `Successfully uploaded ${acceptedFiles.length} image(s).`,
-                severity: SnackSeverity.Success
+                severity: SnackSeverity.Success,
             });
             refetchImages();
         } catch (error: any) {
             PubSub.get().publishSnack({
                 message: error?.message || "Failed to upload images",
-                severity: SnackSeverity.Error
+                severity: SnackSeverity.Error,
             });
         }
     }, [addImages, refetchImages]);
@@ -46,17 +46,17 @@ export const AdminGalleryPage = () => {
                 hash: d.hash,
                 alt: d.alt,
                 description: d.description,
-                label: "gallery"
+                label: "gallery",
             }));
             await updateImages({ images });
             PubSub.get().publishSnack({
                 message: "Successfully updated image(s).",
-                severity: SnackSeverity.Success
+                severity: SnackSeverity.Success,
             });
         } catch (error: any) {
             PubSub.get().publishSnack({
                 message: error?.message || "Failed to update images",
-                severity: SnackSeverity.Error
+                severity: SnackSeverity.Error,
             });
         }
     }, [updateImages]);

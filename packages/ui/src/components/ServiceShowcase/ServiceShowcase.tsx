@@ -11,7 +11,7 @@ import {
 import { useState } from "react";
 import { useLocation } from "route";
 import { Sprout, Leaf, Home, Truck, Package, Wrench, LucideIcon } from "lucide-react";
-import { useLandingPageContent } from "api/rest/hooks";
+import { useLandingPage } from "hooks/useLandingPage";
 
 interface Service {
     title: string;
@@ -71,7 +71,7 @@ export const ServiceShowcase = () => {
     const { palette } = useTheme();
     const [, setLocation] = useLocation();
     const [hoveredCard, setHoveredCard] = useState<number | null>(null);
-    const { data: landingPageData } = useLandingPageContent(true);
+    const { data: landingPageData } = useLandingPage();
 
     // Get services from content or use defaults
     const servicesConfig = landingPageData?.content?.services;

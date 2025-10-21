@@ -227,15 +227,15 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
         if (import.meta.env.DEV) {
             // eslint-disable-next-line no-console
             console.group(`🚨 Error Boundary: ${category.type.toUpperCase()} ERROR`);
-            // eslint-disable-next-line no-console
+             
             console.error("Error ID:", this.state.errorId);
-            // eslint-disable-next-line no-console
+             
             console.error("Error:", error);
-            // eslint-disable-next-line no-console
+             
             console.error("Error Info:", errorInfo);
-            // eslint-disable-next-line no-console
+             
             console.error("Context:", this.state.context);
-            // eslint-disable-next-line no-console
+             
             console.error("Category:", category);
             // eslint-disable-next-line no-console
             console.groupEnd();
@@ -269,7 +269,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
         try {
             localStorage.setItem("errorBoundary_errorCount", errorCount.toString());
             localStorage.setItem("errorBoundary_lastError", Date.now().toString());
-        } catch (e) {
+        } catch (_e) {
             // Storage not available
         }
     }

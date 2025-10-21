@@ -6,14 +6,14 @@ import { logger, LogLevel, genErrorCode } from "../logger.js";
 export interface EmailData {
     to: string[];
     subject: string;
-    text: string;
-    html: string;
+    text?: string;
+    html?: string;
     from?: string;
 }
 
 export interface EmailResult {
     success: boolean;
-    info?: any;
+    info?: unknown;
     devInfo?: {
         mode: string;
         action: string;

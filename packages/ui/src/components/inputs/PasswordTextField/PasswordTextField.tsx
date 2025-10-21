@@ -23,7 +23,7 @@ export const PasswordTextField = ({
     error = false,
     fullWidth = true,
     helperText = undefined,
-    id = "password",
+    id: _id = "password",
     label,
     name = "password",
     onBlur = noop,

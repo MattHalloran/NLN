@@ -9,7 +9,7 @@ import {
     LocationVisit,
 } from "components";
 import { TopBar } from "components/navigation/TopBar/TopBar";
-import { useLandingPageContent } from "api/rest/hooks";
+import { useLandingPage } from "hooks/useLandingPage";
 
 // Section component mapping
 const SECTION_COMPONENTS: Record<string, React.ComponentType> = {
@@ -22,7 +22,7 @@ const SECTION_COMPONENTS: Record<string, React.ComponentType> = {
 };
 
 export const HomePage = () => {
-    const { data: landingPageData, loading } = useLandingPageContent(true);
+    const { data: landingPageData, loading } = useLandingPage();
 
     // Get section configuration with fallback to default
     const sectionConfig = useMemo(() => {

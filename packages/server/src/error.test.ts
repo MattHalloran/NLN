@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { CustomError, validateArgs } from "./error";
 import { logger, LogLevel } from "./logger";
 
@@ -52,11 +52,7 @@ describe("error", () => {
 
         it("should log with custom message when both message and logMeta provided", () => {
             const logMeta = { userId: "123" };
-            new CustomError(
-                { code: "TEST_ERROR", message: "Default" },
-                "Custom message",
-                logMeta
-            );
+            new CustomError({ code: "TEST_ERROR", message: "Default" }, "Custom message", logMeta);
             expect(logger.log).toHaveBeenCalledWith(LogLevel.error, "Custom message", logMeta);
         });
 
@@ -117,7 +113,9 @@ describe("error", () => {
             } catch (error: any) {
                 expect(error).toBeInstanceOf(CustomError);
                 expect(error.code).toBe("ARGS_VALIDATION_FAILED");
-                expect(Array.isArray(error.message) ? error.message : [error.message]).toContain(validationErrors[0]);
+                expect(Array.isArray(error.message) ? error.message : [error.message]).toContain(
+                    validationErrors[0]
+                );
             }
         });
 

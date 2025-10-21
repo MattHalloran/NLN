@@ -1,11 +1,10 @@
 import { CODE, PLANT_SORT_OPTIONS, SKU_STATUS } from "@local/shared";
 import { PrismaSelect } from "@paljs/plugins";
-
 import { GraphQLResolveInfo } from "graphql";
 import { Context } from "../context.js";
 import { CustomError } from "../error.js";
 import { IWrap, RecursivePartial } from "../types.js";
-import { Count, DeleteManyInput, Plant, PlantInput, PlantsInput, Sku } from "./types.js";
+import { Count, DeleteManyInput, Plant, PlantInput, PlantsInput } from "./types.js";
 
 export const typeDef = /* GraphQL */ `
     input PlantTraitInput {
@@ -73,7 +72,7 @@ export const resolvers = {
             _parent: undefined,
             { input }: IWrap<PlantsInput>,
             { prisma, req }: Context,
-            info: GraphQLResolveInfo
+            info: GraphQLResolveInfo,
         ): Promise<RecursivePartial<Plant[]> | null> => {
             let idQuery;
             if (Array.isArray(input.ids)) {
@@ -159,7 +158,7 @@ export const resolvers = {
             _parent: undefined,
             { input }: IWrap<PlantInput>,
             { prisma, req }: Context,
-            info: GraphQLResolveInfo
+            info: GraphQLResolveInfo,
         ): Promise<RecursivePartial<Plant> | null> => {
             // Must be admin
             if (!req.isAdmin) {
@@ -203,7 +202,7 @@ export const resolvers = {
             _parent: undefined,
             { input }: IWrap<PlantInput>,
             { prisma, req }: Context,
-            info: GraphQLResolveInfo
+            info: GraphQLResolveInfo,
         ): Promise<RecursivePartial<Plant> | null> => {
             // Must be admin
             if (!req.isAdmin) {
@@ -237,7 +236,7 @@ export const resolvers = {
                             prisma.plant_images.update({
                                 where: { id: existingImage.id },
                                 data: { isDisplay: input.images[i].isDisplay ?? false, index: i },
-                            })
+                            }),
                         );
                     } else {
                         operations.push(
@@ -249,7 +248,7 @@ export const resolvers = {
                                     isDisplay: input.images[i].isDisplay ?? false,
                                     index: i,
                                 },
-                            })
+                            }),
                         );
                     }
                 }
@@ -260,7 +259,7 @@ export const resolvers = {
                 where: { plantId: input.id },
             });
             const inputTraits = input.traits || [];
-            const temp = await prisma.plant.findUnique({
+            const _temp = await prisma.plant.findUnique({
                 where: { id: input.id },
                 select: {
                     id: true,
@@ -320,7 +319,7 @@ export const resolvers = {
         deletePlants: async (
             _parent: undefined,
             { input }: IWrap<DeleteManyInput>,
-            { prisma, req }: Context
+            { prisma, req }: Context,
         ): Promise<Count | null> => {
             // Must be admin
             if (!req.isAdmin) {

@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 import { useLocation } from "route";
 import { Eye, Gift, Smartphone, Car, Clock, Phone, MapPin, Mail, Map } from "lucide-react";
-import { useLandingPageContent } from "api/rest/hooks";
+import { useLandingPage } from "hooks/useLandingPage";
 import { parseBusinessHours } from "utils/businessHours";
 import { BusinessContext } from "contexts/BusinessContext";
 import { useContext } from "react";
@@ -24,7 +24,7 @@ export const LocationVisit = () => {
     const business = useContext(BusinessContext);
 
     // Fetch business hours from API
-    const { data } = useLandingPageContent(true);
+    const { data } = useLandingPage();
 
     const foundedYear = data?.content?.company?.foundedYear || COMPANY_INFO.FoundedYear;
 

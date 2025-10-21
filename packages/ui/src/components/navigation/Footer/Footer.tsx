@@ -1,5 +1,5 @@
 import { APP_LINKS } from "@local/shared";
-import { Box, ButtonBase, Container, Grid, IconButton, Link, Stack, Typography, useTheme } from "@mui/material";
+import { Box, ButtonBase as _ButtonBase, Container, Grid, IconButton as _IconButton, Link, Stack, Typography, useTheme } from "@mui/material";
 import AmericanHort from "assets/img/american-hort.png";
 import NJNLA from "assets/img/njnla_logo.jpg";
 import ProvenWinners from "assets/img/proven-winners.png";
@@ -30,12 +30,12 @@ export const Footer = () => {
 
     // Load RapidScan compliance seal script
     useEffect(() => {
-        const script = document.createElement('script');
-        script.type = 'text/javascript';
-        script.src = 'https://www.rapidscansecure.com/siteseal/siteseal.js?code=158,A67D1E952FE47EAFCF2B0E9D0FABF9840AD29386';
+        const script = document.createElement("script");
+        script.type = "text/javascript";
+        script.src = "https://www.rapidscansecure.com/siteseal/siteseal.js?code=158,A67D1E952FE47EAFCF2B0E9D0FABF9840AD29386";
         script.async = true;
 
-        const sealContainer = document.getElementById('rapidscan-seal');
+        const sealContainer = document.getElementById("rapidscan-seal");
         if (sealContainer) {
             sealContainer.appendChild(script);
         }
@@ -343,9 +343,9 @@ export const Footer = () => {
                         id="rapidscan-seal"
                         sx={{
                             mt: 2,
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
+                            display: "flex",
+                            justifyContent: "center",
+                            alignItems: "center",
                         }}
                     />
                 </Box>

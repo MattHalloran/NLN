@@ -110,7 +110,7 @@ This line has no pipes`;
             expect(getShortBusinessHours(allClosed)).toBe("Contact us for hours");
         });
 
-        it('handles case-insensitive "closed"', () => {
+        it("handles case-insensitive \"closed\"", () => {
             const mixedCase = `| Day | Hours |
 | --- | --- |
 | Monday | 9:00 AM - 5:00 PM |

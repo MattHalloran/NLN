@@ -27,11 +27,11 @@ import { changeCustomerStatusMutation, deleteCustomerMutation } from "api/mutati
 import { mutationWrapper } from "api/utils";
 import { ListDialog } from "components/dialogs";
 import { DeleteForeverIcon, DeleteIcon, EditIcon, EmailIcon, LockIcon, LockOpenIcon, PhoneIcon, ThumbUpIcon } from "icons";
-import { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { PubSub, emailLink, mapIfExists, phoneLink, showPhone } from "utils";
 import { CustomerCardProps } from "../types";
 
-type ActionArray = [(() => any), JSX.Element, string];
+type ActionArray = [(() => any), React.JSX.Element, string];
 
 enum CustomerStatus {
     Deleted = "Deleted",
@@ -43,7 +43,7 @@ enum CustomerStatus {
 
 export const CustomerCard = ({
     customer,
-    isMobile,
+    isMobile: _isMobile,
     onEdit,
 }: CustomerCardProps) => {
     const { palette } = useTheme();

@@ -39,7 +39,7 @@ export const parseSearchParams = (): ParseSearchParamsResult => {
             if (typeof value === "string" && value.startsWith("{") && value.endsWith("}")) {
                 try {
                     parsed[key] = JSON.parse(value);
-                } catch (e) {
+                } catch (_e) {
                     // Do nothing
                 }
             }

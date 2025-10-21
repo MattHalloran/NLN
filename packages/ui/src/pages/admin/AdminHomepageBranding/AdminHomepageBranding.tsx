@@ -8,20 +8,21 @@ import {
     Typography,
     Alert,
     Snackbar,
-    Divider,
+    Divider as _Divider,
     InputAdornment,
     ToggleButton,
     ToggleButtonGroup,
     Grid,
     Paper,
     IconButton,
-    Chip,
+    Chip as _Chip,
 } from "@mui/material";
 import { Save, RotateCcw, Palette, Building, Sun, Moon, Menu, ShoppingCart, Heart, User } from "lucide-react";
 import { BackButton, PageContainer } from "components";
 import { TopBar } from "components/navigation/TopBar/TopBar";
-import { useLandingPageContent, useUpdateLandingPageSettings } from "api/rest/hooks";
-import { useCallback, useEffect, useState, useMemo } from "react";
+import { useLandingPage } from "hooks/useLandingPage";
+import { useUpdateLandingPageSettings } from "api/rest/hooks";
+import { useCallback as _useCallback, useEffect, useState, useMemo } from "react";
 import { PubSub } from "utils";
 
 interface ThemeColors {
@@ -271,7 +272,7 @@ const RealisticPreview = ({ colors, mode }: PreviewProps) => {
 
 export const AdminHomepageBranding = () => {
     const updateSettings = useUpdateLandingPageSettings();
-    const { data: landingPageContent, refetch } = useLandingPageContent(false);
+    const { data: landingPageContent, refetch } = useLandingPage();
 
     const [branding, setBranding] = useState<BrandingSettings>({
         companyInfo: {
@@ -340,7 +341,7 @@ export const AdminHomepageBranding = () => {
     // Check for unsaved changes using useMemo for derived state
     const hasChanges = useMemo(
         () => JSON.stringify(branding) !== JSON.stringify(originalBranding),
-        [branding, originalBranding]
+        [branding, originalBranding],
     );
 
     const handleSave = async () => {
@@ -370,7 +371,7 @@ export const AdminHomepageBranding = () => {
         }
 
         try {
-            await updateSettings.mutate(branding);
+            await updateSettings.mutate(branding as unknown as Record<string, unknown>);
             setOriginalBranding(JSON.parse(JSON.stringify(branding)));
             setSnackbar({
                 open: true,

@@ -51,7 +51,7 @@ describe("stringTools", () => {
             expect(result).not.toMatch(/\d{1,2}:\d{2}/); // No time pattern
         });
 
-        it('displays "Today at" for current date', () => {
+        it("displays \"Today at\" for current date", () => {
             const now = Date.now();
             const result = displayDate(now, true);
             // Should display time without date prefix

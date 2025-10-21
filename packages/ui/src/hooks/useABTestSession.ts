@@ -1,5 +1,5 @@
-import { useMemo, useEffect, useState } from "react";
-import { useLandingPageContent } from "api/rest/hooks";
+import { useMemo, useEffect, useState, useRef } from "react";
+import { useLandingPage } from "hooks/useLandingPage";
 
 export interface ABTestSession {
     sessionId: string;
@@ -44,7 +44,7 @@ function getOrCreateSessionId(): string {
 function assignVariant(
     sessionId: string,
     testId: string,
-    trafficSplit: number = 50
+    trafficSplit: number = 50,
 ): "variantA" | "variantB" {
     // Hash session ID + test ID for consistent assignment
     const hash = simpleHash(sessionId + testId);
@@ -62,7 +62,10 @@ function assignVariant(
  * Returns session info and assigned variant
  */
 export function useABTestSession(): ABTestSession {
-    const { data: landingPageData } = useLandingPageContent(false);
+    const { data: landingPageData } = useLandingPage();
+
+    // Capture start time once on mount
+    const startTimeRef = useRef(Date.now());
 
     const session = useMemo<ABTestSession>(() => {
         // Check if A/B testing is enabled
@@ -74,7 +77,7 @@ export function useABTestSession(): ABTestSession {
                 sessionId: getOrCreateSessionId(),
                 variantId: null,
                 testId: null,
-                startTime: Date.now(),
+                startTime: startTimeRef.current,
             };
         }
 
@@ -85,14 +88,14 @@ export function useABTestSession(): ABTestSession {
         const variantId = assignVariant(
             sessionId,
             abTesting.activeTestId,
-            50 // Default 50/50 split, can be customized per test
+            50, // Default 50/50 split, can be customized per test
         );
 
         return {
             sessionId,
             variantId,
             testId: abTesting.activeTestId,
-            startTime: Date.now(),
+            startTime: startTimeRef.current,
         };
     }, [landingPageData]);
 
@@ -114,7 +117,7 @@ export function useABTestSession(): ABTestSession {
  */
 export function useVariantConfig() {
     const session = useABTestSession();
-    const { data: landingPageData } = useLandingPageContent(false);
+    const { data: landingPageData } = useLandingPage();
     const [variantConfig, setVariantConfig] = useState<any>(null);
     const [loading, setLoading] = useState(false);
 

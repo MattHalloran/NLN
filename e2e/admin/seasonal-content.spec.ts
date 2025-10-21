@@ -1,6 +1,5 @@
-import { test, expect } from '../fixtures/auth';
-import { AdminHomePage } from '../pages/admin-home.page';
-import { mockSeasonalPlant, mockPlantTip } from '../fixtures/test-data';
+import { test, expect } from "../fixtures/auth";
+import { AdminHomePage } from "../pages/admin-home.page";
 
 /**
  * E2E Tests for Admin Seasonal Content Management
@@ -15,7 +14,7 @@ import { mockSeasonalPlant, mockPlantTip } from '../fixtures/test-data';
  * - Data persistence
  */
 
-test.describe('Admin Seasonal Content - Plants', () => {
+test.describe("Admin Seasonal Content - Plants", () => {
   let adminPage: AdminHomePage;
 
   test.beforeEach(async ({ authenticatedPage }) => {
@@ -25,20 +24,20 @@ test.describe('Admin Seasonal Content - Plants', () => {
     await adminPage.switchToSeasonalPlantsTab();
   });
 
-  test('should display existing seasonal plants', async ({ authenticatedPage }) => {
+  test("should display existing seasonal plants", async ({ authenticatedPage }) => {
     // Verify plants are loaded
-    const plantCards = authenticatedPage.locator('[class*="Card"], [role="article"]');
+    const plantCards = authenticatedPage.locator("[class*=\"Card\"], [role=\"article\"]");
     const count = await plantCards.count();
 
     expect(count).toBeGreaterThan(0);
   });
 
-  test('should add a new seasonal plant', async ({ authenticatedPage }) => {
+  test("should add a new seasonal plant", async ({ authenticatedPage }) => {
     const newPlant = {
       name: `Test Plant ${Date.now()}`,
-      description: 'This is a test plant for E2E testing',
-      season: 'Spring',
-      careLevel: 'Easy',
+      description: "This is a test plant for E2E testing",
+      season: "Spring",
+      careLevel: "Easy",
     };
 
     // Add plant
@@ -52,20 +51,20 @@ test.describe('Admin Seasonal Content - Plants', () => {
 
     // Verify persistence
     await authenticatedPage.reload();
-    await authenticatedPage.waitForLoadState('networkidle');
+    await authenticatedPage.waitForLoadState("networkidle");
     await adminPage.switchToSeasonalTab();
     await adminPage.switchToSeasonalPlantsTab();
     await expect(authenticatedPage.locator(`text=${newPlant.name}`)).toBeVisible();
   });
 
-  test('should edit an existing plant', async ({ authenticatedPage }) => {
+  test("should edit an existing plant", async ({ authenticatedPage }) => {
     // First add a plant to edit
     const originalName = `Plant to Edit ${Date.now()}`;
     await adminPage.addSeasonalPlant({
       name: originalName,
-      description: 'Original description',
-      season: 'Summer',
-      careLevel: 'Medium',
+      description: "Original description",
+      season: "Summer",
+      careLevel: "Medium",
     });
 
     await adminPage.expectSuccessMessage();
@@ -74,7 +73,7 @@ test.describe('Admin Seasonal Content - Plants', () => {
     const updatedName = `${originalName} - Updated`;
     await adminPage.editPlant(originalName, {
       name: updatedName,
-      description: 'Updated description',
+      description: "Updated description",
     });
 
     await adminPage.expectSuccessMessage();
@@ -84,20 +83,20 @@ test.describe('Admin Seasonal Content - Plants', () => {
 
     // Verify persistence
     await authenticatedPage.reload();
-    await authenticatedPage.waitForLoadState('networkidle');
+    await authenticatedPage.waitForLoadState("networkidle");
     await adminPage.switchToSeasonalTab();
     await adminPage.switchToSeasonalPlantsTab();
     await expect(authenticatedPage.locator(`text=${updatedName}`)).toBeVisible();
   });
 
-  test('should delete a plant', async ({ authenticatedPage }) => {
+  test("should delete a plant", async ({ authenticatedPage }) => {
     // First add a plant to delete
     const plantName = `Plant to Delete ${Date.now()}`;
     await adminPage.addSeasonalPlant({
       name: plantName,
-      description: 'Will be deleted',
-      season: 'Fall',
-      careLevel: 'Advanced',
+      description: "Will be deleted",
+      season: "Fall",
+      careLevel: "Advanced",
     });
 
     await adminPage.expectSuccessMessage();
@@ -112,42 +111,42 @@ test.describe('Admin Seasonal Content - Plants', () => {
 
     // Verify persistence
     await authenticatedPage.reload();
-    await authenticatedPage.waitForLoadState('networkidle');
+    await authenticatedPage.waitForLoadState("networkidle");
     await adminPage.switchToSeasonalTab();
     await adminPage.switchToSeasonalPlantsTab();
     await expect(authenticatedPage.locator(`text=${plantName}`)).not.toBeVisible();
   });
 
-  test('should display plant details correctly', async ({ authenticatedPage }) => {
+  test("should display plant details correctly", async ({ authenticatedPage }) => {
     // Add a plant with specific details
     const plantData = {
       name: `Detailed Plant ${Date.now()}`,
-      description: 'A plant with all details visible',
-      season: 'Winter',
-      careLevel: 'Easy',
+      description: "A plant with all details visible",
+      season: "Winter",
+      careLevel: "Easy",
     };
 
     await adminPage.addSeasonalPlant(plantData);
     await adminPage.expectSuccessMessage();
 
     // Verify all details are shown in the card
-    const plantCard = authenticatedPage.locator(`text=${plantData.name}`).locator('..').locator('..');
+    const plantCard = authenticatedPage.locator(`text=${plantData.name}`).locator("..").locator("..");
 
     await expect(plantCard).toContainText(plantData.description);
     await expect(plantCard).toContainText(plantData.season);
     await expect(plantCard).toContainText(plantData.careLevel);
   });
 
-  test('should show active/inactive status', async ({ authenticatedPage }) => {
+  test("should show active/inactive status", async ({ authenticatedPage }) => {
     // The active status chip should be visible
-    const activeChips = authenticatedPage.locator('text=/Active|Inactive/i');
+    const activeChips = authenticatedPage.locator("text=/Active|Inactive/i");
     const count = await activeChips.count();
 
     expect(count).toBeGreaterThan(0);
   });
 });
 
-test.describe('Admin Seasonal Content - Plant Care Tips', () => {
+test.describe("Admin Seasonal Content - Plant Care Tips", () => {
   let adminPage: AdminHomePage;
 
   test.beforeEach(async ({ authenticatedPage }) => {
@@ -157,20 +156,20 @@ test.describe('Admin Seasonal Content - Plant Care Tips', () => {
     await adminPage.switchToPlantCareTipsTab();
   });
 
-  test('should display existing plant care tips', async ({ authenticatedPage }) => {
+  test("should display existing plant care tips", async ({ authenticatedPage }) => {
     // Verify tips are loaded
-    const tipCards = authenticatedPage.locator('[class*="Card"], [role="article"]');
+    const tipCards = authenticatedPage.locator("[class*=\"Card\"], [role=\"article\"]");
     const count = await tipCards.count();
 
     expect(count).toBeGreaterThan(0);
   });
 
-  test('should add a new plant care tip', async ({ authenticatedPage }) => {
+  test("should add a new plant care tip", async ({ authenticatedPage }) => {
     const newTip = {
       title: `Test Tip ${Date.now()}`,
-      description: 'This is a test tip for E2E testing',
-      category: 'Watering',
-      season: 'Year-round',
+      description: "This is a test tip for E2E testing",
+      category: "Watering",
+      season: "Year-round",
     };
 
     // Add tip
@@ -184,20 +183,20 @@ test.describe('Admin Seasonal Content - Plant Care Tips', () => {
 
     // Verify persistence
     await authenticatedPage.reload();
-    await authenticatedPage.waitForLoadState('networkidle');
+    await authenticatedPage.waitForLoadState("networkidle");
     await adminPage.switchToSeasonalTab();
     await adminPage.switchToPlantCareTipsTab();
     await expect(authenticatedPage.locator(`text=${newTip.title}`)).toBeVisible();
   });
 
-  test('should delete a plant care tip', async ({ authenticatedPage }) => {
+  test("should delete a plant care tip", async ({ authenticatedPage }) => {
     // First add a tip to delete
     const tipTitle = `Tip to Delete ${Date.now()}`;
     await adminPage.addPlantTip({
       title: tipTitle,
-      description: 'Will be deleted',
-      category: 'Fertilizing',
-      season: 'Spring',
+      description: "Will be deleted",
+      category: "Fertilizing",
+      season: "Spring",
     });
 
     await adminPage.expectSuccessMessage();
@@ -212,33 +211,33 @@ test.describe('Admin Seasonal Content - Plant Care Tips', () => {
 
     // Verify persistence
     await authenticatedPage.reload();
-    await authenticatedPage.waitForLoadState('networkidle');
+    await authenticatedPage.waitForLoadState("networkidle");
     await adminPage.switchToSeasonalTab();
     await adminPage.switchToPlantCareTipsTab();
     await expect(authenticatedPage.locator(`text=${tipTitle}`)).not.toBeVisible();
   });
 
-  test('should display tip categories and seasons', async ({ authenticatedPage }) => {
+  test("should display tip categories and seasons", async ({ authenticatedPage }) => {
     // Add a tip with specific category and season
     const tipData = {
       title: `Categorized Tip ${Date.now()}`,
-      description: 'A tip with visible category',
-      category: 'Pruning',
-      season: 'Summer',
+      description: "A tip with visible category",
+      category: "Pruning",
+      season: "Summer",
     };
 
     await adminPage.addPlantTip(tipData);
     await adminPage.expectSuccessMessage();
 
     // Verify category and season chips are visible
-    const tipCard = authenticatedPage.locator(`text=${tipData.title}`).locator('..').locator('..');
+    const tipCard = authenticatedPage.locator(`text=${tipData.title}`).locator("..").locator("..");
 
     await expect(tipCard).toContainText(tipData.category);
     await expect(tipCard).toContainText(tipData.season);
   });
 });
 
-test.describe('Admin Seasonal Content - Statistics', () => {
+test.describe("Admin Seasonal Content - Statistics", () => {
   let adminPage: AdminHomePage;
 
   test.beforeEach(async ({ authenticatedPage }) => {
@@ -247,35 +246,35 @@ test.describe('Admin Seasonal Content - Statistics', () => {
     await adminPage.switchToSeasonalTab();
   });
 
-  test('should display statistics cards', async ({ authenticatedPage }) => {
+  test("should display statistics cards", async ({ authenticatedPage }) => {
     // Verify statistics cards are visible
-    const statCards = authenticatedPage.locator('[class*="Card"]').filter({ hasText: /Active Plants|Active Tips|Total Items/i });
+    const statCards = authenticatedPage.locator("[class*=\"Card\"]").filter({ hasText: /Active Plants|Active Tips|Total Items/i });
     const count = await statCards.count();
 
     expect(count).toBeGreaterThanOrEqual(2); // At least Plants and Tips cards
   });
 
-  test('should show correct active plant count', async ({ authenticatedPage }) => {
+  test("should show correct active plant count", async ({ authenticatedPage }) => {
     // Find the "Active Plants" card
-    const activePlantsCard = authenticatedPage.locator('text=/Active Plants/i').locator('..').locator('..');
+    const activePlantsCard = authenticatedPage.locator("text=/Active Plants/i").locator("..").locator("..");
 
     // Should have a number
     await expect(activePlantsCard).toContainText(/\d+/);
   });
 
-  test('should update statistics after adding content', async ({ authenticatedPage }) => {
+  test("should update statistics after adding content", async ({ authenticatedPage }) => {
     // Get initial count
-    const statCard = authenticatedPage.locator('text=/Total Items/i').locator('..').locator('..');
+    const statCard = authenticatedPage.locator("text=/Total Items/i").locator("..").locator("..");
     const initialText = await statCard.textContent();
-    const initialCount = parseInt(initialText?.match(/\d+/)?.[0] || '0');
+    const initialCount = parseInt(initialText?.match(/\d+/)?.[0] || "0");
 
     // Add a plant
     await adminPage.switchToSeasonalPlantsTab();
     await adminPage.addSeasonalPlant({
       name: `Stat Test Plant ${Date.now()}`,
-      description: 'For statistics test',
-      season: 'Spring',
-      careLevel: 'Easy',
+      description: "For statistics test",
+      season: "Spring",
+      careLevel: "Easy",
     });
 
     await adminPage.expectSuccessMessage();
@@ -285,18 +284,18 @@ test.describe('Admin Seasonal Content - Statistics', () => {
 
     // Check if statistics updated (reload might be needed)
     await authenticatedPage.reload();
-    await authenticatedPage.waitForLoadState('networkidle');
+    await authenticatedPage.waitForLoadState("networkidle");
     await adminPage.switchToSeasonalTab();
 
-    const updatedCard = authenticatedPage.locator('text=/Total Items/i').locator('..').locator('..');
+    const updatedCard = authenticatedPage.locator("text=/Total Items/i").locator("..").locator("..");
     const updatedText = await updatedCard.textContent();
-    const updatedCount = parseInt(updatedText?.match(/\d+/)?.[0] || '0');
+    const updatedCount = parseInt(updatedText?.match(/\d+/)?.[0] || "0");
 
     expect(updatedCount).toBeGreaterThan(initialCount);
   });
 });
 
-test.describe('Admin Seasonal Content - Navigation', () => {
+test.describe("Admin Seasonal Content - Navigation", () => {
   let adminPage: AdminHomePage;
 
   test.beforeEach(async ({ authenticatedPage }) => {
@@ -304,7 +303,7 @@ test.describe('Admin Seasonal Content - Navigation', () => {
     await adminPage.goto();
   });
 
-  test('should switch between Hero and Seasonal tabs', async ({ authenticatedPage }) => {
+  test("should switch between Hero and Seasonal tabs", async ({ authenticatedPage: _authenticatedPage }) => {
     // Start on Hero tab
     await adminPage.switchToHeroTab();
     await expect(adminPage.dropzone).toBeVisible();
@@ -318,7 +317,7 @@ test.describe('Admin Seasonal Content - Navigation', () => {
     await expect(adminPage.dropzone).toBeVisible();
   });
 
-  test('should switch between Plants and Tips tabs', async ({ authenticatedPage }) => {
+  test("should switch between Plants and Tips tabs", async ({ authenticatedPage: _authenticatedPage }) => {
     await adminPage.switchToSeasonalTab();
 
     // Go to Plants tab

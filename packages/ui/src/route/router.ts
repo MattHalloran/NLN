@@ -24,8 +24,7 @@ export type ExtractRouteParams<PathType extends string> =
     ? ParamWithOptionalRegExp extends `${infer Param}(${infer _RegExp})`
     ? ExtractRouteOptionalParam<Param>
     : ExtractRouteOptionalParam<ParamWithOptionalRegExp>
-    // eslint-disable-next-line @typescript-eslint/ban-types
-    : {};
+    : Record<string, never>;
 
 export interface RouterProps {
     hook: LocationHook;
@@ -178,7 +177,9 @@ export const Link = (props: LinkProps) => {
             )
                 return;
 
-            onClick && onClick(event);
+            if (onClick) {
+                onClick(event);
+            }
             if (!event.defaultPrevented) {
                 event.preventDefault();
                 navRef.current?.();

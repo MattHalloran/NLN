@@ -1,5 +1,5 @@
-import { test as setup } from '@playwright/test';
-import { setupAuth } from './fixtures/auth';
+import { test as setup } from "@playwright/test";
+import { setupAuth } from "./fixtures/auth";
 
 /**
  * Global Setup: Admin Authentication
@@ -14,6 +14,6 @@ import { setupAuth } from './fixtures/auth';
  * - Cleaner test code (no login boilerplate in each test)
  */
 
-setup('authenticate as admin', async ({ page }) => {
+setup("authenticate as admin", async ({ page }) => {
   await setupAuth(page);
 });

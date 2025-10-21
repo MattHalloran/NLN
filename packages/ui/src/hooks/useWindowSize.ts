@@ -10,7 +10,7 @@ export const useWindowSize = <T>(condition: ({ width, height }: { width: number,
     const checkSizeCondition = useCallback(() => setConditionMet(condition({ width: window.innerWidth, height: window.innerHeight })), [condition]);
 
     useEffect(() => {
-        checkSizeCondition();
+        // State is already initialized, just set up the resize listener
         window.addEventListener("resize", checkSizeCondition);
         return () => window.removeEventListener("resize", checkSizeCondition);
     }, [checkSizeCondition]);

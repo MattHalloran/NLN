@@ -6,7 +6,7 @@ import { BreadcrumbsBase, SnackSeverity } from "components";
 import { PasswordTextField } from "components/inputs/PasswordTextField/PasswordTextField";
 import { BusinessContext } from "contexts/BusinessContext";
 import { useFormik } from "formik";
-import { formSubmit } from "forms/styles";
+import { formSubmit as _formSubmit } from "forms/styles";
 import { EmailIcon } from "icons/common";
 import { useContext } from "react";
 import { useLocation } from "route";
@@ -25,7 +25,7 @@ const emailStartAdornment = {
 };
 
 export const SignUpForm = () => {
-    const { palette, spacing } = useTheme();
+    const { palette, spacing: _spacing } = useTheme();
     const [, setLocation] = useLocation();
     const business = useContext(BusinessContext);
 
@@ -92,7 +92,7 @@ export const SignUpForm = () => {
                 } else {
                     PubSub.get().publishSnack({
                         message: error?.message || "Sign up failed. Please try again.",
-                        severity: SnackSeverity.Error
+                        severity: SnackSeverity.Error,
                     });
                 }
             }
