@@ -73,8 +73,8 @@ export const ServiceShowcase = () => {
     const [hoveredCard, setHoveredCard] = useState<number | null>(null);
     const { data: landingPageData } = useLandingPageContent(true);
 
-    // Get services from settings or use defaults
-    const servicesConfig = landingPageData?.settings?.services;
+    // Get services from content or use defaults
+    const servicesConfig = landingPageData?.content?.services;
     const services = servicesConfig?.items || defaultServices;
     const sectionTitle = servicesConfig?.title || "Our Services";
     const sectionSubtitle =

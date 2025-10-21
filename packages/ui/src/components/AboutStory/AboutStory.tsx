@@ -9,7 +9,7 @@ export const AboutStory = () => {
     const [, setLocation] = useLocation();
     const { data } = useLandingPageContent(true);
 
-    const foundedYear = data?.settings?.companyInfo?.foundedYear || COMPANY_INFO.FoundedYear;
+    const foundedYear = data?.content?.company?.foundedYear || COMPANY_INFO.FoundedYear;
 
     const values = [
         {

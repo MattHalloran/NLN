@@ -16,7 +16,7 @@ import { Save, RotateCcw, Mail } from "lucide-react";
 import { BackButton, PageContainer } from "components";
 import { TopBar } from "components/navigation/TopBar/TopBar";
 import { useLandingPageContent, useUpdateLandingPageSettings } from "api/rest/hooks";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useMemo } from "react";
 
 interface NewsletterSettings {
     title: string;
@@ -36,7 +36,6 @@ export const AdminHomepageNewsletter = () => {
         isActive: true,
     });
     const [originalNewsletter, setOriginalNewsletter] = useState<NewsletterSettings>(newsletter);
-    const [hasChanges, setHasChanges] = useState(false);
     const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: "success" | "error" }>({
         open: false,
         message: "",
@@ -45,18 +44,18 @@ export const AdminHomepageNewsletter = () => {
 
     // Load newsletter settings from landing page content
     useEffect(() => {
-        if (landingPageContent?.settings?.newsletter) {
-            const settings = landingPageContent.settings.newsletter;
+        if (landingPageContent?.content?.newsletter) {
+            const settings = landingPageContent.content.newsletter;
             setNewsletter(settings);
             setOriginalNewsletter(JSON.parse(JSON.stringify(settings)));
         }
     }, [landingPageContent]);
 
-    // Check for unsaved changes
-    useEffect(() => {
-        const changed = JSON.stringify(newsletter) !== JSON.stringify(originalNewsletter);
-        setHasChanges(changed);
-    }, [newsletter, originalNewsletter]);
+    // Check for unsaved changes using useMemo for derived state
+    const hasChanges = useMemo(
+        () => JSON.stringify(newsletter) !== JSON.stringify(originalNewsletter),
+        [newsletter, originalNewsletter]
+    );
 
     const handleSave = async () => {
         try {

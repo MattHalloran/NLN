@@ -55,65 +55,47 @@ async function fetchApi<T>(
 
 // Type definitions for API responses
 export interface LandingPageContent {
-    heroBanners: Array<{
-        id: string;
-        src: string;
-        alt: string;
-        description: string;
-        width: number;
-        height: number;
-        displayOrder: number;
-        isActive: boolean;
-    }>;
-    heroSettings: {
-        autoPlay: boolean;
-        autoPlayDelay: number;
-        showDots: boolean;
-        showArrows: boolean;
-        fadeTransition: boolean;
+    metadata: {
+        version: string;
+        lastUpdated: string;
     };
-    seasonalPlants: Array<{
-        id: string;
-        name: string;
-        description: string;
-        season: string;
-        careLevel: string;
-        icon: string;
-        displayOrder: number;
-        isActive: boolean;
-    }>;
-    plantTips: Array<{
-        id: string;
-        title: string;
-        description: string;
-        category: string;
-        season: string;
-        displayOrder: number;
-        isActive: boolean;
-    }>;
-    settings: {
+    content: {
         hero: {
-            title: string;
-            subtitle: string;
-            description: string;
-            businessHours: string;
-            trustBadges: Array<{
-                icon: string;
-                text: string;
+            banners: Array<{
+                id: string;
+                src: string;
+                alt: string;
+                description: string;
+                width: number;
+                height: number;
+                displayOrder: number;
+                isActive: boolean;
             }>;
-            buttons: Array<{
-                text: string;
-                link: string;
-                type: string;
-            }>;
+            settings: {
+                autoPlay: boolean;
+                autoPlayDelay: number;
+                showDots: boolean;
+                showArrows: boolean;
+                fadeTransition: boolean;
+            };
+            text: {
+                title: string;
+                subtitle: string;
+                description: string;
+                businessHours: string;
+                useContactInfoHours?: boolean;
+                trustBadges: Array<{
+                    icon: string;
+                    text: string;
+                }>;
+                buttons: Array<{
+                    text: string;
+                    link: string;
+                    type: string;
+                }>;
+            };
         };
-        newsletter: {
-            title: string;
-            description: string;
-            disclaimer: string;
-            isActive: boolean;
-        };
-        services?: {
+        services: {
             title: string;
             subtitle: string;
             items: Array<{
@@ -124,14 +106,91 @@ export interface LandingPageContent {
                 url: string;
             }>;
         };
-        companyInfo: {
+        seasonal: {
+            plants: Array<{
+                id: string;
+                name: string;
+                description: string;
+                season: string;
+                careLevel: string;
+                icon: string;
+                displayOrder: number;
+                isActive: boolean;
+            }>;
+            tips: Array<{
+                id: string;
+                title: string;
+                description: string;
+                category: string;
+                season: string;
+                displayOrder: number;
+                isActive: boolean;
+            }>;
+        };
+        newsletter: {
+            title: string;
+            description: string;
+            disclaimer: string;
+            isActive: boolean;
+        };
+        company: {
             foundedYear: number;
             description: string;
         };
+    };
+    contact: {
+        name: string;
+        address: {
+            street: string;
+            city: string;
+            state: string;
+            zip: string;
+            full: string;
+            googleMapsUrl: string;
+        };
+        phone: {
+            display: string;
+            link: string;
+        };
+        fax?: {
+            display: string;
+            link: string;
+        };
+        email: {
+            display: string;
+            link: string;
+        };
+        social: {
+            facebook?: string;
+            instagram?: string;
+            twitter?: string;
+            linkedin?: string;
+        };
+        website: string;
+        hours: string;
+    };
+    theme: {
         colors: {
-            primary: string;
-            secondary: string;
-            accent: string;
+            light: {
+                primary: string;
+                secondary: string;
+                accent: string;
+                background: string;
+                paper: string;
+            };
+            dark: {
+                primary: string;
+                secondary: string;
+                accent: string;
+                background: string;
+                paper: string;
+            };
+        };
+    };
+    layout: {
+        sections: {
+            order: string[];
+            enabled: Record<string, boolean>;
         };
         features: {
             showSeasonalContent: boolean;
@@ -139,48 +198,13 @@ export interface LandingPageContent {
             showSocialProof: boolean;
             enableAnimations: boolean;
         };
-        sections?: {
-            order: string[];
-            enabled: Record<string, boolean>;
-        };
-        abTesting?: {
+    };
+    experiments: {
+        abTesting: {
             enabled: boolean;
             activeTestId: string | null;
         };
     };
-    contactInfo: {
-        business: {
-            BUSINESS_NAME: {
-                Short: string;
-                Long: string;
-            };
-            ADDRESS: {
-                Label: string;
-                Link: string;
-            };
-            PHONE: {
-                Label: string;
-                Link: string;
-            };
-            FAX?: {
-                Label: string;
-                Link: string;
-            };
-            EMAIL: {
-                Label: string;
-                Link: string;
-            };
-            SOCIAL?: {
-                Facebook?: string;
-                Instagram?: string;
-                Twitter?: string;
-                LinkedIn?: string;
-            };
-            WEBSITE?: string;
-        };
-        hours: string;
-    };
-    lastUpdated: string;
 }
 
 // A/B Testing types
@@ -465,9 +489,20 @@ export const restApi = {
                 description: string;
             };
             colors: {
-                primary: string;
-                secondary: string;
-                accent: string;
+                light: {
+                    primary: string;
+                    secondary: string;
+                    accent: string;
+                    background: string;
+                    paper: string;
+                };
+                dark: {
+                    primary: string;
+                    secondary: string;
+                    accent: string;
+                    background: string;
+                    paper: string;
+                };
             };
             features: {
                 showSeasonalContent: boolean;

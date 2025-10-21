@@ -26,7 +26,7 @@ export const LocationVisit = () => {
     // Fetch business hours from API
     const { data } = useLandingPageContent(true);
 
-    const foundedYear = data?.settings?.companyInfo?.foundedYear || COMPANY_INFO.FoundedYear;
+    const foundedYear = data?.content?.company?.foundedYear || COMPANY_INFO.FoundedYear;
 
     const visitInfo = [
         {
@@ -56,8 +56,8 @@ export const LocationVisit = () => {
     ];
 
     // Get real business hours from API or use fallback
-    const businessHours = data?.contactInfo?.hours
-        ? parseBusinessHours(data.contactInfo.hours)
+    const businessHours = data?.contact?.hours
+        ? parseBusinessHours(data.contact.hours)
         : [];
     const hours =
         businessHours.length > 0

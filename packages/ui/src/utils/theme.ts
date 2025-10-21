@@ -1,4 +1,4 @@
-import { createTheme, lighten, alpha } from "@mui/material";
+import { createTheme, lighten, alpha, PaletteColor, PaletteColorOptions } from "@mui/material";
 
 // Define custom theme properties
 declare module "@mui/material/styles/createPalette" {
@@ -236,7 +236,13 @@ export const themes = {
 };
 
 // Create a dynamic theme with custom colors from settings
-export const createDynamicTheme = (mode: "light" | "dark", customColors?: { primary?: string; secondary?: string; accent?: string }) => {
+export const createDynamicTheme = (mode: "light" | "dark", customColors?: {
+    primary?: string;
+    secondary?: string;
+    accent?: string;
+    background?: string;
+    paper?: string;
+}) => {
     const baseTheme = mode === "light" ? lightPalette : darkPalette;
 
     if (!customColors) {
@@ -263,6 +269,24 @@ export const createDynamicTheme = (mode: "light" | "dark", customColors?: { prim
             dark: lighten(customColors.accent, -0.3),
             contrastText: "#ffffff",
         } : baseTheme.accent,
+        background: {
+            ...baseTheme.background,
+            default: customColors.background || baseTheme.background.default,
+            paper: customColors.paper || baseTheme.background.paper,
+        },
+        admin: {
+            ...baseTheme.admin,
+            // Update admin gradient to use custom primary/secondary if provided
+            gradientPrimary: customColors.primary
+                ? `linear-gradient(135deg, ${lighten(customColors.primary, 0.3)} 0%, ${customColors.primary} 100%)`
+                : baseTheme.admin.gradientPrimary,
+            gradientSecondary: customColors.secondary
+                ? `linear-gradient(135deg, ${lighten(customColors.secondary, 0.3)} 0%, ${customColors.secondary} 100%)`
+                : baseTheme.admin.gradientSecondary,
+            // Update admin colors based on primary
+            cardHover: customColors.primary ? alpha(customColors.primary, 0.04) : baseTheme.admin.cardHover,
+            iconBackground: customColors.primary ? alpha(customColors.primary, mode === "light" ? 0.1 : 0.15) : baseTheme.admin.iconBackground,
+        },
     };
 
     return createTheme({

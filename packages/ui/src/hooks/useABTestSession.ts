@@ -66,7 +66,7 @@ export function useABTestSession(): ABTestSession {
 
     const session = useMemo<ABTestSession>(() => {
         // Check if A/B testing is enabled
-        const abTesting = landingPageData?.settings?.abTesting;
+        const abTesting = landingPageData?.experiments?.abTesting;
 
         if (!abTesting?.enabled || !abTesting?.activeTestId) {
             // No active test
@@ -122,7 +122,7 @@ export function useVariantConfig() {
         async function fetchVariantConfig() {
             // If no active test, use default configuration
             if (!session.testId || !session.variantId) {
-                setVariantConfig(landingPageData?.settings?.sections || null);
+                setVariantConfig(landingPageData?.layout?.sections || null);
                 return;
             }
 
@@ -133,7 +133,7 @@ export function useVariantConfig() {
 
                 if (!response.ok) {
                     console.warn(`Failed to fetch A/B test ${session.testId}, using default config`);
-                    setVariantConfig(landingPageData?.settings?.sections || null);
+                    setVariantConfig(landingPageData?.layout?.sections || null);
                     return;
                 }
 
@@ -146,12 +146,12 @@ export function useVariantConfig() {
                     setVariantConfig(variant.sections);
                 } else {
                     // Fallback to default config if variant doesn't have sections
-                    setVariantConfig(landingPageData?.settings?.sections || null);
+                    setVariantConfig(landingPageData?.layout?.sections || null);
                 }
             } catch (error) {
                 console.error("Error fetching variant configuration:", error);
                 // Fallback to default config on error
-                setVariantConfig(landingPageData?.settings?.sections || null);
+                setVariantConfig(landingPageData?.layout?.sections || null);
             } finally {
                 setLoading(false);
             }

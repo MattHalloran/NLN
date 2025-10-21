@@ -32,7 +32,7 @@ export function App() {
     const isMobile = useWindowSize(({ width }) => width <= theme.breakpoints.values.md);
     
     // Using REST API for landing page content
-    const { data: landingPageData } = useLandingPageContent(true);
+    const { data: landingPageData, refetch: refetchLandingPage } = useLandingPageContent(true);
 
     const { mutate: login } = useLogin();
     const [,] = useLocation();
@@ -43,11 +43,26 @@ export function App() {
     }, []);
 
     useEffect(() => {
-        if (landingPageData?.contactInfo) {
-            const { business, hours } = landingPageData.contactInfo;
+        if (landingPageData?.contact) {
+            // Extract business data from new contact structure
             const data = {
-                ...business,
-                hours,
+                BUSINESS_NAME: {
+                    Short: landingPageData.contact.name,
+                    Long: landingPageData.contact.name, // Same as short for now
+                },
+                ADDRESS: {
+                    Label: landingPageData.contact.address?.full || "",
+                    Link: landingPageData.contact.address?.googleMapsUrl || "",
+                },
+                PHONE: {
+                    Label: landingPageData.contact.phone?.display || "",
+                    Link: landingPageData.contact.phone?.link || "",
+                },
+                EMAIL: {
+                    Label: landingPageData.contact.email?.display || "",
+                    Link: landingPageData.contact.email?.link || "",
+                },
+                hours: landingPageData.contact.hours,
             };
             setBusiness(data);
         }
@@ -59,12 +74,14 @@ export function App() {
             ? session.theme
             : "light";
 
-        // Apply custom brand colors from settings if available
-        const customColors = landingPageData?.settings?.colors;
+        // Apply custom brand colors from theme if available
+        const themeColors = landingPageData?.theme?.colors;
+        // Extract colors for the current theme mode (new format supports light/dark separately)
+        const customColors = themeColors?.[themeMode] || themeColors;
         const dynamicTheme = createDynamicTheme(themeMode, customColors);
 
         setTheme(dynamicTheme);
-    }, [session, landingPageData?.settings?.colors]);
+    }, [session, landingPageData?.theme?.colors]);
 
     const checkLogin = useCallback((session?: Session) => {
         if (session) {
@@ -98,6 +115,10 @@ export function App() {
                 setTheme(themes.light);
             }
         });
+        // Handle landing page content updates (e.g., when branding settings change)
+        const landingPageSub = PubSub.get().subscribeLandingPageUpdated(() => {
+            refetchLandingPage();
+        });
         // Handle session updates
         const sessionSub = PubSub.get().subscribeSession((session) => {
             // If undefined or empty, set session to published data
@@ -129,6 +150,7 @@ export function App() {
             PubSub.get().unsubscribe(loadingSub);
             PubSub.get().unsubscribe(businessSub);
             PubSub.get().unsubscribe(themeSub);
+            PubSub.get().unsubscribe(landingPageSub);
             PubSub.get().unsubscribe(sessionSub);
             PubSub.get().unsubscribe(sideMenuPub);
         });

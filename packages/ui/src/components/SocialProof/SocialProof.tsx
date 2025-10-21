@@ -28,7 +28,7 @@ export const SocialProof = () => {
     const business = useContext(BusinessContext);
     const { data } = useLandingPageContent(true);
 
-    const foundedYear = data?.settings?.companyInfo?.foundedYear || COMPANY_INFO.FoundedYear;
+    const foundedYear = data?.content?.company?.foundedYear || COMPANY_INFO.FoundedYear;
 
     const stats = useMemo(() => [
         { number: `${new Date().getFullYear() - foundedYear}+`, label: "Years of Excellence", subtext: `Since ${foundedYear}` },

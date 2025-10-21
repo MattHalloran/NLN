@@ -105,7 +105,7 @@ export const AdminSeasonalContentPage = () => {
                 season: "Spring",
                 careLevel: "Easy",
                 icon: "leaf",
-                displayOrder: data?.seasonalPlants?.length || 0,
+                displayOrder: data?.content?.seasonal?.plants?.length || 0,
                 isActive: true,
             },
         );
@@ -120,7 +120,7 @@ export const AdminSeasonalContentPage = () => {
                 description: "",
                 category: "General",
                 season: "Year-round",
-                displayOrder: data?.plantTips?.length || 0,
+                displayOrder: data?.content?.seasonal?.tips?.length || 0,
                 isActive: true,
             },
         );
@@ -131,7 +131,7 @@ export const AdminSeasonalContentPage = () => {
         if (!editingPlant) return;
 
         try {
-            const currentPlants = data?.seasonalPlants || [];
+            const currentPlants = data?.content?.seasonal?.plants || [];
             let updatedPlants;
 
             if (editingPlant.id) {
@@ -164,7 +164,7 @@ export const AdminSeasonalContentPage = () => {
         if (!editingTip) return;
 
         try {
-            const currentTips = data?.plantTips || [];
+            const currentTips = data?.content?.seasonal?.tips || [];
             let updatedTips;
 
             if (editingTip.id) {
@@ -193,8 +193,8 @@ export const AdminSeasonalContentPage = () => {
         }
     };
 
-    const plants = data?.seasonalPlants || [];
-    const tips = data?.plantTips || [];
+    const plants = data?.content?.seasonal?.plants || [];
+    const tips = data?.content?.seasonal?.tips || [];
 
     const handlePlantDelete = async (plant: SeasonalPlant) => {
         if (!window.confirm(`Delete ${plant.name}?`)) return;

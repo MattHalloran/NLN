@@ -45,9 +45,9 @@ export const InteractiveElements = () => {
     // Fetch landing page content using REST API
     const { data } = useLandingPageContent(true);
 
-    const seasonalPlants = data?.seasonalPlants || [];
-    const plantTips = data?.plantTips || [];
-    const settings = data?.settings;
+    const seasonalPlants = data?.content?.seasonal?.plants || [];
+    const plantTips = data?.content?.seasonal?.tips || [];
+    const newsletterSettings = data?.content?.newsletter;
 
     // Get unique categories from tips
     const tipCategories = ["All", ...Array.from(new Set(plantTips.map(tip => tip.category)))];
@@ -365,7 +365,7 @@ export const InteractiveElements = () => {
                 </Grid>
 
                 {/* Newsletter Signup */}
-                {settings?.newsletter?.isActive && (
+                {newsletterSettings?.isActive && (
                     <Box sx={{
                         mt: 8,
                         p: 4,
@@ -377,11 +377,11 @@ export const InteractiveElements = () => {
                         <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 1, mb: 2 }}>
                             <Sprout size={24} color="white" />
                             <Typography variant="h5" sx={{ fontWeight: 600 }}>
-                                {settings?.newsletter?.title || "Stay in the Grow"}
+                                {newsletterSettings?.title || "Stay in the Grow"}
                             </Typography>
                         </Box>
                         <Typography variant="body1" sx={{ mb: 3, opacity: 0.9 }}>
-                            {settings?.newsletter?.description || "Get seasonal care tips, new arrival notifications, and exclusive offers delivered to your inbox"}
+                            {newsletterSettings?.description || "Get seasonal care tips, new arrival notifications, and exclusive offers delivered to your inbox"}
                         </Typography>
 
                         {!subscribed ? (
@@ -438,7 +438,7 @@ export const InteractiveElements = () => {
                         )}
 
                         <Typography variant="caption" sx={{ display: "block", mt: 2, opacity: 0.8 }}>
-                            {settings?.newsletter?.disclaimer || "No spam, just helpful gardening tips. Unsubscribe anytime."}
+                            {newsletterSettings?.disclaimer || "No spam, just helpful gardening tips. Unsubscribe anytime."}
                         </Typography>
                     </Box>
                 )}

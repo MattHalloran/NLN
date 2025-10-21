@@ -105,7 +105,7 @@ export const AdminContactPage = () => {
 
     // Parse existing hours from markdown on load
     useEffect(() => {
-        if (!landingPageData?.contactInfo?.hours) {
+        if (!landingPageData?.contact?.hours) {
             // Initialize with default hours
             const defaultHours = DAYS_OF_WEEK.map((day) => ({
                 day,
@@ -121,11 +121,11 @@ export const AdminContactPage = () => {
             return;
         }
 
-        setMarkdownHours(landingPageData.contactInfo.hours);
+        setMarkdownHours(landingPageData.contact.hours);
 
         // Parse markdown table into structured data
         try {
-            const lines = landingPageData.contactInfo.hours
+            const lines = landingPageData.contact.hours
                 .split("\n")
                 .filter((line) => line.trim());
             const parsedHours: DayHours[] = [];
@@ -307,7 +307,7 @@ export const AdminContactPage = () => {
             }));
             setDayHours(defaultHours);
         }
-    }, [landingPageData?.contactInfo?.hours]);
+    }, [landingPageData?.contact?.hours]);
 
     const updateDayHours = (index: number, field: keyof DayHours, value: any) => {
         const newHours = [...dayHours];
@@ -483,9 +483,9 @@ export const AdminContactPage = () => {
     };
 
     const revertHours = () => {
-        if (landingPageData?.contactInfo?.hours) {
+        if (landingPageData?.contact?.hours) {
             // Re-parse from original business hours using the same logic as useEffect
-            const lines = landingPageData.contactInfo.hours
+            const lines = landingPageData.contact.hours
                 .split("\n")
                 .filter((line) => line.trim());
             const parsedHours: DayHours[] = [];
@@ -651,7 +651,7 @@ export const AdminContactPage = () => {
 
             setDayHours(finalHours);
             setBusinessNotes(parsedNotes);
-            setMarkdownHours(landingPageData.contactInfo.hours);
+            setMarkdownHours(landingPageData.contact.hours);
         }
     };
 

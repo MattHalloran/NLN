@@ -20,6 +20,7 @@ export const Pubs = {
     SideMenu: "sideMenu",
     Snack: "snack",
     Theme: "theme",
+    LandingPageUpdated: "landingPageUpdated",
 };
 export type PubsKey = ValueOf<typeof Pubs>;
 
@@ -28,7 +29,7 @@ export type SnackPub = {
     severity: SnackSeverity;
     data?: unknown;
     buttonText?: string;
-    buttonClicked?: (event?: Event) => unknown;
+    buttonClicked?: (event?: React.MouseEvent) => unknown;
     autoHideDuration?: number;
 }
 
@@ -81,8 +82,10 @@ export class PubSub {
     publishTheme(theme: "light" | "dark") {
         this.publish(Pubs.Theme, theme);
     }
+    publishLandingPageUpdated() {
+        this.publish(Pubs.LandingPageUpdated);
+    }
 
-    // eslint-disable-next-line @typescript-eslint/ban-types
     subscribe(key: PubsKey, subscriber: (data?: any) => void): symbol {
         // Create unique token, so we can unsubscribe later
         const token = Symbol(key);
@@ -118,6 +121,9 @@ export class PubSub {
     }
     subscribeTheme(subscriber: (theme: "light" | "dark") => void) {
         return this.subscribe(Pubs.Theme, subscriber);
+    }
+    subscribeLandingPageUpdated(subscriber: () => void) {
+        return this.subscribe(Pubs.LandingPageUpdated, subscriber);
     }
 
     unsubscribe(token: symbol) {

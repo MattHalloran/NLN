@@ -105,7 +105,7 @@ export const AdminHomepageSeasonal = () => {
                 season: "Spring",
                 careLevel: "Easy",
                 icon: "leaf",
-                displayOrder: seasonalData?.seasonalPlants?.length || 0,
+                displayOrder: seasonalData?.content?.seasonal?.plants?.length || 0,
                 isActive: true,
             },
         );
@@ -120,7 +120,7 @@ export const AdminHomepageSeasonal = () => {
                 description: "",
                 category: "General",
                 season: "Year-round",
-                displayOrder: seasonalData?.plantTips?.length || 0,
+                displayOrder: seasonalData?.content?.seasonal?.tips?.length || 0,
                 isActive: true,
             },
         );
@@ -132,7 +132,7 @@ export const AdminHomepageSeasonal = () => {
 
         try {
             setIsLoading(true);
-            const currentPlants = seasonalData?.seasonalPlants || [];
+            const currentPlants = seasonalData?.content?.seasonal?.plants || [];
             let updatedPlants;
 
             if (editingPlant.id) {
@@ -174,7 +174,7 @@ export const AdminHomepageSeasonal = () => {
 
         try {
             setIsLoading(true);
-            const currentTips = seasonalData?.plantTips || [];
+            const currentTips = seasonalData?.content?.seasonal?.tips || [];
             let updatedTips;
 
             if (editingTip.id) {
@@ -209,8 +209,8 @@ export const AdminHomepageSeasonal = () => {
         }
     };
 
-    const plants = seasonalData?.seasonalPlants || [];
-    const tips = seasonalData?.plantTips || [];
+    const plants = seasonalData?.content?.seasonal?.plants || [];
+    const tips = seasonalData?.content?.seasonal?.tips || [];
     const activePlants = plants.filter((p: SeasonalPlant) => p.isActive).length;
     const activeTips = tips.filter((t: PlantTip) => t.isActive).length;
 

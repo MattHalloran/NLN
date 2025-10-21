@@ -40,9 +40,10 @@ export const Hero = ({ text = DEFAULT_HERO_TEXT, subtext = DEFAULT_HERO_SUBTEXT 
     // Fetch unified landing page content using REST API
     const { data } = useLandingPageContent(true);
 
-    const heroBanners = data?.heroBanners || [];
-    const heroSettings = data?.heroSettings;
-    const settings = data?.settings;
+    const heroBanners = data?.content?.hero?.banners || [];
+    const heroSettings = data?.content?.hero?.settings;
+    const heroText = data?.content?.hero?.text;
+    const companyInfo = data?.content?.company;
 
     // Convert hero banners to the format expected by Slider
     const images = heroBanners.map((banner) => ({
@@ -106,8 +107,8 @@ export const Hero = ({ text = DEFAULT_HERO_TEXT, subtext = DEFAULT_HERO_SUBTEXT 
                     }}
                 >
                     {(
-                        settings?.hero?.trustBadges || [
-                            { icon: "users", text: `Family Owned Since ${settings?.companyInfo?.foundedYear || COMPANY_INFO.FoundedYear}` },
+                        heroText?.trustBadges || [
+                            { icon: "users", text: `Family Owned Since ${companyInfo?.foundedYear || COMPANY_INFO.FoundedYear}` },
                             { icon: "award", text: "Licensed & Certified" },
                             { icon: "leaf", text: "Expert Plant Care" },
                         ]
@@ -144,7 +145,7 @@ export const Hero = ({ text = DEFAULT_HERO_TEXT, subtext = DEFAULT_HERO_SUBTEXT 
                         fontWeight: 800,
                     }}
                 >
-                    {settings?.hero?.title || text}
+                    {heroText?.title || text}
                 </Typography>
 
                 <Typography
@@ -158,7 +159,7 @@ export const Hero = ({ text = DEFAULT_HERO_TEXT, subtext = DEFAULT_HERO_SUBTEXT 
                         fontWeight: 500,
                     }}
                 >
-                    {settings?.hero?.subtitle || subtext}
+                    {heroText?.subtitle || subtext}
                 </Typography>
 
                 {/* Value proposition */}
@@ -175,7 +176,7 @@ export const Hero = ({ text = DEFAULT_HERO_TEXT, subtext = DEFAULT_HERO_SUBTEXT 
                         opacity: 0.95,
                     }}
                 >
-                    {settings?.hero?.description ||
+                    {heroText?.description ||
                         "Serving the community for over 30 years with the finest selection of plants, trees, and expert gardening advice"}
                 </Typography>
 
@@ -193,7 +194,7 @@ export const Hero = ({ text = DEFAULT_HERO_TEXT, subtext = DEFAULT_HERO_SUBTEXT 
                     }}
                 >
                     {(
-                        settings?.hero?.buttons || [
+                        heroText?.buttons || [
                             {
                                 text: "Browse Plants",
                                 link: "https://newlife.online-orders.sbiteam.com/",
@@ -267,9 +268,9 @@ export const Hero = ({ text = DEFAULT_HERO_TEXT, subtext = DEFAULT_HERO_SUBTEXT 
                             letterSpacing: "0.02em",
                         }}
                     >
-                        {(settings?.hero as any)?.useContactInfoHours && data?.contactInfo?.hours
-                            ? getShortBusinessHours(data.contactInfo.hours)
-                            : settings?.hero?.businessHours || "Contact us for hours"}
+                        {heroText?.useContactInfoHours && data?.contact?.hours
+                            ? getShortBusinessHours(data.contact.hours)
+                            : heroText?.businessHours || "Contact us for hours"}
                     </Typography>
                 </Box>
             </Box>

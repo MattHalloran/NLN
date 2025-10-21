@@ -38,10 +38,10 @@ const LogoComponent = ({
                 alignItems: "center",
                 marginRight: isLeftHanded ? 1 : "auto",
                 marginLeft: isLeftHanded ? "auto" : 1,
+                cursor: "pointer",
             }}
         >
             <Box
-                onClick={onClick}
                 sx={{
                     padding: 0,
                     display: "flex",

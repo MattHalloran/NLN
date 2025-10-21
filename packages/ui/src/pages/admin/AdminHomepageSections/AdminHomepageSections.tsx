@@ -73,8 +73,8 @@ export const AdminHomepageSections = () => {
 
     // Load section configuration
     useEffect(() => {
-        if (landingPageContent?.settings?.sections) {
-            const config = landingPageContent.settings.sections;
+        if (landingPageContent?.layout?.sections) {
+            const config = landingPageContent.layout.sections;
             setSectionConfig(config);
             setOriginalSectionConfig(JSON.parse(JSON.stringify(config)));
         }

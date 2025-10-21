@@ -3,33 +3,47 @@ import { readFileSync, existsSync } from "fs";
 import { join } from "path";
 
 const DATA_PATH = join(__dirname, "..");
-const ASSETS_PATH = join(process.cwd(), "../../assets/public");
 
 describe("Data File Integrity Tests", () => {
-    describe("Hero Banners", () => {
-        test("hero-banners.json exists and is valid JSON", () => {
-            const filePath = join(DATA_PATH, "hero-banners.json");
+    describe("Landing Page Content", () => {
+        test("landing-page-content.json exists and is valid JSON", () => {
+            const filePath = join(DATA_PATH, "landing-page-content.json");
             expect(existsSync(filePath)).toBe(true);
 
             const content = readFileSync(filePath, "utf8");
             expect(() => JSON.parse(content)).not.toThrow();
         });
 
-        test("hero-banners.json has correct structure", () => {
-            const filePath = join(DATA_PATH, "hero-banners.json");
+        test("landing-page-content.json has correct top-level structure", () => {
+            const filePath = join(DATA_PATH, "landing-page-content.json");
             const data = JSON.parse(readFileSync(filePath, "utf8"));
 
-            expect(data).toHaveProperty("banners");
-            expect(data).toHaveProperty("settings");
-            expect(Array.isArray(data.banners)).toBe(true);
-            expect(typeof data.settings).toBe("object");
+            expect(data).toHaveProperty("metadata");
+            expect(data).toHaveProperty("content");
+            expect(data).toHaveProperty("contact");
+            expect(data).toHaveProperty("theme");
+            expect(data).toHaveProperty("layout");
+            expect(data).toHaveProperty("experiments");
+        });
+    });
+
+    describe("Hero Banners", () => {
+        test("hero banners exist in landing-page-content.json", () => {
+            const filePath = join(DATA_PATH, "landing-page-content.json");
+            const data = JSON.parse(readFileSync(filePath, "utf8"));
+
+            expect(data.content).toHaveProperty("hero");
+            expect(data.content.hero).toHaveProperty("banners");
+            expect(data.content.hero).toHaveProperty("settings");
+            expect(Array.isArray(data.content.hero.banners)).toBe(true);
+            expect(typeof data.content.hero.settings).toBe("object");
         });
 
         test("all hero banners have required fields", () => {
-            const filePath = join(DATA_PATH, "hero-banners.json");
+            const filePath = join(DATA_PATH, "landing-page-content.json");
             const data = JSON.parse(readFileSync(filePath, "utf8"));
 
-            data.banners.forEach((banner: any, index: number) => {
+            data.content.hero.banners.forEach((banner: any, index: number) => {
                 expect(banner, `Banner ${index} missing id`).toHaveProperty("id");
                 expect(banner, `Banner ${index} missing src`).toHaveProperty("src");
                 expect(banner, `Banner ${index} missing alt`).toHaveProperty("alt");
@@ -50,78 +64,71 @@ describe("Data File Integrity Tests", () => {
         });
 
         test("hero banner display orders are unique", () => {
-            const filePath = join(DATA_PATH, "hero-banners.json");
+            const filePath = join(DATA_PATH, "landing-page-content.json");
             const data = JSON.parse(readFileSync(filePath, "utf8"));
 
-            const orders = data.banners.map((b: any) => b.displayOrder);
+            const orders = data.content.hero.banners.map((b: any) => b.displayOrder);
             const uniqueOrders = new Set(orders);
 
             expect(uniqueOrders.size).toBe(orders.length);
         });
 
         test("hero banner IDs are unique", () => {
-            const filePath = join(DATA_PATH, "hero-banners.json");
+            const filePath = join(DATA_PATH, "landing-page-content.json");
             const data = JSON.parse(readFileSync(filePath, "utf8"));
 
-            const ids = data.banners.map((b: any) => b.id);
+            const ids = data.content.hero.banners.map((b: any) => b.id);
             const uniqueIds = new Set(ids);
 
             expect(uniqueIds.size).toBe(ids.length);
         });
 
         test("hero settings have required fields", () => {
-            const filePath = join(DATA_PATH, "hero-banners.json");
+            const filePath = join(DATA_PATH, "landing-page-content.json");
             const data = JSON.parse(readFileSync(filePath, "utf8"));
 
-            expect(data.settings).toHaveProperty("autoPlay");
-            expect(data.settings).toHaveProperty("autoPlayDelay");
-            expect(data.settings).toHaveProperty("showDots");
-            expect(data.settings).toHaveProperty("showArrows");
-            expect(data.settings).toHaveProperty("fadeTransition");
+            expect(data.content.hero.settings).toHaveProperty("autoPlay");
+            expect(data.content.hero.settings).toHaveProperty("autoPlayDelay");
+            expect(data.content.hero.settings).toHaveProperty("showDots");
+            expect(data.content.hero.settings).toHaveProperty("showArrows");
+            expect(data.content.hero.settings).toHaveProperty("fadeTransition");
 
-            expect(typeof data.settings.autoPlay).toBe("boolean");
-            expect(typeof data.settings.autoPlayDelay).toBe("number");
-            expect(typeof data.settings.showDots).toBe("boolean");
-            expect(typeof data.settings.showArrows).toBe("boolean");
-            expect(typeof data.settings.fadeTransition).toBe("boolean");
+            expect(typeof data.content.hero.settings.autoPlay).toBe("boolean");
+            expect(typeof data.content.hero.settings.autoPlayDelay).toBe("number");
+            expect(typeof data.content.hero.settings.showDots).toBe("boolean");
+            expect(typeof data.content.hero.settings.showArrows).toBe("boolean");
+            expect(typeof data.content.hero.settings.fadeTransition).toBe("boolean");
 
-            expect(data.settings.autoPlayDelay).toBeGreaterThan(0);
+            expect(data.content.hero.settings.autoPlayDelay).toBeGreaterThan(0);
         });
 
         test("at least one hero banner is active", () => {
-            const filePath = join(DATA_PATH, "hero-banners.json");
+            const filePath = join(DATA_PATH, "landing-page-content.json");
             const data = JSON.parse(readFileSync(filePath, "utf8"));
 
-            const activeBanners = data.banners.filter((b: any) => b.isActive);
+            const activeBanners = data.content.hero.banners.filter((b: any) => b.isActive);
             expect(activeBanners.length).toBeGreaterThan(0);
         });
     });
 
     describe("Seasonal Plants", () => {
-        test("seasonal-plants.json exists and is valid JSON", () => {
-            const filePath = join(DATA_PATH, "seasonal-plants.json");
-            expect(existsSync(filePath)).toBe(true);
-
-            const content = readFileSync(filePath, "utf8");
-            expect(() => JSON.parse(content)).not.toThrow();
-        });
-
-        test("seasonal-plants.json has correct structure", () => {
-            const filePath = join(DATA_PATH, "seasonal-plants.json");
+        test("seasonal plants exist in landing-page-content.json", () => {
+            const filePath = join(DATA_PATH, "landing-page-content.json");
             const data = JSON.parse(readFileSync(filePath, "utf8"));
 
-            expect(data).toHaveProperty("plants");
-            expect(Array.isArray(data.plants)).toBe(true);
+            expect(data.content).toHaveProperty("seasonal");
+            expect(data.content.seasonal).toHaveProperty("plants");
+            expect(Array.isArray(data.content.seasonal.plants)).toBe(true);
         });
 
         test("all plants have required fields", () => {
-            const filePath = join(DATA_PATH, "seasonal-plants.json");
+            const filePath = join(DATA_PATH, "landing-page-content.json");
             const data = JSON.parse(readFileSync(filePath, "utf8"));
 
             const validSeasons = ["Spring", "Summer", "Fall", "Winter"];
             const validCareLevels = ["Easy", "Medium", "Advanced"];
 
-            data.plants.forEach((plant: any, index: number) => {
+            data.content.seasonal.plants.forEach((plant: any, index: number) => {
                 expect(plant, `Plant ${index} missing id`).toHaveProperty("id");
                 expect(plant, `Plant ${index} missing name`).toHaveProperty("name");
                 expect(plant, `Plant ${index} missing description`).toHaveProperty("description");
@@ -151,20 +158,20 @@ describe("Data File Integrity Tests", () => {
         });
 
         test("plant IDs are unique", () => {
-            const filePath = join(DATA_PATH, "seasonal-plants.json");
+            const filePath = join(DATA_PATH, "landing-page-content.json");
             const data = JSON.parse(readFileSync(filePath, "utf8"));
 
-            const ids = data.plants.map((p: any) => p.id);
+            const ids = data.content.seasonal.plants.map((p: any) => p.id);
             const uniqueIds = new Set(ids);
 
             expect(uniqueIds.size).toBe(ids.length);
         });
 
         test("plant display orders are unique", () => {
-            const filePath = join(DATA_PATH, "seasonal-plants.json");
+            const filePath = join(DATA_PATH, "landing-page-content.json");
             const data = JSON.parse(readFileSync(filePath, "utf8"));
 
-            const orders = data.plants.map((p: any) => p.displayOrder);
+            const orders = data.content.seasonal.plants.map((p: any) => p.displayOrder);
             const uniqueOrders = new Set(orders);
 
             expect(uniqueOrders.size).toBe(orders.length);
@@ -172,30 +179,23 @@ describe("Data File Integrity Tests", () => {
     });
 
     describe("Plant Tips", () => {
-        test("plant-tips.json exists and is valid JSON", () => {
-            const filePath = join(DATA_PATH, "plant-tips.json");
-            expect(existsSync(filePath)).toBe(true);
-
-            const content = readFileSync(filePath, "utf8");
-            expect(() => JSON.parse(content)).not.toThrow();
-        });
-
-        test("plant-tips.json has correct structure", () => {
-            const filePath = join(DATA_PATH, "plant-tips.json");
+        test("plant tips exist in landing-page-content.json", () => {
+            const filePath = join(DATA_PATH, "landing-page-content.json");
             const data = JSON.parse(readFileSync(filePath, "utf8"));
 
-            expect(data).toHaveProperty("tips");
-            expect(Array.isArray(data.tips)).toBe(true);
+            expect(data.content).toHaveProperty("seasonal");
+            expect(data.content.seasonal).toHaveProperty("tips");
+            expect(Array.isArray(data.content.seasonal.tips)).toBe(true);
         });
 
         test("all tips have required fields", () => {
-            const filePath = join(DATA_PATH, "plant-tips.json");
+            const filePath = join(DATA_PATH, "landing-page-content.json");
             const data = JSON.parse(readFileSync(filePath, "utf8"));
 
             const validSeasons = ["Spring", "Summer", "Fall", "Winter", "Year-round"];
             const validCategories = ["Watering", "Fertilizing", "Pruning", "Pest Control", "General"];
 
-            data.tips.forEach((tip: any, index: number) => {
+            data.content.seasonal.tips.forEach((tip: any, index: number) => {
                 expect(tip, `Tip ${index} missing id`).toHaveProperty("id");
                 expect(tip, `Tip ${index} missing title`).toHaveProperty("title");
                 expect(tip, `Tip ${index} missing description`).toHaveProperty("description");
@@ -223,164 +223,147 @@ describe("Data File Integrity Tests", () => {
         });
 
         test("tip IDs are unique", () => {
-            const filePath = join(DATA_PATH, "plant-tips.json");
+            const filePath = join(DATA_PATH, "landing-page-content.json");
             const data = JSON.parse(readFileSync(filePath, "utf8"));
 
-            const ids = data.tips.map((t: any) => t.id);
+            const ids = data.content.seasonal.tips.map((t: any) => t.id);
             const uniqueIds = new Set(ids);
 
             expect(uniqueIds.size).toBe(ids.length);
         });
 
         test("tip display orders are unique", () => {
-            const filePath = join(DATA_PATH, "plant-tips.json");
+            const filePath = join(DATA_PATH, "landing-page-content.json");
             const data = JSON.parse(readFileSync(filePath, "utf8"));
 
-            const orders = data.tips.map((t: any) => t.displayOrder);
+            const orders = data.content.seasonal.tips.map((t: any) => t.displayOrder);
             const uniqueOrders = new Set(orders);
 
             expect(uniqueOrders.size).toBe(orders.length);
         });
     });
 
-    describe("Landing Page Settings", () => {
-        test("landing-page-settings.json exists and is valid JSON", () => {
-            const filePath = join(DATA_PATH, "landing-page-settings.json");
-            expect(existsSync(filePath)).toBe(true);
-
-            const content = readFileSync(filePath, "utf8");
-            expect(() => JSON.parse(content)).not.toThrow();
-        });
-
-        test("landing-page-settings.json has required sections", () => {
-            const filePath = join(DATA_PATH, "landing-page-settings.json");
+    describe("Content Settings", () => {
+        test("hero text section has required fields", () => {
+            const filePath = join(DATA_PATH, "landing-page-content.json");
             const data = JSON.parse(readFileSync(filePath, "utf8"));
 
-            expect(data).toHaveProperty("hero");
-            expect(data).toHaveProperty("newsletter");
-            expect(data).toHaveProperty("companyInfo");
-            expect(data).toHaveProperty("features");
-        });
+            expect(data.content.hero).toHaveProperty("text");
+            expect(data.content.hero.text).toHaveProperty("title");
+            expect(data.content.hero.text).toHaveProperty("subtitle");
+            expect(data.content.hero.text).toHaveProperty("description");
+            expect(data.content.hero.text).toHaveProperty("trustBadges");
+            expect(data.content.hero.text).toHaveProperty("buttons");
 
-        test("hero section has required fields", () => {
-            const filePath = join(DATA_PATH, "landing-page-settings.json");
-            const data = JSON.parse(readFileSync(filePath, "utf8"));
-
-            expect(data.hero).toHaveProperty("title");
-            expect(data.hero).toHaveProperty("subtitle");
-            expect(data.hero).toHaveProperty("description");
-            expect(data.hero).toHaveProperty("trustBadges");
-            expect(data.hero).toHaveProperty("buttons");
-
-            expect(typeof data.hero.title).toBe("string");
-            expect(typeof data.hero.subtitle).toBe("string");
-            expect(typeof data.hero.description).toBe("string");
-            expect(Array.isArray(data.hero.trustBadges)).toBe(true);
-            expect(Array.isArray(data.hero.buttons)).toBe(true);
+            expect(typeof data.content.hero.text.title).toBe("string");
+            expect(typeof data.content.hero.text.subtitle).toBe("string");
+            expect(typeof data.content.hero.text.description).toBe("string");
+            expect(Array.isArray(data.content.hero.text.trustBadges)).toBe(true);
+            expect(Array.isArray(data.content.hero.text.buttons)).toBe(true);
         });
 
         test("newsletter section has required fields", () => {
-            const filePath = join(DATA_PATH, "landing-page-settings.json");
+            const filePath = join(DATA_PATH, "landing-page-content.json");
             const data = JSON.parse(readFileSync(filePath, "utf8"));
 
-            expect(data.newsletter).toHaveProperty("title");
-            expect(data.newsletter).toHaveProperty("description");
-            expect(data.newsletter).toHaveProperty("isActive");
+            expect(data.content).toHaveProperty("newsletter");
+            expect(data.content.newsletter).toHaveProperty("title");
+            expect(data.content.newsletter).toHaveProperty("description");
+            expect(data.content.newsletter).toHaveProperty("isActive");
 
-            expect(typeof data.newsletter.isActive).toBe("boolean");
+            expect(typeof data.content.newsletter.isActive).toBe("boolean");
         });
 
-        test("features section has required flags", () => {
-            const filePath = join(DATA_PATH, "landing-page-settings.json");
+        test("layout features section has required flags", () => {
+            const filePath = join(DATA_PATH, "landing-page-content.json");
             const data = JSON.parse(readFileSync(filePath, "utf8"));
 
-            expect(data.features).toHaveProperty("showSeasonalContent");
-            expect(data.features).toHaveProperty("showNewsletter");
+            expect(data.layout).toHaveProperty("features");
+            expect(data.layout.features).toHaveProperty("showSeasonalContent");
+            expect(data.layout.features).toHaveProperty("showNewsletter");
 
-            expect(typeof data.features.showSeasonalContent).toBe("boolean");
-            expect(typeof data.features.showNewsletter).toBe("boolean");
+            expect(typeof data.layout.features.showSeasonalContent).toBe("boolean");
+            expect(typeof data.layout.features.showNewsletter).toBe("boolean");
         });
     });
 
-    describe("Business Information", () => {
-        test("business.json exists and is valid JSON", () => {
-            const filePath = join(ASSETS_PATH, "business.json");
-            expect(existsSync(filePath)).toBe(true);
-
-            const content = readFileSync(filePath, "utf8");
-            expect(() => JSON.parse(content)).not.toThrow();
-        });
-
-        test("business.json has required fields", () => {
-            const filePath = join(ASSETS_PATH, "business.json");
+    describe("Contact Information", () => {
+        test("contact info has required fields", () => {
+            const filePath = join(DATA_PATH, "landing-page-content.json");
             const data = JSON.parse(readFileSync(filePath, "utf8"));
 
-            expect(data).toHaveProperty("BUSINESS_NAME");
-            expect(data).toHaveProperty("ADDRESS");
-            expect(data).toHaveProperty("PHONE");
-            expect(data).toHaveProperty("EMAIL");
+            expect(data).toHaveProperty("contact");
+            expect(data.contact).toHaveProperty("name");
+            expect(data.contact).toHaveProperty("address");
+            expect(data.contact).toHaveProperty("phone");
+            expect(data.contact).toHaveProperty("email");
         });
 
-        test("business name has required structure", () => {
-            const filePath = join(ASSETS_PATH, "business.json");
+        test("contact name is valid", () => {
+            const filePath = join(DATA_PATH, "landing-page-content.json");
             const data = JSON.parse(readFileSync(filePath, "utf8"));
 
-            expect(data.BUSINESS_NAME).toHaveProperty("Short");
-            expect(data.BUSINESS_NAME).toHaveProperty("Long");
-            expect(typeof data.BUSINESS_NAME.Short).toBe("string");
-            expect(typeof data.BUSINESS_NAME.Long).toBe("string");
-            expect(data.BUSINESS_NAME.Short.length).toBeGreaterThan(0);
+            expect(typeof data.contact.name).toBe("string");
+            expect(data.contact.name.length).toBeGreaterThan(0);
+        });
+
+        test("address has required structure", () => {
+            const filePath = join(DATA_PATH, "landing-page-content.json");
+            const data = JSON.parse(readFileSync(filePath, "utf8"));
+
+            expect(data.contact.address).toHaveProperty("street");
+            expect(data.contact.address).toHaveProperty("city");
+            expect(data.contact.address).toHaveProperty("state");
+            expect(data.contact.address).toHaveProperty("zip");
+            expect(data.contact.address).toHaveProperty("full");
+            expect(data.contact.address).toHaveProperty("googleMapsUrl");
         });
 
         test("contact info has required structure", () => {
-            const filePath = join(ASSETS_PATH, "business.json");
+            const filePath = join(DATA_PATH, "landing-page-content.json");
             const data = JSON.parse(readFileSync(filePath, "utf8"));
 
-            // ADDRESS
-            expect(data.ADDRESS).toHaveProperty("Label");
-            expect(data.ADDRESS).toHaveProperty("Link");
-            expect(typeof data.ADDRESS.Label).toBe("string");
-            expect(typeof data.ADDRESS.Link).toBe("string");
-
             // PHONE
-            expect(data.PHONE).toHaveProperty("Label");
-            expect(data.PHONE).toHaveProperty("Link");
-            expect(typeof data.PHONE.Label).toBe("string");
-            expect(typeof data.PHONE.Link).toBe("string");
-            expect(data.PHONE.Link).toMatch(/^tel:/);
+            expect(data.contact.phone).toHaveProperty("display");
+            expect(data.contact.phone).toHaveProperty("link");
+            expect(typeof data.contact.phone.display).toBe("string");
+            expect(typeof data.contact.phone.link).toBe("string");
+            expect(data.contact.phone.link).toMatch(/^tel:/);
 
             // EMAIL
-            expect(data.EMAIL).toHaveProperty("Label");
-            expect(data.EMAIL).toHaveProperty("Link");
-            expect(typeof data.EMAIL.Label).toBe("string");
-            expect(typeof data.EMAIL.Link).toBe("string");
-            expect(data.EMAIL.Link).toMatch(/^mailto:/);
-            expect(data.EMAIL.Label).toMatch(/^[^\s@]+@[^\s@]+\.[^\s@]+$/); // Basic email regex
+            expect(data.contact.email).toHaveProperty("display");
+            expect(data.contact.email).toHaveProperty("link");
+            expect(typeof data.contact.email.display).toBe("string");
+            expect(typeof data.contact.email.link).toBe("string");
+            expect(data.contact.email.link).toMatch(/^mailto:/);
+            expect(data.contact.email.display).toMatch(/^[^\s@]+@[^\s@]+\.[^\s@]+$/); // Basic email regex
         });
 
         test("website URL is valid", () => {
-            const filePath = join(ASSETS_PATH, "business.json");
+            const filePath = join(DATA_PATH, "landing-page-content.json");
             const data = JSON.parse(readFileSync(filePath, "utf8"));
 
-            if (data.WEBSITE) {
-                expect(typeof data.WEBSITE).toBe("string");
-                expect(data.WEBSITE).toMatch(/^https?:\/\/.+/);
+            if (data.contact.website) {
+                expect(typeof data.contact.website).toBe("string");
+                expect(data.contact.website).toMatch(/^https?:\/\/.+/);
             }
         });
     });
 
     describe("Business Hours", () => {
-        test("hours.md exists and is readable", () => {
-            const filePath = join(ASSETS_PATH, "hours.md");
-            expect(existsSync(filePath)).toBe(true);
+        test("hours exist in contact info", () => {
+            const filePath = join(DATA_PATH, "landing-page-content.json");
+            const data = JSON.parse(readFileSync(filePath, "utf8"));
 
-            const content = readFileSync(filePath, "utf8");
-            expect(content.length).toBeGreaterThan(0);
+            expect(data.contact).toHaveProperty("hours");
+            expect(typeof data.contact.hours).toBe("string");
+            expect(data.contact.hours.length).toBeGreaterThan(0);
         });
 
-        test("hours.md is valid markdown table", () => {
-            const filePath = join(ASSETS_PATH, "hours.md");
-            const content = readFileSync(filePath, "utf8");
+        test("hours is valid markdown table", () => {
+            const filePath = join(DATA_PATH, "landing-page-content.json");
+            const data = JSON.parse(readFileSync(filePath, "utf8"));
+            const content = data.contact.hours;
 
             // Must contain table headers
             expect(content).toContain("| Day");
@@ -388,15 +371,16 @@ describe("Data File Integrity Tests", () => {
             expect(content).toMatch(/\|[\s-]+\|/); // Contains separator row with dashes
         });
 
-        test("hours.md has no malformed rows", () => {
-            const filePath = join(ASSETS_PATH, "hours.md");
-            const content = readFileSync(filePath, "utf8");
+        test("hours has no malformed rows", () => {
+            const filePath = join(DATA_PATH, "landing-page-content.json");
+            const data = JSON.parse(readFileSync(filePath, "utf8"));
+            const content = data.contact.hours;
 
-            const lines = content.split("\n").filter((l) => l.trim());
+            const lines = content.split("\n").filter((l: string) => l.trim());
 
-            lines.forEach((line, index) => {
+            lines.forEach((line: string, index: number) => {
                 if (line.includes("|") && !line.includes("---")) {
-                    const parts = line.split("|").filter((p) => p.trim());
+                    const parts = line.split("|").filter((p: string) => p.trim());
 
                     // Each row should have at least 2 columns (Day and Hours)
                     expect(
@@ -419,18 +403,19 @@ describe("Data File Integrity Tests", () => {
             });
         });
 
-        test("hours.md contains valid time format or CLOSED", () => {
-            const filePath = join(ASSETS_PATH, "hours.md");
-            const content = readFileSync(filePath, "utf8");
+        test("hours contains valid time format or CLOSED", () => {
+            const filePath = join(DATA_PATH, "landing-page-content.json");
+            const data = JSON.parse(readFileSync(filePath, "utf8"));
+            const content = data.contact.hours;
 
             const lines = content
                 .split("\n")
-                .filter((l) => l.trim() && l.includes("|") && !l.includes("---") && !l.includes("Day"));
+                .filter((l: string) => l.trim() && l.includes("|") && !l.includes("---") && !l.includes("Day"));
 
             const timePattern = /\d{1,2}:\d{2}\s*(AM|PM)/i;
 
-            lines.forEach((line, index) => {
-                const parts = line.split("|").map((p) => p.trim()).filter((p) => p);
+            lines.forEach((line: string, index: number) => {
+                const parts = line.split("|").map((p: string) => p.trim()).filter((p: string) => p);
 
                 if (parts.length >= 2) {
                     const hours = parts[1];
@@ -452,10 +437,10 @@ describe("Data File Integrity Tests", () => {
 
     describe("Data Relationships", () => {
         test("all referenced images in hero banners should follow valid path format", () => {
-            const filePath = join(DATA_PATH, "hero-banners.json");
+            const filePath = join(DATA_PATH, "landing-page-content.json");
             const data = JSON.parse(readFileSync(filePath, "utf8"));
 
-            data.banners.forEach((banner: any) => {
+            data.content.hero.banners.forEach((banner: any) => {
                 // Images should either be absolute URLs or start with /
                 const isValid = banner.src.startsWith("http") || banner.src.startsWith("/");
                 expect(isValid, `Banner ${banner.id} has invalid src path: ${banner.src}`).toBe(true);
@@ -463,10 +448,10 @@ describe("Data File Integrity Tests", () => {
         });
 
         test("display orders form a contiguous sequence starting from 1", () => {
-            const filePath = join(DATA_PATH, "hero-banners.json");
+            const filePath = join(DATA_PATH, "landing-page-content.json");
             const data = JSON.parse(readFileSync(filePath, "utf8"));
 
-            const orders = data.banners.map((b: any) => b.displayOrder).sort((a: number, b: number) => a - b);
+            const orders = data.content.hero.banners.map((b: any) => b.displayOrder).sort((a: number, b: number) => a - b);
 
             // Check if it starts from 1 and increments by 1
             orders.forEach((order: number, index: number) => {

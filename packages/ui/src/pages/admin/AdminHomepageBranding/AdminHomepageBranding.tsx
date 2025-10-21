@@ -21,7 +21,8 @@ import { Save, RotateCcw, Palette, Building, Sun, Moon, Menu, ShoppingCart, Hear
 import { BackButton, PageContainer } from "components";
 import { TopBar } from "components/navigation/TopBar/TopBar";
 import { useLandingPageContent, useUpdateLandingPageSettings } from "api/rest/hooks";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useMemo } from "react";
+import { PubSub } from "utils";
 
 interface ThemeColors {
     primary: string;
@@ -69,7 +70,7 @@ const RealisticPreview = ({ colors, mode }: PreviewProps) => {
             {/* Navigation Bar */}
             <Box
                 sx={{
-                    backgroundColor: colors.paper,
+                    backgroundColor: colors.primary,
                     borderBottom: `1px solid ${mode === "light" ? "#e0e0e0" : "#404040"}`,
                     padding: 2,
                     display: "flex",
@@ -78,21 +79,21 @@ const RealisticPreview = ({ colors, mode }: PreviewProps) => {
                 }}
             >
                 <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                    <IconButton size="small" sx={{ color: colors.primary }}>
+                    <IconButton size="small" sx={{ color: "#ffffff" }}>
                         <Menu size={20} />
                     </IconButton>
-                    <Typography variant="h6" sx={{ color: textColor, fontWeight: 600 }}>
+                    <Typography variant="h6" sx={{ color: "#ffffff", fontWeight: 600 }}>
                         Your Brand
                     </Typography>
                 </Box>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <IconButton size="small" sx={{ color: textColor }}>
+                    <IconButton size="small" sx={{ color: "#ffffff" }}>
                         <Heart size={18} />
                     </IconButton>
-                    <IconButton size="small" sx={{ color: textColor }}>
+                    <IconButton size="small" sx={{ color: "#ffffff" }}>
                         <ShoppingCart size={18} />
                     </IconButton>
-                    <IconButton size="small" sx={{ color: textColor }}>
+                    <IconButton size="small" sx={{ color: "#ffffff" }}>
                         <User size={18} />
                     </IconButton>
                 </Box>
@@ -295,7 +296,6 @@ export const AdminHomepageBranding = () => {
         },
     });
     const [originalBranding, setOriginalBranding] = useState<BrandingSettings>(branding);
-    const [hasChanges, setHasChanges] = useState(false);
     const [previewMode, setPreviewMode] = useState<"light" | "dark">("light");
     const [editingMode, setEditingMode] = useState<"light" | "dark">("light");
     const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: "success" | "error" }>({
@@ -306,9 +306,9 @@ export const AdminHomepageBranding = () => {
 
     // Load branding settings from landing page content
     useEffect(() => {
-        if (landingPageContent?.settings) {
+        if (landingPageContent?.theme) {
             // Handle both old format (single colors object) and new format (light/dark)
-            const colors = landingPageContent.settings.colors as any;
+            const colors = landingPageContent.theme.colors as any;
             let colorSettings = branding.colors;
 
             if (colors?.light && colors?.dark) {
@@ -329,7 +329,7 @@ export const AdminHomepageBranding = () => {
             }
 
             const settings: BrandingSettings = {
-                companyInfo: landingPageContent.settings.companyInfo || branding.companyInfo,
+                companyInfo: landingPageContent.content?.company || branding.companyInfo,
                 colors: colorSettings,
             };
             setBranding(settings);
@@ -337,11 +337,11 @@ export const AdminHomepageBranding = () => {
         }
     }, [landingPageContent]);
 
-    // Check for unsaved changes
-    useEffect(() => {
-        const changed = JSON.stringify(branding) !== JSON.stringify(originalBranding);
-        setHasChanges(changed);
-    }, [branding, originalBranding]);
+    // Check for unsaved changes using useMemo for derived state
+    const hasChanges = useMemo(
+        () => JSON.stringify(branding) !== JSON.stringify(originalBranding),
+        [branding, originalBranding]
+    );
 
     const handleSave = async () => {
         // Validate all colors for both light and dark modes
@@ -378,6 +378,8 @@ export const AdminHomepageBranding = () => {
                 severity: "success",
             });
             refetch();
+            // Notify other components that landing page content has been updated
+            PubSub.get().publishLandingPageUpdated();
         } catch (error) {
             setSnackbar({
                 open: true,

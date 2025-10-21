@@ -18,7 +18,7 @@ import { Save, RotateCcw, Plus, Trash2, GripVertical } from "lucide-react";
 import { BackButton, PageContainer } from "components";
 import { TopBar } from "components/navigation/TopBar/TopBar";
 import { useLandingPageContent, useUpdateLandingPageSettings } from "api/rest/hooks";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useMemo } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
 interface Service {
@@ -88,7 +88,6 @@ export const AdminHomepageServices = () => {
         ],
     });
     const [originalServices, setOriginalServices] = useState<ServicesSettings>(services);
-    const [hasChanges, setHasChanges] = useState(false);
     const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: "success" | "error" }>({
         open: false,
         message: "",
@@ -97,22 +96,22 @@ export const AdminHomepageServices = () => {
 
     // Load services settings from landing page content
     useEffect(() => {
-        if (landingPageContent?.settings?.services) {
+        if (landingPageContent?.content?.services) {
             const loadedServices = {
-                title: landingPageContent.settings.services.title || services.title,
-                subtitle: landingPageContent.settings.services.subtitle || services.subtitle,
-                items: landingPageContent.settings.services.items || services.items,
+                title: landingPageContent.content.services.title || services.title,
+                subtitle: landingPageContent.content.services.subtitle || services.subtitle,
+                items: landingPageContent.content.services.items || services.items,
             };
             setServices(loadedServices);
             setOriginalServices(JSON.parse(JSON.stringify(loadedServices)));
         }
     }, [landingPageContent]);
 
-    // Check for unsaved changes
-    useEffect(() => {
-        const changed = JSON.stringify(services) !== JSON.stringify(originalServices);
-        setHasChanges(changed);
-    }, [services, originalServices]);
+    // Check for unsaved changes using useMemo for derived state
+    const hasChanges = useMemo(
+        () => JSON.stringify(services) !== JSON.stringify(originalServices),
+        [services, originalServices]
+    );
 
     const handleSave = async () => {
         try {

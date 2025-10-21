@@ -33,7 +33,7 @@ import { TopBar } from "components/navigation/TopBar/TopBar";
 import { getServerUrl } from "utils/serverUrl";
 import { PubSub } from "utils/pubsub";
 import { SnackSeverity } from "components/dialogs/Snack/Snack";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useMemo } from "react";
 import { pagePaddingBottom } from "styles";
 import { Users, Award, Leaf, Package, Shield, Heart } from "lucide-react";
 
@@ -104,7 +104,6 @@ export const AdminHomepageHeroBanner = () => {
         { text: "Visit Our Nursery", link: "/about", type: "secondary" },
     ]);
     const [originalCtaButtons, setOriginalCtaButtons] = useState<CTAButton[]>(ctaButtons);
-    const [hasChanges, setHasChanges] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
     const { data: landingPageContent, refetch } = useLandingPageContent(false);
@@ -114,8 +113,8 @@ export const AdminHomepageHeroBanner = () => {
     useEffect(() => {
         if (landingPageContent) {
             // Load hero banners
-            if (landingPageContent.heroBanners) {
-                const sorted = [...landingPageContent.heroBanners].sort(
+            if (landingPageContent.content?.hero?.banners) {
+                const sorted = [...landingPageContent.content?.hero?.banners].sort(
                     (a: any, b: any) => a.displayOrder - b.displayOrder,
                 );
                 setHeroBanners(sorted);
@@ -123,14 +122,14 @@ export const AdminHomepageHeroBanner = () => {
             }
 
             // Load hero settings
-            if (landingPageContent.heroSettings) {
-                setHeroSettings(landingPageContent.heroSettings);
-                setOriginalHeroSettings(JSON.parse(JSON.stringify(landingPageContent.heroSettings)));
+            if (landingPageContent.content?.hero?.settings) {
+                setHeroSettings(landingPageContent.content?.hero?.settings);
+                setOriginalHeroSettings(JSON.parse(JSON.stringify(landingPageContent.content?.hero?.settings)));
             }
 
             // Load hero content
-            if (landingPageContent.settings?.hero) {
-                const content = landingPageContent.settings.hero;
+            if (landingPageContent.content?.hero?.text) {
+                const content = landingPageContent.content.hero.text;
                 setHeroContent({
                     title: content.title || heroContent.title,
                     subtitle: content.subtitle || heroContent.subtitle,
@@ -161,14 +160,14 @@ export const AdminHomepageHeroBanner = () => {
         }
     }, [landingPageContent]);
 
-    // Check for changes
-    useEffect(() => {
+    // Check for changes using useMemo for derived state
+    const hasChanges = useMemo(() => {
         const bannersChanged = JSON.stringify(heroBanners) !== JSON.stringify(originalHeroBanners);
         const settingsChanged = JSON.stringify(heroSettings) !== JSON.stringify(originalHeroSettings);
         const contentChanged = JSON.stringify(heroContent) !== JSON.stringify(originalHeroContent);
         const badgesChanged = JSON.stringify(trustBadges) !== JSON.stringify(originalTrustBadges);
         const buttonsChanged = JSON.stringify(ctaButtons) !== JSON.stringify(originalCtaButtons);
-        setHasChanges(bannersChanged || settingsChanged || contentChanged || badgesChanged || buttonsChanged);
+        return bannersChanged || settingsChanged || contentChanged || badgesChanged || buttonsChanged;
     }, [heroBanners, originalHeroBanners, heroSettings, originalHeroSettings, heroContent, originalHeroContent, trustBadges, originalTrustBadges, ctaButtons, originalCtaButtons]);
 
     const handleApiError = useCallback((error: any, defaultMessage: string) => {

@@ -1,3 +1,4 @@
+import React, { useMemo } from "react";
 import { Box, CircularProgress } from "@mui/material";
 import {
     Hero,
@@ -9,8 +10,6 @@ import {
 } from "components";
 import { TopBar } from "components/navigation/TopBar/TopBar";
 import { useLandingPageContent } from "api/rest/hooks";
-import { useMemo } from "react";
-import { useAnalyticsTracking } from "hooks/useAnalyticsTracking";
 
 // Section component mapping
 const SECTION_COMPONENTS: Record<string, React.ComponentType> = {
@@ -24,12 +23,11 @@ const SECTION_COMPONENTS: Record<string, React.ComponentType> = {
 
 export const HomePage = () => {
     const { data: landingPageData, loading } = useLandingPageContent(true);
-    const { trackConversion } = useAnalyticsTracking(); // Track analytics events for A/B testing
 
     // Get section configuration with fallback to default
     const sectionConfig = useMemo(() => {
-        if (landingPageData?.settings?.sections) {
-            return landingPageData.settings.sections;
+        if (landingPageData?.layout?.sections) {
+            return landingPageData.layout.sections;
         }
         // Default configuration if not available
         return {
