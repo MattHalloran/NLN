@@ -8,7 +8,6 @@ import {
     Image,
     DashboardStats,
     ABTest,
-    ABTestCreate,
     SectionConfiguration,
     AnalyticsEvent,
 } from "./client";
@@ -140,10 +139,10 @@ export function useInvalidateLandingPageCache() {
 // Contact info update hook
 export function useUpdateContactInfo() {
     return useRestMutation<
-        { business?: Record<string, unknown>; hours?: string },
+        { data: { business?: Record<string, unknown>; hours?: string }; queryParams?: { abTestId?: string; variant?: "variantA" | "variantB" } },
         { success: boolean; message: string; updated: { business: boolean; hours: boolean } }
     >(
-        (data) => restApi.updateContactInfo(data),
+        ({ data, queryParams }) => restApi.updateContactInfo(data, queryParams),
     );
 }
 
@@ -383,10 +382,10 @@ export function useUpdateSectionConfiguration() {
 
 export function useUpdateLandingPageSettings() {
     return useRestMutation<
-        Record<string, unknown>,
+        { settings: Record<string, unknown>; queryParams?: { abTestId?: string; variant?: "variantA" | "variantB" } },
         { success: boolean; message: string; updatedFields: string[] }
     >(
-        (settings) => restApi.updateLandingPageSettings(settings),
+        ({ settings, queryParams }) => restApi.updateLandingPageSettings(settings, queryParams),
     );
 }
 
@@ -412,7 +411,14 @@ export function useABTest(id: string | null) {
 }
 
 export function useCreateABTest() {
-    return useRestMutation<ABTestCreate, ABTest>(
+    return useRestMutation<
+        {
+            name: string;
+            description?: string;
+            trafficSplit?: { variantA: number; variantB: number };
+        },
+        ABTest
+    >(
         (test) => restApi.createABTest(test),
     );
 }

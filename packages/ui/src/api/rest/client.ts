@@ -54,6 +54,36 @@ async function fetchApi<T>(
 }
 
 // Type definitions for API responses
+export interface ABTestMeta {
+    testId: string;
+    variantId: "variantA" | "variantB";
+}
+
+export interface ABTest {
+    id: string;
+    name: string;
+    description?: string;
+    status: "draft" | "active" | "paused" | "completed";
+    trafficSplit: {
+        variantA: number;
+        variantB: number;
+    };
+    metrics: {
+        variantA: ABTestMetrics;
+        variantB: ABTestMetrics;
+    };
+    createdAt: string;
+    updatedAt?: string;
+    startDate?: string;
+    endDate?: string;
+}
+
+export interface ABTestMetrics {
+    views: number;
+    conversions: number;
+    bounces: number;
+}
+
 export interface LandingPageContent {
     metadata: {
         version: string;
@@ -205,56 +235,13 @@ export interface LandingPageContent {
             activeTestId: string | null;
         };
     };
+    _meta?: ABTestMeta;
 }
 
-// A/B Testing types
-export interface ABTestMetrics {
-    views: number;
-    bounces: number;
-    avgTimeOnPage: number;
-    interactions: number;
-    conversions: number;
-}
-
+// Section configuration type
 export interface SectionConfiguration {
     order: string[];
     enabled: Record<string, boolean>;
-}
-
-export interface ABTest {
-    id: string;
-    name: string;
-    description: string;
-    status: "draft" | "active" | "paused" | "completed";
-    variantA: {
-        name: string;
-        sections: SectionConfiguration;
-    };
-    variantB: {
-        name: string;
-        sections: SectionConfiguration;
-    };
-    metrics: {
-        variantA: ABTestMetrics;
-        variantB: ABTestMetrics;
-    };
-    startDate?: string;
-    endDate?: string;
-    createdAt: string;
-    updatedAt: string;
-}
-
-export interface ABTestCreate {
-    name: string;
-    description: string;
-    variantA: {
-        name: string;
-        sections: SectionConfiguration;
-    };
-    variantB: {
-        name: string;
-        sections: SectionConfiguration;
-    };
 }
 
 export interface AnalyticsEvent {
@@ -362,9 +349,28 @@ export interface DashboardStats {
 // API client with typed methods
 export const restApi = {
     // Landing page
-    async getLandingPageContent(onlyActive = true): Promise<LandingPageContent> {
+    async getLandingPageContent(params?: {
+        onlyActive?: boolean;
+        abTest?: string;
+        abTestId?: string;
+        variant?: "variantA" | "variantB";
+    }): Promise<LandingPageContent> {
+        const queryParams = new URLSearchParams();
+
+        queryParams.append("onlyActive", String(params?.onlyActive ?? true));
+
+        if (params?.abTest !== undefined) {
+            queryParams.append("abTest", params.abTest);
+        }
+        if (params?.abTestId) {
+            queryParams.append("abTestId", params.abTestId);
+        }
+        if (params?.variant) {
+            queryParams.append("variant", params.variant);
+        }
+
         return fetchApi<LandingPageContent>(
-            `/landing-page?onlyActive=${onlyActive}`,
+            `/landing-page?${queryParams.toString()}`,
             { cache: "no-store" }, // Bypass browser cache to always get fresh data
         );
     },
@@ -411,12 +417,23 @@ export const restApi = {
     },
 
     // Contact info updates
-    async updateContactInfo(data: {
-        business?: Record<string, unknown>;
-        hours?: string;
-    }): Promise<{ success: boolean; message: string; updated: { business: boolean; hours: boolean } }> {
+    async updateContactInfo(
+        data: {
+            business?: Record<string, unknown>;
+            hours?: string;
+        },
+        queryParams?: {
+            abTestId?: string;
+            variant?: "variantA" | "variantB";
+        },
+    ): Promise<{ success: boolean; message: string; updated: { business: boolean; hours: boolean } }> {
+        const params = new URLSearchParams();
+        if (queryParams?.abTestId) params.append("abTestId", queryParams.abTestId);
+        if (queryParams?.variant) params.append("variant", queryParams.variant);
+
+        const queryString = params.toString();
         return fetchApi<{ success: boolean; message: string; updated: { business: boolean; hours: boolean } }>(
-            "/landing-page/contact-info",
+            `/landing-page/contact-info${queryString ? `?${queryString}` : ""}`,
             {
                 method: "PUT",
                 body: JSON.stringify(data),
@@ -425,99 +442,110 @@ export const restApi = {
     },
 
     // Unified landing page content updates
-    async updateLandingPageContent(data: {
-        heroBanners?: Array<{
-            id: string;
-            src: string;
-            alt: string;
-            description: string;
-            width: number;
-            height: number;
-            displayOrder: number;
-            isActive: boolean;
-        }>;
-        heroSettings?: {
-            autoPlay: boolean;
-            autoPlayDelay: number;
-            showDots: boolean;
-            showArrows: boolean;
-            fadeTransition: boolean;
-        };
-        seasonalPlants?: Array<{
-            id: string;
-            name: string;
-            description: string;
-            season: string;
-            careLevel: string;
-            icon: string;
-            displayOrder: number;
-            isActive: boolean;
-        }>;
-        plantTips?: Array<{
-            id: string;
-            title: string;
-            description: string;
-            category: string;
-            season: string;
-            displayOrder: number;
-            isActive: boolean;
-        }>;
-        settings?: {
-            hero: {
-                title: string;
-                subtitle: string;
+    async updateLandingPageContent(
+        data: {
+            heroBanners?: Array<{
+                id: string;
+                src: string;
+                alt: string;
                 description: string;
-                businessHours: string;
-                trustBadges: Array<{
-                    icon: string;
-                    text: string;
-                }>;
-                buttons: Array<{
-                    text: string;
-                    link: string;
-                    type: string;
-                }>;
-            };
-            newsletter: {
-                title: string;
-                description: string;
-                disclaimer: string;
+                width: number;
+                height: number;
+                displayOrder: number;
                 isActive: boolean;
+            }>;
+            heroSettings?: {
+                autoPlay: boolean;
+                autoPlayDelay: number;
+                showDots: boolean;
+                showArrows: boolean;
+                fadeTransition: boolean;
             };
-            companyInfo: {
-                foundedYear: number;
+            seasonalPlants?: Array<{
+                id: string;
+                name: string;
                 description: string;
-            };
-            colors: {
-                light: {
-                    primary: string;
-                    secondary: string;
-                    accent: string;
-                    background: string;
-                    paper: string;
+                season: string;
+                careLevel: string;
+                icon: string;
+                displayOrder: number;
+                isActive: boolean;
+            }>;
+            plantTips?: Array<{
+                id: string;
+                title: string;
+                description: string;
+                category: string;
+                season: string;
+                displayOrder: number;
+                isActive: boolean;
+            }>;
+            settings?: {
+                hero: {
+                    title: string;
+                    subtitle: string;
+                    description: string;
+                    businessHours: string;
+                    trustBadges: Array<{
+                        icon: string;
+                        text: string;
+                    }>;
+                    buttons: Array<{
+                        text: string;
+                        link: string;
+                        type: string;
+                    }>;
                 };
-                dark: {
-                    primary: string;
-                    secondary: string;
-                    accent: string;
-                    background: string;
-                    paper: string;
+                newsletter: {
+                    title: string;
+                    description: string;
+                    disclaimer: string;
+                    isActive: boolean;
+                };
+                companyInfo: {
+                    foundedYear: number;
+                    description: string;
+                };
+                colors: {
+                    light: {
+                        primary: string;
+                        secondary: string;
+                        accent: string;
+                        background: string;
+                        paper: string;
+                    };
+                    dark: {
+                        primary: string;
+                        secondary: string;
+                        accent: string;
+                        background: string;
+                        paper: string;
+                    };
+                };
+                features: {
+                    showSeasonalContent: boolean;
+                    showNewsletter: boolean;
+                    showSocialProof: boolean;
+                    enableAnimations: boolean;
                 };
             };
-            features: {
-                showSeasonalContent: boolean;
-                showNewsletter: boolean;
-                showSocialProof: boolean;
-                enableAnimations: boolean;
+            contactInfo?: {
+                business?: Record<string, unknown>;
+                hours?: string;
             };
-        };
-        contactInfo?: {
-            business?: Record<string, unknown>;
-            hours?: string;
-        };
-    }): Promise<{ success: boolean; message: string; updatedSections: string[] }> {
+        },
+        queryParams?: {
+            abTestId?: string;
+            variant?: "variantA" | "variantB";
+        },
+    ): Promise<{ success: boolean; message: string; updatedSections: string[] }> {
+        const params = new URLSearchParams();
+        if (queryParams?.abTestId) params.append("abTestId", queryParams.abTestId);
+        if (queryParams?.variant) params.append("variant", queryParams.variant);
+
+        const queryString = params.toString();
         return fetchApi<{ success: boolean; message: string; updatedSections: string[] }>(
-            "/landing-page",
+            `/landing-page${queryString ? `?${queryString}` : ""}`,
             {
                 method: "PUT",
                 body: JSON.stringify(data),
@@ -663,9 +691,20 @@ export const restApi = {
     },
 
     // Landing Page Settings Management
-    async updateLandingPageSettings(settings: Record<string, unknown>): Promise<{ success: boolean; message: string; updatedFields: string[] }> {
+    async updateLandingPageSettings(
+        settings: Record<string, unknown>,
+        queryParams?: {
+            abTestId?: string;
+            variant?: "variantA" | "variantB";
+        },
+    ): Promise<{ success: boolean; message: string; updatedFields: string[] }> {
+        const params = new URLSearchParams();
+        if (queryParams?.abTestId) params.append("abTestId", queryParams.abTestId);
+        if (queryParams?.variant) params.append("variant", queryParams.variant);
+
+        const queryString = params.toString();
         return fetchApi<{ success: boolean; message: string; updatedFields: string[] }>(
-            "/landing-page/settings",
+            `/landing-page/settings${queryString ? `?${queryString}` : ""}`,
             {
                 method: "PUT",
                 body: JSON.stringify(settings),
@@ -682,7 +721,11 @@ export const restApi = {
         return fetchApi<ABTest>(`/landing-page/ab-tests/${id}`);
     },
 
-    async createABTest(test: ABTestCreate): Promise<ABTest> {
+    async createABTest(test: {
+        name: string;
+        description?: string;
+        trafficSplit?: { variantA: number; variantB: number };
+    }): Promise<ABTest> {
         return fetchApi<ABTest>("/landing-page/ab-tests", {
             method: "POST",
             body: JSON.stringify(test),
@@ -712,6 +755,22 @@ export const restApi = {
         return fetchApi<ABTest>(`/landing-page/ab-tests/${id}/stop`, {
             method: "POST",
         });
+    },
+
+    async trackABTestEvent(
+        testId: string,
+        event: {
+            variantId: "variantA" | "variantB";
+            eventType: "view" | "conversion" | "bounce";
+        },
+    ): Promise<{ success: boolean; metrics?: { variantA: ABTestMetrics; variantB: ABTestMetrics } }> {
+        return fetchApi<{ success: boolean; metrics?: { variantA: ABTestMetrics; variantB: ABTestMetrics } }>(
+            `/landing-page/ab-tests/${testId}/track`,
+            {
+                method: "POST",
+                body: JSON.stringify(event),
+            },
+        );
     },
 
     // Analytics (public endpoint)

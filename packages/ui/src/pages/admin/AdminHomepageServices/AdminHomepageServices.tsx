@@ -16,8 +16,10 @@ import {
 } from "@mui/material";
 import { Save, RotateCcw, Plus, Trash2, GripVertical } from "lucide-react";
 import { BackButton, PageContainer } from "components";
+import { ABTestEditingBanner } from "components/admin/ABTestEditingBanner";
 import { TopBar } from "components/navigation/TopBar/TopBar";
 import { useLandingPage } from "hooks/useLandingPage";
+import { useABTestQueryParams } from "hooks/useABTestQueryParams";
 import { useUpdateLandingPageSettings } from "api/rest/hooks";
 import { useCallback as _useCallback, useEffect, useState, useMemo } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
@@ -47,6 +49,7 @@ const SERVICE_ICONS = [
 ];
 
 export const AdminHomepageServices = () => {
+    const { abTestId, variant } = useABTestQueryParams();
     const updateSettings = useUpdateLandingPageSettings();
     const { data: landingPageContent, refetch } = useLandingPage();
 
@@ -116,7 +119,8 @@ export const AdminHomepageServices = () => {
 
     const handleSave = async () => {
         try {
-            await updateSettings.mutate({ services });
+            const queryParams = abTestId && variant ? { abTestId, variant } : undefined;
+            await updateSettings.mutate({ settings: { services }, queryParams });
             setOriginalServices(JSON.parse(JSON.stringify(services)));
             setSnackbar({
                 open: true,
@@ -186,6 +190,8 @@ export const AdminHomepageServices = () => {
             />
 
             <Box p={3}>
+                <ABTestEditingBanner />
+
                 {/* Unsaved changes warning */}
                 {hasChanges && (
                     <Alert severity="warning" sx={{ mb: 3 }}>

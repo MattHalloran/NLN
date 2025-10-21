@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useEffect, useRef } from "react";
 import { Box, CircularProgress } from "@mui/material";
 import {
     Hero,
@@ -10,6 +10,7 @@ import {
 } from "components";
 import { TopBar } from "components/navigation/TopBar/TopBar";
 import { useLandingPage } from "hooks/useLandingPage";
+import { restApi } from "api/rest/client";
 
 // Section component mapping
 const SECTION_COMPONENTS: Record<string, React.ComponentType> = {
@@ -21,8 +22,12 @@ const SECTION_COMPONENTS: Record<string, React.ComponentType> = {
     location: LocationVisit,
 };
 
+const BOUNCE_THRESHOLD_MS = 10000; // 10 seconds
+
 export const HomePage = () => {
     const { data: landingPageData, loading } = useLandingPage();
+    const bounceTracked = useRef(false);
+    const visitStartTime = useRef(Date.now());
 
     // Get section configuration with fallback to default
     const sectionConfig = useMemo(() => {
@@ -49,6 +54,45 @@ export const HomePage = () => {
             .filter((sectionId) => sectionConfig.enabled[sectionId])
             .filter((sectionId) => SECTION_COMPONENTS[sectionId]); // Only render sections we have components for
     }, [sectionConfig]);
+
+    // Track bounce if user leaves within 10 seconds
+    useEffect(() => {
+        const handleBeforeUnload = () => {
+            const timeOnPage = Date.now() - visitStartTime.current;
+
+            // Only track bounce if they leave within 10 seconds and haven't already tracked
+            if (timeOnPage < BOUNCE_THRESHOLD_MS && !bounceTracked.current && landingPageData?._meta) {
+                bounceTracked.current = true;
+
+                // Use sendBeacon for reliable tracking on page unload
+                const meta = landingPageData._meta;
+                const data = JSON.stringify({
+                    variantId: meta.variantId,
+                    eventType: "bounce",
+                });
+
+                // sendBeacon is more reliable than fetch for unload events
+                if (navigator.sendBeacon) {
+                    const url = `${window.location.origin}/rest/v1/landing-page/ab-tests/${meta.testId}/track`;
+                    navigator.sendBeacon(url, data);
+                } else {
+                    // Fallback for browsers that don't support sendBeacon
+                    restApi.trackABTestEvent(meta.testId, {
+                        variantId: meta.variantId,
+                        eventType: "bounce",
+                    }).catch((err) => {
+                        console.error("Error tracking bounce event:", err);
+                    });
+                }
+            }
+        };
+
+        window.addEventListener("beforeunload", handleBeforeUnload);
+
+        return () => {
+            window.removeEventListener("beforeunload", handleBeforeUnload);
+        };
+    }, [landingPageData]);
 
     return (
         <>

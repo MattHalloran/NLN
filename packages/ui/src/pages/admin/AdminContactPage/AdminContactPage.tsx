@@ -27,8 +27,10 @@ import {
 } from "@mui/material";
 import { AccessTime, Business, Delete, Schedule, Add } from "@mui/icons-material";
 import { useLandingPage } from "hooks/useLandingPage";
+import { useABTestQueryParams } from "hooks/useABTestQueryParams";
 import { useUpdateContactInfo } from "api/rest/hooks";
 import { BackButton, PageContainer } from "components";
+import { ABTestEditingBanner } from "components/admin/ABTestEditingBanner";
 import { TopBar } from "components/navigation/TopBar/TopBar";
 import { CancelIcon, SaveIcon } from "icons";
 import { useEffect, useState } from "react";
@@ -95,6 +97,7 @@ const TIME_OPTIONS = [
 
 export const AdminContactPage = () => {
     const { palette } = useTheme();
+    const { abTestId, variant } = useABTestQueryParams();
     const { data: landingPageData, refetch } = useLandingPage(); // Get all data, not just active
     const { mutate: updateContactInfo, loading: updateLoading } = useUpdateContactInfo();
 
@@ -461,9 +464,11 @@ export const AdminContactPage = () => {
     const applyHours = async () => {
         try {
             const markdown = showAdvancedMode ? markdownHours : generateMarkdown();
+            const queryParams = abTestId && variant ? { abTestId, variant } : undefined;
 
             await updateContactInfo({
-                hours: markdown,
+                data: { hours: markdown },
+                queryParams,
             });
 
             // Refetch data FIRST to ensure UI is updated
@@ -666,6 +671,8 @@ export const AdminContactPage = () => {
             />
 
             <Box sx={{ p: 3 }}>
+                <ABTestEditingBanner />
+
                 {/* Header with mode toggle */}
                 <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
                     <Typography variant="h5" fontWeight="600" color="text.primary">

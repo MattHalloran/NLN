@@ -202,6 +202,11 @@ export interface Metadata {
     lastUpdated: string;
 }
 
+export interface ABTestMeta {
+    testId: string;
+    variantId: "variantA" | "variantB";
+}
+
 export interface LandingPageContent {
     metadata: Metadata;
     content: {
@@ -215,6 +220,7 @@ export interface LandingPageContent {
     theme: Theme;
     layout: Layout;
     experiments: Experiments;
+    _meta?: ABTestMeta;
 }
 
 // Update request types
@@ -282,4 +288,41 @@ export interface BusinessContactData {
     PHONE?: BusinessPhone;
     EMAIL?: BusinessEmail;
     [key: string]: unknown;
+}
+
+// New simplified A/B Test structure
+export interface ABTest {
+    id: string;
+    name: string;
+    description?: string;
+    status: "draft" | "active" | "paused" | "completed";
+    trafficSplit: {
+        variantA: number;
+        variantB: number;
+    };
+    metrics: {
+        variantA: ABTestMetrics;
+        variantB: ABTestMetrics;
+    };
+    createdAt: string;
+    updatedAt?: string;
+    startDate?: string;
+    endDate?: string;
+}
+
+export interface ABTestMetrics {
+    views: number;
+    conversions: number;
+    bounces: number;
+}
+
+export interface ABTestEvent {
+    testId: string;
+    variantId: "variantA" | "variantB";
+    eventType: "view" | "conversion" | "bounce";
+}
+
+export interface ABTestAssignment {
+    testId: string;
+    variantId: "variantA" | "variantB";
 }

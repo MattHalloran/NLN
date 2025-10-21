@@ -10,6 +10,9 @@ import type {
     PlantTip,
     HeroSettings,
     BusinessContactData,
+    ABTest,
+    ABTestEvent,
+    ABTestAssignment,
 } from "../types/landingPage.js";
 
 // Extend Express Request to include auth properties
@@ -177,20 +180,152 @@ const aggregateLandingPageContent = (onlyActive: boolean = true): LandingPageCon
     return result;
 };
 
-// GET endpoint for landing page content
+// GET endpoint for landing page content with A/B testing support
 router.get("/", async (req: Request, res: Response) => {
     try {
         // Parse query params
         const onlyActive = req.query.onlyActive !== "false"; // Default to true
+        const abTest = req.query.abTest as string | undefined;
+        const abTestId = req.query.abTestId as string | undefined;
+        const variant = req.query.variant as "variantA" | "variantB" | undefined;
 
-        // Try cache first
+        // If abTest=false, return official landing page (no A/B testing)
+        if (abTest === "false") {
+            logger.info("Returning official landing page (A/B testing disabled via query param)");
+            const content = aggregateLandingPageContent(onlyActive);
+
+            res.set({
+                "Cache-Control": "public, max-age=300",
+                ETag: `"${Buffer.from(JSON.stringify(content)).toString("base64").substring(0, 20)}"`,
+                "Last-Modified": content.metadata.lastUpdated,
+            });
+
+            return res.json(content);
+        }
+
+        // If abTestId and variant provided (user has existing assignment)
+        if (abTestId && variant) {
+            const tests = readABTests();
+            const test = tests.find((t) => t.id === abTestId);
+
+            // If test exists and is active, return the variant
+            if (test && test.status === "active") {
+                const variantContent = readVariantLandingPage(abTestId, variant);
+
+                if (variantContent) {
+                    logger.info(`Returning variant ${variant} for test ${abTestId}`);
+
+                    // Add metadata about which variant is being served
+                    const contentWithMeta: LandingPageContent = {
+                        ...variantContent,
+                        _meta: {
+                            testId: abTestId,
+                            variantId: variant,
+                        },
+                    };
+
+                    // Filter active content if requested
+                    if (onlyActive) {
+                        if (contentWithMeta.content?.hero?.banners) {
+                            contentWithMeta.content.hero.banners = contentWithMeta.content.hero.banners
+                                .filter((b: HeroBanner) => b.isActive)
+                                .sort((a: HeroBanner, b: HeroBanner) => a.displayOrder - b.displayOrder);
+                        }
+
+                        if (contentWithMeta.content?.seasonal?.plants) {
+                            contentWithMeta.content.seasonal.plants = contentWithMeta.content.seasonal.plants
+                                .filter((p: SeasonalPlant) => p.isActive)
+                                .sort((a: SeasonalPlant, b: SeasonalPlant) => a.displayOrder - b.displayOrder);
+                        }
+
+                        if (contentWithMeta.content?.seasonal?.tips) {
+                            contentWithMeta.content.seasonal.tips = contentWithMeta.content.seasonal.tips
+                                .filter((t: PlantTip) => t.isActive)
+                                .sort((a: PlantTip, b: PlantTip) => a.displayOrder - b.displayOrder);
+                        }
+                    }
+
+                    res.set({
+                        "Cache-Control": "public, max-age=60", // Shorter cache for A/B test variants
+                        "X-AB-Test": abTestId,
+                        "X-AB-Variant": variant,
+                    });
+
+                    return res.json(contentWithMeta);
+                }
+
+                logger.warn(`Variant file not found for test ${abTestId}, variant ${variant}. Falling through to new assignment.`);
+            } else {
+                logger.info(`Test ${abTestId} not found or not active. Assigning new test.`);
+            }
+
+            // Fall through to assign a new test if the provided test is invalid
+        }
+
+        // New visitor or invalid test - check for active A/B tests
+        const activeTests = getActiveABTests();
+
+        if (activeTests.length > 0) {
+            // For simplicity, use the first active test (could be randomized if multiple)
+            const selectedTest = activeTests[0];
+            const assignedVariant = assignVariant(selectedTest.trafficSplit);
+
+            const variantContent = readVariantLandingPage(selectedTest.id, assignedVariant);
+
+            if (variantContent) {
+                logger.info(`New visitor: Assigned to test ${selectedTest.id}, variant ${assignedVariant}`);
+
+                const contentWithMeta: LandingPageContent = {
+                    ...variantContent,
+                    _meta: {
+                        testId: selectedTest.id,
+                        variantId: assignedVariant,
+                    },
+                };
+
+                // Filter active content if requested
+                if (onlyActive) {
+                    if (contentWithMeta.content?.hero?.banners) {
+                        contentWithMeta.content.hero.banners = contentWithMeta.content.hero.banners
+                            .filter((b: HeroBanner) => b.isActive)
+                            .sort((a: HeroBanner, b: HeroBanner) => a.displayOrder - b.displayOrder);
+                    }
+
+                    if (contentWithMeta.content?.seasonal?.plants) {
+                        contentWithMeta.content.seasonal.plants = contentWithMeta.content.seasonal.plants
+                            .filter((p: SeasonalPlant) => p.isActive)
+                            .sort((a: SeasonalPlant, b: SeasonalPlant) => a.displayOrder - b.displayOrder);
+                    }
+
+                    if (contentWithMeta.content?.seasonal?.tips) {
+                        contentWithMeta.content.seasonal.tips = contentWithMeta.content.seasonal.tips
+                            .filter((t: PlantTip) => t.isActive)
+                            .sort((a: PlantTip, b: PlantTip) => a.displayOrder - b.displayOrder);
+                    }
+                }
+
+                res.set({
+                    "Cache-Control": "public, max-age=60",
+                    "X-AB-Test": selectedTest.id,
+                    "X-AB-Variant": assignedVariant,
+                });
+
+                return res.json(contentWithMeta);
+            }
+
+            logger.warn(`Variant file not found for test ${selectedTest.id}. Falling back to official content.`);
+        }
+
+        // No active tests or variant files not found - return official landing page
+        logger.info("No active A/B tests. Returning official landing page");
+
+        // Try cache first for official content
         const cached = await getCachedContent();
         if (cached) {
-            logger.info("Returning cached landing page content");
+            logger.info("Returning cached official landing page content");
 
-            // Set cache headers for browser caching
             res.set({
-                "Cache-Control": "public, max-age=300", // 5 minutes browser cache
+                "Cache-Control": "public, max-age=300",
                 ETag: `"${Buffer.from(JSON.stringify(cached)).toString("base64").substring(0, 20)}"`,
                 "Last-Modified": cached.metadata.lastUpdated || new Date().toUTCString(),
             });
@@ -199,13 +334,11 @@ router.get("/", async (req: Request, res: Response) => {
         }
 
         // Generate fresh content
-        logger.info("Generating fresh landing page content");
         const content = aggregateLandingPageContent(onlyActive);
 
         // Cache it
         await setCachedContent(content);
 
-        // Set cache headers
         res.set({
             "Cache-Control": "public, max-age=300",
             ETag: `"${Buffer.from(JSON.stringify(content)).toString("base64").substring(0, 20)}"`,
@@ -242,6 +375,7 @@ router.post("/invalidate-cache", async (req: AuthenticatedRequest, res: Response
 });
 
 // PUT endpoint to update entire landing page content (admin only)
+// Supports editing A/B test variants via query params: ?abTestId=xxx&variant=variantA
 router.put("/", async (req: AuthenticatedRequest, res: Response) => {
     try {
         // Check admin access (using the auth middleware)
@@ -261,8 +395,27 @@ router.put("/", async (req: AuthenticatedRequest, res: Response) => {
 
         const updatedSections: string[] = [];
 
-        // Read current content
-        const currentContent = readLandingPageContent();
+        // Check if editing an A/B test variant
+        const abTestId = req.query.abTestId as string | undefined;
+        const variant = req.query.variant as "variantA" | "variantB" | undefined;
+
+        let currentContent: LandingPageContent;
+        let isVariant = false;
+
+        if (abTestId && variant) {
+            // Editing a variant
+            const variantContent = readVariantLandingPage(abTestId, variant);
+            if (!variantContent) {
+                return res.status(404).json({ error: `Variant ${variant} for test ${abTestId} not found` });
+            }
+            currentContent = variantContent;
+            isVariant = true;
+            logger.info(`Editing variant ${variant} for test ${abTestId}`);
+        } else {
+            // Editing official landing page
+            currentContent = readLandingPageContent();
+            logger.info("Editing official landing page");
+        }
 
         // Update hero banners if provided
         if (heroBanners) {
@@ -590,7 +743,11 @@ router.put("/", async (req: AuthenticatedRequest, res: Response) => {
 
         // Write updated content
         try {
-            writeLandingPageContent(currentContent);
+            if (isVariant && abTestId && variant) {
+                writeVariantLandingPage(abTestId, variant, currentContent);
+            } else {
+                writeLandingPageContent(currentContent);
+            }
         } catch (error) {
             logger.error("Error writing landing page content:", error);
             return res.status(500).json({
@@ -611,8 +768,13 @@ router.put("/", async (req: AuthenticatedRequest, res: Response) => {
 
         return res.json({
             success: true,
-            message: "Landing page content updated successfully",
+            message: isVariant
+                ? `Variant ${variant} for test ${abTestId} updated successfully`
+                : "Landing page content updated successfully",
             updatedSections,
+            isVariant,
+            abTestId,
+            variant,
         });
     } catch (error) {
         logger.error("Error updating landing page content:", error);
@@ -624,6 +786,7 @@ router.put("/", async (req: AuthenticatedRequest, res: Response) => {
 });
 
 // PUT endpoint to update contact information (admin only)
+// Supports editing A/B test variants via query params: ?abTestId=xxx&variant=variantA
 router.put("/contact-info", async (req: Request, res: Response) => {
     try {
         // Check admin access (using the auth middleware)
@@ -639,8 +802,24 @@ router.put("/contact-info", async (req: Request, res: Response) => {
                 .json({ error: "Either business or hours data must be provided" });
         }
 
-        // Read current content
-        const currentContent = readLandingPageContent();
+        // Check if editing an A/B test variant
+        const abTestId = req.query.abTestId as string | undefined;
+        const variant = req.query.variant as "variantA" | "variantB" | undefined;
+
+        let currentContent: LandingPageContent;
+        let isVariant = false;
+
+        if (abTestId && variant) {
+            const variantContent = readVariantLandingPage(abTestId, variant);
+            if (!variantContent) {
+                return res.status(404).json({ error: `Variant ${variant} for test ${abTestId} not found` });
+            }
+            currentContent = variantContent;
+            isVariant = true;
+        } else {
+            currentContent = readLandingPageContent();
+        }
+
         currentContent.contact = currentContent.contact || {};
 
         // Update business info if provided
@@ -701,7 +880,11 @@ router.put("/contact-info", async (req: Request, res: Response) => {
 
         // Write updated content
         try {
-            writeLandingPageContent(currentContent);
+            if (isVariant && abTestId && variant) {
+                writeVariantLandingPage(abTestId, variant, currentContent);
+            } else {
+                writeLandingPageContent(currentContent);
+            }
         } catch (error) {
             logger.error("Error writing landing page content:", error);
             return res.status(500).json({
@@ -722,11 +905,16 @@ router.put("/contact-info", async (req: Request, res: Response) => {
 
         return res.json({
             success: true,
-            message: "Contact information updated successfully",
+            message: isVariant
+                ? `Variant ${variant} contact info for test ${abTestId} updated successfully`
+                : "Contact information updated successfully",
             updated: {
                 business: !!business,
                 hours: !!hours,
             },
+            isVariant,
+            abTestId,
+            variant,
         });
     } catch (error) {
         logger.error("Error updating contact info:", error);
@@ -738,25 +926,124 @@ router.put("/contact-info", async (req: Request, res: Response) => {
 });
 
 // Helper functions for A/B testing
-const readABTests = () => {
+const readABTests = (): ABTest[] => {
     try {
         const data = readFileSync(join(dataPath, "ab-tests.json"), "utf8");
-        return JSON.parse(data).tests || [];
+        const parsed = JSON.parse(data);
+        // Handle both old format (with tests array) and new format (direct object with test IDs as keys)
+        if (parsed.tests && Array.isArray(parsed.tests)) {
+            // Convert old array format to new object format
+            const testsObj: Record<string, ABTest> = {};
+            parsed.tests.forEach((test: any) => {
+                testsObj[test.id] = {
+                    id: test.id,
+                    name: test.name || "Unnamed Test",
+                    description: test.description,
+                    status: test.status || "draft",
+                    trafficSplit: test.trafficSplit || { variantA: 50, variantB: 50 },
+                    metrics: test.metrics || {
+                        variantA: { views: 0, conversions: 0, bounces: 0 },
+                        variantB: { views: 0, conversions: 0, bounces: 0 },
+                    },
+                    createdAt: test.createdAt || new Date().toISOString(),
+                    updatedAt: test.updatedAt,
+                    startDate: test.startDate,
+                    endDate: test.endDate,
+                };
+            });
+            return Object.values(testsObj);
+        }
+        // New format: object with test IDs as keys
+        return Object.values(parsed);
     } catch (error) {
         logger.error("Error reading A/B tests:", error);
         return [];
     }
 };
 
-const writeABTests = (tests: any[]) => {
+const writeABTests = (tests: ABTest[]): void => {
     try {
         const testsPath = join(dataPath, "ab-tests.json");
-        writeFileSync(testsPath, JSON.stringify({ tests }, null, 2), "utf8");
+        // Store as object with test IDs as keys
+        const testsObj: Record<string, ABTest> = {};
+        tests.forEach((test) => {
+            testsObj[test.id] = test;
+        });
+        writeFileSync(testsPath, JSON.stringify(testsObj, null, 2), "utf8");
         logger.info("A/B tests updated successfully");
     } catch (error) {
         logger.error("Error writing A/B tests:", error);
         throw error;
     }
+};
+
+// Read variant landing page file
+const readVariantLandingPage = (testId: string, variantId: "variantA" | "variantB"): LandingPageContent | null => {
+    try {
+        const fileName = `landing-page-test-${testId}-${variantId}.json`;
+        const data = readFileSync(join(dataPath, fileName), "utf8");
+        return JSON.parse(data) as LandingPageContent;
+    } catch (error) {
+        logger.error(`Error reading variant landing page ${testId}-${variantId}:`, error);
+        return null;
+    }
+};
+
+// Write variant landing page file
+const writeVariantLandingPage = (testId: string, variantId: "variantA" | "variantB", content: LandingPageContent): void => {
+    try {
+        const fileName = `landing-page-test-${testId}-${variantId}.json`;
+        const filePath = join(dataPath, fileName);
+        const dataToWrite: LandingPageContent = {
+            ...content,
+            metadata: {
+                ...content.metadata,
+                lastUpdated: new Date().toISOString(),
+            },
+        };
+        writeFileSync(filePath, JSON.stringify(dataToWrite, null, 2), "utf8");
+        logger.info(`Variant landing page ${testId}-${variantId} updated successfully`);
+    } catch (error) {
+        logger.error(`Error writing variant landing page ${testId}-${variantId}:`, error);
+        throw error;
+    }
+};
+
+// Delete variant landing page files
+const deleteVariantFiles = (testId: string): void => {
+    try {
+        const { unlinkSync } = require("fs");
+        const variantAFile = join(dataPath, `landing-page-test-${testId}-variantA.json`);
+        const variantBFile = join(dataPath, `landing-page-test-${testId}-variantB.json`);
+
+        try {
+            unlinkSync(variantAFile);
+        } catch (err) {
+            logger.warn(`Could not delete ${variantAFile}:`, err);
+        }
+
+        try {
+            unlinkSync(variantBFile);
+        } catch (err) {
+            logger.warn(`Could not delete ${variantBFile}:`, err);
+        }
+
+        logger.info(`Variant files for test ${testId} deleted`);
+    } catch (error) {
+        logger.error(`Error deleting variant files for test ${testId}:`, error);
+    }
+};
+
+// Assign variant based on traffic split
+const assignVariant = (trafficSplit: { variantA: number; variantB: number }): "variantA" | "variantB" => {
+    const random = Math.random() * 100;
+    return random < trafficSplit.variantA ? "variantA" : "variantB";
+};
+
+// Get active A/B tests
+const getActiveABTests = (): ABTest[] => {
+    const tests = readABTests();
+    return tests.filter((test) => test.status === "active");
 };
 
 // Helper function to deep merge objects
@@ -783,6 +1070,7 @@ const isObject = (item: any): boolean => {
 };
 
 // PUT endpoint to update landing page settings with deep merge (admin only)
+// Supports editing A/B test variants via query params: ?abTestId=xxx&variant=variantA
 router.put("/settings", async (req: Request, res: Response) => {
     try {
         if (!(req as any).isAdmin) {
@@ -795,8 +1083,24 @@ router.put("/settings", async (req: Request, res: Response) => {
             return res.status(400).json({ error: "No settings provided for update" });
         }
 
-        // Read current content
-        const currentContent = readLandingPageContent();
+        // Check if editing an A/B test variant
+        const abTestId = req.query.abTestId as string | undefined;
+        const variant = req.query.variant as "variantA" | "variantB" | undefined;
+
+        let currentContent: LandingPageContent;
+        let isVariant = false;
+
+        if (abTestId && variant) {
+            const variantContent = readVariantLandingPage(abTestId, variant);
+            if (!variantContent) {
+                return res.status(404).json({ error: `Variant ${variant} for test ${abTestId} not found` });
+            }
+            currentContent = variantContent;
+            isVariant = true;
+        } else {
+            currentContent = readLandingPageContent();
+        }
+
         currentContent.content = currentContent.content || {};
         currentContent.theme = currentContent.theme || {};
         currentContent.layout = currentContent.layout || {};
@@ -855,7 +1159,11 @@ router.put("/settings", async (req: Request, res: Response) => {
 
         // Write updated content
         try {
-            writeLandingPageContent(currentContent);
+            if (isVariant && abTestId && variant) {
+                writeVariantLandingPage(abTestId, variant, currentContent);
+            } else {
+                writeLandingPageContent(currentContent);
+            }
         } catch (error) {
             logger.error("Error writing landing page content:", error);
             return res.status(500).json({
@@ -870,8 +1178,13 @@ router.put("/settings", async (req: Request, res: Response) => {
 
         return res.json({
             success: true,
-            message: "Landing page settings updated successfully",
+            message: isVariant
+                ? `Variant ${variant} settings for test ${abTestId} updated successfully`
+                : "Landing page settings updated successfully",
             updatedFields: Object.keys(updates),
+            isVariant,
+            abTestId,
+            variant,
         });
     } catch (error) {
         logger.error("Error updating landing page settings:", error);
@@ -883,6 +1196,7 @@ router.put("/settings", async (req: Request, res: Response) => {
 });
 
 // PUT endpoint to update section configuration (admin only)
+// Supports editing A/B test variants via query params: ?abTestId=xxx&variant=variantA
 router.put("/sections", async (req: Request, res: Response) => {
     try {
         if (!(req as any).isAdmin) {
@@ -895,8 +1209,24 @@ router.put("/sections", async (req: Request, res: Response) => {
             return res.status(400).json({ error: "Invalid section configuration" });
         }
 
-        // Read current content
-        const currentContent = readLandingPageContent();
+        // Check if editing an A/B test variant
+        const abTestId = req.query.abTestId as string | undefined;
+        const variant = req.query.variant as "variantA" | "variantB" | undefined;
+
+        let currentContent: LandingPageContent;
+        let isVariant = false;
+
+        if (abTestId && variant) {
+            const variantContent = readVariantLandingPage(abTestId, variant);
+            if (!variantContent) {
+                return res.status(404).json({ error: `Variant ${variant} for test ${abTestId} not found` });
+            }
+            currentContent = variantContent;
+            isVariant = true;
+        } else {
+            currentContent = readLandingPageContent();
+        }
+
         currentContent.layout = currentContent.layout || {};
 
         // Update sections
@@ -904,7 +1234,11 @@ router.put("/sections", async (req: Request, res: Response) => {
 
         // Write updated content
         try {
-            writeLandingPageContent(currentContent);
+            if (isVariant && abTestId && variant) {
+                writeVariantLandingPage(abTestId, variant, currentContent);
+            } else {
+                writeLandingPageContent(currentContent);
+            }
         } catch (error) {
             logger.error("Error writing landing page content:", error);
             return res.status(500).json({
@@ -919,7 +1253,12 @@ router.put("/sections", async (req: Request, res: Response) => {
 
         return res.json({
             success: true,
-            message: "Section configuration updated successfully",
+            message: isVariant
+                ? `Variant ${variant} sections for test ${abTestId} updated successfully`
+                : "Section configuration updated successfully",
+            isVariant,
+            abTestId,
+            variant,
         });
     } catch (error) {
         logger.error("Error updating section configuration:", error);
@@ -973,46 +1312,53 @@ router.get("/ab-tests/:id", async (req: Request, res: Response) => {
 });
 
 // POST endpoint to create a new A/B test (admin only)
+// Creates test metadata and copies current landing page to both variants
 router.post("/ab-tests", async (req: Request, res: Response) => {
     try {
         if (!(req as any).isAdmin) {
             return res.status(403).json({ error: "Admin access required" });
         }
 
-        const { name, description, variantA, variantB } = req.body;
+        const { name, description, trafficSplit } = req.body as {
+            name?: string;
+            description?: string;
+            trafficSplit?: { variantA: number; variantB: number };
+        };
 
-        if (!name || !variantA || !variantB) {
-            return res.status(400).json({ error: "Missing required fields" });
+        if (!name) {
+            return res.status(400).json({ error: "Test name is required" });
         }
 
         const tests = readABTests();
 
-        const newTest = {
+        const newTest: ABTest = {
             id: `test-${Date.now()}-${Math.random().toString(36).substring(7)}`,
             name,
-            description,
+            description: description || "",
             status: "draft",
-            variantA,
-            variantB,
+            trafficSplit: trafficSplit || { variantA: 50, variantB: 50 },
             metrics: {
-                variantA: {
-                    views: 0,
-                    bounces: 0,
-                    avgTimeOnPage: 0,
-                    interactions: 0,
-                    conversions: 0,
-                },
-                variantB: {
-                    views: 0,
-                    bounces: 0,
-                    avgTimeOnPage: 0,
-                    interactions: 0,
-                    conversions: 0,
-                },
+                variantA: { views: 0, conversions: 0, bounces: 0 },
+                variantB: { views: 0, conversions: 0, bounces: 0 },
             },
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
         };
+
+        // Copy current landing page content to both variants
+        const currentContent = readLandingPageContent();
+
+        try {
+            writeVariantLandingPage(newTest.id, "variantA", currentContent);
+            writeVariantLandingPage(newTest.id, "variantB", currentContent);
+            logger.info(`Created variant files for test ${newTest.id}`);
+        } catch (error) {
+            logger.error("Error creating variant files:", error);
+            return res.status(500).json({
+                error: "Failed to create variant files",
+                message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
+            });
+        }
 
         tests.push(newTest);
         writeABTests(tests);
@@ -1062,6 +1408,7 @@ router.put("/ab-tests/:id", async (req: Request, res: Response) => {
 });
 
 // DELETE endpoint to delete an A/B test (admin only)
+// Also deletes the variant files
 router.delete("/ab-tests/:id", async (req: Request, res: Response) => {
     try {
         if (!(req as any).isAdmin) {
@@ -1069,25 +1416,26 @@ router.delete("/ab-tests/:id", async (req: Request, res: Response) => {
         }
 
         const tests = readABTests();
-        const testIndex = tests.findIndex((t: any) => t.id === req.params.id);
+        const testIndex = tests.findIndex((t) => t.id === req.params.id);
 
         if (testIndex === -1) {
             return res.status(404).json({ error: "A/B test not found" });
         }
 
         // Check if test is active
-        const currentContent = readLandingPageContent();
-        const abTesting = currentContent.experiments?.abTesting as
-            | { activeTestId?: string }
-            | undefined;
-        if (abTesting?.activeTestId === req.params.id) {
+        const test = tests[testIndex];
+        if (test.status === "active") {
             return res.status(400).json({ error: "Cannot delete an active test. Stop it first." });
         }
 
+        // Delete variant files
+        deleteVariantFiles(req.params.id);
+
+        // Remove from tests array
         tests.splice(testIndex, 1);
         writeABTests(tests);
 
-        return res.json({ success: true });
+        return res.json({ success: true, message: "A/B test and variant files deleted successfully" });
     } catch (error) {
         logger.error("Error deleting A/B test:", error);
         return res.status(500).json({
@@ -1098,6 +1446,7 @@ router.delete("/ab-tests/:id", async (req: Request, res: Response) => {
 });
 
 // POST endpoint to start an A/B test (admin only)
+// Stops any other active tests and activates this one
 router.post("/ab-tests/:id/start", async (req: Request, res: Response) => {
     try {
         if (!(req as any).isAdmin) {
@@ -1105,35 +1454,34 @@ router.post("/ab-tests/:id/start", async (req: Request, res: Response) => {
         }
 
         const tests = readABTests();
-        const testIndex = tests.findIndex((t: any) => t.id === req.params.id);
+        const testIndex = tests.findIndex((t) => t.id === req.params.id);
 
         if (testIndex === -1) {
             return res.status(404).json({ error: "A/B test not found" });
         }
 
-        // Update settings to enable A/B testing and set active test
-        const currentContent = readLandingPageContent();
-        currentContent.experiments = currentContent.experiments || {};
-        currentContent.experiments.abTesting = {
-            enabled: true,
-            activeTestId: req.params.id,
-        };
+        // Verify variant files exist
+        const variantA = readVariantLandingPage(req.params.id, "variantA");
+        const variantB = readVariantLandingPage(req.params.id, "variantB");
 
-        // Write updated content
-        try {
-            writeLandingPageContent(currentContent);
-        } catch (error) {
-            logger.error("Error writing landing page content:", error);
-            return res.status(500).json({
-                error: "Failed to write landing page content",
-                message:
-                    process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
+        if (!variantA || !variantB) {
+            return res.status(400).json({
+                error: "Variant files not found. Please ensure both variants have been created.",
             });
         }
 
+        // Stop all other active tests
+        tests.forEach((test, idx) => {
+            if (test.status === "active" && idx !== testIndex) {
+                tests[idx].status = "paused";
+                tests[idx].updatedAt = new Date().toISOString();
+                logger.info(`Paused test ${test.id} to activate ${req.params.id}`);
+            }
+        });
+
         // Update test status
         tests[testIndex].status = "active";
-        tests[testIndex].startDate = new Date().toISOString();
+        tests[testIndex].startDate = tests[testIndex].startDate || new Date().toISOString();
         tests[testIndex].updatedAt = new Date().toISOString();
 
         writeABTests(tests);
@@ -1159,30 +1507,10 @@ router.post("/ab-tests/:id/stop", async (req: Request, res: Response) => {
         }
 
         const tests = readABTests();
-        const testIndex = tests.findIndex((t: any) => t.id === req.params.id);
+        const testIndex = tests.findIndex((t) => t.id === req.params.id);
 
         if (testIndex === -1) {
             return res.status(404).json({ error: "A/B test not found" });
-        }
-
-        // Update settings to disable A/B testing
-        const currentContent = readLandingPageContent();
-        currentContent.experiments = currentContent.experiments || {};
-        currentContent.experiments.abTesting = {
-            enabled: false,
-            activeTestId: null,
-        };
-
-        // Write updated content
-        try {
-            writeLandingPageContent(currentContent);
-        } catch (error) {
-            logger.error("Error writing landing page content:", error);
-            return res.status(500).json({
-                error: "Failed to write landing page content",
-                message:
-                    process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
-            });
         }
 
         // Update test status
@@ -1200,6 +1528,49 @@ router.post("/ab-tests/:id/stop", async (req: Request, res: Response) => {
         logger.error("Error stopping A/B test:", error);
         return res.status(500).json({
             error: "Failed to stop A/B test",
+            message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
+        });
+    }
+});
+
+// POST endpoint to track A/B test analytics events
+router.post("/ab-tests/:id/track", async (req: Request, res: Response) => {
+    try {
+        const { variantId, eventType } = req.body as {
+            variantId?: "variantA" | "variantB";
+            eventType?: "view" | "conversion" | "bounce";
+        };
+
+        if (!variantId || !eventType) {
+            return res.status(400).json({ error: "variantId and eventType are required" });
+        }
+
+        const tests = readABTests();
+        const testIndex = tests.findIndex((t) => t.id === req.params.id);
+
+        if (testIndex === -1) {
+            return res.status(404).json({ error: "A/B test not found" });
+        }
+
+        // Increment the appropriate metric
+        if (!tests[testIndex].metrics[variantId]) {
+            tests[testIndex].metrics[variantId] = { views: 0, conversions: 0, bounces: 0 };
+        }
+
+        // Map event type to metric property (singular to plural)
+        const metricKey = eventType === "view" ? "views" : eventType === "conversion" ? "conversions" : "bounces";
+        tests[testIndex].metrics[variantId][metricKey]++;
+        tests[testIndex].updatedAt = new Date().toISOString();
+
+        writeABTests(tests);
+
+        logger.info(`Tracked ${eventType} for test ${req.params.id}, variant ${variantId}`);
+
+        return res.json({ success: true, metrics: tests[testIndex].metrics });
+    } catch (error) {
+        logger.error("Error tracking A/B test event:", error);
+        return res.status(500).json({
+            error: "Failed to track A/B test event",
             message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
         });
     }

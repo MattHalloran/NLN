@@ -28,8 +28,10 @@ import {
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { useLandingPage } from "hooks/useLandingPage";
 import { useUpdateLandingPageSettings } from "api/rest/hooks";
+import { useABTestQueryParams } from "hooks/useABTestQueryParams";
 import { restApi } from "api/rest/client";
 import { BackButton, Dropzone, PageContainer } from "components";
+import { ABTestEditingBanner } from "components/admin/ABTestEditingBanner/ABTestEditingBanner";
 import { TopBar } from "components/navigation/TopBar/TopBar";
 import { getServerUrl } from "utils/serverUrl";
 import { PubSub } from "utils/pubsub";
@@ -76,6 +78,7 @@ interface CTAButton {
 }
 
 export const AdminHomepageHeroBanner = () => {
+    const { abTestId, variant } = useABTestQueryParams();
     const [heroBanners, setHeroBanners] = useState<any[]>([]);
     const [originalHeroBanners, setOriginalHeroBanners] = useState<any[]>([]);
     const [heroSettings, setHeroSettings] = useState<HeroSettings>({
@@ -264,19 +267,27 @@ export const AdminHomepageHeroBanner = () => {
         try {
             setIsLoading(true);
 
+            const queryParams = abTestId && variant ? { abTestId, variant } : undefined;
+
             // Update hero banners and settings
-            await restApi.updateLandingPageContent({
-                heroBanners,
-                heroSettings,
-            });
+            await restApi.updateLandingPageContent(
+                {
+                    heroBanners,
+                    heroSettings,
+                },
+                queryParams,
+            );
 
             // Update hero content, trust badges, and CTA buttons
             await updateSettings.mutate({
-                hero: {
-                    ...heroContent,
-                    trustBadges,
-                    buttons: ctaButtons,
+                settings: {
+                    hero: {
+                        ...heroContent,
+                        trustBadges,
+                        buttons: ctaButtons,
+                    },
                 },
+                queryParams,
             });
 
             await refetch();
@@ -293,7 +304,7 @@ export const AdminHomepageHeroBanner = () => {
         } finally {
             setIsLoading(false);
         }
-    }, [heroBanners, heroSettings, heroContent, trustBadges, ctaButtons, refetch, handleApiSuccess, handleApiError, updateSettings]);
+    }, [heroBanners, heroSettings, heroContent, trustBadges, ctaButtons, refetch, handleApiSuccess, handleApiError, updateSettings, abTestId, variant]);
 
     const handleCancelChanges = useCallback(() => {
         setHeroBanners(JSON.parse(JSON.stringify(originalHeroBanners)));
@@ -318,6 +329,8 @@ export const AdminHomepageHeroBanner = () => {
             />
 
             <Box p={2}>
+                <ABTestEditingBanner />
+
                 {/* Unsaved changes warning */}
                 {hasChanges && (
                     <Alert severity="warning" sx={{ mb: 3 }}>
