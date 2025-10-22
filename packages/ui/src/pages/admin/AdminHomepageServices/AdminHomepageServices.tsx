@@ -49,7 +49,7 @@ const SERVICE_ICONS = [
 ];
 
 export const AdminHomepageServices = () => {
-    const { abTestId, variant } = useABTestQueryParams();
+    const { variantId } = useABTestQueryParams();
     const updateSettings = useUpdateLandingPageSettings();
     const { data: landingPageContent, refetch } = useLandingPage();
 
@@ -119,8 +119,10 @@ export const AdminHomepageServices = () => {
 
     const handleSave = async () => {
         try {
-            const queryParams = abTestId && variant ? { abTestId, variant } : undefined;
-            await updateSettings.mutate({ settings: { services }, queryParams });
+            await updateSettings.mutate({
+                settings: { services },
+                queryParams: variantId ? { variantId } : undefined
+            });
             setOriginalServices(JSON.parse(JSON.stringify(services)));
             setSnackbar({
                 open: true,

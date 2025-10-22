@@ -1,0 +1,17 @@
+{
+  "variant-homepage-official": {
+    "id": "variant-homepage-official",
+    "name": "Official Homepage",
+    "description": "The current production homepage design",
+    "status": "enabled",
+    "isOfficial": true,
+    "trafficAllocation": 100,
+    "metrics": {
+      "views": 2,
+      "conversions": 0,
+      "bounces": 0
+    },
+    "createdAt": "2025-01-01T00:00:00Z",
+    "updatedAt": "2025-10-22T03:14:04.861Z"
+  }
+}

@@ -7,7 +7,7 @@ import {
     CustomerContact as _CustomerContact,
     Image,
     DashboardStats,
-    ABTest,
+    LandingPageVariant,
     SectionConfiguration,
     AnalyticsEvent,
 } from "./client";
@@ -66,7 +66,7 @@ function useRestQuery<T>(
 // Specific hooks for different endpoints
 export function useLandingPageContent(onlyActive = true) {
     return useRestQuery<LandingPageContent>(
-        () => restApi.getLandingPageContent(onlyActive),
+        () => restApi.getLandingPageContent({ onlyActive }),
         [onlyActive],
     );
 }
@@ -139,7 +139,7 @@ export function useInvalidateLandingPageCache() {
 // Contact info update hook
 export function useUpdateContactInfo() {
     return useRestMutation<
-        { data: { business?: Record<string, unknown>; hours?: string }; queryParams?: { abTestId?: string; variant?: "variantA" | "variantB" } },
+        { data: { business?: Record<string, unknown>; hours?: string }; queryParams?: { variantId?: string } },
         { success: boolean; message: string; updated: { business: boolean; hours: boolean } }
     >(
         ({ data, queryParams }) => restApi.updateContactInfo(data, queryParams),
@@ -382,7 +382,12 @@ export function useUpdateSectionConfiguration() {
 
 export function useUpdateLandingPageSettings() {
     return useRestMutation<
-        { settings: Record<string, unknown>; queryParams?: { abTestId?: string; variant?: "variantA" | "variantB" } },
+        {
+            settings: Record<string, unknown>;
+            queryParams?: {
+                variantId?: string;
+            };
+        },
         { success: boolean; message: string; updatedFields: string[] }
     >(
         ({ settings, queryParams }) => restApi.updateLandingPageSettings(settings, queryParams),
@@ -390,68 +395,84 @@ export function useUpdateLandingPageSettings() {
 }
 
 // ============================================
-// A/B Testing Hooks
+// Analytics Hooks
 // ============================================
 
-export function useABTests() {
-    return useRestQuery<ABTest[]>(
-        () => restApi.getABTests(),
+export function useTrackAnalyticsEvent() {
+    return useRestMutation<AnalyticsEvent, { success: boolean }>(
+        (event) => restApi.trackAnalyticsEvent(event),
+    );
+}
+
+// ============================================
+// NEW Variant-First A/B Testing Hooks
+// ============================================
+
+export function useVariants() {
+    return useRestQuery<LandingPageVariant[]>(
+        () => restApi.getVariants(),
         [],
     );
 }
 
-export function useABTest(id: string | null) {
-    return useRestQuery<ABTest>(
+export function useVariant(id: string | null) {
+    return useRestQuery<LandingPageVariant>(
         () => {
-            if (!id) throw new Error("Test ID is required");
-            return restApi.getABTest(id);
+            if (!id) throw new Error("Variant ID is required");
+            return restApi.getVariant(id);
         },
         [id],
     );
 }
 
-export function useCreateABTest() {
+export function useCreateVariant() {
     return useRestMutation<
         {
             name: string;
             description?: string;
-            trafficSplit?: { variantA: number; variantB: number };
+            trafficAllocation?: number;
+            copyFromVariantId?: string;
         },
-        ABTest
+        LandingPageVariant
     >(
-        (test) => restApi.createABTest(test),
+        (variant) => restApi.createVariant(variant),
     );
 }
 
-export function useUpdateABTest() {
+export function useUpdateVariant() {
     return useRestMutation<
-        { id: string; test: Partial<ABTest> },
-        ABTest
+        {
+            id: string;
+            variant: Partial<{
+                name: string;
+                description: string;
+                status: "enabled" | "disabled";
+                trafficAllocation: number;
+            }>;
+        },
+        LandingPageVariant
     >(
-        ({ id, test }) => restApi.updateABTest(id, test),
+        ({ id, variant }) => restApi.updateVariant(id, variant),
     );
 }
 
-export function useDeleteABTest() {
-    return useRestMutation<string, { success: boolean }>(
-        (id) => restApi.deleteABTest(id),
+export function useDeleteVariant() {
+    return useRestMutation<string, { success: boolean; message: string }>(
+        (id) => restApi.deleteVariant(id),
     );
 }
 
-export function useStartABTest() {
-    return useRestMutation<string, ABTest>(
-        (id) => restApi.startABTest(id),
+export function usePromoteVariant() {
+    return useRestMutation<
+        string,
+        { success: boolean; message: string; variant: LandingPageVariant }
+    >(
+        (id) => restApi.promoteVariant(id),
     );
 }
 
-export function useStopABTest() {
-    return useRestMutation<string, ABTest>(
-        (id) => restApi.stopABTest(id),
-    );
-}
-
-export function useTrackAnalyticsEvent() {
-    return useRestMutation<AnalyticsEvent, { success: boolean }>(
-        (event) => restApi.trackAnalyticsEvent(event),
+export function useToggleVariant() {
+    return useRestMutation<string, LandingPageVariant>(
+        (id) => restApi.toggleVariant(id),
     );
 }

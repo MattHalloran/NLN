@@ -202,9 +202,8 @@ export interface Metadata {
     lastUpdated: string;
 }
 
-export interface ABTestMeta {
-    testId: string;
-    variantId: "variantA" | "variantB";
+export interface VariantMeta {
+    variantId: string;
 }
 
 export interface LandingPageContent {
@@ -220,7 +219,7 @@ export interface LandingPageContent {
     theme: Theme;
     layout: Layout;
     experiments: Experiments;
-    _meta?: ABTestMeta;
+    _meta?: VariantMeta; // Variant assignment metadata
 }
 
 // Update request types
@@ -290,39 +289,30 @@ export interface BusinessContactData {
     [key: string]: unknown;
 }
 
-// New simplified A/B Test structure
-export interface ABTest {
-    id: string;
-    name: string;
-    description?: string;
-    status: "draft" | "active" | "paused" | "completed";
-    trafficSplit: {
-        variantA: number;
-        variantB: number;
-    };
+
+// New variant-first structure for A/B testing
+export interface LandingPageVariant {
+    id: string; // e.g., "variant-homepage-official", "variant-bold-cta"
+    name: string; // Display name like "Official Homepage", "Bold CTA Design"
+    description?: string; // What this variant is testing
+    status: "enabled" | "disabled"; // Whether this variant is receiving traffic
+    isOfficial: boolean; // Is this the official/control variant?
+    trafficAllocation: number; // Percentage of traffic (0-100)
     metrics: {
-        variantA: ABTestMetrics;
-        variantB: ABTestMetrics;
+        views: number;
+        conversions: number;
+        bounces: number;
     };
     createdAt: string;
     updatedAt?: string;
-    startDate?: string;
-    endDate?: string;
+    lastModified?: string; // When the content was last edited
 }
 
-export interface ABTestMetrics {
-    views: number;
-    conversions: number;
-    bounces: number;
-}
-
-export interface ABTestEvent {
-    testId: string;
-    variantId: "variantA" | "variantB";
+export interface VariantEvent {
+    variantId: string;
     eventType: "view" | "conversion" | "bounce";
 }
 
-export interface ABTestAssignment {
-    testId: string;
-    variantId: "variantA" | "variantB";
+export interface VariantAssignment {
+    variantId: string;
 }

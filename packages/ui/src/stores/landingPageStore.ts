@@ -1,27 +1,25 @@
 import { create } from "zustand";
-import { LandingPageContent, restApi, ABTestMeta } from "api/rest/client";
+import { LandingPageContent, restApi } from "api/rest/client";
 
-const AB_TEST_STORAGE_KEY = "abTestAssignment";
+const VARIANT_STORAGE_KEY = "variantAssignment";
 
-// Helper to get stored A/B test assignment from localStorage
-const getStoredABTestAssignment = (): ABTestMeta | null => {
+// Helper to get stored variant assignment from localStorage
+const getStoredVariantId = (): string | null => {
     try {
-        const stored = localStorage.getItem(AB_TEST_STORAGE_KEY);
-        if (stored) {
-            return JSON.parse(stored) as ABTestMeta;
-        }
+        const stored = localStorage.getItem(VARIANT_STORAGE_KEY);
+        return stored || null;
     } catch (error) {
-        console.error("Error reading A/B test assignment from localStorage:", error);
+        console.error("Error reading variant assignment from localStorage:", error);
+        return null;
     }
-    return null;
 };
 
-// Helper to save A/B test assignment to localStorage
-const saveABTestAssignment = (meta: ABTestMeta): void => {
+// Helper to save variant assignment to localStorage
+const saveVariantId = (variantId: string): void => {
     try {
-        localStorage.setItem(AB_TEST_STORAGE_KEY, JSON.stringify(meta));
+        localStorage.setItem(VARIANT_STORAGE_KEY, variantId);
     } catch (error) {
-        console.error("Error saving A/B test assignment to localStorage:", error);
+        console.error("Error saving variant assignment to localStorage:", error);
     }
 };
 
@@ -46,30 +44,19 @@ export const useLandingPageStore = create<LandingPageState>((set, get) => ({
         set({ loading: true, error: null });
 
         try {
-            // Get stored A/B test assignment
-            const storedAssignment = getStoredABTestAssignment();
+            // Get stored variant assignment (if user was previously assigned)
+            const storedVariantId = getStoredVariantId();
 
-            // Fetch data with A/B test parameters if available
+            // Fetch data with variantId if available
+            // Backend will handle variant assignment if no variantId provided
             const data = await restApi.getLandingPageContent({
                 onlyActive: false, // Fetch ALL data (including inactive) - components can filter as needed
-                abTestId: storedAssignment?.testId,
-                variant: storedAssignment?.variantId,
+                variantId: storedVariantId || undefined,
             });
 
-            // Save returned A/B test metadata to localStorage
-            if (data._meta) {
-                saveABTestAssignment(data._meta);
-
-                // Track "view" event for this A/B test
-                try {
-                    await restApi.trackABTestEvent(data._meta.testId, {
-                        variantId: data._meta.variantId,
-                        eventType: "view",
-                    });
-                } catch (trackError) {
-                    // Non-fatal - don't block rendering if analytics fails
-                    console.error("Error tracking A/B test view event:", trackError);
-                }
+            // Save returned variant metadata to localStorage for consistency
+            if (data._meta?.variantId) {
+                saveVariantId(data._meta.variantId);
             }
 
             set({ data, loading: false, error: null });

@@ -1,78 +1,80 @@
 import React, { useEffect, useState } from "react";
-import { Alert, AlertTitle, Box, Button } from "@mui/material";
+import { Alert, AlertTitle, Box, Button, Chip } from "@mui/material";
+import { Star as StarIcon } from "@mui/icons-material";
 import { useLocation } from "route";
-import { restApi, ABTest } from "api/rest/client";
-
-interface QueryParams {
-    abTestId?: string;
-    variant?: "variantA" | "variantB";
-}
+import { restApi, LandingPageVariant } from "api/rest/client";
 
 /**
- * Banner component that displays when editing an A/B test variant.
- * Shows the test name and variant being edited.
- * Reads abTestId and variant from URL query params.
+ * Banner component that displays when editing a variant.
+ * Shows variant name and official badge if applicable.
  */
 export const ABTestEditingBanner: React.FC = () => {
     const [location, navigate] = useLocation();
-    const [testInfo, setTestInfo] = useState<{ test: ABTest; variant: "variantA" | "variantB" } | null>(null);
+    const [variantInfo, setVariantInfo] = useState<LandingPageVariant | null>(null);
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         const searchParams = new URLSearchParams(location.split('?')[1] || '');
-        const abTestId = searchParams.get("abTestId");
-        const variant = searchParams.get("variant") as "variantA" | "variantB" | null;
+        const variantId = searchParams.get("variantId");
 
-        if (abTestId && variant) {
+        if (variantId) {
             setLoading(true);
             restApi
-                .getABTest(abTestId)
-                .then((test) => {
-                    setTestInfo({ test, variant });
+                .getVariant(variantId)
+                .then((variant) => {
+                    setVariantInfo(variant);
                 })
                 .catch((error) => {
-                    console.error("Error fetching A/B test info:", error);
-                    setTestInfo(null);
+                    console.error("Error fetching variant info:", error);
+                    setVariantInfo(null);
                 })
                 .finally(() => {
                     setLoading(false);
                 });
         } else {
-            setTestInfo(null);
+            setVariantInfo(null);
         }
     }, [location]);
 
-    const handleExitVariantEditing = () => {
-        // Remove abTestId and variant from URL
+    const handleExitEditing = () => {
+        // Remove variantId from URL
         const [pathname, search] = location.split('?');
         const searchParams = new URLSearchParams(search || '');
-        searchParams.delete("abTestId");
-        searchParams.delete("variant");
+        searchParams.delete("variantId");
 
         const newSearch = searchParams.toString();
         const newPath = newSearch ? `${pathname}?${newSearch}` : pathname;
         navigate(newPath);
     };
 
-    if (!testInfo || loading) {
+    if (loading || !variantInfo) {
         return null;
     }
-
-    const variantName = testInfo.variant === "variantA" ? "Variant A" : "Variant B";
 
     return (
         <Box sx={{ mb: 2 }}>
             <Alert
-                severity="info"
+                severity="warning"
                 action={
-                    <Button color="inherit" size="small" onClick={handleExitVariantEditing}>
-                        Exit Variant Editing
+                    <Button color="inherit" size="small" onClick={handleExitEditing}>
+                        Exit Editing
                     </Button>
                 }
             >
-                <AlertTitle>Editing A/B Test Variant</AlertTitle>
-                <strong>{testInfo.test.name}</strong> - {variantName}
-                {testInfo.test.description && <> • {testInfo.test.description}</>}
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
+                    <AlertTitle sx={{ mb: 0 }}>Editing Variant</AlertTitle>
+                    <strong>{variantInfo.name}</strong>
+                    {variantInfo.isOfficial && (
+                        <Chip
+                            label="OFFICIAL"
+                            color="warning"
+                            icon={<StarIcon />}
+                            size="small"
+                            sx={{ height: 20 }}
+                        />
+                    )}
+                    {variantInfo.description && <span> • {variantInfo.description}</span>}
+                </Box>
             </Alert>
         </Box>
     );

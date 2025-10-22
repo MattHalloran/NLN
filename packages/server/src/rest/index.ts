@@ -7,7 +7,7 @@ import authRouter from "./auth.js";
 import imagesRouter from "./images.js";
 import assetsRouter from "./assets.js";
 import dashboardRouter from "./dashboard.js";
-import analyticsRouter from "./analytics.js";
+// ARCHIVED: import analyticsRouter from "./analytics.js"; // Old A/B test analytics moved to variant system
 
 const router = Router();
 
@@ -35,7 +35,7 @@ v1Router.use("/auth", authRouter);
 v1Router.use("/images", upload.array("files"), imagesRouter);
 v1Router.use("/assets", upload.array("files"), assetsRouter);
 v1Router.use("/dashboard", dashboardRouter);
-v1Router.use("/analytics", analyticsRouter);
+// ARCHIVED: v1Router.use("/analytics", analyticsRouter); // Old A/B test analytics moved to variant system
 
 // Mount versioned API
 router.use("/v1", v1Router);

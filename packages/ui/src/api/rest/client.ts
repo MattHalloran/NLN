@@ -54,34 +54,28 @@ async function fetchApi<T>(
 }
 
 // Type definitions for API responses
-export interface ABTestMeta {
-    testId: string;
-    variantId: "variantA" | "variantB";
+
+// Variant System
+export interface VariantMeta {
+    variantId: string; // e.g., "variant-homepage-official"
 }
 
-export interface ABTest {
-    id: string;
-    name: string;
-    description?: string;
-    status: "draft" | "active" | "paused" | "completed";
-    trafficSplit: {
-        variantA: number;
-        variantB: number;
-    };
+// New variant-first structure for A/B testing
+export interface LandingPageVariant {
+    id: string; // e.g., "variant-homepage-official", "variant-bold-cta"
+    name: string; // Display name like "Official Homepage", "Bold CTA Design"
+    description?: string; // What this variant is testing
+    status: "enabled" | "disabled"; // Whether this variant is receiving traffic
+    isOfficial: boolean; // Is this the official/control variant?
+    trafficAllocation: number; // Percentage of traffic (0-100)
     metrics: {
-        variantA: ABTestMetrics;
-        variantB: ABTestMetrics;
+        views: number;
+        conversions: number;
+        bounces: number;
     };
     createdAt: string;
     updatedAt?: string;
-    startDate?: string;
-    endDate?: string;
-}
-
-export interface ABTestMetrics {
-    views: number;
-    conversions: number;
-    bounces: number;
+    lastModified?: string; // When the content was last edited
 }
 
 export interface LandingPageContent {
@@ -235,7 +229,7 @@ export interface LandingPageContent {
             activeTestId: string | null;
         };
     };
-    _meta?: ABTestMeta;
+    _meta?: VariantMeta; // Variant assignment metadata
 }
 
 // Section configuration type
@@ -351,22 +345,14 @@ export const restApi = {
     // Landing page
     async getLandingPageContent(params?: {
         onlyActive?: boolean;
-        abTest?: string;
-        abTestId?: string;
-        variant?: "variantA" | "variantB";
+        variantId?: string;
     }): Promise<LandingPageContent> {
         const queryParams = new URLSearchParams();
 
         queryParams.append("onlyActive", String(params?.onlyActive ?? true));
 
-        if (params?.abTest !== undefined) {
-            queryParams.append("abTest", params.abTest);
-        }
-        if (params?.abTestId) {
-            queryParams.append("abTestId", params.abTestId);
-        }
-        if (params?.variant) {
-            queryParams.append("variant", params.variant);
+        if (params?.variantId) {
+            queryParams.append("variantId", params.variantId);
         }
 
         return fetchApi<LandingPageContent>(
@@ -423,13 +409,11 @@ export const restApi = {
             hours?: string;
         },
         queryParams?: {
-            abTestId?: string;
-            variant?: "variantA" | "variantB";
+            variantId?: string;
         },
     ): Promise<{ success: boolean; message: string; updated: { business: boolean; hours: boolean } }> {
         const params = new URLSearchParams();
-        if (queryParams?.abTestId) params.append("abTestId", queryParams.abTestId);
-        if (queryParams?.variant) params.append("variant", queryParams.variant);
+        if (queryParams?.variantId) params.append("variantId", queryParams.variantId);
 
         const queryString = params.toString();
         return fetchApi<{ success: boolean; message: string; updated: { business: boolean; hours: boolean } }>(
@@ -535,13 +519,11 @@ export const restApi = {
             };
         },
         queryParams?: {
-            abTestId?: string;
-            variant?: "variantA" | "variantB";
+            variantId?: string;
         },
     ): Promise<{ success: boolean; message: string; updatedSections: string[] }> {
         const params = new URLSearchParams();
-        if (queryParams?.abTestId) params.append("abTestId", queryParams.abTestId);
-        if (queryParams?.variant) params.append("variant", queryParams.variant);
+        if (queryParams?.variantId) params.append("variantId", queryParams.variantId);
 
         const queryString = params.toString();
         return fetchApi<{ success: boolean; message: string; updatedSections: string[] }>(
@@ -694,13 +676,11 @@ export const restApi = {
     async updateLandingPageSettings(
         settings: Record<string, unknown>,
         queryParams?: {
-            abTestId?: string;
-            variant?: "variantA" | "variantB";
+            variantId?: string;
         },
     ): Promise<{ success: boolean; message: string; updatedFields: string[] }> {
         const params = new URLSearchParams();
-        if (queryParams?.abTestId) params.append("abTestId", queryParams.abTestId);
-        if (queryParams?.variant) params.append("variant", queryParams.variant);
+        if (queryParams?.variantId) params.append("variantId", queryParams.variantId);
 
         const queryString = params.toString();
         return fetchApi<{ success: boolean; message: string; updatedFields: string[] }>(
@@ -712,65 +692,80 @@ export const restApi = {
         );
     },
 
-    // A/B Testing
-    async getABTests(): Promise<ABTest[]> {
-        return fetchApi<ABTest[]>("/landing-page/ab-tests");
+    // ============================================================================
+    // VARIANT-FIRST A/B TESTING API
+    // ============================================================================
+
+    async getVariants(): Promise<LandingPageVariant[]> {
+        return fetchApi<LandingPageVariant[]>("/landing-page/variants");
     },
 
-    async getABTest(id: string): Promise<ABTest> {
-        return fetchApi<ABTest>(`/landing-page/ab-tests/${id}`);
+    async getVariant(id: string): Promise<LandingPageVariant> {
+        return fetchApi<LandingPageVariant>(`/landing-page/variants/${id}`);
     },
 
-    async createABTest(test: {
+    async createVariant(variant: {
         name: string;
         description?: string;
-        trafficSplit?: { variantA: number; variantB: number };
-    }): Promise<ABTest> {
-        return fetchApi<ABTest>("/landing-page/ab-tests", {
+        trafficAllocation?: number;
+        copyFromVariantId?: string;
+    }): Promise<LandingPageVariant> {
+        return fetchApi<LandingPageVariant>("/landing-page/variants", {
             method: "POST",
-            body: JSON.stringify(test),
+            body: JSON.stringify(variant),
         });
     },
 
-    async updateABTest(id: string, test: Partial<ABTest>): Promise<ABTest> {
-        return fetchApi<ABTest>(`/landing-page/ab-tests/${id}`, {
+    async updateVariant(id: string, variant: Partial<{
+        name: string;
+        description: string;
+        status: "enabled" | "disabled";
+        trafficAllocation: number;
+    }>): Promise<LandingPageVariant> {
+        return fetchApi<LandingPageVariant>(`/landing-page/variants/${id}`, {
             method: "PUT",
-            body: JSON.stringify(test),
+            body: JSON.stringify(variant),
         });
     },
 
-    async deleteABTest(id: string): Promise<{ success: boolean }> {
-        return fetchApi<{ success: boolean }>(`/landing-page/ab-tests/${id}`, {
+    async deleteVariant(id: string): Promise<{ success: boolean; message: string }> {
+        return fetchApi<{ success: boolean; message: string }>(`/landing-page/variants/${id}`, {
             method: "DELETE",
         });
     },
 
-    async startABTest(id: string): Promise<ABTest> {
-        return fetchApi<ABTest>(`/landing-page/ab-tests/${id}/start`, {
-            method: "POST",
-        });
+    async promoteVariant(id: string): Promise<{
+        success: boolean;
+        message: string;
+        variant: LandingPageVariant;
+    }> {
+        return fetchApi<{ success: boolean; message: string; variant: LandingPageVariant }>(
+            `/landing-page/variants/${id}/promote`,
+            {
+                method: "POST",
+            },
+        );
     },
 
-    async stopABTest(id: string): Promise<ABTest> {
-        return fetchApi<ABTest>(`/landing-page/ab-tests/${id}/stop`, {
-            method: "POST",
-        });
-    },
-
-    async trackABTestEvent(
-        testId: string,
+    async trackVariantEvent(
+        variantId: string,
         event: {
-            variantId: "variantA" | "variantB";
             eventType: "view" | "conversion" | "bounce";
         },
-    ): Promise<{ success: boolean; metrics?: { variantA: ABTestMetrics; variantB: ABTestMetrics } }> {
-        return fetchApi<{ success: boolean; metrics?: { variantA: ABTestMetrics; variantB: ABTestMetrics } }>(
-            `/landing-page/ab-tests/${testId}/track`,
+    ): Promise<{ success: boolean; metrics?: { views: number; conversions: number; bounces: number } }> {
+        return fetchApi<{ success: boolean; metrics?: { views: number; conversions: number; bounces: number } }>(
+            `/landing-page/variants/${variantId}/track`,
             {
                 method: "POST",
                 body: JSON.stringify(event),
             },
         );
+    },
+
+    async toggleVariant(id: string): Promise<LandingPageVariant> {
+        return fetchApi<LandingPageVariant>(`/landing-page/variants/${id}/toggle`, {
+            method: "POST",
+        });
     },
 
     // Analytics (public endpoint)

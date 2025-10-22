@@ -97,7 +97,7 @@ const TIME_OPTIONS = [
 
 export const AdminContactPage = () => {
     const { palette } = useTheme();
-    const { abTestId, variant } = useABTestQueryParams();
+    const { variantId } = useABTestQueryParams();
     const { data: landingPageData, refetch } = useLandingPage(); // Get all data, not just active
     const { mutate: updateContactInfo, loading: updateLoading } = useUpdateContactInfo();
 
@@ -464,11 +464,10 @@ export const AdminContactPage = () => {
     const applyHours = async () => {
         try {
             const markdown = showAdvancedMode ? markdownHours : generateMarkdown();
-            const queryParams = abTestId && variant ? { abTestId, variant } : undefined;
 
             await updateContactInfo({
                 data: { hours: markdown },
-                queryParams,
+                queryParams: variantId ? { variantId } : undefined,
             });
 
             // Refetch data FIRST to ensure UI is updated

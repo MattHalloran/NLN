@@ -60,7 +60,7 @@ export const AdminHomepageNewsletter = () => {
 
     const handleSave = async () => {
         try {
-            await updateSettings.mutate({ newsletter });
+            await updateSettings.mutate({ settings: { newsletter } });
             setOriginalNewsletter(JSON.parse(JSON.stringify(newsletter)));
             setSnackbar({
                 open: true,

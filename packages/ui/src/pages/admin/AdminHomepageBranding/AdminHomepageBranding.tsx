@@ -371,7 +371,7 @@ export const AdminHomepageBranding = () => {
         }
 
         try {
-            await updateSettings.mutate(branding as unknown as Record<string, unknown>);
+            await updateSettings.mutate({ settings: branding as unknown as Record<string, unknown> });
             setOriginalBranding(JSON.parse(JSON.stringify(branding)));
             setSnackbar({
                 open: true,

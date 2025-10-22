@@ -78,7 +78,7 @@ interface CTAButton {
 }
 
 export const AdminHomepageHeroBanner = () => {
-    const { abTestId, variant } = useABTestQueryParams();
+    const { variantId } = useABTestQueryParams();
     const [heroBanners, setHeroBanners] = useState<any[]>([]);
     const [originalHeroBanners, setOriginalHeroBanners] = useState<any[]>([]);
     const [heroSettings, setHeroSettings] = useState<HeroSettings>({
@@ -267,7 +267,7 @@ export const AdminHomepageHeroBanner = () => {
         try {
             setIsLoading(true);
 
-            const queryParams = abTestId && variant ? { abTestId, variant } : undefined;
+            const queryParams = variantId ? { variantId } : undefined;
 
             // Update hero banners and settings
             await restApi.updateLandingPageContent(
@@ -304,7 +304,7 @@ export const AdminHomepageHeroBanner = () => {
         } finally {
             setIsLoading(false);
         }
-    }, [heroBanners, heroSettings, heroContent, trustBadges, ctaButtons, refetch, handleApiSuccess, handleApiError, updateSettings, abTestId, variant]);
+    }, [heroBanners, heroSettings, heroContent, trustBadges, ctaButtons, refetch, handleApiSuccess, handleApiError, updateSettings, variantId]);
 
     const handleCancelChanges = useCallback(() => {
         setHeroBanners(JSON.parse(JSON.stringify(originalHeroBanners)));

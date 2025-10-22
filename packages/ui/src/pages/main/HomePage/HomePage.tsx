@@ -55,30 +55,36 @@ export const HomePage = () => {
             .filter((sectionId) => SECTION_COMPONENTS[sectionId]); // Only render sections we have components for
     }, [sectionConfig]);
 
+    // Track "view" event when landing page loads with variant
+    useEffect(() => {
+        if (landingPageData?._meta?.variantId) {
+            restApi.trackVariantEvent(landingPageData._meta.variantId, {
+                eventType: "view",
+            }).catch((err) => {
+                console.error("Error tracking view event:", err);
+            });
+        }
+    }, [landingPageData?._meta?.variantId]);
+
     // Track bounce if user leaves within 10 seconds
     useEffect(() => {
         const handleBeforeUnload = () => {
             const timeOnPage = Date.now() - visitStartTime.current;
 
             // Only track bounce if they leave within 10 seconds and haven't already tracked
-            if (timeOnPage < BOUNCE_THRESHOLD_MS && !bounceTracked.current && landingPageData?._meta) {
+            if (timeOnPage < BOUNCE_THRESHOLD_MS && !bounceTracked.current && landingPageData?._meta?.variantId) {
                 bounceTracked.current = true;
 
-                // Use sendBeacon for reliable tracking on page unload
-                const meta = landingPageData._meta;
                 const data = JSON.stringify({
-                    variantId: meta.variantId,
                     eventType: "bounce",
                 });
 
-                // sendBeacon is more reliable than fetch for unload events
                 if (navigator.sendBeacon) {
-                    const url = `${window.location.origin}/rest/v1/landing-page/ab-tests/${meta.testId}/track`;
+                    const url = `${window.location.origin}/rest/v1/landing-page/variants/${landingPageData._meta.variantId}/track`;
                     navigator.sendBeacon(url, data);
                 } else {
                     // Fallback for browsers that don't support sendBeacon
-                    restApi.trackABTestEvent(meta.testId, {
-                        variantId: meta.variantId,
+                    restApi.trackVariantEvent(landingPageData._meta.variantId, {
                         eventType: "bounce",
                     }).catch((err) => {
                         console.error("Error tracking bounce event:", err);
