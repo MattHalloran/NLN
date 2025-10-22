@@ -13,6 +13,8 @@
   "version": "2.0.0",
   "scripts": {
     "prepare": "husky",
+    "lint": "yarn workspaces run lint",
+    "typecheck": "yarn workspaces run typecheck",
     "test": "yarn workspaces run test",
     "test:server": "yarn workspace server test",
     "test:ui": "yarn workspace ui test",
@@ -32,8 +34,5 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
     "eslint-plugin-react-hooks": "^7.0.0"
-  },
-  "dependencies": {
-    "bcrypt": "^6.0.0"
   }
 }

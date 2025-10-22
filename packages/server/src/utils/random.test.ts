@@ -51,7 +51,7 @@ describe("random", () => {
         it("should throw error for chars length < 10", () => {
             expect(() => randomString(10, "abc")).toThrow("Chars must be bewteen 10 and 256.");
             expect(() => randomString(10, "123456789")).toThrow(
-                "Chars must be bewteen 10 and 256."
+                "Chars must be bewteen 10 and 256.",
             );
         });
 

@@ -20,7 +20,7 @@ export function attachPrisma(req: Request, _: Response, next: NextFunction): voi
 // Return array of customer roles (ex: ['admin', 'customer'])
 async function findCustomerRoles(
     customerId: string,
-    prismaClient?: PrismaClientType
+    prismaClient?: PrismaClientType,
 ): Promise<string[]> {
     const client = prismaClient || prisma;
     // Query customer's roles
@@ -63,7 +63,7 @@ export function authenticate(req: Request, _: Response, next: NextFunction): voi
             req.isCustomer = payload.isCustomer;
             req.isAdmin = payload.isAdmin;
             next();
-        }
+        },
     );
 }
 
@@ -72,7 +72,7 @@ export async function generateToken(
     res: Response,
     customerId: string,
     businessId: string,
-    prismaClient?: PrismaClientType
+    prismaClient?: PrismaClientType,
 ): Promise<void> {
     const customerRoles = await findCustomerRoles(customerId, prismaClient);
     const tokenContents: JWTPayload = {

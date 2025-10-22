@@ -48,7 +48,7 @@ describe("Data File Integrity Tests", () => {
                 expect(banner, `Banner ${index} missing src`).toHaveProperty("src");
                 expect(banner, `Banner ${index} missing alt`).toHaveProperty("alt");
                 expect(banner, `Banner ${index} missing displayOrder`).toHaveProperty(
-                    "displayOrder"
+                    "displayOrder",
                 );
                 expect(banner, `Banner ${index} missing isActive`).toHaveProperty("isActive");
 
@@ -58,19 +58,19 @@ describe("Data File Integrity Tests", () => {
                 expect(typeof banner.alt, `Banner ${index} alt should be string`).toBe("string");
                 expect(
                     typeof banner.displayOrder,
-                    `Banner ${index} displayOrder should be number`
+                    `Banner ${index} displayOrder should be number`,
                 ).toBe("number");
                 expect(typeof banner.isActive, `Banner ${index} isActive should be boolean`).toBe(
-                    "boolean"
+                    "boolean",
                 );
 
                 // Value validation
                 expect(banner.id.length, `Banner ${index} id should not be empty`).toBeGreaterThan(
-                    0
+                    0,
                 );
                 expect(
                     banner.displayOrder,
-                    `Banner ${index} displayOrder should be positive`
+                    `Banner ${index} displayOrder should be positive`,
                 ).toBeGreaterThan(0);
             });
         });
@@ -403,19 +403,19 @@ describe("Data File Integrity Tests", () => {
                     // Each row should have at least 2 columns (Day and Hours)
                     expect(
                         parts.length,
-                        `Line ${index + 1}: "${line}" should have at least 2 columns`
+                        `Line ${index + 1}: "${line}" should have at least 2 columns`,
                     ).toBeGreaterThanOrEqual(2);
 
                     // Day column shouldn't be empty
                     expect(
                         parts[0].trim().length,
-                        `Line ${index + 1}: Day column should not be empty`
+                        `Line ${index + 1}: Day column should not be empty`,
                     ).toBeGreaterThan(0);
 
                     // Hours column shouldn't be empty
                     expect(
                         parts[1].trim().length,
-                        `Line ${index + 1}: Hours column should not be empty`
+                        `Line ${index + 1}: Hours column should not be empty`,
                     ).toBeGreaterThan(0);
                 }
             });
@@ -430,7 +430,7 @@ describe("Data File Integrity Tests", () => {
                 .split("\n")
                 .filter(
                     (l: string) =>
-                        l.trim() && l.includes("|") && !l.includes("---") && !l.includes("Day")
+                        l.trim() && l.includes("|") && !l.includes("---") && !l.includes("Day"),
                 );
 
             const timePattern = /\d{1,2}:\d{2}\s*(AM|PM)/i;
@@ -452,7 +452,7 @@ describe("Data File Integrity Tests", () => {
 
                     expect(
                         isValid,
-                        `Line ${index + 1}: "${hours}" should contain valid time format (HH:MM AM/PM) or "CLOSED"`
+                        `Line ${index + 1}: "${hours}" should contain valid time format (HH:MM AM/PM) or "CLOSED"`,
                     ).toBe(true);
                 }
             });
@@ -468,7 +468,7 @@ describe("Data File Integrity Tests", () => {
                 // Images should either be absolute URLs or start with /
                 const isValid = banner.src.startsWith("http") || banner.src.startsWith("/");
                 expect(isValid, `Banner ${banner.id} has invalid src path: ${banner.src}`).toBe(
-                    true
+                    true,
                 );
             });
         });

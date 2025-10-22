@@ -1,6 +1,6 @@
 import { Box, Tooltip, Typography, useTheme } from "@mui/material";
 import { useWindowSize } from "hooks/useWindowSize";
-import { createRef, useCallback, useEffect, useRef } from "react";
+import { createRef, useCallback, useEffect, useMemo, useRef } from "react";
 import { PageTabsProps } from "../types";
 
 export const PageTabs = <T, S extends boolean = true>({
@@ -17,7 +17,11 @@ export const PageTabs = <T, S extends boolean = true>({
     const isMobile = useWindowSize(({ width }) => width <= breakpoints.values.md);
 
     const tabsRef = useRef<HTMLDivElement>(null);
-    const tabRefs = useRef(tabs.map(() => createRef<HTMLDivElement>()));
+    // Update refs array when tabs changes
+    const tabRefs = useMemo(
+        () => tabs.map(() => createRef<HTMLDivElement>()),
+        [tabs],
+    );
     const underlineRef = useRef<HTMLDivElement>(null);
 
     // Handle dragging of tabs
@@ -73,7 +77,7 @@ export const PageTabs = <T, S extends boolean = true>({
     // Scroll so new tab is centered
     const easeInOutCubic = (t: number) => t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1;
     useEffect(() => {
-        const selectedTab = tabRefs.current[currTab.index].current;
+        const selectedTab = tabRefs[currTab.index]?.current;
         if (!selectedTab || !tabsRef.current) return;
 
         const targetScrollPosition = selectedTab.offsetLeft + selectedTab.offsetWidth / 2 - tabsRef.current.offsetWidth / 2;
@@ -97,7 +101,7 @@ export const PageTabs = <T, S extends boolean = true>({
         };
 
         requestAnimationFrame(animateScroll);
-    }, [currTab.index]);
+    }, [currTab.index, tabRefs]);
 
     const updateUnderline = useCallback(() => {
         if (tabsRef.current && underlineRef.current) {
@@ -203,7 +207,7 @@ export const PageTabs = <T, S extends boolean = true>({
                     <Tooltip key={index} title={(Icon && !ignoreIcons) ? label : ""}>
                         <Box
                             id={`${ariaLabel}-${index}`}
-                            ref={tabRefs.current[index]}
+                            ref={tabRefs[index]}
                             role="tab"
                             component={href ? "a" : "div"}
                             href={href}

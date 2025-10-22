@@ -289,7 +289,6 @@ export interface BusinessContactData {
     [key: string]: unknown;
 }
 
-
 // New variant-first structure for A/B testing
 export interface LandingPageVariant {
     id: string; // e.g., "variant-homepage-official", "variant-bold-cta"

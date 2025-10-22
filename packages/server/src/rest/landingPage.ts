@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import { readFileSync, writeFileSync } from "fs";
 import { join } from "path";
+import { merge } from "lodash";
 import { logger } from "../logger.js";
 import { initializeRedis } from "../redisConn.js";
 import type {
@@ -11,7 +12,6 @@ import type {
     HeroSettings,
     BusinessContactData,
     LandingPageVariant,
-    VariantEvent,
 } from "../types/landingPage.js";
 
 // Extend Express Request to include auth properties
@@ -23,7 +23,7 @@ const router = Router();
 // In production, data files are in dist folder, in development they're in src
 const dataPath = join(
     process.env.PROJECT_DIR || "",
-    process.env.NODE_ENV === "production" ? "packages/server/dist/data" : "packages/server/src/data"
+    process.env.NODE_ENV === "production" ? "packages/server/dist/data" : "packages/server/src/data",
 );
 
 // Cache configuration (same as GraphQL)
@@ -154,7 +154,7 @@ const aggregateLandingPageContent = (onlyActive: boolean = true): LandingPageCon
 
     // Clone the data so we don't modify the original
     const result: LandingPageContent = JSON.parse(
-        JSON.stringify(landingPageData)
+        JSON.stringify(landingPageData),
     ) as LandingPageContent;
 
     // Filter active content if requested
@@ -216,28 +216,40 @@ router.get("/", async (req: Request, res: Response) => {
                     const contentWithMeta: LandingPageContent = {
                         ...variantContent,
                         _meta: {
-                            variantId: variantId,
+                            variantId,
                         },
                     };
 
                     // Filter active content if requested
                     if (onlyActive) {
                         if (contentWithMeta.content?.hero?.banners) {
-                            contentWithMeta.content.hero.banners = contentWithMeta.content.hero.banners
-                                .filter((b: HeroBanner) => b.isActive)
-                                .sort((a: HeroBanner, b: HeroBanner) => a.displayOrder - b.displayOrder);
+                            contentWithMeta.content.hero.banners =
+                                contentWithMeta.content.hero.banners
+                                    .filter((b: HeroBanner) => b.isActive)
+                                    .sort(
+                                        (a: HeroBanner, b: HeroBanner) =>
+                                            a.displayOrder - b.displayOrder,
+                                    );
                         }
 
                         if (contentWithMeta.content?.seasonal?.plants) {
-                            contentWithMeta.content.seasonal.plants = contentWithMeta.content.seasonal.plants
-                                .filter((p: SeasonalPlant) => p.isActive)
-                                .sort((a: SeasonalPlant, b: SeasonalPlant) => a.displayOrder - b.displayOrder);
+                            contentWithMeta.content.seasonal.plants =
+                                contentWithMeta.content.seasonal.plants
+                                    .filter((p: SeasonalPlant) => p.isActive)
+                                    .sort(
+                                        (a: SeasonalPlant, b: SeasonalPlant) =>
+                                            a.displayOrder - b.displayOrder,
+                                    );
                         }
 
                         if (contentWithMeta.content?.seasonal?.tips) {
-                            contentWithMeta.content.seasonal.tips = contentWithMeta.content.seasonal.tips
-                                .filter((t: PlantTip) => t.isActive)
-                                .sort((a: PlantTip, b: PlantTip) => a.displayOrder - b.displayOrder);
+                            contentWithMeta.content.seasonal.tips =
+                                contentWithMeta.content.seasonal.tips
+                                    .filter((t: PlantTip) => t.isActive)
+                                    .sort(
+                                        (a: PlantTip, b: PlantTip) =>
+                                            a.displayOrder - b.displayOrder,
+                                    );
                         }
                     }
 
@@ -249,9 +261,13 @@ router.get("/", async (req: Request, res: Response) => {
                     return res.json(contentWithMeta);
                 }
 
-                logger.warn(`Variant content file not found for ${variantId}. Falling through to new assignment.`);
+                logger.warn(
+                    `Variant content file not found for ${variantId}. Falling through to new assignment.`,
+                );
             } else {
-                logger.info(`Variant ${variantId} not found or not enabled. Assigning new variant.`);
+                logger.info(
+                    `Variant ${variantId} not found or not enabled. Assigning new variant.`,
+                );
             }
         }
 
@@ -277,21 +293,33 @@ router.get("/", async (req: Request, res: Response) => {
                     // Filter active content if requested
                     if (onlyActive) {
                         if (contentWithMeta.content?.hero?.banners) {
-                            contentWithMeta.content.hero.banners = contentWithMeta.content.hero.banners
-                                .filter((b: HeroBanner) => b.isActive)
-                                .sort((a: HeroBanner, b: HeroBanner) => a.displayOrder - b.displayOrder);
+                            contentWithMeta.content.hero.banners =
+                                contentWithMeta.content.hero.banners
+                                    .filter((b: HeroBanner) => b.isActive)
+                                    .sort(
+                                        (a: HeroBanner, b: HeroBanner) =>
+                                            a.displayOrder - b.displayOrder,
+                                    );
                         }
 
                         if (contentWithMeta.content?.seasonal?.plants) {
-                            contentWithMeta.content.seasonal.plants = contentWithMeta.content.seasonal.plants
-                                .filter((p: SeasonalPlant) => p.isActive)
-                                .sort((a: SeasonalPlant, b: SeasonalPlant) => a.displayOrder - b.displayOrder);
+                            contentWithMeta.content.seasonal.plants =
+                                contentWithMeta.content.seasonal.plants
+                                    .filter((p: SeasonalPlant) => p.isActive)
+                                    .sort(
+                                        (a: SeasonalPlant, b: SeasonalPlant) =>
+                                            a.displayOrder - b.displayOrder,
+                                    );
                         }
 
                         if (contentWithMeta.content?.seasonal?.tips) {
-                            contentWithMeta.content.seasonal.tips = contentWithMeta.content.seasonal.tips
-                                .filter((t: PlantTip) => t.isActive)
-                                .sort((a: PlantTip, b: PlantTip) => a.displayOrder - b.displayOrder);
+                            contentWithMeta.content.seasonal.tips =
+                                contentWithMeta.content.seasonal.tips
+                                    .filter((t: PlantTip) => t.isActive)
+                                    .sort(
+                                        (a: PlantTip, b: PlantTip) =>
+                                            a.displayOrder - b.displayOrder,
+                                    );
                         }
                     }
 
@@ -303,7 +331,9 @@ router.get("/", async (req: Request, res: Response) => {
                     return res.json(contentWithMeta);
                 }
 
-                logger.warn(`Variant content file not found for ${assignedVariant.id}. Falling back to official content.`);
+                logger.warn(
+                    `Variant content file not found for ${assignedVariant.id}. Falling back to official content.`,
+                );
             }
         }
 
@@ -1029,10 +1059,14 @@ const getEnabledVariants = (): LandingPageVariant[] => {
 
 // Assign variant based on traffic allocation (weighted random)
 const assignVariantWeighted = (variants: LandingPageVariant[]): LandingPageVariant | null => {
-    if (variants.length === 0) return null;
+    if (variants.length === 0) {
+        return null;
+    }
 
     const totalAllocation = variants.reduce((sum, v) => sum + v.trafficAllocation, 0);
-    if (totalAllocation === 0) return null;
+    if (totalAllocation === 0) {
+        return null;
+    }
 
     const random = Math.random() * totalAllocation;
     let cumulative = 0;
@@ -1098,51 +1132,48 @@ router.put("/settings", async (req: Request, res: Response) => {
         // Map old settings format to new structure
         if (updates.hero) {
             currentContent.content.hero = currentContent.content.hero || {};
-            currentContent.content.hero.text = deepMerge(
+            currentContent.content.hero.text = merge(
                 currentContent.content.hero.text || {},
-                updates.hero
+                updates.hero,
             );
         }
         if (updates.newsletter) {
-            currentContent.content.newsletter = deepMerge(
+            currentContent.content.newsletter = merge(
                 currentContent.content.newsletter || {},
-                updates.newsletter
+                updates.newsletter,
             );
         }
         if (updates.companyInfo) {
-            currentContent.content.company = deepMerge(
+            currentContent.content.company = merge(
                 currentContent.content.company || {},
-                updates.companyInfo
+                updates.companyInfo,
             );
         }
         if (updates.services) {
-            currentContent.content.services = deepMerge(
+            currentContent.content.services = merge(
                 currentContent.content.services || {},
-                updates.services
+                updates.services,
             );
         }
         if (updates.colors) {
-            currentContent.theme.colors = deepMerge(
-                currentContent.theme.colors || {},
-                updates.colors
-            );
+            currentContent.theme.colors = merge(currentContent.theme.colors || {}, updates.colors);
         }
         if (updates.features) {
-            currentContent.layout.features = deepMerge(
+            currentContent.layout.features = merge(
                 currentContent.layout.features || {},
-                updates.features
+                updates.features,
             );
         }
         if (updates.sections) {
-            currentContent.layout.sections = deepMerge(
+            currentContent.layout.sections = merge(
                 currentContent.layout.sections || {},
-                updates.sections
+                updates.sections,
             );
         }
         if (updates.abTesting) {
-            currentContent.experiments.abTesting = deepMerge(
+            currentContent.experiments.abTesting = merge(
                 currentContent.experiments.abTesting || {},
-                updates.abTesting
+                updates.abTesting,
             );
         }
 
@@ -1369,7 +1400,9 @@ router.post("/variants", async (req: Request, res: Response) => {
         if (copyFromVariantId) {
             sourceContent = readVariantContent(copyFromVariantId);
             if (!sourceContent) {
-                return res.status(404).json({ error: `Source variant ${copyFromVariantId} not found` });
+                return res
+                    .status(404)
+                    .json({ error: `Source variant ${copyFromVariantId} not found` });
             }
         } else {
             // Copy from official landing page
@@ -1383,7 +1416,8 @@ router.post("/variants", async (req: Request, res: Response) => {
             logger.error("Error creating variant content file:", error);
             return res.status(500).json({
                 error: "Failed to create variant content file",
-                message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
+                message:
+                    process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
             });
         }
 
@@ -1474,7 +1508,9 @@ router.delete("/variants/:id", async (req: Request, res: Response) => {
 
         // Cannot delete an enabled variant
         if (variant.status === "enabled") {
-            return res.status(400).json({ error: "Cannot delete an enabled variant. Disable it first." });
+            return res
+                .status(400)
+                .json({ error: "Cannot delete an enabled variant. Disable it first." });
         }
 
         // Delete variant content file
@@ -1484,7 +1520,10 @@ router.delete("/variants/:id", async (req: Request, res: Response) => {
         variants.splice(variantIndex, 1);
         writeVariants(variants);
 
-        return res.json({ success: true, message: "Variant and content file deleted successfully" });
+        return res.json({
+            success: true,
+            message: "Variant and content file deleted successfully",
+        });
     } catch (error) {
         logger.error("Error deleting variant:", error);
         return res.status(500).json({
@@ -1521,7 +1560,9 @@ router.post("/variants/:id/promote", async (req: Request, res: Response) => {
         if (currentOfficialIndex !== -1) {
             variants[currentOfficialIndex].isOfficial = false;
             variants[currentOfficialIndex].updatedAt = new Date().toISOString();
-            logger.info(`Demoted variant ${variants[currentOfficialIndex].id} from official status`);
+            logger.info(
+                `Demoted variant ${variants[currentOfficialIndex].id} from official status`,
+            );
         }
 
         // Promote the new variant
@@ -1530,7 +1571,9 @@ router.post("/variants/:id/promote", async (req: Request, res: Response) => {
 
         // Copy variant content to the official landing page
         writeLandingPageContent(variantContent);
-        logger.info(`Promoted variant ${variant.id} to official. Content copied to landing-page-content.json`);
+        logger.info(
+            `Promoted variant ${variant.id} to official. Content copied to landing-page-content.json`,
+        );
 
         writeVariants(variants);
 
@@ -1570,7 +1613,8 @@ router.post("/variants/:id/track", async (req: Request, res: Response) => {
         }
 
         // Increment the appropriate metric
-        const metricKey = eventType === "view" ? "views" : eventType === "conversion" ? "conversions" : "bounces";
+        const metricKey =
+            eventType === "view" ? "views" : eventType === "conversion" ? "conversions" : "bounces";
         variants[variantIndex].metrics[metricKey]++;
         variants[variantIndex].updatedAt = new Date().toISOString();
 

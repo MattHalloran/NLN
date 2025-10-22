@@ -8,7 +8,7 @@ import { randomBytes } from "crypto";
  */
 export function randomString(
     length = 64,
-    chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
 ): string {
     // Check for valid parameters
     if (length <= 0 || length > 2048) {

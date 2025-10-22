@@ -17,7 +17,7 @@ function getEmailQueue(): Bull.Queue {
         // Load business config
         const businessConfigStr = fs.readFileSync(
             `${process.env.PROJECT_DIR}/assets/public/business.json`,
-            "utf8"
+            "utf8",
         );
         const businessConfig = JSON.parse(businessConfigStr) as {
             BUSINESS_NAME: { Long: string; Short: string };
@@ -85,7 +85,7 @@ export function orderNotifyAdmin(): void {
 export function sendResetPasswordLink(
     _email: string,
     _userId: string | number,
-    _code: string
+    _code: string,
 ): void {
     // Temporarily disabled for E2E testing
     logger.log(LogLevel.info, "sendResetPasswordLink called (disabled for testing)");

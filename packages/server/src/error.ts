@@ -29,7 +29,7 @@ export class CustomError extends Error {
 
 export async function validateArgs<T>(
     schema: { validate: (args: unknown, options?: object) => Promise<T> },
-    args: unknown
+    args: unknown,
 ): Promise<null> {
     try {
         await schema.validate(args, { abortEarly: false });

@@ -98,7 +98,7 @@ export class EmailService {
         if (!process.env.SITE_EMAIL_USERNAME || !process.env.SITE_EMAIL_PASSWORD) {
             logger.log(
                 LogLevel.warn,
-                "Email credentials not configured - emails will fail in production mode"
+                "Email credentials not configured - emails will fail in production mode",
             );
             return;
         }
@@ -110,7 +110,7 @@ export class EmailService {
 
         logger.log(
             LogLevel.info,
-            `📧 Configuring SMTP transport: ${smtpHost}:${smtpPort} (secure: ${smtpSecure})`
+            `📧 Configuring SMTP transport: ${smtpHost}:${smtpPort} (secure: ${smtpSecure})`,
         );
 
         this.transporter = nodemailer.createTransport({
@@ -177,6 +177,7 @@ export class EmailService {
     }
 
     private logEmailToConsole(emailData: EmailData): void {
+        /* eslint-disable no-console */
         console.log(`\n${"=".repeat(80)}`);
         console.log("📧 EMAIL INTERCEPTED IN DEVELOPMENT");
         console.log("=".repeat(80));
@@ -190,6 +191,7 @@ export class EmailService {
         console.log("HTML CONTENT:");
         console.log(emailData.html);
         console.log(`${"=".repeat(80)}\n`);
+        /* eslint-enable no-console */
     }
 
     public async sendEmail(emailData: EmailData): Promise<EmailResult> {
@@ -201,7 +203,7 @@ export class EmailService {
             case "disabled":
                 logger.log(
                     LogLevel.info,
-                    `📧 Email sending disabled - would have sent to: ${emailData.to.join(", ")}`
+                    `📧 Email sending disabled - would have sent to: ${emailData.to.join(", ")}`,
                 );
                 return {
                     success: true,
@@ -254,7 +256,7 @@ export class EmailService {
 
                     logger.log(
                         LogLevel.info,
-                        `📧 Email redirected from ${emailData.to.join(", ")} to ${redirectEmail}`
+                        `📧 Email redirected from ${emailData.to.join(", ")} to ${redirectEmail}`,
                     );
                     return {
                         success: info.rejected.length === 0,
@@ -284,23 +286,23 @@ export class EmailService {
             case "staging":
                 // In staging, only send to allowed emails/domains
                 const allowedRecipients = emailData.to.filter((email) =>
-                    this.isAllowedEmailInStaging(email)
+                    this.isAllowedEmailInStaging(email),
                 );
                 const blockedRecipients = emailData.to.filter(
-                    (email) => !this.isAllowedEmailInStaging(email)
+                    (email) => !this.isAllowedEmailInStaging(email),
                 );
 
                 if (blockedRecipients.length > 0) {
                     logger.log(
                         LogLevel.warn,
-                        `📧 Blocked emails in staging: ${blockedRecipients.join(", ")}`
+                        `📧 Blocked emails in staging: ${blockedRecipients.join(", ")}`,
                     );
                 }
 
                 if (allowedRecipients.length === 0) {
                     logger.log(
                         LogLevel.info,
-                        `📧 All recipients blocked in staging mode: ${emailData.to.join(", ")}`
+                        `📧 All recipients blocked in staging mode: ${emailData.to.join(", ")}`,
                     );
                     return {
                         success: true,
@@ -361,7 +363,7 @@ export class EmailService {
                     // Log production emails for audit trail
                     logger.log(
                         LogLevel.info,
-                        `📧 Production email sent to: ${emailData.to.join(", ")}`
+                        `📧 Production email sent to: ${emailData.to.join(", ")}`,
                     );
 
                     return {

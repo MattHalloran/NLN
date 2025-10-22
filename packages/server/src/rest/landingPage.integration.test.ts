@@ -209,12 +209,12 @@ describe("Landing Page API Integration Tests", () => {
         writeFileSync(
             HERO_BANNERS_FILE,
             JSON.stringify({ banners: mockHeroBanners, settings: mockHeroSettings }, null, 2),
-            "utf8"
+            "utf8",
         );
         writeFileSync(
             SEASONAL_PLANTS_FILE,
             JSON.stringify({ plants: mockSeasonalPlants }, null, 2),
-            "utf8"
+            "utf8",
         );
         writeFileSync(PLANT_TIPS_FILE, JSON.stringify({ tips: mockPlantTips }, null, 2), "utf8");
     });

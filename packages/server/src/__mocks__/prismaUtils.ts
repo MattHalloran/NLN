@@ -10,16 +10,16 @@ type WhereCondition = {
     contains?: string;
     [key: string]: unknown;
 };
-// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
+ 
 type WhereClause = Record<string, unknown | WhereCondition>;
 
 function mockFindUnique<T extends Record<string, unknown>>(
     records: T[],
-    args: { where: WhereClause; select?: PrismaSelect }
+    args: { where: WhereClause; select?: PrismaSelect },
 ): Promise<T | null> {
     const whereKeys = Object.keys(args.where);
     const item = records.find((record) =>
-        whereKeys.every((key) => record[key] === args.where[key])
+        whereKeys.every((key) => record[key] === args.where[key]),
     );
 
     if (!item) {
@@ -33,7 +33,7 @@ function mockFindUnique<T extends Record<string, unknown>>(
 
 function mockFindMany<T extends Record<string, unknown>>(
     records: T[],
-    args: { where: WhereClause; select?: PrismaSelect }
+    args: { where: WhereClause; select?: PrismaSelect },
 ): Promise<T[]> {
     const whereKeys = Object.keys(args.where);
     const filteredItems = records.filter((record) =>
@@ -64,7 +64,7 @@ function mockFindMany<T extends Record<string, unknown>>(
                 // Direct equality
                 return record[key] === condition;
             }
-        })
+        }),
     );
 
     const results = filteredItems.map((item) => constructSelectResponse(item, args.select));
@@ -79,7 +79,7 @@ function mockCreate<T>(records: T[], args: { data: T }): Promise<T> {
 
 function constructSelectResponse<T extends Record<string, unknown>>(
     item: T,
-    select?: PrismaSelect
+    select?: PrismaSelect,
 ): Partial<T> {
     if (!select) {
         return item;
@@ -87,7 +87,7 @@ function constructSelectResponse<T extends Record<string, unknown>>(
 
     function constructNestedResponse(
         nestedItem: Record<string, unknown>,
-        nestedSelect: PrismaSelect
+        nestedSelect: PrismaSelect,
     ): Record<string, unknown> {
         return Object.keys(nestedSelect).reduce(
             (acc: Record<string, unknown>, key) => {
@@ -105,25 +105,25 @@ function constructSelectResponse<T extends Record<string, unknown>>(
                             // Handle array of relations
                             const nestedArray = nestedItem[key] as Record<string, unknown>[];
                             acc[key] = nestedArray.map((item) =>
-                                constructNestedResponse(item, nestedSelectValue.select!)
+                                constructNestedResponse(item, nestedSelectValue.select!),
                             );
                         } else {
                             // Handle single relation object
                             acc[key] = constructNestedResponse(
                                 nestedItem[key] as Record<string, unknown>,
-                                nestedSelectValue.select
+                                nestedSelectValue.select,
                             );
                         }
                     } else {
                         acc[key] = constructNestedResponse(
                             nestedItem[key] as Record<string, unknown>,
-                            nestedSelectValue
+                            nestedSelectValue,
                         );
                     }
                 }
                 return acc;
             },
-            {} as Record<string, unknown>
+            {} as Record<string, unknown>,
         );
     }
 
@@ -133,11 +133,11 @@ function constructSelectResponse<T extends Record<string, unknown>>(
 
 function mockUpdate<T extends Record<string, unknown>>(
     records: T[],
-    args: { where: WhereClause; data: Partial<T> }
+    args: { where: WhereClause; data: Partial<T> },
 ): Promise<T> {
     const whereKeys = Object.keys(args.where);
     const index = records.findIndex((record) =>
-        whereKeys.every((key) => record[key] === args.where[key])
+        whereKeys.every((key) => record[key] === args.where[key]),
     );
 
     if (index === -1) {
@@ -150,7 +150,7 @@ function mockUpdate<T extends Record<string, unknown>>(
 
 function mockUpsert<T extends Record<string, unknown>>(
     records: T[],
-    args: { where: WhereClause; create: T; update: Partial<T> }
+    args: { where: WhereClause; create: T; update: Partial<T> },
 ): Promise<T> {
     const existingItem = mockFindUnique(records, { where: args.where });
     return existingItem.then((item) => {
@@ -174,19 +174,19 @@ export const mockPrisma = (data: Record<string, Array<Record<string, unknown>>>)
 
         prismaMock[modelName] = {
             findUnique: jest.fn((args: { where: WhereClause; select?: PrismaSelect }) =>
-                mockFindUnique(records, args)
+                mockFindUnique(records, args),
             ),
             findMany: jest.fn((args: { where: WhereClause; select?: PrismaSelect }) =>
-                mockFindMany(records, args)
+                mockFindMany(records, args),
             ),
             create: jest.fn((args: { data: Record<string, unknown> }) =>
-                mockCreate(records, args as { data: (typeof records)[0] })
+                mockCreate(records, args as { data: (typeof records)[0] }),
             ),
             update: jest.fn((args: { where: WhereClause; data: Record<string, unknown> }) =>
                 mockUpdate(
                     records,
-                    args as { where: WhereClause; data: Partial<(typeof records)[0]> }
-                )
+                    args as { where: WhereClause; data: Partial<(typeof records)[0]> },
+                ),
             ),
             upsert: jest.fn(
                 (args: {
@@ -200,8 +200,8 @@ export const mockPrisma = (data: Record<string, Array<Record<string, unknown>>>)
                             where: WhereClause;
                             create: (typeof records)[0];
                             update: Partial<(typeof records)[0]>;
-                        }
-                    )
+                        },
+                    ),
             ),
             // Add other methods here as needed
         };

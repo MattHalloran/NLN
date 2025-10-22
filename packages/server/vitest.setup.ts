@@ -6,9 +6,11 @@
 
 // Polyfill File API for testcontainers (undici dependency)
 if (typeof globalThis.File === "undefined") {
-    // @ts-ignore
+    // @ts-expect-error - Polyfilling File API for Node.js environment
     globalThis.File = class File {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         constructor(bits: any[], name: string, options?: any) {
+            // eslint-disable-next-line no-undef
             return new Blob(bits, options);
         }
     };

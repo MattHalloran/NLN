@@ -9,7 +9,8 @@
   "typings": "src/types.d.ts",
   "sideEffects": false,
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "uuid": "^9.0.0",

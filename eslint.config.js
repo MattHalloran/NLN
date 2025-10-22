@@ -15,13 +15,15 @@ export default [
             "**/node_modules/**",
             "**/generated/**",
             "**/archived/**",
-            "packages/server/**",
             "vite.config.ts",
             "graphqlTypes.ts",
             "**/*.js",
             "**/*.cjs",
             "**/*.mjs",
             "!eslint.config.js",
+            // UI-specific ignores (migrated from packages/ui/.eslintignore)
+            "packages/ui/src/sw-template.js",
+            "packages/ui/workbox-build.js",
         ],
     },
 
@@ -101,6 +103,8 @@ export default [
             "@typescript-eslint/prefer-nullish-coalescing": "off",
             "@typescript-eslint/prefer-optional-chain": "off",
             "@typescript-eslint/no-empty-function": "off",
+            "no-redeclare": "off",
+            "@typescript-eslint/no-redeclare": "error",
         },
     },
 
@@ -170,10 +174,17 @@ export default [
         },
     },
 
-    // Server package
+    // Server package - strict type checking
     {
         files: ["packages/server/**/*.ts"],
         languageOptions: {
+            parser: tsparser,
+            parserOptions: {
+                ecmaVersion: 2022,
+                sourceType: "module",
+                project: "packages/server/tsconfig.eslint.json",
+                tsconfigRootDir: import.meta.dirname,
+            },
             globals: {
                 console: "readonly",
                 process: "readonly",
@@ -184,7 +195,53 @@ export default [
                 module: "writable",
                 require: "readonly",
                 global: "readonly",
+                NodeJS: "readonly",
+                Express: "readonly",
             },
+        },
+        plugins: {
+            "@typescript-eslint": tseslint,
+        },
+        rules: {
+            "@typescript-eslint/no-explicit-any": "error",
+            "@typescript-eslint/no-misused-promises": [
+                "error",
+                {
+                    checksVoidReturn: false,
+                },
+            ],
+            "@typescript-eslint/no-floating-promises": "error",
+            "@typescript-eslint/await-thenable": "error",
+            "no-duplicate-imports": "error",
+            "no-unused-expressions": "error",
+            "eqeqeq": ["error", "always"],
+            "curly": ["error", "all"],
+            "prefer-template": "warn",
+        },
+    },
+
+    // Server package - relaxed rules for specific files with legacy any usage
+    {
+        files: [
+            "packages/server/src/rest/landingPage.ts",
+            "packages/server/src/rest/auth.ts",
+            "packages/server/src/rest/dashboard.ts",
+            "packages/server/src/rest/images.ts",
+            "packages/server/src/rest/assets.ts",
+            "packages/server/src/rest/plants.ts",
+            "packages/server/src/utils/emailService.ts",
+            "packages/server/src/utils/fileIO.ts",
+        ],
+        rules: {
+            "@typescript-eslint/no-explicit-any": "off",
+            "@typescript-eslint/no-unsafe-assignment": "off",
+            "@typescript-eslint/no-unsafe-member-access": "off",
+            "@typescript-eslint/no-unsafe-call": "off",
+            "@typescript-eslint/no-unsafe-argument": "off",
+            "@typescript-eslint/no-unsafe-return": "off",
+            "@typescript-eslint/no-require-imports": "off",
+            "@typescript-eslint/await-thenable": "off",
+            "no-case-declarations": "off",
         },
     },
 
@@ -201,11 +258,14 @@ export default [
                 document: "readonly",
             },
         },
+        rules: {
+            "@typescript-eslint/no-redeclare": "off",
+        },
     },
 
     // Test files
     {
-        files: ["**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "**/*.spec.tsx", "**/setupTests.ts"],
+        files: ["**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "**/*.spec.tsx", "**/setupTests.ts", "**/*.test.example.ts"],
         languageOptions: {
             globals: {
                 describe: "readonly",
@@ -223,6 +283,40 @@ export default [
         },
         rules: {
             "@typescript-eslint/no-explicit-any": "off",
+            "@typescript-eslint/no-unsafe-assignment": "off",
+            "@typescript-eslint/no-unsafe-member-access": "off",
+            "@typescript-eslint/no-unsafe-call": "off",
+            "@typescript-eslint/no-unsafe-argument": "off",
+            "@typescript-eslint/no-unsafe-return": "off",
+            "@typescript-eslint/unbound-method": "off",
+            "@typescript-eslint/await-thenable": "off",
+            "@typescript-eslint/no-floating-promises": "off",
+            "@typescript-eslint/no-unused-vars": "off",
+            "no-console": "off",
+        },
+    },
+
+    // Server test files - additional relaxed rules
+    {
+        files: [
+            "packages/server/**/*.test.ts",
+            "packages/server/**/*.integration.test.ts",
+            "packages/server/**/__tests__/**/*.ts",
+            "packages/server/**/__mocks__/**/*.ts",
+            "packages/server/**/seeds/**/*.ts",
+        ],
+        rules: {
+            "@typescript-eslint/no-explicit-any": "off",
+            "@typescript-eslint/no-unsafe-assignment": "off",
+            "@typescript-eslint/no-unsafe-member-access": "off",
+            "@typescript-eslint/no-unsafe-call": "off",
+            "@typescript-eslint/no-unsafe-argument": "off",
+            "@typescript-eslint/no-unsafe-return": "off",
+            "@typescript-eslint/unbound-method": "off",
+            "@typescript-eslint/await-thenable": "off",
+            "@typescript-eslint/no-floating-promises": "off",
+            "@typescript-eslint/no-unused-vars": "off",
+            "no-console": "off",
         },
     },
 
@@ -244,6 +338,14 @@ export default [
         files: ["e2e/setup/**/*.ts", "e2e/teardown/**/*.ts", "e2e/fixtures/**/*.ts", "e2e/**/*.setup.ts"],
         rules: {
             "no-console": "off",
+        },
+    },
+
+    // Type declaration files - allow empty interfaces for augmentation
+    {
+        files: ["**/*.d.ts"],
+        rules: {
+            "@typescript-eslint/no-empty-object-type": "off",
         },
     },
 ];

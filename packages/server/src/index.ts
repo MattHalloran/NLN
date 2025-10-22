@@ -52,7 +52,7 @@ const main = async () => {
         cors({
             credentials: true,
             origin: true,
-        })
+        }),
     );
 
     // For authentication
@@ -63,7 +63,7 @@ const main = async () => {
     app.use(
         "/api/private",
         auth.requireAdmin,
-        express.static(`${process.env.PROJECT_DIR}/assets/private`)
+        express.static(`${process.env.PROJECT_DIR}/assets/private`),
     );
     app.use("/api/images", express.static(`${process.env.PROJECT_DIR}/assets/images`));
 
@@ -76,6 +76,7 @@ const main = async () => {
         logger.log(LogLevel.info, `🚀 Server running at ${SERVER_URL}`);
 
         // Always log to console for visibility
+        /* eslint-disable no-console */
         console.log(`\n${"=".repeat(60)}`);
         console.log("✅ Server ready and accepting connections");
         console.log(`   Server URL: ${SERVER_URL}`);
@@ -91,6 +92,7 @@ const main = async () => {
             } else {
                 console.error(`⚠️  Health check returned status: ${response.status}\n`);
             }
+            /* eslint-enable no-console */
         } catch (error) {
             const err = error as Error;
             console.error(`⚠️  Health check failed: ${err.message}\n`);

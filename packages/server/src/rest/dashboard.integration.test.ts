@@ -144,7 +144,7 @@ describe("Dashboard API Integration Tests", () => {
         if (adminLoginRes.status !== 200) {
             console.error("Admin login failed:", adminLoginRes.status, adminLoginRes.body);
             throw new Error(
-                `Admin login failed with status ${adminLoginRes.status}: ${JSON.stringify(adminLoginRes.body)}`
+                `Admin login failed with status ${adminLoginRes.status}: ${JSON.stringify(adminLoginRes.body)}`,
             );
         }
 

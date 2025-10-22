@@ -121,7 +121,7 @@ export const AdminHomepageServices = () => {
         try {
             await updateSettings.mutate({
                 settings: { services },
-                queryParams: variantId ? { variantId } : undefined
+                queryParams: variantId ? { variantId } : undefined,
             });
             setOriginalServices(JSON.parse(JSON.stringify(services)));
             setSnackbar({

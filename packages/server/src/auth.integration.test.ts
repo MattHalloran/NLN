@@ -312,7 +312,7 @@ describe("Authentication Integration Tests", () => {
                     isAdmin: false,
                     exp: Date.now() - 1000, // Expired 1 second ago
                 },
-                process.env.JWT_SECRET!
+                process.env.JWT_SECRET!,
             );
 
             const req = createMockRequest({

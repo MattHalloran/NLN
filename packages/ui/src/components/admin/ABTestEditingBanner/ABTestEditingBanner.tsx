@@ -14,32 +14,47 @@ export const ABTestEditingBanner: React.FC = () => {
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        const searchParams = new URLSearchParams(location.split('?')[1] || '');
+        const searchParams = new URLSearchParams(location.split("?")[1] || "");
         const variantId = searchParams.get("variantId");
 
-        if (variantId) {
-            setLoading(true);
-            restApi
-                .getVariant(variantId)
-                .then((variant) => {
-                    setVariantInfo(variant);
-                })
-                .catch((error) => {
-                    console.error("Error fetching variant info:", error);
-                    setVariantInfo(null);
-                })
-                .finally(() => {
-                    setLoading(false);
-                });
-        } else {
+        if (!variantId) {
+            // Early return case - reset state
             setVariantInfo(null);
+            setLoading(false);
+            return;
         }
+
+        // Use a flag to prevent state updates if component unmounts
+        let isSubscribed = true;
+
+        const fetchVariant = async () => {
+            try {
+                const variant = await restApi.getVariant(variantId);
+                if (isSubscribed) {
+                    setVariantInfo(variant);
+                    setLoading(false);
+                }
+            } catch (error) {
+                console.error("Error fetching variant info:", error);
+                if (isSubscribed) {
+                    setVariantInfo(null);
+                    setLoading(false);
+                }
+            }
+        };
+
+        setLoading(true);
+        fetchVariant();
+
+        return () => {
+            isSubscribed = false;
+        };
     }, [location]);
 
     const handleExitEditing = () => {
         // Remove variantId from URL
-        const [pathname, search] = location.split('?');
-        const searchParams = new URLSearchParams(search || '');
+        const [pathname, search] = location.split("?");
+        const searchParams = new URLSearchParams(search || "");
         searchParams.delete("variantId");
 
         const newSearch = searchParams.toString();

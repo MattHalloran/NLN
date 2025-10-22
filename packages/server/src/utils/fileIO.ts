@@ -31,7 +31,7 @@ const UPLOAD_DIR = `${process.env.PROJECT_DIR}/assets`;
  */
 export function clean(
     file: string,
-    defaultFolder?: string
+    defaultFolder?: string,
 ): {
     name?: string;
     ext?: string;
@@ -63,7 +63,7 @@ export function clean(
  */
 export async function findFileName(
     file: string,
-    defaultFolder?: string
+    defaultFolder?: string,
 ): Promise<{
     name?: string;
     ext?: string;
@@ -95,7 +95,7 @@ export async function findFileName(
  */
 function streamToBuffer(
     stream: fs.ReadStream,
-    numBytes: number = MAX_BUFFER_SIZE
+    numBytes: number = MAX_BUFFER_SIZE,
 ): Promise<Buffer> {
     return new Promise((resolve, reject) => {
         const _buf: Buffer[] = [];
@@ -144,7 +144,7 @@ export async function saveFile(
     filename: string,
     mimetype: any,
     overwrite?: boolean,
-    acceptedTypes?: string[]
+    acceptedTypes?: string[],
 ) {
     try {
         const { name, ext, folder } = await (overwrite
@@ -394,7 +394,7 @@ export function readFiles(files: string[]): (string | null)[] {
 export async function saveFiles(
     files: any,
     overwrite = true,
-    acceptedTypes?: string[]
+    acceptedTypes?: string[],
 ): Promise<(string | null)[]> {
     const data: (string | null)[] = [];
     for (const file of files) {
@@ -405,7 +405,7 @@ export async function saveFiles(
             filename,
             mimetype,
             overwrite,
-            acceptedTypes
+            acceptedTypes,
         );
         data.push(success ? finalFilename : null);
     }

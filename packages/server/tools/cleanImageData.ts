@@ -43,7 +43,7 @@ const dbFiles = imageData
 for (const file of files) {
     if (!dbFiles.some(f => f === file)) {
         console.info(`Deleting ${file}`);
-        deleteFile(file);
+        void deleteFile(file);
     }
 }
 

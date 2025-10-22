@@ -1,5 +1,0 @@
-dist/
-node_modules/
-coverage/
-src/sw-template.js
-workbox-build.js

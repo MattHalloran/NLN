@@ -191,7 +191,7 @@ describe("Bull Queue Integration Tests", () => {
                 },
                 {
                     delay: 2000, // 2 second delay
-                }
+                },
             );
 
             expect(job.opts.delay).toBe(2000);
@@ -208,7 +208,7 @@ describe("Bull Queue Integration Tests", () => {
                 },
                 {
                     priority: 1,
-                }
+                },
             );
 
             const lowPriority = await emailQueue.add(
@@ -218,7 +218,7 @@ describe("Bull Queue Integration Tests", () => {
                 },
                 {
                     priority: 10,
-                }
+                },
             );
 
             expect(highPriority.opts.priority).toBe(1);
@@ -247,7 +247,7 @@ describe("Bull Queue Integration Tests", () => {
                         type: "fixed",
                         delay: 100,
                     },
-                }
+                },
             );
 
             const result = await job.finished();
@@ -268,7 +268,7 @@ describe("Bull Queue Integration Tests", () => {
                 },
                 {
                     removeOnComplete: true,
-                }
+                },
             );
 
             await job.finished();
@@ -443,7 +443,7 @@ describe("Bull Queue Integration Tests", () => {
                 to: ["newuser@example.com"],
                 subject: "Verify Account",
                 text: "Click link to verify",
-                html: '<a href="#">Verify Account</a>',
+                html: "<a href=\"#\">Verify Account</a>",
             });
 
             const result = await job.finished();
@@ -461,7 +461,7 @@ describe("Bull Queue Integration Tests", () => {
                 to: ["reset@example.com"],
                 subject: "Password Reset",
                 text: "Reset your password",
-                html: '<a href="#">Reset Password</a>',
+                html: "<a href=\"#\">Reset Password</a>",
             });
 
             const result = await job.finished();
@@ -494,7 +494,7 @@ describe("Bull Queue Integration Tests", () => {
                 },
                 {
                     timeout: 1000, // 1 second timeout
-                }
+                },
             );
 
             try {

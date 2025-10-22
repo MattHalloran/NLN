@@ -28,7 +28,7 @@ export async function emailProcess(job: Bull.Job<EmailJobData>) {
                     originalRecipients: result.devInfo.originalRecipients,
                     actualRecipients: result.devInfo.actualRecipients,
                     filePath: result.devInfo.filePath,
-                }
+                },
             );
         }
 

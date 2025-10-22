@@ -9,7 +9,7 @@ export function useABTestQueryParams() {
     const [location] = useLocation();
 
     const queryParams = useMemo(() => {
-        const search = location.split('?')[1] || '';
+        const search = location.split("?")[1] || "";
         const searchParams = new URLSearchParams(search);
         const variantId = searchParams.get("variantId") || undefined;
 

@@ -5,7 +5,9 @@
         "src/**/*.test.ts",
         "src/**/*.integration.test.ts",
         "src/__mocks__/**/*",
-        "src/__tests__/**/*"
+        "src/__tests__/**/*",
+        "tools/**/*.ts",
+        "vitest.setup.ts"
     ],
     "exclude": ["**/node_modules", "**/.*/", "dist"]
 }

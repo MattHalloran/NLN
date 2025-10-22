@@ -42,7 +42,7 @@ export const logger = winston.createLogger({
     levels: winston.config.syslog.levels,
     format: winston.format.combine(
         winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
-        winston.format.json()
+        winston.format.json(),
     ),
     defaultMeta: { service: "express-server" },
     transports: [
@@ -63,7 +63,7 @@ logger.add(
     new winston.transports.Console({
         format: winston.format.simple(),
         level: process.env.NODE_ENV === "production" ? "info" : "debug",
-    })
+    }),
 );
 
 /**

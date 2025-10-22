@@ -1,4 +1,4 @@
-/* eslint-disable no-undef */
+ 
 import { ErrorBoundary } from "components";
 import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
@@ -28,7 +28,7 @@ const HOURS_1_MS = 60 * 60 * 1000;
 // Enable PWA service worker with smart cleanup strategy
 const initializePWA = async (): Promise<void> => {
     if (!("serviceWorker" in navigator)) {
-        console.log("Service Workers not supported");
+        // No service worker support - silent return
         return;
     }
 
@@ -36,23 +36,17 @@ const initializePWA = async (): Promise<void> => {
     if (import.meta.env.PROD) {
         try {
             // Force cleanup of any old service workers and caches first
-            console.log("Performing PWA cleanup...");
             await serviceWorkerRegistration.forceCleanup();
 
             // Wait a moment for cleanup to complete
             await new Promise(resolve => setTimeout(resolve, 1000));
 
             // Register new service worker
-            console.log("Registering new service worker...");
             serviceWorkerRegistration.register({
                 onUpdate: (registration: ServiceWorkerRegistration) => {
                     if (registration && registration.waiting) {
                         // Auto-update: skip waiting and reload
                         registration.waiting.postMessage({ type: "SKIP_WAITING" });
-
-                        // Optional: Show user-friendly update notification
-                        // This could be integrated with your snack/notification system
-                        console.log("PWA update available, applying...");
 
                         // Reload page to apply update
                         setTimeout(() => {
@@ -61,8 +55,6 @@ const initializePWA = async (): Promise<void> => {
                     }
                 },
                 onSuccess: (registration: ServiceWorkerRegistration) => {
-                    console.log("PWA cached and ready for offline use");
-
                     // Send standalone status for push notification setup
                     if (registration && registration.active) {
                         registration.active.postMessage({
@@ -89,7 +81,6 @@ const initializePWA = async (): Promise<void> => {
         }
     } else {
         // In development, clean up any existing service workers to avoid conflicts
-        console.log("Development mode: cleaning up service workers");
         serviceWorkerRegistration.forceCleanup();
     }
 };

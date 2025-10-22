@@ -28,7 +28,14 @@
         "sw-template.js"
     ],
     "exclude": [
-        "node_modules"
+        "node_modules",
+        "**/*.test.ts",
+        "**/*.test.tsx",
+        "**/*.spec.ts",
+        "**/*.spec.tsx",
+        "**/__tests__/**",
+        "**/__mocks__/**",
+        "**/setupTests.ts"
     ],
     "references": [
         {

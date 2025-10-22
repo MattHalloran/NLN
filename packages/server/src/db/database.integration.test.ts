@@ -71,7 +71,7 @@ describe("Database Integration Tests", () => {
             if (tablename !== "_prisma_migrations") {
                 try {
                     await prisma.$executeRawUnsafe(
-                        `TRUNCATE TABLE "public"."${tablename}" CASCADE;`
+                        `TRUNCATE TABLE "public"."${tablename}" CASCADE;`,
                     );
                 } catch (_error) {
                     console.log(`Could not truncate ${tablename}, but continuing...`);
@@ -147,7 +147,7 @@ describe("Database Integration Tests", () => {
                         title: "TestRole",
                         description: "Duplicate role",
                     },
-                })
+                }),
             ).rejects.toThrow();
         });
     });
@@ -296,7 +296,7 @@ describe("Database Integration Tests", () => {
                             },
                         },
                     },
-                })
+                }),
             ).rejects.toThrow();
         });
     });
@@ -387,7 +387,7 @@ describe("Database Integration Tests", () => {
                         plantId: plant2.id,
                         price: 15.0,
                     },
-                })
+                }),
             ).rejects.toThrow();
         });
     });
