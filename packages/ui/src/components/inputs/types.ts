@@ -11,6 +11,6 @@ export interface PasswordTextFieldProps {
     label?: string;
     name?: string;
     onBlur?: TextFieldProps["onBlur"];
-    onChange: (e: ChangeEvent<any>) => any;
+    onChange: (e: ChangeEvent<HTMLInputElement>) => void;
     value: string;
 }

@@ -17,18 +17,23 @@ export const ABTestEditingBanner: React.FC = () => {
         const searchParams = new URLSearchParams(location.split("?")[1] || "");
         const variantId = searchParams.get("variantId");
 
-        if (!variantId) {
-            // Early return case - reset state
-            setVariantInfo(null);
-            setLoading(false);
-            return;
-        }
-
         // Use a flag to prevent state updates if component unmounts
         let isSubscribed = true;
 
         const fetchVariant = async () => {
+            if (!variantId) {
+                // Early return case - reset state
+                if (isSubscribed) {
+                    setVariantInfo(null);
+                    setLoading(false);
+                }
+                return;
+            }
+
             try {
+                if (isSubscribed) {
+                    setLoading(true);
+                }
                 const variant = await restApi.getVariant(variantId);
                 if (isSubscribed) {
                     setVariantInfo(variant);
@@ -43,7 +48,6 @@ export const ABTestEditingBanner: React.FC = () => {
             }
         };
 
-        setLoading(true);
         fetchVariant();
 
         return () => {

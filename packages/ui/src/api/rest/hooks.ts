@@ -476,3 +476,6 @@ export function useToggleVariant() {
         (id) => restApi.toggleVariant(id),
     );
 }
+
+// Re-export commonly used types from client
+export type { Image, LandingPageContent, Plant, DashboardStats, LandingPageVariant };

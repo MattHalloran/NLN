@@ -3,12 +3,13 @@
 import fs from "fs";
 import { deleteFile } from "../src/utils";
 import { PrismaClient } from "@prisma/client";
+import { logger } from "../src/logger.js";
 
 const prisma = new PrismaClient();
 
 const FOLDER = "images";
 const PATH = `${process.env.PROJECT_DIR}/assets/${FOLDER}`;
-console.info(`🧼 Cleaning image data in: ${PATH}...`);
+logger.info(`🧼 Cleaning image data in: ${PATH}...`);
 
 if (!fs.existsSync(PATH)) {
     fs.mkdirSync(PATH);
@@ -26,7 +27,7 @@ const imageData = await prisma.image.findMany({
 });
 
 if (imageData === undefined || imageData.length === 0) {
-    console.warn("No image data found in database");
+    logger.warn("No image data found in database");
 }
 
 const dbFiles = imageData
@@ -42,7 +43,7 @@ const dbFiles = imageData
 // Delete images not referenced in database
 for (const file of files) {
     if (!dbFiles.some(f => f === file)) {
-        console.info(`Deleting ${file}`);
+        logger.info(`Deleting ${file}`);
         void deleteFile(file);
     }
 }
@@ -50,10 +51,10 @@ for (const file of files) {
 // Delete database rows no longer associated with an image
 for (const file of dbFiles) {
     if (!files.some(f => f === file)) {
-        console.info(`Deleting image data for ${file}`);
+        logger.info(`Deleting image data for ${file}`);
         await prisma.image.deleteMany({ where: { files: { some: { src: file } } } });
     }
 }
 
-console.info("✅ Cleaning complete");
+logger.info("✅ Cleaning complete");
 process.exit(0);

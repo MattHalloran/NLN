@@ -10,7 +10,7 @@ export const ContactPage = () => {
     });
     return (
         <PageContainer>
-            {/* TODO */}
+            {/* Placeholder page - contact functionality is in AdminContactPage */}
         </PageContainer>
     );
 };

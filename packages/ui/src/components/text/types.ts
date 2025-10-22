@@ -10,7 +10,7 @@ export interface TitleProps {
     options?: {
         Icon: SvgComponent;
         label: string;
-        onClick: (e?: any) => void;
+        onClick: (e?: React.MouseEvent) => void;
     }[];
     sxs?: {
         stack?: SxType;

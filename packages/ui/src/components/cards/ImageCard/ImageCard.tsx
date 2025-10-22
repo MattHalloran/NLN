@@ -1,7 +1,7 @@
 import { IMAGE_SIZE } from "@local/shared";
 import { Card, CardActions, CardContent, CardMedia, IconButton, useTheme } from "@mui/material";
 import { DeleteIcon, EditIcon } from "icons";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useDrag, useDrop } from "react-dnd";
 import { Image, ImageInfo } from "types";
 import { getImageSrc, getServerUrl } from "utils";
@@ -21,16 +21,16 @@ export const ImageCard = ({
 }) => {
     const { palette } = useTheme();
 
-    const ref = useRef(null);
+    const ref = useRef<HTMLDivElement>(null);
 
-    const [, drop] = useDrop({
+    const [, drop] = useDrop<{ data: ImageInfo | Image; index: number }>({
         accept: "card",
         collect(monitor) {
             return {
                 handlerId: monitor.getHandlerId(),
             };
         },
-        hover(item: any) {
+        hover(item) {
             if (!ref.current) {
                 return;
             }
@@ -54,7 +54,11 @@ export const ImageCard = ({
         }),
     });
     const opacity = isDragging ? 0 : 1;
-    drag(drop(ref));
+
+    // Connect drag and drop refs in useEffect to avoid accessing ref during render
+    useEffect(() => {
+        drag(drop(ref));
+    }, [drag, drop]);
 
     return (
         <Card

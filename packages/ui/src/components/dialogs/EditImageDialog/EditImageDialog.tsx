@@ -1,6 +1,6 @@
 import { Button, Dialog, DialogActions, DialogContent, TextField, useTheme } from "@mui/material";
 import { CancelIcon, SaveIcon } from "icons";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { ImageInfo } from "types";
 import { DialogTitle } from "../DialogTitle/DialogTitle";
 
@@ -17,21 +17,13 @@ export const EditImageDialog = ({
 }) => {
     const { palette: _palette } = useTheme();
 
-    const [alt, setAlt] = useState("");
-    const [description, setDescription] = useState("");
-    const prevDataRef = useRef<ImageInfo | null>(null);
-
-    useEffect(() => {
-        // Only update state if data actually changed
-        if (data !== prevDataRef.current) {
-            setAlt(data?.image?.alt ?? "");
-            setDescription(data?.image?.description ?? "");
-            prevDataRef.current = data;
-        }
-    }, [data]);
+    // Use image hash as key to reset form state when editing different items
+    const dataKey = data?.image?.hash ?? "empty";
+    const [alt, setAlt] = useState(data?.image?.alt ?? "");
+    const [description, setDescription] = useState(data?.image?.description ?? "");
 
     return (
-        <Dialog open={open} onClose={onClose}>
+        <Dialog key={dataKey} open={open} onClose={onClose}>
             <DialogTitle id="edit-image-title" title="Edit Image Data" onClose={onClose} />
             <DialogContent>
                 <TextField

@@ -31,7 +31,7 @@ export interface MenuTitleProps {
 export interface PopoverWithArrowProps extends Omit<PopoverProps, "open" | "sx"> {
     anchorEl: HTMLElement | null;
     children: React.ReactNode;
-    handleClose: () => any;
+    handleClose: () => void;
     placement?: "bottom" | "left" | "right" | "top";
     sxs?: {
         root?: Record<string, unknown>;
@@ -41,13 +41,13 @@ export interface PopoverWithArrowProps extends Omit<PopoverProps, "open" | "sx">
 }
 
 export interface SnackProps {
-    buttonClicked?: (event?: any) => any;
+    buttonClicked?: (event?: React.MouseEvent) => void;
     buttonText?: string;
     /**
      * Anything you'd like to log in development mode
      */
-    data?: any;
-    handleClose: () => any;
+    data?: unknown;
+    handleClose: () => void;
     id: string;
     message?: string;
     severity?: SnackSeverity;

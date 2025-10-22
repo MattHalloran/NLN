@@ -11,6 +11,7 @@ import {
 import { TopBar } from "components/navigation/TopBar/TopBar";
 import { useLandingPage } from "hooks/useLandingPage";
 import { restApi } from "api/rest/client";
+import { handleError } from "utils/errorLogger";
 
 // Section component mapping
 const SECTION_COMPONENTS: Record<string, React.ComponentType> = {
@@ -61,7 +62,7 @@ export const HomePage = () => {
             restApi.trackVariantEvent(landingPageData._meta.variantId, {
                 eventType: "view",
             }).catch((err) => {
-                console.error("Error tracking view event:", err);
+                handleError(err, "HomePage", "trackViewEvent");
             });
         }
     }, [landingPageData?._meta?.variantId]);
@@ -87,7 +88,7 @@ export const HomePage = () => {
                     restApi.trackVariantEvent(landingPageData._meta.variantId, {
                         eventType: "bounce",
                     }).catch((err) => {
-                        console.error("Error tracking bounce event:", err);
+                        handleError(err, "HomePage", "trackBounceEvent");
                     });
                 }
             }

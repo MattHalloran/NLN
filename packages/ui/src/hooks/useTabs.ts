@@ -11,8 +11,8 @@ export type TabParam<T, S extends boolean = true> = {
     tabType: T;
 } & (S extends true ? {
     searchPlaceholder?: string;
-    searchType: any;
-    where: (params?: any) => { [x: string]: any };
+    searchType: string;
+    where: (params?: Record<string, unknown>) => Record<string, unknown>;
 } : object);
 
 export type PageTab<T, S extends boolean = true> = {
@@ -24,7 +24,7 @@ export type PageTab<T, S extends boolean = true> = {
     tabType: T;
 } & (S extends true ? {
     searchPlaceholder: string;
-    searchType: any;
+    searchType: string;
 } : object);
 
 type UseTabsParam<T, S extends boolean = true> = TabParam<T, S>;
@@ -35,7 +35,7 @@ type UseTabsParam<T, S extends boolean = true> = TabParam<T, S>;
 export const useTabs = <T, S extends boolean = true>({
     defaultTab,
     display,
-    id,
+    id: _id,
     tabParams,
 }: {
     defaultTab?: T,
@@ -73,7 +73,7 @@ export const useTabs = <T, S extends boolean = true>({
         e.preventDefault();
         if (display === "page") addSearchParams(setLocation, { type: tab.tabType });
         setCurrTab(tab);
-    }, [display, setLocation, id]);
+    }, [display, setLocation]);
 
     const currTabParams = useMemo(() => tabParams[currTab.index], [currTab.index, tabParams]);
 

@@ -55,19 +55,13 @@ export async function subscribeUserToPush(): Promise<PushSubscription | null> {
             `${import.meta.env.BASE_URL}service-worker.js`,
             { scope: import.meta.env.BASE_URL },
         );
-        console.log("getting subscribeoptions", import.meta.env);
         const subscribeOptions: PushSubscriptionOptions = {
             userVisibleOnly: true,
             applicationServerKey: urlBase64ToUint8Array(
                 import.meta.env.VITE_VAPID_PUBLIC_KEY,
             ).buffer as ArrayBuffer,
         };
-        console.log("push notification subscribeOptions: ", subscribeOptions);
         const pushSubscription = await registration.pushManager.subscribe(subscribeOptions);
-        console.log(
-            "Received PushSubscription: ",
-            JSON.stringify(pushSubscription),
-        );
         return pushSubscription;
     } catch (error) {
         console.error("Error subscribing to push notifications:", error);
@@ -84,27 +78,20 @@ const isLocalhost = Boolean(
 );
 
 export function register(config?: Config): void {
-    console.log("register 1", config, "serviceWorker" in navigator);
     if (import.meta.env.PROD && "serviceWorker" in navigator) {
-        console.log("register 2");
         // The URL constructor is available in all browsers that support SW.
         const publicUrl = new URL(import.meta.env.BASE_URL, window.location.href);
-        console.log("register 3", publicUrl, "window.location.origin: ", window.location.origin);
         if (publicUrl.origin !== window.location.origin) {
-            console.log("register 4 - bad origin");
             // Our service worker won't work if PUBLIC_URL/BASE_URL is on a different origin
             // from what our page is served on. This might happen if a CDN is used to
             // serve assets; see https://github.com/facebook/create-react-app/issues/2374
             return;
         }
 
-        console.log("register 5");
         // Function for checking registration of service worker
         const checkRegister = (): void => {
             const swUrl = `${window.location.origin}/service-worker.js`;
-            console.log("register 6 - checking register...", swUrl);
             if (isLocalhost) {
-                console.log("register 7 is localhost");
                 // This is running on localhost. Let's check if a service worker still exists or not.
                 checkValidServiceWorker(swUrl, config);
 
@@ -117,13 +104,11 @@ export function register(config?: Config): void {
                     );
                 });
             } else {
-                console.log("register 8 is not localhost");
                 // Is not localhost. Just register service worker
                 registerValidSW(swUrl, config);
             }
         };
 
-        console.log("register 9");
         // Check for registration on load and visibility change
         window.addEventListener("load", checkRegister);
         // document.addEventListener('visibilitychange', () => {
@@ -231,27 +216,22 @@ export async function forceCleanup(): Promise<boolean> {
     try {
         // Get all registrations
         const registrations = await navigator.serviceWorker.getRegistrations();
-        console.log("Found service worker registrations:", registrations.length);
 
         // Unregister all existing service workers
         await Promise.all(
             registrations.map(async (registration) => {
-                console.log("Unregistering service worker:", registration.scope);
                 return registration.unregister();
             }),
         );
 
         // Clear all caches
         const cacheNames = await caches.keys();
-        console.log("Found caches:", cacheNames);
         await Promise.all(
             cacheNames.map(async (cacheName) => {
-                console.log("Deleting cache:", cacheName);
                 return caches.delete(cacheName);
             }),
         );
 
-        console.log("Service worker cleanup completed");
         return true;
     } catch (error) {
         console.error("Error during service worker cleanup:", error);

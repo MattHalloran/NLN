@@ -54,6 +54,30 @@ interface PreviewProps {
     mode: "light" | "dark";
 }
 
+// Default branding settings
+const DEFAULT_BRANDING: BrandingSettings = {
+    companyInfo: {
+        foundedYear: 1981,
+        description: "Expert plant care and community service",
+    },
+    colors: {
+        light: {
+            primary: "#1b5e20",
+            secondary: "#1976d2",
+            accent: "#4CAF50",
+            background: "#e9f1e9",
+            paper: "#ffffff",
+        },
+        dark: {
+            primary: "#515774",
+            secondary: "#4372a3",
+            accent: "#5b99da",
+            background: "#181818",
+            paper: "#2e2e2e",
+        },
+    },
+};
+
 const RealisticPreview = ({ colors, mode }: PreviewProps) => {
     const textColor = mode === "light" ? "#000000" : "#ffffff";
     const textSecondary = mode === "light" ? "#666666" : "#aaaaaa";
@@ -274,29 +298,8 @@ export const AdminHomepageBranding = () => {
     const updateSettings = useUpdateLandingPageSettings();
     const { data: landingPageContent, refetch } = useLandingPage();
 
-    const [branding, setBranding] = useState<BrandingSettings>({
-        companyInfo: {
-            foundedYear: 1981,
-            description: "Expert plant care and community service",
-        },
-        colors: {
-            light: {
-                primary: "#1b5e20",
-                secondary: "#1976d2",
-                accent: "#4CAF50",
-                background: "#e9f1e9",
-                paper: "#ffffff",
-            },
-            dark: {
-                primary: "#515774",
-                secondary: "#4372a3",
-                accent: "#5b99da",
-                background: "#181818",
-                paper: "#2e2e2e",
-            },
-        },
-    });
-    const [originalBranding, setOriginalBranding] = useState<BrandingSettings>(branding);
+    const [branding, setBranding] = useState<BrandingSettings>(DEFAULT_BRANDING);
+    const [originalBranding, setOriginalBranding] = useState<BrandingSettings>(DEFAULT_BRANDING);
     const [previewMode, setPreviewMode] = useState<"light" | "dark">("light");
     const [editingMode, setEditingMode] = useState<"light" | "dark">("light");
     const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: "success" | "error" }>({
@@ -306,37 +309,46 @@ export const AdminHomepageBranding = () => {
     });
 
     // Load branding settings from landing page content
-    useEffect(() => {
-        if (landingPageContent?.theme) {
-            // Handle both old format (single colors object) and new format (light/dark)
-            const colors = landingPageContent.theme.colors as any;
-            let colorSettings = branding.colors;
+    // Using useMemo to derive settings from landingPageContent
+    const settingsFromContent = useMemo(() => {
+        if (!landingPageContent?.theme) return null;
 
-            if (colors?.light && colors?.dark) {
-                // New format with light/dark mode
-                colorSettings = colors as { light: ThemeColors; dark: ThemeColors };
-            } else if (colors?.primary) {
-                // Old format - use for light mode, keep defaults for dark
-                colorSettings = {
-                    light: {
-                        primary: colors.primary || branding.colors.light.primary,
-                        secondary: colors.secondary || branding.colors.light.secondary,
-                        accent: colors.accent || branding.colors.light.accent,
-                        background: branding.colors.light.background,
-                        paper: branding.colors.light.paper,
-                    },
-                    dark: branding.colors.dark,
-                };
-            }
+        // Handle both old format (single colors object) and new format (light/dark)
+        const colors = landingPageContent.theme.colors as Record<string, unknown>;
+        let colorSettings = DEFAULT_BRANDING.colors;
 
-            const settings: BrandingSettings = {
-                companyInfo: landingPageContent.content?.company || branding.companyInfo,
-                colors: colorSettings,
+        if (colors?.light && colors?.dark) {
+            // New format with light/dark mode
+            colorSettings = colors as { light: ThemeColors; dark: ThemeColors };
+        } else if (colors?.primary) {
+            // Old format - use for light mode, keep defaults for dark
+            colorSettings = {
+                light: {
+                    primary: (colors.primary as string) || DEFAULT_BRANDING.colors.light.primary,
+                    secondary: (colors.secondary as string) || DEFAULT_BRANDING.colors.light.secondary,
+                    accent: (colors.accent as string) || DEFAULT_BRANDING.colors.light.accent,
+                    background: DEFAULT_BRANDING.colors.light.background,
+                    paper: DEFAULT_BRANDING.colors.light.paper,
+                },
+                dark: DEFAULT_BRANDING.colors.dark,
             };
-            setBranding(settings);
-            setOriginalBranding(JSON.parse(JSON.stringify(settings)));
         }
+
+        const settings: BrandingSettings = {
+            companyInfo: landingPageContent.content?.company || DEFAULT_BRANDING.companyInfo,
+            colors: colorSettings,
+        };
+
+        return settings;
     }, [landingPageContent]);
+
+    // Update state when settings from content change
+    useEffect(() => {
+        if (settingsFromContent) {
+            setBranding(settingsFromContent);
+            setOriginalBranding(JSON.parse(JSON.stringify(settingsFromContent)));
+        }
+    }, [settingsFromContent]);
 
     // Check for unsaved changes using useMemo for derived state
     const hasChanges = useMemo(

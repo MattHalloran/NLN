@@ -77,37 +77,46 @@ interface CTAButton {
     type: string;
 }
 
+// Default values
+const DEFAULT_HERO_SETTINGS: HeroSettings = {
+    autoPlay: true,
+    autoPlayDelay: 5000,
+    showDots: true,
+    showArrows: true,
+    fadeTransition: true,
+};
+
+const DEFAULT_HERO_CONTENT: HeroContent = {
+    title: "Beautiful, healthy plants",
+    subtitle: "At competitive prices",
+    description: "Serving landscape professionals for over 40 years with the finest selection of wholesale plants, trees, and shrubs",
+    businessHours: "OPEN 7 DAYS A WEEK | Mon-Sat 8AM-6PM | Sun 9AM-5PM",
+    useContactInfoHours: false,
+};
+
+const DEFAULT_TRUST_BADGES: TrustBadge[] = [
+    { icon: "users", text: "Family Owned Since 1981" },
+    { icon: "award", text: "Licensed & Certified" },
+    { icon: "leaf", text: "Expert Plant Care" },
+];
+
+const DEFAULT_CTA_BUTTONS: CTAButton[] = [
+    { text: "Browse Plants", link: "https://newlife.online-orders.sbiteam.com/", type: "primary" },
+    { text: "Visit Our Nursery", link: "/about", type: "secondary" },
+];
+
 export const AdminHomepageHeroBanner = () => {
     const { variantId } = useABTestQueryParams();
     const [heroBanners, setHeroBanners] = useState<any[]>([]);
     const [originalHeroBanners, setOriginalHeroBanners] = useState<any[]>([]);
-    const [heroSettings, setHeroSettings] = useState<HeroSettings>({
-        autoPlay: true,
-        autoPlayDelay: 5000,
-        showDots: true,
-        showArrows: true,
-        fadeTransition: true,
-    });
-    const [originalHeroSettings, setOriginalHeroSettings] = useState<HeroSettings>(heroSettings);
-    const [heroContent, setHeroContent] = useState<HeroContent>({
-        title: "Beautiful, healthy plants",
-        subtitle: "At competitive prices",
-        description: "Serving landscape professionals for over 40 years with the finest selection of wholesale plants, trees, and shrubs",
-        businessHours: "OPEN 7 DAYS A WEEK | Mon-Sat 8AM-6PM | Sun 9AM-5PM",
-        useContactInfoHours: false,
-    });
-    const [originalHeroContent, setOriginalHeroContent] = useState<HeroContent>(heroContent);
-    const [trustBadges, setTrustBadges] = useState<TrustBadge[]>([
-        { icon: "users", text: "Family Owned Since 1981" },
-        { icon: "award", text: "Licensed & Certified" },
-        { icon: "leaf", text: "Expert Plant Care" },
-    ]);
-    const [originalTrustBadges, setOriginalTrustBadges] = useState<TrustBadge[]>(trustBadges);
-    const [ctaButtons, setCtaButtons] = useState<CTAButton[]>([
-        { text: "Browse Plants", link: "https://newlife.online-orders.sbiteam.com/", type: "primary" },
-        { text: "Visit Our Nursery", link: "/about", type: "secondary" },
-    ]);
-    const [originalCtaButtons, setOriginalCtaButtons] = useState<CTAButton[]>(ctaButtons);
+    const [heroSettings, setHeroSettings] = useState<HeroSettings>(DEFAULT_HERO_SETTINGS);
+    const [originalHeroSettings, setOriginalHeroSettings] = useState<HeroSettings>(DEFAULT_HERO_SETTINGS);
+    const [heroContent, setHeroContent] = useState<HeroContent>(DEFAULT_HERO_CONTENT);
+    const [originalHeroContent, setOriginalHeroContent] = useState<HeroContent>(DEFAULT_HERO_CONTENT);
+    const [trustBadges, setTrustBadges] = useState<TrustBadge[]>(DEFAULT_TRUST_BADGES);
+    const [originalTrustBadges, setOriginalTrustBadges] = useState<TrustBadge[]>(DEFAULT_TRUST_BADGES);
+    const [ctaButtons, setCtaButtons] = useState<CTAButton[]>(DEFAULT_CTA_BUTTONS);
+    const [originalCtaButtons, setOriginalCtaButtons] = useState<CTAButton[]>(DEFAULT_CTA_BUTTONS);
     const [isLoading, setIsLoading] = useState(false);
 
     const { data: landingPageContent, refetch } = useLandingPage();
@@ -116,9 +125,10 @@ export const AdminHomepageHeroBanner = () => {
     // Load all hero-related content
     useEffect(() => {
         if (landingPageContent) {
-            // Load hero banners
+            // Load hero banners - fix unsafe optional chaining
             if (landingPageContent.content?.hero?.banners) {
-                const sorted = [...landingPageContent.content?.hero?.banners].sort(
+                const banners = landingPageContent.content.hero.banners;
+                const sorted = [...banners].sort(
                     (a: any, b: any) => a.displayOrder - b.displayOrder,
                 );
                 setHeroBanners(sorted);
@@ -127,27 +137,22 @@ export const AdminHomepageHeroBanner = () => {
 
             // Load hero settings
             if (landingPageContent.content?.hero?.settings) {
-                setHeroSettings(landingPageContent.content?.hero?.settings);
-                setOriginalHeroSettings(JSON.parse(JSON.stringify(landingPageContent.content?.hero?.settings)));
+                setHeroSettings(landingPageContent.content.hero.settings);
+                setOriginalHeroSettings(JSON.parse(JSON.stringify(landingPageContent.content.hero.settings)));
             }
 
             // Load hero content
             if (landingPageContent.content?.hero?.text) {
                 const content = landingPageContent.content.hero.text;
-                setHeroContent({
-                    title: content.title || heroContent.title,
-                    subtitle: content.subtitle || heroContent.subtitle,
-                    description: content.description || heroContent.description,
-                    businessHours: content.businessHours || heroContent.businessHours,
+                const newContent = {
+                    title: content.title || DEFAULT_HERO_CONTENT.title,
+                    subtitle: content.subtitle || DEFAULT_HERO_CONTENT.subtitle,
+                    description: content.description || DEFAULT_HERO_CONTENT.description,
+                    businessHours: content.businessHours || DEFAULT_HERO_CONTENT.businessHours,
                     useContactInfoHours: (content as any).useContactInfoHours ?? false,
-                });
-                setOriginalHeroContent(JSON.parse(JSON.stringify({
-                    title: content.title || heroContent.title,
-                    subtitle: content.subtitle || heroContent.subtitle,
-                    description: content.description || heroContent.description,
-                    businessHours: content.businessHours || heroContent.businessHours,
-                    useContactInfoHours: (content as any).useContactInfoHours ?? false,
-                })));
+                };
+                setHeroContent(newContent);
+                setOriginalHeroContent(JSON.parse(JSON.stringify(newContent)));
 
                 // Load trust badges
                 if (content.trustBadges) {

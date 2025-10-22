@@ -10,19 +10,39 @@ export const useZIndex = <
     hasTransition?: HasTransition,
 ): UseZIndexReturn<HasTransition> => {
     const context = useContext(ZIndexContext);
-    const [zIndex, setZIndex] = useState<number>(DEFAULT_Z_INDEX);
     const hasCalledGetZIndex = useRef(false);
+    const shouldInitialize = visible === undefined || visible;
 
-    // If the component is visible and hasn't already been assigned a zIndex, get a new zIndex
-    if ((visible === undefined || visible) && !hasCalledGetZIndex.current) {
-        setZIndex(context?.getZIndex() ?? DEFAULT_Z_INDEX);
-        hasCalledGetZIndex.current = true;
-    }
+    // Initialize state without accessing ref during render
+    const [zIndex, setZIndex] = useState<number>(DEFAULT_Z_INDEX);
+
+    // Get zIndex on mount if initially visible
+    useEffect(() => {
+        if (shouldInitialize && !hasCalledGetZIndex.current && context) {
+            const newZIndex = context.getZIndex() ?? DEFAULT_Z_INDEX;
+            setZIndex(newZIndex);
+            hasCalledGetZIndex.current = true;
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); // Only run on mount
+
+    // Update zIndex when visibility changes from false to true
+    useEffect(() => {
+        if (visible && !hasCalledGetZIndex.current && context) {
+            // Defer setState to avoid cascading renders
+            queueMicrotask(() => {
+                setZIndex(context.getZIndex() ?? DEFAULT_Z_INDEX);
+                hasCalledGetZIndex.current = true;
+            });
+        }
+    }, [visible, context]);
 
     // Cleanup on component unmount
     useEffect(() => {
         return () => {
-            if (hasCalledGetZIndex.current) context?.releaseZIndex();
+            if (hasCalledGetZIndex.current) {
+                context?.releaseZIndex();
+            }
             hasCalledGetZIndex.current = false;
         };
     }, [context]);
@@ -30,8 +50,10 @@ export const useZIndex = <
     const handleTransitionExit = () => {
         if (!visible && context) {
             setZIndex(DEFAULT_Z_INDEX);
-            if (hasCalledGetZIndex.current) context?.releaseZIndex();
-            hasCalledGetZIndex.current = false;
+            if (hasCalledGetZIndex.current) {
+                context?.releaseZIndex();
+                hasCalledGetZIndex.current = false;
+            }
         }
     };
 

@@ -3,17 +3,27 @@ import { Box } from "@mui/material";
 import { useImagesByLabel, useAddImages, useUpdateImages } from "api/rest/hooks";
 import { BackButton, Dropzone, PageContainer, SnackSeverity, WrappedImageList } from "components";
 import { TopBar } from "components/navigation/TopBar/TopBar";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useMemo } from "react";
 import { pagePaddingBottom } from "styles";
 import { PubSub } from "utils";
+import { ImageInfo } from "types";
 
 const helpText = "This page allows you to manage the images displayed on the gallery page";
 
 export const AdminGalleryPage = () => {
-    const [imageData, setImageData] = useState<any[]>([]);
     const { data: currImages, refetch: refetchImages } = useImagesByLabel("gallery");
     const { mutate: addImages } = useAddImages();
     const { mutate: updateImages } = useUpdateImages();
+
+    // Derive imageData from currImages using useMemo instead of useEffect + useState
+    // Convert Image[] to ImageInfo[] format expected by WrappedImageList
+    const imageData: ImageInfo[] = useMemo(() => {
+        if (!currImages) return [];
+        return currImages.map((image, index) => ({
+            index,
+            image,
+        }));
+    }, [currImages]);
 
     const uploadImages = useCallback(async (acceptedFiles: File[]) => {
         try {
@@ -23,29 +33,22 @@ export const AdminGalleryPage = () => {
                 severity: SnackSeverity.Success,
             });
             refetchImages();
-        } catch (error: any) {
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : "Failed to upload images";
             PubSub.get().publishSnack({
-                message: error?.message || "Failed to upload images",
+                message: errorMessage,
                 severity: SnackSeverity.Error,
             });
         }
     }, [addImages, refetchImages]);
 
-    useEffect(() => {
-        // Table data must be extensible, and needs position
-        setImageData(currImages?.map((d: any, index: number) => ({
-            ...d,
-            pos: index,
-        })) || []);
-    }, [currImages]);
-
-    const applyChanges = useCallback(async (changed: any[]) => {
+    const applyChanges = useCallback(async (changed: ImageInfo[]) => {
         try {
             // Prepare data for request - map changed items to the format expected by REST API
-            const images = changed.map((d: any) => ({
-                hash: d.hash,
-                alt: d.alt,
-                description: d.description,
+            const images = changed.map((d) => ({
+                hash: d.image.hash,
+                alt: d.image.alt ?? undefined,
+                description: d.image.description ?? undefined,
                 label: "gallery",
             }));
             await updateImages({ images });
@@ -53,9 +56,10 @@ export const AdminGalleryPage = () => {
                 message: "Successfully updated image(s).",
                 severity: SnackSeverity.Success,
             });
-        } catch (error: any) {
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : "Failed to update images";
             PubSub.get().publishSnack({
-                message: error?.message || "Failed to update images",
+                message: errorMessage,
                 severity: SnackSeverity.Error,
             });
         }

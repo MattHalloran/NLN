@@ -31,7 +31,7 @@ export interface ErrorBoundaryProps {
 
 export interface PageContainerProps {
     children?: boolean | null | undefined | JSX.Element | (boolean | null | undefined | JSX.Element)[];
-    sx?: { [x: string]: any };
+    sx?: SxType;
 }
 
 export type NavbarProps = {
@@ -40,7 +40,7 @@ export type NavbarProps = {
     options?: {
         Icon: SvgComponent;
         label: string;
-        onClick: (e?: any) => void;
+        onClick: (e?: React.MouseEvent) => void;
     }[];
     shouldHideTitle?: boolean;
     startComponent?: JSX.Element;

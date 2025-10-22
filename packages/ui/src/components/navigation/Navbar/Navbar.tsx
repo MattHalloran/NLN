@@ -193,7 +193,7 @@ export const Navbar = forwardRef(({
                     <Stack direction="row" spacing={0} alignItems="center" sx={{
                         paddingLeft: 1,
                         paddingRight: 1,
-                        // TODO Reverse order on left-handed mobile
+                        // Reverse order for left-handed users on mobile
                         flexDirection: isLeftHanded ? "row-reverse" : "row",
                     }}>
                         {startComponent ? <Box sx={isMobile ? {

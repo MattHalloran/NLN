@@ -1,9 +1,6 @@
 import { Router, Request, Response } from "express";
-import { readFileSync, writeFileSync } from "fs";
-import { join } from "path";
 import { merge } from "lodash";
 import { logger } from "../logger.js";
-import { initializeRedis } from "../redisConn.js";
 import type {
     LandingPageContent,
     HeroBanner,
@@ -13,6 +10,22 @@ import type {
     BusinessContactData,
     LandingPageVariant,
 } from "../types/landingPage.js";
+import {
+    readLandingPageContent,
+    writeLandingPageContent,
+    aggregateLandingPageContent,
+} from "./landingPage/landingPageService.js";
+import { getCachedContent, setCachedContent, invalidateCache } from "./landingPage/landingPageCache.js";
+import {
+    readVariants,
+    writeVariants,
+    readVariantContent,
+    writeVariantContent,
+    deleteVariantContent,
+    getEnabledVariants,
+    assignVariantWeighted,
+    validateTrafficAllocation,
+} from "./landingPage/variantsService.js";
 
 // Extend Express Request to include auth properties
 interface AuthenticatedRequest extends Request {
@@ -20,164 +33,6 @@ interface AuthenticatedRequest extends Request {
 }
 
 const router = Router();
-// In production, data files are in dist folder, in development they're in src
-const dataPath = join(
-    process.env.PROJECT_DIR || "",
-    process.env.NODE_ENV === "production" ? "packages/server/dist/data" : "packages/server/src/data",
-);
-
-// Cache configuration (same as GraphQL)
-const CACHE_KEY = "landing-page-content:v1";
-const CACHE_TTL = 3600; // 1 hour
-
-// Helper function to read the consolidated landing page content
-const readLandingPageContent = (): LandingPageContent => {
-    try {
-        const data = readFileSync(join(dataPath, "landing-page-content.json"), "utf8");
-        return JSON.parse(data) as LandingPageContent;
-    } catch (error) {
-        logger.error("Error reading landing page content:", error);
-        return {
-            metadata: { version: "2.0", lastUpdated: new Date().toISOString() },
-            content: {
-                hero: {
-                    banners: [],
-                    settings: {
-                        autoPlay: false,
-                        autoPlayDelay: 5000,
-                        showDots: true,
-                        showArrows: true,
-                        fadeTransition: false,
-                    },
-                    text: {
-                        title: "",
-                        subtitle: "",
-                        description: "",
-                        businessHours: "",
-                        trustBadges: [],
-                        buttons: [],
-                    },
-                },
-                services: { title: "", subtitle: "", items: [] },
-                seasonal: { plants: [], tips: [] },
-                newsletter: { title: "", description: "", disclaimer: "", isActive: false },
-                company: { foundedYear: new Date().getFullYear(), description: "" },
-            },
-            contact: {
-                name: "",
-                address: { street: "", city: "", state: "", zip: "", full: "", googleMapsUrl: "" },
-                phone: { display: "", link: "" },
-                email: { address: "", link: "" },
-                socialMedia: {},
-                hours: {
-                    monday: "",
-                    tuesday: "",
-                    wednesday: "",
-                    thursday: "",
-                    friday: "",
-                    saturday: "",
-                    sunday: "",
-                },
-            },
-            theme: {
-                colors: {
-                    light: { primary: "", secondary: "", accent: "", background: "", paper: "" },
-                    dark: { primary: "", secondary: "", accent: "", background: "", paper: "" },
-                },
-                features: {
-                    showSeasonalContent: true,
-                    showNewsletter: true,
-                    showSocialProof: true,
-                    enableAnimations: true,
-                },
-            },
-            layout: { sections: [] },
-            experiments: { tests: [] },
-        };
-    }
-};
-
-// Helper function to write the consolidated landing page content
-const writeLandingPageContent = (content: LandingPageContent): void => {
-    try {
-        const contentPath = join(dataPath, "landing-page-content.json");
-        const dataToWrite: LandingPageContent = {
-            ...content,
-            metadata: {
-                ...content.metadata,
-                lastUpdated: new Date().toISOString(),
-            },
-        };
-        writeFileSync(contentPath, JSON.stringify(dataToWrite, null, 2), "utf8");
-        logger.info("Landing page content updated successfully");
-    } catch (error) {
-        logger.error("Error writing landing page content:", error);
-        throw error;
-    }
-};
-
-// Cache management
-const getCachedContent = async (): Promise<LandingPageContent | null> => {
-    try {
-        const redis = await initializeRedis();
-        const cached = await redis.get(CACHE_KEY);
-        return cached ? (JSON.parse(cached) as LandingPageContent) : null;
-    } catch (error) {
-        logger.error("Error reading from cache:", error);
-        return null;
-    }
-};
-
-const setCachedContent = async (content: LandingPageContent): Promise<void> => {
-    try {
-        const redis = await initializeRedis();
-        await redis.setEx(CACHE_KEY, CACHE_TTL, JSON.stringify(content));
-        logger.info("Landing page content cached");
-    } catch (error) {
-        logger.error("Error caching content:", error);
-    }
-};
-
-const invalidateCache = async () => {
-    try {
-        const redis = await initializeRedis();
-        await redis.del(CACHE_KEY);
-        logger.info("Landing page cache invalidated");
-    } catch (error) {
-        logger.error("Error invalidating cache:", error);
-    }
-};
-
-// Aggregate content from the new structure and return it in the new format
-const aggregateLandingPageContent = (onlyActive: boolean = true): LandingPageContent => {
-    const landingPageData = readLandingPageContent();
-
-    // Clone the data so we don't modify the original
-    const result: LandingPageContent = JSON.parse(
-        JSON.stringify(landingPageData),
-    ) as LandingPageContent;
-
-    // Filter active content if requested
-    if (onlyActive && result.content?.hero?.banners) {
-        result.content.hero.banners = result.content.hero.banners
-            .filter((b: HeroBanner) => b.isActive)
-            .sort((a: HeroBanner, b: HeroBanner) => a.displayOrder - b.displayOrder);
-    }
-
-    if (onlyActive && result.content?.seasonal?.plants) {
-        result.content.seasonal.plants = result.content.seasonal.plants
-            .filter((p: SeasonalPlant) => p.isActive)
-            .sort((a: SeasonalPlant, b: SeasonalPlant) => a.displayOrder - b.displayOrder);
-    }
-
-    if (onlyActive && result.content?.seasonal?.tips) {
-        result.content.seasonal.tips = result.content.seasonal.tips
-            .filter((t: PlantTip) => t.isActive)
-            .sort((a: PlantTip, b: PlantTip) => a.displayOrder - b.displayOrder);
-    }
-
-    return result;
-};
 
 // GET endpoint for landing page content with variant-based A/B testing support
 router.get("/", async (req: Request, res: Response) => {
@@ -973,121 +828,6 @@ router.put("/contact-info", async (req: Request, res: Response) => {
 // ============================================================================
 // VARIANT-FIRST A/B TESTING SYSTEM
 // ============================================================================
-
-// Helper functions for variant management
-const readVariants = (): LandingPageVariant[] => {
-    try {
-        const data = readFileSync(join(dataPath, "variants.json"), "utf8");
-        const parsed = JSON.parse(data);
-        return Object.values(parsed);
-    } catch (error) {
-        logger.error("Error reading variants:", error);
-        return [];
-    }
-};
-
-const writeVariants = (variants: LandingPageVariant[]): void => {
-    try {
-        const variantsPath = join(dataPath, "variants.json");
-        // Store as object with variant IDs as keys
-        const variantsObj: Record<string, LandingPageVariant> = {};
-        variants.forEach((variant) => {
-            variantsObj[variant.id] = variant;
-        });
-        writeFileSync(variantsPath, JSON.stringify(variantsObj, null, 2), "utf8");
-        logger.info("Variants updated successfully");
-    } catch (error) {
-        logger.error("Error writing variants:", error);
-        throw error;
-    }
-};
-
-// Read variant landing page content file
-const readVariantContent = (variantId: string): LandingPageContent | null => {
-    try {
-        const fileName = `landing-page-variant-${variantId}.json`;
-        const data = readFileSync(join(dataPath, fileName), "utf8");
-        return JSON.parse(data) as LandingPageContent;
-    } catch (error) {
-        logger.error(`Error reading variant content ${variantId}:`, error);
-        return null;
-    }
-};
-
-// Write variant landing page content file
-const writeVariantContent = (variantId: string, content: LandingPageContent): void => {
-    try {
-        const fileName = `landing-page-variant-${variantId}.json`;
-        const filePath = join(dataPath, fileName);
-        const dataToWrite: LandingPageContent = {
-            ...content,
-            metadata: {
-                ...content.metadata,
-                lastUpdated: new Date().toISOString(),
-            },
-        };
-        writeFileSync(filePath, JSON.stringify(dataToWrite, null, 2), "utf8");
-        logger.info(`Variant content ${variantId} updated successfully`);
-    } catch (error) {
-        logger.error(`Error writing variant content ${variantId}:`, error);
-        throw error;
-    }
-};
-
-// Delete variant content file
-const deleteVariantContent = (variantId: string): void => {
-    try {
-        const { unlinkSync } = require("fs");
-        const variantFile = join(dataPath, `landing-page-variant-${variantId}.json`);
-
-        try {
-            unlinkSync(variantFile);
-            logger.info(`Variant content file for ${variantId} deleted`);
-        } catch (err) {
-            logger.warn(`Could not delete ${variantFile}:`, err);
-        }
-    } catch (error) {
-        logger.error(`Error deleting variant content for ${variantId}:`, error);
-    }
-};
-
-// Get enabled variants
-const getEnabledVariants = (): LandingPageVariant[] => {
-    const variants = readVariants();
-    return variants.filter((v) => v.status === "enabled");
-};
-
-// Assign variant based on traffic allocation (weighted random)
-const assignVariantWeighted = (variants: LandingPageVariant[]): LandingPageVariant | null => {
-    if (variants.length === 0) {
-        return null;
-    }
-
-    const totalAllocation = variants.reduce((sum, v) => sum + v.trafficAllocation, 0);
-    if (totalAllocation === 0) {
-        return null;
-    }
-
-    const random = Math.random() * totalAllocation;
-    let cumulative = 0;
-
-    for (const variant of variants) {
-        cumulative += variant.trafficAllocation;
-        if (random <= cumulative) {
-            return variant;
-        }
-    }
-
-    // Fallback to last variant
-    return variants[variants.length - 1];
-};
-
-// Validate traffic allocation (must sum to 100 for enabled variants)
-const validateTrafficAllocation = (variants: LandingPageVariant[]): boolean => {
-    const enabledVariants = variants.filter((v) => v.status === "enabled");
-    const total = enabledVariants.reduce((sum, v) => sum + v.trafficAllocation, 0);
-    return Math.abs(total - 100) < 0.01; // Allow for floating point errors
-};
 
 // PUT endpoint to update landing page settings with deep merge (admin only)
 // Supports editing variants via query params: ?variantId=xxx

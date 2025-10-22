@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 type Dimensions = { width: number, height: number };
 type UseDimensionsReturn<T extends HTMLElement> = {
@@ -16,6 +16,7 @@ type UseDimensionsReturn<T extends HTMLElement> = {
 export const useDimensions = <T extends HTMLElement>(): UseDimensionsReturn<T> => {
     const [dimensions, setDimensions] = useState<Dimensions>({ width: 0, height: 0 });
     const ref = useRef<T>(null);
+    const hasCalculatedInitial = useRef(false);
 
     const calculateDimensions = useCallback(() => {
         const width = ref.current?.clientWidth ?? 0;
@@ -23,10 +24,16 @@ export const useDimensions = <T extends HTMLElement>(): UseDimensionsReturn<T> =
         setDimensions({ width, height });
     }, []);
 
-    useEffect(() => {
-        // Initial calculation
-        calculateDimensions();
-    }, [calculateDimensions]);
+    // Calculate dimensions only when ref changes (not on every render)
+    useLayoutEffect(() => {
+        if (ref.current && !hasCalculatedInitial.current) {
+            hasCalculatedInitial.current = true;
+            // Use requestAnimationFrame to avoid setState during render
+            requestAnimationFrame(() => {
+                calculateDimensions();
+            });
+        }
+    });
 
     const refreshDimensions = useCallback(() => {
         calculateDimensions();

@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { LandingPageContent, restApi } from "api/rest/client";
+import { handleError } from "utils/errorLogger";
 
 const VARIANT_STORAGE_KEY = "variantAssignment";
 
@@ -9,7 +10,7 @@ const getStoredVariantId = (): string | null => {
         const stored = localStorage.getItem(VARIANT_STORAGE_KEY);
         return stored || null;
     } catch (error) {
-        console.error("Error reading variant assignment from localStorage:", error);
+        handleError(error, "landingPageStore", "getStoredVariantId");
         return null;
     }
 };
@@ -19,7 +20,7 @@ const saveVariantId = (variantId: string): void => {
     try {
         localStorage.setItem(VARIANT_STORAGE_KEY, variantId);
     } catch (error) {
-        console.error("Error saving variant assignment to localStorage:", error);
+        handleError(error, "landingPageStore", "saveVariantId");
     }
 };
 

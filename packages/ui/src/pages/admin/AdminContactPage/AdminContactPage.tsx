@@ -28,6 +28,7 @@ import {
 import { AccessTime, Business, Delete, Schedule, Add } from "@mui/icons-material";
 import { useLandingPage } from "hooks/useLandingPage";
 import { useABTestQueryParams } from "hooks/useABTestQueryParams";
+import { handleError } from "utils/errorLogger";
 import { useUpdateContactInfo } from "api/rest/hooks";
 import { BackButton, PageContainer } from "components";
 import { ABTestEditingBanner } from "components/admin/ABTestEditingBanner";
@@ -298,7 +299,7 @@ export const AdminContactPage = () => {
 
             setDayHours(finalHours);
         } catch (error) {
-            console.error("Error parsing hours:", error);
+            handleError(error, "AdminContactPage", "parseHours");
             // Fallback to default hours
             const defaultHours = DAYS_OF_WEEK.map((day) => ({
                 day,
@@ -479,7 +480,7 @@ export const AdminContactPage = () => {
                 severity: SnackSeverity.Success,
             });
         } catch (error) {
-            console.error("Failed to update contact information:", error);
+            handleError(error, "AdminContactPage", "updateContactInfo");
             PubSub.get().publishSnack({
                 message: "Failed to update contact information.",
                 severity: SnackSeverity.Error,

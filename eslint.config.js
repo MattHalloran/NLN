@@ -156,6 +156,7 @@ export default [
                 NotificationPermission: "readonly",
                 PushSubscription: "readonly",
                 PushSubscriptionOptions: "readonly",
+                queueMicrotask: "readonly",
             },
         },
         plugins: {
