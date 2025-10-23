@@ -51,6 +51,7 @@ import {
 import { LandingPageVariant } from "api/rest/client";
 import { PubSub } from "utils/pubsub";
 import { SnackSeverity } from "components/dialogs/Snack/Snack";
+import { saveVariantId } from "stores/landingPageStore";
 
 /**
  * Calculates conversion rate as a percentage
@@ -159,6 +160,10 @@ export const AdminHomepageABTestingNew = () => {
     }, [toggleVariant, refetch, handleApiSuccess, handleApiError]);
 
     const handleEditVariant = useCallback((variantId: string) => {
+        // Save the selected variant to localStorage so admin stays on this variant
+        // when navigating to other pages (including the landing page for preview)
+        saveVariantId(variantId);
+
         // Navigate to the hero banner page with variantId query param
         navigate(`${APP_LINKS.AdminHomepageHeroBanner}?variantId=${variantId}`);
     }, [navigate]);
@@ -177,6 +182,20 @@ export const AdminHomepageABTestingNew = () => {
     const officialVariant = variants?.find(v => v.isOfficial);
     const testVariants = variants?.filter(v => !v.isOfficial) || [];
     const totalTraffic = variants?.filter(v => v.status === "enabled").reduce((sum, v) => sum + v.trafficAllocation, 0) || 0;
+    const availableTraffic = Math.max(0, 100 - totalTraffic);
+
+    // Helper function to suggest traffic allocation for new variant
+    const handleSuggestTraffic = () => {
+        // If there's available traffic, suggest a reasonable split
+        if (availableTraffic > 0) {
+            // Suggest all available traffic
+            setNewVariantTraffic(availableTraffic);
+        } else {
+            // Suggest 20% and show warning that user needs to adjust others
+            setNewVariantTraffic(20);
+            handleApiError(null, `No available traffic. Consider reducing the official variant to ${officialVariant?.trafficAllocation ? officialVariant.trafficAllocation - 20 : 80}%`);
+        }
+    };
 
     return (
         <PageContainer sx={{ minHeight: "100vh", paddingBottom: 0, bgcolor: "background.default" }}>
@@ -197,11 +216,26 @@ export const AdminHomepageABTestingNew = () => {
                 {/* Traffic Allocation Warning */}
                 {totalTraffic !== 100 && variants && variants.length > 0 && (
                     <Alert severity="warning" sx={{ mb: 3, borderRadius: 2 }}>
-                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                        <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
                             Traffic Allocation Issue
                         </Typography>
-                        <Typography variant="body2">
+                        <Typography variant="body2" sx={{ mb: 1 }}>
                             Enabled variants must total 100% traffic. Current total: {totalTraffic}%
+                        </Typography>
+                        <Typography variant="body2" sx={{ fontSize: "0.875rem" }}>
+                            {totalTraffic > 100 ? (
+                                <>
+                                    <strong>Over-allocated by {totalTraffic - 100}%.</strong> Reduce traffic on one or more variants.
+                                </>
+                            ) : (
+                                <>
+                                    <strong>{100 - totalTraffic}% unallocated.</strong> {
+                                        officialVariant && officialVariant.status === "enabled"
+                                            ? `Consider increasing the official variant from ${officialVariant.trafficAllocation}% to ${officialVariant.trafficAllocation + (100 - totalTraffic)}%.`
+                                            : "Enable additional variants or adjust allocations."
+                                    }
+                                </>
+                            )}
                         </Typography>
                     </Alert>
                 )}
@@ -684,21 +718,44 @@ export const AdminHomepageABTestingNew = () => {
                             sx: { borderRadius: 2 },
                         }}
                     />
-                    <TextField
-                        label="Traffic Allocation (%)"
-                        type="number"
-                        placeholder="0"
-                        fullWidth
-                        value={newVariantTraffic}
-                        onChange={(e) => setNewVariantTraffic(Math.max(0, Math.min(100, Number(e.target.value))))}
-                        disabled={createVariant.loading}
-                        variant="outlined"
-                        sx={{ mb: 2.5 }}
-                        InputProps={{
-                            sx: { borderRadius: 2 },
-                        }}
-                        helperText="Percentage of traffic this variant should receive (0-100)"
-                    />
+                    <Box sx={{ mb: 2.5 }}>
+                        <Box sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
+                            <TextField
+                                label="Traffic Allocation (%)"
+                                type="number"
+                                placeholder="0"
+                                fullWidth
+                                value={newVariantTraffic}
+                                onChange={(e) => setNewVariantTraffic(Math.max(0, Math.min(100, Number(e.target.value))))}
+                                disabled={createVariant.loading}
+                                variant="outlined"
+                                InputProps={{
+                                    sx: { borderRadius: 2 },
+                                }}
+                                helperText={
+                                    availableTraffic > 0
+                                        ? `${availableTraffic}% traffic available`
+                                        : "No traffic available. You'll need to adjust other variants."
+                                }
+                                error={availableTraffic === 0 && newVariantTraffic > 0}
+                            />
+                            <Tooltip title={availableTraffic > 0 ? `Use available ${availableTraffic}%` : "Suggest 20% (will need manual adjustment)"}>
+                                <Button
+                                    variant="outlined"
+                                    onClick={handleSuggestTraffic}
+                                    disabled={createVariant.loading}
+                                    sx={{
+                                        borderRadius: 2,
+                                        textTransform: "none",
+                                        minWidth: "120px",
+                                        height: "56px", // Match TextField height
+                                    }}
+                                >
+                                    Auto-Fill
+                                </Button>
+                            </Tooltip>
+                        </Box>
+                    </Box>
                     <FormControl fullWidth sx={{ mb: 2.5 }}>
                         <InputLabel>Copy From Variant (optional)</InputLabel>
                         <Select

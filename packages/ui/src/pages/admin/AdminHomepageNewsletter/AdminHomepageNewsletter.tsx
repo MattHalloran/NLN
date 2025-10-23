@@ -14,8 +14,10 @@ import {
 } from "@mui/material";
 import { Save, RotateCcw, Mail } from "lucide-react";
 import { BackButton, PageContainer } from "components";
+import { ABTestEditingBanner } from "components/admin/ABTestEditingBanner";
 import { TopBar } from "components/navigation/TopBar/TopBar";
 import { useLandingPage } from "hooks/useLandingPage";
+import { useABTestQueryParams } from "hooks/useABTestQueryParams";
 import { useUpdateLandingPageSettings } from "api/rest/hooks";
 import { useCallback as _useCallback, useEffect, useState, useMemo } from "react";
 
@@ -27,8 +29,12 @@ interface NewsletterSettings {
 }
 
 export const AdminHomepageNewsletter = () => {
+    const { variantId: queryVariantId } = useABTestQueryParams();
     const updateSettings = useUpdateLandingPageSettings();
     const { data: landingPageContent, refetch } = useLandingPage();
+
+    // Use variantId from URL query params, or fall back to the loaded data's variant
+    const variantId = queryVariantId || landingPageContent?._meta?.variantId;
 
     const [newsletter, setNewsletter] = useState<NewsletterSettings>({
         title: "Stay in the Grow",
@@ -60,7 +66,15 @@ export const AdminHomepageNewsletter = () => {
 
     const handleSave = async () => {
         try {
-            await updateSettings.mutate({ settings: { newsletter } });
+            // Send nested structure matching LandingPageContent for type safety
+            await updateSettings.mutate({
+                settings: {
+                    content: {
+                        newsletter,
+                    },
+                },
+                queryParams: variantId ? { variantId } : undefined,
+            });
             setOriginalNewsletter(JSON.parse(JSON.stringify(newsletter)));
             setSnackbar({
                 open: true,
@@ -91,6 +105,8 @@ export const AdminHomepageNewsletter = () => {
             />
 
             <Box p={3}>
+                <ABTestEditingBanner />
+
                 {/* Unsaved changes warning */}
                 {hasChanges && (
                     <Alert severity="warning" sx={{ mb: 3 }}>

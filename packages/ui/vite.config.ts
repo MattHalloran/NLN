@@ -66,8 +66,9 @@ export default defineConfig({
         ],
     },
     build: {
-        // Enable source maps for better debugging and performance monitoring
-        sourcemap: true,
+        // Disable source maps in production to reduce bundle size
+        // Use 'hidden' if you need them for error tracking services
+        sourcemap: false,
         // Report compressed size of modules
         reportCompressedSize: true,
         // Chunk size warnings

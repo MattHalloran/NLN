@@ -380,10 +380,17 @@ export function useUpdateSectionConfiguration() {
     );
 }
 
+// Deep partial utility type for nested updates
+type DeepPartial<T> = T extends object
+    ? {
+          [P in keyof T]?: DeepPartial<T[P]>;
+      }
+    : T;
+
 export function useUpdateLandingPageSettings() {
     return useRestMutation<
         {
-            settings: Record<string, unknown>;
+            settings: DeepPartial<Pick<LandingPageContent, "content" | "theme" | "layout" | "experiments">>;
             queryParams?: {
                 variantId?: string;
             };

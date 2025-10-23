@@ -55,6 +55,13 @@ async function fetchApi<T>(
 
 // Type definitions for API responses
 
+// Deep partial utility type for nested updates
+type DeepPartial<T> = T extends object
+    ? {
+          [P in keyof T]?: DeepPartial<T[P]>;
+      }
+    : T;
+
 // Variant System
 export interface VariantMeta {
     variantId: string; // e.g., "variant-homepage-official"
@@ -673,8 +680,9 @@ export const restApi = {
     },
 
     // Landing Page Settings Management
+    // UPDATED: Now accepts DeepPartial for type-safe nested updates
     async updateLandingPageSettings(
-        settings: Record<string, unknown>,
+        settings: DeepPartial<Pick<LandingPageContent, "content" | "theme" | "layout" | "experiments">>,
         queryParams?: {
             variantId?: string;
         },

@@ -106,7 +106,7 @@ const DEFAULT_CTA_BUTTONS: CTAButton[] = [
 ];
 
 export const AdminHomepageHeroBanner = () => {
-    const { variantId } = useABTestQueryParams();
+    const { variantId: queryVariantId } = useABTestQueryParams();
     const [heroBanners, setHeroBanners] = useState<any[]>([]);
     const [originalHeroBanners, setOriginalHeroBanners] = useState<any[]>([]);
     const [heroSettings, setHeroSettings] = useState<HeroSettings>(DEFAULT_HERO_SETTINGS);
@@ -121,6 +121,9 @@ export const AdminHomepageHeroBanner = () => {
 
     const { data: landingPageContent, refetch } = useLandingPage();
     const updateSettings = useUpdateLandingPageSettings();
+
+    // Use variantId from URL query params, or fall back to the loaded data's variant
+    const variantId = queryVariantId || landingPageContent?._meta?.variantId;
 
     // Load all hero-related content
     useEffect(() => {
@@ -284,12 +287,17 @@ export const AdminHomepageHeroBanner = () => {
             );
 
             // Update hero content, trust badges, and CTA buttons
+            // Send nested structure matching LandingPageContent for type safety
             await updateSettings.mutate({
                 settings: {
-                    hero: {
-                        ...heroContent,
-                        trustBadges,
-                        buttons: ctaButtons,
+                    content: {
+                        hero: {
+                            text: {
+                                ...heroContent,
+                                trustBadges,
+                                buttons: ctaButtons,
+                            },
+                        },
                     },
                 },
                 queryParams,

@@ -1,13 +1,13 @@
-import { 
-    Box, 
-    Container, 
-    Grid, 
-    Typography, 
-    Card, 
-    CardContent, 
-    TextField, 
-    Button, 
-    Chip, 
+import {
+    Box,
+    Container,
+    Grid,
+    Typography,
+    Card,
+    CardContent,
+    TextField,
+    Button,
+    Chip,
     useTheme,
     IconButton,
     Tab,
@@ -15,6 +15,7 @@ import {
 } from "@mui/material";
 import { useState, useMemo } from "react";
 import { useLandingPage } from "hooks/useLandingPage";
+import { useABTestTracking } from "hooks";
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import { Leaf, Lightbulb, Sprout, Flower, Snowflake, LucideIcon, Star } from "lucide-react";
@@ -44,6 +45,7 @@ export const InteractiveElements = () => {
 
     // Fetch landing page content using REST API
     const { data } = useLandingPage();
+    const { trackConversion } = useABTestTracking();
 
     const seasonalPlants = data?.content?.seasonal?.plants || [];
     const plantTips = data?.content?.seasonal?.tips || [];
@@ -71,9 +73,18 @@ export const InteractiveElements = () => {
         setCurrentPlant((prev) => (prev - 1 + seasonalPlants.length) % seasonalPlants.length);
     };
 
-    const handleNewsletterSubmit = (e: React.FormEvent) => {
+    const handleNewsletterSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (email) {
+            // Track A/B test conversion for newsletter signup
+            // Don't let tracking errors block the user experience
+            try {
+                await trackConversion();
+            } catch (error) {
+                // Log but don't block - newsletter signup UX should proceed
+                console.error("Failed to track A/B test conversion:", error);
+            }
+
             setSubscribed(true);
             setTimeout(() => {
                 setSubscribed(false);

@@ -21,7 +21,7 @@ export function useABTestTracking() {
                 console.error("Error tracking conversion:", error);
             }
         }
-    }, [data]);
+    }, [data?._meta?.variantId]); // Only depend on variantId to avoid unnecessary re-renders
 
     return { trackConversion };
 }

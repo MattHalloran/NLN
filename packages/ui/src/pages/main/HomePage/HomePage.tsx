@@ -12,6 +12,7 @@ import { TopBar } from "components/navigation/TopBar/TopBar";
 import { useLandingPage } from "hooks/useLandingPage";
 import { restApi } from "api/rest/client";
 import { handleError } from "utils/errorLogger";
+import { getServerUrl } from "utils/serverUrl";
 
 // Section component mapping
 const SECTION_COMPONENTS: Record<string, React.ComponentType> = {
@@ -27,8 +28,10 @@ const BOUNCE_THRESHOLD_MS = 10000; // 10 seconds
 
 export const HomePage = () => {
     const { data: landingPageData, loading } = useLandingPage();
+    const trackedViewVariantId = useRef<string | null>(null);
+    const trackedBounceVariantId = useRef<string | null>(null);
     const bounceTracked = useRef(false);
-    const visitStartTime = useRef(Date.now());
+    const visitStartTime = useRef<number | null>(null);
 
     // Get section configuration with fallback to default
     const sectionConfig = useMemo(() => {
@@ -57,9 +60,14 @@ export const HomePage = () => {
     }, [sectionConfig]);
 
     // Track "view" event when landing page loads with variant
+    // Resets and tracks again if variant changes (e.g., after localStorage expiration or variant reassignment)
     useEffect(() => {
-        if (landingPageData?._meta?.variantId) {
-            restApi.trackVariantEvent(landingPageData._meta.variantId, {
+        const currentVariantId = landingPageData?._meta?.variantId;
+
+        // Only track if we have a variant and haven't tracked this specific variant yet
+        if (currentVariantId && trackedViewVariantId.current !== currentVariantId) {
+            trackedViewVariantId.current = currentVariantId;
+            restApi.trackVariantEvent(currentVariantId, {
                 eventType: "view",
             }).catch((err) => {
                 handleError(err, "HomePage", "trackViewEvent");
@@ -68,24 +76,39 @@ export const HomePage = () => {
     }, [landingPageData?._meta?.variantId]);
 
     // Track bounce if user leaves within 10 seconds
+    // Resets timestamp if variant changes to accurately track bounce for each variant
     useEffect(() => {
+        const currentVariantId = landingPageData?._meta?.variantId;
+
+        if (!currentVariantId) return;
+
+        // If this is a new variant, reset tracking state
+        if (trackedBounceVariantId.current !== currentVariantId) {
+            trackedBounceVariantId.current = currentVariantId;
+            visitStartTime.current = Date.now();
+            bounceTracked.current = false;
+        }
+
         const handleBeforeUnload = () => {
+            if (!visitStartTime.current || bounceTracked.current) return;
+
             const timeOnPage = Date.now() - visitStartTime.current;
 
-            // Only track bounce if they leave within 10 seconds and haven't already tracked
-            if (timeOnPage < BOUNCE_THRESHOLD_MS && !bounceTracked.current && landingPageData?._meta?.variantId) {
+            // Only track bounce if they leave within 10 seconds
+            if (timeOnPage < BOUNCE_THRESHOLD_MS) {
                 bounceTracked.current = true;
 
-                const data = JSON.stringify({
-                    eventType: "bounce",
-                });
-
                 if (navigator.sendBeacon) {
-                    const url = `${window.location.origin}/rest/v1/landing-page/variants/${landingPageData._meta.variantId}/track`;
-                    navigator.sendBeacon(url, data);
+                    // Use Blob with explicit content type for proper JSON parsing on server
+                    const blob = new Blob(
+                        [JSON.stringify({ eventType: "bounce" })],
+                        { type: "application/json" }
+                    );
+                    const url = `${getServerUrl()}/rest/v1/landing-page/variants/${currentVariantId}/track`;
+                    navigator.sendBeacon(url, blob);
                 } else {
                     // Fallback for browsers that don't support sendBeacon
-                    restApi.trackVariantEvent(landingPageData._meta.variantId, {
+                    restApi.trackVariantEvent(currentVariantId, {
                         eventType: "bounce",
                     }).catch((err) => {
                         handleError(err, "HomePage", "trackBounceEvent");
@@ -99,7 +122,7 @@ export const HomePage = () => {
         return () => {
             window.removeEventListener("beforeunload", handleBeforeUnload);
         };
-    }, [landingPageData]);
+    }, [landingPageData?._meta?.variantId]);
 
     return (
         <>

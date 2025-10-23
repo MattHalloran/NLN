@@ -49,9 +49,12 @@ const SERVICE_ICONS = [
 ];
 
 export const AdminHomepageServices = () => {
-    const { variantId } = useABTestQueryParams();
+    const { variantId: queryVariantId } = useABTestQueryParams();
     const updateSettings = useUpdateLandingPageSettings();
     const { data: landingPageContent, refetch } = useLandingPage();
+
+    // Use variantId from URL query params, or fall back to the loaded data's variant
+    const variantId = queryVariantId || landingPageContent?._meta?.variantId;
 
     const [services, setServices] = useState<ServicesSettings>({
         title: "Our Services",
@@ -119,8 +122,13 @@ export const AdminHomepageServices = () => {
 
     const handleSave = async () => {
         try {
+            // Send nested structure matching LandingPageContent for type safety
             await updateSettings.mutate({
-                settings: { services },
+                settings: {
+                    content: {
+                        services,
+                    },
+                },
                 queryParams: variantId ? { variantId } : undefined,
             });
             setOriginalServices(JSON.parse(JSON.stringify(services)));

@@ -88,15 +88,15 @@ export const PasswordTextField = ({
                             edge="end"
                             sx={{
                                 "&:focus": {
-                                    border: `2px solid ${palette.background.textPrimary}`,
+                                    border: `2px solid ${palette.text.primary}`,
                                 },
                                 borderRadius: "2px",
                             }}
                         >
                             {
                                 showPassword ?
-                                    <InvisibleIcon fill={palette.background.textSecondary} /> :
-                                    <VisibleIcon fill={palette.background.textSecondary} />
+                                    <InvisibleIcon fill={palette.text.secondary} /> :
+                                    <VisibleIcon fill={palette.text.secondary} />
                             }
                         </IconButton>
                     </InputAdornment>

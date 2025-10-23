@@ -134,7 +134,7 @@ const HomepageCard = ({
                             sx={{
                                 fontWeight: 600,
                                 mb: 1,
-                                color: palette.background.textPrimary,
+                                color: palette.text.primary,
                             }}
                         >
                             {data.title}
@@ -142,7 +142,7 @@ const HomepageCard = ({
                         <Typography
                             variant="body2"
                             sx={{
-                                color: palette.background.textSecondary,
+                                color: palette.text.secondary,
                                 lineHeight: 1.5,
                                 mb: 2,
                             }}
@@ -202,7 +202,7 @@ export const AdminHomepageHub = () => {
                     sx={{
                         mb: 2,
                         fontWeight: 600,
-                        color: palette.background.textPrimary,
+                        color: palette.text.primary,
                     }}
                 >
                     Homepage Settings
@@ -211,7 +211,7 @@ export const AdminHomepageHub = () => {
                     variant="body1"
                     sx={{
                         mb: 4,
-                        color: palette.background.textSecondary,
+                        color: palette.text.secondary,
                     }}
                 >
                     Configure and manage different aspects of your homepage content and layout.

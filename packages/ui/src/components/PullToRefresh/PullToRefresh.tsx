@@ -70,7 +70,7 @@ export const PullToRefresh = () => {
                 transition: "transform 500ms cubic-bezier(0.4, 0, 0.2, 1)",
             }}>
                 <RefreshIcon
-                    fill={palette.background.textPrimary}
+                    fill={palette.text.primary}
                     width={iconSize}
                     height={iconSize}
                 />

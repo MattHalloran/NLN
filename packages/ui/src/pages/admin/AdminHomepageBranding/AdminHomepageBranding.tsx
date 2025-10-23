@@ -16,14 +16,20 @@ import {
     Paper,
     IconButton,
     Chip as _Chip,
+    Accordion,
+    AccordionSummary,
+    AccordionDetails,
 } from "@mui/material";
-import { Save, RotateCcw, Palette, Building, Sun, Moon, Menu, ShoppingCart, Heart, User } from "lucide-react";
+import { Save, RotateCcw, Palette, Building, Sun, Moon, Menu, ShoppingCart, Heart, User, AlertTriangle, CheckCircle, ChevronDown } from "lucide-react";
 import { BackButton, PageContainer } from "components";
+import { ABTestEditingBanner } from "components/admin/ABTestEditingBanner";
 import { TopBar } from "components/navigation/TopBar/TopBar";
 import { useLandingPage } from "hooks/useLandingPage";
+import { useABTestQueryParams } from "hooks/useABTestQueryParams";
 import { useUpdateLandingPageSettings } from "api/rest/hooks";
-import { useCallback as _useCallback, useEffect, useState, useMemo } from "react";
+import { useCallback as _useCallback, useEffect, useState, useMemo, useRef } from "react";
 import { PubSub } from "utils";
+import { validateThemeContrast, type ContrastIssue } from "utils/colorContrast";
 
 interface ThemeColors {
     primary: string;
@@ -295,8 +301,12 @@ const RealisticPreview = ({ colors, mode }: PreviewProps) => {
 };
 
 export const AdminHomepageBranding = () => {
+    const { variantId: queryVariantId } = useABTestQueryParams();
     const updateSettings = useUpdateLandingPageSettings();
     const { data: landingPageContent, refetch } = useLandingPage();
+
+    // Use variantId from URL query params, or fall back to the loaded data's variant
+    const variantId = queryVariantId || landingPageContent?._meta?.variantId;
 
     const [branding, setBranding] = useState<BrandingSettings>(DEFAULT_BRANDING);
     const [originalBranding, setOriginalBranding] = useState<BrandingSettings>(DEFAULT_BRANDING);
@@ -307,6 +317,46 @@ export const AdminHomepageBranding = () => {
         message: "",
         severity: "success",
     });
+
+    // Track if we just saved to prevent form reset from refetch
+    const justSavedRef = useRef(false);
+
+    // Calculate contrast issues for BOTH light and dark modes
+    const lightIssues = useMemo(() => {
+        return validateThemeContrast("light", branding.colors.light);
+    }, [branding.colors.light]);
+
+    const darkIssues = useMemo(() => {
+        return validateThemeContrast("dark", branding.colors.dark);
+    }, [branding.colors.dark]);
+
+    // Get issues for the currently editing mode (for inline display under fields)
+    const contrastIssues = editingMode === "light" ? lightIssues : darkIssues;
+
+    // Get issues specific to each color field
+    const getColorIssues = (colorName: string): ContrastIssue[] => {
+        return contrastIssues.filter((issue) => {
+            const issueColorLower = issue.colorName.toLowerCase();
+            const colorLower = colorName.toLowerCase();
+            // Exact match or combined Paper/Background issue
+            return (
+                issueColorLower === colorLower ||
+                (issueColorLower === "paper/background" && (colorLower === "paper" || colorLower === "background"))
+            );
+        });
+    };
+
+    // Check if there are critical errors in either mode
+    const hasCriticalErrors = useMemo(() => {
+        const lightErrors = lightIssues.some((issue) => issue.severity === "error");
+        const darkErrors = darkIssues.some((issue) => issue.severity === "error");
+        return lightErrors || darkErrors;
+    }, [lightIssues, darkIssues]);
+
+    // Get critical errors from both modes
+    const allCriticalErrors = useMemo(() => {
+        return [...lightIssues, ...darkIssues].filter((issue) => issue.severity === "error");
+    }, [lightIssues, darkIssues]);
 
     // Load branding settings from landing page content
     // Using useMemo to derive settings from landingPageContent
@@ -345,6 +395,11 @@ export const AdminHomepageBranding = () => {
     // Update state when settings from content change
     useEffect(() => {
         if (settingsFromContent) {
+            // Don't reset the form if we just saved (wait for refetch to complete first)
+            if (justSavedRef.current) {
+                justSavedRef.current = false;
+                return;
+            }
             setBranding(settingsFromContent);
             setOriginalBranding(JSON.parse(JSON.stringify(settingsFromContent)));
         }
@@ -382,14 +437,52 @@ export const AdminHomepageBranding = () => {
             }
         }
 
+        // Check for accessibility issues in both modes
+        const lightErrors = lightIssues.filter((issue) => issue.severity === "error");
+        const darkErrors = darkIssues.filter((issue) => issue.severity === "error");
+        const totalErrors = lightErrors.length + darkErrors.length;
+
+        if (totalErrors > 0) {
+            // Don't auto-switch modes - let the user see the summary card which shows all issues
+            const modeMessages: string[] = [];
+            if (lightErrors.length > 0) {
+                modeMessages.push(`${lightErrors.length} in light mode`);
+            }
+            if (darkErrors.length > 0) {
+                modeMessages.push(`${darkErrors.length} in dark mode`);
+            }
+
+            setSnackbar({
+                open: true,
+                message: `Cannot save: ${totalErrors} critical accessibility ${totalErrors === 1 ? "error" : "errors"} found (${modeMessages.join(", ")}). Check the accessibility warnings above.`,
+                severity: "error",
+            });
+            return;
+        }
+
         try {
-            await updateSettings.mutate({ settings: branding as unknown as Record<string, unknown> });
+            // Send nested structure matching LandingPageContent for type safety
+            await updateSettings.mutate({
+                settings: {
+                    theme: {
+                        colors: branding.colors,
+                    },
+                    content: {
+                        company: branding.companyInfo,
+                    },
+                },
+                queryParams: variantId ? { variantId } : undefined,
+            });
+            // Mark that we just saved to prevent form reset from refetch
+            justSavedRef.current = true;
+            // Update the original branding to reflect what we just saved
             setOriginalBranding(JSON.parse(JSON.stringify(branding)));
             setSnackbar({
                 open: true,
                 message: "Branding settings saved successfully!",
                 severity: "success",
             });
+            // Refetch to update other parts of the app, but the useEffect will skip the reset
             refetch();
             // Notify other components that landing page content has been updated
             PubSub.get().publishLandingPageUpdated();
@@ -431,6 +524,8 @@ export const AdminHomepageBranding = () => {
             />
 
             <Box p={3}>
+                <ABTestEditingBanner />
+
                 {/* Unsaved changes warning */}
                 {hasChanges && (
                     <Alert severity="warning" sx={{ mb: 3 }}>
@@ -484,6 +579,155 @@ export const AdminHomepageBranding = () => {
                     </CardContent>
                 </Card>
 
+                {/* Accessibility Summary Card - Shows issues from BOTH modes */}
+                {(lightIssues.length > 0 || darkIssues.length > 0) && (
+                    <Card sx={{ mb: 3, borderLeft: hasCriticalErrors ? "4px solid #d32f2f" : "4px solid #ed6c02" }}>
+                        <CardContent>
+                            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+                                <AlertTriangle size={24} color={hasCriticalErrors ? "#d32f2f" : "#ed6c02"} />
+                                <Typography variant="h6">
+                                    Accessibility {hasCriticalErrors ? "Errors" : "Warnings"}
+                                </Typography>
+                            </Box>
+
+                            <Alert severity={hasCriticalErrors ? "error" : "warning"} sx={{ mb: 2 }}>
+                                {hasCriticalErrors ? (
+                                    <>
+                                        <strong>Critical:</strong> Your theme has accessibility issues that will cause Lighthouse
+                                        failures. Fix these before saving.
+                                        {lightIssues.some((i) => i.severity === "error") && darkIssues.some((i) => i.severity === "error") && (
+                                            <> Issues found in both light and dark modes.</>
+                                        )}
+                                        {lightIssues.some((i) => i.severity === "error") && !darkIssues.some((i) => i.severity === "error") && (
+                                            <> Issues found in light mode only.</>
+                                        )}
+                                        {!lightIssues.some((i) => i.severity === "error") && darkIssues.some((i) => i.severity === "error") && (
+                                            <> Issues found in dark mode only.</>
+                                        )}
+                                    </>
+                                ) : (
+                                    <>
+                                        <strong>Warning:</strong> Some color combinations may have minor accessibility issues.
+                                        Consider improving contrast for better user experience.
+                                    </>
+                                )}
+                            </Alert>
+
+                            {/* Light Mode Issues */}
+                            {lightIssues.length > 0 && (
+                                <Accordion defaultExpanded={lightIssues.some((i) => i.severity === "error")}>
+                                    <AccordionSummary expandIcon={<ChevronDown size={20} />}>
+                                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                            <Sun size={18} />
+                                            <Typography>
+                                                Light Mode: {lightIssues.length} {lightIssues.length === 1 ? "issue" : "issues"}
+                                                {lightIssues.some((i) => i.severity === "error") && (
+                                                    <Typography component="span" color="error" sx={{ ml: 1, fontWeight: 600 }}>
+                                                        ({lightIssues.filter((i) => i.severity === "error").length} critical)
+                                                    </Typography>
+                                                )}
+                                            </Typography>
+                                        </Box>
+                                    </AccordionSummary>
+                                    <AccordionDetails>
+                                        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                                            {lightIssues.map((issue, idx) => (
+                                                <Alert key={idx} severity={issue.severity} sx={{ width: "100%" }}>
+                                                    <Typography variant="body2" sx={{ mb: 1 }}>
+                                                        <strong>{issue.colorName}:</strong> {issue.description}
+                                                    </Typography>
+                                                    <Box sx={{ display: "flex", gap: 2, mt: 1, alignItems: "center" }}>
+                                                        <Box
+                                                            sx={{
+                                                                width: 40,
+                                                                height: 40,
+                                                                backgroundColor: issue.backgroundColor,
+                                                                border: "1px solid #ccc",
+                                                                borderRadius: 1,
+                                                            }}
+                                                        />
+                                                        <Typography variant="caption">on</Typography>
+                                                        <Box
+                                                            sx={{
+                                                                width: 40,
+                                                                height: 40,
+                                                                backgroundColor: issue.textColor,
+                                                                border: "1px solid #ccc",
+                                                                borderRadius: 1,
+                                                            }}
+                                                        />
+                                                        {issue.ratio !== null && (
+                                                            <Typography variant="caption">
+                                                                = {issue.ratio.toFixed(2)}:1 (need {issue.required}:1)
+                                                            </Typography>
+                                                        )}
+                                                    </Box>
+                                                </Alert>
+                                            ))}
+                                        </Box>
+                                    </AccordionDetails>
+                                </Accordion>
+                            )}
+
+                            {/* Dark Mode Issues */}
+                            {darkIssues.length > 0 && (
+                                <Accordion defaultExpanded={darkIssues.some((i) => i.severity === "error")} sx={{ mt: lightIssues.length > 0 ? 2 : 0 }}>
+                                    <AccordionSummary expandIcon={<ChevronDown size={20} />}>
+                                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                            <Moon size={18} />
+                                            <Typography>
+                                                Dark Mode: {darkIssues.length} {darkIssues.length === 1 ? "issue" : "issues"}
+                                                {darkIssues.some((i) => i.severity === "error") && (
+                                                    <Typography component="span" color="error" sx={{ ml: 1, fontWeight: 600 }}>
+                                                        ({darkIssues.filter((i) => i.severity === "error").length} critical)
+                                                    </Typography>
+                                                )}
+                                            </Typography>
+                                        </Box>
+                                    </AccordionSummary>
+                                    <AccordionDetails>
+                                        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                                            {darkIssues.map((issue, idx) => (
+                                                <Alert key={idx} severity={issue.severity} sx={{ width: "100%" }}>
+                                                    <Typography variant="body2" sx={{ mb: 1 }}>
+                                                        <strong>{issue.colorName}:</strong> {issue.description}
+                                                    </Typography>
+                                                    <Box sx={{ display: "flex", gap: 2, mt: 1, alignItems: "center" }}>
+                                                        <Box
+                                                            sx={{
+                                                                width: 40,
+                                                                height: 40,
+                                                                backgroundColor: issue.backgroundColor,
+                                                                border: "1px solid #ccc",
+                                                                borderRadius: 1,
+                                                            }}
+                                                        />
+                                                        <Typography variant="caption">on</Typography>
+                                                        <Box
+                                                            sx={{
+                                                                width: 40,
+                                                                height: 40,
+                                                                backgroundColor: issue.textColor,
+                                                                border: "1px solid #ccc",
+                                                                borderRadius: 1,
+                                                            }}
+                                                        />
+                                                        {issue.ratio !== null && (
+                                                            <Typography variant="caption">
+                                                                = {issue.ratio.toFixed(2)}:1 (need {issue.required}:1)
+                                                            </Typography>
+                                                        )}
+                                                    </Box>
+                                                </Alert>
+                                            ))}
+                                        </Box>
+                                    </AccordionDetails>
+                                </Accordion>
+                            )}
+                        </CardContent>
+                    </Card>
+                )}
+
                 {/* Theme Colors Card */}
                 <Card sx={{ mb: 3 }}>
                     <CardContent>
@@ -492,8 +736,18 @@ export const AdminHomepageBranding = () => {
                             <Typography variant="h6">Theme Colors</Typography>
                         </Box>
 
+                        {lightIssues.length === 0 && darkIssues.length === 0 && (
+                            <Alert severity="success" sx={{ mb: 3 }}>
+                                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                    <CheckCircle size={20} />
+                                    <Typography>All colors in both light and dark modes meet WCAG accessibility standards!</Typography>
+                                </Box>
+                            </Alert>
+                        )}
+
                         <Alert severity="info" sx={{ mb: 3 }}>
-                            Customize colors for both light and dark modes. Use hex format (e.g., #2E7D32).
+                            Customize colors for both light and dark modes. Use hex format (e.g., #2E7D32). Colors are
+                            automatically validated for WCAG accessibility compliance.
                         </Alert>
 
                         {/* Theme Mode Toggle */}
@@ -517,149 +771,184 @@ export const AdminHomepageBranding = () => {
 
                         <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
                             {/* Primary Color */}
-                            <TextField
-                                fullWidth
-                                label="Primary Color"
-                                value={currentColors.primary}
-                                onChange={(e) => handleColorChange("primary", e.target.value)}
-                                helperText="Main brand color (used for primary buttons, links, etc.)"
-                                error={!isValidHexColor(currentColors.primary)}
-                                InputProps={{
-                                    startAdornment: (
-                                        <InputAdornment position="start">
-                                            <input
-                                                type="color"
-                                                value={isValidHexColor(currentColors.primary) ? currentColors.primary : "#000000"}
-                                                onChange={(e) => handleColorChange("primary", e.target.value)}
-                                                style={{
-                                                    width: 40,
-                                                    height: 40,
-                                                    border: "none",
-                                                    borderRadius: 4,
-                                                    cursor: "pointer",
-                                                    marginRight: 8,
-                                                }}
-                                            />
-                                        </InputAdornment>
-                                    ),
-                                }}
-                            />
+                            <Box>
+                                <TextField
+                                    fullWidth
+                                    label="Primary Color"
+                                    value={currentColors.primary}
+                                    onChange={(e) => handleColorChange("primary", e.target.value)}
+                                    helperText="Main brand color (used for primary buttons, navbar, etc.)"
+                                    error={!isValidHexColor(currentColors.primary) || getColorIssues("primary").some((i) => i.severity === "error")}
+                                    InputProps={{
+                                        startAdornment: (
+                                            <InputAdornment position="start">
+                                                <input
+                                                    type="color"
+                                                    value={isValidHexColor(currentColors.primary) ? currentColors.primary : "#000000"}
+                                                    onChange={(e) => handleColorChange("primary", e.target.value)}
+                                                    style={{
+                                                        width: 40,
+                                                        height: 40,
+                                                        border: "none",
+                                                        borderRadius: 4,
+                                                        cursor: "pointer",
+                                                        marginRight: 8,
+                                                    }}
+                                                />
+                                            </InputAdornment>
+                                        ),
+                                    }}
+                                />
+                                {getColorIssues("primary").map((issue, idx) => (
+                                    <Alert key={idx} severity={issue.severity} sx={{ mt: 1 }}>
+                                        <Typography variant="caption">{issue.description}</Typography>
+                                    </Alert>
+                                ))}
+                            </Box>
 
                             {/* Secondary Color */}
-                            <TextField
-                                fullWidth
-                                label="Secondary Color"
-                                value={currentColors.secondary}
-                                onChange={(e) => handleColorChange("secondary", e.target.value)}
-                                helperText="Secondary brand color (used for accents and highlights)"
-                                error={!isValidHexColor(currentColors.secondary)}
-                                InputProps={{
-                                    startAdornment: (
-                                        <InputAdornment position="start">
-                                            <input
-                                                type="color"
-                                                value={isValidHexColor(currentColors.secondary) ? currentColors.secondary : "#000000"}
-                                                onChange={(e) => handleColorChange("secondary", e.target.value)}
-                                                style={{
-                                                    width: 40,
-                                                    height: 40,
-                                                    border: "none",
-                                                    borderRadius: 4,
-                                                    cursor: "pointer",
-                                                    marginRight: 8,
-                                                }}
-                                            />
-                                        </InputAdornment>
-                                    ),
-                                }}
-                            />
+                            <Box>
+                                <TextField
+                                    fullWidth
+                                    label="Secondary Color"
+                                    value={currentColors.secondary}
+                                    onChange={(e) => handleColorChange("secondary", e.target.value)}
+                                    helperText="Secondary brand color (used for gradients and highlights)"
+                                    error={!isValidHexColor(currentColors.secondary) || getColorIssues("secondary").some((i) => i.severity === "error")}
+                                    InputProps={{
+                                        startAdornment: (
+                                            <InputAdornment position="start">
+                                                <input
+                                                    type="color"
+                                                    value={isValidHexColor(currentColors.secondary) ? currentColors.secondary : "#000000"}
+                                                    onChange={(e) => handleColorChange("secondary", e.target.value)}
+                                                    style={{
+                                                        width: 40,
+                                                        height: 40,
+                                                        border: "none",
+                                                        borderRadius: 4,
+                                                        cursor: "pointer",
+                                                        marginRight: 8,
+                                                    }}
+                                                />
+                                            </InputAdornment>
+                                        ),
+                                    }}
+                                />
+                                {getColorIssues("secondary").map((issue, idx) => (
+                                    <Alert key={idx} severity={issue.severity} sx={{ mt: 1 }}>
+                                        <Typography variant="caption">{issue.description}</Typography>
+                                    </Alert>
+                                ))}
+                            </Box>
 
                             {/* Accent Color */}
-                            <TextField
-                                fullWidth
-                                label="Accent Color"
-                                value={currentColors.accent}
-                                onChange={(e) => handleColorChange("accent", e.target.value)}
-                                helperText="Accent color (used for CTAs and special highlights)"
-                                error={!isValidHexColor(currentColors.accent)}
-                                InputProps={{
-                                    startAdornment: (
-                                        <InputAdornment position="start">
-                                            <input
-                                                type="color"
-                                                value={isValidHexColor(currentColors.accent) ? currentColors.accent : "#000000"}
-                                                onChange={(e) => handleColorChange("accent", e.target.value)}
-                                                style={{
-                                                    width: 40,
-                                                    height: 40,
-                                                    border: "none",
-                                                    borderRadius: 4,
-                                                    cursor: "pointer",
-                                                    marginRight: 8,
-                                                }}
-                                            />
-                                        </InputAdornment>
-                                    ),
-                                }}
-                            />
+                            <Box>
+                                <TextField
+                                    fullWidth
+                                    label="Accent Color"
+                                    value={currentColors.accent}
+                                    onChange={(e) => handleColorChange("accent", e.target.value)}
+                                    helperText="Accent color (used for CTAs and special highlights)"
+                                    error={!isValidHexColor(currentColors.accent) || getColorIssues("accent").some((i) => i.severity === "error")}
+                                    InputProps={{
+                                        startAdornment: (
+                                            <InputAdornment position="start">
+                                                <input
+                                                    type="color"
+                                                    value={isValidHexColor(currentColors.accent) ? currentColors.accent : "#000000"}
+                                                    onChange={(e) => handleColorChange("accent", e.target.value)}
+                                                    style={{
+                                                        width: 40,
+                                                        height: 40,
+                                                        border: "none",
+                                                        borderRadius: 4,
+                                                        cursor: "pointer",
+                                                        marginRight: 8,
+                                                    }}
+                                                />
+                                            </InputAdornment>
+                                        ),
+                                    }}
+                                />
+                                {getColorIssues("accent").map((issue, idx) => (
+                                    <Alert key={idx} severity={issue.severity} sx={{ mt: 1 }}>
+                                        <Typography variant="caption">{issue.description}</Typography>
+                                    </Alert>
+                                ))}
+                            </Box>
 
                             {/* Background Color */}
-                            <TextField
-                                fullWidth
-                                label="Background Color"
-                                value={currentColors.background}
-                                onChange={(e) => handleColorChange("background", e.target.value)}
-                                helperText="Main background color for pages"
-                                error={!isValidHexColor(currentColors.background)}
-                                InputProps={{
-                                    startAdornment: (
-                                        <InputAdornment position="start">
-                                            <input
-                                                type="color"
-                                                value={isValidHexColor(currentColors.background) ? currentColors.background : "#000000"}
-                                                onChange={(e) => handleColorChange("background", e.target.value)}
-                                                style={{
-                                                    width: 40,
-                                                    height: 40,
-                                                    border: "none",
-                                                    borderRadius: 4,
-                                                    cursor: "pointer",
-                                                    marginRight: 8,
-                                                }}
-                                            />
-                                        </InputAdornment>
-                                    ),
-                                }}
-                            />
+                            <Box>
+                                <TextField
+                                    fullWidth
+                                    label="Background Color"
+                                    value={currentColors.background}
+                                    onChange={(e) => handleColorChange("background", e.target.value)}
+                                    helperText="Main background color for pages"
+                                    error={!isValidHexColor(currentColors.background) || getColorIssues("background").some((i) => i.severity === "error")}
+                                    InputProps={{
+                                        startAdornment: (
+                                            <InputAdornment position="start">
+                                                <input
+                                                    type="color"
+                                                    value={isValidHexColor(currentColors.background) ? currentColors.background : "#000000"}
+                                                    onChange={(e) => handleColorChange("background", e.target.value)}
+                                                    style={{
+                                                        width: 40,
+                                                        height: 40,
+                                                        border: "none",
+                                                        borderRadius: 4,
+                                                        cursor: "pointer",
+                                                        marginRight: 8,
+                                                    }}
+                                                />
+                                            </InputAdornment>
+                                        ),
+                                    }}
+                                />
+                                {getColorIssues("background").map((issue, idx) => (
+                                    <Alert key={idx} severity={issue.severity} sx={{ mt: 1 }}>
+                                        <Typography variant="caption">{issue.description}</Typography>
+                                    </Alert>
+                                ))}
+                            </Box>
 
                             {/* Paper Color */}
-                            <TextField
-                                fullWidth
-                                label="Paper/Card Color"
-                                value={currentColors.paper}
-                                onChange={(e) => handleColorChange("paper", e.target.value)}
-                                helperText="Background color for cards and elevated surfaces"
-                                error={!isValidHexColor(currentColors.paper)}
-                                InputProps={{
-                                    startAdornment: (
-                                        <InputAdornment position="start">
-                                            <input
-                                                type="color"
-                                                value={isValidHexColor(currentColors.paper) ? currentColors.paper : "#ffffff"}
-                                                onChange={(e) => handleColorChange("paper", e.target.value)}
-                                                style={{
-                                                    width: 40,
-                                                    height: 40,
-                                                    border: "none",
-                                                    borderRadius: 4,
-                                                    cursor: "pointer",
-                                                    marginRight: 8,
-                                                }}
-                                            />
-                                        </InputAdornment>
-                                    ),
-                                }}
-                            />
+                            <Box>
+                                <TextField
+                                    fullWidth
+                                    label="Paper/Card Color"
+                                    value={currentColors.paper}
+                                    onChange={(e) => handleColorChange("paper", e.target.value)}
+                                    helperText="Background color for cards and elevated surfaces"
+                                    error={!isValidHexColor(currentColors.paper) || getColorIssues("paper").some((i) => i.severity === "error")}
+                                    InputProps={{
+                                        startAdornment: (
+                                            <InputAdornment position="start">
+                                                <input
+                                                    type="color"
+                                                    value={isValidHexColor(currentColors.paper) ? currentColors.paper : "#ffffff"}
+                                                    onChange={(e) => handleColorChange("paper", e.target.value)}
+                                                    style={{
+                                                        width: 40,
+                                                        height: 40,
+                                                        border: "none",
+                                                        borderRadius: 4,
+                                                        cursor: "pointer",
+                                                        marginRight: 8,
+                                                    }}
+                                                />
+                                            </InputAdornment>
+                                        ),
+                                    }}
+                                />
+                                {getColorIssues("paper").map((issue, idx) => (
+                                    <Alert key={idx} severity={issue.severity} sx={{ mt: 1 }}>
+                                        <Typography variant="caption">{issue.description}</Typography>
+                                    </Alert>
+                                ))}
+                            </Box>
                         </Box>
                     </CardContent>
                 </Card>
@@ -690,24 +979,34 @@ export const AdminHomepageBranding = () => {
                 </Card>
 
                 {/* Action Buttons */}
-                <Box sx={{ display: "flex", gap: 2 }}>
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        startIcon={<Save size={20} />}
-                        onClick={handleSave}
-                        disabled={!hasChanges || updateSettings.loading}
-                    >
-                        {updateSettings.loading ? "Saving..." : "Save Changes"}
-                    </Button>
-                    <Button
-                        variant="outlined"
-                        startIcon={<RotateCcw size={20} />}
-                        onClick={handleCancel}
-                        disabled={!hasChanges}
-                    >
-                        Cancel
-                    </Button>
+                <Box sx={{ display: "flex", gap: 2, flexDirection: "column" }}>
+                    {hasCriticalErrors && (
+                        <Alert severity="error">
+                            <Typography variant="body2">
+                                Cannot save changes while there are critical accessibility errors. Please fix the
+                                contrast issues highlighted above.
+                            </Typography>
+                        </Alert>
+                    )}
+                    <Box sx={{ display: "flex", gap: 2 }}>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            startIcon={<Save size={20} />}
+                            onClick={handleSave}
+                            disabled={!hasChanges || updateSettings.loading || hasCriticalErrors}
+                        >
+                            {updateSettings.loading ? "Saving..." : "Save Changes"}
+                        </Button>
+                        <Button
+                            variant="outlined"
+                            startIcon={<RotateCcw size={20} />}
+                            onClick={handleCancel}
+                            disabled={!hasChanges}
+                        >
+                            Cancel
+                        </Button>
+                    </Box>
                 </Box>
             </Box>
 

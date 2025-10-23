@@ -831,6 +831,7 @@ router.put("/contact-info", async (req: Request, res: Response) => {
 
 // PUT endpoint to update landing page settings with deep merge (admin only)
 // Supports editing variants via query params: ?variantId=xxx
+// UPDATED: Now accepts the same nested structure as GET /landing-page returns
 router.put("/settings", async (req: Request, res: Response) => {
     try {
         if (!(req as any).isAdmin) {
@@ -864,57 +865,25 @@ router.put("/settings", async (req: Request, res: Response) => {
             currentContent = readLandingPageContent();
         }
 
+        // Initialize nested structures if they don't exist
         currentContent.content = currentContent.content || {};
         currentContent.theme = currentContent.theme || {};
         currentContent.layout = currentContent.layout || {};
         currentContent.experiments = currentContent.experiments || {};
 
-        // Map old settings format to new structure
-        if (updates.hero) {
-            currentContent.content.hero = currentContent.content.hero || {};
-            currentContent.content.hero.text = merge(
-                currentContent.content.hero.text || {},
-                updates.hero,
-            );
+        // NEW: Accept nested structure matching LandingPageContent
+        // Deep merge content, theme, layout, and experiments sections
+        if (updates.content) {
+            currentContent.content = merge(currentContent.content, updates.content);
         }
-        if (updates.newsletter) {
-            currentContent.content.newsletter = merge(
-                currentContent.content.newsletter || {},
-                updates.newsletter,
-            );
+        if (updates.theme) {
+            currentContent.theme = merge(currentContent.theme, updates.theme);
         }
-        if (updates.companyInfo) {
-            currentContent.content.company = merge(
-                currentContent.content.company || {},
-                updates.companyInfo,
-            );
+        if (updates.layout) {
+            currentContent.layout = merge(currentContent.layout, updates.layout);
         }
-        if (updates.services) {
-            currentContent.content.services = merge(
-                currentContent.content.services || {},
-                updates.services,
-            );
-        }
-        if (updates.colors) {
-            currentContent.theme.colors = merge(currentContent.theme.colors || {}, updates.colors);
-        }
-        if (updates.features) {
-            currentContent.layout.features = merge(
-                currentContent.layout.features || {},
-                updates.features,
-            );
-        }
-        if (updates.sections) {
-            currentContent.layout.sections = merge(
-                currentContent.layout.sections || {},
-                updates.sections,
-            );
-        }
-        if (updates.abTesting) {
-            currentContent.experiments.abTesting = merge(
-                currentContent.experiments.abTesting || {},
-                updates.abTesting,
-            );
+        if (updates.experiments) {
+            currentContent.experiments = merge(currentContent.experiments, updates.experiments);
         }
 
         // Write updated content

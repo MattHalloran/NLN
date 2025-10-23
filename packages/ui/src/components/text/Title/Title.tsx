@@ -40,7 +40,7 @@ export const Title = ({
             }}
         >
             {/* Icon */}
-            {Icon && <Icon fill={palette.background.textPrimary} style={{ width: "30px", height: "30px", marginRight: 8 }} />}
+            {Icon && <Icon fill={palette.text.primary} style={{ width: "30px", height: "30px", marginRight: 8 }} />}
             {/* Title */}
             {titleComponent ?? <Typography
                 component={variant === "header" ? "h1" : "h2"}

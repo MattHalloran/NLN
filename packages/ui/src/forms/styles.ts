@@ -11,7 +11,7 @@ export const formSubmit = {
 } as const;
 
 export const formNavLink = {
-    color: (t: Theme) => t.palette.mode === "light" ? t.palette.secondary.dark : t.palette.background.textPrimary,
+    color: (t: Theme) => t.palette.mode === "light" ? t.palette.secondary.dark : t.palette.text.primary,
     display: "flex",
     alignItems: "center",
     cursor: "pointer",

@@ -43,7 +43,7 @@ import { useLocation } from "route";
 import { PubSub, getUserActions, noop, UserActions } from "utils";
 
 const menuItemStyle = (palette: Palette) => ({
-    color: palette.background.textPrimary,
+    color: palette.text.primary,
     transition: "all 0.3s ease",
     borderRadius: "8px",
     marginX: 1,
@@ -135,7 +135,7 @@ export const SideMenu = () => {
                         palette.mode === "light"
                             ? "linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%)"
                             : "linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)",
-                    color: palette.background.textPrimary,
+                    color: palette.text.primary,
                     boxShadow: "-4px 0 20px rgba(0, 0, 0, 0.1)",
                     width: isMobile ? "85vw" : "320px",
                     maxWidth: "400px",

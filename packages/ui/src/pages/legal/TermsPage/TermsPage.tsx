@@ -12,7 +12,7 @@ const OuterBox = styled(Box)(({ theme }) => ({
     borderRadius: "16px",
     overflow: "overlay",
     background: theme.palette.background.paper,
-    color: theme.palette.background.textPrimary,
+    color: theme.palette.text.primary,
     marginTop: theme.spacing(3),
     boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)",
     border: `1px solid ${theme.palette.divider}`,

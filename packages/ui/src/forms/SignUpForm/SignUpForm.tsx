@@ -11,6 +11,7 @@ import { EmailIcon } from "icons/common";
 import { useContext } from "react";
 import { useLocation } from "route";
 import { PubSub } from "utils";
+import { useABTestTracking } from "hooks";
 
 const breadcrumbsStyle = {
     margin: "auto",
@@ -30,6 +31,7 @@ export const SignUpForm = () => {
     const business = useContext(BusinessContext);
 
     const { mutate: signUp, loading } = useSignUp();
+    const { trackConversion } = useABTestTracking();
 
     const formik = useFormik({
         initialValues: {
@@ -62,6 +64,16 @@ export const SignUpForm = () => {
                     phones: rest.phone ? [{ number: rest.phone }] : undefined,
                     password: rest.password,
                 });
+
+                // Track A/B test conversion for successful sign up
+                // Don't let tracking errors break the signup flow - signup already succeeded!
+                try {
+                    await trackConversion();
+                } catch (conversionError) {
+                    // Log but don't propagate - the signup was successful
+                    console.error("Failed to track A/B test conversion:", conversionError);
+                }
+
                 PubSub.get().publishSession({ ...data, theme: (data.theme as "light" | "dark") || "light" });
                 if (data.accountApproved) {
                     PubSub.get().publishAlertDialog({

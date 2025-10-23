@@ -14,6 +14,11 @@ lerna-debug.log*
 # Source map analytics
 source-tree*.html
 
+# Lighthouse CI
+.lighthouseci/
+# Windows-style paths that Lighthouse may create in WSL
+C:*/
+
 ### Zipped ###
 *.tar
 *.tar.gz

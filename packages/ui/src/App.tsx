@@ -209,7 +209,7 @@ export function App() {
                             <BusinessContext.Provider value={business}>
                                 <Box id="App" sx={{
                                     background: theme.palette.background.default,
-                                    color: theme.palette.background.textPrimary,
+                                    color: theme.palette.text.primary,
                                     // Style visited, active, and hovered links
                                     "& span, p": {
                                         "& a": {
@@ -232,7 +232,7 @@ export function App() {
                                         id="page-container"
                                         style={{
                                             background: theme.palette.background.default,
-                                            color: theme.palette.background.textPrimary,
+                                            color: theme.palette.text.primary,
                                         }}
                                     >
                                         {/* Pull-to-refresh for PWAs */}

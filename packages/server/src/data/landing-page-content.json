@@ -1,7 +1,7 @@
 {
   "metadata": {
     "version": "2.0",
-    "lastUpdated": "2025-10-22T16:14:32.592Z"
+    "lastUpdated": "2025-10-22T17:50:49.795Z"
   },
   "content": {
     "hero": {
@@ -48,11 +48,11 @@
         }
       ],
       "settings": {
-        "autoPlay": false,
-        "autoPlayDelay": 3000,
-        "showDots": false,
-        "showArrows": true,
-        "fadeTransition": false
+        "autoPlay": true,
+        "autoPlayDelay": 5000,
+        "showDots": true,
+        "showArrows": false,
+        "fadeTransition": true
       },
       "text": {
         "title": "Beautiful, healthy plants",

@@ -192,10 +192,7 @@ export const AboutPage = () => {
                                         <Typography
                                             variant="subtitle1"
                                             sx={{
-                                                color:
-                                                    theme.palette.mode === "light"
-                                                        ? "#6b7b6b"
-                                                        : "#a8a098",
+                                                color: theme.palette.text.secondary,
                                                 fontWeight: 400,
                                                 letterSpacing: "0.1em",
                                                 fontSize: "1.1rem",
@@ -235,10 +232,7 @@ export const AboutPage = () => {
                                         <Typography
                                             variant="subtitle1"
                                             sx={{
-                                                color:
-                                                    theme.palette.mode === "light"
-                                                        ? "#6b7b6b"
-                                                        : "#a8a098",
+                                                color: theme.palette.text.secondary,
                                                 fontWeight: 400,
                                                 letterSpacing: "0.1em",
                                                 fontSize: "1.1rem",
@@ -278,10 +272,7 @@ export const AboutPage = () => {
                                         <Typography
                                             variant="subtitle1"
                                             sx={{
-                                                color:
-                                                    theme.palette.mode === "light"
-                                                        ? "#6b7b6b"
-                                                        : "#a8a098",
+                                                color: theme.palette.text.secondary,
                                                 fontWeight: 400,
                                                 letterSpacing: "0.1em",
                                                 fontSize: "1.1rem",

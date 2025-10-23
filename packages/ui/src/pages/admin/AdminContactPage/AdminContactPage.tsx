@@ -98,9 +98,12 @@ const TIME_OPTIONS = [
 
 export const AdminContactPage = () => {
     const { palette } = useTheme();
-    const { variantId } = useABTestQueryParams();
+    const { variantId: queryVariantId } = useABTestQueryParams();
     const { data: landingPageData, refetch } = useLandingPage(); // Get all data, not just active
     const { mutate: updateContactInfo, loading: updateLoading } = useUpdateContactInfo();
+
+    // Use variantId from URL query params, or fall back to the loaded data's variant
+    const variantId = queryVariantId || landingPageData?._meta?.variantId;
 
     const [dayHours, setDayHours] = useState<DayHours[]>([]);
     const [showAdvancedMode, setShowAdvancedMode] = useState(false);

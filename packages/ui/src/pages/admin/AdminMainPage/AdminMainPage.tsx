@@ -154,7 +154,7 @@ const AdminPageCard = ({
                             sx={{ 
                                 fontWeight: 600,
                                 mb: 1,
-                                color: palette.background.textPrimary,
+                                color: palette.text.primary,
                             }}
                         >
                             {data.title}
@@ -162,7 +162,7 @@ const AdminPageCard = ({
                         <Typography 
                             variant="body2" 
                             sx={{ 
-                                color: palette.background.textSecondary,
+                                color: palette.text.secondary,
                                 lineHeight: 1.5,
                                 mb: 2,
                             }}
@@ -291,7 +291,7 @@ export const AdminMainPage = () => {
                     sx={{ 
                         mb: 2,
                         fontWeight: 600,
-                        color: palette.background.textPrimary,
+                        color: palette.text.primary,
                     }}
                 >
                     Management Modules
@@ -300,7 +300,7 @@ export const AdminMainPage = () => {
                     variant="body1" 
                     sx={{ 
                         mb: 4,
-                        color: palette.background.textSecondary,
+                        color: palette.text.secondary,
                     }}
                 >
                     Select a module below to manage different aspects of your nursery business.
