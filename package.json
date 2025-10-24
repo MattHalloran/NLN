@@ -12,7 +12,7 @@
   },
   "version": "2.0.0",
   "scripts": {
-    "prepare": "husky",
+    "prepare": "command -v husky >/dev/null 2>&1 && husky || true",
     "lint": "yarn workspaces run lint",
     "typecheck": "yarn workspaces run typecheck",
     "test": "yarn workspaces run test",
@@ -24,11 +24,11 @@
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:report": "playwright show-report",
     "test:e2e:codegen": "playwright codegen http://localhost:3001",
-    "lighthouse": "lhci autorun",
+    "lighthouse": "TMPDIR=/tmp TEMP=/tmp TMP=/tmp lhci autorun",
     "lighthouse:prod": "./scripts/lighthouse-prod.sh",
-    "lighthouse:collect": "lhci collect",
-    "lighthouse:assert": "lhci assert",
-    "lighthouse:open": "lhci open"
+    "lighthouse:collect": "TMPDIR=/tmp TEMP=/tmp TMP=/tmp lhci collect",
+    "lighthouse:assert": "TMPDIR=/tmp TEMP=/tmp TMP=/tmp lhci assert",
+    "lighthouse:open": "TMPDIR=/tmp TEMP=/tmp TMP=/tmp lhci open"
   },
   "devDependencies": {
     "@lhci/cli": "^0.15.1",

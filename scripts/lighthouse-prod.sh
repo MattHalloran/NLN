@@ -57,7 +57,15 @@ done
 
 # Run Lighthouse
 # Set environment variables to prevent Windows temp paths in WSL
-export CHROME_PATH=/root/.cache/ms-playwright/chromium-1148/chrome-linux/chrome
+# Dynamically find Playwright's Chromium binary
+CHROME_BINARY=$(find ~/.cache/ms-playwright -name "chrome" -path "*/chrome-linux/chrome" -type f 2>/dev/null | head -1)
+if [ -n "$CHROME_BINARY" ]; then
+    export CHROME_PATH="$CHROME_BINARY"
+    echo -e "${BLUE}Using Chromium: $CHROME_PATH${NC}"
+else
+    echo -e "${YELLOW}Warning: Could not find Playwright Chromium, using system Chrome${NC}"
+fi
+
 export TMPDIR=/tmp
 export TEMP=/tmp
 export TMP=/tmp
@@ -72,6 +80,12 @@ kill $SERVER_PID 2>/dev/null || true
 
 # Wait a moment for the port to be released
 sleep 2
+
+# Clean up orphaned Windows temp directories (WSL issue)
+echo -e "${BLUE}Cleaning up temporary Lighthouse directories...${NC}"
+find /tmp -maxdepth 1 -name "lighthouse.*" -type d -mtime +1 -exec rm -rf {} \; 2>/dev/null || true
+# Also clean up any orphaned Windows paths in the project directory
+find . -maxdepth 1 -type d -name "C:*" -exec rm -rf {} \; 2>/dev/null || true
 
 if [ "${LIGHTHOUSE_EXIT:-0}" -ne 0 ]; then
     echo -e "\n${YELLOW}Lighthouse CI completed with warnings/errors${NC}"

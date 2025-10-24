@@ -25,7 +25,8 @@ module.exports = {
       numberOfRuns: 3,
 
       // Use Playwright's Chromium binary (works better in WSL2/headless environments)
-      chromePath: '/root/.cache/ms-playwright/chromium-1148/chrome-linux/chrome',
+      // Use environment variable if set, otherwise undefined (Lighthouse will find Chrome automatically)
+      chromePath: process.env.CHROME_PATH || undefined,
 
       // Lighthouse settings
       settings: {
@@ -52,6 +53,9 @@ module.exports = {
 
       // Increase timeout for slower machines
       maxAutodiscoverUrls: 0,  // Don't auto-discover URLs
+
+      // Store output in .lighthouseci directory
+      outputDir: '.lighthouseci',
     },
 
     assert: {
