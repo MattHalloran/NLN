@@ -1,5 +1,5 @@
 import { Router, Response } from "express";
-import { logger } from "../../logger.js";
+import { logger, LogLevel } from "../../logger.js";
 import type { LandingPageVariant, LandingPageContent } from "../../types/landingPage.js";
 import {
     readVariants,
@@ -21,7 +21,7 @@ router.get("/", requireAdmin, async (req: AuthenticatedRequest, res: Response) =
         const variants = readVariants();
         return res.json(variants);
     } catch (error) {
-        logger.error("Error fetching variants:", error);
+        logger.log(LogLevel.error, "Error fetching variants:", error);
         return res.status(500).json({
             error: "Failed to fetch variants",
             message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
@@ -41,7 +41,7 @@ router.get("/:id", requireAdmin, async (req: AuthenticatedRequest, res: Response
 
         return res.json(variant);
     } catch (error) {
-        logger.error("Error fetching variant:", error);
+        logger.log(LogLevel.error, "Error fetching variant:", error);
         return res.status(500).json({
             error: "Failed to fetch variant",
             message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
@@ -97,7 +97,7 @@ router.post("/", requireAdmin, async (req: AuthenticatedRequest, res: Response) 
             writeVariantContent(newVariant.id, sourceContent);
             logger.info(`Created variant content file for ${newVariant.id}`);
         } catch (error) {
-            logger.error("Error creating variant content file:", error);
+            logger.log(LogLevel.error, "Error creating variant content file:", error);
             return res.status(500).json({
                 error: "Failed to create variant content file",
                 message:
@@ -110,7 +110,7 @@ router.post("/", requireAdmin, async (req: AuthenticatedRequest, res: Response) 
 
         return res.status(201).json(newVariant);
     } catch (error) {
-        logger.error("Error creating variant:", error);
+        logger.log(LogLevel.error, "Error creating variant:", error);
         return res.status(500).json({
             error: "Failed to create variant",
             message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
@@ -155,7 +155,7 @@ router.put("/:id", requireAdmin, async (req: AuthenticatedRequest, res: Response
 
         return res.json(variants[variantIndex]);
     } catch (error) {
-        logger.error("Error updating variant:", error);
+        logger.log(LogLevel.error, "Error updating variant:", error);
         return res.status(500).json({
             error: "Failed to update variant",
             message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
@@ -194,7 +194,7 @@ router.delete("/:id", requireAdmin, async (req: AuthenticatedRequest, res: Respo
             message: "Variant and content file deleted successfully",
         });
     } catch (error) {
-        logger.error("Error deleting variant:", error);
+        logger.log(LogLevel.error, "Error deleting variant:", error);
         return res.status(500).json({
             error: "Failed to delete variant",
             message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
@@ -246,7 +246,7 @@ router.post("/:id/promote", requireAdmin, async (req: AuthenticatedRequest, res:
             variant: variants[variantIndex],
         });
     } catch (error) {
-        logger.error("Error promoting variant:", error);
+        logger.log(LogLevel.error, "Error promoting variant:", error);
         return res.status(500).json({
             error: "Failed to promote variant",
             message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
@@ -284,7 +284,7 @@ router.post("/:id/track", async (req: AuthenticatedRequest, res: Response) => {
 
         return res.json({ success: true, metrics: variants[variantIndex].metrics });
     } catch (error) {
-        logger.error("Error tracking variant event:", error);
+        logger.log(LogLevel.error, "Error tracking variant event:", error);
         return res.status(500).json({
             error: "Failed to track variant event",
             message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
@@ -319,7 +319,7 @@ router.post("/:id/toggle", requireAdmin, async (req: AuthenticatedRequest, res: 
 
         return res.json(variants[variantIndex]);
     } catch (error) {
-        logger.error("Error toggling variant status:", error);
+        logger.log(LogLevel.error, "Error toggling variant status:", error);
         return res.status(500).json({
             error: "Failed to toggle variant status",
             message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,

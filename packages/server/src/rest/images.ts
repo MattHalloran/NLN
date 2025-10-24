@@ -2,7 +2,8 @@ import { Router, Request, Response } from "express";
 import { CODE } from "@local/shared";
 import { CustomError } from "../error.js";
 import { saveImage } from "../utils/index.js";
-import { logger } from "../logger.js";
+import { logger, LogLevel } from "../logger.js";
+import { auditAdminAction, AuditEventType } from "../utils/auditLogger.js";
 
 const router = Router();
 
@@ -59,7 +60,7 @@ router.get("/", async (req: Request, res: Response) => {
 
         return res.json(imageData);
     } catch (error) {
-        logger.error("Get images error:", error);
+        logger.log(LogLevel.error, "Get images error:", error);
         return res.status(500).json({ error: "Failed to get images" });
     }
 });
@@ -114,9 +115,21 @@ router.post("/", async (req: Request, res: Response) => {
             }
         }
 
+        // Audit log: image upload
+        auditAdminAction(
+            req,
+            AuditEventType.ADMIN_IMAGE_UPLOAD,
+            "images",
+            undefined,
+            {
+                uploadedCount: results.filter((r) => r.success).length,
+                label,
+            },
+        );
+
         return res.json(results);
     } catch (error) {
-        logger.error("Add images error:", error);
+        logger.log(LogLevel.error, "Add images error:", error);
         if (error instanceof CustomError) {
             return res.status(401).json({ error: error.message, code: error.code });
         }
@@ -164,9 +177,18 @@ router.put("/", async (req: Request, res: Response) => {
             });
         }
 
+        // Audit log: image update
+        auditAdminAction(
+            req,
+            AuditEventType.ADMIN_IMAGE_UPDATE,
+            "images",
+            undefined,
+            { updatedCount: images.length },
+        );
+
         return res.json({ success: true });
     } catch (error: any) {
-        logger.error("Update images error:", error);
+        logger.log(LogLevel.error, "Update images error:", error);
         if (error instanceof CustomError) {
             return res.status(401).json({ error: error.message, code: error.code });
         }

@@ -8,6 +8,7 @@ import imagesRouter from "./images.js";
 import assetsRouter from "./assets.js";
 import dashboardRouter from "./dashboard.js";
 // ARCHIVED: import analyticsRouter from "./analytics.js"; // Old A/B test analytics moved to variant system
+import { csrfTokenEndpoint } from "../middleware/csrf.js";
 
 const router = Router();
 
@@ -26,6 +27,9 @@ const v1Router = Router();
 v1Router.get("/health", (_req, res) => {
     res.json({ status: "healthy", timestamp: new Date().toISOString() });
 });
+
+// CSRF token endpoint - clients fetch token before making state-changing requests
+v1Router.get("/csrf-token", csrfTokenEndpoint);
 
 // Mount route handlers
 v1Router.use("/landing-page", landingPageRouter);
@@ -48,6 +52,7 @@ router.get("/", (_req, res) => {
         endpoints: {
             v1: {
                 health: "/api/rest/v1/health",
+                csrfToken: "/api/rest/v1/csrf-token",
                 auth: {
                     login: "/api/rest/v1/auth/login",
                     logout: "/api/rest/v1/auth/logout",

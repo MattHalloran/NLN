@@ -1,4 +1,5 @@
 import { getServerUrl } from "../../utils/serverUrl";
+import { getCsrfToken, requiresCsrfToken, refreshCsrfToken } from "../../utils/csrf";
 
 // Base REST API URL
 const REST_BASE_URL = `${getServerUrl()}/rest/v1`;
@@ -15,13 +16,33 @@ export class ApiError extends Error {
 async function fetchApi<T>(
     endpoint: string,
     options?: RequestInit,
+    retryCount = 0,
 ): Promise<T> {
     const url = `${REST_BASE_URL}${endpoint}`;
-    
+
+    // Get CSRF token for state-changing requests
+    const method = options?.method || "GET";
+    let csrfHeaders = {};
+
+    if (requiresCsrfToken(method)) {
+        console.log(`[CSRF] Request ${method} ${endpoint} requires CSRF token`);
+        const csrfToken = await getCsrfToken();
+        if (csrfToken) {
+            csrfHeaders = {
+                "X-CSRF-Token": csrfToken,
+            };
+            console.log(`[CSRF] Including CSRF token in request:`, csrfToken.substring(0, 20) + "...");
+        } else {
+            console.error(`[CSRF] Failed to get CSRF token for ${method} ${endpoint}!`);
+            throw new ApiError(500, "Failed to get CSRF token", { code: "CSRF_TOKEN_UNAVAILABLE" });
+        }
+    }
+
     const defaultOptions: RequestInit = {
         credentials: "include", // Include cookies for auth
         headers: {
             "Content-Type": "application/json",
+            ...csrfHeaders,
             ...options?.headers,
         },
         ...options,
@@ -29,22 +50,34 @@ async function fetchApi<T>(
 
     try {
         const response = await fetch(url, defaultOptions);
-        
+
         if (!response.ok) {
             const errorData = await response.json().catch(() => null);
+
+            // If CSRF error and haven't retried yet, refresh token and retry
+            if (
+                response.status === 403 &&
+                errorData?.code === "CSRF_VALIDATION_FAILED" &&
+                retryCount === 0
+            ) {
+                console.log("[CSRF] CSRF validation failed, refreshing token and retrying...");
+                await refreshCsrfToken();
+                return fetchApi<T>(endpoint, options, retryCount + 1);
+            }
+
             throw new ApiError(
                 response.status,
                 errorData?.error || `HTTP ${response.status}: ${response.statusText}`,
                 errorData,
             );
         }
-        
+
         return await response.json();
     } catch (error) {
         if (error instanceof ApiError) {
             throw error;
         }
-        
+
         // Network or other errors
         throw new ApiError(
             0,

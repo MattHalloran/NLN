@@ -1,4 +1,4 @@
-import { logger } from "../../logger.js";
+import { logger, LogLevel } from "../../logger.js";
 import { initializeRedis } from "../../redisConn.js";
 import type { LandingPageContent } from "../../types/landingPage.js";
 
@@ -15,7 +15,7 @@ export const getCachedContent = async (): Promise<LandingPageContent | null> => 
         const cached = await redis.get(CACHE_KEY);
         return cached ? (JSON.parse(cached) as LandingPageContent) : null;
     } catch (error) {
-        logger.error("Error reading from cache:", error);
+        logger.log(LogLevel.error, "Error reading from cache:", error);
         return null;
     }
 };
@@ -29,7 +29,7 @@ export const setCachedContent = async (content: LandingPageContent): Promise<voi
         await redis.setEx(CACHE_KEY, CACHE_TTL, JSON.stringify(content));
         logger.info("Landing page content cached");
     } catch (error) {
-        logger.error("Error caching content:", error);
+        logger.log(LogLevel.error, "Error caching content:", error);
     }
 };
 
@@ -42,6 +42,6 @@ export const invalidateCache = async (): Promise<void> => {
         await redis.del(CACHE_KEY);
         logger.info("Landing page cache invalidated");
     } catch (error) {
-        logger.error("Error invalidating cache:", error);
+        logger.log(LogLevel.error, "Error invalidating cache:", error);
     }
 };

@@ -92,10 +92,30 @@ export function sendResetPasswordLink(
     return;
 }
 
-export function sendVerificationLink(_email: string, _userId: string | number): void {
+export function sendVerificationLink(
+    _email: string,
+    _userId: string | number,
+    _verificationCode: string,
+): void {
     // Temporarily disabled for E2E testing
-    logger.log(LogLevel.info, "sendVerificationLink called (disabled for testing)");
+    logger.log(LogLevel.info, "sendVerificationLink called (disabled for testing)", {
+        email: _email,
+        hasCode: !!_verificationCode,
+    });
     return;
+
+    // PRODUCTION CODE (currently disabled):
+    // const queue = getEmailQueue();
+    // if (!WEBSITE) {
+    //     throw new Error("Business config not loaded");
+    // }
+    // const verificationLink = `${WEBSITE}/verify-email?code=${_verificationCode}`;
+    // void queue.add({
+    //     to: [_email],
+    //     subject: "Verify Your Email Address",
+    //     text: `Please verify your email by clicking: ${verificationLink}`,
+    //     html: `<p>Please verify your email by clicking the link below:</p><p><a href="${verificationLink}">Verify Email</a></p><p>This link expires in 7 days.</p>`,
+    // });
 }
 
 export function feedbackNotifyAdmin(text: string, from?: string): void {

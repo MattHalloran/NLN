@@ -284,6 +284,27 @@ export async function saveImage({
                 height: dimensions.height,
             },
         });
+        // Also generate WebP version of full-size image for better performance
+        try {
+            const full_size_webp_filename = `${folder}/${name}-XXL.webp`;
+            const webp_info = await sharp(image_buffer)
+                .webp({ quality: 85, effort: 4 })
+                .toFile(`${UPLOAD_DIR}/${full_size_webp_filename}`);
+            await prisma.image_file.create({
+                data: {
+                    hash,
+                    src: full_size_webp_filename,
+                    width: webp_info.width,
+                    height: webp_info.height,
+                },
+            });
+        } catch (webpError) {
+            logger.log(LogLevel.error, "WebP conversion failed for full-size image, continuing with original format", {
+                code: genErrorCode("0013"),
+                error: webpError,
+                filename,
+            });
+        }
         if (Array.isArray(labels)) {
             await prisma.image_labels.deleteMany({ where: { hash } });
             for (let i = 0; i < labels.length; i++) {
@@ -305,6 +326,8 @@ export async function saveImage({
             }
             // Use largest dimension for resize
             const sizing_dimension = dimensions.width > dimensions.height ? "width" : "height";
+
+            // Save original format (JPEG/PNG)
             const resize_filename = `${folder}/${name}-${key}${extCheck}`;
             const { width, height } = await sharp(image_buffer)
                 .resize({ [sizing_dimension]: value })
@@ -317,6 +340,30 @@ export async function saveImage({
                     height,
                 },
             });
+
+            // Also generate WebP version for better performance (typically 30% smaller)
+            try {
+                const resize_webp_filename = `${folder}/${name}-${key}.webp`;
+                const webp_result = await sharp(image_buffer)
+                    .resize({ [sizing_dimension]: value })
+                    .webp({ quality: 85, effort: 4 })
+                    .toFile(`${UPLOAD_DIR}/${resize_webp_filename}`);
+                await prisma.image_file.create({
+                    data: {
+                        hash,
+                        src: resize_webp_filename,
+                        width: webp_result.width,
+                        height: webp_result.height,
+                    },
+                });
+            } catch (webpError) {
+                logger.log(LogLevel.error, `WebP conversion failed for ${key} size, continuing with original format`, {
+                    code: genErrorCode("0014"),
+                    error: webpError,
+                    filename,
+                    size: key,
+                });
+            }
         }
         return {
             success: true,

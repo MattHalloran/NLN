@@ -15,6 +15,7 @@ import { useLocation } from "route";
 import { useLandingPageStore } from "stores/landingPageStore";
 import { BusinessData, Session } from "types";
 import { PubSub, SideMenuPub, createDynamicTheme } from "utils";
+import { initializeCsrfToken } from "utils/csrf";
 
 const menusDisplayData: { [key in SideMenuPub["id"]]: { persistentOnDesktop: boolean, sideForRightHanded: "left" | "right" } } = {
     "side-menu": sideMenuDisplayData,
@@ -95,6 +96,9 @@ export function App() {
             setSession(session);
             return;
         }
+        // Always attempt session restore on page load
+        // The httpOnly cookie is invisible to JavaScript but sent automatically with HTTP requests
+        // The server will validate the cookie and return user data if valid, or 401 if invalid
         login({ email: "", password: "" }).then((response) => {
             setSession(response as Session);
         }).catch(() => {
@@ -105,6 +109,8 @@ export function App() {
 
     // Initial data fetch - only runs once on mount
     useEffect(() => {
+        // Initialize CSRF token for all API requests
+        initializeCsrfToken();
         checkLogin();
         fetchLandingPage();
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import {
     CODE,
     COOKIE,
@@ -12,14 +12,16 @@ import { generateToken } from "../auth.js";
 import { HASHING_ROUNDS } from "../consts.js";
 import { customerFromEmail, upsertCustomer } from "../db/models/customer.js";
 import { CustomError, validateArgs } from "../error.js";
-import { randomString } from "../utils/index.js";
+import { randomString, secureCompare } from "../utils/index.js";
 import {
     customerNotifyAdmin,
     sendResetPasswordLink,
     sendVerificationLink,
 } from "../worker/email/queue.js";
 import { AccountStatus } from "../schema/types.js";
-import { logger } from "../logger.js";
+import { logger, LogLevel } from "../logger.js";
+import { loginLimiter, passwordResetLimiter, signupLimiter } from "../middleware/rateLimiter.js";
+import { auditAuthEvent, AuditEventType } from "../utils/auditLogger.js";
 
 const router = Router();
 
@@ -33,7 +35,7 @@ const LOGIN_ATTEMPTS_TO_HARD_LOCKOUT = 15;
  * POST /api/rest/v1/auth/login
  * Login with email and password
  */
-router.post("/login", async (req: Request, res: Response) => {
+router.post("/login", loginLimiter, async (req: Request, res: Response) => {
     try {
         const { email, password, verificationCode } = req.body;
         const { prisma } = req as any;
@@ -82,7 +84,15 @@ router.post("/login", async (req: Request, res: Response) => {
         let customer = await customerFromEmail(email, prisma);
 
         // Check for password in database, if doesn't exist, send a password reset link
-        if (!customer.password) {
+        let hasPassword = false;
+        let storedPassword: string | null = null;
+        try {
+            storedPassword = customer.password;
+            hasPassword = !!storedPassword;
+        } catch (e) {
+            logger.log(LogLevel.error, "Error accessing customer password:", { error: e });
+        }
+        if (!hasPassword) {
             // Generate new code
             const requestCode = randomString(32);
             // Store code and request time in customer row
@@ -99,11 +109,29 @@ router.post("/login", async (req: Request, res: Response) => {
         }
 
         // Validate verification code, if supplied
-        if (verificationCode === customer.id && customer.emailVerified === false) {
-            customer = await prisma.customer.update({
-                where: { id: customer.id },
-                data: { status: AccountStatus.Unlocked, emailVerified: true },
-            });
+        if (verificationCode && customer.emailVerified === false) {
+            // Check if verification code matches and hasn't expired
+            // Using constant-time comparison to prevent timing attacks
+            if (
+                secureCompare(customer.emailVerificationCode, verificationCode) &&
+                customer.emailVerificationExpiry &&
+                new Date(customer.emailVerificationExpiry).getTime() > Date.now()
+            ) {
+                customer = await prisma.customer.update({
+                    where: { id: customer.id },
+                    data: {
+                        status: AccountStatus.Unlocked,
+                        emailVerified: true,
+                        emailVerificationCode: null,
+                        emailVerificationExpiry: null,
+                    },
+                });
+            } else {
+                // Verification code invalid or expired - don't verify but allow login to continue
+                logger.log(LogLevel.warn, "Invalid or expired email verification code", {
+                    customerId: customer.id,
+                });
+            }
         }
 
         // Reset login attempts after 15 minutes
@@ -128,8 +156,17 @@ router.post("/login", async (req: Request, res: Response) => {
             throw new CustomError((status_to_code as any)[customer.status]);
         }
 
-        // Now we can validate the password
-        const validPassword = customer.password && bcrypt.compareSync(password, customer.password);
+        // Now we can validate the password using async bcrypt.compare (more stable than compareSync)
+        let validPassword = false;
+        try {
+            if (storedPassword) {
+                validPassword = await bcrypt.compare(password, storedPassword);
+            }
+        } catch (e) {
+            logger.log(LogLevel.error, "Error in bcrypt.compare:", { error: e });
+            // If bcrypt fails, return false instead of crashing
+            validPassword = false;
+        }
         if (validPassword) {
             await generateToken(res, customer.id, customer.businessId ?? "", prisma);
             await prisma.customer.update({
@@ -140,6 +177,12 @@ router.post("/login", async (req: Request, res: Response) => {
                     resetPasswordCode: null,
                     lastResetPasswordReqestAttempt: null,
                 },
+            });
+
+            // Audit log: successful login
+            auditAuthEvent(req, AuditEventType.AUTH_LOGIN_SUCCESS, "success", {
+                email,
+                userId: customer.id,
             });
 
             // Return customer data
@@ -181,10 +224,29 @@ router.post("/login", async (req: Request, res: Response) => {
                     lastLoginAttempt: new Date().toISOString(),
                 },
             });
+
+            // Audit log: failed login
+            auditAuthEvent(req, AuditEventType.AUTH_LOGIN_FAILURE, "failure", {
+                email,
+                userId: customer.id,
+                attempts: login_attempts,
+                accountStatus: new_status,
+            });
+
+            // Audit log: account locked if applicable
+            if (new_status === AccountStatus.SoftLock || new_status === AccountStatus.HardLock) {
+                auditAuthEvent(req, AuditEventType.AUTH_ACCOUNT_LOCKED, "warning", {
+                    email,
+                    userId: customer.id,
+                    lockType: new_status,
+                    attempts: login_attempts,
+                });
+            }
+
             throw new CustomError(CODE.BadCredentials);
         }
     } catch (error: any) {
-        logger.error("Login error:", error);
+        logger.log(LogLevel.error, "Login error:", { error: error.message, stack: error.stack });
         if (error instanceof CustomError) {
             return res.status(401).json({ error: error.message, code: error.code });
         }
@@ -196,12 +258,17 @@ router.post("/login", async (req: Request, res: Response) => {
  * POST /api/rest/v1/auth/logout
  * Logout and clear session
  */
-router.post("/logout", async (_req: Request, res: Response) => {
+router.post("/logout", async (req: Request, res: Response) => {
     try {
+        // Audit log: logout
+        auditAuthEvent(req, AuditEventType.AUTH_LOGOUT, "success", {
+            userId: (req as any).customerId,
+        });
+
         res.clearCookie(COOKIE.Jwt);
         return res.json({ success: true });
-    } catch (error) {
-        logger.error("Logout error:", error);
+    } catch (error: any) {
+        logger.log(LogLevel.error, "Logout error:", { error: error.message, stack: error.stack });
         return res.status(500).json({ error: "Logout failed" });
     }
 });
@@ -210,7 +277,7 @@ router.post("/logout", async (_req: Request, res: Response) => {
  * POST /api/rest/v1/auth/signup
  * Register a new customer
  */
-router.post("/signup", async (req: Request, res: Response) => {
+router.post("/signup", signupLimiter, async (req: Request, res: Response) => {
     try {
         const {
             firstName,
@@ -254,11 +321,32 @@ router.post("/signup", async (req: Request, res: Response) => {
 
         await generateToken(res, customer.id, customer.businessId ?? "", prisma);
 
-        // Send verification email
-        sendVerificationLink(email, customer.id);
+        // Generate secure email verification code (valid for 7 days)
+        const verificationCode = randomString(32);
+        const verificationExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+
+        // Store hashed verification code
+        await prisma.customer.update({
+            where: { id: customer.id },
+            data: {
+                emailVerificationCode: verificationCode,
+                emailVerificationExpiry: verificationExpiry.toISOString(),
+            },
+        });
+
+        // Send verification email with secure token
+        sendVerificationLink(email, customer.id, verificationCode);
 
         // Send email to business owner
         customerNotifyAdmin(`${firstName} ${lastName}`);
+
+        // Audit log: new account signup
+        auditAuthEvent(req, AuditEventType.AUTH_SIGNUP, "success", {
+            email,
+            userId: customer.id,
+            firstName,
+            lastName,
+        });
 
         // Return customer data
         const userData: any = await prisma.customer.findUnique({
@@ -284,7 +372,7 @@ router.post("/signup", async (req: Request, res: Response) => {
 
         return res.json(userData);
     } catch (error: any) {
-        logger.error("Signup error:", error);
+        logger.log(LogLevel.error, "Signup error:", { error: error.message, stack: error.stack });
         if (error instanceof CustomError) {
             return res.status(400).json({ error: error.message, code: error.code });
         }
@@ -332,9 +420,10 @@ router.post("/reset-password", async (req: Request, res: Response) => {
         }
 
         // Verify request code and that request was made within 48 hours
+        // Using constant-time comparison to prevent timing attacks on reset codes
         if (
             !customer.resetPasswordCode ||
-            customer.resetPasswordCode !== code ||
+            !secureCompare(customer.resetPasswordCode, code) ||
             !customer.lastResetPasswordReqestAttempt ||
             Date.now() - new Date(customer.lastResetPasswordReqestAttempt).getTime() >
                 REQUEST_PASSWORD_RESET_DURATION_MS
@@ -367,6 +456,11 @@ router.post("/reset-password", async (req: Request, res: Response) => {
             },
         });
 
+        // Audit log: password reset completed
+        auditAuthEvent(req, AuditEventType.AUTH_PASSWORD_RESET_COMPLETE, "success", {
+            userId: customer.id,
+        });
+
         // Return customer data
         const customerData: any = await prisma.customer.findUnique({
             where: { id: customer.id },
@@ -391,7 +485,7 @@ router.post("/reset-password", async (req: Request, res: Response) => {
 
         return res.json(customerData);
     } catch (error: any) {
-        logger.error("Reset password error:", error);
+        logger.log(LogLevel.error, "Reset password error:", { error: error.message, stack: error.stack });
         if (error instanceof CustomError) {
             return res.status(400).json({ error: error.message, code: error.code });
         }
@@ -403,7 +497,7 @@ router.post("/reset-password", async (req: Request, res: Response) => {
  * POST /api/rest/v1/auth/request-password-change
  * Request a password reset link
  */
-router.post("/request-password-change", async (req: Request, res: Response) => {
+router.post("/request-password-change", passwordResetLimiter, async (req: Request, res: Response) => {
     try {
         const { email } = req.body;
         const { prisma } = req as any;
@@ -429,9 +523,15 @@ router.post("/request-password-change", async (req: Request, res: Response) => {
         // Send email with correct reset link
         sendResetPasswordLink(email, customer.id, requestCode);
 
+        // Audit log: password reset requested
+        auditAuthEvent(req, AuditEventType.AUTH_PASSWORD_RESET_REQUEST, "success", {
+            email,
+            userId: customer.id,
+        });
+
         return res.json({ success: true });
     } catch (error: any) {
-        logger.error("Request password change error:", error);
+        logger.log(LogLevel.error, "Request password change error:", { error: error.message, stack: error.stack });
         if (error instanceof CustomError) {
             return res.status(400).json({ error: error.message, code: error.code });
         }

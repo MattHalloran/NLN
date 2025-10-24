@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import { merge } from "lodash";
-import { logger } from "../logger.js";
+import { logger, LogLevel } from "../logger.js";
+import { auditAdminAction, AuditEventType } from "../utils/auditLogger.js";
 import type {
     LandingPageContent,
     HeroBanner,
@@ -108,12 +109,18 @@ router.get("/", async (req: Request, res: Response) => {
                         }
                     }
 
-                    res.set({
-                        "Cache-Control": "public, max-age=60", // Shorter cache for variants
-                        "X-Variant-ID": variantId,
-                    });
+                    try {
+                        res.set({
+                            "Cache-Control": "public, max-age=60", // Shorter cache for variants
+                            "X-Variant-ID": variantId,
+                        });
 
-                    return res.json(contentWithMeta);
+                        return res.json(contentWithMeta);
+                    } catch (jsonError) {
+                        logger.log(LogLevel.error, "Error sending variant JSON response:", jsonError);
+                        logger.log(LogLevel.error, "Content object keys:", Object.keys(contentWithMeta));
+                        throw jsonError;
+                    }
                 }
 
                 logger.warn(
@@ -178,12 +185,18 @@ router.get("/", async (req: Request, res: Response) => {
                         }
                     }
 
-                    res.set({
-                        "Cache-Control": "public, max-age=60",
-                        "X-Variant-ID": assignedVariant.id,
-                    });
+                    try {
+                        res.set({
+                            "Cache-Control": "public, max-age=60",
+                            "X-Variant-ID": assignedVariant.id,
+                        });
 
-                    return res.json(contentWithMeta);
+                        return res.json(contentWithMeta);
+                    } catch (jsonError) {
+                        logger.log(LogLevel.error, "Error sending auto-assigned variant JSON response:", jsonError);
+                        logger.log(LogLevel.error, "Content object keys:", Object.keys(contentWithMeta));
+                        throw jsonError;
+                    }
                 }
 
                 logger.warn(
@@ -223,7 +236,7 @@ router.get("/", async (req: Request, res: Response) => {
 
         return res.json(content);
     } catch (error) {
-        logger.error("Error fetching landing page content:", error);
+        logger.log(LogLevel.error, "Error fetching landing page content:", error);
         return res.status(500).json({
             error: "Failed to fetch landing page content",
             message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
@@ -242,7 +255,7 @@ router.post("/invalidate-cache", async (req: AuthenticatedRequest, res: Response
         await invalidateCache();
         return res.json({ success: true, message: "Cache invalidated successfully" });
     } catch (error) {
-        logger.error("Error invalidating cache:", error);
+        logger.log(LogLevel.error, "Error invalidating cache:", error);
         return res.status(500).json({
             error: "Failed to invalidate cache",
             message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
@@ -637,7 +650,7 @@ router.put("/", async (req: AuthenticatedRequest, res: Response) => {
                 writeLandingPageContent(currentContent);
             }
         } catch (error) {
-            logger.error("Error writing landing page content:", error);
+            logger.log(LogLevel.error, "Error writing landing page content:", error);
             return res.status(500).json({
                 error: "Failed to write landing page content",
                 message:
@@ -650,9 +663,21 @@ router.put("/", async (req: AuthenticatedRequest, res: Response) => {
             await invalidateCache();
             logger.info("Cache invalidated after content update");
         } catch (error) {
-            logger.error("Error invalidating cache (non-fatal):", error);
+            logger.log(LogLevel.error, "Error invalidating cache (non-fatal):", error);
             // Continue even if cache invalidation fails - write succeeded
         }
+
+        // Audit log: content update
+        auditAdminAction(
+            req,
+            AuditEventType.ADMIN_CONTENT_UPDATE,
+            activeVariantId ? `variant/${activeVariantId}` : "landing-page",
+            undefined,
+            {
+                updatedSections,
+                isVariant,
+            },
+        );
 
         return res.json({
             success: true,
@@ -664,7 +689,7 @@ router.put("/", async (req: AuthenticatedRequest, res: Response) => {
             variantId: activeVariantId,
         });
     } catch (error) {
-        logger.error("Error updating landing page content:", error);
+        logger.log(LogLevel.error, "Error updating landing page content:", error);
         return res.status(500).json({
             error: "Failed to update landing page content",
             message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
@@ -787,7 +812,7 @@ router.put("/contact-info", async (req: Request, res: Response) => {
                 writeLandingPageContent(currentContent);
             }
         } catch (error) {
-            logger.error("Error writing landing page content:", error);
+            logger.log(LogLevel.error, "Error writing landing page content:", error);
             return res.status(500).json({
                 error: "Failed to write landing page content",
                 message:
@@ -800,7 +825,7 @@ router.put("/contact-info", async (req: Request, res: Response) => {
             await invalidateCache();
             logger.info("Cache invalidated after content update");
         } catch (error) {
-            logger.error("Error invalidating cache (non-fatal):", error);
+            logger.log(LogLevel.error, "Error invalidating cache (non-fatal):", error);
             // Continue even if cache invalidation fails - write succeeded
         }
 
@@ -817,7 +842,7 @@ router.put("/contact-info", async (req: Request, res: Response) => {
             variantId: activeVariantId,
         });
     } catch (error) {
-        logger.error("Error updating contact info:", error);
+        logger.log(LogLevel.error, "Error updating contact info:", error);
         return res.status(500).json({
             error: "Failed to update contact information",
             message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
@@ -905,7 +930,7 @@ router.put("/settings", async (req: Request, res: Response) => {
                 writeLandingPageContent(currentContent);
             }
         } catch (error) {
-            logger.error("Error writing landing page content:", error);
+            logger.log(LogLevel.error, "Error writing landing page content:", error);
             return res.status(500).json({
                 error: "Failed to write landing page content",
                 message:
@@ -926,7 +951,7 @@ router.put("/settings", async (req: Request, res: Response) => {
             variantId: activeVariantId,
         });
     } catch (error) {
-        logger.error("Error updating landing page settings:", error);
+        logger.log(LogLevel.error, "Error updating landing page settings:", error);
         return res.status(500).json({
             error: "Failed to update landing page settings",
             message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
@@ -993,7 +1018,7 @@ router.put("/sections", async (req: Request, res: Response) => {
                 writeLandingPageContent(currentContent);
             }
         } catch (error) {
-            logger.error("Error writing landing page content:", error);
+            logger.log(LogLevel.error, "Error writing landing page content:", error);
             return res.status(500).json({
                 error: "Failed to write landing page content",
                 message:
@@ -1013,7 +1038,7 @@ router.put("/sections", async (req: Request, res: Response) => {
             variantId: activeVariantId,
         });
     } catch (error) {
-        logger.error("Error updating section configuration:", error);
+        logger.log(LogLevel.error, "Error updating section configuration:", error);
         return res.status(500).json({
             error: "Failed to update section configuration",
             message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
@@ -1035,7 +1060,7 @@ router.get("/variants", async (req: Request, res: Response) => {
         const variants = readVariants();
         return res.json(variants);
     } catch (error) {
-        logger.error("Error fetching variants:", error);
+        logger.log(LogLevel.error, "Error fetching variants:", error);
         return res.status(500).json({
             error: "Failed to fetch variants",
             message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
@@ -1059,7 +1084,7 @@ router.get("/variants/:id", async (req: Request, res: Response) => {
 
         return res.json(variant);
     } catch (error) {
-        logger.error("Error fetching variant:", error);
+        logger.log(LogLevel.error, "Error fetching variant:", error);
         return res.status(500).json({
             error: "Failed to fetch variant",
             message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
@@ -1122,7 +1147,7 @@ router.post("/variants", async (req: Request, res: Response) => {
             writeVariantContent(newVariant.id, sourceContent);
             logger.info(`Created variant content file for ${newVariant.id}`);
         } catch (error) {
-            logger.error("Error creating variant content file:", error);
+            logger.log(LogLevel.error, "Error creating variant content file:", error);
             return res.status(500).json({
                 error: "Failed to create variant content file",
                 message:
@@ -1133,9 +1158,16 @@ router.post("/variants", async (req: Request, res: Response) => {
         variants.push(newVariant);
         writeVariants(variants);
 
+        // Audit log: variant created
+        auditAdminAction(req, AuditEventType.ADMIN_VARIANT_CREATE, `variant/${newVariant.id}`, undefined, {
+            name,
+            description,
+            copyFrom: copyFromVariantId || "official",
+        });
+
         return res.status(201).json(newVariant);
     } catch (error) {
-        logger.error("Error creating variant:", error);
+        logger.log(LogLevel.error, "Error creating variant:", error);
         return res.status(500).json({
             error: "Failed to create variant",
             message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
@@ -1184,9 +1216,18 @@ router.put("/variants/:id", async (req: Request, res: Response) => {
         // Invalidate cache
         await invalidateCache();
 
+        // Audit log: variant updated
+        auditAdminAction(
+            req,
+            AuditEventType.ADMIN_VARIANT_UPDATE,
+            `variant/${req.params.id}`,
+            undefined,
+            { name, status, trafficAllocation },
+        );
+
         return res.json(variants[variantIndex]);
     } catch (error) {
-        logger.error("Error updating variant:", error);
+        logger.log(LogLevel.error, "Error updating variant:", error);
         return res.status(500).json({
             error: "Failed to update variant",
             message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
@@ -1229,12 +1270,17 @@ router.delete("/variants/:id", async (req: Request, res: Response) => {
         variants.splice(variantIndex, 1);
         writeVariants(variants);
 
+        // Audit log: variant deleted
+        auditAdminAction(req, AuditEventType.ADMIN_VARIANT_DELETE, `variant/${req.params.id}`, undefined, {
+            variantName: variant.name,
+        });
+
         return res.json({
             success: true,
             message: "Variant and content file deleted successfully",
         });
     } catch (error) {
-        logger.error("Error deleting variant:", error);
+        logger.log(LogLevel.error, "Error deleting variant:", error);
         return res.status(500).json({
             error: "Failed to delete variant",
             message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
@@ -1289,13 +1335,22 @@ router.post("/variants/:id/promote", async (req: Request, res: Response) => {
         // Invalidate cache
         await invalidateCache();
 
+        // Audit log: variant promoted to official
+        auditAdminAction(
+            req,
+            AuditEventType.ADMIN_VARIANT_PROMOTE,
+            `variant/${req.params.id}`,
+            { previousOfficial: currentOfficialIndex !== -1 ? variants[currentOfficialIndex].id : null },
+            { newOfficial: variant.id, variantName: variant.name },
+        );
+
         return res.json({
             success: true,
             message: "Variant promoted to official successfully",
             variant: variants[variantIndex],
         });
     } catch (error) {
-        logger.error("Error promoting variant:", error);
+        logger.log(LogLevel.error, "Error promoting variant:", error);
         return res.status(500).json({
             error: "Failed to promote variant",
             message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
@@ -1327,13 +1382,17 @@ router.post("/variants/:id/track", async (req: Request, res: Response) => {
         variants[variantIndex].metrics[metricKey]++;
         variants[variantIndex].updatedAt = new Date().toISOString();
 
-        writeVariants(variants);
-
-        logger.info(`Tracked ${eventType} for variant ${req.params.id}`);
+        try {
+            writeVariants(variants);
+            logger.info(`Tracked ${eventType} for variant ${req.params.id}`);
+        } catch (writeError) {
+            logger.log(LogLevel.error, "Error writing variants during analytics tracking:", writeError);
+            throw writeError;
+        }
 
         return res.json({ success: true, metrics: variants[variantIndex].metrics });
     } catch (error) {
-        logger.error("Error tracking variant event:", error);
+        logger.log(LogLevel.error, "Error tracking variant event:", error);
         return res.status(500).json({
             error: "Failed to track variant event",
             message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
@@ -1374,7 +1433,7 @@ router.post("/variants/:id/toggle", async (req: Request, res: Response) => {
 
         return res.json(variants[variantIndex]);
     } catch (error) {
-        logger.error("Error toggling variant status:", error);
+        logger.log(LogLevel.error, "Error toggling variant status:", error);
         return res.status(500).json({
             error: "Failed to toggle variant status",
             message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,

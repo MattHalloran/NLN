@@ -20,6 +20,7 @@ export const IMAGE_EXTENSION = {
     Heic: ".heic",
     Heif: ".heif",
     Ico: ".ico",
+    Webp: ".webp",
 };
 // Possible image sizes stored, and their max size
 export const IMAGE_SIZE = {

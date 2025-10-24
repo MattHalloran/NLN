@@ -1,0 +1,283 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                  NEW LIFE NURSERY APPLICATION ARCHITECTURE                   ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                              CLIENT LAYER (WEB)                              │
+│  ┌─────────────────────────────────────────────────────────────────────────┐ │
+│  │ React + Vite Frontend Application (Port 3001)                          │ │
+│  │ - Material-UI Components                                               │ │
+│  │ - Zustand State Management                                            │ │
+│  │ - Formik + Yup Validation                                            │ │
+│  │ - Password Strength (zxcvbn)                                         │ │
+│  │ - Service Worker / PWA Support                                       │ │
+│  │ - TypeScript Strict Mode                                            │ │
+│  └─────────────────────────────────────────────────────────────────────────┘ │
+│                              HTTPS / CORS                                    │
+└──────────────────────────────────┬───────────────────────────────────────────┘
+                                   │
+                                   │ HTTP/HTTPS Request
+                                   │ with Cookies & Auth Headers
+                                   ▼
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                             API LAYER (BACKEND)                              │
+│  ┌─────────────────────────────────────────────────────────────────────────┐ │
+│  │ Express.js REST API Server (Port 5331)                                │ │
+│  │                                                                        │ │
+│  │ MIDDLEWARE STACK (In Order):                                        │ │
+│  │  1. Raw Body Parser (JSON handling)                                 │ │
+│  │  2. Cookie Parser (JWT_SECRET signing)                            │ │
+│  │  3. Prisma Client Attachment                                      │ │
+│  │  4. CORS Handler → credentials:true, origin:true               │ │
+│  │  5. Authentication Middleware                                    │ │
+│  │     └─ JWT Verification from Cookie                             │ │
+│  │     └─ Set req.customerId, req.roles, req.isAdmin              │ │
+│  │  6. Authorization Middleware (Role-Based)                       │ │
+│  │     └─ requireAdmin() - Admin endpoints                        │ │
+│  │     └─ requireCustomer() - Customer endpoints                  │ │
+│  │                                                                 │ │
+│  │ ROUTE HANDLERS (/api/rest/v1/):                                │ │
+│  │                                                                 │ │
+│  │  Authentication Routes:                                        │ │
+│  │   ├─ POST /auth/login (8-50 char password, bcryptjs rounds:8) │ │
+│  │   ├─ POST /auth/logout                                        │ │
+│  │   ├─ POST /auth/signup                                        │ │
+│  │   ├─ POST /auth/request-password-change                       │ │
+│  │   └─ POST /auth/reset-password                                │ │
+│  │                                                                 │ │
+│  │  File Upload Routes (Admin-Only):                              │ │
+│  │   ├─ POST /images (Multer: 10MB limit, memory storage)        │ │
+│  │   │  └─ MIME validation, ext whitelist, filename sanitize     │ │
+│  │   ├─ PUT /images (metadata update)                           │ │
+│  │   ├─ POST /assets/write                                      │ │
+│  │   └─ POST /assets/read                                       │ │
+│  │                                                                 │ │
+│  │  Data Routes:                                                  │ │
+│  │   ├─ GET /landing-page                                       │ │
+│  │   ├─ POST /landing-page/variants (Admin)                     │ │
+│  │   ├─ GET /plants                                             │ │
+│  │   └─ GET /dashboard/stats                                    │ │
+│  │                                                                 │ │
+│  │  Public Routes:                                               │ │
+│  │   └─ GET /images?label=:label                               │ │
+│  │                                                                 │ │
+│  └─────────────────────────────────────────────────────────────────────────┘ │
+│                                                                              │ │
+│  ┌─────────────────────────────────────────────────────────────────────────┐ │
+│  │ SECURITY FEATURES:                                                      │ │
+│  │ • JWT Tokens: 30-day expiration, HTTP-only cookies                     │ │
+│  │ • Account Lockout: 5 attempts (5min soft), 15 attempts (hard)          │ │
+│  │ • Password Reset: 48-hour throttle, email verification                 │ │
+│  │ • File Operations: Admin-only routes, content-type validation          │ │
+│  │ • Email Service: Mode-based (dev/prod/staging safe modes)             │ │
+│  │ • Logging: Winston logger with error tracking                         │ │
+│  │ • Error Handling: Custom error codes, sanitized responses             │ │
+│  │ • Input Validation: Yup schemas on all endpoints                      │ │
+│  └─────────────────────────────────────────────────────────────────────────┘ │
+└──────────────────────────────────┬───────────────────────────────────────────┘
+                                   │
+                                   │ Prisma ORM
+                                   │ Connection Pooling
+                                   ▼
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                          DATA LAYER (DATABASE)                               │
+│  ┌─────────────────────────────────────────────────────────────────────────┐ │
+│  │ PostgreSQL Database (Port 5433)                                        │ │
+│  │ Prisma ORM v6.1.0                                                     │ │
+│  │                                                                        │ │
+│  │ KEY TABLES:                                                           │ │
+│  │ ├─ customers                                                         │ │
+│  │ │  ├─ id (UUID)                                                     │ │
+│  │ │  ├─ email (via email table)                                       │ │
+│  │ │  ├─ password (bcryptjs hashed)                                    │ │
+│  │ │  ├─ loginAttempts (tracks failed logins)                          │ │
+│  │ │  ├─ resetPasswordCode (for password reset flow)                   │ │
+│  │ │  ├─ status (Unlocked/SoftLock/HardLock/Deleted)                 │ │
+│  │ │  ├─ emailVerified (boolean)                                      │ │
+│  │ │  └─ accountApproved (boolean)                                    │ │
+│  │ │                                                                  │ │
+│  │ ├─ customer_roles (M:M with roles)                                │ │
+│  │ │  ├─ Customer (regular user)                                     │ │
+│  │ │  ├─ Owner (business owner)                                      │ │
+│  │ │  └─ Admin (system administrator)                                │ │
+│  │ │                                                                  │ │
+│  │ ├─ emails                                                          │ │
+│  │ │  ├─ emailAddress (UNIQUE)                                       │ │
+│  │ │  ├─ customerId (FK)                                             │ │
+│  │ │  └─ receivesDeliveryUpdates                                     │ │
+│  │ │                                                                  │ │
+│  │ ├─ orders                                                          │ │
+│  │ │  ├─ status (Draft/Pending/Approved/Scheduled/Delivered/etc)   │ │
+│  │ │  ├─ customerId (FK)                                             │ │
+│  │ │  └─ special instructions (2048 chars max)                       │ │
+│  │ │                                                                  │ │
+│  │ ├─ plants & skus (catalog)                                        │ │
+│  │ │  ├─ latinName                                                   │ │
+│  │ │  ├─ sku                                                         │ │
+│  │ │  ├─ price, availability                                        │ │
+│  │ │  └─ traits (height, light, soil, etc)                          │ │
+│  │ │                                                                  │ │
+│  │ └─ images                                                          │ │
+│  │    ├─ hash (UNIQUE, primary deduplication key)                    │ │
+│  │    ├─ alt (256 chars, accessibility)                             │ │
+│  │    ├─ description (1024 chars)                                    │ │
+│  │    └─ image_file (multiple formats/sizes)                        │ │
+│  │                                                                  │ │
+│  │ DATA VALIDATION:                                                 │ │
+│  │ • Yup schemas enforced on all inputs                            │ │
+│  │ • Unique constraints (email, phone, SKU)                        │ │
+│  │ • FK relationships with CASCADE deletes                         │ │
+│  │ • NOT NULL constraints on required fields                       │ │
+│  │ • ENUM types for status fields                                 │ │
+│  │                                                                  │ │
+│  └─────────────────────────────────────────────────────────────────────────┘ │
+└──────────────────────────────────┬───────────────────────────────────────────┘
+                                   │
+                                   │ Job Queue
+                                   ▼
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                         BACKGROUND SERVICES                                  │
+│  ┌─────────────────────────────────────────────────────────────────────────┐ │
+│  │ Redis (Port 6380) - Job Queue Backend                                  │ │
+│  │ Bull Queue - Job Processing                                            │ │
+│  │                                                                        │ │
+│  │ JOBS:                                                                 │ │
+│  │ ├─ Email Verification (signup)                                       │ │
+│  │ ├─ Password Reset Links                                              │ │
+│  │ ├─ Admin Notifications                                               │ │
+│  │ ├─ Order Status Updates                                              │ │
+│  │ └─ Delivery Updates                                                  │ │
+│  │                                                                        │ │
+│  └─────────────────────────────────────────────────────────────────────────┘ │
+│  ┌─────────────────────────────────────────────────────────────────────────┐ │
+│  │ Email Service (Nodemailer)                                            │ │
+│  │                                                                        │ │
+│  │ MODES (Environment-Based):                                          │ │
+│  │ ├─ disabled (no email, testing)                                     │ │
+│  │ ├─ console (log to console)                                         │ │
+│  │ ├─ file (save to files + console, dev default)                     │ │
+│  │ ├─ redirect (all emails → dev address)                             │ │
+│  │ ├─ staging (whitelist filtering)                                   │ │
+│  │ └─ production (real SMTP sending)                                  │ │
+│  │                                                                        │ │
+│  │ SMTP CONFIG:                                                         │ │
+│  │ ├─ Host: smtp.gmail.com (default)                                  │ │
+│  │ ├─ Port: 465 (SSL) or 587 (STARTTLS)                              │ │
+│  │ ├─ Auth: SITE_EMAIL_USERNAME + SITE_EMAIL_PASSWORD               │ │
+│  │ └─ Identity: SITE_EMAIL_ALIAS / SITE_EMAIL_FROM                  │ │
+│  │                                                                        │ │
+│  └─────────────────────────────────────────────────────────────────────────┘ │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+
+AUTHENTICATION FLOW:
+═══════════════════════════════════════════════════════════════════════════════
+
+LOGIN REQUEST:
+  Client submits: { email, password }
+       │
+       ├─ Validate format (Yup schema)
+       ├─ Find customer by email
+       ├─ Check account status (not locked/deleted)
+       ├─ Compare password with bcryptjs (8 rounds)
+       ├─ Check email verification, account approval
+       ├─ Clear login attempts counter
+       ├─ Generate JWT with roles
+       └─ Set HTTP-only secure cookie
+            {
+              httpOnly: true,
+              secure: NODE_ENV === 'production',
+              sameSite: 'lax' | 'none',
+              maxAge: 30 days,
+              path: '/',
+              signed: JWT_SECRET
+            }
+
+SUBSEQUENT REQUESTS:
+  Client sends cookie (automatic)
+       │
+       ├─ Middleware extracts JWT from cookie
+       ├─ Verify signature with JWT_SECRET
+       ├─ Check token not expired (30 days)
+       ├─ Set req.customerId, req.roles, req.isAdmin
+       └─ Proceed to route or return 401
+
+
+FILE UPLOAD FLOW:
+═══════════════════════════════════════════════════════════════════════════════
+
+UPLOAD REQUEST (Admin-only):
+  Client submits: multipart/form-data with files
+       │
+       ├─ Check requireAdmin() - verify req.isAdmin
+       ├─ Multer parses (max 10MB, memory storage)
+       ├─ Loop through files:
+       │   ├─ Validate MIME type (image/*)
+       │   ├─ Validate file extension (whitelist)
+       │   ├─ Sanitize filename (remove special chars)
+       │   ├─ Find available filename (append -1, -2, etc)
+       │   ├─ Read to buffer
+       │   ├─ Probe dimensions
+       │   ├─ Convert HEIC → JPEG if needed
+       │   ├─ Generate image hash
+       │   ├─ Check for duplicate (hash lookup)
+       │   ├─ Save original (XXL) + WebP version
+       │   ├─ Generate 8 resized versions (XXS-XL)
+       │   ├─ Create WebP for each size
+       │   └─ Store metadata in DB
+       │
+       └─ Return success with hash & dimensions
+
+
+ENVIRONMENT-BASED BEHAVIOR:
+═══════════════════════════════════════════════════════════════════════════════
+
+Development (LOCAL):
+  NODE_ENV: development
+  VITE_SERVER_LOCATION: local
+  CREATE_MOCK_DATA: true
+  EMAIL_MODE: file
+  Behavior:
+    ✓ Mock data seeded
+    ✓ Emails saved to file system + console
+    ✓ CORS allows any origin
+    ✓ Cookies not secure
+    ✓ SameSite: lax
+
+Production (DNS):
+  NODE_ENV: production
+  VITE_SERVER_LOCATION: dns
+  CREATE_MOCK_DATA: false
+  EMAIL_MODE: production
+  Behavior:
+    ✓ No mock data
+    ✓ Real SMTP email delivery
+    ✓ CORS restricted to configured origins
+    ✓ Cookies HTTPS only
+    ✓ SameSite: none
+
+
+SECURITY BOUNDARIES:
+═══════════════════════════════════════════════════════════════════════════════
+
+Public Routes (No Authentication Required):
+  • GET /api/rest/v1/landing-page
+  • GET /api/rest/v1/plants
+  • GET /api/rest/v1/images?label=...
+  • POST /api/rest/v1/auth/login
+  • POST /api/rest/v1/auth/signup
+  • POST /api/rest/v1/auth/reset-password
+  • GET /api/healthcheck
+
+Customer Routes (requireCustomer middleware):
+  • User profile/preferences
+  • Order management
+  • Account settings
+
+Admin Routes (requireAdmin middleware):
+  • POST /api/rest/v1/images
+  • PUT /api/rest/v1/images
+  • POST /api/rest/v1/assets/write
+  • POST /api/rest/v1/landing-page/variants
+  • Dashboard statistics
+

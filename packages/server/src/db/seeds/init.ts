@@ -1,4 +1,4 @@
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { HASHING_ROUNDS } from "../../consts";
 import { logger, LogLevel } from "../../logger.js";
 import { AccountStatus } from "../../schema/types";

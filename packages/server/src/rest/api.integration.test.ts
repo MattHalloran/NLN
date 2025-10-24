@@ -8,7 +8,7 @@ import { PostgreSqlContainer, StartedPostgreSqlContainer } from "@testcontainers
 import { PrismaClient } from "@prisma/client";
 import express, { Express } from "express";
 import request from "supertest";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { exec } from "child_process";
 import { promisify } from "util";
 import cookieParser from "cookie-parser";

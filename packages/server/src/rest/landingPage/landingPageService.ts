@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync } from "fs";
 import { join } from "path";
-import { logger } from "../../logger.js";
+import { logger, LogLevel } from "../../logger.js";
 import type {
     LandingPageContent,
     HeroBanner,
@@ -83,7 +83,7 @@ export const readLandingPageContent = (): LandingPageContent => {
         const data = readFileSync(join(dataPath, "landing-page-content.json"), "utf8");
         return JSON.parse(data) as LandingPageContent;
     } catch (error) {
-        logger.error("Error reading landing page content:", error);
+        logger.log(LogLevel.error, "Error reading landing page content:", error);
         return getDefaultContent();
     }
 };
@@ -104,7 +104,7 @@ export const writeLandingPageContent = (content: LandingPageContent): void => {
         writeFileSync(contentPath, JSON.stringify(dataToWrite, null, 2), "utf8");
         logger.info("Landing page content updated successfully");
     } catch (error) {
-        logger.error("Error writing landing page content:", error);
+        logger.log(LogLevel.error, "Error writing landing page content:", error);
         throw error;
     }
 };

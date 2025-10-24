@@ -59,6 +59,8 @@ model customer {
     sessionToken                   String?          @db.VarChar(1024)
     resetPasswordCode              String?          @unique(map: "customer_resetpasswordcode_unique") @db.VarChar(256)
     lastResetPasswordReqestAttempt DateTime?        @db.Timestamptz(6)
+    emailVerificationCode          String?          @unique(map: "customer_emailverificationcode_unique") @db.VarChar(256)
+    emailVerificationExpiry        DateTime?        @db.Timestamptz(6)
     accountApproved                Boolean          @default(false)
     emailVerified                  Boolean          @default(false)
     status                         String           @default("Unlocked")

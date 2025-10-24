@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
 import { CODE } from "@local/shared";
 import { CustomError } from "../error.js";
-import { logger } from "../logger.js";
+import { logger, LogLevel } from "../logger.js";
 
 const router = Router();
 
@@ -43,7 +43,7 @@ router.get("/stats", async (req: Request, res: Response) => {
             totalSkus,
         });
     } catch (error: any) {
-        logger.error("Get dashboard stats error:", error);
+        logger.log(LogLevel.error, "Get dashboard stats error:", error);
         if (error instanceof CustomError) {
             return res.status(401).json({ error: error.message, code: error.code });
         }

@@ -1,4 +1,4 @@
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { HASHING_ROUNDS } from "../../consts";
 import { AccountStatus } from "../../schema/types";
 import { PrismaType } from "../../types";

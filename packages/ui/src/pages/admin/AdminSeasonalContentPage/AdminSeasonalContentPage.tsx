@@ -149,7 +149,7 @@ export const AdminSeasonalContentPage = () => {
                 updatedPlants = [...currentPlants, newPlant];
             }
 
-            await updateLandingPageContent.mutate({ seasonalPlants: updatedPlants });
+            await updateLandingPageContent.mutate({ data: { seasonalPlants: updatedPlants } });
             // Refetch data FIRST to ensure UI is updated
             await refetch();
             // THEN show success and close dialog
@@ -182,7 +182,7 @@ export const AdminSeasonalContentPage = () => {
                 updatedTips = [...currentTips, newTip];
             }
 
-            await updateLandingPageContent.mutate({ plantTips: updatedTips });
+            await updateLandingPageContent.mutate({ data: { plantTips: updatedTips } });
             // Refetch data FIRST to ensure UI is updated
             await refetch();
             // THEN show success and close dialog
@@ -202,7 +202,7 @@ export const AdminSeasonalContentPage = () => {
 
         try {
             const updatedPlants = plants.filter((p) => p.id !== plant.id);
-            await updateLandingPageContent.mutate({ seasonalPlants: updatedPlants });
+            await updateLandingPageContent.mutate({ data: { seasonalPlants: updatedPlants } });
             // Refetch data FIRST to ensure UI is updated
             await refetch();
             // THEN show success message
@@ -217,7 +217,7 @@ export const AdminSeasonalContentPage = () => {
 
         try {
             const updatedTips = tips.filter((t) => t.id !== tip.id);
-            await updateLandingPageContent.mutate({ plantTips: updatedTips });
+            await updateLandingPageContent.mutate({ data: { plantTips: updatedTips } });
             // Refetch data FIRST to ensure UI is updated
             await refetch();
             // THEN show success message

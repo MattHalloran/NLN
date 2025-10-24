@@ -51,7 +51,9 @@ export function authenticate(req: Request, _: Response, next: NextFunction): voi
                 return;
             }
             const payload = decoded as JWTPayload;
-            if (isNaN(payload.exp) || payload.exp < Date.now()) {
+            // JWT standard: exp is in seconds since epoch
+            const nowInSeconds = Math.floor(Date.now() / 1000);
+            if (isNaN(payload.exp) || payload.exp < nowInSeconds) {
                 next();
                 return;
             }
@@ -75,21 +77,28 @@ export async function generateToken(
     prismaClient?: PrismaClientType,
 ): Promise<void> {
     const customerRoles = await findCustomerRoles(customerId, prismaClient);
+    // JWT standard: iat and exp should be in SECONDS since epoch (not milliseconds)
+    const now = Math.floor(Date.now() / 1000);
+    const expiry = now + Math.floor(SESSION_MILLI / 1000);
+
     const tokenContents: JWTPayload = {
-        iat: Date.now(),
+        iat: now,
         iss: `https://${process.env.SITE_NAME ?? ""}/`,
         customerId,
         businessId,
         roles: customerRoles,
         isCustomer: customerRoles.includes("customer") || customerRoles.includes("admin"),
         isAdmin: customerRoles.includes("admin"),
-        exp: Date.now() + SESSION_MILLI,
+        exp: expiry,
     };
     const token = jwt.sign(tokenContents, process.env.JWT_SECRET ?? "");
     res.cookie(COOKIE.Jwt, token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        // SECURITY: Changed from 'none' to 'lax' for CSRF protection
+        // 'lax' allows cookies on top-level GET navigation but blocks CSRF attacks
+        // Since frontend and backend are same-origin, this is safe
+        sameSite: "lax",
         maxAge: SESSION_MILLI,
         path: "/",
     });

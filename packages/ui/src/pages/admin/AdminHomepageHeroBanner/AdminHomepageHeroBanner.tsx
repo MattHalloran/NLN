@@ -27,9 +27,8 @@ import {
 } from "@mui/icons-material";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { useLandingPage } from "hooks/useLandingPage";
-import { useUpdateLandingPageSettings } from "api/rest/hooks";
+import { useUpdateLandingPageSettings, useAddImages, useUpdateLandingPageContent } from "api/rest/hooks";
 import { useABTestQueryParams } from "hooks/useABTestQueryParams";
-import { restApi } from "api/rest/client";
 import { BackButton, Dropzone, PageContainer } from "components";
 import { ABTestEditingBanner } from "components/admin/ABTestEditingBanner/ABTestEditingBanner";
 import { TopBar } from "components/navigation/TopBar/TopBar";
@@ -121,6 +120,8 @@ export const AdminHomepageHeroBanner = () => {
 
     const { data: landingPageContent, refetch } = useLandingPage();
     const updateSettings = useUpdateLandingPageSettings();
+    const { mutate: addImages } = useAddImages();
+    const updateLandingPageContent = useUpdateLandingPageContent();
 
     // Use variantId from URL query params, or fall back to the loaded data's variant
     const variantId = queryVariantId || landingPageContent?._meta?.variantId;
@@ -195,49 +196,39 @@ export const AdminHomepageHeroBanner = () => {
         try {
             setIsLoading(true);
 
-            const uploadResult = await restApi.writeAssets(acceptedFiles);
-
-            if (!uploadResult.success) {
-                throw new Error("Failed to upload images to server");
-            }
+            // Upload images using the images API (which creates multiple sizes + WebP)
+            const uploadResults = await addImages({ label: "hero", files: acceptedFiles });
 
             const newBanners: any[] = [];
             const currentLength = heroBanners.length;
 
-            for (const file of acceptedFiles) {
-                const reader = new window.FileReader();
-                const base64 = await new Promise<string>((resolve) => {
-                    reader.onload = (e) => resolve(e.target?.result as string);
-                    reader.readAsDataURL(file);
-                });
+            for (let i = 0; i < uploadResults.length; i++) {
+                const result = uploadResults[i];
+                const file = acceptedFiles[i];
 
-                const img = new window.Image();
-                await new Promise<void>((resolve) => {
-                    img.onload = () => resolve();
-                    img.src = base64;
-                });
-
-                const newBanner = {
-                    id: `hero-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-                    src: `/${file.name}`,
-                    alt: file.name.replace(/\.[^/.]+$/, ""),
-                    description: "",
-                    width: img.width,
-                    height: img.height,
-                    displayOrder: currentLength + newBanners.length + 1,
-                    isActive: true,
-                };
-                newBanners.push(newBanner);
+                if (result.success && result.src) {
+                    const newBanner = {
+                        id: `hero-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                        src: `/${result.src}`, // Use the server-generated path (e.g., /images/filename-XXL.jpg)
+                        alt: file.name.replace(/\.[^/.]+$/, ""),
+                        description: "",
+                        width: 0, // Width/height will be determined by the image rendering
+                        height: 0,
+                        displayOrder: currentLength + newBanners.length + 1,
+                        isActive: true,
+                    };
+                    newBanners.push(newBanner);
+                }
             }
 
             setHeroBanners((prev) => [...prev, ...newBanners]);
-            handleApiSuccess(`Added ${acceptedFiles.length} image(s). Remember to save changes.`);
+            handleApiSuccess(`Added ${newBanners.length} image(s). Remember to save changes.`);
         } catch (error) {
             handleApiError(error, "Failed to add images");
         } finally {
             setIsLoading(false);
         }
-    }, [heroBanners.length, handleApiSuccess, handleApiError]);
+    }, [heroBanners.length, addImages, handleApiSuccess, handleApiError]);
 
     const handleDragEnd = useCallback((result: any) => {
         if (!result.destination) return;
@@ -278,13 +269,13 @@ export const AdminHomepageHeroBanner = () => {
             const queryParams = variantId ? { variantId } : undefined;
 
             // Update hero banners and settings
-            await restApi.updateLandingPageContent(
-                {
+            await updateLandingPageContent.mutate({
+                data: {
                     heroBanners,
                     heroSettings,
                 },
                 queryParams,
-            );
+            });
 
             // Update hero content, trust badges, and CTA buttons
             // Send nested structure matching LandingPageContent for type safety
@@ -317,7 +308,7 @@ export const AdminHomepageHeroBanner = () => {
         } finally {
             setIsLoading(false);
         }
-    }, [heroBanners, heroSettings, heroContent, trustBadges, ctaButtons, refetch, handleApiSuccess, handleApiError, updateSettings, variantId]);
+    }, [heroBanners, heroSettings, heroContent, trustBadges, ctaButtons, refetch, handleApiSuccess, handleApiError, updateSettings, updateLandingPageContent, variantId]);
 
     const handleCancelChanges = useCallback(() => {
         setHeroBanners(JSON.parse(JSON.stringify(originalHeroBanners)));

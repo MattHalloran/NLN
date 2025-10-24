@@ -14,6 +14,15 @@ interface ImageWithFallbackProps {
     onClick?: () => void;
     className?: string;
     component?: "img" | "div";
+    loading?: "lazy" | "eager";
+}
+
+/**
+ * Converts an image path to its WebP equivalent
+ * Example: /images/foo-L.jpg -> /images/foo-L.webp
+ */
+function toWebP(src: string): string {
+    return src.replace(/\.(jpg|jpeg|png|gif|bmp)$/i, ".webp");
 }
 
 /**
@@ -32,6 +41,7 @@ export const ImageWithFallback = ({
     onClick,
     className,
     component = "img",
+    loading = "lazy",
 }: ImageWithFallbackProps) => {
     const [hasError, setHasError] = useState(false);
     const [fallbackError, setFallbackError] = useState(false);
@@ -54,7 +64,7 @@ export const ImageWithFallback = ({
     // Show fallback icon if both primary and fallback images failed
     if ((hasError && !fallbackSrc) || fallbackError) {
         if (!showFallbackIcon) return null;
-        
+
         return (
             <Box
                 className={className}
@@ -70,52 +80,59 @@ export const ImageWithFallback = ({
                 }}
                 style={style}
             >
-                <NoImageIcon 
-                    style={{ 
-                        width: "50%", 
+                <NoImageIcon
+                    style={{
+                        width: "50%",
                         height: "50%",
                         maxWidth: "200px",
                         maxHeight: "200px",
                         opacity: 0.3,
                         fill: "#9e9e9e",
-                    }} 
+                    }}
                 />
             </Box>
         );
     }
 
     const imageSrc = hasError && fallbackSrc ? fallbackSrc : src;
+    const webpSrc = toWebP(imageSrc);
 
     if (component === "div") {
         return (
-            <CardMedia
-                component="img"
-                image={imageSrc}
-                alt={alt}
-                className={className}
-                onClick={onClick}
-                onError={handleError}
-                onLoad={handleLoad}
-                sx={sx}
-                style={style}
-            />
+            <picture>
+                <source srcSet={webpSrc} type="image/webp" />
+                <CardMedia
+                    component="img"
+                    image={imageSrc}
+                    alt={alt}
+                    className={className}
+                    onClick={onClick}
+                    onError={handleError}
+                    onLoad={handleLoad}
+                    sx={sx}
+                    style={style}
+                    loading={loading}
+                />
+            </picture>
         );
     }
 
     return (
-        <img
-            src={imageSrc}
-            alt={alt}
-            className={className}
-            onClick={onClick}
-            onError={handleError}
-            onLoad={handleLoad}
-            style={{
-                width: "100%",
-                height: "auto",
-                objectFit: "cover",
-                ...style,
-            }}
-        />
+        <picture onClick={onClick} className={className}>
+            <source srcSet={webpSrc} type="image/webp" />
+            <img
+                src={imageSrc}
+                alt={alt}
+                onError={handleError}
+                onLoad={handleLoad}
+                loading={loading}
+                style={{
+                    width: "100%",
+                    height: "auto",
+                    objectFit: "cover",
+                    ...style,
+                }}
+            />
+        </picture>
     );
 };

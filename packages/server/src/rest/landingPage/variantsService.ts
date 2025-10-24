@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync, unlinkSync } from "fs";
 import { join } from "path";
-import { logger } from "../../logger.js";
+import { logger, LogLevel } from "../../logger.js";
 import type { LandingPageContent, LandingPageVariant } from "../../types/landingPage.js";
 
 // In production, data files are in dist folder, in development they're in src
@@ -18,7 +18,7 @@ export const readVariants = (): LandingPageVariant[] => {
         const parsed = JSON.parse(data);
         return Object.values(parsed);
     } catch (error) {
-        logger.error("Error reading variants:", error);
+        logger.log(LogLevel.error, "Error reading variants:", error);
         return [];
     }
 };
@@ -37,7 +37,7 @@ export const writeVariants = (variants: LandingPageVariant[]): void => {
         writeFileSync(variantsPath, JSON.stringify(variantsObj, null, 2), "utf8");
         logger.info("Variants updated successfully");
     } catch (error) {
-        logger.error("Error writing variants:", error);
+        logger.log(LogLevel.error, "Error writing variants:", error);
         throw error;
     }
 };
@@ -51,7 +51,7 @@ export const readVariantContent = (variantId: string): LandingPageContent | null
         const data = readFileSync(join(dataPath, fileName), "utf8");
         return JSON.parse(data) as LandingPageContent;
     } catch (error) {
-        logger.error(`Error reading variant content ${variantId}:`, error);
+        logger.log(LogLevel.error, `Error reading variant content ${variantId}:`, error);
         return null;
     }
 };
@@ -73,7 +73,7 @@ export const writeVariantContent = (variantId: string, content: LandingPageConte
         writeFileSync(filePath, JSON.stringify(dataToWrite, null, 2), "utf8");
         logger.info(`Variant content ${variantId} updated successfully`);
     } catch (error) {
-        logger.error(`Error writing variant content ${variantId}:`, error);
+        logger.log(LogLevel.error, `Error writing variant content ${variantId}:`, error);
         throw error;
     }
 };
@@ -92,7 +92,7 @@ export const deleteVariantContent = (variantId: string): void => {
             logger.warn(`Could not delete ${variantFile}:`, err);
         }
     } catch (error) {
-        logger.error(`Error deleting variant content for ${variantId}:`, error);
+        logger.log(LogLevel.error, `Error deleting variant content for ${variantId}:`, error);
     }
 };
 

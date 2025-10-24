@@ -150,99 +150,104 @@ export function useUpdateContactInfo() {
 export function useUpdateLandingPageContent() {
     return useRestMutation<
         {
-            heroBanners?: Array<{
-                id: string;
-                src: string;
-                alt: string;
-                description: string;
-                width: number;
-                height: number;
-                displayOrder: number;
-                isActive: boolean;
-            }>;
-            heroSettings?: {
-                autoPlay: boolean;
-                autoPlayDelay: number;
-                showDots: boolean;
-                showArrows: boolean;
-                fadeTransition: boolean;
-            };
-            seasonalPlants?: Array<{
-                id: string;
-                name: string;
-                description: string;
-                season: string;
-                careLevel: string;
-                icon: string;
-                displayOrder: number;
-                isActive: boolean;
-            }>;
-            plantTips?: Array<{
-                id: string;
-                title: string;
-                description: string;
-                category: string;
-                season: string;
-                displayOrder: number;
-                isActive: boolean;
-            }>;
-            settings?: {
-                hero: {
-                    title: string;
-                    subtitle: string;
+            data: {
+                heroBanners?: Array<{
+                    id: string;
+                    src: string;
+                    alt: string;
                     description: string;
-                    businessHours: string;
-                    trustBadges: Array<{
-                        icon: string;
-                        text: string;
-                    }>;
-                    buttons: Array<{
-                        text: string;
-                        link: string;
-                        type: string;
-                    }>;
-                };
-                newsletter: {
-                    title: string;
-                    description: string;
-                    disclaimer: string;
+                    width: number;
+                    height: number;
+                    displayOrder: number;
                     isActive: boolean;
+                }>;
+                heroSettings?: {
+                    autoPlay: boolean;
+                    autoPlayDelay: number;
+                    showDots: boolean;
+                    showArrows: boolean;
+                    fadeTransition: boolean;
                 };
-                companyInfo: {
-                    foundedYear: number;
+                seasonalPlants?: Array<{
+                    id: string;
+                    name: string;
                     description: string;
-                };
-                colors: {
-                    light: {
-                        primary: string;
-                        secondary: string;
-                        accent: string;
-                        background: string;
-                        paper: string;
+                    season: string;
+                    careLevel: string;
+                    icon: string;
+                    displayOrder: number;
+                    isActive: boolean;
+                }>;
+                plantTips?: Array<{
+                    id: string;
+                    title: string;
+                    description: string;
+                    category: string;
+                    season: string;
+                    displayOrder: number;
+                    isActive: boolean;
+                }>;
+                settings?: {
+                    hero: {
+                        title: string;
+                        subtitle: string;
+                        description: string;
+                        businessHours: string;
+                        trustBadges: Array<{
+                            icon: string;
+                            text: string;
+                        }>;
+                        buttons: Array<{
+                            text: string;
+                            link: string;
+                            type: string;
+                        }>;
                     };
-                    dark: {
-                        primary: string;
-                        secondary: string;
-                        accent: string;
-                        background: string;
-                        paper: string;
+                    newsletter: {
+                        title: string;
+                        description: string;
+                        disclaimer: string;
+                        isActive: boolean;
+                    };
+                    companyInfo: {
+                        foundedYear: number;
+                        description: string;
+                    };
+                    colors: {
+                        light: {
+                            primary: string;
+                            secondary: string;
+                            accent: string;
+                            background: string;
+                            paper: string;
+                        };
+                        dark: {
+                            primary: string;
+                            secondary: string;
+                            accent: string;
+                            background: string;
+                            paper: string;
+                        };
+                    };
+                    features: {
+                        showSeasonalContent: boolean;
+                        showNewsletter: boolean;
+                        showSocialProof: boolean;
+                        enableAnimations: boolean;
                     };
                 };
-                features: {
-                    showSeasonalContent: boolean;
-                    showNewsletter: boolean;
-                    showSocialProof: boolean;
-                    enableAnimations: boolean;
+                contactInfo?: {
+                    business?: Record<string, unknown>;
+                    hours?: string;
                 };
             };
-            contactInfo?: {
-                business?: Record<string, unknown>;
-                hours?: string;
+            queryParams?: {
+                variantId?: string;
             };
         },
         { success: boolean; message: string; updatedSections: string[] }
     >(
-        (data) => restApi.updateLandingPageContent(data),
+        ({ data, queryParams }) => restApi.updateLandingPageContent(data, queryParams),
     );
 }
 
