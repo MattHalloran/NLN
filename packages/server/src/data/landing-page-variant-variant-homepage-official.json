@@ -1,7 +1,7 @@
 {
   "metadata": {
     "version": "2.0",
-    "lastUpdated": "2025-10-23T01:16:27.371Z"
+    "lastUpdated": "2025-10-26T17:06:35.043Z"
   },
   "content": {
     "hero": {
@@ -51,7 +51,7 @@
         "autoPlay": true,
         "autoPlayDelay": 5000,
         "showDots": true,
-        "showArrows": true,
+        "showArrows": false,
         "fadeTransition": true
       },
       "text": {

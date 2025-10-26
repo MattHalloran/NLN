@@ -215,6 +215,15 @@ const main = async () => {
         }),
     );
 
+    // CRITICAL: Authentication MUST come before CSRF protection
+    // Reason: CSRF tokens are bound to session identifiers (userId or IP)
+    // - If user is authenticated, session ID = req.customerId
+    // - If user is not authenticated, session ID = req.ip
+    // Authentication middleware sets req.customerId, so it must run FIRST
+    // to ensure consistent session identifiers during both token generation and validation
+    app.use(auth.authenticate);
+    logger.log(LogLevel.info, "🔐 Authentication middleware enabled");
+
     // Apply rate limiting to all API routes
     app.use("/api/rest", generalApiLimiter);
     logger.log(LogLevel.info, "🛡️  Rate limiting enabled: 100 requests per 15 minutes per IP");
@@ -223,9 +232,6 @@ const main = async () => {
     // This middleware automatically exempts GET, HEAD, and OPTIONS requests
     app.use("/api/rest", csrfProtection);
     logger.log(LogLevel.info, "🛡️  CSRF protection enabled for all state-changing requests");
-
-    // For authentication
-    app.use(auth.authenticate);
 
     // Set static folders
     app.use("/api", express.static(`${process.env.PROJECT_DIR}/assets/public`));
