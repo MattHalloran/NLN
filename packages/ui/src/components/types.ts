@@ -32,6 +32,12 @@ export interface ErrorBoundaryProps {
 export interface PageContainerProps {
     children?: boolean | null | undefined | JSX.Element | (boolean | null | undefined | JSX.Element)[];
     sx?: SxType;
+    /**
+     * Layout variant for the page container
+     * - 'default': Max width of 700px, suitable for single-column content
+     * - 'wide': Max width of 1400px, suitable for two-column layouts with previews
+     */
+    variant?: 'default' | 'wide';
 }
 
 export type NavbarProps = {

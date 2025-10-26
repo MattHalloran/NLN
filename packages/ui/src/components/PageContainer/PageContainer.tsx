@@ -8,16 +8,25 @@ import { PageContainerProps } from "../types";
 export const PageContainer = ({
     children,
     sx,
+    variant = 'default',
 }: PageContainerProps) => {
+    const maxWidth = variant === 'wide' ? '1400px' : '700px';
+
+    // Wide variant uses minimal padding to maximize usable space for two-column layouts
+    // Default variant uses responsive padding for centered single-column content
+    const horizontalPadding = variant === 'wide'
+        ? { xs: 1, sm: 2 }
+        : { xs: 0, sm: "max(1em, calc(15% - 75px))" };
+
     return (
         <Box id="page" sx={{
             minWidth: "100%",
             minHeight: "100%",
-            width: "min(100%, 700px)",
+            width: `min(100%, ${maxWidth})`,
             margin: "auto",
             paddingBottom: pagePaddingBottom,
-            paddingLeft: { xs: 0, sm: "max(1em, calc(15% - 75px))" },
-            paddingRight: { xs: 0, sm: "max(1em, calc(15% - 75px))" },
+            paddingLeft: horizontalPadding,
+            paddingRight: horizontalPadding,
             ...(sx ?? {}),
         }}>
             {children}

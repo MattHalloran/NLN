@@ -665,7 +665,7 @@ export const AdminContactPage = () => {
     };
 
     return (
-        <PageContainer sx={{ minHeight: "100vh" }}>
+        <PageContainer variant="wide" sx={{ minHeight: "100vh" }}>
             <TopBar
                 display="page"
                 help={helpText}

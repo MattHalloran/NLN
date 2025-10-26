@@ -515,7 +515,7 @@ export const AdminHomepageBranding = () => {
     };
 
     return (
-        <PageContainer sx={{ minHeight: "100vh", paddingBottom: 0 }}>
+        <PageContainer variant="wide" sx={{ minHeight: "100vh", paddingBottom: 0 }}>
             <TopBar
                 display="page"
                 title="Branding & Theme"

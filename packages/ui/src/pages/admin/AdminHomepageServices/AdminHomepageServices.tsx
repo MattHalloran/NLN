@@ -384,7 +384,7 @@ export const AdminHomepageServices = () => {
     };
 
     return (
-        <PageContainer sx={{ minHeight: "100vh", paddingBottom: 0 }}>
+        <PageContainer variant="wide" sx={{ minHeight: "100vh", paddingBottom: 0 }}>
             <TopBar
                 display="page"
                 title="Services Section Settings"
