@@ -7,12 +7,12 @@
     "isOfficial": true,
     "trafficAllocation": 100,
     "metrics": {
-      "views": 143,
+      "views": 145,
       "conversions": 1,
       "bounces": 13
     },
     "createdAt": "2025-01-01T00:00:00Z",
-    "updatedAt": "2025-10-26T17:06:54.534Z",
+    "updatedAt": "2025-10-26T17:57:02.154Z",
     "lastModified": "2025-10-26T17:06:35.044Z"
   }
 }
