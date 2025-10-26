@@ -523,491 +523,744 @@ export const AdminHomepageBranding = () => {
                 startComponent={<BackButton to={APP_LINKS.AdminHomepage} ariaLabel="Back to Homepage Management" />}
             />
 
-            <Box p={3}>
+            <Box p={2}>
                 <ABTestEditingBanner />
 
                 {/* Unsaved changes warning */}
                 {hasChanges && (
-                    <Alert severity="warning" sx={{ mb: 3 }}>
-                        You have unsaved changes. Don't forget to save before leaving!
+                    <Alert
+                        severity="warning"
+                        sx={{
+                            mb: 3,
+                            borderLeft: "4px solid",
+                            borderColor: "warning.main",
+                            bgcolor: "warning.lighter",
+                            "& .MuiAlert-icon": {
+                                color: "warning.main",
+                            },
+                        }}
+                    >
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                            You have unsaved changes. Don't forget to save before leaving!
+                        </Typography>
                     </Alert>
                 )}
 
-                {/* Company Information Card */}
-                <Card sx={{ mb: 3 }}>
-                    <CardContent>
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 3 }}>
-                            <Building size={24} />
-                            <Typography variant="h6">Company Information</Typography>
-                        </Box>
-
-                        <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                            <TextField
-                                fullWidth
-                                type="number"
-                                label="Founded Year"
-                                value={branding.companyInfo.foundedYear}
-                                onChange={(e) =>
-                                    setBranding({
-                                        ...branding,
-                                        companyInfo: {
-                                            ...branding.companyInfo,
-                                            foundedYear: parseInt(e.target.value) || 1981,
-                                        },
-                                    })
-                                }
-                                helperText="Year the company was founded"
-                                inputProps={{ min: 1900, max: new Date().getFullYear() }}
-                            />
-
-                            <TextField
-                                fullWidth
-                                label="Company Description"
-                                value={branding.companyInfo.description}
-                                onChange={(e) =>
-                                    setBranding({
-                                        ...branding,
-                                        companyInfo: {
-                                            ...branding.companyInfo,
-                                            description: e.target.value,
-                                        },
-                                    })
-                                }
-                                helperText="Short description of your company"
-                            />
-                        </Box>
-                    </CardContent>
-                </Card>
-
-                {/* Accessibility Summary Card - Shows issues from BOTH modes */}
-                {(lightIssues.length > 0 || darkIssues.length > 0) && (
-                    <Card sx={{ mb: 3, borderLeft: hasCriticalErrors ? "4px solid #d32f2f" : "4px solid #ed6c02" }}>
-                        <CardContent>
-                            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
-                                <AlertTriangle size={24} color={hasCriticalErrors ? "#d32f2f" : "#ed6c02"} />
-                                <Typography variant="h6">
-                                    Accessibility {hasCriticalErrors ? "Errors" : "Warnings"}
-                                </Typography>
-                            </Box>
-
-                            <Alert severity={hasCriticalErrors ? "error" : "warning"} sx={{ mb: 2 }}>
-                                {hasCriticalErrors ? (
-                                    <>
-                                        <strong>Critical:</strong> Your theme has accessibility issues that will cause Lighthouse
-                                        failures. Fix these before saving.
-                                        {lightIssues.some((i) => i.severity === "error") && darkIssues.some((i) => i.severity === "error") && (
-                                            <> Issues found in both light and dark modes.</>
-                                        )}
-                                        {lightIssues.some((i) => i.severity === "error") && !darkIssues.some((i) => i.severity === "error") && (
-                                            <> Issues found in light mode only.</>
-                                        )}
-                                        {!lightIssues.some((i) => i.severity === "error") && darkIssues.some((i) => i.severity === "error") && (
-                                            <> Issues found in dark mode only.</>
-                                        )}
-                                    </>
-                                ) : (
-                                    <>
-                                        <strong>Warning:</strong> Some color combinations may have minor accessibility issues.
-                                        Consider improving contrast for better user experience.
-                                    </>
-                                )}
-                            </Alert>
-
-                            {/* Light Mode Issues */}
-                            {lightIssues.length > 0 && (
-                                <Accordion defaultExpanded={lightIssues.some((i) => i.severity === "error")}>
-                                    <AccordionSummary expandIcon={<ChevronDown size={20} />}>
-                                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                            <Sun size={18} />
-                                            <Typography>
-                                                Light Mode: {lightIssues.length} {lightIssues.length === 1 ? "issue" : "issues"}
-                                                {lightIssues.some((i) => i.severity === "error") && (
-                                                    <Typography component="span" color="error" sx={{ ml: 1, fontWeight: 600 }}>
-                                                        ({lightIssues.filter((i) => i.severity === "error").length} critical)
-                                                    </Typography>
-                                                )}
-                                            </Typography>
-                                        </Box>
-                                    </AccordionSummary>
-                                    <AccordionDetails>
-                                        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                                            {lightIssues.map((issue, idx) => (
-                                                <Alert key={idx} severity={issue.severity} sx={{ width: "100%" }}>
-                                                    <Typography variant="body2" sx={{ mb: 1 }}>
-                                                        <strong>{issue.colorName}:</strong> {issue.description}
-                                                    </Typography>
-                                                    <Box sx={{ display: "flex", gap: 2, mt: 1, alignItems: "center" }}>
-                                                        <Box
-                                                            sx={{
-                                                                width: 40,
-                                                                height: 40,
-                                                                backgroundColor: issue.backgroundColor,
-                                                                border: "1px solid #ccc",
-                                                                borderRadius: 1,
-                                                            }}
-                                                        />
-                                                        <Typography variant="caption">on</Typography>
-                                                        <Box
-                                                            sx={{
-                                                                width: 40,
-                                                                height: 40,
-                                                                backgroundColor: issue.textColor,
-                                                                border: "1px solid #ccc",
-                                                                borderRadius: 1,
-                                                            }}
-                                                        />
-                                                        {issue.ratio !== null && (
-                                                            <Typography variant="caption">
-                                                                = {issue.ratio.toFixed(2)}:1 (need {issue.required}:1)
-                                                            </Typography>
-                                                        )}
-                                                    </Box>
-                                                </Alert>
-                                            ))}
-                                        </Box>
-                                    </AccordionDetails>
-                                </Accordion>
-                            )}
-
-                            {/* Dark Mode Issues */}
-                            {darkIssues.length > 0 && (
-                                <Accordion defaultExpanded={darkIssues.some((i) => i.severity === "error")} sx={{ mt: lightIssues.length > 0 ? 2 : 0 }}>
-                                    <AccordionSummary expandIcon={<ChevronDown size={20} />}>
-                                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                            <Moon size={18} />
-                                            <Typography>
-                                                Dark Mode: {darkIssues.length} {darkIssues.length === 1 ? "issue" : "issues"}
-                                                {darkIssues.some((i) => i.severity === "error") && (
-                                                    <Typography component="span" color="error" sx={{ ml: 1, fontWeight: 600 }}>
-                                                        ({darkIssues.filter((i) => i.severity === "error").length} critical)
-                                                    </Typography>
-                                                )}
-                                            </Typography>
-                                        </Box>
-                                    </AccordionSummary>
-                                    <AccordionDetails>
-                                        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                                            {darkIssues.map((issue, idx) => (
-                                                <Alert key={idx} severity={issue.severity} sx={{ width: "100%" }}>
-                                                    <Typography variant="body2" sx={{ mb: 1 }}>
-                                                        <strong>{issue.colorName}:</strong> {issue.description}
-                                                    </Typography>
-                                                    <Box sx={{ display: "flex", gap: 2, mt: 1, alignItems: "center" }}>
-                                                        <Box
-                                                            sx={{
-                                                                width: 40,
-                                                                height: 40,
-                                                                backgroundColor: issue.backgroundColor,
-                                                                border: "1px solid #ccc",
-                                                                borderRadius: 1,
-                                                            }}
-                                                        />
-                                                        <Typography variant="caption">on</Typography>
-                                                        <Box
-                                                            sx={{
-                                                                width: 40,
-                                                                height: 40,
-                                                                backgroundColor: issue.textColor,
-                                                                border: "1px solid #ccc",
-                                                                borderRadius: 1,
-                                                            }}
-                                                        />
-                                                        {issue.ratio !== null && (
-                                                            <Typography variant="caption">
-                                                                = {issue.ratio.toFixed(2)}:1 (need {issue.required}:1)
-                                                            </Typography>
-                                                        )}
-                                                    </Box>
-                                                </Alert>
-                                            ))}
-                                        </Box>
-                                    </AccordionDetails>
-                                </Accordion>
-                            )}
-                        </CardContent>
-                    </Card>
-                )}
-
-                {/* Theme Colors Card */}
-                <Card sx={{ mb: 3 }}>
-                    <CardContent>
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
-                            <Palette size={24} />
-                            <Typography variant="h6">Theme Colors</Typography>
-                        </Box>
-
-                        {lightIssues.length === 0 && darkIssues.length === 0 && (
-                            <Alert severity="success" sx={{ mb: 3 }}>
-                                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                    <CheckCircle size={20} />
-                                    <Typography>All colors in both light and dark modes meet WCAG accessibility standards!</Typography>
-                                </Box>
-                            </Alert>
-                        )}
-
-                        <Alert severity="info" sx={{ mb: 3 }}>
-                            Customize colors for both light and dark modes. Use hex format (e.g., #2E7D32). Colors are
-                            automatically validated for WCAG accessibility compliance.
-                        </Alert>
-
-                        {/* Theme Mode Toggle */}
-                        <Box sx={{ mb: 3 }}>
-                            <ToggleButtonGroup
-                                value={editingMode}
-                                exclusive
-                                onChange={(e, value) => value && setEditingMode(value)}
-                                fullWidth
-                            >
-                                <ToggleButton value="light">
-                                    <Sun size={18} style={{ marginRight: 8 }} />
-                                    Light Mode
-                                </ToggleButton>
-                                <ToggleButton value="dark">
-                                    <Moon size={18} style={{ marginRight: 8 }} />
-                                    Dark Mode
-                                </ToggleButton>
-                            </ToggleButtonGroup>
-                        </Box>
-
-                        <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                            {/* Primary Color */}
-                            <Box>
-                                <TextField
-                                    fullWidth
-                                    label="Primary Color"
-                                    value={currentColors.primary}
-                                    onChange={(e) => handleColorChange("primary", e.target.value)}
-                                    helperText="Main brand color (used for primary buttons, navbar, etc.)"
-                                    error={!isValidHexColor(currentColors.primary) || getColorIssues("primary").some((i) => i.severity === "error")}
-                                    InputProps={{
-                                        startAdornment: (
-                                            <InputAdornment position="start">
-                                                <input
-                                                    type="color"
-                                                    value={isValidHexColor(currentColors.primary) ? currentColors.primary : "#000000"}
-                                                    onChange={(e) => handleColorChange("primary", e.target.value)}
-                                                    style={{
-                                                        width: 40,
-                                                        height: 40,
-                                                        border: "none",
-                                                        borderRadius: 4,
-                                                        cursor: "pointer",
-                                                        marginRight: 8,
-                                                    }}
-                                                />
-                                            </InputAdornment>
-                                        ),
-                                    }}
-                                />
-                                {getColorIssues("primary").map((issue, idx) => (
-                                    <Alert key={idx} severity={issue.severity} sx={{ mt: 1 }}>
-                                        <Typography variant="caption">{issue.description}</Typography>
-                                    </Alert>
-                                ))}
-                            </Box>
-
-                            {/* Secondary Color */}
-                            <Box>
-                                <TextField
-                                    fullWidth
-                                    label="Secondary Color"
-                                    value={currentColors.secondary}
-                                    onChange={(e) => handleColorChange("secondary", e.target.value)}
-                                    helperText="Secondary brand color (used for gradients and highlights)"
-                                    error={!isValidHexColor(currentColors.secondary) || getColorIssues("secondary").some((i) => i.severity === "error")}
-                                    InputProps={{
-                                        startAdornment: (
-                                            <InputAdornment position="start">
-                                                <input
-                                                    type="color"
-                                                    value={isValidHexColor(currentColors.secondary) ? currentColors.secondary : "#000000"}
-                                                    onChange={(e) => handleColorChange("secondary", e.target.value)}
-                                                    style={{
-                                                        width: 40,
-                                                        height: 40,
-                                                        border: "none",
-                                                        borderRadius: 4,
-                                                        cursor: "pointer",
-                                                        marginRight: 8,
-                                                    }}
-                                                />
-                                            </InputAdornment>
-                                        ),
-                                    }}
-                                />
-                                {getColorIssues("secondary").map((issue, idx) => (
-                                    <Alert key={idx} severity={issue.severity} sx={{ mt: 1 }}>
-                                        <Typography variant="caption">{issue.description}</Typography>
-                                    </Alert>
-                                ))}
-                            </Box>
-
-                            {/* Accent Color */}
-                            <Box>
-                                <TextField
-                                    fullWidth
-                                    label="Accent Color"
-                                    value={currentColors.accent}
-                                    onChange={(e) => handleColorChange("accent", e.target.value)}
-                                    helperText="Accent color (used for CTAs and special highlights)"
-                                    error={!isValidHexColor(currentColors.accent) || getColorIssues("accent").some((i) => i.severity === "error")}
-                                    InputProps={{
-                                        startAdornment: (
-                                            <InputAdornment position="start">
-                                                <input
-                                                    type="color"
-                                                    value={isValidHexColor(currentColors.accent) ? currentColors.accent : "#000000"}
-                                                    onChange={(e) => handleColorChange("accent", e.target.value)}
-                                                    style={{
-                                                        width: 40,
-                                                        height: 40,
-                                                        border: "none",
-                                                        borderRadius: 4,
-                                                        cursor: "pointer",
-                                                        marginRight: 8,
-                                                    }}
-                                                />
-                                            </InputAdornment>
-                                        ),
-                                    }}
-                                />
-                                {getColorIssues("accent").map((issue, idx) => (
-                                    <Alert key={idx} severity={issue.severity} sx={{ mt: 1 }}>
-                                        <Typography variant="caption">{issue.description}</Typography>
-                                    </Alert>
-                                ))}
-                            </Box>
-
-                            {/* Background Color */}
-                            <Box>
-                                <TextField
-                                    fullWidth
-                                    label="Background Color"
-                                    value={currentColors.background}
-                                    onChange={(e) => handleColorChange("background", e.target.value)}
-                                    helperText="Main background color for pages"
-                                    error={!isValidHexColor(currentColors.background) || getColorIssues("background").some((i) => i.severity === "error")}
-                                    InputProps={{
-                                        startAdornment: (
-                                            <InputAdornment position="start">
-                                                <input
-                                                    type="color"
-                                                    value={isValidHexColor(currentColors.background) ? currentColors.background : "#000000"}
-                                                    onChange={(e) => handleColorChange("background", e.target.value)}
-                                                    style={{
-                                                        width: 40,
-                                                        height: 40,
-                                                        border: "none",
-                                                        borderRadius: 4,
-                                                        cursor: "pointer",
-                                                        marginRight: 8,
-                                                    }}
-                                                />
-                                            </InputAdornment>
-                                        ),
-                                    }}
-                                />
-                                {getColorIssues("background").map((issue, idx) => (
-                                    <Alert key={idx} severity={issue.severity} sx={{ mt: 1 }}>
-                                        <Typography variant="caption">{issue.description}</Typography>
-                                    </Alert>
-                                ))}
-                            </Box>
-
-                            {/* Paper Color */}
-                            <Box>
-                                <TextField
-                                    fullWidth
-                                    label="Paper/Card Color"
-                                    value={currentColors.paper}
-                                    onChange={(e) => handleColorChange("paper", e.target.value)}
-                                    helperText="Background color for cards and elevated surfaces"
-                                    error={!isValidHexColor(currentColors.paper) || getColorIssues("paper").some((i) => i.severity === "error")}
-                                    InputProps={{
-                                        startAdornment: (
-                                            <InputAdornment position="start">
-                                                <input
-                                                    type="color"
-                                                    value={isValidHexColor(currentColors.paper) ? currentColors.paper : "#ffffff"}
-                                                    onChange={(e) => handleColorChange("paper", e.target.value)}
-                                                    style={{
-                                                        width: 40,
-                                                        height: 40,
-                                                        border: "none",
-                                                        borderRadius: 4,
-                                                        cursor: "pointer",
-                                                        marginRight: 8,
-                                                    }}
-                                                />
-                                            </InputAdornment>
-                                        ),
-                                    }}
-                                />
-                                {getColorIssues("paper").map((issue, idx) => (
-                                    <Alert key={idx} severity={issue.severity} sx={{ mt: 1 }}>
-                                        <Typography variant="caption">{issue.description}</Typography>
-                                    </Alert>
-                                ))}
-                            </Box>
-                        </Box>
-                    </CardContent>
-                </Card>
-
-                {/* Live Preview Section */}
-                <Card sx={{ mb: 3 }}>
-                    <CardContent>
-                        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 3 }}>
-                            <Typography variant="h6">Live Preview</Typography>
-                            <ToggleButtonGroup
-                                value={previewMode}
-                                exclusive
-                                onChange={(e, value) => value && setPreviewMode(value)}
-                                size="small"
-                            >
-                                <ToggleButton value="light">
-                                    <Sun size={16} style={{ marginRight: 8 }} />
-                                    Light
-                                </ToggleButton>
-                                <ToggleButton value="dark">
-                                    <Moon size={16} style={{ marginRight: 8 }} />
-                                    Dark
-                                </ToggleButton>
-                            </ToggleButtonGroup>
-                        </Box>
-                        <RealisticPreview colors={branding.colors[previewMode]} mode={previewMode} />
-                    </CardContent>
-                </Card>
-
-                {/* Action Buttons */}
-                <Box sx={{ display: "flex", gap: 2, flexDirection: "column" }}>
-                    {hasCriticalErrors && (
-                        <Alert severity="error">
-                            <Typography variant="body2">
-                                Cannot save changes while there are critical accessibility errors. Please fix the
-                                contrast issues highlighted above.
-                            </Typography>
-                        </Alert>
-                    )}
-                    <Box sx={{ display: "flex", gap: 2 }}>
+                {/* Action Buttons at Top */}
+                {hasChanges && (
+                    <Paper
+                        elevation={0}
+                        sx={{
+                            mb: 3,
+                            p: 2,
+                            display: "flex",
+                            gap: 2,
+                            bgcolor: "grey.50",
+                            border: "1px solid",
+                            borderColor: "divider",
+                            borderRadius: 2,
+                        }}
+                    >
                         <Button
                             variant="contained"
-                            color="primary"
+                            size="large"
                             startIcon={<Save size={20} />}
                             onClick={handleSave}
                             disabled={!hasChanges || updateSettings.loading || hasCriticalErrors}
+                            sx={{
+                                px: 4,
+                                fontWeight: 600,
+                                boxShadow: 2,
+                                "&:hover": {
+                                    boxShadow: 4,
+                                },
+                            }}
                         >
                             {updateSettings.loading ? "Saving..." : "Save Changes"}
                         </Button>
                         <Button
                             variant="outlined"
+                            size="large"
                             startIcon={<RotateCcw size={20} />}
                             onClick={handleCancel}
                             disabled={!hasChanges}
+                            sx={{
+                                px: 4,
+                                fontWeight: 600,
+                                borderWidth: 2,
+                                "&:hover": {
+                                    borderWidth: 2,
+                                },
+                            }}
                         >
                             Cancel
                         </Button>
-                    </Box>
-                </Box>
+                    </Paper>
+                )}
+
+                {/* Two-column layout: Controls on left, Preview on right */}
+                <Grid container spacing={3}>
+                    {/* Left Column - Editing Controls */}
+                    <Grid item xs={12} lg={7}>
+                        <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                            {/* Preview on Mobile Only */}
+                            <Box sx={{ display: { xs: "block", lg: "none" } }}>
+                                <Paper
+                                    elevation={0}
+                                    sx={{
+                                        p: 3,
+                                        bgcolor: "background.paper",
+                                        borderRadius: 2,
+                                        border: "2px solid",
+                                        borderColor: "divider",
+                                        boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+                                    }}
+                                >
+                                    <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 3 }}>
+                                        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                                            Live Preview
+                                        </Typography>
+                                        <ToggleButtonGroup
+                                            value={previewMode}
+                                            exclusive
+                                            onChange={(e, value) => value && setPreviewMode(value)}
+                                            size="small"
+                                        >
+                                            <ToggleButton value="light">
+                                                <Sun size={16} style={{ marginRight: 8 }} />
+                                                Light
+                                            </ToggleButton>
+                                            <ToggleButton value="dark">
+                                                <Moon size={16} style={{ marginRight: 8 }} />
+                                                Dark
+                                            </ToggleButton>
+                                        </ToggleButtonGroup>
+                                    </Box>
+                                    <RealisticPreview colors={branding.colors[previewMode]} mode={previewMode} />
+                                    <Alert
+                                        severity="info"
+                                        sx={{
+                                            mt: 2,
+                                            bgcolor: "info.lighter",
+                                            border: "1px solid",
+                                            borderColor: "info.light",
+                                        }}
+                                    >
+                                        <Typography variant="caption">
+                                            This preview updates in real-time as you make changes.
+                                        </Typography>
+                                    </Alert>
+                                </Paper>
+                            </Box>
+
+                            {/* Company Information Card */}
+                            <Card
+                                sx={{
+                                    border: "1px solid",
+                                    borderColor: "divider",
+                                    borderRadius: 2,
+                                    boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+                                }}
+                            >
+                                <CardContent>
+                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 3 }}>
+                                        <Building size={24} />
+                                        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                                            Company Information
+                                        </Typography>
+                                    </Box>
+
+                                    <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                                        <TextField
+                                            fullWidth
+                                            type="number"
+                                            label="Founded Year"
+                                            value={branding.companyInfo.foundedYear}
+                                            onChange={(e) =>
+                                                setBranding({
+                                                    ...branding,
+                                                    companyInfo: {
+                                                        ...branding.companyInfo,
+                                                        foundedYear: parseInt(e.target.value) || 1981,
+                                                    },
+                                                })
+                                            }
+                                            helperText="Year the company was founded"
+                                            inputProps={{ min: 1900, max: new Date().getFullYear() }}
+                                        />
+
+                                        <TextField
+                                            fullWidth
+                                            label="Company Description"
+                                            value={branding.companyInfo.description}
+                                            onChange={(e) =>
+                                                setBranding({
+                                                    ...branding,
+                                                    companyInfo: {
+                                                        ...branding.companyInfo,
+                                                        description: e.target.value,
+                                                    },
+                                                })
+                                            }
+                                            helperText="Short description of your company"
+                                        />
+                                    </Box>
+                                </CardContent>
+                            </Card>
+
+                            {/* Accessibility Summary Card - Shows issues from BOTH modes */}
+                            {(lightIssues.length > 0 || darkIssues.length > 0) && (
+                                <Card
+                                    sx={{
+                                        borderLeft: hasCriticalErrors ? "4px solid #d32f2f" : "4px solid #ed6c02",
+                                        border: "1px solid",
+                                        borderColor: "divider",
+                                        borderRadius: 2,
+                                        boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+                                    }}
+                                >
+                                    <CardContent>
+                                        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+                                            <AlertTriangle size={24} color={hasCriticalErrors ? "#d32f2f" : "#ed6c02"} />
+                                            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                                                Accessibility {hasCriticalErrors ? "Errors" : "Warnings"}
+                                            </Typography>
+                                        </Box>
+
+                                        <Alert severity={hasCriticalErrors ? "error" : "warning"} sx={{ mb: 2 }}>
+                                            {hasCriticalErrors ? (
+                                                <>
+                                                    <strong>Critical:</strong> Your theme has accessibility issues that will cause Lighthouse
+                                                    failures. Fix these before saving.
+                                                    {lightIssues.some((i) => i.severity === "error") &&
+                                                        darkIssues.some((i) => i.severity === "error") && <> Issues found in both light and dark modes.</>}
+                                                    {lightIssues.some((i) => i.severity === "error") &&
+                                                        !darkIssues.some((i) => i.severity === "error") && <> Issues found in light mode only.</>}
+                                                    {!lightIssues.some((i) => i.severity === "error") &&
+                                                        darkIssues.some((i) => i.severity === "error") && <> Issues found in dark mode only.</>}
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <strong>Warning:</strong> Some color combinations may have minor accessibility issues.
+                                                    Consider improving contrast for better user experience.
+                                                </>
+                                            )}
+                                        </Alert>
+
+                                        {/* Light Mode Issues */}
+                                        {lightIssues.length > 0 && (
+                                            <Accordion defaultExpanded={lightIssues.some((i) => i.severity === "error")}>
+                                                <AccordionSummary expandIcon={<ChevronDown size={20} />}>
+                                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                                        <Sun size={18} />
+                                                        <Typography>
+                                                            Light Mode: {lightIssues.length} {lightIssues.length === 1 ? "issue" : "issues"}
+                                                            {lightIssues.some((i) => i.severity === "error") && (
+                                                                <Typography component="span" color="error" sx={{ ml: 1, fontWeight: 600 }}>
+                                                                    ({lightIssues.filter((i) => i.severity === "error").length} critical)
+                                                                </Typography>
+                                                            )}
+                                                        </Typography>
+                                                    </Box>
+                                                </AccordionSummary>
+                                                <AccordionDetails>
+                                                    <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                                                        {lightIssues.map((issue, idx) => (
+                                                            <Alert key={idx} severity={issue.severity} sx={{ width: "100%" }}>
+                                                                <Typography variant="body2" sx={{ mb: 1 }}>
+                                                                    <strong>{issue.colorName}:</strong> {issue.description}
+                                                                </Typography>
+                                                                <Box sx={{ display: "flex", gap: 2, mt: 1, alignItems: "center" }}>
+                                                                    <Box
+                                                                        sx={{
+                                                                            width: 40,
+                                                                            height: 40,
+                                                                            backgroundColor: issue.backgroundColor,
+                                                                            border: "1px solid #ccc",
+                                                                            borderRadius: 1,
+                                                                        }}
+                                                                    />
+                                                                    <Typography variant="caption">on</Typography>
+                                                                    <Box
+                                                                        sx={{
+                                                                            width: 40,
+                                                                            height: 40,
+                                                                            backgroundColor: issue.textColor,
+                                                                            border: "1px solid #ccc",
+                                                                            borderRadius: 1,
+                                                                        }}
+                                                                    />
+                                                                    {issue.ratio !== null && (
+                                                                        <Typography variant="caption">
+                                                                            = {issue.ratio.toFixed(2)}:1 (need {issue.required}:1)
+                                                                        </Typography>
+                                                                    )}
+                                                                </Box>
+                                                            </Alert>
+                                                        ))}
+                                                    </Box>
+                                                </AccordionDetails>
+                                            </Accordion>
+                                        )}
+
+                                        {/* Dark Mode Issues */}
+                                        {darkIssues.length > 0 && (
+                                            <Accordion
+                                                defaultExpanded={darkIssues.some((i) => i.severity === "error")}
+                                                sx={{ mt: lightIssues.length > 0 ? 2 : 0 }}
+                                            >
+                                                <AccordionSummary expandIcon={<ChevronDown size={20} />}>
+                                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                                        <Moon size={18} />
+                                                        <Typography>
+                                                            Dark Mode: {darkIssues.length} {darkIssues.length === 1 ? "issue" : "issues"}
+                                                            {darkIssues.some((i) => i.severity === "error") && (
+                                                                <Typography component="span" color="error" sx={{ ml: 1, fontWeight: 600 }}>
+                                                                    ({darkIssues.filter((i) => i.severity === "error").length} critical)
+                                                                </Typography>
+                                                            )}
+                                                        </Typography>
+                                                    </Box>
+                                                </AccordionSummary>
+                                                <AccordionDetails>
+                                                    <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                                                        {darkIssues.map((issue, idx) => (
+                                                            <Alert key={idx} severity={issue.severity} sx={{ width: "100%" }}>
+                                                                <Typography variant="body2" sx={{ mb: 1 }}>
+                                                                    <strong>{issue.colorName}:</strong> {issue.description}
+                                                                </Typography>
+                                                                <Box sx={{ display: "flex", gap: 2, mt: 1, alignItems: "center" }}>
+                                                                    <Box
+                                                                        sx={{
+                                                                            width: 40,
+                                                                            height: 40,
+                                                                            backgroundColor: issue.backgroundColor,
+                                                                            border: "1px solid #ccc",
+                                                                            borderRadius: 1,
+                                                                        }}
+                                                                    />
+                                                                    <Typography variant="caption">on</Typography>
+                                                                    <Box
+                                                                        sx={{
+                                                                            width: 40,
+                                                                            height: 40,
+                                                                            backgroundColor: issue.textColor,
+                                                                            border: "1px solid #ccc",
+                                                                            borderRadius: 1,
+                                                                        }}
+                                                                    />
+                                                                    {issue.ratio !== null && (
+                                                                        <Typography variant="caption">
+                                                                            = {issue.ratio.toFixed(2)}:1 (need {issue.required}:1)
+                                                                        </Typography>
+                                                                    )}
+                                                                </Box>
+                                                            </Alert>
+                                                        ))}
+                                                    </Box>
+                                                </AccordionDetails>
+                                            </Accordion>
+                                        )}
+                                    </CardContent>
+                                </Card>
+                            )}
+
+                            {/* Theme Colors Card */}
+                            <Card
+                                sx={{
+                                    border: "1px solid",
+                                    borderColor: "divider",
+                                    borderRadius: 2,
+                                    boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+                                }}
+                            >
+                                <CardContent>
+                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+                                        <Palette size={24} />
+                                        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                                            Theme Colors
+                                        </Typography>
+                                    </Box>
+
+                                    {lightIssues.length === 0 && darkIssues.length === 0 && (
+                                        <Alert severity="success" sx={{ mb: 3 }}>
+                                            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                                <CheckCircle size={20} />
+                                                <Typography>
+                                                    All colors in both light and dark modes meet WCAG accessibility standards!
+                                                </Typography>
+                                            </Box>
+                                        </Alert>
+                                    )}
+
+                                    <Alert severity="info" sx={{ mb: 3 }}>
+                                        Customize colors for both light and dark modes. Use hex format (e.g., #2E7D32). Colors are
+                                        automatically validated for WCAG accessibility compliance.
+                                    </Alert>
+
+                                    {/* Theme Mode Toggle */}
+                                    <Box sx={{ mb: 3 }}>
+                                        <ToggleButtonGroup
+                                            value={editingMode}
+                                            exclusive
+                                            onChange={(e, value) => value && setEditingMode(value)}
+                                            fullWidth
+                                        >
+                                            <ToggleButton value="light">
+                                                <Sun size={18} style={{ marginRight: 8 }} />
+                                                Light Mode
+                                            </ToggleButton>
+                                            <ToggleButton value="dark">
+                                                <Moon size={18} style={{ marginRight: 8 }} />
+                                                Dark Mode
+                                            </ToggleButton>
+                                        </ToggleButtonGroup>
+                                    </Box>
+
+                                    <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                                        {/* Primary Color */}
+                                        <Box>
+                                            <TextField
+                                                fullWidth
+                                                label="Primary Color"
+                                                value={currentColors.primary}
+                                                onChange={(e) => handleColorChange("primary", e.target.value)}
+                                                helperText="Main brand color (used for primary buttons, navbar, etc.)"
+                                                error={
+                                                    !isValidHexColor(currentColors.primary) ||
+                                                    getColorIssues("primary").some((i) => i.severity === "error")
+                                                }
+                                                InputProps={{
+                                                    startAdornment: (
+                                                        <InputAdornment position="start">
+                                                            <input
+                                                                type="color"
+                                                                value={
+                                                                    isValidHexColor(currentColors.primary) ? currentColors.primary : "#000000"
+                                                                }
+                                                                onChange={(e) => handleColorChange("primary", e.target.value)}
+                                                                style={{
+                                                                    width: 40,
+                                                                    height: 40,
+                                                                    border: "none",
+                                                                    borderRadius: 4,
+                                                                    cursor: "pointer",
+                                                                    marginRight: 8,
+                                                                }}
+                                                            />
+                                                        </InputAdornment>
+                                                    ),
+                                                }}
+                                            />
+                                            {getColorIssues("primary").map((issue, idx) => (
+                                                <Alert key={idx} severity={issue.severity} sx={{ mt: 1 }}>
+                                                    <Typography variant="caption">{issue.description}</Typography>
+                                                </Alert>
+                                            ))}
+                                        </Box>
+
+                                        {/* Secondary Color */}
+                                        <Box>
+                                            <TextField
+                                                fullWidth
+                                                label="Secondary Color"
+                                                value={currentColors.secondary}
+                                                onChange={(e) => handleColorChange("secondary", e.target.value)}
+                                                helperText="Secondary brand color (used for gradients and highlights)"
+                                                error={
+                                                    !isValidHexColor(currentColors.secondary) ||
+                                                    getColorIssues("secondary").some((i) => i.severity === "error")
+                                                }
+                                                InputProps={{
+                                                    startAdornment: (
+                                                        <InputAdornment position="start">
+                                                            <input
+                                                                type="color"
+                                                                value={
+                                                                    isValidHexColor(currentColors.secondary) ? currentColors.secondary : "#000000"
+                                                                }
+                                                                onChange={(e) => handleColorChange("secondary", e.target.value)}
+                                                                style={{
+                                                                    width: 40,
+                                                                    height: 40,
+                                                                    border: "none",
+                                                                    borderRadius: 4,
+                                                                    cursor: "pointer",
+                                                                    marginRight: 8,
+                                                                }}
+                                                            />
+                                                        </InputAdornment>
+                                                    ),
+                                                }}
+                                            />
+                                            {getColorIssues("secondary").map((issue, idx) => (
+                                                <Alert key={idx} severity={issue.severity} sx={{ mt: 1 }}>
+                                                    <Typography variant="caption">{issue.description}</Typography>
+                                                </Alert>
+                                            ))}
+                                        </Box>
+
+                                        {/* Accent Color */}
+                                        <Box>
+                                            <TextField
+                                                fullWidth
+                                                label="Accent Color"
+                                                value={currentColors.accent}
+                                                onChange={(e) => handleColorChange("accent", e.target.value)}
+                                                helperText="Accent color (used for CTAs and special highlights)"
+                                                error={
+                                                    !isValidHexColor(currentColors.accent) ||
+                                                    getColorIssues("accent").some((i) => i.severity === "error")
+                                                }
+                                                InputProps={{
+                                                    startAdornment: (
+                                                        <InputAdornment position="start">
+                                                            <input
+                                                                type="color"
+                                                                value={isValidHexColor(currentColors.accent) ? currentColors.accent : "#000000"}
+                                                                onChange={(e) => handleColorChange("accent", e.target.value)}
+                                                                style={{
+                                                                    width: 40,
+                                                                    height: 40,
+                                                                    border: "none",
+                                                                    borderRadius: 4,
+                                                                    cursor: "pointer",
+                                                                    marginRight: 8,
+                                                                }}
+                                                            />
+                                                        </InputAdornment>
+                                                    ),
+                                                }}
+                                            />
+                                            {getColorIssues("accent").map((issue, idx) => (
+                                                <Alert key={idx} severity={issue.severity} sx={{ mt: 1 }}>
+                                                    <Typography variant="caption">{issue.description}</Typography>
+                                                </Alert>
+                                            ))}
+                                        </Box>
+
+                                        {/* Background Color */}
+                                        <Box>
+                                            <TextField
+                                                fullWidth
+                                                label="Background Color"
+                                                value={currentColors.background}
+                                                onChange={(e) => handleColorChange("background", e.target.value)}
+                                                helperText="Main background color for pages"
+                                                error={
+                                                    !isValidHexColor(currentColors.background) ||
+                                                    getColorIssues("background").some((i) => i.severity === "error")
+                                                }
+                                                InputProps={{
+                                                    startAdornment: (
+                                                        <InputAdornment position="start">
+                                                            <input
+                                                                type="color"
+                                                                value={
+                                                                    isValidHexColor(currentColors.background) ? currentColors.background : "#000000"
+                                                                }
+                                                                onChange={(e) => handleColorChange("background", e.target.value)}
+                                                                style={{
+                                                                    width: 40,
+                                                                    height: 40,
+                                                                    border: "none",
+                                                                    borderRadius: 4,
+                                                                    cursor: "pointer",
+                                                                    marginRight: 8,
+                                                                }}
+                                                            />
+                                                        </InputAdornment>
+                                                    ),
+                                                }}
+                                            />
+                                            {getColorIssues("background").map((issue, idx) => (
+                                                <Alert key={idx} severity={issue.severity} sx={{ mt: 1 }}>
+                                                    <Typography variant="caption">{issue.description}</Typography>
+                                                </Alert>
+                                            ))}
+                                        </Box>
+
+                                        {/* Paper Color */}
+                                        <Box>
+                                            <TextField
+                                                fullWidth
+                                                label="Paper/Card Color"
+                                                value={currentColors.paper}
+                                                onChange={(e) => handleColorChange("paper", e.target.value)}
+                                                helperText="Background color for cards and elevated surfaces"
+                                                error={
+                                                    !isValidHexColor(currentColors.paper) ||
+                                                    getColorIssues("paper").some((i) => i.severity === "error")
+                                                }
+                                                InputProps={{
+                                                    startAdornment: (
+                                                        <InputAdornment position="start">
+                                                            <input
+                                                                type="color"
+                                                                value={isValidHexColor(currentColors.paper) ? currentColors.paper : "#ffffff"}
+                                                                onChange={(e) => handleColorChange("paper", e.target.value)}
+                                                                style={{
+                                                                    width: 40,
+                                                                    height: 40,
+                                                                    border: "none",
+                                                                    borderRadius: 4,
+                                                                    cursor: "pointer",
+                                                                    marginRight: 8,
+                                                                }}
+                                                            />
+                                                        </InputAdornment>
+                                                    ),
+                                                }}
+                                            />
+                                            {getColorIssues("paper").map((issue, idx) => (
+                                                <Alert key={idx} severity={issue.severity} sx={{ mt: 1 }}>
+                                                    <Typography variant="caption">{issue.description}</Typography>
+                                                </Alert>
+                                            ))}
+                                        </Box>
+                                    </Box>
+                                </CardContent>
+                            </Card>
+
+                            {/* Action Buttons at Bottom */}
+                            {hasChanges && (
+                                <Paper
+                                    elevation={0}
+                                    sx={{
+                                        p: 2,
+                                        display: "flex",
+                                        gap: 2,
+                                        flexDirection: "column",
+                                        bgcolor: "grey.50",
+                                        border: "1px solid",
+                                        borderColor: "divider",
+                                        borderRadius: 2,
+                                    }}
+                                >
+                                    {hasCriticalErrors && (
+                                        <Alert severity="error">
+                                            <Typography variant="body2">
+                                                Cannot save changes while there are critical accessibility errors. Please fix the contrast
+                                                issues highlighted above.
+                                            </Typography>
+                                        </Alert>
+                                    )}
+                                    <Box sx={{ display: "flex", gap: 2 }}>
+                                        <Button
+                                            variant="contained"
+                                            size="large"
+                                            startIcon={<Save size={20} />}
+                                            onClick={handleSave}
+                                            disabled={!hasChanges || updateSettings.loading || hasCriticalErrors}
+                                            sx={{
+                                                px: 4,
+                                                fontWeight: 600,
+                                                boxShadow: 2,
+                                                "&:hover": {
+                                                    boxShadow: 4,
+                                                },
+                                            }}
+                                        >
+                                            {updateSettings.loading ? "Saving..." : "Save Changes"}
+                                        </Button>
+                                        <Button
+                                            variant="outlined"
+                                            size="large"
+                                            startIcon={<RotateCcw size={20} />}
+                                            onClick={handleCancel}
+                                            disabled={!hasChanges}
+                                            sx={{
+                                                px: 4,
+                                                fontWeight: 600,
+                                                borderWidth: 2,
+                                                "&:hover": {
+                                                    borderWidth: 2,
+                                                },
+                                            }}
+                                        >
+                                            Cancel
+                                        </Button>
+                                    </Box>
+                                </Paper>
+                            )}
+                        </Box>
+                    </Grid>
+
+                    {/* Right Column - Live Preview (Desktop only, sticky) */}
+                    <Grid item xs={12} lg={5}>
+                        <Box sx={{ display: { xs: "none", lg: "block" } }}>
+                            <Paper
+                                elevation={0}
+                                sx={{
+                                    position: "sticky",
+                                    top: 16,
+                                    p: 3,
+                                    bgcolor: "background.paper",
+                                    borderRadius: 2,
+                                    border: "2px solid",
+                                    borderColor: "divider",
+                                    boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+                                }}
+                            >
+                                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3 }}>
+                                    <Box
+                                        sx={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            width: 36,
+                                            height: 36,
+                                            borderRadius: 1.5,
+                                            bgcolor: "primary.main",
+                                            color: "white",
+                                        }}
+                                    >
+                                        <Palette size={20} />
+                                    </Box>
+                                    <Box sx={{ flex: 1 }}>
+                                        <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                                            Live Preview
+                                        </Typography>
+                                        <Typography variant="caption" color="text.secondary">
+                                            See your changes in real-time
+                                        </Typography>
+                                    </Box>
+                                    <ToggleButtonGroup
+                                        value={previewMode}
+                                        exclusive
+                                        onChange={(e, value) => value && setPreviewMode(value)}
+                                        size="small"
+                                    >
+                                        <ToggleButton value="light">
+                                            <Sun size={16} />
+                                        </ToggleButton>
+                                        <ToggleButton value="dark">
+                                            <Moon size={16} />
+                                        </ToggleButton>
+                                    </ToggleButtonGroup>
+                                </Box>
+                                <RealisticPreview colors={branding.colors[previewMode]} mode={previewMode} />
+                                <Alert
+                                    severity="info"
+                                    sx={{
+                                        mt: 2,
+                                        bgcolor: "info.lighter",
+                                        border: "1px solid",
+                                        borderColor: "info.light",
+                                        "& .MuiAlert-icon": {
+                                            color: "info.main",
+                                        },
+                                    }}
+                                >
+                                    <Typography variant="caption">
+                                        This preview updates in real-time as you make changes. The actual theme may look slightly
+                                        different based on screen size and components.
+                                    </Typography>
+                                </Alert>
+                            </Paper>
+                        </Box>
+                    </Grid>
+                </Grid>
             </Box>
 
             {/* Snackbar for feedback */}

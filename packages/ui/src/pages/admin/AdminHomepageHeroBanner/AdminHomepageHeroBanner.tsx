@@ -657,27 +657,71 @@ export const AdminHomepageHeroBanner = () => {
 
                 {/* Unsaved changes warning */}
                 {hasChanges && (
-                    <Alert severity="warning" sx={{ mb: 3 }}>
-                        You have unsaved changes. Don't forget to save before leaving!
+                    <Alert
+                        severity="warning"
+                        sx={{
+                            mb: 3,
+                            borderLeft: "4px solid",
+                            borderColor: "warning.main",
+                            bgcolor: "warning.lighter",
+                            "& .MuiAlert-icon": {
+                                color: "warning.main",
+                            },
+                        }}
+                    >
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                            You have unsaved changes. Don't forget to save before leaving!
+                        </Typography>
                     </Alert>
                 )}
 
                 {/* Action Buttons at Top */}
                 {hasChanges && (
-                    <Box sx={{ mb: 3, display: "flex", gap: 2 }}>
+                    <Paper
+                        elevation={0}
+                        sx={{
+                            mb: 3,
+                            p: 2,
+                            display: "flex",
+                            gap: 2,
+                            bgcolor: "grey.50",
+                            border: "1px solid",
+                            borderColor: "divider",
+                            borderRadius: 2,
+                        }}
+                    >
                         <Button
                             variant="contained"
+                            size="large"
                             onClick={handleSaveAllChanges}
                             disabled={isLoading}
+                            sx={{
+                                px: 4,
+                                fontWeight: 600,
+                                boxShadow: 2,
+                                "&:hover": {
+                                    boxShadow: 4,
+                                },
+                            }}
                         >
-                            Save All Changes
+                            {isLoading ? "Saving..." : "Save All Changes"}
                         </Button>
                         <Button
+                            variant="outlined"
+                            size="large"
                             onClick={handleCancelChanges}
+                            sx={{
+                                px: 4,
+                                fontWeight: 600,
+                                borderWidth: 2,
+                                "&:hover": {
+                                    borderWidth: 2,
+                                },
+                            }}
                         >
                             Cancel
                         </Button>
-                    </Box>
+                    </Paper>
                 )}
 
                 {/* Two-column layout: Controls on left, Preview on right */}
@@ -685,28 +729,131 @@ export const AdminHomepageHeroBanner = () => {
                     {/* Left Column - Editing Controls */}
                     <Grid item xs={12} lg={7}>
                         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                            {/* Preview on Mobile Only */}
+                            <Box sx={{ display: { xs: "block", lg: "none" } }}>
+                                <Paper
+                                    elevation={0}
+                                    sx={{
+                                        p: 3,
+                                        bgcolor: "background.paper",
+                                        borderRadius: 2,
+                                        border: "2px solid",
+                                        borderColor: "divider",
+                                        boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+                                    }}
+                                >
+                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3 }}>
+                                        <Box
+                                            sx={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                width: 36,
+                                                height: 36,
+                                                borderRadius: 1.5,
+                                                bgcolor: "primary.main",
+                                                color: "white",
+                                            }}
+                                        >
+                                            <ImageIcon fontSize="small" />
+                                        </Box>
+                                        <Box>
+                                            <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                                                Live Preview
+                                            </Typography>
+                                            <Typography variant="caption" color="text.secondary">
+                                                See your changes in real-time
+                                            </Typography>
+                                        </Box>
+                                    </Box>
+                                    <HeroPreview
+                                        heroBanners={heroBanners}
+                                        heroSettings={heroSettings}
+                                        heroContent={heroContent}
+                                        trustBadges={trustBadges}
+                                        ctaButtons={ctaButtons}
+                                    />
+                                    <Alert
+                                        severity="info"
+                                        sx={{
+                                            mt: 2,
+                                            bgcolor: "info.lighter",
+                                            border: "1px solid",
+                                            borderColor: "info.light",
+                                        }}
+                                    >
+                                        <Typography variant="caption">
+                                            This preview updates in real-time as you make changes.
+                                        </Typography>
+                                    </Alert>
+                                </Paper>
+                            </Box>
 
                 {/* Accordion 1: Hero Text Content */}
-                <Accordion defaultExpanded sx={{ border: "1px solid", borderColor: "divider" }}>
+                <Accordion
+                    defaultExpanded
+                    sx={{
+                        border: "1px solid",
+                        borderColor: "divider",
+                        borderRadius: "8px !important",
+                        "&:before": { display: "none" },
+                        boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+                        mb: 2,
+                    }}
+                >
                     <AccordionSummary
                         expandIcon={<ExpandMoreIcon />}
-                        sx={{ bgcolor: "action.hover" }}
+                        sx={{
+                            bgcolor: "grey.50",
+                            borderRadius: "8px 8px 0 0",
+                            minHeight: 64,
+                            "&:hover": {
+                                bgcolor: "grey.100",
+                            },
+                            "& .MuiAccordionSummary-content": {
+                                my: 2,
+                            },
+                        }}
                     >
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                            <TextFieldsIcon color="primary" />
-                            <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                                Hero Text Content
-                            </Typography>
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                            <Box
+                                sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    width: 40,
+                                    height: 40,
+                                    borderRadius: 2,
+                                    bgcolor: "primary.main",
+                                    color: "white",
+                                }}
+                            >
+                                <TextFieldsIcon />
+                            </Box>
+                            <Box>
+                                <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                                    Hero Text Content
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                    Configure title, subtitle, and description
+                                </Typography>
+                            </Box>
                         </Box>
                     </AccordionSummary>
-                    <AccordionDetails>
-                        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                    <AccordionDetails sx={{ p: 3, bgcolor: "background.paper" }}>
+                        <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
                             <TextField
                                 fullWidth
                                 label="Title"
                                 value={heroContent.title}
                                 onChange={(e) => setHeroContent({ ...heroContent, title: e.target.value })}
                                 helperText="Main hero title"
+                                variant="outlined"
+                                sx={{
+                                    "& .MuiOutlinedInput-root": {
+                                        bgcolor: "background.paper",
+                                    },
+                                }}
                             />
                             <TextField
                                 fullWidth
@@ -714,6 +861,12 @@ export const AdminHomepageHeroBanner = () => {
                                 value={heroContent.subtitle}
                                 onChange={(e) => setHeroContent({ ...heroContent, subtitle: e.target.value })}
                                 helperText="Subtitle below the title"
+                                variant="outlined"
+                                sx={{
+                                    "& .MuiOutlinedInput-root": {
+                                        bgcolor: "background.paper",
+                                    },
+                                }}
                             />
                             <TextField
                                 fullWidth
@@ -723,6 +876,12 @@ export const AdminHomepageHeroBanner = () => {
                                 value={heroContent.description}
                                 onChange={(e) => setHeroContent({ ...heroContent, description: e.target.value })}
                                 helperText="Longer description text"
+                                variant="outlined"
+                                sx={{
+                                    "& .MuiOutlinedInput-root": {
+                                        bgcolor: "background.paper",
+                                    },
+                                }}
                             />
                             <TextField
                                 fullWidth
@@ -730,40 +889,113 @@ export const AdminHomepageHeroBanner = () => {
                                 value={heroContent.businessHours}
                                 onChange={(e) => setHeroContent({ ...heroContent, businessHours: e.target.value })}
                                 helperText="Custom business hours text for hero (used when toggle below is OFF)"
+                                variant="outlined"
+                                sx={{
+                                    "& .MuiOutlinedInput-root": {
+                                        bgcolor: "background.paper",
+                                    },
+                                }}
                             />
-                            <FormControlLabel
-                                control={
-                                    <Switch
-                                        checked={heroContent.useContactInfoHours}
-                                        onChange={(e) => setHeroContent({ ...heroContent, useContactInfoHours: e.target.checked })}
-                                    />
-                                }
-                                label="Use detailed hours from Contact Info"
-                            />
-                            <Alert severity="info" sx={{ mt: 1 }}>
-                                When enabled, displays the detailed hours from the Contact page (if available). When disabled, displays the custom text above.
-                            </Alert>
+                            <Paper
+                                elevation={0}
+                                sx={{
+                                    p: 2,
+                                    bgcolor: "grey.50",
+                                    border: "1px solid",
+                                    borderColor: "divider",
+                                    borderRadius: 1,
+                                }}
+                            >
+                                <FormControlLabel
+                                    control={
+                                        <Switch
+                                            checked={heroContent.useContactInfoHours}
+                                            onChange={(e) => setHeroContent({ ...heroContent, useContactInfoHours: e.target.checked })}
+                                        />
+                                    }
+                                    label={
+                                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                            Use detailed hours from Contact Info
+                                        </Typography>
+                                    }
+                                />
+                                <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1, ml: 4.5 }}>
+                                    When enabled, displays the detailed hours from the Contact page (if available). When disabled, displays the custom text above.
+                                </Typography>
+                            </Paper>
                         </Box>
                     </AccordionDetails>
                 </Accordion>
 
                 {/* Accordion 2: Trust Badges */}
-                <Accordion defaultExpanded sx={{ border: "1px solid", borderColor: "divider" }}>
+                <Accordion
+                    defaultExpanded
+                    sx={{
+                        border: "1px solid",
+                        borderColor: "divider",
+                        borderRadius: "8px !important",
+                        "&:before": { display: "none" },
+                        boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+                        mb: 2,
+                    }}
+                >
                     <AccordionSummary
                         expandIcon={<ExpandMoreIcon />}
-                        sx={{ bgcolor: "action.hover" }}
+                        sx={{
+                            bgcolor: "grey.50",
+                            borderRadius: "8px 8px 0 0",
+                            minHeight: 64,
+                            "&:hover": {
+                                bgcolor: "grey.100",
+                            },
+                            "& .MuiAccordionSummary-content": {
+                                my: 2,
+                            },
+                        }}
                     >
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                            <BadgeIcon color="primary" />
-                            <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                                Trust Badges
-                            </Typography>
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                            <Box
+                                sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    width: 40,
+                                    height: 40,
+                                    borderRadius: 2,
+                                    bgcolor: "secondary.main",
+                                    color: "white",
+                                }}
+                            >
+                                <BadgeIcon />
+                            </Box>
+                            <Box>
+                                <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                                    Trust Badges
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                    Add credibility indicators for your business
+                                </Typography>
+                            </Box>
                         </Box>
                     </AccordionSummary>
-                    <AccordionDetails>
-                        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                    <AccordionDetails sx={{ p: 3, bgcolor: "background.paper" }}>
+                        <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
                             {trustBadges.map((badge, index) => (
-                                <Card key={index} sx={{ p: 2 }}>
+                                <Paper
+                                    key={index}
+                                    elevation={0}
+                                    sx={{
+                                        p: 2.5,
+                                        border: "2px solid",
+                                        borderColor: "divider",
+                                        borderRadius: 2,
+                                        transition: "all 0.2s",
+                                        "&:hover": {
+                                            borderColor: "primary.light",
+                                            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                                        },
+                                    }}
+                                >
                                     <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
                                         <FormControl sx={{ minWidth: 150 }}>
                                             <InputLabel>Icon</InputLabel>
@@ -775,12 +1007,17 @@ export const AdminHomepageHeroBanner = () => {
                                                     newBadges[index].icon = e.target.value;
                                                     setTrustBadges(newBadges);
                                                 }}
+                                                sx={{
+                                                    bgcolor: "background.paper",
+                                                }}
                                             >
                                                 {Object.keys(TRUST_BADGE_ICONS).map((iconName) => (
                                                     <MenuItem key={iconName} value={iconName}>
                                                         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                                                             <IconComponent iconName={iconName} />
-                                                            {iconName}
+                                                            <Typography sx={{ textTransform: "capitalize" }}>
+                                                                {iconName}
+                                                            </Typography>
                                                         </Box>
                                                     </MenuItem>
                                                 ))}
@@ -795,19 +1032,40 @@ export const AdminHomepageHeroBanner = () => {
                                                 newBadges[index].text = e.target.value;
                                                 setTrustBadges(newBadges);
                                             }}
+                                            sx={{
+                                                "& .MuiOutlinedInput-root": {
+                                                    bgcolor: "background.paper",
+                                                },
+                                            }}
                                         />
                                         <IconButton
                                             color="error"
                                             onClick={() => setTrustBadges(trustBadges.filter((_, i) => i !== index))}
+                                            sx={{
+                                                "&:hover": {
+                                                    bgcolor: "error.lighter",
+                                                },
+                                            }}
                                         >
                                             <DeleteIcon />
                                         </IconButton>
                                     </Box>
-                                </Card>
+                                </Paper>
                             ))}
                             <Button
+                                variant="outlined"
                                 startIcon={<AddIcon />}
                                 onClick={() => setTrustBadges([...trustBadges, { icon: "users", text: "New Badge" }])}
+                                sx={{
+                                    mt: 1,
+                                    borderStyle: "dashed",
+                                    borderWidth: 2,
+                                    py: 1.5,
+                                    "&:hover": {
+                                        borderWidth: 2,
+                                        bgcolor: "action.hover",
+                                    },
+                                }}
                             >
                                 Add Trust Badge
                             </Button>
@@ -816,22 +1074,74 @@ export const AdminHomepageHeroBanner = () => {
                 </Accordion>
 
                 {/* Accordion 3: CTA Buttons */}
-                <Accordion defaultExpanded sx={{ border: "1px solid", borderColor: "divider" }}>
+                <Accordion
+                    defaultExpanded
+                    sx={{
+                        border: "1px solid",
+                        borderColor: "divider",
+                        borderRadius: "8px !important",
+                        "&:before": { display: "none" },
+                        boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+                        mb: 2,
+                    }}
+                >
                     <AccordionSummary
                         expandIcon={<ExpandMoreIcon />}
-                        sx={{ bgcolor: "action.hover" }}
+                        sx={{
+                            bgcolor: "grey.50",
+                            borderRadius: "8px 8px 0 0",
+                            minHeight: 64,
+                            "&:hover": {
+                                bgcolor: "grey.100",
+                            },
+                            "& .MuiAccordionSummary-content": {
+                                my: 2,
+                            },
+                        }}
                     >
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                            <ButtonIcon color="primary" />
-                            <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                                Call-to-Action Buttons
-                            </Typography>
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                            <Box
+                                sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    width: 40,
+                                    height: 40,
+                                    borderRadius: 2,
+                                    bgcolor: "success.main",
+                                    color: "white",
+                                }}
+                            >
+                                <ButtonIcon />
+                            </Box>
+                            <Box>
+                                <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                                    Call-to-Action Buttons
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                    Add action buttons to drive user engagement
+                                </Typography>
+                            </Box>
                         </Box>
                     </AccordionSummary>
-                    <AccordionDetails>
-                        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                    <AccordionDetails sx={{ p: 3, bgcolor: "background.paper" }}>
+                        <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
                             {ctaButtons.map((button, index) => (
-                                <Card key={index} sx={{ p: 2 }}>
+                                <Paper
+                                    key={index}
+                                    elevation={0}
+                                    sx={{
+                                        p: 2.5,
+                                        border: "2px solid",
+                                        borderColor: "divider",
+                                        borderRadius: 2,
+                                        transition: "all 0.2s",
+                                        "&:hover": {
+                                            borderColor: "success.light",
+                                            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                                        },
+                                    }}
+                                >
                                     <Box sx={{ display: "flex", gap: 2, alignItems: "center", flexWrap: "wrap" }}>
                                         <TextField
                                             label="Button Text"
@@ -841,7 +1151,13 @@ export const AdminHomepageHeroBanner = () => {
                                                 newButtons[index].text = e.target.value;
                                                 setCtaButtons(newButtons);
                                             }}
-                                            sx={{ flex: 1, minWidth: 150 }}
+                                            sx={{
+                                                flex: 1,
+                                                minWidth: 150,
+                                                "& .MuiOutlinedInput-root": {
+                                                    bgcolor: "background.paper",
+                                                },
+                                            }}
                                         />
                                         <TextField
                                             label="Link"
@@ -851,7 +1167,13 @@ export const AdminHomepageHeroBanner = () => {
                                                 newButtons[index].link = e.target.value;
                                                 setCtaButtons(newButtons);
                                             }}
-                                            sx={{ flex: 2, minWidth: 200 }}
+                                            sx={{
+                                                flex: 2,
+                                                minWidth: 200,
+                                                "& .MuiOutlinedInput-root": {
+                                                    bgcolor: "background.paper",
+                                                },
+                                            }}
                                         />
                                         <FormControl sx={{ minWidth: 120 }}>
                                             <InputLabel>Type</InputLabel>
@@ -863,6 +1185,9 @@ export const AdminHomepageHeroBanner = () => {
                                                     newButtons[index].type = e.target.value;
                                                     setCtaButtons(newButtons);
                                                 }}
+                                                sx={{
+                                                    bgcolor: "background.paper",
+                                                }}
                                             >
                                                 <MenuItem value="primary">Primary</MenuItem>
                                                 <MenuItem value="secondary">Secondary</MenuItem>
@@ -871,144 +1196,316 @@ export const AdminHomepageHeroBanner = () => {
                                         <IconButton
                                             color="error"
                                             onClick={() => setCtaButtons(ctaButtons.filter((_, i) => i !== index))}
+                                            sx={{
+                                                "&:hover": {
+                                                    bgcolor: "error.lighter",
+                                                },
+                                            }}
                                         >
                                             <DeleteIcon />
                                         </IconButton>
                                     </Box>
-                                </Card>
+                                </Paper>
                             ))}
                             {ctaButtons.length < 3 && (
                                 <Button
+                                    variant="outlined"
                                     startIcon={<AddIcon />}
                                     onClick={() => setCtaButtons([...ctaButtons, { text: "New Button", link: "/", type: "primary" }])}
+                                    sx={{
+                                        mt: 1,
+                                        borderStyle: "dashed",
+                                        borderWidth: 2,
+                                        py: 1.5,
+                                        "&:hover": {
+                                            borderWidth: 2,
+                                            bgcolor: "action.hover",
+                                        },
+                                    }}
                                 >
                                     Add CTA Button
                                 </Button>
+                            )}
+                            {ctaButtons.length >= 3 && (
+                                <Alert severity="info" sx={{ mt: 1 }}>
+                                    Maximum of 3 CTA buttons reached for optimal user experience
+                                </Alert>
                             )}
                         </Box>
                     </AccordionDetails>
                 </Accordion>
 
                 {/* Accordion 4: Carousel Behavior */}
-                <Accordion defaultExpanded sx={{ border: "1px solid", borderColor: "divider" }}>
+                <Accordion
+                    defaultExpanded
+                    sx={{
+                        border: "1px solid",
+                        borderColor: "divider",
+                        borderRadius: "8px !important",
+                        "&:before": { display: "none" },
+                        boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+                        mb: 2,
+                    }}
+                >
                     <AccordionSummary
                         expandIcon={<ExpandMoreIcon />}
-                        sx={{ bgcolor: "action.hover" }}
+                        sx={{
+                            bgcolor: "grey.50",
+                            borderRadius: "8px 8px 0 0",
+                            minHeight: 64,
+                            "&:hover": {
+                                bgcolor: "grey.100",
+                            },
+                            "& .MuiAccordionSummary-content": {
+                                my: 2,
+                            },
+                        }}
                     >
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                            <SettingsIcon color="primary" />
-                            <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                                Carousel Behavior Settings
-                            </Typography>
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                            <Box
+                                sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    width: 40,
+                                    height: 40,
+                                    borderRadius: 2,
+                                    bgcolor: "info.main",
+                                    color: "white",
+                                }}
+                            >
+                                <SettingsIcon />
+                            </Box>
+                            <Box>
+                                <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                                    Carousel Behavior Settings
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                    Configure slideshow timing and navigation
+                                </Typography>
+                            </Box>
                         </Box>
                     </AccordionSummary>
-                    <AccordionDetails>
-                        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                    <AccordionDetails sx={{ p: 3, bgcolor: "background.paper" }}>
+                        <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
                             {/* Current Settings Preview Card */}
-                            <Card sx={{ bgcolor: "primary.main", color: "white", p: 2 }}>
-                                <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
-                                    Current Carousel Configuration:
+                            <Paper
+                                elevation={0}
+                                sx={{
+                                    bgcolor: "info.lighter",
+                                    border: "2px solid",
+                                    borderColor: "info.light",
+                                    borderRadius: 2,
+                                    p: 2.5,
+                                }}
+                            >
+                                <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2, color: "info.dark" }}>
+                                    Current Configuration
                                 </Typography>
-                                <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-                                    <Typography variant="body2">
-                                        🔄 Auto-play: <strong>{heroSettings.autoPlay ? `ON (${heroSettings.autoPlayDelay / 1000}s delay)` : "OFF"}</strong>
-                                    </Typography>
-                                    <Typography variant="body2">
-                                        ⚫ Navigation Dots: <strong>{heroSettings.showDots ? "VISIBLE" : "HIDDEN"}</strong>
-                                    </Typography>
-                                    <Typography variant="body2">
-                                        ⬅➡ Navigation Arrows: <strong>{heroSettings.showArrows ? "VISIBLE" : "HIDDEN"}</strong>
-                                    </Typography>
-                                    <Typography variant="body2">
-                                        ✨ Transition Style: <strong>{heroSettings.fadeTransition ? "FADE" : "SLIDE"}</strong>
-                                    </Typography>
+                                <Grid container spacing={2}>
+                                    <Grid item xs={6}>
+                                        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+                                            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+                                                Auto-play
+                                            </Typography>
+                                            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                                {heroSettings.autoPlay ? `Enabled (${heroSettings.autoPlayDelay / 1000}s delay)` : "Disabled"}
+                                            </Typography>
+                                        </Box>
+                                    </Grid>
+                                    <Grid item xs={6}>
+                                        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+                                            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+                                                Navigation Dots
+                                            </Typography>
+                                            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                                {heroSettings.showDots ? "Visible" : "Hidden"}
+                                            </Typography>
+                                        </Box>
+                                    </Grid>
+                                    <Grid item xs={6}>
+                                        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+                                            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+                                                Navigation Arrows
+                                            </Typography>
+                                            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                                {heroSettings.showArrows ? "Visible" : "Hidden"}
+                                            </Typography>
+                                        </Box>
+                                    </Grid>
+                                    <Grid item xs={6}>
+                                        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+                                            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+                                                Transition Style
+                                            </Typography>
+                                            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                                {heroSettings.fadeTransition ? "Fade" : "Slide"}
+                                            </Typography>
+                                        </Box>
+                                    </Grid>
+                                </Grid>
+                            </Paper>
+
+                            <Paper
+                                elevation={0}
+                                sx={{
+                                    p: 2.5,
+                                    bgcolor: "grey.50",
+                                    border: "1px solid",
+                                    borderColor: "divider",
+                                    borderRadius: 2,
+                                }}
+                            >
+                                <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
+                                    <Box>
+                                        <FormControlLabel
+                                            control={
+                                                <Switch
+                                                    checked={heroSettings.autoPlay}
+                                                    onChange={(e) => setHeroSettings({ ...heroSettings, autoPlay: e.target.checked })}
+                                                />
+                                            }
+                                            label={
+                                                <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                                    Auto-play carousel
+                                                </Typography>
+                                            }
+                                        />
+                                        <Typography variant="caption" color="text.secondary" sx={{ display: "block", ml: 4.5 }}>
+                                            Automatically cycle through images without user interaction
+                                        </Typography>
+                                    </Box>
+
+                                    <TextField
+                                        fullWidth
+                                        type="number"
+                                        label="Auto-play Delay (milliseconds)"
+                                        value={heroSettings.autoPlayDelay}
+                                        onChange={(e) => setHeroSettings({ ...heroSettings, autoPlayDelay: parseInt(e.target.value) || 5000 })}
+                                        disabled={!heroSettings.autoPlay}
+                                        helperText={`Time between automatic slide changes (currently ${heroSettings.autoPlayDelay / 1000} seconds)`}
+                                        inputProps={{ min: 1000, max: 10000, step: 500 }}
+                                        sx={{
+                                            "& .MuiOutlinedInput-root": {
+                                                bgcolor: "background.paper",
+                                            },
+                                        }}
+                                    />
+
+                                    <Box>
+                                        <FormControlLabel
+                                            control={
+                                                <Switch
+                                                    checked={heroSettings.showDots}
+                                                    onChange={(e) => setHeroSettings({ ...heroSettings, showDots: e.target.checked })}
+                                                />
+                                            }
+                                            label={
+                                                <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                                    Show navigation dots
+                                                </Typography>
+                                            }
+                                        />
+                                        <Typography variant="caption" color="text.secondary" sx={{ display: "block", ml: 4.5 }}>
+                                            Display small dots at bottom indicating current slide and allowing direct navigation
+                                        </Typography>
+                                    </Box>
+
+                                    <Box>
+                                        <FormControlLabel
+                                            control={
+                                                <Switch
+                                                    checked={heroSettings.showArrows}
+                                                    onChange={(e) => setHeroSettings({ ...heroSettings, showArrows: e.target.checked })}
+                                                />
+                                            }
+                                            label={
+                                                <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                                    Show navigation arrows
+                                                </Typography>
+                                            }
+                                        />
+                                        <Typography variant="caption" color="text.secondary" sx={{ display: "block", ml: 4.5 }}>
+                                            Display left/right arrows on sides of carousel for manual navigation
+                                        </Typography>
+                                    </Box>
+
+                                    <Box>
+                                        <FormControlLabel
+                                            control={
+                                                <Switch
+                                                    checked={heroSettings.fadeTransition}
+                                                    onChange={(e) => setHeroSettings({ ...heroSettings, fadeTransition: e.target.checked })}
+                                                />
+                                            }
+                                            label={
+                                                <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                                    Use fade transition
+                                                </Typography>
+                                            }
+                                        />
+                                        <Typography variant="caption" color="text.secondary" sx={{ display: "block", ml: 4.5 }}>
+                                            Fade between images (smooth) vs. slide horizontally (dynamic)
+                                        </Typography>
+                                    </Box>
                                 </Box>
-                            </Card>
-
-                            <Alert severity="info">
-                                These settings control how hero banner images are displayed and animated. Save changes and visit the homepage to see the effect.
-                            </Alert>
-
-                            <FormControlLabel
-                                control={
-                                    <Switch
-                                        checked={heroSettings.autoPlay}
-                                        onChange={(e) => setHeroSettings({ ...heroSettings, autoPlay: e.target.checked })}
-                                    />
-                                }
-                                label="🔄 Auto-play carousel"
-                            />
-                            <Typography variant="caption" color="text.secondary" sx={{ mt: -1, ml: 4 }}>
-                                Automatically cycle through images without user interaction
-                            </Typography>
-
-                            <TextField
-                                fullWidth
-                                type="number"
-                                label="Auto-play Delay (milliseconds)"
-                                value={heroSettings.autoPlayDelay}
-                                onChange={(e) => setHeroSettings({ ...heroSettings, autoPlayDelay: parseInt(e.target.value) || 5000 })}
-                                disabled={!heroSettings.autoPlay}
-                                helperText={`Time between automatic slide changes (currently ${heroSettings.autoPlayDelay / 1000} seconds)`}
-                                inputProps={{ min: 1000, max: 10000, step: 500 }}
-                            />
-
-                            <FormControlLabel
-                                control={
-                                    <Switch
-                                        checked={heroSettings.showDots}
-                                        onChange={(e) => setHeroSettings({ ...heroSettings, showDots: e.target.checked })}
-                                    />
-                                }
-                                label="⚫ Show navigation dots"
-                            />
-                            <Typography variant="caption" color="text.secondary" sx={{ mt: -1, ml: 4 }}>
-                                Display small dots at bottom indicating current slide and allowing direct navigation
-                            </Typography>
-
-                            <FormControlLabel
-                                control={
-                                    <Switch
-                                        checked={heroSettings.showArrows}
-                                        onChange={(e) => setHeroSettings({ ...heroSettings, showArrows: e.target.checked })}
-                                    />
-                                }
-                                label="⬅➡ Show navigation arrows"
-                            />
-                            <Typography variant="caption" color="text.secondary" sx={{ mt: -1, ml: 4 }}>
-                                Display left/right arrows on sides of carousel for manual navigation
-                            </Typography>
-
-                            <FormControlLabel
-                                control={
-                                    <Switch
-                                        checked={heroSettings.fadeTransition}
-                                        onChange={(e) => setHeroSettings({ ...heroSettings, fadeTransition: e.target.checked })}
-                                    />
-                                }
-                                label="✨ Use fade transition"
-                            />
-                            <Typography variant="caption" color="text.secondary" sx={{ mt: -1, ml: 4 }}>
-                                Fade between images (smooth) vs. slide horizontally (dynamic)
-                            </Typography>
+                            </Paper>
                         </Box>
                     </AccordionDetails>
                 </Accordion>
 
                 {/* Accordion 5: Hero Banner Images */}
-                <Accordion defaultExpanded sx={{ border: "1px solid", borderColor: "divider" }}>
+                <Accordion
+                    defaultExpanded
+                    sx={{
+                        border: "1px solid",
+                        borderColor: "divider",
+                        borderRadius: "8px !important",
+                        "&:before": { display: "none" },
+                        boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+                        mb: 2,
+                    }}
+                >
                     <AccordionSummary
                         expandIcon={<ExpandMoreIcon />}
-                        sx={{ bgcolor: "action.hover" }}
+                        sx={{
+                            bgcolor: "grey.50",
+                            borderRadius: "8px 8px 0 0",
+                            minHeight: 64,
+                            "&:hover": {
+                                bgcolor: "grey.100",
+                            },
+                            "& .MuiAccordionSummary-content": {
+                                my: 2,
+                            },
+                        }}
                     >
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                            <ImageIcon color="primary" />
-                            <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                                Hero Banner Images
-                            </Typography>
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                            <Box
+                                sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    width: 40,
+                                    height: 40,
+                                    borderRadius: 2,
+                                    bgcolor: "warning.main",
+                                    color: "white",
+                                }}
+                            >
+                                <ImageIcon />
+                            </Box>
+                            <Box>
+                                <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                                    Hero Banner Images
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                    Upload and manage carousel images ({heroBanners.length} total, {heroBanners.filter(b => b.isActive).length} active)
+                                </Typography>
+                            </Box>
                         </Box>
                     </AccordionSummary>
-                    <AccordionDetails>
+                    <AccordionDetails sx={{ p: 3, bgcolor: "background.paper" }}>
                         <Box>
                             <Dropzone
                                 dropzoneText={"Drag 'n' drop new images here or click"}
@@ -1032,16 +1529,30 @@ export const AdminHomepageHeroBanner = () => {
                                                     index={index}
                                                 >
                                                     {(provided, snapshot) => (
-                                                        <Card
+                                                        <Paper
                                                             ref={provided.innerRef}
                                                             {...provided.draggableProps}
                                                             data-testid={`hero-banner-card-${index}`}
+                                                            elevation={0}
                                                             sx={{
-                                                                mb: 2,
-                                                                opacity: snapshot.isDragging ? 0.5 : 1,
-                                                                backgroundColor: snapshot.isDragging
-                                                                    ? "action.hover"
-                                                                    : "background.paper",
+                                                                mb: 2.5,
+                                                                opacity: snapshot.isDragging ? 0.7 : 1,
+                                                                border: "2px solid",
+                                                                borderColor: snapshot.isDragging
+                                                                    ? "primary.main"
+                                                                    : banner.isActive
+                                                                    ? "success.light"
+                                                                    : "divider",
+                                                                borderRadius: 2,
+                                                                overflow: "hidden",
+                                                                transition: "all 0.2s",
+                                                                boxShadow: snapshot.isDragging
+                                                                    ? "0 8px 16px rgba(0,0,0,0.15)"
+                                                                    : "0 1px 3px rgba(0,0,0,0.05)",
+                                                                "&:hover": {
+                                                                    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                                                                    borderColor: banner.isActive ? "success.main" : "primary.light",
+                                                                },
                                                             }}
                                                         >
                                                             <Box
@@ -1054,97 +1565,168 @@ export const AdminHomepageHeroBanner = () => {
                                                                     {...provided.dragHandleProps}
                                                                     sx={{
                                                                         display: "flex",
+                                                                        flexDirection: "column",
                                                                         alignItems: "center",
+                                                                        justifyContent: "center",
                                                                         px: 2,
                                                                         cursor: "grab",
-                                                                        backgroundColor: "action.hover",
+                                                                        backgroundColor: "grey.50",
+                                                                        borderRight: "1px solid",
+                                                                        borderColor: "divider",
+                                                                        "&:active": {
+                                                                            cursor: "grabbing",
+                                                                        },
                                                                     }}
                                                                 >
-                                                                    <DragIcon />
-                                                                </Box>
-
-                                                                <CardMedia
-                                                                    component="img"
-                                                                    height="200"
-                                                                    image={
-                                                                        banner.src.startsWith("http")
-                                                                            ? banner.src
-                                                                            : `${getServerUrl()}${banner.src}`
-                                                                    }
-                                                                    alt={banner.alt}
-                                                                    sx={{ width: 300, objectFit: "cover" }}
-                                                                />
-
-                                                                <Box sx={{ flex: 1, p: 2 }}>
+                                                                    <DragIcon sx={{ color: "text.secondary" }} />
                                                                     <Typography
-                                                                        variant="subtitle2"
-                                                                        gutterBottom
+                                                                        variant="caption"
+                                                                        sx={{
+                                                                            mt: 0.5,
+                                                                            fontWeight: 600,
+                                                                            color: "text.secondary",
+                                                                        }}
                                                                     >
-                                                                        Order: {banner.displayOrder}
+                                                                        #{banner.displayOrder}
                                                                     </Typography>
-                                                                    <TextField
-                                                                        label="Alt Text"
-                                                                        value={banner.alt}
-                                                                        onChange={(e) =>
-                                                                            handleFieldChange(
-                                                                                banner.id,
-                                                                                "alt",
-                                                                                e.target.value,
-                                                                            )
-                                                                        }
-                                                                        fullWidth
-                                                                        size="small"
-                                                                        sx={{ mb: 1 }}
-                                                                        data-testid={`hero-alt-input-${index}`}
-                                                                    />
-                                                                    <TextField
-                                                                        label="Description"
-                                                                        value={banner.description}
-                                                                        onChange={(e) =>
-                                                                            handleFieldChange(
-                                                                                banner.id,
-                                                                                "description",
-                                                                                e.target.value,
-                                                                            )
-                                                                        }
-                                                                        fullWidth
-                                                                        size="small"
-                                                                        multiline
-                                                                        rows={2}
-                                                                        data-testid={`hero-description-input-${index}`}
-                                                                    />
-                                                                    <FormControlLabel
-                                                                        control={
-                                                                            <Switch
-                                                                                checked={banner.isActive}
-                                                                                onChange={(e) =>
-                                                                                    handleFieldChange(
-                                                                                        banner.id,
-                                                                                        "isActive",
-                                                                                        e.target.checked,
-                                                                                    )
-                                                                                }
-                                                                                data-testid={`hero-active-switch-${index}`}
-                                                                            />
-                                                                        }
-                                                                        label="Active"
-                                                                        sx={{ mt: 1 }}
-                                                                    />
                                                                 </Box>
 
-                                                                <CardActions>
-                                                                    <IconButton
-                                                                        onClick={() =>
-                                                                            handleDeleteBanner(banner.id)
+                                                                <Box
+                                                                    sx={{
+                                                                        position: "relative",
+                                                                        width: 280,
+                                                                        height: 180,
+                                                                        flexShrink: 0,
+                                                                    }}
+                                                                >
+                                                                    <CardMedia
+                                                                        component="img"
+                                                                        image={
+                                                                            banner.src.startsWith("http")
+                                                                                ? banner.src
+                                                                                : `${getServerUrl()}${banner.src}`
                                                                         }
-                                                                        color="error"
-                                                                        data-testid={`hero-delete-button-${index}`}
-                                                                    >
-                                                                        <DeleteIcon />
-                                                                    </IconButton>
-                                                                </CardActions>
+                                                                        alt={banner.alt}
+                                                                        sx={{
+                                                                            width: "100%",
+                                                                            height: "100%",
+                                                                            objectFit: "cover",
+                                                                        }}
+                                                                    />
+                                                                    {!banner.isActive && (
+                                                                        <Box
+                                                                            sx={{
+                                                                                position: "absolute",
+                                                                                top: 0,
+                                                                                left: 0,
+                                                                                right: 0,
+                                                                                bottom: 0,
+                                                                                bgcolor: "rgba(0, 0, 0, 0.6)",
+                                                                                display: "flex",
+                                                                                alignItems: "center",
+                                                                                justifyContent: "center",
+                                                                            }}
+                                                                        >
+                                                                            <Typography
+                                                                                variant="caption"
+                                                                                sx={{
+                                                                                    color: "white",
+                                                                                    fontWeight: 600,
+                                                                                    px: 2,
+                                                                                    py: 1,
+                                                                                    bgcolor: "rgba(0, 0, 0, 0.8)",
+                                                                                    borderRadius: 1,
+                                                                                }}
+                                                                            >
+                                                                                INACTIVE
+                                                                            </Typography>
+                                                                        </Box>
+                                                                    )}
+                                                                </Box>
+
+                                                                <Box sx={{ flex: 1, p: 2.5 }}>
+                                                                    <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                                                                        <TextField
+                                                                            label="Alt Text"
+                                                                            value={banner.alt}
+                                                                            onChange={(e) =>
+                                                                                handleFieldChange(
+                                                                                    banner.id,
+                                                                                    "alt",
+                                                                                    e.target.value,
+                                                                                )
+                                                                            }
+                                                                            fullWidth
+                                                                            size="small"
+                                                                            data-testid={`hero-alt-input-${index}`}
+                                                                            sx={{
+                                                                                "& .MuiOutlinedInput-root": {
+                                                                                    bgcolor: "background.paper",
+                                                                                },
+                                                                            }}
+                                                                        />
+                                                                        <TextField
+                                                                            label="Description"
+                                                                            value={banner.description}
+                                                                            onChange={(e) =>
+                                                                                handleFieldChange(
+                                                                                    banner.id,
+                                                                                    "description",
+                                                                                    e.target.value,
+                                                                                )
+                                                                            }
+                                                                            fullWidth
+                                                                            size="small"
+                                                                            multiline
+                                                                            rows={2}
+                                                                            data-testid={`hero-description-input-${index}`}
+                                                                            sx={{
+                                                                                "& .MuiOutlinedInput-root": {
+                                                                                    bgcolor: "background.paper",
+                                                                                },
+                                                                            }}
+                                                                        />
+                                                                        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                                                                            <FormControlLabel
+                                                                                control={
+                                                                                    <Switch
+                                                                                        checked={banner.isActive}
+                                                                                        onChange={(e) =>
+                                                                                            handleFieldChange(
+                                                                                                banner.id,
+                                                                                                "isActive",
+                                                                                                e.target.checked,
+                                                                                            )
+                                                                                        }
+                                                                                        data-testid={`hero-active-switch-${index}`}
+                                                                                        color="success"
+                                                                                    />
+                                                                                }
+                                                                                label={
+                                                                                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                                                                        Active
+                                                                                    </Typography>
+                                                                                }
+                                                                            />
+                                                                            <IconButton
+                                                                                onClick={() =>
+                                                                                    handleDeleteBanner(banner.id)
+                                                                                }
+                                                                                color="error"
+                                                                                data-testid={`hero-delete-button-${index}`}
+                                                                                sx={{
+                                                                                    "&:hover": {
+                                                                                        bgcolor: "error.lighter",
+                                                                                    },
+                                                                                }}
+                                                                            >
+                                                                                <DeleteIcon />
+                                                                            </IconButton>
+                                                                        </Box>
+                                                                    </Box>
+                                                                </Box>
                                                             </Box>
-                                                        </Card>
+                                                        </Paper>
                                                     )}
                                                 </Draggable>
                                             ))}
@@ -1159,50 +1741,121 @@ export const AdminHomepageHeroBanner = () => {
 
                         {/* Action Buttons at Bottom */}
                         {hasChanges && (
-                            <Box sx={{ mt: 3, display: "flex", gap: 2 }}>
+                            <Paper
+                                elevation={0}
+                                sx={{
+                                    mt: 3,
+                                    p: 2,
+                                    display: "flex",
+                                    gap: 2,
+                                    bgcolor: "grey.50",
+                                    border: "1px solid",
+                                    borderColor: "divider",
+                                    borderRadius: 2,
+                                }}
+                            >
                                 <Button
                                     variant="contained"
+                                    size="large"
                                     onClick={handleSaveAllChanges}
                                     disabled={isLoading}
+                                    sx={{
+                                        px: 4,
+                                        fontWeight: 600,
+                                        boxShadow: 2,
+                                        "&:hover": {
+                                            boxShadow: 4,
+                                        },
+                                    }}
                                 >
-                                    Save All Changes
+                                    {isLoading ? "Saving..." : "Save All Changes"}
                                 </Button>
                                 <Button
+                                    variant="outlined"
+                                    size="large"
                                     onClick={handleCancelChanges}
+                                    sx={{
+                                        px: 4,
+                                        fontWeight: 600,
+                                        borderWidth: 2,
+                                        "&:hover": {
+                                            borderWidth: 2,
+                                        },
+                                    }}
                                 >
                                     Cancel
                                 </Button>
-                            </Box>
+                            </Paper>
                         )}
                         </Box>
                     </Grid>
 
                     {/* Right Column - Live Preview (Desktop only, sticky) */}
-                    <Grid item xs={12} lg={5} sx={{ display: { xs: "none", lg: "block" } }}>
-                        <Paper
-                            elevation={3}
-                            sx={{
-                                position: "sticky",
-                                top: 16,
-                                p: 2,
-                                bgcolor: "background.paper",
-                                borderRadius: 2,
-                            }}
-                        >
-                            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mb: 2 }}>
-                                Live Preview
-                            </Typography>
-                            <HeroPreview
-                                heroBanners={heroBanners}
-                                heroSettings={heroSettings}
-                                heroContent={heroContent}
-                                trustBadges={trustBadges}
-                                ctaButtons={ctaButtons}
-                            />
-                            <Alert severity="info" sx={{ mt: 2 }}>
-                                This preview updates in real-time as you make changes. The actual hero section may look slightly different based on screen size.
-                            </Alert>
-                        </Paper>
+                    <Grid item xs={12} lg={5}>
+                        <Box sx={{ display: { xs: "none", lg: "block" } }}>
+                            <Paper
+                                elevation={0}
+                                sx={{
+                                    position: "sticky",
+                                    top: 16,
+                                    p: 3,
+                                    bgcolor: "background.paper",
+                                    borderRadius: 2,
+                                    border: "2px solid",
+                                    borderColor: "divider",
+                                    boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+                                }}
+                            >
+                                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3 }}>
+                                    <Box
+                                        sx={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            width: 36,
+                                            height: 36,
+                                            borderRadius: 1.5,
+                                            bgcolor: "primary.main",
+                                            color: "white",
+                                        }}
+                                    >
+                                        <ImageIcon fontSize="small" />
+                                    </Box>
+                                    <Box>
+                                        <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                                            Live Preview
+                                        </Typography>
+                                        <Typography variant="caption" color="text.secondary">
+                                            See your changes in real-time
+                                        </Typography>
+                                    </Box>
+                                </Box>
+                                <HeroPreview
+                                    heroBanners={heroBanners}
+                                    heroSettings={heroSettings}
+                                    heroContent={heroContent}
+                                    trustBadges={trustBadges}
+                                    ctaButtons={ctaButtons}
+                                />
+                                <Alert
+                                    severity="info"
+                                    sx={{
+                                        mt: 2,
+                                        bgcolor: "info.lighter",
+                                        border: "1px solid",
+                                        borderColor: "info.light",
+                                        "& .MuiAlert-icon": {
+                                            color: "info.main",
+                                        },
+                                    }}
+                                >
+                                    <Typography variant="caption">
+                                        This preview updates in real-time as you make changes. The actual hero section may look slightly
+                                        different based on screen size.
+                                    </Typography>
+                                </Alert>
+                            </Paper>
+                        </Box>
                     </Grid>
                 </Grid>
             </Box>

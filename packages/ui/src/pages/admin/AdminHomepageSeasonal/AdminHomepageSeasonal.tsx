@@ -4,42 +4,48 @@ import {
     Button,
     Card,
     CardContent,
+    Chip,
+    Container,
     Grid,
+    IconButton,
+    Paper,
+    Stack,
+    TextField,
     Typography,
     useTheme,
-    IconButton,
-    Stack,
-    Chip,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogTitle,
-    TextField,
-    ToggleButton,
+    Accordion,
+    AccordionSummary,
+    AccordionDetails,
+    Alert,
+    FormControlLabel,
+    Switch,
     ToggleButtonGroup,
-    Tab,
-    Tabs,
-    Paper,
+    ToggleButton,
+    Select,
+    MenuItem,
+    FormControl,
+    InputLabel,
 } from "@mui/material";
+import { useLandingPage } from "hooks/useLandingPage";
+import { useUpdateLandingPageContent } from "api/rest/hooks";
+import { BackButton, PageContainer, TopBar } from "components";
 import {
     Flower,
     Leaf,
     Lightbulb,
     Plus,
-    Settings,
     Snowflake,
     Sprout,
     Star,
-    Edit3,
     Trash2,
+    Save,
+    RotateCcw,
+    Leaf as LeafIcon,
+    ChevronDown,
 } from "lucide-react";
-import { useLandingPage } from "hooks/useLandingPage";
-import { restApi } from "api/rest/client";
-import { BackButton, PageContainer } from "components";
-import { TopBar } from "components/navigation/TopBar/TopBar";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { PubSub } from "utils/pubsub";
 import { SnackSeverity } from "components/dialogs/Snack/Snack";
-import { useCallback, useState } from "react";
 
 interface SeasonalPlant {
     id: string;
@@ -76,16 +82,241 @@ const getIconComponent = (iconName: string) => {
     return option ? option.icon : Leaf;
 };
 
+// Preview Component - Shows how the seasonal section looks on the homepage
+const SeasonalPreview = ({ plants, tips }: { plants: SeasonalPlant[]; tips: PlantTip[] }) => {
+    const { palette } = useTheme();
+    const [currentPlant, setCurrentPlant] = useState(0);
+    const [selectedCategory, setSelectedCategory] = useState(0);
+
+    const activePlants = plants.filter((p) => p.isActive);
+    const activeTips = tips.filter((t) => t.isActive);
+    const tipCategories = ["All", ...Array.from(new Set(activeTips.map((tip) => tip.category)))];
+    const filteredTips =
+        selectedCategory === 0 ? activeTips : activeTips.filter((tip) => tip.category === tipCategories[selectedCategory]);
+
+    const safeCurrentPlant = useMemo(() => {
+        if (activePlants.length === 0) return 0;
+        if (currentPlant >= activePlants.length) return 0;
+        return currentPlant;
+    }, [currentPlant, activePlants.length]);
+
+    const getCareColor = (level: string) => {
+        switch (level) {
+            case "Easy":
+                return palette.success.main;
+            case "Medium":
+                return palette.warning.main;
+            case "Advanced":
+                return palette.error.main;
+            default:
+                return palette.grey[500];
+        }
+    };
+
+    return (
+        <Box
+            sx={{
+                borderRadius: 2,
+                border: "2px solid",
+                borderColor: "divider",
+                overflow: "hidden",
+                bgcolor: palette.grey[50],
+            }}
+        >
+            {/* Header */}
+            <Box sx={{ textAlign: "center", p: 3, bgcolor: "background.paper" }}>
+                <Typography
+                    variant="h6"
+                    sx={{
+                        fontWeight: 700,
+                        color: palette.primary.main,
+                        mb: 0.5,
+                    }}
+                >
+                    Seasonal Highlights & Expert Tips
+                </Typography>
+                <Typography variant="caption" sx={{ color: palette.text.secondary }}>
+                    Discover what's blooming now and get expert care advice
+                </Typography>
+            </Box>
+
+            <Box sx={{ p: 2 }}>
+                <Grid container spacing={2}>
+                    {/* Seasonal Plants Carousel */}
+                    <Grid item xs={12} md={6}>
+                        <Box>
+                            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
+                                <Leaf size={18} color={palette.primary.main} />
+                                <Typography variant="subtitle2" sx={{ fontWeight: 600, color: palette.primary.main }}>
+                                    What's Blooming Now
+                                </Typography>
+                            </Box>
+
+                            {activePlants.length > 0 ? (
+                                <Card sx={{ borderRadius: 2, boxShadow: 2 }}>
+                                    <Box
+                                        sx={{
+                                            minHeight: "200px",
+                                            background: `linear-gradient(135deg, ${palette.primary.light} 0%, ${palette.secondary.light} 100%)`,
+                                            position: "relative",
+                                            p: 3,
+                                            color: "white",
+                                            textAlign: "center",
+                                        }}
+                                    >
+                                        <Box sx={{ mb: 1.5, display: "flex", justifyContent: "center" }}>
+                                            {(() => {
+                                                const IconComponent = getIconComponent(activePlants[safeCurrentPlant]?.icon || "leaf");
+                                                return <IconComponent size={48} />;
+                                            })()}
+                                        </Box>
+
+                                        <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, textShadow: "1px 1px 2px rgba(0,0,0,0.3)" }}>
+                                            {activePlants[safeCurrentPlant]?.name || "Loading..."}
+                                        </Typography>
+
+                                        <Box sx={{ display: "flex", justifyContent: "center", gap: 0.5, mb: 1.5 }}>
+                                            <Chip label={activePlants[safeCurrentPlant]?.season || "Season"} color="secondary" size="small" />
+                                            <Chip
+                                                label={activePlants[safeCurrentPlant]?.careLevel || "Easy"}
+                                                sx={{
+                                                    backgroundColor: getCareColor(activePlants[safeCurrentPlant]?.careLevel || "Easy"),
+                                                    color: "white",
+                                                }}
+                                                size="small"
+                                            />
+                                        </Box>
+
+                                        <Typography
+                                            variant="caption"
+                                            sx={{
+                                                opacity: 0.9,
+                                                textShadow: "1px 1px 2px rgba(0,0,0,0.3)",
+                                                display: "block",
+                                            }}
+                                        >
+                                            {activePlants[safeCurrentPlant]?.description || "Loading..."}
+                                        </Typography>
+                                    </Box>
+
+                                    {/* Navigation Dots */}
+                                    <Box sx={{ display: "flex", justifyContent: "center", gap: 0.5, p: 1.5, backgroundColor: "white" }}>
+                                        {activePlants.map((_, index) => (
+                                            <Box
+                                                key={index}
+                                                onClick={() => setCurrentPlant(index)}
+                                                sx={{
+                                                    width: 8,
+                                                    height: 8,
+                                                    borderRadius: "50%",
+                                                    backgroundColor: index === safeCurrentPlant ? palette.primary.main : palette.grey[300],
+                                                    cursor: "pointer",
+                                                    transition: "all 0.2s",
+                                                }}
+                                            />
+                                        ))}
+                                    </Box>
+                                </Card>
+                            ) : (
+                                <Paper sx={{ p: 3, textAlign: "center", bgcolor: "grey.100" }}>
+                                    <Typography variant="caption" color="text.secondary">
+                                        Add plants to see preview
+                                    </Typography>
+                                </Paper>
+                            )}
+                        </Box>
+                    </Grid>
+
+                    {/* Plant Care Tips */}
+                    <Grid item xs={12} md={6}>
+                        <Box>
+                            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
+                                <Lightbulb size={18} color={palette.primary.main} />
+                                <Typography variant="subtitle2" sx={{ fontWeight: 600, color: palette.primary.main }}>
+                                    Expert Plant Care Tips
+                                </Typography>
+                            </Box>
+
+                            {activeTips.length > 0 ? (
+                                <Box>
+                                    {/* Category Tabs */}
+                                    <Box sx={{ mb: 1.5, display: "flex", gap: 0.5, flexWrap: "wrap" }}>
+                                        {tipCategories.slice(0, 3).map((category, index) => (
+                                            <Chip
+                                                key={index}
+                                                label={category}
+                                                size="small"
+                                                onClick={() => setSelectedCategory(index)}
+                                                color={selectedCategory === index ? "primary" : "default"}
+                                                sx={{ cursor: "pointer", fontSize: "0.7rem" }}
+                                            />
+                                        ))}
+                                    </Box>
+
+                                    {/* Tips List */}
+                                    <Box sx={{ maxHeight: "200px", overflowY: "auto" }}>
+                                        {filteredTips.slice(0, 2).map((tip, index) => (
+                                            <Card key={index} sx={{ mb: 1, borderRadius: 1 }}>
+                                                <CardContent sx={{ p: 1.5, "&:last-child": { pb: 1.5 } }}>
+                                                    <Typography variant="caption" sx={{ fontWeight: 600, color: palette.primary.main, display: "block", mb: 0.5 }}>
+                                                        {tip.title}
+                                                    </Typography>
+                                                    <Typography variant="caption" sx={{ color: palette.text.secondary, fontSize: "0.65rem", display: "block" }}>
+                                                        {tip.description.substring(0, 80)}
+                                                        {tip.description.length > 80 ? "..." : ""}
+                                                    </Typography>
+                                                </CardContent>
+                                            </Card>
+                                        ))}
+                                    </Box>
+                                </Box>
+                            ) : (
+                                <Paper sx={{ p: 3, textAlign: "center", bgcolor: "grey.100" }}>
+                                    <Typography variant="caption" color="text.secondary">
+                                        Add tips to see preview
+                                    </Typography>
+                                </Paper>
+                            )}
+                        </Box>
+                    </Grid>
+                </Grid>
+            </Box>
+        </Box>
+    );
+};
+
 export const AdminHomepageSeasonal = () => {
     const { palette } = useTheme();
-    const [selectedTab, setSelectedTab] = useState(0);
+    const { data, refetch } = useLandingPage();
+    const updateLandingPageContent = useUpdateLandingPageContent();
+
+    const [plants, setPlants] = useState<SeasonalPlant[]>([]);
+    const [originalPlants, setOriginalPlants] = useState<SeasonalPlant[]>([]);
+    const [tips, setTips] = useState<PlantTip[]>([]);
+    const [originalTips, setOriginalTips] = useState<PlantTip[]>([]);
     const [editingPlant, setEditingPlant] = useState<SeasonalPlant | null>(null);
     const [editingTip, setEditingTip] = useState<PlantTip | null>(null);
-    const [plantDialogOpen, setPlantDialogOpen] = useState(false);
-    const [tipDialogOpen, setTipDialogOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
-    const { data: seasonalData, refetch } = useLandingPage();
+    // Load data from API
+    useEffect(() => {
+        if (data?.content?.seasonal) {
+            const loadedPlants = data.content.seasonal.plants || [];
+            const loadedTips = data.content.seasonal.tips || [];
+
+            setPlants(JSON.parse(JSON.stringify(loadedPlants)));
+            setOriginalPlants(JSON.parse(JSON.stringify(loadedPlants)));
+            setTips(JSON.parse(JSON.stringify(loadedTips)));
+            setOriginalTips(JSON.parse(JSON.stringify(loadedTips)));
+        }
+    }, [data]);
+
+    // Check for unsaved changes
+    const hasChanges = useMemo(() => {
+        const plantsChanged = JSON.stringify(plants) !== JSON.stringify(originalPlants);
+        const tipsChanged = JSON.stringify(tips) !== JSON.stringify(originalTips);
+        return plantsChanged || tipsChanged;
+    }, [plants, originalPlants, tips, originalTips]);
 
     const handleApiError = useCallback((error: any, defaultMessage: string) => {
         const message = error?.message || defaultMessage;
@@ -96,657 +327,738 @@ export const AdminHomepageSeasonal = () => {
         PubSub.get().publishSnack({ message, severity: SnackSeverity.Success });
     }, []);
 
-    const handlePlantEdit = (plant?: SeasonalPlant) => {
-        setEditingPlant(
-            plant || {
-                id: "",
-                name: "",
-                description: "",
-                season: "Spring",
-                careLevel: "Easy",
-                icon: "leaf",
-                displayOrder: seasonalData?.content?.seasonal?.plants?.length || 0,
-                isActive: true,
-            },
-        );
-        setPlantDialogOpen(true);
+    const handleSaveAll = async () => {
+        try {
+            setIsLoading(true);
+            await updateLandingPageContent.mutate({
+                data: {
+                    seasonalPlants: plants,
+                    plantTips: tips,
+                },
+            });
+            await refetch();
+            setOriginalPlants(JSON.parse(JSON.stringify(plants)));
+            setOriginalTips(JSON.parse(JSON.stringify(tips)));
+            handleApiSuccess("Seasonal content saved successfully!");
+        } catch (error) {
+            handleApiError(error, "Failed to save seasonal content");
+        } finally {
+            setIsLoading(false);
+        }
     };
 
-    const handleTipEdit = (tip?: PlantTip) => {
-        setEditingTip(
-            tip || {
-                id: "",
-                title: "",
-                description: "",
-                category: "General",
-                season: "Year-round",
-                displayOrder: seasonalData?.content?.seasonal?.tips?.length || 0,
-                isActive: true,
-            },
-        );
-        setTipDialogOpen(true);
+    const handleCancel = () => {
+        setPlants(JSON.parse(JSON.stringify(originalPlants)));
+        setTips(JSON.parse(JSON.stringify(originalTips)));
+        setEditingPlant(null);
+        setEditingTip(null);
     };
 
-    const handlePlantSave = async () => {
+    const handleAddPlant = () => {
+        const newPlant: SeasonalPlant = {
+            id: `plant-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            name: "",
+            description: "",
+            season: "Spring",
+            careLevel: "Easy",
+            icon: "leaf",
+            displayOrder: plants.length + 1,
+            isActive: true,
+        };
+        setPlants([...plants, newPlant]);
+        setEditingPlant(newPlant);
+    };
+
+    const handleAddTip = () => {
+        const newTip: PlantTip = {
+            id: `tip-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            title: "",
+            description: "",
+            category: "General",
+            season: "Year-round",
+            displayOrder: tips.length + 1,
+            isActive: true,
+        };
+        setTips([...tips, newTip]);
+        setEditingTip(newTip);
+    };
+
+    const handleDeletePlant = (id: string) => {
+        if (window.confirm("Delete this plant?")) {
+            setPlants(plants.filter((p) => p.id !== id));
+            if (editingPlant?.id === id) setEditingPlant(null);
+        }
+    };
+
+    const handleDeleteTip = (id: string) => {
+        if (window.confirm("Delete this tip?")) {
+            setTips(tips.filter((t) => t.id !== id));
+            if (editingTip?.id === id) setEditingTip(null);
+        }
+    };
+
+    const handlePlantFieldChange = (field: keyof SeasonalPlant, value: any) => {
         if (!editingPlant) return;
-
-        try {
-            setIsLoading(true);
-            const currentPlants = seasonalData?.content?.seasonal?.plants || [];
-            let updatedPlants;
-
-            if (editingPlant.id) {
-                // Update existing plant
-                updatedPlants = currentPlants.map((plant: SeasonalPlant) =>
-                    plant.id === editingPlant.id ? editingPlant : plant,
-                );
-            } else {
-                // Add new plant with generated ID
-                const newPlant = {
-                    ...editingPlant,
-                    id: `plant-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-                };
-                updatedPlants = [...currentPlants, newPlant];
-            }
-
-            const response = await restApi.updateLandingPageContent({
-                seasonalPlants: updatedPlants,
-            });
-            if (response.success) {
-                // Refetch data FIRST to ensure UI is updated
-                await refetch();
-                // THEN show success and close dialog
-                handleApiSuccess("Plant saved successfully!");
-                setPlantDialogOpen(false);
-                setEditingPlant(null);
-            } else {
-                throw new Error("Failed to save");
-            }
-        } catch (error) {
-            handleApiError(error, "Failed to save plant");
-        } finally {
-            setIsLoading(false);
-        }
+        const updatedPlant = { ...editingPlant, [field]: value };
+        setEditingPlant(updatedPlant);
+        setPlants(plants.map((p) => (p.id === updatedPlant.id ? updatedPlant : p)));
     };
 
-    const handleTipSave = async () => {
+    const handleTipFieldChange = (field: keyof PlantTip, value: any) => {
         if (!editingTip) return;
-
-        try {
-            setIsLoading(true);
-            const currentTips = seasonalData?.content?.seasonal?.tips || [];
-            let updatedTips;
-
-            if (editingTip.id) {
-                // Update existing tip
-                updatedTips = currentTips.map((tip: PlantTip) =>
-                    tip.id === editingTip.id ? editingTip : tip,
-                );
-            } else {
-                // Add new tip with generated ID
-                const newTip = {
-                    ...editingTip,
-                    id: `tip-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-                };
-                updatedTips = [...currentTips, newTip];
-            }
-
-            const response = await restApi.updateLandingPageContent({ plantTips: updatedTips });
-            if (response.success) {
-                // Refetch data FIRST to ensure UI is updated
-                await refetch();
-                // THEN show success and close dialog
-                handleApiSuccess("Tip saved successfully!");
-                setTipDialogOpen(false);
-                setEditingTip(null);
-            } else {
-                throw new Error("Failed to save");
-            }
-        } catch (error) {
-            handleApiError(error, "Failed to save tip");
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const plants = seasonalData?.content?.seasonal?.plants || [];
-    const tips = seasonalData?.content?.seasonal?.tips || [];
-    const activePlants = plants.filter((p: SeasonalPlant) => p.isActive).length;
-    const activeTips = tips.filter((t: PlantTip) => t.isActive).length;
-
-    const handlePlantDelete = async (plant: SeasonalPlant) => {
-        if (!window.confirm(`Delete ${plant.name}?`)) return;
-
-        try {
-            const updatedPlants = plants.filter((p: SeasonalPlant) => p.id !== plant.id);
-            const response = await restApi.updateLandingPageContent({
-                seasonalPlants: updatedPlants,
-            });
-            if (response.success) {
-                // Refetch data FIRST to ensure UI is updated
-                await refetch();
-                // THEN show success message
-                handleApiSuccess("Plant deleted successfully!");
-            } else {
-                throw new Error("Failed to delete");
-            }
-        } catch (error) {
-            handleApiError(error, "Failed to delete plant");
-        }
-    };
-
-    const handleTipDelete = async (tip: PlantTip) => {
-        if (!window.confirm(`Delete ${tip.title}?`)) return;
-
-        try {
-            const updatedTips = tips.filter((t: PlantTip) => t.id !== tip.id);
-            const response = await restApi.updateLandingPageContent({ plantTips: updatedTips });
-            if (response.success) {
-                // Refetch data FIRST to ensure UI is updated
-                await refetch();
-                // THEN show success message
-                handleApiSuccess("Tip deleted successfully!");
-            } else {
-                throw new Error("Failed to delete");
-            }
-        } catch (error) {
-            handleApiError(error, "Failed to delete tip");
-        }
+        const updatedTip = { ...editingTip, [field]: value };
+        setEditingTip(updatedTip);
+        setTips(tips.map((t) => (t.id === updatedTip.id ? updatedTip : t)));
     };
 
     return (
         <PageContainer sx={{ minHeight: "100vh", paddingBottom: 0 }}>
             <TopBar
                 display="page"
-                title="Seasonal Content"
-                help="Update seasonal plants and expert care tips displayed on the homepage"
+                title="Seasonal Content Management"
+                help="Manage seasonal plants and expert tips displayed on the home page"
                 startComponent={<BackButton to={APP_LINKS.AdminHomepage} ariaLabel="Back to Homepage Management" />}
             />
 
             <Box p={2}>
-                {/* Statistics */}
-                <Grid container spacing={3} sx={{ mb: 4 }}>
-                    <Grid item xs={12} sm={4}>
-                        <Card>
-                            <CardContent sx={{ textAlign: "center" }}>
-                                <Leaf size={32} color={palette.primary.main} />
-                                <Typography variant="h5" sx={{ mt: 1 }}>
-                                    {activePlants}
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary">
-                                    Active Plants
-                                </Typography>
-                            </CardContent>
-                        </Card>
-                    </Grid>
-                    <Grid item xs={12} sm={4}>
-                        <Card>
-                            <CardContent sx={{ textAlign: "center" }}>
-                                <Lightbulb size={32} color={palette.secondary.main} />
-                                <Typography variant="h5" sx={{ mt: 1 }}>
-                                    {activeTips}
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary">
-                                    Active Tips
-                                </Typography>
-                            </CardContent>
-                        </Card>
-                    </Grid>
-                    <Grid item xs={12} sm={4}>
-                        <Card>
-                            <CardContent sx={{ textAlign: "center" }}>
-                                <Settings size={32} color={palette.info.main} />
-                                <Typography variant="h5" sx={{ mt: 1 }}>
-                                    {plants.length + tips.length}
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary">
-                                    Total Items
-                                </Typography>
-                            </CardContent>
-                        </Card>
-                    </Grid>
-                </Grid>
-
-                {/* Sub-tabs */}
-                <Paper sx={{ mb: 4 }}>
-                    <Tabs
-                        value={selectedTab}
-                        onChange={(_, v) => setSelectedTab(v)}
+                {/* Unsaved changes warning */}
+                {hasChanges && (
+                    <Alert
+                        severity="warning"
+                        sx={{
+                            mb: 3,
+                            borderLeft: "4px solid",
+                            borderColor: "warning.main",
+                            bgcolor: "warning.lighter",
+                        }}
                     >
-                        <Tab label="Seasonal Plants" />
-                        <Tab label="Plant Care Tips" />
-                    </Tabs>
-                </Paper>
-
-                {/* Seasonal Plants */}
-                {selectedTab === 0 && (
-                    <Box>
-                        <Box sx={{ mb: 3, display: "flex", justifyContent: "space-between" }}>
-                            <Typography variant="h5">Seasonal Plants</Typography>
-                            <Button
-                                variant="contained"
-                                startIcon={<Plus size={20} />}
-                                onClick={() => handlePlantEdit()}
-                                data-testid="add-plant-button"
-                            >
-                                Add Plant
-                            </Button>
-                        </Box>
-
-                        <Grid container spacing={3}>
-                            {plants.map((plant: SeasonalPlant, index: number) => {
-                                const IconComponent = getIconComponent(plant.icon);
-                                return (
-                                    <Grid item xs={12} sm={6} md={4} key={plant.id}>
-                                        <Card
-                                            sx={{ height: "100%" }}
-                                            data-testid={`plant-card-${index}`}
-                                        >
-                                            <CardContent>
-                                                <Box
-                                                    sx={{
-                                                        display: "flex",
-                                                        justifyContent: "space-between",
-                                                        mb: 2,
-                                                    }}
-                                                >
-                                                    <IconComponent
-                                                        size={32}
-                                                        color={palette.primary.main}
-                                                    />
-                                                    <Stack direction="row" spacing={1}>
-                                                        <IconButton
-                                                            size="small"
-                                                            onClick={() =>
-                                                                handlePlantEdit(plant)
-                                                            }
-                                                            data-testid={`edit-plant-${index}`}
-                                                        >
-                                                            <Edit3 size={18} />
-                                                        </IconButton>
-                                                        <IconButton
-                                                            size="small"
-                                                            onClick={() =>
-                                                                handlePlantDelete(plant)
-                                                            }
-                                                            data-testid={`delete-plant-${index}`}
-                                                        >
-                                                            <Trash2 size={18} />
-                                                        </IconButton>
-                                                    </Stack>
-                                                </Box>
-                                                <Typography variant="h6" sx={{ mb: 1 }}>
-                                                    {plant.name}
-                                                </Typography>
-                                                <Typography
-                                                    variant="body2"
-                                                    color="text.secondary"
-                                                    sx={{ mb: 2 }}
-                                                >
-                                                    {plant.description}
-                                                </Typography>
-                                                <Stack
-                                                    direction="row"
-                                                    spacing={1}
-                                                    flexWrap="wrap"
-                                                >
-                                                    <Chip
-                                                        label={plant.season}
-                                                        size="small"
-                                                        color="primary"
-                                                    />
-                                                    <Chip
-                                                        label={plant.careLevel}
-                                                        size="small"
-                                                    />
-                                                    <Chip
-                                                        label={
-                                                            plant.isActive
-                                                                ? "Active"
-                                                                : "Inactive"
-                                                        }
-                                                        size="small"
-                                                        color={
-                                                            plant.isActive
-                                                                ? "success"
-                                                                : "default"
-                                                        }
-                                                    />
-                                                </Stack>
-                                            </CardContent>
-                                        </Card>
-                                    </Grid>
-                                );
-                            })}
-                        </Grid>
-                    </Box>
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                            You have unsaved changes. Don't forget to save before leaving!
+                        </Typography>
+                    </Alert>
                 )}
 
-                {/* Plant Care Tips */}
-                {selectedTab === 1 && (
-                    <Box>
-                        <Box sx={{ mb: 3, display: "flex", justifyContent: "space-between" }}>
-                            <Typography variant="h5">Plant Care Tips</Typography>
-                            <Button
-                                variant="contained"
-                                startIcon={<Plus size={20} />}
-                                onClick={() => handleTipEdit()}
-                                data-testid="add-tip-button"
-                            >
-                                Add Tip
-                            </Button>
-                        </Box>
+                {/* Action Buttons at Top */}
+                {hasChanges && (
+                    <Paper
+                        elevation={0}
+                        sx={{
+                            mb: 3,
+                            p: 2,
+                            display: "flex",
+                            gap: 2,
+                            bgcolor: "grey.50",
+                            border: "1px solid",
+                            borderColor: "divider",
+                            borderRadius: 2,
+                        }}
+                    >
+                        <Button
+                            variant="contained"
+                            size="large"
+                            startIcon={<Save size={20} />}
+                            onClick={handleSaveAll}
+                            disabled={isLoading}
+                            sx={{
+                                px: 4,
+                                fontWeight: 600,
+                                boxShadow: 2,
+                                "&:hover": { boxShadow: 4 },
+                            }}
+                        >
+                            {isLoading ? "Saving..." : "Save All Changes"}
+                        </Button>
+                        <Button
+                            variant="outlined"
+                            size="large"
+                            startIcon={<RotateCcw size={20} />}
+                            onClick={handleCancel}
+                            sx={{
+                                px: 4,
+                                fontWeight: 600,
+                                borderWidth: 2,
+                                "&:hover": { borderWidth: 2 },
+                            }}
+                        >
+                            Cancel
+                        </Button>
+                    </Paper>
+                )}
 
-                        <Grid container spacing={3}>
-                            {tips.map((tip: PlantTip, index: number) => (
-                                <Grid item xs={12} md={6} key={tip.id}>
-                                    <Card data-testid={`tip-card-${index}`}>
-                                        <CardContent>
-                                            <Box
+                {/* Two-column layout */}
+                <Grid container spacing={3}>
+                    {/* Left Column - Editing Controls */}
+                    <Grid item xs={12} lg={7}>
+                        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                            {/* Preview on Mobile Only */}
+                            <Box sx={{ display: { xs: "block", lg: "none" } }}>
+                                <Paper
+                                    elevation={0}
+                                    sx={{
+                                        p: 3,
+                                        bgcolor: "background.paper",
+                                        borderRadius: 2,
+                                        border: "2px solid",
+                                        borderColor: "divider",
+                                        boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+                                    }}
+                                >
+                                    <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+                                        Live Preview
+                                    </Typography>
+                                    <SeasonalPreview plants={plants} tips={tips} />
+                                    <Alert severity="info" sx={{ mt: 2 }}>
+                                        <Typography variant="caption">This preview updates in real-time as you make changes.</Typography>
+                                    </Alert>
+                                </Paper>
+                            </Box>
+
+                            {/* Statistics Card */}
+                            <Paper
+                                elevation={0}
+                                sx={{
+                                    p: 3,
+                                    border: "1px solid",
+                                    borderColor: "divider",
+                                    borderRadius: 2,
+                                }}
+                            >
+                                <Grid container spacing={3}>
+                                    <Grid item xs={4}>
+                                        <Box sx={{ textAlign: "center" }}>
+                                            <Leaf size={32} color={palette.primary.main} />
+                                            <Typography variant="h5" sx={{ mt: 1 }}>
+                                                {plants.filter((p) => p.isActive).length}
+                                            </Typography>
+                                            <Typography variant="caption" color="text.secondary">
+                                                Active Plants
+                                            </Typography>
+                                        </Box>
+                                    </Grid>
+                                    <Grid item xs={4}>
+                                        <Box sx={{ textAlign: "center" }}>
+                                            <Lightbulb size={32} color={palette.secondary.main} />
+                                            <Typography variant="h5" sx={{ mt: 1 }}>
+                                                {tips.filter((t) => t.isActive).length}
+                                            </Typography>
+                                            <Typography variant="caption" color="text.secondary">
+                                                Active Tips
+                                            </Typography>
+                                        </Box>
+                                    </Grid>
+                                    <Grid item xs={4}>
+                                        <Box sx={{ textAlign: "center" }}>
+                                            <LeafIcon size={32} color={palette.info.main} />
+                                            <Typography variant="h5" sx={{ mt: 1 }}>
+                                                {plants.length + tips.length}
+                                            </Typography>
+                                            <Typography variant="caption" color="text.secondary">
+                                                Total Items
+                                            </Typography>
+                                        </Box>
+                                    </Grid>
+                                </Grid>
+                            </Paper>
+
+                            {/* Seasonal Plants Accordion */}
+                            <Accordion
+                                defaultExpanded
+                                sx={{
+                                    border: "1px solid",
+                                    borderColor: "divider",
+                                    borderRadius: "8px !important",
+                                    "&:before": { display: "none" },
+                                    boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+                                }}
+                            >
+                                <AccordionSummary
+                                    expandIcon={<ChevronDown size={20} />}
+                                    sx={{
+                                        bgcolor: "grey.50",
+                                        borderRadius: "8px 8px 0 0",
+                                        minHeight: 64,
+                                        "&:hover": { bgcolor: "grey.100" },
+                                    }}
+                                >
+                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                                        <Box
+                                            sx={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                width: 40,
+                                                height: 40,
+                                                borderRadius: 2,
+                                                bgcolor: "primary.main",
+                                                color: "white",
+                                            }}
+                                        >
+                                            <Leaf size={20} />
+                                        </Box>
+                                        <Box>
+                                            <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                                                Seasonal Plants ({plants.length})
+                                            </Typography>
+                                            <Typography variant="caption" color="text.secondary">
+                                                Manage plants that appear in the carousel
+                                            </Typography>
+                                        </Box>
+                                    </Box>
+                                </AccordionSummary>
+                                <AccordionDetails sx={{ p: 3, bgcolor: "background.paper" }}>
+                                    <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                                        <Button
+                                            variant="outlined"
+                                            startIcon={<Plus size={20} />}
+                                            onClick={handleAddPlant}
+                                            sx={{
+                                                borderStyle: "dashed",
+                                                borderWidth: 2,
+                                                py: 1.5,
+                                                "&:hover": { borderWidth: 2 },
+                                            }}
+                                        >
+                                            Add New Plant
+                                        </Button>
+
+                                        {plants.map((plant) => (
+                                            <Paper
+                                                key={plant.id}
+                                                elevation={0}
                                                 sx={{
-                                                    display: "flex",
-                                                    justifyContent: "space-between",
-                                                    mb: 2,
+                                                    p: 2.5,
+                                                    border: "2px solid",
+                                                    borderColor: editingPlant?.id === plant.id ? "primary.main" : "divider",
+                                                    borderRadius: 2,
+                                                    cursor: "pointer",
+                                                    transition: "all 0.2s",
+                                                    "&:hover": {
+                                                        borderColor: "primary.light",
+                                                        boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                                                    },
                                                 }}
+                                                onClick={() => setEditingPlant(plant)}
                                             >
-                                                <Typography variant="h6">
-                                                    {tip.title}
-                                                </Typography>
-                                                <Stack direction="row" spacing={1}>
+                                                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                                                    <Box sx={{ flex: 1 }}>
+                                                        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 1 }}>
+                                                            {(() => {
+                                                                const IconComponent = getIconComponent(plant.icon);
+                                                                return <IconComponent size={24} color={palette.primary.main} />;
+                                                            })()}
+                                                            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                                                                {plant.name || "Untitled Plant"}
+                                                            </Typography>
+                                                            {!plant.isActive && (
+                                                                <Chip label="Inactive" size="small" color="default" />
+                                                            )}
+                                                        </Box>
+                                                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                                                            {plant.description || "No description"}
+                                                        </Typography>
+                                                        <Stack direction="row" spacing={1}>
+                                                            <Chip label={plant.season} size="small" color="primary" />
+                                                            <Chip label={plant.careLevel} size="small" />
+                                                        </Stack>
+                                                    </Box>
                                                     <IconButton
                                                         size="small"
-                                                        onClick={() => handleTipEdit(tip)}
-                                                        data-testid={`edit-tip-${index}`}
-                                                    >
-                                                        <Edit3 size={18} />
-                                                    </IconButton>
-                                                    <IconButton
-                                                        size="small"
-                                                        onClick={() => handleTipDelete(tip)}
-                                                        data-testid={`delete-tip-${index}`}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleDeletePlant(plant.id);
+                                                        }}
+                                                        color="error"
                                                     >
                                                         <Trash2 size={18} />
                                                     </IconButton>
-                                                </Stack>
-                                            </Box>
-                                            <Typography
-                                                variant="body2"
-                                                color="text.secondary"
-                                                sx={{ mb: 2 }}
-                                            >
-                                                {tip.description}
+                                                </Box>
+
+                                                {/* Editing Form */}
+                                                {editingPlant?.id === plant.id && (
+                                                    <Box sx={{ mt: 3, pt: 3, borderTop: "1px solid", borderColor: "divider" }}>
+                                                        <Grid container spacing={2}>
+                                                            <Grid item xs={12}>
+                                                                <TextField
+                                                                    fullWidth
+                                                                    label="Name"
+                                                                    value={editingPlant.name}
+                                                                    onChange={(e) => handlePlantFieldChange("name", e.target.value)}
+                                                                    size="small"
+                                                                />
+                                                            </Grid>
+                                                            <Grid item xs={12}>
+                                                                <TextField
+                                                                    fullWidth
+                                                                    multiline
+                                                                    rows={2}
+                                                                    label="Description"
+                                                                    value={editingPlant.description}
+                                                                    onChange={(e) => handlePlantFieldChange("description", e.target.value)}
+                                                                    size="small"
+                                                                />
+                                                            </Grid>
+                                                            <Grid item xs={6}>
+                                                                <FormControl fullWidth size="small">
+                                                                    <InputLabel>Season</InputLabel>
+                                                                    <Select
+                                                                        value={editingPlant.season}
+                                                                        label="Season"
+                                                                        onChange={(e) => handlePlantFieldChange("season", e.target.value)}
+                                                                    >
+                                                                        <MenuItem value="Spring">Spring</MenuItem>
+                                                                        <MenuItem value="Summer">Summer</MenuItem>
+                                                                        <MenuItem value="Fall">Fall</MenuItem>
+                                                                        <MenuItem value="Winter">Winter</MenuItem>
+                                                                    </Select>
+                                                                </FormControl>
+                                                            </Grid>
+                                                            <Grid item xs={6}>
+                                                                <FormControl fullWidth size="small">
+                                                                    <InputLabel>Care Level</InputLabel>
+                                                                    <Select
+                                                                        value={editingPlant.careLevel}
+                                                                        label="Care Level"
+                                                                        onChange={(e) => handlePlantFieldChange("careLevel", e.target.value)}
+                                                                    >
+                                                                        <MenuItem value="Easy">Easy</MenuItem>
+                                                                        <MenuItem value="Medium">Medium</MenuItem>
+                                                                        <MenuItem value="Advanced">Advanced</MenuItem>
+                                                                    </Select>
+                                                                </FormControl>
+                                                            </Grid>
+                                                            <Grid item xs={12}>
+                                                                <Typography variant="caption" sx={{ mb: 1, display: "block" }}>
+                                                                    Icon
+                                                                </Typography>
+                                                                <ToggleButtonGroup
+                                                                    value={editingPlant.icon}
+                                                                    exclusive
+                                                                    onChange={(_, value) => value && handlePlantFieldChange("icon", value)}
+                                                                    size="small"
+                                                                >
+                                                                    {iconOptions.map((option) => {
+                                                                        const IconComp = option.icon;
+                                                                        return (
+                                                                            <ToggleButton key={option.value} value={option.value}>
+                                                                                <IconComp size={18} />
+                                                                            </ToggleButton>
+                                                                        );
+                                                                    })}
+                                                                </ToggleButtonGroup>
+                                                            </Grid>
+                                                            <Grid item xs={12}>
+                                                                <FormControlLabel
+                                                                    control={
+                                                                        <Switch
+                                                                            checked={editingPlant.isActive}
+                                                                            onChange={(e) => handlePlantFieldChange("isActive", e.target.checked)}
+                                                                        />
+                                                                    }
+                                                                    label="Active"
+                                                                />
+                                                            </Grid>
+                                                        </Grid>
+                                                    </Box>
+                                                )}
+                                            </Paper>
+                                        ))}
+                                    </Box>
+                                </AccordionDetails>
+                            </Accordion>
+
+                            {/* Plant Care Tips Accordion */}
+                            <Accordion
+                                defaultExpanded
+                                sx={{
+                                    border: "1px solid",
+                                    borderColor: "divider",
+                                    borderRadius: "8px !important",
+                                    "&:before": { display: "none" },
+                                    boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+                                }}
+                            >
+                                <AccordionSummary
+                                    expandIcon={<ChevronDown size={20} />}
+                                    sx={{
+                                        bgcolor: "grey.50",
+                                        borderRadius: "8px 8px 0 0",
+                                        minHeight: 64,
+                                        "&:hover": { bgcolor: "grey.100" },
+                                    }}
+                                >
+                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                                        <Box
+                                            sx={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                width: 40,
+                                                height: 40,
+                                                borderRadius: 2,
+                                                bgcolor: "secondary.main",
+                                                color: "white",
+                                            }}
+                                        >
+                                            <Lightbulb size={20} />
+                                        </Box>
+                                        <Box>
+                                            <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                                                Plant Care Tips ({tips.length})
                                             </Typography>
-                                            <Stack direction="row" spacing={1}>
-                                                <Chip
-                                                    label={tip.category}
-                                                    size="small"
-                                                    color="primary"
-                                                />
-                                                <Chip
-                                                    label={tip.season}
-                                                    size="small"
-                                                    color="secondary"
-                                                />
-                                                <Chip
-                                                    label={tip.isActive ? "Active" : "Inactive"}
-                                                    size="small"
-                                                    color={tip.isActive ? "success" : "default"}
-                                                />
-                                            </Stack>
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
-                            ))}
-                        </Grid>
-                    </Box>
-                )}
+                                            <Typography variant="caption" color="text.secondary">
+                                                Manage expert advice and tips
+                                            </Typography>
+                                        </Box>
+                                    </Box>
+                                </AccordionSummary>
+                                <AccordionDetails sx={{ p: 3, bgcolor: "background.paper" }}>
+                                    <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                                        <Button
+                                            variant="outlined"
+                                            startIcon={<Plus size={20} />}
+                                            onClick={handleAddTip}
+                                            sx={{
+                                                borderStyle: "dashed",
+                                                borderWidth: 2,
+                                                py: 1.5,
+                                                "&:hover": { borderWidth: 2 },
+                                            }}
+                                        >
+                                            Add New Tip
+                                        </Button>
+
+                                        {tips.map((tip) => (
+                                            <Paper
+                                                key={tip.id}
+                                                elevation={0}
+                                                sx={{
+                                                    p: 2.5,
+                                                    border: "2px solid",
+                                                    borderColor: editingTip?.id === tip.id ? "secondary.main" : "divider",
+                                                    borderRadius: 2,
+                                                    cursor: "pointer",
+                                                    transition: "all 0.2s",
+                                                    "&:hover": {
+                                                        borderColor: "secondary.light",
+                                                        boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                                                    },
+                                                }}
+                                                onClick={() => setEditingTip(tip)}
+                                            >
+                                                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                                                    <Box sx={{ flex: 1 }}>
+                                                        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+                                                            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                                                                {tip.title || "Untitled Tip"}
+                                                            </Typography>
+                                                            {!tip.isActive && (
+                                                                <Chip label="Inactive" size="small" color="default" />
+                                                            )}
+                                                        </Box>
+                                                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                                                            {tip.description || "No description"}
+                                                        </Typography>
+                                                        <Stack direction="row" spacing={1}>
+                                                            <Chip label={tip.category} size="small" color="primary" />
+                                                            <Chip label={tip.season} size="small" color="secondary" />
+                                                        </Stack>
+                                                    </Box>
+                                                    <IconButton
+                                                        size="small"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleDeleteTip(tip.id);
+                                                        }}
+                                                        color="error"
+                                                    >
+                                                        <Trash2 size={18} />
+                                                    </IconButton>
+                                                </Box>
+
+                                                {/* Editing Form */}
+                                                {editingTip?.id === tip.id && (
+                                                    <Box sx={{ mt: 3, pt: 3, borderTop: "1px solid", borderColor: "divider" }}>
+                                                        <Grid container spacing={2}>
+                                                            <Grid item xs={12}>
+                                                                <TextField
+                                                                    fullWidth
+                                                                    label="Title"
+                                                                    value={editingTip.title}
+                                                                    onChange={(e) => handleTipFieldChange("title", e.target.value)}
+                                                                    size="small"
+                                                                />
+                                                            </Grid>
+                                                            <Grid item xs={12}>
+                                                                <TextField
+                                                                    fullWidth
+                                                                    multiline
+                                                                    rows={3}
+                                                                    label="Description"
+                                                                    value={editingTip.description}
+                                                                    onChange={(e) => handleTipFieldChange("description", e.target.value)}
+                                                                    size="small"
+                                                                />
+                                                            </Grid>
+                                                            <Grid item xs={6}>
+                                                                <FormControl fullWidth size="small">
+                                                                    <InputLabel>Category</InputLabel>
+                                                                    <Select
+                                                                        value={editingTip.category}
+                                                                        label="Category"
+                                                                        onChange={(e) => handleTipFieldChange("category", e.target.value)}
+                                                                    >
+                                                                        <MenuItem value="Watering">Watering</MenuItem>
+                                                                        <MenuItem value="Fertilizing">Fertilizing</MenuItem>
+                                                                        <MenuItem value="Pruning">Pruning</MenuItem>
+                                                                        <MenuItem value="Pest Control">Pest Control</MenuItem>
+                                                                        <MenuItem value="General">General</MenuItem>
+                                                                    </Select>
+                                                                </FormControl>
+                                                            </Grid>
+                                                            <Grid item xs={6}>
+                                                                <FormControl fullWidth size="small">
+                                                                    <InputLabel>Season</InputLabel>
+                                                                    <Select
+                                                                        value={editingTip.season}
+                                                                        label="Season"
+                                                                        onChange={(e) => handleTipFieldChange("season", e.target.value)}
+                                                                    >
+                                                                        <MenuItem value="Spring">Spring</MenuItem>
+                                                                        <MenuItem value="Summer">Summer</MenuItem>
+                                                                        <MenuItem value="Fall">Fall</MenuItem>
+                                                                        <MenuItem value="Winter">Winter</MenuItem>
+                                                                        <MenuItem value="Year-round">Year-round</MenuItem>
+                                                                    </Select>
+                                                                </FormControl>
+                                                            </Grid>
+                                                            <Grid item xs={12}>
+                                                                <FormControlLabel
+                                                                    control={
+                                                                        <Switch
+                                                                            checked={editingTip.isActive}
+                                                                            onChange={(e) => handleTipFieldChange("isActive", e.target.checked)}
+                                                                        />
+                                                                    }
+                                                                    label="Active"
+                                                                />
+                                                            </Grid>
+                                                        </Grid>
+                                                    </Box>
+                                                )}
+                                            </Paper>
+                                        ))}
+                                    </Box>
+                                </AccordionDetails>
+                            </Accordion>
+
+                            {/* Action Buttons at Bottom */}
+                            {hasChanges && (
+                                <Paper
+                                    elevation={0}
+                                    sx={{
+                                        p: 2,
+                                        display: "flex",
+                                        gap: 2,
+                                        bgcolor: "grey.50",
+                                        border: "1px solid",
+                                        borderColor: "divider",
+                                        borderRadius: 2,
+                                    }}
+                                >
+                                    <Button
+                                        variant="contained"
+                                        size="large"
+                                        startIcon={<Save size={20} />}
+                                        onClick={handleSaveAll}
+                                        disabled={isLoading}
+                                        sx={{
+                                            px: 4,
+                                            fontWeight: 600,
+                                            boxShadow: 2,
+                                            "&:hover": { boxShadow: 4 },
+                                        }}
+                                    >
+                                        {isLoading ? "Saving..." : "Save All Changes"}
+                                    </Button>
+                                    <Button
+                                        variant="outlined"
+                                        size="large"
+                                        startIcon={<RotateCcw size={20} />}
+                                        onClick={handleCancel}
+                                        sx={{
+                                            px: 4,
+                                            fontWeight: 600,
+                                            borderWidth: 2,
+                                            "&:hover": { borderWidth: 2 },
+                                        }}
+                                    >
+                                        Cancel
+                                    </Button>
+                                </Paper>
+                            )}
+                        </Box>
+                    </Grid>
+
+                    {/* Right Column - Live Preview (Desktop only, sticky) */}
+                    <Grid item xs={12} lg={5}>
+                        <Box sx={{ display: { xs: "none", lg: "block" } }}>
+                            <Paper
+                                elevation={0}
+                                sx={{
+                                    position: "sticky",
+                                    top: 16,
+                                    p: 3,
+                                    bgcolor: "background.paper",
+                                    borderRadius: 2,
+                                    border: "2px solid",
+                                    borderColor: "divider",
+                                    boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+                                }}
+                            >
+                                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3 }}>
+                                    <Box
+                                        sx={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            width: 36,
+                                            height: 36,
+                                            borderRadius: 1.5,
+                                            bgcolor: "primary.main",
+                                            color: "white",
+                                        }}
+                                    >
+                                        <LeafIcon size={20} />
+                                    </Box>
+                                    <Box>
+                                        <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                                            Live Preview
+                                        </Typography>
+                                        <Typography variant="caption" color="text.secondary">
+                                            See your changes in real-time
+                                        </Typography>
+                                    </Box>
+                                </Box>
+                                <SeasonalPreview plants={plants} tips={tips} />
+                                <Alert
+                                    severity="info"
+                                    sx={{
+                                        mt: 2,
+                                        bgcolor: "info.lighter",
+                                        border: "1px solid",
+                                        borderColor: "info.light",
+                                    }}
+                                >
+                                    <Typography variant="caption">
+                                        This preview updates in real-time as you make changes. The actual seasonal section may look slightly different
+                                        based on screen size.
+                                    </Typography>
+                                </Alert>
+                            </Paper>
+                        </Box>
+                    </Grid>
+                </Grid>
             </Box>
-
-            {/* Plant Edit Dialog */}
-            <Dialog
-                open={plantDialogOpen}
-                onClose={() => setPlantDialogOpen(false)}
-                maxWidth="sm"
-                fullWidth
-            >
-                <DialogTitle>{editingPlant?.id ? "Edit Plant" : "Add Plant"}</DialogTitle>
-                <DialogContent>
-                    <Box sx={{ pt: 2 }}>
-                        <TextField
-                            fullWidth
-                            label="Name"
-                            value={editingPlant?.name || ""}
-                            onChange={(e) =>
-                                setEditingPlant((prev) => ({ ...prev!, name: e.target.value }))
-                            }
-                            sx={{ mb: 2 }}
-                            data-testid="plant-name-input"
-                        />
-                        <TextField
-                            fullWidth
-                            multiline
-                            rows={3}
-                            label="Description"
-                            value={editingPlant?.description || ""}
-                            onChange={(e) =>
-                                setEditingPlant((prev) => ({
-                                    ...prev!,
-                                    description: e.target.value,
-                                }))
-                            }
-                            sx={{ mb: 2 }}
-                            data-testid="plant-description-input"
-                        />
-                        <Grid container spacing={2}>
-                            <Grid item xs={6}>
-                                <TextField
-                                    fullWidth
-                                    select
-                                    label="Season"
-                                    value={editingPlant?.season || "Spring"}
-                                    onChange={(e) =>
-                                        setEditingPlant((prev) => ({
-                                            ...prev!,
-                                            season: e.target.value,
-                                        }))
-                                    }
-                                    SelectProps={{ native: true }}
-                                    data-testid="plant-season-select"
-                                >
-                                    <option value="Spring">Spring</option>
-                                    <option value="Summer">Summer</option>
-                                    <option value="Fall">Fall</option>
-                                    <option value="Winter">Winter</option>
-                                </TextField>
-                            </Grid>
-                            <Grid item xs={6}>
-                                <TextField
-                                    fullWidth
-                                    select
-                                    label="Care Level"
-                                    value={editingPlant?.careLevel || "Easy"}
-                                    onChange={(e) =>
-                                        setEditingPlant((prev) => ({
-                                            ...prev!,
-                                            careLevel: e.target.value,
-                                        }))
-                                    }
-                                    SelectProps={{ native: true }}
-                                    data-testid="plant-care-level-select"
-                                >
-                                    <option value="Easy">Easy</option>
-                                    <option value="Medium">Medium</option>
-                                    <option value="Advanced">Advanced</option>
-                                </TextField>
-                            </Grid>
-                        </Grid>
-                        <Typography variant="body2" sx={{ mt: 2, mb: 1 }}>
-                            Icon
-                        </Typography>
-                        <ToggleButtonGroup
-                            value={editingPlant?.icon || "leaf"}
-                            exclusive
-                            onChange={(_, value) =>
-                                value && setEditingPlant((prev) => ({ ...prev!, icon: value }))
-                            }
-                            sx={{ mb: 2 }}
-                            data-testid="plant-icon-group"
-                        >
-                            {iconOptions.map((option) => {
-                                const IconComp = option.icon;
-                                return (
-                                    <ToggleButton key={option.value} value={option.value}>
-                                        <IconComp size={20} />
-                                    </ToggleButton>
-                                );
-                            })}
-                        </ToggleButtonGroup>
-                        <Box>
-                            <ToggleButton
-                                value="check"
-                                selected={editingPlant?.isActive}
-                                onChange={() =>
-                                    setEditingPlant((prev) => ({
-                                        ...prev!,
-                                        isActive: !prev?.isActive,
-                                    }))
-                                }
-                                sx={{ mt: 2 }}
-                                data-testid="plant-active-toggle"
-                            >
-                                {editingPlant?.isActive ? "Active" : "Inactive"}
-                            </ToggleButton>
-                        </Box>
-                    </Box>
-                </DialogContent>
-                <DialogActions>
-                    <Button
-                        onClick={() => setPlantDialogOpen(false)}
-                        data-testid="plant-cancel-button"
-                    >
-                        Cancel
-                    </Button>
-                    <Button
-                        variant="contained"
-                        onClick={handlePlantSave}
-                        disabled={isLoading}
-                        data-testid="plant-save-button"
-                    >
-                        {isLoading ? "Saving..." : "Save"}
-                    </Button>
-                </DialogActions>
-            </Dialog>
-
-            {/* Tip Edit Dialog */}
-            <Dialog
-                open={tipDialogOpen}
-                onClose={() => setTipDialogOpen(false)}
-                maxWidth="sm"
-                fullWidth
-            >
-                <DialogTitle>{editingTip?.id ? "Edit Tip" : "Add Tip"}</DialogTitle>
-                <DialogContent>
-                    <Box sx={{ pt: 2 }}>
-                        <TextField
-                            fullWidth
-                            label="Title"
-                            value={editingTip?.title || ""}
-                            onChange={(e) =>
-                                setEditingTip((prev) => ({ ...prev!, title: e.target.value }))
-                            }
-                            sx={{ mb: 2 }}
-                            data-testid="tip-title-input"
-                        />
-                        <TextField
-                            fullWidth
-                            multiline
-                            rows={3}
-                            label="Description"
-                            value={editingTip?.description || ""}
-                            onChange={(e) =>
-                                setEditingTip((prev) => ({ ...prev!, description: e.target.value }))
-                            }
-                            sx={{ mb: 2 }}
-                            data-testid="tip-description-input"
-                        />
-                        <Grid container spacing={2}>
-                            <Grid item xs={6}>
-                                <TextField
-                                    fullWidth
-                                    select
-                                    label="Category"
-                                    value={editingTip?.category || "General"}
-                                    onChange={(e) =>
-                                        setEditingTip((prev) => ({
-                                            ...prev!,
-                                            category: e.target.value,
-                                        }))
-                                    }
-                                    SelectProps={{ native: true }}
-                                    data-testid="tip-category-select"
-                                >
-                                    <option value="Watering">Watering</option>
-                                    <option value="Fertilizing">Fertilizing</option>
-                                    <option value="Pruning">Pruning</option>
-                                    <option value="Pest Control">Pest Control</option>
-                                    <option value="General">General</option>
-                                </TextField>
-                            </Grid>
-                            <Grid item xs={6}>
-                                <TextField
-                                    fullWidth
-                                    select
-                                    label="Season"
-                                    value={editingTip?.season || "Year-round"}
-                                    onChange={(e) =>
-                                        setEditingTip((prev) => ({
-                                            ...prev!,
-                                            season: e.target.value,
-                                        }))
-                                    }
-                                    SelectProps={{ native: true }}
-                                    data-testid="tip-season-select"
-                                >
-                                    <option value="Spring">Spring</option>
-                                    <option value="Summer">Summer</option>
-                                    <option value="Fall">Fall</option>
-                                    <option value="Winter">Winter</option>
-                                    <option value="Year-round">Year-round</option>
-                                </TextField>
-                            </Grid>
-                        </Grid>
-                        <Box>
-                            <ToggleButton
-                                value="check"
-                                selected={editingTip?.isActive}
-                                onChange={() =>
-                                    setEditingTip((prev) => ({
-                                        ...prev!,
-                                        isActive: !prev?.isActive,
-                                    }))
-                                }
-                                sx={{ mt: 2 }}
-                                data-testid="tip-active-toggle"
-                            >
-                                {editingTip?.isActive ? "Active" : "Inactive"}
-                            </ToggleButton>
-                        </Box>
-                    </Box>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setTipDialogOpen(false)} data-testid="tip-cancel-button">
-                        Cancel
-                    </Button>
-                    <Button
-                        variant="contained"
-                        onClick={handleTipSave}
-                        disabled={isLoading}
-                        data-testid="tip-save-button"
-                    >
-                        {isLoading ? "Saving..." : "Save"}
-                    </Button>
-                </DialogActions>
-            </Dialog>
         </PageContainer>
     );
 };

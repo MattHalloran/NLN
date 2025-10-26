@@ -13,8 +13,30 @@ import {
     FormControl,
     InputLabel,
     IconButton,
+    Accordion,
+    AccordionSummary,
+    AccordionDetails,
+    Grid,
+    Paper,
+    useTheme,
 } from "@mui/material";
-import { Save, RotateCcw, Plus, Trash2, GripVertical } from "lucide-react";
+import {
+    Save,
+    RotateCcw,
+    Plus,
+    Trash2,
+    GripVertical,
+    Sprout,
+    Leaf,
+    Home,
+    Truck,
+    Package,
+    Wrench,
+    Type as TextFieldsIcon,
+    Grid3x3 as GridIcon,
+    Eye as EyeIcon,
+} from "lucide-react";
+import { ExpandMore as ExpandMoreIcon } from "@mui/icons-material";
 import { BackButton, PageContainer } from "components";
 import { ABTestEditingBanner } from "components/admin/ABTestEditingBanner";
 import { TopBar } from "components/navigation/TopBar/TopBar";
@@ -47,6 +69,177 @@ const SERVICE_ICONS = [
     { value: "package", label: "Package" },
     { value: "wrench", label: "Wrench" },
 ];
+
+// Icon mapping for preview
+const ICON_COMPONENTS: Record<string, any> = {
+    sprout: Sprout,
+    leaf: Leaf,
+    home: Home,
+    truck: Truck,
+    package: Package,
+    wrench: Wrench,
+};
+
+// Preview component that shows how services will look
+const ServicesPreview = ({
+    services,
+    sectionTitle,
+    sectionSubtitle,
+}: {
+    services: ServicesSettings;
+    sectionTitle: string;
+    sectionSubtitle: string;
+}) => {
+    const { palette } = useTheme();
+    const [hoveredCard, setHoveredCard] = useState<number | null>(null);
+
+    return (
+        <Box
+            sx={{
+                borderRadius: 2,
+                border: "2px solid",
+                borderColor: "divider",
+                overflow: "hidden",
+                bgcolor: palette.grey[50],
+            }}
+        >
+            <Box sx={{ p: 3 }}>
+                {/* Section Header */}
+                <Box sx={{ textAlign: "center", mb: 3 }}>
+                    <Typography
+                        variant="h5"
+                        sx={{
+                            fontWeight: 700,
+                            color: palette.primary.main,
+                            mb: 1,
+                        }}
+                    >
+                        {sectionTitle}
+                    </Typography>
+                    <Typography
+                        variant="body2"
+                        sx={{
+                            color: palette.text.secondary,
+                            maxWidth: "400px",
+                            mx: "auto",
+                        }}
+                    >
+                        {sectionSubtitle}
+                    </Typography>
+                </Box>
+
+                {/* Service Cards Grid */}
+                {services.items.length > 0 ? (
+                    <Grid container spacing={2}>
+                        {services.items.map((service: Service, index: number) => {
+                            const IconComponent = ICON_COMPONENTS[service.icon] || Sprout;
+                            return (
+                                <Grid item xs={12} sm={6} key={index}>
+                                    <Card
+                                        sx={{
+                                            height: "100%",
+                                            display: "flex",
+                                            flexDirection: "column",
+                                            transition: "all 0.3s ease-in-out",
+                                            transform:
+                                                hoveredCard === index
+                                                    ? "translateY(-4px)"
+                                                    : "translateY(0)",
+                                            boxShadow: hoveredCard === index ? 4 : 1,
+                                            cursor: "pointer",
+                                            border: `1px solid ${palette.divider}`,
+                                        }}
+                                        onMouseEnter={() => setHoveredCard(index)}
+                                        onMouseLeave={() => setHoveredCard(null)}
+                                    >
+                                        <CardContent
+                                            sx={{
+                                                flexGrow: 1,
+                                                display: "flex",
+                                                flexDirection: "column",
+                                                alignItems: "center",
+                                                textAlign: "center",
+                                                p: 2,
+                                            }}
+                                        >
+                                            <Box
+                                                sx={{
+                                                    mb: 1.5,
+                                                    display: "flex",
+                                                    justifyContent: "center",
+                                                    color: palette.primary.main,
+                                                }}
+                                            >
+                                                <IconComponent size={36} />
+                                            </Box>
+
+                                            <Typography
+                                                variant="subtitle1"
+                                                sx={{
+                                                    fontWeight: 600,
+                                                    color: palette.primary.main,
+                                                    mb: 1,
+                                                    fontSize: "0.95rem",
+                                                    minHeight: "2.5rem",
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                }}
+                                            >
+                                                {service.title}
+                                            </Typography>
+
+                                            <Typography
+                                                variant="caption"
+                                                sx={{
+                                                    color: palette.text.secondary,
+                                                    flexGrow: 1,
+                                                    mb: 1.5,
+                                                    lineHeight: 1.4,
+                                                    fontSize: "0.75rem",
+                                                }}
+                                            >
+                                                {service.description}
+                                            </Typography>
+
+                                            <Button
+                                                variant="outlined"
+                                                color="primary"
+                                                size="small"
+                                                sx={{
+                                                    borderRadius: 1,
+                                                    textTransform: "none",
+                                                    fontWeight: 600,
+                                                    px: 2,
+                                                    fontSize: "0.75rem",
+                                                    pointerEvents: "none",
+                                                }}
+                                            >
+                                                {service.action}
+                                            </Button>
+                                        </CardContent>
+                                    </Card>
+                                </Grid>
+                            );
+                        })}
+                    </Grid>
+                ) : (
+                    <Box
+                        sx={{
+                            p: 4,
+                            textAlign: "center",
+                            bgcolor: "grey.200",
+                            borderRadius: 2,
+                        }}
+                    >
+                        <Typography variant="body2" color="text.secondary">
+                            Add service cards to see preview
+                        </Typography>
+                    </Box>
+                )}
+            </Box>
+        </Box>
+    );
+};
 
 export const AdminHomepageServices = () => {
     const { variantId: queryVariantId } = useABTestQueryParams();
@@ -194,199 +387,631 @@ export const AdminHomepageServices = () => {
         <PageContainer sx={{ minHeight: "100vh", paddingBottom: 0 }}>
             <TopBar
                 display="page"
-                title="Services Section"
-                help="Manage service cards displayed on the homepage"
+                title="Services Section Settings"
+                help="Configure all aspects of your services section"
                 startComponent={<BackButton to={APP_LINKS.AdminHomepage} ariaLabel="Back to Homepage Management" />}
             />
 
-            <Box p={3}>
+            <Box p={2}>
                 <ABTestEditingBanner />
 
                 {/* Unsaved changes warning */}
                 {hasChanges && (
-                    <Alert severity="warning" sx={{ mb: 3 }}>
-                        You have unsaved changes. Don't forget to save before leaving!
+                    <Alert
+                        severity="warning"
+                        sx={{
+                            mb: 3,
+                            borderLeft: "4px solid",
+                            borderColor: "warning.main",
+                            bgcolor: "warning.lighter",
+                            "& .MuiAlert-icon": {
+                                color: "warning.main",
+                            },
+                        }}
+                    >
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                            You have unsaved changes. Don't forget to save before leaving!
+                        </Typography>
                     </Alert>
                 )}
 
-                {/* Section Header Settings */}
-                <Card sx={{ mb: 3 }}>
-                    <CardContent>
-                        <Typography variant="h6" sx={{ mb: 3 }}>
-                            Section Header
-                        </Typography>
+                {/* Action Buttons at Top */}
+                {hasChanges && (
+                    <Paper
+                        elevation={0}
+                        sx={{
+                            mb: 3,
+                            p: 2,
+                            display: "flex",
+                            gap: 2,
+                            bgcolor: "grey.50",
+                            border: "1px solid",
+                            borderColor: "divider",
+                            borderRadius: 2,
+                        }}
+                    >
+                        <Button
+                            variant="contained"
+                            size="large"
+                            startIcon={<Save size={20} />}
+                            onClick={handleSave}
+                            disabled={!hasChanges || updateSettings.loading}
+                            sx={{
+                                px: 4,
+                                fontWeight: 600,
+                                boxShadow: 2,
+                                "&:hover": {
+                                    boxShadow: 4,
+                                },
+                            }}
+                        >
+                            {updateSettings.loading ? "Saving..." : "Save All Changes"}
+                        </Button>
+                        <Button
+                            variant="outlined"
+                            size="large"
+                            startIcon={<RotateCcw size={20} />}
+                            onClick={handleCancel}
+                            disabled={!hasChanges}
+                            sx={{
+                                px: 4,
+                                fontWeight: 600,
+                                borderWidth: 2,
+                                "&:hover": {
+                                    borderWidth: 2,
+                                },
+                            }}
+                        >
+                            Cancel
+                        </Button>
+                    </Paper>
+                )}
 
-                        <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                            <TextField
-                                fullWidth
-                                label="Section Title"
-                                value={services.title}
-                                onChange={(e) => setServices({ ...services, title: e.target.value })}
-                                helperText="Main heading for the services section"
-                            />
+                {/* Two-column layout: Controls on left, Preview on right */}
+                <Grid container spacing={3}>
+                    {/* Left Column - Editing Controls */}
+                    <Grid item xs={12} lg={7}>
+                        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                            {/* Preview on Mobile Only */}
+                            <Box sx={{ display: { xs: "block", lg: "none" } }}>
+                                <Paper
+                                    elevation={0}
+                                    sx={{
+                                        p: 3,
+                                        bgcolor: "background.paper",
+                                        borderRadius: 2,
+                                        border: "2px solid",
+                                        borderColor: "divider",
+                                        boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+                                    }}
+                                >
+                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3 }}>
+                                        <Box
+                                            sx={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                width: 36,
+                                                height: 36,
+                                                borderRadius: 1.5,
+                                                bgcolor: "primary.main",
+                                                color: "white",
+                                            }}
+                                        >
+                                            <EyeIcon size={20} />
+                                        </Box>
+                                        <Box>
+                                            <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                                                Live Preview
+                                            </Typography>
+                                            <Typography variant="caption" color="text.secondary">
+                                                See your changes in real-time
+                                            </Typography>
+                                        </Box>
+                                    </Box>
+                                    <ServicesPreview
+                                        services={services}
+                                        sectionTitle={services.title}
+                                        sectionSubtitle={services.subtitle}
+                                    />
+                                    <Alert
+                                        severity="info"
+                                        sx={{
+                                            mt: 2,
+                                            bgcolor: "info.lighter",
+                                            border: "1px solid",
+                                            borderColor: "info.light",
+                                        }}
+                                    >
+                                        <Typography variant="caption">
+                                            This preview updates in real-time as you make changes.
+                                        </Typography>
+                                    </Alert>
+                                </Paper>
+                            </Box>
 
-                            <TextField
-                                fullWidth
-                                label="Section Subtitle"
-                                value={services.subtitle}
-                                onChange={(e) => setServices({ ...services, subtitle: e.target.value })}
-                                helperText="Subtitle text below the main heading"
-                            />
-                        </Box>
-                    </CardContent>
-                </Card>
+                            {/* Accordion 1: Section Header */}
+                            <Accordion
+                                defaultExpanded
+                                sx={{
+                                    border: "1px solid",
+                                    borderColor: "divider",
+                                    borderRadius: "8px !important",
+                                    "&:before": { display: "none" },
+                                    boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+                                    mb: 2,
+                                }}
+                            >
+                                <AccordionSummary
+                                    expandIcon={<ExpandMoreIcon />}
+                                    sx={{
+                                        bgcolor: "grey.50",
+                                        borderRadius: "8px 8px 0 0",
+                                        minHeight: 64,
+                                        "&:hover": {
+                                            bgcolor: "grey.100",
+                                        },
+                                        "& .MuiAccordionSummary-content": {
+                                            my: 2,
+                                        },
+                                    }}
+                                >
+                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                                        <Box
+                                            sx={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                width: 40,
+                                                height: 40,
+                                                borderRadius: 2,
+                                                bgcolor: "primary.main",
+                                                color: "white",
+                                            }}
+                                        >
+                                            <TextFieldsIcon size={20} />
+                                        </Box>
+                                        <Box>
+                                            <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                                                Section Header
+                                            </Typography>
+                                            <Typography variant="caption" color="text.secondary">
+                                                Configure title and subtitle
+                                            </Typography>
+                                        </Box>
+                                    </Box>
+                                </AccordionSummary>
+                                <AccordionDetails sx={{ p: 3, bgcolor: "background.paper" }}>
+                                    <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                                        <TextField
+                                            fullWidth
+                                            label="Section Title"
+                                            value={services.title}
+                                            onChange={(e) => setServices({ ...services, title: e.target.value })}
+                                            helperText="Main heading for the services section"
+                                            variant="outlined"
+                                            sx={{
+                                                "& .MuiOutlinedInput-root": {
+                                                    bgcolor: "background.paper",
+                                                },
+                                            }}
+                                        />
+                                        <TextField
+                                            fullWidth
+                                            label="Section Subtitle"
+                                            value={services.subtitle}
+                                            onChange={(e) => setServices({ ...services, subtitle: e.target.value })}
+                                            helperText="Subtitle text below the main heading"
+                                            variant="outlined"
+                                            sx={{
+                                                "& .MuiOutlinedInput-root": {
+                                                    bgcolor: "background.paper",
+                                                },
+                                            }}
+                                        />
+                                    </Box>
+                                </AccordionDetails>
+                            </Accordion>
 
-                {/* Service Cards */}
-                <Card sx={{ mb: 3 }}>
-                    <CardContent>
-                        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
-                            <Typography variant="h6">Service Cards</Typography>
-                            <Button variant="contained" startIcon={<Plus size={20} />} onClick={handleAddService}>
-                                Add Service
-                            </Button>
-                        </Box>
+                            {/* Accordion 2: Service Cards */}
+                            <Accordion
+                                defaultExpanded
+                                sx={{
+                                    border: "1px solid",
+                                    borderColor: "divider",
+                                    borderRadius: "8px !important",
+                                    "&:before": { display: "none" },
+                                    boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+                                    mb: 2,
+                                }}
+                            >
+                                <AccordionSummary
+                                    expandIcon={<ExpandMoreIcon />}
+                                    sx={{
+                                        bgcolor: "grey.50",
+                                        borderRadius: "8px 8px 0 0",
+                                        minHeight: 64,
+                                        "&:hover": {
+                                            bgcolor: "grey.100",
+                                        },
+                                        "& .MuiAccordionSummary-content": {
+                                            my: 2,
+                                        },
+                                    }}
+                                >
+                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, width: "100%" }}>
+                                        <Box
+                                            sx={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                width: 40,
+                                                height: 40,
+                                                borderRadius: 2,
+                                                bgcolor: "secondary.main",
+                                                color: "white",
+                                            }}
+                                        >
+                                            <GridIcon size={20} />
+                                        </Box>
+                                        <Box sx={{ flex: 1 }}>
+                                            <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                                                Service Cards
+                                            </Typography>
+                                            <Typography variant="caption" color="text.secondary">
+                                                Manage your service offerings ({services.items.length} cards)
+                                            </Typography>
+                                        </Box>
+                                    </Box>
+                                </AccordionSummary>
+                                <AccordionDetails sx={{ p: 3, bgcolor: "background.paper" }}>
+                                    <Box sx={{ mb: 3 }}>
+                                        <Button
+                                            variant="outlined"
+                                            startIcon={<Plus size={20} />}
+                                            onClick={handleAddService}
+                                            sx={{
+                                                borderStyle: "dashed",
+                                                borderWidth: 2,
+                                                py: 1.5,
+                                                width: "100%",
+                                                "&:hover": {
+                                                    borderWidth: 2,
+                                                    bgcolor: "action.hover",
+                                                },
+                                            }}
+                                        >
+                                            Add Service Card
+                                        </Button>
+                                    </Box>
 
-                        <Alert severity="info" sx={{ mb: 3 }}>
-                            Drag cards to reorder them. Services are displayed on the homepage in the order shown below.
-                        </Alert>
+                                    {services.items.length > 0 && (
+                                        <Alert
+                                            severity="info"
+                                            sx={{
+                                                mb: 3,
+                                                bgcolor: "info.lighter",
+                                                border: "1px solid",
+                                                borderColor: "info.light",
+                                            }}
+                                        >
+                                            <Typography variant="caption">
+                                                Drag cards to reorder them. Services are displayed on the homepage in the order shown below.
+                                            </Typography>
+                                        </Alert>
+                                    )}
 
-                        <DragDropContext onDragEnd={handleDragEnd}>
-                            <Droppable droppableId="services">
-                                {(provided) => (
-                                    <Box {...provided.droppableProps} ref={provided.innerRef}>
-                                        {services.items.map((service, index) => (
-                                            <Draggable key={index} draggableId={`service-${index}`} index={index}>
-                                                {(provided) => (
-                                                    <Card
-                                                        ref={provided.innerRef}
-                                                        {...provided.draggableProps}
-                                                        sx={{ mb: 2, position: "relative" }}
-                                                    >
-                                                        <CardContent>
-                                                            <Box sx={{ display: "flex", gap: 2, alignItems: "flex-start" }}>
-                                                                {/* Drag Handle */}
-                                                                <Box
-                                                                    {...provided.dragHandleProps}
+                                    <DragDropContext onDragEnd={handleDragEnd}>
+                                        <Droppable droppableId="services">
+                                            {(provided) => (
+                                                <Box {...provided.droppableProps} ref={provided.innerRef}>
+                                                    {services.items.map((service, index) => (
+                                                        <Draggable key={index} draggableId={`service-${index}`} index={index}>
+                                                            {(provided, snapshot) => (
+                                                                <Paper
+                                                                    ref={provided.innerRef}
+                                                                    {...provided.draggableProps}
+                                                                    elevation={0}
                                                                     sx={{
-                                                                        cursor: "grab",
-                                                                        display: "flex",
-                                                                        alignItems: "center",
-                                                                        color: "text.secondary",
-                                                                        pt: 1,
+                                                                        mb: 2.5,
+                                                                        opacity: snapshot.isDragging ? 0.7 : 1,
+                                                                        border: "2px solid",
+                                                                        borderColor: snapshot.isDragging
+                                                                            ? "primary.main"
+                                                                            : "divider",
+                                                                        borderRadius: 2,
+                                                                        overflow: "hidden",
+                                                                        transition: "all 0.2s",
+                                                                        boxShadow: snapshot.isDragging
+                                                                            ? "0 8px 16px rgba(0,0,0,0.15)"
+                                                                            : "0 1px 3px rgba(0,0,0,0.05)",
+                                                                        "&:hover": {
+                                                                            boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                                                                            borderColor: "primary.light",
+                                                                        },
                                                                     }}
                                                                 >
-                                                                    <GripVertical size={20} />
-                                                                </Box>
-
-                                                                {/* Service Fields */}
-                                                                <Box sx={{ flex: 1, display: "flex", flexDirection: "column", gap: 2 }}>
-                                                                    <TextField
-                                                                        fullWidth
-                                                                        label="Service Title"
-                                                                        value={service.title}
-                                                                        onChange={(e) =>
-                                                                            handleUpdateService(index, "title", e.target.value)
-                                                                        }
-                                                                    />
-
-                                                                    <TextField
-                                                                        fullWidth
-                                                                        multiline
-                                                                        rows={3}
-                                                                        label="Description"
-                                                                        value={service.description}
-                                                                        onChange={(e) =>
-                                                                            handleUpdateService(index, "description", e.target.value)
-                                                                        }
-                                                                    />
-
-                                                                    <Box sx={{ display: "flex", gap: 2 }}>
-                                                                        <FormControl sx={{ flex: 1 }}>
-                                                                            <InputLabel>Icon</InputLabel>
-                                                                            <Select
-                                                                                value={service.icon}
-                                                                                label="Icon"
-                                                                                onChange={(e) =>
-                                                                                    handleUpdateService(index, "icon", e.target.value)
-                                                                                }
+                                                                    <Box sx={{ display: "flex", alignItems: "stretch" }}>
+                                                                        <Box
+                                                                            {...provided.dragHandleProps}
+                                                                            sx={{
+                                                                                display: "flex",
+                                                                                flexDirection: "column",
+                                                                                alignItems: "center",
+                                                                                justifyContent: "center",
+                                                                                px: 2,
+                                                                                cursor: "grab",
+                                                                                backgroundColor: "grey.50",
+                                                                                borderRight: "1px solid",
+                                                                                borderColor: "divider",
+                                                                                "&:active": {
+                                                                                    cursor: "grabbing",
+                                                                                },
+                                                                            }}
+                                                                        >
+                                                                            <GripVertical size={20} />
+                                                                            <Typography
+                                                                                variant="caption"
+                                                                                sx={{
+                                                                                    mt: 0.5,
+                                                                                    fontWeight: 600,
+                                                                                    color: "text.secondary",
+                                                                                }}
                                                                             >
-                                                                                {SERVICE_ICONS.map((icon) => (
-                                                                                    <MenuItem key={icon.value} value={icon.value}>
-                                                                                        {icon.label}
-                                                                                    </MenuItem>
-                                                                                ))}
-                                                                            </Select>
-                                                                        </FormControl>
+                                                                                #{index + 1}
+                                                                            </Typography>
+                                                                        </Box>
 
-                                                                        <TextField
-                                                                            sx={{ flex: 1 }}
-                                                                            label="Button Text"
-                                                                            value={service.action}
-                                                                            onChange={(e) =>
-                                                                                handleUpdateService(index, "action", e.target.value)
-                                                                            }
-                                                                        />
+                                                                        <Box sx={{ flex: 1, p: 2.5 }}>
+                                                                            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                                                                                <TextField
+                                                                                    fullWidth
+                                                                                    label="Service Title"
+                                                                                    value={service.title}
+                                                                                    onChange={(e) =>
+                                                                                        handleUpdateService(index, "title", e.target.value)
+                                                                                    }
+                                                                                    size="small"
+                                                                                    sx={{
+                                                                                        "& .MuiOutlinedInput-root": {
+                                                                                            bgcolor: "background.paper",
+                                                                                        },
+                                                                                    }}
+                                                                                />
+
+                                                                                <TextField
+                                                                                    fullWidth
+                                                                                    multiline
+                                                                                    rows={3}
+                                                                                    label="Description"
+                                                                                    value={service.description}
+                                                                                    onChange={(e) =>
+                                                                                        handleUpdateService(index, "description", e.target.value)
+                                                                                    }
+                                                                                    size="small"
+                                                                                    sx={{
+                                                                                        "& .MuiOutlinedInput-root": {
+                                                                                            bgcolor: "background.paper",
+                                                                                        },
+                                                                                    }}
+                                                                                />
+
+                                                                                <Box sx={{ display: "flex", gap: 2 }}>
+                                                                                    <FormControl sx={{ flex: 1 }} size="small">
+                                                                                        <InputLabel>Icon</InputLabel>
+                                                                                        <Select
+                                                                                            value={service.icon}
+                                                                                            label="Icon"
+                                                                                            onChange={(e) =>
+                                                                                                handleUpdateService(index, "icon", e.target.value)
+                                                                                            }
+                                                                                            sx={{
+                                                                                                bgcolor: "background.paper",
+                                                                                            }}
+                                                                                        >
+                                                                                            {SERVICE_ICONS.map((icon) => (
+                                                                                                <MenuItem key={icon.value} value={icon.value}>
+                                                                                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                                                                                        {(() => {
+                                                                                                            const IconComp = ICON_COMPONENTS[icon.value];
+                                                                                                            return IconComp ? <IconComp size={16} /> : null;
+                                                                                                        })()}
+                                                                                                        <Typography>{icon.label}</Typography>
+                                                                                                    </Box>
+                                                                                                </MenuItem>
+                                                                                            ))}
+                                                                                        </Select>
+                                                                                    </FormControl>
+
+                                                                                    <TextField
+                                                                                        sx={{
+                                                                                            flex: 1,
+                                                                                            "& .MuiOutlinedInput-root": {
+                                                                                                bgcolor: "background.paper",
+                                                                                            },
+                                                                                        }}
+                                                                                        label="Button Text"
+                                                                                        value={service.action}
+                                                                                        onChange={(e) =>
+                                                                                            handleUpdateService(index, "action", e.target.value)
+                                                                                        }
+                                                                                        size="small"
+                                                                                    />
+                                                                                </Box>
+
+                                                                                <TextField
+                                                                                    fullWidth
+                                                                                    label="Button URL"
+                                                                                    value={service.url}
+                                                                                    onChange={(e) =>
+                                                                                        handleUpdateService(index, "url", e.target.value)
+                                                                                    }
+                                                                                    helperText="Internal path (e.g., /about) or external URL (e.g., https://...)"
+                                                                                    size="small"
+                                                                                    sx={{
+                                                                                        "& .MuiOutlinedInput-root": {
+                                                                                            bgcolor: "background.paper",
+                                                                                        },
+                                                                                    }}
+                                                                                />
+
+                                                                                <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+                                                                                    <Button
+                                                                                        variant="outlined"
+                                                                                        color="error"
+                                                                                        startIcon={<Trash2 size={16} />}
+                                                                                        onClick={() => handleRemoveService(index)}
+                                                                                        size="small"
+                                                                                        sx={{
+                                                                                            "&:hover": {
+                                                                                                bgcolor: "error.lighter",
+                                                                                            },
+                                                                                        }}
+                                                                                    >
+                                                                                        Remove Card
+                                                                                    </Button>
+                                                                                </Box>
+                                                                            </Box>
+                                                                        </Box>
                                                                     </Box>
+                                                                </Paper>
+                                                            )}
+                                                        </Draggable>
+                                                    ))}
+                                                    {provided.placeholder}
+                                                </Box>
+                                            )}
+                                        </Droppable>
+                                    </DragDropContext>
 
-                                                                    <TextField
-                                                                        fullWidth
-                                                                        label="Button URL"
-                                                                        value={service.url}
-                                                                        onChange={(e) =>
-                                                                            handleUpdateService(index, "url", e.target.value)
-                                                                        }
-                                                                        helperText="Internal path (e.g., /about) or external URL (e.g., https://...)"
-                                                                    />
-                                                                </Box>
+                                    {services.items.length === 0 && (
+                                        <Alert severity="warning">
+                                            No service cards configured. Click "Add Service Card" above to create your first service card.
+                                        </Alert>
+                                    )}
+                                </AccordionDetails>
+                            </Accordion>
 
-                                                                {/* Delete Button */}
-                                                                <IconButton
-                                                                    color="error"
-                                                                    onClick={() => handleRemoveService(index)}
-                                                                    sx={{ mt: 1 }}
-                                                                >
-                                                                    <Trash2 size={20} />
-                                                                </IconButton>
-                                                            </Box>
-                                                        </CardContent>
-                                                    </Card>
-                                                )}
-                                            </Draggable>
-                                        ))}
-                                        {provided.placeholder}
+                            {/* Action Buttons at Bottom */}
+                            {hasChanges && (
+                                <Paper
+                                    elevation={0}
+                                    sx={{
+                                        mt: 3,
+                                        p: 2,
+                                        display: "flex",
+                                        gap: 2,
+                                        bgcolor: "grey.50",
+                                        border: "1px solid",
+                                        borderColor: "divider",
+                                        borderRadius: 2,
+                                    }}
+                                >
+                                    <Button
+                                        variant="contained"
+                                        size="large"
+                                        startIcon={<Save size={20} />}
+                                        onClick={handleSave}
+                                        disabled={!hasChanges || updateSettings.loading}
+                                        sx={{
+                                            px: 4,
+                                            fontWeight: 600,
+                                            boxShadow: 2,
+                                            "&:hover": {
+                                                boxShadow: 4,
+                                            },
+                                        }}
+                                    >
+                                        {updateSettings.loading ? "Saving..." : "Save All Changes"}
+                                    </Button>
+                                    <Button
+                                        variant="outlined"
+                                        size="large"
+                                        startIcon={<RotateCcw size={20} />}
+                                        onClick={handleCancel}
+                                        disabled={!hasChanges}
+                                        sx={{
+                                            px: 4,
+                                            fontWeight: 600,
+                                            borderWidth: 2,
+                                            "&:hover": {
+                                                borderWidth: 2,
+                                            },
+                                        }}
+                                    >
+                                        Cancel
+                                    </Button>
+                                </Paper>
+                            )}
+                        </Box>
+                    </Grid>
+
+                    {/* Right Column - Live Preview (Desktop only, sticky) */}
+                    <Grid item xs={12} lg={5}>
+                        <Box sx={{ display: { xs: "none", lg: "block" } }}>
+                            <Paper
+                                elevation={0}
+                                sx={{
+                                    position: "sticky",
+                                    top: 16,
+                                    p: 3,
+                                    bgcolor: "background.paper",
+                                    borderRadius: 2,
+                                    border: "2px solid",
+                                    borderColor: "divider",
+                                    boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+                                }}
+                            >
+                                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3 }}>
+                                    <Box
+                                        sx={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            width: 36,
+                                            height: 36,
+                                            borderRadius: 1.5,
+                                            bgcolor: "primary.main",
+                                            color: "white",
+                                        }}
+                                    >
+                                        <EyeIcon size={20} />
                                     </Box>
-                                )}
-                            </Droppable>
-                        </DragDropContext>
-
-                        {services.items.length === 0 && (
-                            <Alert severity="warning">
-                                No service cards configured. Click "Add Service" to create your first service card.
-                            </Alert>
-                        )}
-                    </CardContent>
-                </Card>
-
-                {/* Action Buttons */}
-                <Box sx={{ display: "flex", gap: 2 }}>
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        startIcon={<Save size={20} />}
-                        onClick={handleSave}
-                        disabled={!hasChanges || updateSettings.loading}
-                    >
-                        {updateSettings.loading ? "Saving..." : "Save Changes"}
-                    </Button>
-                    <Button
-                        variant="outlined"
-                        startIcon={<RotateCcw size={20} />}
-                        onClick={handleCancel}
-                        disabled={!hasChanges}
-                    >
-                        Cancel
-                    </Button>
-                </Box>
+                                    <Box>
+                                        <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                                            Live Preview
+                                        </Typography>
+                                        <Typography variant="caption" color="text.secondary">
+                                            See your changes in real-time
+                                        </Typography>
+                                    </Box>
+                                </Box>
+                                <ServicesPreview
+                                    services={services}
+                                    sectionTitle={services.title}
+                                    sectionSubtitle={services.subtitle}
+                                />
+                                <Alert
+                                    severity="info"
+                                    sx={{
+                                        mt: 2,
+                                        bgcolor: "info.lighter",
+                                        border: "1px solid",
+                                        borderColor: "info.light",
+                                        "& .MuiAlert-icon": {
+                                            color: "info.main",
+                                        },
+                                    }}
+                                >
+                                    <Typography variant="caption">
+                                        This preview updates in real-time as you make changes. The actual services section may look slightly
+                                        different based on screen size.
+                                    </Typography>
+                                </Alert>
+                            </Paper>
+                        </Box>
+                    </Grid>
+                </Grid>
             </Box>
 
             {/* Snackbar for feedback */}
