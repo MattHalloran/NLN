@@ -630,23 +630,52 @@ export const restApi = {
             formData.append("files", file);
         });
 
-        const url = `${REST_BASE_URL}/images`;
-        const response = await fetch(url, {
-            method: "POST",
-            credentials: "include",
-            body: formData, // Don't set Content-Type, browser will set it with boundary
-        });
+        // Internal function to make the request with retry logic
+        const makeRequest = async (retryCount = 0): Promise<Array<{ success: boolean; src: string; hash: string }>> => {
+            // Get CSRF token for each attempt
+            console.log(`[CSRF] Request POST /images requires CSRF token`);
+            const csrfToken = await getCsrfToken();
+            if (!csrfToken) {
+                console.error(`[CSRF] Failed to get CSRF token for POST /images!`);
+                throw new ApiError(500, "Failed to get CSRF token", { code: "CSRF_TOKEN_UNAVAILABLE" });
+            }
+            console.log(`[CSRF] Including CSRF token in request:`, csrfToken.substring(0, 20) + "...");
 
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => null);
-            throw new ApiError(
-                response.status,
-                errorData?.error || `HTTP ${response.status}: ${response.statusText}`,
-                errorData,
-            );
-        }
+            const url = `${REST_BASE_URL}/images`;
+            const response = await fetch(url, {
+                method: "POST",
+                credentials: "include",
+                headers: {
+                    "X-CSRF-Token": csrfToken, // Add CSRF token header
+                },
+                body: formData, // Don't set Content-Type, browser will set it with boundary
+            });
 
-        return await response.json();
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => null);
+
+                // If CSRF error and haven't retried yet, refresh token and retry
+                if (
+                    response.status === 403 &&
+                    errorData?.code === "CSRF_VALIDATION_FAILED" &&
+                    retryCount === 0
+                ) {
+                    console.log("[CSRF] CSRF validation failed for image upload, refreshing token and retrying...");
+                    await refreshCsrfToken();
+                    return makeRequest(retryCount + 1);
+                }
+
+                throw new ApiError(
+                    response.status,
+                    errorData?.error || `HTTP ${response.status}: ${response.statusText}`,
+                    errorData,
+                );
+            }
+
+            return await response.json();
+        };
+
+        return makeRequest();
     },
 
     async updateImages(input: {
@@ -677,23 +706,52 @@ export const restApi = {
             formData.append("files", file);
         });
 
-        const url = `${REST_BASE_URL}/assets/write`;
-        const response = await fetch(url, {
-            method: "POST",
-            credentials: "include",
-            body: formData,
-        });
+        // Internal function to make the request with retry logic
+        const makeRequest = async (retryCount = 0): Promise<{ success: boolean }> => {
+            // Get CSRF token for each attempt
+            console.log(`[CSRF] Request POST /assets/write requires CSRF token`);
+            const csrfToken = await getCsrfToken();
+            if (!csrfToken) {
+                console.error(`[CSRF] Failed to get CSRF token for POST /assets/write!`);
+                throw new ApiError(500, "Failed to get CSRF token", { code: "CSRF_TOKEN_UNAVAILABLE" });
+            }
+            console.log(`[CSRF] Including CSRF token in request:`, csrfToken.substring(0, 20) + "...");
 
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => null);
-            throw new ApiError(
-                response.status,
-                errorData?.error || `HTTP ${response.status}: ${response.statusText}`,
-                errorData,
-            );
-        }
+            const url = `${REST_BASE_URL}/assets/write`;
+            const response = await fetch(url, {
+                method: "POST",
+                credentials: "include",
+                headers: {
+                    "X-CSRF-Token": csrfToken, // Add CSRF token header
+                },
+                body: formData,
+            });
 
-        return await response.json();
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => null);
+
+                // If CSRF error and haven't retried yet, refresh token and retry
+                if (
+                    response.status === 403 &&
+                    errorData?.code === "CSRF_VALIDATION_FAILED" &&
+                    retryCount === 0
+                ) {
+                    console.log("[CSRF] CSRF validation failed for asset write, refreshing token and retrying...");
+                    await refreshCsrfToken();
+                    return makeRequest(retryCount + 1);
+                }
+
+                throw new ApiError(
+                    response.status,
+                    errorData?.error || `HTTP ${response.status}: ${response.statusText}`,
+                    errorData,
+                );
+            }
+
+            return await response.json();
+        };
+
+        return makeRequest();
     },
 
     // Dashboard Stats

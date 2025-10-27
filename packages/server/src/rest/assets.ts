@@ -89,24 +89,11 @@ router.post("/write", async (req: Request, res: Response) => {
             throw new CustomError(CODE.Unauthorized);
         }
 
-        const multerFiles = (req as any).files || [];
+        const files: Express.Multer.File[] = (req as any).files || [];
 
-        if (!multerFiles || multerFiles.length === 0) {
+        if (!files || files.length === 0) {
             return res.status(400).json({ error: "No files provided" });
         }
-
-        // Convert multer files to GraphQL upload format expected by saveFiles
-        const files = multerFiles.map((file: any) => ({
-            createReadStream: () => {
-                const { Readable } = require("stream");
-                const stream = new Readable();
-                stream.push(file.buffer);
-                stream.push(null);
-                return stream;
-            },
-            filename: file.originalname,
-            mimetype: file.mimetype,
-        }));
 
         const data = await saveFiles(files);
 

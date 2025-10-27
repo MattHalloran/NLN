@@ -1,7 +1,0 @@
-# NOTE: This file is deprecated as GraphQL has been removed from the project
-# Keeping for reference only - the project now uses REST API
-schema: "http://localhost:${PORT_SERVER:-5331}/api/v1"
-generates:
-  generatedTypes.ts:
-    plugins:
-      - "@graphql-codegen/typescript"

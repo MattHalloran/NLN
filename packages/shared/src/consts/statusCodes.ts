@@ -1,14 +1,17 @@
-export type ApolloErrorCode = {
+/**
+ * Standard error code structure used throughout the application
+ */
+export type ErrorCode = {
     /**
-     * Error code
+     * Machine-readable error code (e.g., "UNAUTHORIZED", "NOT_FOUND")
      */
     code: string;
     /**
-     * Detailed error message
+     * Human-readable detailed error message
      */
     message: string;
     /**
-     * Short error message
+     * Optional short message for snackbar notifications
      */
     snack?: string;
 }

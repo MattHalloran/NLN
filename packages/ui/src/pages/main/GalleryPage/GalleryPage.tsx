@@ -52,7 +52,7 @@ type ImageData = {
     featured?: boolean;
 }
 
-// Real image data is fetched from the GraphQL API
+// Real image data is fetched from the REST API
 
 const categories = ["All", "Gallery"];
 

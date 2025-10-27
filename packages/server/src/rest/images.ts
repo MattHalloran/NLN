@@ -105,7 +105,7 @@ router.post("/", async (req: Request, res: Response) => {
             const file: Express.Multer.File | undefined = files[i];
             if (file) {
                 const result = await saveImage({
-                    file: Promise.resolve(file),
+                    file,
                     alt: altArray[i],
                     description: descArray[i],
                     labels,

@@ -24,7 +24,6 @@
         "start-development-debug": "yarn pre-build && yarn build && nodemon --max-old-space-size=4096 --wasm-max-initial-code-space-reservation=1048576 --inspect=0.0.0.0:9229 dist/index.js",
         "start-production": "bash scripts/start-production.sh",
         "prisma-generate": "prisma generate",
-        "graphql-generate": "graphql-codegen && mv generatedTypes.ts src/schema/types.ts",
         "lint": "eslint src",
         "lint:fix": "eslint src --fix",
         "format": "prettier --write \"src/**/*.{ts,tsx,json}\"",

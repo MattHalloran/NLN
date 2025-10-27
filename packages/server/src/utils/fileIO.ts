@@ -193,7 +193,7 @@ export async function deleteFile(file: string) {
 }
 
 interface SaveImageProps {
-    file: Promise<any>;
+    file: Express.Multer.File;
     alt?: string | null;
     description?: string | null;
     labels?: string[] | null;
@@ -217,25 +217,28 @@ export async function saveImage({
     errorOnDuplicate = false,
 }: SaveImageProps): Promise<AddImageResponse> {
     try {
-        // Destructure data. Each file upload is a promise
-        const { createReadStream, filename, mimetype } = await file;
+        // Extract Multer file properties
+        const { buffer, originalname, mimetype } = file;
+
         // Make sure that the file is actually an image
         if (!mimetype.startsWith("image/")) {
             throw Error("Invalid mimetype");
         }
+
         // Make sure image type is supported
-        let { ext: extCheck } = path.parse(filename);
+        let { ext: extCheck } = path.parse(originalname);
         if (Object.values(IMAGE_EXTENSION).indexOf(extCheck.toLowerCase()) <= 0) {
             throw Error("Image type not supported");
         }
-        // Create a read stream
-        const stream = createReadStream();
-        const { name, folder } = await findFileName(filename, "images");
+
+        // Find available filename
+        const { name, folder } = await findFileName(originalname, "images");
         if (name === null) {
             throw Error("Could not create a valid file name");
         }
-        // Determine image dimensions
-        let image_buffer = await streamToBuffer(stream);
+
+        // Determine image dimensions using the buffer directly
+        let image_buffer = buffer;
         const dimensions = probe.sync(image_buffer);
         if (dimensions === null) {
             throw new Error("Could not determine image dimensions");
@@ -254,7 +257,7 @@ export async function saveImage({
                 logger.log(LogLevel.error, "HEIC conversion failed, skipping file", {
                     code: genErrorCode("0012"),
                     error: heicError,
-                    filename,
+                    filename: originalname,
                 });
                 throw new Error("HEIC conversion not available in current environment");
             }
@@ -302,7 +305,7 @@ export async function saveImage({
             logger.log(LogLevel.error, "WebP conversion failed for full-size image, continuing with original format", {
                 code: genErrorCode("0013"),
                 error: webpError,
-                filename,
+                filename: originalname,
             });
         }
         if (Array.isArray(labels)) {
@@ -360,7 +363,7 @@ export async function saveImage({
                 logger.log(LogLevel.error, `WebP conversion failed for ${key} size, continuing with original format`, {
                     code: genErrorCode("0014"),
                     error: webpError,
-                    filename,
+                    filename: originalname,
                     size: key,
                 });
             }
@@ -433,23 +436,29 @@ export function readFiles(files: string[]): (string | null)[] {
 
 /**
  * Saves a list of files
- * @param files Array of filenames, including extension (ex: 'boop.png')
+ * @param files Array of Multer file objects
  * @param overwrite Boolean indicating if existing files should be overwritten
  * @param acceptedTypes String or array of accepted file types, in mimetype form (e.g. 'image/png', 'application/vnd.ms-excel')
  * @returns Array of each filename saved, or null if unsuccessful
  */
 export async function saveFiles(
-    files: any,
+    files: Express.Multer.File[],
     overwrite = true,
     acceptedTypes?: string[],
 ): Promise<(string | null)[]> {
     const data: (string | null)[] = [];
     for (const file of files) {
-        const { createReadStream, filename, mimetype } = await file;
-        const stream = createReadStream();
+        const { buffer, originalname, mimetype } = file;
+
+        // Create a readable stream from buffer for saveFile
+        const { Readable } = require("stream");
+        const stream = new Readable();
+        stream.push(buffer);
+        stream.push(null);
+
         const { success, filename: finalFilename } = await saveFile(
             stream,
-            filename,
+            originalname,
             mimetype,
             overwrite,
             acceptedTypes,

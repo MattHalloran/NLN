@@ -1,8 +1,7 @@
 /**
  * Determines server URL to use, depending on whether we are running
  * locally or not.
- * NOTE: This is not the GraphQL endpoint, but the API endpoint.
- * @returns URL to use
+ * @returns Base server URL (without /api path)
  */
 export function getServerUrl(): string {
     // Get port from environment variable with fallback to 5331

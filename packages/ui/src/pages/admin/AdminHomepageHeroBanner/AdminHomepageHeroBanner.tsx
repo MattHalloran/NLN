@@ -520,6 +520,7 @@ export const AdminHomepageHeroBanner = () => {
             const uploadResults = await addImages({ label: "hero", files: acceptedFiles });
 
             const newBanners: any[] = [];
+            const failedUploads: string[] = [];
             const currentLength = heroBanners.length;
 
             for (let i = 0; i < uploadResults.length; i++) {
@@ -538,11 +539,27 @@ export const AdminHomepageHeroBanner = () => {
                         isActive: true,
                     };
                     newBanners.push(newBanner);
+                } else {
+                    failedUploads.push(file.name);
                 }
             }
 
             setHeroBanners((prev) => [...prev, ...newBanners]);
-            handleApiSuccess(`Added ${newBanners.length} image(s). Remember to save changes.`);
+
+            // Show appropriate message based on results
+            if (failedUploads.length === uploadResults.length) {
+                // All uploads failed
+                handleApiError(new Error(`All ${failedUploads.length} upload(s) failed`), "Failed to upload images");
+            } else if (failedUploads.length > 0) {
+                // Partial failure
+                handleApiError(
+                    new Error(`${failedUploads.length} upload(s) failed: ${failedUploads.join(", ")}`),
+                    `Uploaded ${newBanners.length} image(s), but ${failedUploads.length} failed`
+                );
+            } else {
+                // All successful
+                handleApiSuccess(`Added ${newBanners.length} image(s). Remember to save changes.`);
+            }
         } catch (error) {
             handleApiError(error, "Failed to add images");
         } finally {

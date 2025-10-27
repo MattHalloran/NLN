@@ -7,19 +7,14 @@ import { PrismaType } from "../../types";
 export async function init(prisma: PrismaType) {
     logger.log(LogLevel.info, "🌱 Starting database intial seed...");
 
-    // // Make sure auto-increment fields have the correct starting value
-    // // plant_trait
-    // const maxId = await prisma.$executeRaw`SELECT MAX(id) FROM plant_trait`;
-    // await prisma.$executeRaw`ALTER TABLE plant_trait AUTO_INCREMENT = ${maxId + 1}`;
-    // // plant_images
-    // const maxId2 = await prisma.$executeRaw`SELECT MAX(id) FROM plant_images`;
-    // await prisma.$executeRaw`ALTER TABLE plant_images AUTO_INCREMENT = ${maxId2 + 1}`;
-    // // queue_task
-    // const maxId3 = await prisma.$executeRaw`SELECT MAX(id) FROM queue_task`;
-    // await prisma.$executeRaw`ALTER TABLE queue_task AUTO_INCREMENT = ${maxId3 + 1}`;
-    // // image_labels
-    // const maxId4 = await prisma.$executeRaw`SELECT MAX(id) FROM image_labels`;
-    // await prisma.$executeRaw`ALTER TABLE image_labels AUTO_INCREMENT = ${maxId4 + 1}`;
+    // Make sure auto-increment sequences are synced with actual data (PostgreSQL)
+    // This prevents "Unique constraint failed" errors when inserting new records
+    logger.log(LogLevel.info, "🔧 Synchronizing database sequences...");
+    await prisma.$executeRaw`SELECT setval('plant_trait_id_seq', COALESCE((SELECT MAX(id) FROM plant_trait), 0) + 1, false)`;
+    await prisma.$executeRaw`SELECT setval('plant_images_id_seq', COALESCE((SELECT MAX(id) FROM plant_images), 0) + 1, false)`;
+    await prisma.$executeRaw`SELECT setval('queue_task_id_seq', COALESCE((SELECT MAX(id) FROM queue_task), 0) + 1, false)`;
+    await prisma.$executeRaw`SELECT setval('image_labels_id_seq', COALESCE((SELECT MAX(id) FROM image_labels), 0) + 1, false)`;
+    logger.log(LogLevel.info, "✅ Sequences synchronized.");
 
     // Upsert roles
     const adminRole = await prisma.role.upsert({

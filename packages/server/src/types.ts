@@ -23,16 +23,3 @@ declare global {
  * Note: RejectOnNotFound and RejectPerOperation were removed in Prisma 5+
  */
 export type PrismaType = pkg.PrismaClient;
-
-/**
- * Wrapper for GraphQL input types
- */
-export type IWrap<T> = { input: T };
-
-/**
- * Type for converting GraphQL objects (where nullables are set based on database),
- * to fully OPTIONAL objects (including relationships)
- */
-export type RecursivePartial<T> = {
-    [P in keyof T]?: T[P] extends Date ? T[P] : T[P] extends object ? RecursivePartial<T[P]> : T[P];
-};
