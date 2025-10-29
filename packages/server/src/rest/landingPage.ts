@@ -405,6 +405,12 @@ router.put("/", async (req: AuthenticatedRequest, res: Response) => {
 
         // Update seasonal plants if provided
         if (seasonalPlants) {
+            logger.info(`Received ${seasonalPlants.length} seasonal plants to save`);
+            // Log first plant to debug image field handling
+            if (seasonalPlants.length > 0) {
+                logger.info(`First plant data: ${JSON.stringify(seasonalPlants[0])}`);
+            }
+
             currentContent.content = currentContent.content || {
                 hero: {
                     banners: [],

@@ -1,7 +1,7 @@
 {
   "metadata": {
     "version": "2.0",
-    "lastUpdated": "2025-10-27T02:17:33.554Z"
+    "lastUpdated": "2025-10-29T18:36:09.808Z"
   },
   "content": {
     "hero": {
@@ -132,10 +132,7 @@
           "careLevel": "Medium",
           "icon": "leaf",
           "displayOrder": 1,
-          "isActive": true,
-          "image": "/images/fall-foliage-explorer-div-map-1761246676597-XXL.png",
-          "imageAlt": "fall-foliage-explorer-div-map-1761246676597",
-          "imageHash": "0f17053f7c1c1c1f"
+          "isActive": true
         },
         {
           "id": "winter-jasmine",
@@ -263,21 +260,21 @@
       "facebook": "https://www.facebook.com/newlifenurseryinc",
       "instagram": "https://www.instagram.com/newlifenurseryinc"
     },
-    "hours": "| Day           | Hours |\n| ------------- |:-------------:         |\n| MON-FRI      | 8:00 AM to 5:00 PM     |\n| SAT-SUN     | CLOSED    |\n| Note          | Closed daily from 12:00 PM to 1:00 PM    |\n"
+    "hours": "| Day           | Hours |\n| ------------- |:-------------:         |\n| MON-SUN      | 8:00 AM to 6:00 PM     |\n"
   },
   "theme": {
     "colors": {
       "light": {
-        "primary": "#295b2c",
-        "secondary": "#2179b0",
-        "accent": "#0b8500",
-        "background": "#e5ebe5",
+        "primary": "#2d6730",
+        "secondary": "#1976d2",
+        "accent": "#4CAF50",
+        "background": "#e9f1e9",
         "paper": "#ffffff"
       },
       "dark": {
         "primary": "#515774",
         "secondary": "#4372a3",
-        "accent": "#08838c",
+        "accent": "#5b99da",
         "background": "#181818",
         "paper": "#2e2e2e"
       },

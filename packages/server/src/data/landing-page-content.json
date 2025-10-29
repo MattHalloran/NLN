@@ -1,7 +1,7 @@
 {
   "metadata": {
     "version": "2.0",
-    "lastUpdated": "2025-10-29T15:29:02.216Z"
+    "lastUpdated": "2025-10-29T18:15:30.062Z"
   },
   "content": {
     "hero": {
@@ -132,10 +132,7 @@
           "careLevel": "Medium",
           "icon": "leaf",
           "displayOrder": 1,
-          "isActive": true,
-          "image": "/images/fall-foliage-explorer-div-map-1761246676597-XXL.png",
-          "imageAlt": "fall-foliage-explorer-div-map-1761246676597",
-          "imageHash": "0f17053f7c1c1c1f"
+          "isActive": true
         },
         {
           "id": "winter-jasmine",

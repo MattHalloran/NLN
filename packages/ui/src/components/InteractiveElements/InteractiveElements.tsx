@@ -19,6 +19,7 @@ import { useABTestTracking } from "hooks";
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import { Leaf, Lightbulb, Sprout, Flower, Snowflake, LucideIcon, Star } from "lucide-react";
+import { getServerUrl } from "utils";
 
 // SeasonalPlant and PlantTip interfaces are defined in the API
 // but commented out here since they're not used directly
@@ -27,13 +28,34 @@ import { Leaf, Lightbulb, Sprout, Flower, Snowflake, LucideIcon, Star } from "lu
 const getIconComponent = (iconName: string): LucideIcon => {
     switch (iconName) {
         case "leaf": return Leaf;
-        case "flower": 
+        case "flower":
         case "flower2": return Flower;
         case "snowflake": return Snowflake;
         case "sprout": return Sprout;
         case "star": return Star;
         default: return Leaf;
     }
+};
+
+// Get current season based on month (Northern Hemisphere)
+const getCurrentSeason = (): string => {
+    const month = new Date().getMonth(); // 0-11
+    if (month >= 2 && month <= 4) return "Spring"; // Mar, Apr, May
+    if (month >= 5 && month <= 7) return "Summer"; // Jun, Jul, Aug
+    if (month >= 8 && month <= 10) return "Fall"; // Sep, Oct, Nov
+    return "Winter"; // Dec, Jan, Feb
+};
+
+// Sort plants by season, putting current season first
+const sortPlantsBySeason = (plants: any[]): any[] => {
+    const currentSeason = getCurrentSeason();
+    return [...plants].sort((a, b) => {
+        // Current season comes first
+        if (a.season === currentSeason && b.season !== currentSeason) return -1;
+        if (b.season === currentSeason && a.season !== currentSeason) return 1;
+        // Otherwise maintain original order
+        return 0;
+    });
 };
 
 export const InteractiveElements = () => {
@@ -47,9 +69,13 @@ export const InteractiveElements = () => {
     const { data } = useLandingPage();
     const { trackConversion } = useABTestTracking();
 
-    const seasonalPlants = data?.content?.seasonal?.plants || [];
+    const rawPlants = data?.content?.seasonal?.plants || [];
     const plantTips = data?.content?.seasonal?.tips || [];
     const newsletterSettings = data?.content?.newsletter;
+
+    // Sort plants by season, putting current season first
+    const seasonalPlants = useMemo(() => sortPlantsBySeason(rawPlants), [rawPlants]);
+    const currentSeason = useMemo(() => getCurrentSeason(), []);
 
     // Get unique categories from tips
     const tipCategories = ["All", ...Array.from(new Set(plantTips.map(tip => tip.category)))];
@@ -137,14 +163,18 @@ export const InteractiveElements = () => {
                         <Box>
                             <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 3 }}>
                                 <Leaf size={24} color={palette.primary.main} />
-                                <Typography 
-                                    variant="h5" 
-                                    sx={{ 
+                                <Typography
+                                    variant="h5"
+                                    sx={{
                                         fontWeight: 600,
                                         color: palette.primary.main,
                                     }}
                                 >
-                                    What's Blooming Now
+                                    {seasonalPlants.length > 0 && seasonalPlants[safeCurrentPlant]?.season === currentSeason
+                                        ? "What's Blooming Now"
+                                        : seasonalPlants.length > 0
+                                            ? `Perfect for ${seasonalPlants[safeCurrentPlant]?.season}`
+                                            : "What's Blooming Now"}
                                 </Typography>
                             </Box>
                             
@@ -154,11 +184,15 @@ export const InteractiveElements = () => {
                                 overflow: "hidden",
                                 position: "relative",
                             }}>
-                                <Box sx={{ 
-                                    display: "flex", 
+                                <Box sx={{
+                                    display: "flex",
                                     alignItems: "center",
                                     minHeight: "300px",
-                                    background: `linear-gradient(135deg, ${palette.primary.light} 0%, ${palette.secondary.light} 100%)`,
+                                    background: seasonalPlants.length > 0 && seasonalPlants[safeCurrentPlant]?.image
+                                        ? `linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url(${getServerUrl()}${seasonalPlants[safeCurrentPlant].image})`
+                                        : `linear-gradient(135deg, ${palette.primary.light} 0%, ${palette.secondary.light} 100%)`,
+                                    backgroundSize: "cover",
+                                    backgroundPosition: "center",
                                     position: "relative",
                                 }}>
                                     {/* Navigation Arrows */}
@@ -193,51 +227,26 @@ export const InteractiveElements = () => {
                                     </IconButton>
 
                                     {/* Plant Content */}
-                                    <Box sx={{ 
+                                    <Box sx={{
                                         width: "100%",
                                         textAlign: "center",
                                         p: 4,
                                         color: "white",
                                     }}>
-                                        <Box sx={{
-                                            mb: 2,
-                                            display: "flex",
-                                            justifyContent: "center",
-                                            color: "white",
-                                        }}>
-                                            {seasonalPlants.length > 0 && (() => {
-                                                const currentPlantData = seasonalPlants[safeCurrentPlant];
-
-                                                // Show image if available, otherwise fall back to icon
-                                                if (currentPlantData?.image) {
-                                                    return (
-                                                        <Box
-                                                            component="img"
-                                                            src={currentPlantData.image}
-                                                            alt={currentPlantData.imageAlt || currentPlantData.name}
-                                                            sx={{
-                                                                width: "100%",
-                                                                maxWidth: 200,
-                                                                height: 150,
-                                                                objectFit: "cover",
-                                                                borderRadius: 2,
-                                                                boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
-                                                            }}
-                                                            onError={(e: any) => {
-                                                                // If image fails to load, hide it and show icon fallback
-                                                                e.target.style.display = "none";
-                                                                const iconFallback = e.target.nextElementSibling;
-                                                                if (iconFallback) iconFallback.style.display = "block";
-                                                            }}
-                                                        />
-                                                    );
-                                                }
-
-                                                // Fallback to icon
-                                                const IconComponent = getIconComponent(currentPlantData?.icon || "leaf");
-                                                return <IconComponent size={64} />;
-                                            })()}
-                                        </Box>
+                                        {/* Only show icon if no image is available */}
+                                        {seasonalPlants.length > 0 && !seasonalPlants[safeCurrentPlant]?.image && (
+                                            <Box sx={{
+                                                mb: 2,
+                                                display: "flex",
+                                                justifyContent: "center",
+                                                color: "white",
+                                            }}>
+                                                {(() => {
+                                                    const IconComponent = getIconComponent(seasonalPlants[safeCurrentPlant]?.icon || "leaf");
+                                                    return <IconComponent size={64} />;
+                                                })()}
+                                            </Box>
+                                        )}
 
                                         {seasonalPlants.length > 0 && (
                                             <>

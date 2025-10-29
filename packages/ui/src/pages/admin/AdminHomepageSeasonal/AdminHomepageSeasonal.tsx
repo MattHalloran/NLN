@@ -28,7 +28,9 @@ import {
 } from "@mui/material";
 import { useLandingPage } from "hooks/useLandingPage";
 import { useUpdateLandingPageContent, useAddImages } from "api/rest/hooks";
+import { useABTestQueryParams } from "hooks/useABTestQueryParams";
 import { BackButton, PageContainer, TopBar, Dropzone } from "components";
+import { getServerUrl } from "utils";
 import {
     Flower,
     Leaf,
@@ -88,13 +90,38 @@ const getIconComponent = (iconName: string) => {
     return option ? option.icon : Leaf;
 };
 
+// Get current season based on month (Northern Hemisphere)
+const getCurrentSeason = (): string => {
+    const month = new Date().getMonth(); // 0-11
+    if (month >= 2 && month <= 4) return "Spring"; // Mar, Apr, May
+    if (month >= 5 && month <= 7) return "Summer"; // Jun, Jul, Aug
+    if (month >= 8 && month <= 10) return "Fall"; // Sep, Oct, Nov
+    return "Winter"; // Dec, Jan, Feb
+};
+
+// Sort plants by season, putting current season first
+const sortPlantsBySeason = (plants: SeasonalPlant[]): SeasonalPlant[] => {
+    const currentSeason = getCurrentSeason();
+    return [...plants].sort((a, b) => {
+        // Current season comes first
+        if (a.season === currentSeason && b.season !== currentSeason) return -1;
+        if (b.season === currentSeason && a.season !== currentSeason) return 1;
+        // Otherwise maintain original order
+        return 0;
+    });
+};
+
 // Preview Component - Shows how the seasonal section looks on the homepage
 const SeasonalPreview = ({ plants, tips }: { plants: SeasonalPlant[]; tips: PlantTip[] }) => {
     const { palette } = useTheme();
     const [currentPlant, setCurrentPlant] = useState(0);
     const [selectedCategory, setSelectedCategory] = useState(0);
 
-    const activePlants = plants.filter((p) => p.isActive);
+    const rawActivePlants = plants.filter((p) => p.isActive);
+    // Sort plants by season, putting current season first
+    const activePlants = useMemo(() => sortPlantsBySeason(rawActivePlants), [rawActivePlants]);
+    const currentSeason = useMemo(() => getCurrentSeason(), []);
+
     const activeTips = tips.filter((t) => t.isActive);
     const tipCategories = ["All", ...Array.from(new Set(activeTips.map((tip) => tip.category)))];
     const filteredTips =
@@ -154,7 +181,11 @@ const SeasonalPreview = ({ plants, tips }: { plants: SeasonalPlant[]; tips: Plan
                             <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
                                 <Leaf size={18} color={palette.primary.main} />
                                 <Typography variant="subtitle2" sx={{ fontWeight: 600, color: palette.primary.main }}>
-                                    What's Blooming Now
+                                    {activePlants.length > 0 && activePlants[safeCurrentPlant]?.season === currentSeason
+                                        ? "What's Blooming Now"
+                                        : activePlants.length > 0
+                                            ? `Perfect for ${activePlants[safeCurrentPlant]?.season}`
+                                            : "What's Blooming Now"}
                                 </Typography>
                             </Box>
 
@@ -163,19 +194,26 @@ const SeasonalPreview = ({ plants, tips }: { plants: SeasonalPlant[]; tips: Plan
                                     <Box
                                         sx={{
                                             minHeight: "200px",
-                                            background: `linear-gradient(135deg, ${palette.primary.light} 0%, ${palette.secondary.light} 100%)`,
+                                            background: activePlants[safeCurrentPlant]?.image
+                                                ? `linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url(${getServerUrl()}${activePlants[safeCurrentPlant].image})`
+                                                : `linear-gradient(135deg, ${palette.primary.light} 0%, ${palette.secondary.light} 100%)`,
+                                            backgroundSize: "cover",
+                                            backgroundPosition: "center",
                                             position: "relative",
                                             p: 3,
                                             color: "white",
                                             textAlign: "center",
                                         }}
                                     >
-                                        <Box sx={{ mb: 1.5, display: "flex", justifyContent: "center" }}>
-                                            {(() => {
-                                                const IconComponent = getIconComponent(activePlants[safeCurrentPlant]?.icon || "leaf");
-                                                return <IconComponent size={48} />;
-                                            })()}
-                                        </Box>
+                                        {/* Only show icon if no image is available */}
+                                        {!activePlants[safeCurrentPlant]?.image && (
+                                            <Box sx={{ mb: 1.5, display: "flex", justifyContent: "center" }}>
+                                                {(() => {
+                                                    const IconComponent = getIconComponent(activePlants[safeCurrentPlant]?.icon || "leaf");
+                                                    return <IconComponent size={48} />;
+                                                })()}
+                                            </Box>
+                                        )}
 
                                         <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, textShadow: "1px 1px 2px rgba(0,0,0,0.3)" }}>
                                             {activePlants[safeCurrentPlant]?.name || "Loading..."}
@@ -293,9 +331,13 @@ const SeasonalPreview = ({ plants, tips }: { plants: SeasonalPlant[]; tips: Plan
 
 export const AdminHomepageSeasonal = () => {
     const { palette } = useTheme();
+    const { variantId: queryVariantId } = useABTestQueryParams();
     const { data, refetch } = useLandingPage();
     const updateLandingPageContent = useUpdateLandingPageContent();
     const { mutate: addImages } = useAddImages();
+
+    // Use variantId from URL query params, or fall back to the loaded data's variant
+    const variantId = queryVariantId || data?._meta?.variantId;
 
     const [plants, setPlants] = useState<SeasonalPlant[]>([]);
     const [originalPlants, setOriginalPlants] = useState<SeasonalPlant[]>([]);
@@ -304,6 +346,7 @@ export const AdminHomepageSeasonal = () => {
     const [editingPlant, setEditingPlant] = useState<SeasonalPlant | null>(null);
     const [editingTip, setEditingTip] = useState<PlantTip | null>(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [deletingImageId, setDeletingImageId] = useState<string | null>(null);
 
     // Load data from API
     useEffect(() => {
@@ -337,11 +380,15 @@ export const AdminHomepageSeasonal = () => {
     const handleSaveAll = async () => {
         try {
             setIsLoading(true);
+
+            const queryParams = variantId ? { variantId } : undefined;
+
             await updateLandingPageContent.mutate({
                 data: {
                     seasonalPlants: plants,
                     plantTips: tips,
                 },
+                queryParams,
             });
             await refetch();
             setOriginalPlants(JSON.parse(JSON.stringify(plants)));
@@ -473,28 +520,56 @@ export const AdminHomepageSeasonal = () => {
 
     // Delete image handler for seasonal plants
     const handleDeletePlantImage = useCallback((plantId: string) => {
-        const updatedPlants = plants.map((p) => {
+        // Set deleting state immediately to prevent double-clicks
+        setDeletingImageId(plantId);
+
+        // Use functional state update to avoid stale closure
+        setPlants((prevPlants) => prevPlants.map((p) => {
             if (p.id === plantId) {
-                // Remove image fields, fall back to icon
-                const { image, imageAlt, imageHash, ...rest } = p;
-                return rest as SeasonalPlant;
+                // Create a new object without image fields
+                const newPlant: SeasonalPlant = {
+                    id: p.id,
+                    name: p.name,
+                    description: p.description,
+                    season: p.season,
+                    careLevel: p.careLevel,
+                    icon: p.icon,
+                    displayOrder: p.displayOrder,
+                    isActive: p.isActive,
+                    // Explicitly do not include image, imageAlt, imageHash
+                };
+                return newPlant;
             }
             return p;
-        });
-
-        setPlants(updatedPlants);
+        }));
 
         // Update editing plant if it's the one being edited
-        if (editingPlant?.id === plantId) {
-            const { image, imageAlt, imageHash, ...rest } = editingPlant;
-            setEditingPlant(rest as SeasonalPlant);
-        }
+        setEditingPlant((prevEditingPlant) => {
+            if (prevEditingPlant?.id === plantId) {
+                const newPlant: SeasonalPlant = {
+                    id: prevEditingPlant.id,
+                    name: prevEditingPlant.name,
+                    description: prevEditingPlant.description,
+                    season: prevEditingPlant.season,
+                    careLevel: prevEditingPlant.careLevel,
+                    icon: prevEditingPlant.icon,
+                    displayOrder: prevEditingPlant.displayOrder,
+                    isActive: prevEditingPlant.isActive,
+                    // Explicitly do not include image, imageAlt, imageHash
+                };
+                return newPlant;
+            }
+            return prevEditingPlant;
+        });
 
         PubSub.get().publishSnack({
             message: "Image removed (icon will be used as fallback)",
             severity: SnackSeverity.Info,
         });
-    }, [plants, editingPlant]);
+
+        // Clear deleting state after state updates
+        setTimeout(() => setDeletingImageId(null), 100);
+    }, []);
 
     return (
         <PageContainer variant="wide" sx={{ minHeight: "100vh", paddingBottom: 0 }}>
@@ -819,7 +894,7 @@ export const AdminHomepageSeasonal = () => {
                                                                     <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                                                                         <Box
                                                                             component="img"
-                                                                            src={`${editingPlant.image}`}
+                                                                            src={`${getServerUrl()}${editingPlant.image}`}
                                                                             alt={editingPlant.imageAlt || editingPlant.name}
                                                                             sx={{
                                                                                 width: 100,
@@ -837,10 +912,14 @@ export const AdminHomepageSeasonal = () => {
                                                                             <Button
                                                                                 size="small"
                                                                                 startIcon={<Trash2 size={16} />}
-                                                                                onClick={() => handleDeletePlantImage(editingPlant.id)}
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    handleDeletePlantImage(editingPlant.id);
+                                                                                }}
                                                                                 color="error"
+                                                                                disabled={deletingImageId === editingPlant.id}
                                                                             >
-                                                                                Remove Image
+                                                                                {deletingImageId === editingPlant.id ? "Removing..." : "Remove Image"}
                                                                             </Button>
                                                                         </Box>
                                                                     </Box>

@@ -397,6 +397,10 @@ export interface StorageStats {
         totalFiles: number;
         filesOnDisk: number;
         orphanedFiles: number;
+        maxStorageMB: number;
+        availableStorageMB: number;
+        usagePercent: number;
+        averageImageSizeMB: number;
     };
     cleanup: {
         lastRun: string | null;
@@ -404,12 +408,20 @@ export interface StorageStats {
         lastRunDeletedImages: number;
         lastRunDeletedFiles: number;
         lastRunOrphanedFiles: number;
+        lastRunOrphanedRecords: number;
         lastRunDurationMs: number | null;
         lastRunErrors: string[];
         nextScheduledRun: string | null;
+        jobStatus: {
+            waiting: number;
+            active: number;
+            completed: number;
+            failed: number;
+        };
     };
     policy: {
         retentionDays: number;
+        backupRetentionDays: number;
         frequency: string;
         schedule: string;
     };
@@ -421,10 +433,99 @@ export interface CleanupLogEntry {
     deleted_images: number;
     deleted_files: number;
     orphaned_files: number;
+    orphaned_records: number;
     errors: string | null;
     status: string;
     duration_ms: number | null;
     created_at: string;
+}
+
+export interface CleanupHistory {
+    history: CleanupLogEntry[];
+    pagination: {
+        total: number;
+        limit: number;
+        offset: number;
+        hasMore: boolean;
+    };
+}
+
+export interface CleanupPreview {
+    unlabeledImages: {
+        count: number;
+        estimatedFreedMB: number;
+        ageBreakdown: {
+            "30-60days": number;
+            "60-90days": number;
+            "90+days": number;
+        };
+        samples: Array<{
+            hash: string;
+            alt: string;
+            unlabeledSince: string;
+            fileCount: number;
+        }>;
+    };
+    orphanedFiles: {
+        count: number;
+        estimatedFreedMB: number;
+    };
+    orphanedRecords: {
+        count: number;
+    };
+    totalEstimatedFreedMB: number;
+}
+
+export interface OrphanedFile {
+    name: string;
+    sizeMB: number;
+    lastModified: string;
+}
+
+export interface OrphanedFilesResponse {
+    orphanedFiles: OrphanedFile[];
+    totalCount: number;
+    totalSizeMB: number;
+}
+
+export interface OrphanedRecord {
+    hash: string;
+    alt: string;
+    labels: string[];
+    fileCount: number;
+    reason: string;
+}
+
+export interface OrphanedRecordsResponse {
+    orphanedRecords: OrphanedRecord[];
+    totalCount: number;
+}
+
+export interface RecentActivity {
+    recentUploads: Array<{
+        hash: string;
+        alt: string;
+        createdAt: string;
+        labels: string[];
+    }>;
+    recentlyUnlabeled: Array<{
+        hash: string;
+        alt: string;
+        unlabeledSince: string;
+    }>;
+    recentCleanups: Array<{
+        created_at: string;
+        status: string;
+        deleted_images: number;
+        deleted_files: number;
+    }>;
+}
+
+export interface JobStatus {
+    waiting: number;
+    active: number;
+    completed: number;
+    failed: number;
 }
 
 export interface LogEntry {
@@ -576,6 +677,9 @@ export const restApi = {
                 icon: string;
                 displayOrder: number;
                 isActive: boolean;
+                image?: string;
+                imageAlt?: string;
+                imageHash?: string;
             }>;
             plantTips?: Array<{
                 id: string;
@@ -999,8 +1103,49 @@ export const restApi = {
         });
     },
 
-    async getCleanupHistory(): Promise<CleanupLogEntry[]> {
-        return fetchApi<CleanupLogEntry[]>("/storage/cleanup/history");
+    async getCleanupHistory(params?: { status?: string; limit?: number; offset?: number }): Promise<CleanupHistory> {
+        const queryParams = new URLSearchParams();
+        if (params?.status) queryParams.append("status", params.status);
+        if (params?.limit) queryParams.append("limit", params.limit.toString());
+        if (params?.offset) queryParams.append("offset", params.offset.toString());
+
+        const queryString = queryParams.toString();
+        return fetchApi<CleanupHistory>(`/storage/cleanup/history${queryString ? `?${queryString}` : ""}`);
+    },
+
+    async getCleanupPreview(): Promise<CleanupPreview> {
+        return fetchApi<CleanupPreview>("/storage/cleanup/preview");
+    },
+
+    async getOrphanedFiles(): Promise<OrphanedFilesResponse> {
+        return fetchApi<OrphanedFilesResponse>("/storage/orphaned-files");
+    },
+
+    async getOrphanedRecords(): Promise<OrphanedRecordsResponse> {
+        return fetchApi<OrphanedRecordsResponse>("/storage/orphaned-records");
+    },
+
+    async cleanOrphanedFiles(): Promise<{ success: boolean; deletedCount: number; freedMB: number; errors?: string[] }> {
+        return fetchApi<{ success: boolean; deletedCount: number; freedMB: number; errors?: string[] }>(
+            "/storage/orphaned-files",
+            {
+                method: "DELETE",
+            },
+        );
+    },
+
+    async cleanOrphanedRecords(): Promise<{ success: boolean; deletedCount: number; errors?: string[] }> {
+        return fetchApi<{ success: boolean; deletedCount: number; errors?: string[] }>("/storage/orphaned-records", {
+            method: "DELETE",
+        });
+    },
+
+    async getRecentActivity(): Promise<RecentActivity> {
+        return fetchApi<RecentActivity>("/storage/recent-activity");
+    },
+
+    async getCleanupJobStatus(): Promise<JobStatus> {
+        return fetchApi<JobStatus>("/storage/job-status");
     },
 
     // System logs

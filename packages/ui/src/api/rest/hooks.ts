@@ -177,6 +177,9 @@ export function useUpdateLandingPageContent() {
                     icon: string;
                     displayOrder: number;
                     isActive: boolean;
+                    image?: string;
+                    imageAlt?: string;
+                    imageHash?: string;
                 }>;
                 plantTips?: Array<{
                     id: string;
@@ -537,12 +540,65 @@ export function useTriggerCleanup() {
     );
 }
 
-export function useCleanupHistory() {
+export function useCleanupHistory(params?: { status?: string; limit?: number; offset?: number }) {
     return useRestQuery(
-        () => restApi.getCleanupHistory(),
+        () => restApi.getCleanupHistory(params),
+        [JSON.stringify(params)],
+    );
+}
+
+export function useCleanupPreview() {
+    return useRestQuery(
+        () => restApi.getCleanupPreview(),
+        [],
+    );
+}
+
+export function useOrphanedFiles() {
+    return useRestQuery(
+        () => restApi.getOrphanedFiles(),
+        [],
+    );
+}
+
+export function useOrphanedRecords() {
+    return useRestQuery(
+        () => restApi.getOrphanedRecords(),
+        [],
+    );
+}
+
+export function useCleanOrphanedFiles() {
+    return useRestMutation<void, { success: boolean; deletedCount: number; freedMB: number; errors?: string[] }>(
+        () => restApi.cleanOrphanedFiles(),
+    );
+}
+
+export function useCleanOrphanedRecords() {
+    return useRestMutation<void, { success: boolean; deletedCount: number; errors?: string[] }>(
+        () => restApi.cleanOrphanedRecords(),
+    );
+}
+
+export function useRecentActivity() {
+    return useRestQuery(
+        () => restApi.getRecentActivity(),
+        [],
+    );
+}
+
+export function useCleanupJobStatus() {
+    return useRestQuery(
+        () => restApi.getCleanupJobStatus(),
         [],
     );
 }
 
 // Re-export commonly used types from client
-export type { Image, LandingPageContent, Plant, DashboardStats, LandingPageVariant, StorageStats, CleanupLogEntry };
+export type {
+    Image,
+    LandingPageContent,
+    Plant,
+    DashboardStats,
+    LandingPageVariant,
+} from "./client";
