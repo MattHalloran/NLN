@@ -10,6 +10,8 @@ import {
     TrendingUp as _TrendingUp,
     Assessment as _Assessment,
     BusinessCenter as BackOfficeIcon,
+    Storage as StorageIcon,
+    ListAlt as LogsIcon,
 } from "@mui/icons-material";
 import { useDashboardStats } from "api/rest/hooks";
 import { CardGrid as _CardGrid, PageContainer } from "components";
@@ -87,6 +89,22 @@ const getCardData = (_stats: any): AdminCardData[] => [
         icon: ContactIcon,
         color: "#546e7a",
         stats: "Update info",
+    },
+    {
+        title: "Storage Management",
+        description: "Monitor image storage, view cleanup status, and manage retention",
+        link: APP_LINKS.AdminStorage,
+        icon: StorageIcon,
+        color: "#546e7a",
+        stats: "Monitor storage",
+    },
+    {
+        title: "System Logs",
+        description: "View server logs, filter by level, search errors, and export logs",
+        link: APP_LINKS.AdminLogs,
+        icon: LogsIcon,
+        color: "#546e7a",
+        stats: "View logs",
     },
 ];
 

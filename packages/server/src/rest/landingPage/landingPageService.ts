@@ -1,6 +1,7 @@
 import { readFileSync, writeFileSync } from "fs";
 import { join } from "path";
 import { logger, LogLevel } from "../../logger.js";
+import { syncHeroBannerLabels } from "../../utils/imageLabelSync.js";
 import type {
     LandingPageContent,
     HeroBanner,
@@ -90,8 +91,12 @@ export const readLandingPageContent = (): LandingPageContent => {
 
 /**
  * Write the consolidated landing page content to file
+ *
+ * IMPORTANT: This function now synchronizes image labels to prevent
+ * hero banner images from being incorrectly marked as "unlabeled" and
+ * deleted by cleanup scripts.
  */
-export const writeLandingPageContent = (content: LandingPageContent): void => {
+export const writeLandingPageContent = async (content: LandingPageContent): Promise<void> => {
     try {
         const contentPath = join(dataPath, "landing-page-content.json");
         const dataToWrite: LandingPageContent = {
@@ -101,10 +106,18 @@ export const writeLandingPageContent = (content: LandingPageContent): void => {
                 lastUpdated: new Date().toISOString(),
             },
         };
+
+        // CRITICAL: Synchronize image labels BEFORE writing file
+        // This ensures hero banner images are labeled correctly and prevents orphaning
+        // If label sync fails, the file write is aborted (no partial state)
+        await syncHeroBannerLabels(dataToWrite);
+        logger.info("Image labels synchronized for hero banners");
+
+        // Only write the JSON file after successful label sync
         writeFileSync(contentPath, JSON.stringify(dataToWrite, null, 2), "utf8");
         logger.info("Landing page content updated successfully");
     } catch (error) {
-        logger.log(LogLevel.error, "Error writing landing page content:", error);
+        logger.log(LogLevel.error, "Error updating landing page content:", error);
         throw error;
     }
 };

@@ -9,4 +9,6 @@ export * from "./AdminHomepageSeasonal/AdminHomepageSeasonal";
 export * from "./AdminHomepageSections/AdminHomepageSections";
 export * from "./AdminHomepageServices/AdminHomepageServices";
 export * from "./AdminMainPage/AdminMainPage";
+export * from "./AdminStoragePage/AdminStoragePage";
+export * from "./AdminSystemLogs";
 

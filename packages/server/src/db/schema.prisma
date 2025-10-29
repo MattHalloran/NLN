@@ -115,15 +115,16 @@ model feedback {
 }
 
 model image {
-    hash         String         @unique(map: "image_hash_unique") @db.VarChar(128)
-    alt          String?        @db.VarChar(256)
-    description  String?        @db.VarChar(1024)
-    usedFor      String?
-    created_at   DateTime       @default(now()) @db.Timestamptz(6)
-    updated_at   DateTime       @default(now()) @db.Timestamptz(6)
-    files        image_file[]
-    image_labels image_labels[]
-    plant_images plant_images[]
+    hash            String         @unique(map: "image_hash_unique") @db.VarChar(128)
+    alt             String?        @db.VarChar(256)
+    description     String?        @db.VarChar(1024)
+    usedFor         String?
+    unlabeled_since DateTime?      @db.Timestamptz(6)
+    created_at      DateTime       @default(now()) @db.Timestamptz(6)
+    updated_at      DateTime       @default(now()) @db.Timestamptz(6)
+    files           image_file[]
+    image_labels    image_labels[]
+    plant_images    plant_images[]
 }
 
 model image_file {
@@ -258,4 +259,16 @@ model image_labels {
     image image  @relation(fields: [hash], references: [hash], onDelete: Cascade, map: "image_labels_hash_foreign")
 
     @@unique([hash, label], map: "image_labels_hash_label_unique")
+}
+
+model cleanup_log {
+    id              Int      @id @default(autoincrement())
+    type            String   @db.VarChar(64)
+    deleted_images  Int      @default(0)
+    deleted_files   Int      @default(0)
+    orphaned_files  Int      @default(0)
+    errors          String?  @db.VarChar(4096)
+    status          String   @db.VarChar(32)
+    duration_ms     Int?
+    created_at      DateTime @default(now()) @db.Timestamptz(6)
 }

@@ -7,6 +7,8 @@ import authRouter from "./auth.js";
 import imagesRouter from "./images.js";
 import assetsRouter from "./assets.js";
 import dashboardRouter from "./dashboard.js";
+import storageRouter from "./storage.js";
+import logsRouter from "./logs.js";
 // ARCHIVED: import analyticsRouter from "./analytics.js"; // Old A/B test analytics moved to variant system
 import { csrfTokenEndpoint } from "../middleware/csrf.js";
 
@@ -39,6 +41,8 @@ v1Router.use("/auth", authRouter);
 v1Router.use("/images", upload.array("files"), imagesRouter);
 v1Router.use("/assets", upload.array("files"), assetsRouter);
 v1Router.use("/dashboard", dashboardRouter);
+v1Router.use("/storage", storageRouter);
+v1Router.use("/logs", logsRouter);
 // ARCHIVED: v1Router.use("/analytics", analyticsRouter); // Old A/B test analytics moved to variant system
 
 // Mount versioned API

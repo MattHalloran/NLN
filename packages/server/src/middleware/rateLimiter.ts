@@ -66,3 +66,27 @@ export const signupLimiter = rateLimit({
         });
     },
 });
+
+// Image upload rate limiter - 25 upload requests per 15 minutes
+// Note: Each request can upload multiple files (max 15 per request enforced in handler)
+// This prevents disk space exhaustion and CPU overload from Sharp image processing
+// Max theoretical: ~375 images per 15 min = ~6000 variants (16 per image)
+export const imageUploadLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 25, // Limit each IP to 25 upload requests per 15 minutes
+    message: "Too many image upload requests. Please wait 15 minutes before uploading more images.",
+    standardHeaders: true,
+    legacyHeaders: false,
+    handler: (req, res) => {
+        logger.log(
+            LogLevel.warn,
+            `Image upload rate limit exceeded for IP: ${req.ip}, User: ${req.userId || "unknown"}`,
+        );
+        res.status(429).json({
+            error: "Too many image upload requests. Please wait before uploading more images.",
+            code: "RATE_LIMIT_EXCEEDED",
+            retryAfter: "15 minutes",
+            tip: "Consider uploading images in smaller batches (up to 15 files per upload).",
+        });
+    },
+});

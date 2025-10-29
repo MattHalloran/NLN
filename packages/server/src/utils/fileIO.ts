@@ -19,6 +19,11 @@ const MAX_FILE_NAME_ATTEMPTS = 100;
 const MAX_BUFFER_SIZE = 1000000000;
 // Location of persistent storage directory
 const UPLOAD_DIR = `${process.env.PROJECT_DIR}/assets`;
+// Maximum image dimensions (width or height) in pixels
+// Images larger than this will be rejected to prevent excessive storage usage
+// Note: Each image creates 16 variants (8 sizes × 2 formats), so large images multiply storage
+const MAX_IMAGE_DIMENSION = 8192; // 8K resolution
+const MIN_IMAGE_DIMENSION = 10; // Minimum dimension to ensure valid images
 
 /**
  * Replaces any invalid characters from a file name
@@ -243,6 +248,33 @@ export async function saveImage({
         if (dimensions === null) {
             throw new Error("Could not determine image dimensions");
         }
+
+        // Validate image dimensions to prevent excessive storage usage
+        // Each image creates 16 variants (8 sizes × 2 formats), so we must limit size
+        const { width, height } = dimensions;
+        if (width > MAX_IMAGE_DIMENSION || height > MAX_IMAGE_DIMENSION) {
+            logger.log(LogLevel.warn, "Image dimensions exceed maximum allowed", {
+                code: genErrorCode("0020"),
+                filename: originalname,
+                dimensions: { width, height },
+                maxDimension: MAX_IMAGE_DIMENSION,
+            });
+            throw new Error(
+                `Image dimensions (${width}×${height}) exceed maximum allowed (${MAX_IMAGE_DIMENSION}×${MAX_IMAGE_DIMENSION}). Please resize the image before uploading.`,
+            );
+        }
+        if (width < MIN_IMAGE_DIMENSION || height < MIN_IMAGE_DIMENSION) {
+            logger.log(LogLevel.warn, "Image dimensions below minimum allowed", {
+                code: genErrorCode("0021"),
+                filename: originalname,
+                dimensions: { width, height },
+                minDimension: MIN_IMAGE_DIMENSION,
+            });
+            throw new Error(
+                `Image dimensions (${width}×${height}) are too small. Minimum dimension is ${MIN_IMAGE_DIMENSION}px.`,
+            );
+        }
+
         // If image is .heic or .heif, convert to jpg. Thanks, Apple
         if ([".heic", ".heif"].includes(extCheck.toLowerCase())) {
             try {
@@ -272,11 +304,25 @@ export async function saveImage({
         // Download the original image, and store metadata in database
         const full_size_filename = `${folder}/${name}-XXL${extCheck}`;
         await sharp(image_buffer).toFile(`${UPLOAD_DIR}/${full_size_filename}`);
-        const imageData = { hash, alt, description };
+
+        // Check if labels are provided to determine unlabeled_since timestamp
+        const hasLabels = Array.isArray(labels) && labels.length > 0;
+
         await prisma.image.upsert({
             where: { hash },
-            create: imageData,
-            update: imageData,
+            create: {
+                hash,
+                alt,
+                description,
+                // Set unlabeled_since for new unlabeled images (30-day retention policy)
+                unlabeled_since: hasLabels ? null : new Date(),
+            },
+            update: {
+                alt,
+                description,
+                // Clear unlabeled_since if labels are being added
+                ...(hasLabels ? { unlabeled_since: null } : {}),
+            },
         });
         await prisma.image_file.deleteMany({ where: { hash } });
         await prisma.image_file.create({
@@ -388,31 +434,229 @@ export async function saveImage({
 }
 
 /**
+ * Check where an image is being used
+ * @param hash Hash of image
+ * @returns Object describing usage locations
+ */
+export async function checkImageUsage(hash: string) {
+    const usage = {
+        exists: false,
+        usedInPlants: [] as string[],
+        usedInLabels: [] as string[],
+        canDelete: true,
+        warnings: [] as string[],
+    };
+
+    // Check if image exists
+    const image = await prisma.image.findUnique({
+        where: { hash },
+        select: {
+            hash: true,
+            alt: true,
+            plant_images: {
+                select: {
+                    plantId: true,
+                },
+            },
+            image_labels: {
+                select: {
+                    label: true,
+                },
+            },
+        },
+    });
+
+    if (!image) {
+        return usage;
+    }
+
+    usage.exists = true;
+
+    // Check plant usage
+    if (image.plant_images && image.plant_images.length > 0) {
+        usage.usedInPlants = image.plant_images.map(
+            (pi: { plantId: string }) => pi.plantId,
+        );
+        usage.warnings.push(
+            `Image is used by ${image.plant_images.length} plant(s): ${usage.usedInPlants.join(", ")}`,
+        );
+    }
+
+    // Check labels
+    if (image.image_labels && image.image_labels.length > 0) {
+        usage.usedInLabels = image.image_labels.map((il: { label: string }) => il.label);
+        usage.warnings.push(
+            `Image has ${image.image_labels.length} label(s): ${usage.usedInLabels.join(", ")}`,
+        );
+    }
+
+    // Note: Hero and seasonal images are stored in JSON, not in database
+    // We cannot easily check those here without loading the JSON file
+    // That check should be done at the API level if needed
+
+    return usage;
+}
+
+/**
  * Deletes an image and all resizes, using its hash
  * @param hash Hash of image
- * @returns True if successful
+ * @param force Force deletion even if image is in use (default: false)
+ * @returns Object with success status, deleted file count, and any errors
  */
-export async function deleteImage(hash: string) {
-    // Find all files associated with image
-    const imageData = await prisma.image.findUnique({
-        where: { hash },
-        select: { files: { select: { src: true } } },
-    });
-    if (!imageData) {
-        return false;
-    }
-    // Delete database information for image
-    await prisma.image.delete({ where: { hash } });
-    // Delete image files
-    let success = true;
-    if (Array.isArray(imageData.files)) {
-        for (const file of imageData.files) {
-            if (!(await deleteFile(file.src))) {
-                success = false;
+export async function deleteImage(
+    hash: string,
+    force: boolean = false,
+): Promise<{
+    success: boolean;
+    deletedFiles: number;
+    errors: string[];
+    usage?: ReturnType<typeof checkImageUsage> extends Promise<infer T> ? T : never;
+}> {
+    const errors: string[] = [];
+    let deletedFiles = 0;
+
+    try {
+        // Check image usage first
+        const usage = await checkImageUsage(hash);
+
+        if (!usage.exists) {
+            errors.push("Image not found");
+            return { success: false, deletedFiles: 0, errors, usage };
+        }
+
+        // If image is in use and force is false, warn but allow deletion
+        // The usage info will be returned to the caller for display
+        if (!force && (usage.usedInPlants.length > 0 || usage.usedInLabels.length > 0)) {
+            logger.log(LogLevel.warn, "Deleting image that is in use", {
+                code: genErrorCode("0015"),
+                hash,
+                usage,
+            });
+        }
+
+        // Find all files associated with image
+        const imageData = await prisma.image.findUnique({
+            where: { hash },
+            select: { files: { select: { src: true } } },
+        });
+
+        if (!imageData) {
+            errors.push("Image data not found");
+            return { success: false, deletedFiles: 0, errors, usage };
+        }
+
+        // NEW APPROACH: Delete files BEFORE database to prevent orphaned files
+        // If file deletion fails, we can retry. If DB is deleted first and file deletion
+        // fails, we get orphaned files that require manual cleanup.
+
+        // Track which files were successfully deleted for potential rollback
+        const filePaths = imageData.files.map((f) => f.src);
+        const failedDeletes: string[] = [];
+
+        if (Array.isArray(imageData.files)) {
+            for (const file of imageData.files) {
+                try {
+                    if (await deleteFile(file.src)) {
+                        deletedFiles++;
+                        logger.log(LogLevel.debug, `Successfully deleted file: ${file.src}`);
+                    } else {
+                        failedDeletes.push(file.src);
+                        errors.push(`Failed to delete file: ${file.src}`);
+                    }
+                } catch (fileError) {
+                    failedDeletes.push(file.src);
+                    errors.push(`Error deleting file ${file.src}: ${fileError}`);
+                    logger.log(LogLevel.error, "File deletion error", {
+                        code: genErrorCode("0016"),
+                        error: fileError,
+                        file: file.src,
+                    });
+                }
             }
         }
+
+        // If any file deletions failed, don't delete from database
+        // This prevents broken references to missing files (worse than orphaned files)
+        if (failedDeletes.length > 0) {
+            logger.log(LogLevel.error, `File deletion incomplete, aborting DB deletion`, {
+                code: genErrorCode("0018"),
+                hash,
+                totalFiles: filePaths.length,
+                deletedFiles,
+                failedFiles: failedDeletes.length,
+            });
+            errors.push(
+                `Only ${deletedFiles}/${filePaths.length} files deleted. Database record preserved for retry.`,
+            );
+            return { success: false, deletedFiles, errors, usage };
+        }
+
+        // All files deleted successfully, now delete from database
+        // Database deletion cascades to image_file, image_labels, plant_images
+        // Use retry logic since files are already gone
+        const MAX_DB_DELETE_RETRIES = 3;
+        const RETRY_DELAY_MS = 1000; // 1 second base delay
+
+        let dbDeletionSuccess = false;
+        let lastDbError: unknown = null;
+
+        for (let attempt = 1; attempt <= MAX_DB_DELETE_RETRIES; attempt++) {
+            try {
+                await prisma.$transaction(async (tx) => {
+                    await tx.image.delete({ where: { hash } });
+                });
+
+                logger.log(LogLevel.info, `Successfully deleted image and all files`, {
+                    hash,
+                    filesDeleted: deletedFiles,
+                    dbDeleteAttempt: attempt,
+                });
+
+                dbDeletionSuccess = true;
+                break; // Success, exit retry loop
+            } catch (dbError) {
+                lastDbError = dbError;
+
+                if (attempt < MAX_DB_DELETE_RETRIES) {
+                    const delay = RETRY_DELAY_MS * attempt; // Linear backoff
+                    logger.log(LogLevel.warn, `DB deletion attempt ${attempt} failed, retrying in ${delay}ms`, {
+                        code: genErrorCode("0019"),
+                        hash,
+                        attempt,
+                        error: dbError,
+                    });
+
+                    // Wait before retry
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                } else {
+                    // Final attempt failed
+                    logger.log(LogLevel.error, `CRITICAL: Files deleted but database deletion failed after ${MAX_DB_DELETE_RETRIES} attempts`, {
+                        code: genErrorCode("0019"),
+                        hash,
+                        deletedFiles,
+                        error: dbError,
+                        note: "Database still references deleted files. Run orphan cleanup or manual DB cleanup required.",
+                    });
+                }
+            }
+        }
+
+        if (!dbDeletionSuccess) {
+            errors.push(`Database deletion failed after ${MAX_DB_DELETE_RETRIES} attempts: ${lastDbError}`);
+            return { success: false, deletedFiles, errors, usage };
+        }
+
+        const success = errors.length === 0;
+        return { success, deletedFiles, errors, usage };
+    } catch (error) {
+        logger.log(LogLevel.error, "Image deletion failed", {
+            code: genErrorCode("0017"),
+            error,
+            hash,
+        });
+        errors.push(`Database deletion failed: ${error}`);
+        return { success: false, deletedFiles, errors };
     }
-    return success;
 }
 
 /**

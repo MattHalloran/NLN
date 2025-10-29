@@ -27,6 +27,8 @@ const {
     AdminHomepageSections,
     AdminHomepageServices,
     AdminMainPage,
+    AdminStoragePage,
+    AdminSystemLogs,
 } = lazily(() => import("./pages/admin"));
 const {
     PrivacyPolicyPage,
@@ -226,6 +228,20 @@ export const Routes = () => {
                     <Suspense fallback={Fallback}>
                         <Page excludePageContainer restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
                             <AdminHomepageBranding />
+                        </Page>
+                    </Suspense>
+                </Route>
+                <Route path={APP_LINKS.AdminStorage}>
+                    <Suspense fallback={Fallback}>
+                        <Page excludePageContainer restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
+                            <AdminStoragePage />
+                        </Page>
+                    </Suspense>
+                </Route>
+                <Route path={APP_LINKS.AdminLogs}>
+                    <Suspense fallback={Fallback}>
+                        <Page excludePageContainer restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
+                            <AdminSystemLogs />
                         </Page>
                     </Suspense>
                 </Route>

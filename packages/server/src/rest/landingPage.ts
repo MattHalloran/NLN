@@ -646,8 +646,8 @@ router.put("/", async (req: AuthenticatedRequest, res: Response) => {
                     writeVariants(variants);
                 }
             } else {
-                // Write official landing page
-                writeLandingPageContent(currentContent);
+                // Write official landing page (now async with image label sync)
+                await writeLandingPageContent(currentContent);
             }
         } catch (error) {
             logger.log(LogLevel.error, "Error writing landing page content:", error);
@@ -808,8 +808,8 @@ router.put("/contact-info", async (req: Request, res: Response) => {
                     writeVariants(variants);
                 }
             } else {
-                // Write official landing page
-                writeLandingPageContent(currentContent);
+                // Write official landing page (now async with image label sync)
+                await writeLandingPageContent(currentContent);
             }
         } catch (error) {
             logger.log(LogLevel.error, "Error writing landing page content:", error);
@@ -926,8 +926,8 @@ router.put("/settings", async (req: Request, res: Response) => {
                     writeVariants(variants);
                 }
             } else {
-                // Write official landing page
-                writeLandingPageContent(currentContent);
+                // Write official landing page (now async with image label sync)
+                await writeLandingPageContent(currentContent);
             }
         } catch (error) {
             logger.log(LogLevel.error, "Error writing landing page content:", error);
@@ -1014,8 +1014,8 @@ router.put("/sections", async (req: Request, res: Response) => {
                     writeVariants(variants);
                 }
             } else {
-                // Write official landing page
-                writeLandingPageContent(currentContent);
+                // Write official landing page (now async with image label sync)
+                await writeLandingPageContent(currentContent);
             }
         } catch (error) {
             logger.log(LogLevel.error, "Error writing landing page content:", error);
@@ -1324,8 +1324,8 @@ router.post("/variants/:id/promote", async (req: Request, res: Response) => {
         variants[variantIndex].isOfficial = true;
         variants[variantIndex].updatedAt = new Date().toISOString();
 
-        // Copy variant content to the official landing page
-        writeLandingPageContent(variantContent);
+        // Copy variant content to the official landing page (with image label sync)
+        await writeLandingPageContent(variantContent);
         logger.info(
             `Promoted variant ${variant.id} to official. Content copied to landing-page-content.json`,
         );

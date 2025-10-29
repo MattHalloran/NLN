@@ -344,6 +344,40 @@ export function useUpdateImages() {
     );
 }
 
+export function useDeleteImage() {
+    return useRestMutation<
+        { hash: string; force?: boolean },
+        {
+            success: boolean;
+            deletedFiles: number;
+            message: string;
+            usage?: {
+                exists: boolean;
+                usedInPlants: string[];
+                usedInLabels: string[];
+                canDelete: boolean;
+                warnings: string[];
+            };
+            errors?: string[];
+        }
+    >(
+        (input) => restApi.deleteImage(input.hash, input.force),
+    );
+}
+
+export function useCheckImageUsage(hash: string) {
+    return useRestQuery<{
+        exists: boolean;
+        usedInPlants: string[];
+        usedInLabels: string[];
+        canDelete: boolean;
+        warnings: string[];
+    }>(
+        () => restApi.checkImageUsage(hash),
+        [hash],
+    );
+}
+
 // ============================================
 // Content/Assets Management Hooks
 // ============================================
@@ -489,5 +523,26 @@ export function useToggleVariant() {
     );
 }
 
+// Storage Management hooks
+export function useStorageStats() {
+    return useRestQuery(
+        () => restApi.getStorageStats(),
+        [],
+    );
+}
+
+export function useTriggerCleanup() {
+    return useRestMutation<void, { success: boolean; message: string; jobId: string }>(
+        () => restApi.triggerCleanup(),
+    );
+}
+
+export function useCleanupHistory() {
+    return useRestQuery(
+        () => restApi.getCleanupHistory(),
+        [],
+    );
+}
+
 // Re-export commonly used types from client
-export type { Image, LandingPageContent, Plant, DashboardStats, LandingPageVariant };
+export type { Image, LandingPageContent, Plant, DashboardStats, LandingPageVariant, StorageStats, CleanupLogEntry };

@@ -7,10 +7,12 @@ import { ImageInfo, SxType } from "types";
 export const ImageList = ({
     data,
     onUpdate,
+    onDelete,
     sx,
 }: {
     data: ImageInfo[];
     onUpdate: (data: ImageInfo[]) => unknown;
+    onDelete?: (imageInfo: ImageInfo) => unknown;
     sx?: SxType;
 }) => {
     const [selected, setSelected] = useState(-1);
@@ -35,11 +37,17 @@ export const ImageList = ({
         setSelected(-1);
     }, [selected, data, onUpdate]);
 
-    const deleteImage = (index: number) => {
-        const updated = [...data];
-        updated.splice(index, 1);
-        onUpdate(updated);
-    };
+    const deleteImage = useCallback((index: number) => {
+        if (onDelete) {
+            // If onDelete prop is provided, call it with the image info
+            onDelete(data[index]);
+        } else {
+            // Otherwise, remove from local array
+            const updated = [...data];
+            updated.splice(index, 1);
+            onUpdate(updated);
+        }
+    }, [data, onDelete, onUpdate]);
 
     return (
         <Box sx={{

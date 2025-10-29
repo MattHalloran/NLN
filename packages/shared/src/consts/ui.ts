@@ -17,6 +17,8 @@ export const APP_LINKS = {
     AdminInventory: "/admin/inventory",
     AdminLayout: "/admin/layout",
     AdminOrders: "/admin/orders",
+    AdminStorage: "/admin/storage",
+    AdminLogs: "/admin/logs",
     Cart: "/cart",
     ForgotPassword: "/forgot-password",
     Gallery: "/gallery",

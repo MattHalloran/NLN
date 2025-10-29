@@ -33,6 +33,10 @@ export const IMAGE_SIZE = {
     XL: 2048,
     XXL: 4096,
 };
+// Maximum total storage for images in MB
+// Each image creates ~16 variants (8 sizes × 2 formats)
+// At 100MB average per image, 20GB = ~200 images
+export const MAX_IMAGE_STORAGE_MB = 20000; // 20GB
 export const PLANT_IMAGE_USE = {
     PlantFlower: "Plant Flower",
     PlantLeaf: "Plant Leaf",

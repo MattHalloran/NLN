@@ -380,6 +380,84 @@ export interface DashboardStats {
     totalSkus: number;
 }
 
+// Storage Management types
+export interface StorageStats {
+    images: {
+        total: number;
+        labeled: number;
+        unlabeled: number;
+        unlabeledOverRetention: number;
+    };
+    storage: {
+        totalSizeMB: number;
+        totalFiles: number;
+        filesOnDisk: number;
+        orphanedFiles: number;
+    };
+    cleanup: {
+        lastRun: string | null;
+        lastRunStatus: string | null;
+        lastRunDeletedImages: number;
+        lastRunDeletedFiles: number;
+        lastRunOrphanedFiles: number;
+        lastRunDurationMs: number | null;
+        lastRunErrors: string[];
+        nextScheduledRun: string | null;
+    };
+    policy: {
+        retentionDays: number;
+        frequency: string;
+        schedule: string;
+    };
+}
+
+export interface CleanupLogEntry {
+    id: number;
+    type: string;
+    deleted_images: number;
+    deleted_files: number;
+    orphaned_files: number;
+    errors: string | null;
+    status: string;
+    duration_ms: number | null;
+    created_at: string;
+}
+
+export interface LogEntry {
+    level: string;
+    message: string;
+    timestamp: string;
+    service?: string;
+    stack?: string;
+    ip?: string;
+    path?: string;
+    method?: string;
+    userAgent?: string;
+    [key: string]: any;
+}
+
+export interface LogsResponse {
+    logs: LogEntry[];
+    total: number;
+    hasMore: boolean;
+    file: string;
+}
+
+export interface LogStatsResponse {
+    combinedSize: string;
+    errorSize: string;
+    errorCount: number;
+    warnCount: number;
+    infoCount: number;
+    recentErrors: LogEntry[];
+    logRotation: {
+        enabled: boolean;
+        maxSize: string;
+        maxFiles: number;
+        note: string;
+    };
+}
+
 // API client with typed methods
 export const restApi = {
     // Landing page
@@ -692,6 +770,37 @@ export const restApi = {
         });
     },
 
+    async deleteImage(hash: string, force?: boolean): Promise<{
+        success: boolean;
+        deletedFiles: number;
+        message: string;
+        usage?: {
+            exists: boolean;
+            usedInPlants: string[];
+            usedInLabels: string[];
+            canDelete: boolean;
+            warnings: string[];
+        };
+        errors?: string[];
+    }> {
+        const url = force ? `/images/${hash}?force=true` : `/images/${hash}`;
+        return fetchApi(url, {
+            method: "DELETE",
+        });
+    },
+
+    async checkImageUsage(hash: string): Promise<{
+        exists: boolean;
+        usedInPlants: string[];
+        usedInLabels: string[];
+        canDelete: boolean;
+        warnings: string[];
+    }> {
+        return fetchApi(`/images/${hash}/usage`, {
+            method: "GET",
+        });
+    },
+
     // Content/Assets Management
     async readAssets(input: { files: string[] }): Promise<Record<string, string>> {
         return fetchApi<Record<string, string>>("/assets/read", {
@@ -873,6 +982,48 @@ export const restApi = {
             method: "POST",
             body: JSON.stringify(event),
         });
+    },
+
+    // Storage Management (admin only)
+    async getStorageStats(): Promise<StorageStats> {
+        return fetchApi<StorageStats>("/storage/stats");
+    },
+
+    async triggerCleanup(): Promise<{ success: boolean; message: string; jobId: string }> {
+        return fetchApi<{ success: boolean; message: string; jobId: string }>("/storage/cleanup", {
+            method: "POST",
+        });
+    },
+
+    async getCleanupHistory(): Promise<CleanupLogEntry[]> {
+        return fetchApi<CleanupLogEntry[]>("/storage/cleanup/history");
+    },
+
+    // System logs
+    async getLogs(params: {
+        file?: "combined" | "error";
+        lines?: number;
+        offset?: number;
+        level?: string;
+        search?: string;
+        dateFrom?: string;
+        dateTo?: string;
+    }): Promise<LogsResponse> {
+        const queryParams = new URLSearchParams();
+        if (params.file) queryParams.append("file", params.file);
+        if (params.lines) queryParams.append("lines", params.lines.toString());
+        if (params.offset) queryParams.append("offset", params.offset.toString());
+        if (params.level) queryParams.append("level", params.level);
+        if (params.search) queryParams.append("search", params.search);
+        if (params.dateFrom) queryParams.append("dateFrom", params.dateFrom);
+        if (params.dateTo) queryParams.append("dateTo", params.dateTo);
+
+        const queryString = queryParams.toString();
+        return fetchApi<LogsResponse>(`/logs${queryString ? `?${queryString}` : ""}`);
+    },
+
+    async getLogStats(): Promise<LogStatsResponse> {
+        return fetchApi<LogStatsResponse>("/logs/stats");
     },
 };
 

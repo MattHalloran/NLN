@@ -8,10 +8,12 @@ import { ImageList } from "../ImageList/ImageList";
 export const WrappedImageList = ({
     data,
     onApply,
+    onDelete,
     sxs,
 }: {
     data: ImageInfo[],
     onApply: (data: ImageInfo[]) => unknown,
+    onDelete?: (imageInfo: ImageInfo) => unknown,
     sxs?: {
         imageList?: SxType,
     },
@@ -22,7 +24,12 @@ export const WrappedImageList = ({
 
     return (
         <Box>
-            <ImageList data={changed} onUpdate={(d) => setChanged(d)} sx={{ ...sxs?.imageList }} />
+            <ImageList
+                data={changed}
+                onUpdate={(d) => setChanged(d)}
+                onDelete={onDelete}
+                sx={{ ...sxs?.imageList }}
+            />
             <BottomActionsGrid display="page">
                 <Grid item xs={6} p={1} sx={{ paddingTop: 0 }}>
                     <Button

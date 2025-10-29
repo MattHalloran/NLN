@@ -47,8 +47,20 @@ export const logger = winston.createLogger({
     defaultMeta: { service: "express-server" },
     transports: [
         // Errors are not only included in the combined log file, but also in their own file
-        new winston.transports.File({ filename: `${LOG_DIR}/error.log`, level: "error" }),
-        new winston.transports.File({ filename: `${LOG_DIR}/combined.log` }),
+        // Rotation: Keep last 30 files (approx 30 days), max 100MB per file
+        new winston.transports.File({
+            filename: `${LOG_DIR}/error.log`,
+            level: "error",
+            maxsize: 100 * 1024 * 1024, // 100MB
+            maxFiles: 30,
+            tailable: true,
+        }),
+        new winston.transports.File({
+            filename: `${LOG_DIR}/combined.log`,
+            maxsize: 100 * 1024 * 1024, // 100MB
+            maxFiles: 30,
+            tailable: true,
+        }),
     ],
 });
 
