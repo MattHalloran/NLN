@@ -183,10 +183,19 @@ async function getHashesWithLabel(label: string): Promise<string[]> {
  *
  * @param content - Landing page content with hero banners
  */
-export async function syncHeroBannerLabels(content: LandingPageContent): Promise<void> {
+export async function syncHeroBannerLabels(content?: LandingPageContent): Promise<{ added: number; removed: number }> {
     try {
+        // Read content from file if not provided
+        let landingPageContent: LandingPageContent;
+        if (!content) {
+            const { readLandingPageContent } = await import("../rest/landingPage/landingPageService.js");
+            landingPageContent = readLandingPageContent();
+        } else {
+            landingPageContent = content;
+        }
+
         // Extract all hero banner src paths
-        const heroBanners: HeroBanner[] = content.content?.hero?.banners || [];
+        const heroBanners: HeroBanner[] = landingPageContent.content?.hero?.banners || [];
         const bannerSrcPaths = heroBanners.map((banner) => banner.src);
 
         // Normalize paths and find corresponding image hashes
@@ -212,17 +221,83 @@ export async function syncHeroBannerLabels(content: LandingPageContent): Promise
         const previousHeroHashes = await getHashesWithLabel(HERO_BANNER_LABEL);
 
         // Remove hero-banner label from images no longer in use
+        let removed = 0;
         for (const hash of previousHeroHashes) {
             if (!currentHeroHashes.has(hash)) {
                 await removeImageLabel(hash, HERO_BANNER_LABEL);
+                removed++;
             }
         }
 
+        const added = currentHeroHashes.size;
+
         logger.info(
-            `Hero banner label sync complete: ${currentHeroHashes.size} images labeled, ${previousHeroHashes.length - currentHeroHashes.size} labels removed`,
+            `Hero banner label sync complete: ${added} images labeled, ${removed} labels removed`,
         );
+
+        return { added, removed };
     } catch (error) {
         logger.log(LogLevel.error, "Error syncing hero banner labels:", error);
+        throw error;
+    }
+}
+
+/**
+ * Sync seasonal content labels with current landing page content
+ * This ensures seasonal content images are properly labeled
+ *
+ * @param content - Optional landing page content. If not provided, reads from file
+ * @returns Object with counts of added and removed labels
+ */
+export async function syncSeasonalContentLabels(content?: LandingPageContent): Promise<{ added: number; removed: number }> {
+    try {
+        // Read content from file if not provided
+        let landingPageContent: LandingPageContent;
+        if (!content) {
+            const { readLandingPageContent } = await import("../rest/landingPage/landingPageService.js");
+            landingPageContent = readLandingPageContent();
+        } else {
+            landingPageContent = content;
+        }
+
+        // Extract seasonal plants with images
+        const seasonalPlants = landingPageContent.content?.seasonal?.plants || [];
+        const currentSeasonalHashes: Set<string> = new Set();
+
+        // Process each seasonal plant that has an image
+        for (let i = 0; i < seasonalPlants.length; i++) {
+            const plant = seasonalPlants[i];
+
+            // Skip if no imageHash (plant uses icon only)
+            if (!plant.imageHash) continue;
+
+            currentSeasonalHashes.add(plant.imageHash);
+
+            // Add seasonal label with index matching plant order
+            await addImageLabel(plant.imageHash, SEASONAL_LABEL, i);
+        }
+
+        // Find all images that previously had the seasonal label
+        const previousSeasonalHashes = await getHashesWithLabel(SEASONAL_LABEL);
+
+        // Remove seasonal label from images no longer in use
+        let removed = 0;
+        for (const hash of previousSeasonalHashes) {
+            if (!currentSeasonalHashes.has(hash)) {
+                await removeImageLabel(hash, SEASONAL_LABEL);
+                removed++;
+            }
+        }
+
+        const added = currentSeasonalHashes.size;
+
+        logger.info(
+            `Seasonal content label sync complete: ${added} images labeled, ${removed} labels removed`,
+        );
+
+        return { added, removed };
+    } catch (error) {
+        logger.log(LogLevel.error, "Error syncing seasonal content labels:", error);
         throw error;
     }
 }

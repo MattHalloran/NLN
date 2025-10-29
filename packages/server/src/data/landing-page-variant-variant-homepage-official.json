@@ -132,7 +132,10 @@
           "careLevel": "Medium",
           "icon": "leaf",
           "displayOrder": 1,
-          "isActive": true
+          "isActive": true,
+          "image": "/images/fall-foliage-explorer-div-map-1761246676597-XXL.png",
+          "imageAlt": "fall-foliage-explorer-div-map-1761246676597",
+          "imageHash": "0f17053f7c1c1c1f"
         },
         {
           "id": "winter-jasmine",

@@ -8,6 +8,7 @@ import probe from "probe-image-size";
 import sharp from "sharp";
 import { LogLevel, genErrorCode, logger } from "../logger";
 import { AddImageResponse } from "../schema/types";
+import { withDistributedLock } from "./distributedLock.js";
 
 const { PrismaClient } = pkg;
 const prisma = new PrismaClient();
@@ -189,7 +190,8 @@ export async function saveFile(
 export async function deleteFile(file: string) {
     try {
         const { name, ext, folder } = clean(file);
-        fs.unlinkSync(`${UPLOAD_DIR}/${folder}/${name}${ext}`);
+        // Use async file deletion to avoid blocking event loop
+        await fs.promises.unlink(`${UPLOAD_DIR}/${folder}/${name}${ext}`);
         return true;
     } catch (error) {
         logger.log(LogLevel.error, "Failed to delete file", { code: genErrorCode("0009"), error });
@@ -221,9 +223,25 @@ export async function saveImage({
     labels,
     errorOnDuplicate = false,
 }: SaveImageProps): Promise<AddImageResponse> {
+    let tempFilePath: string | undefined;
+
     try {
         // Extract Multer file properties
-        const { buffer, originalname, mimetype } = file;
+        // Note: buffer is present with memory storage, path is present with disk storage
+        const { buffer, path: filePath, originalname, mimetype } = file;
+
+        // Read file buffer from disk if using disk storage
+        let image_buffer: Buffer;
+        if (buffer) {
+            // Memory storage - buffer is directly available
+            image_buffer = buffer;
+        } else if (filePath) {
+            // Disk storage - read from temp file
+            tempFilePath = filePath;
+            image_buffer = await fs.promises.readFile(filePath);
+        } else {
+            throw new Error("No file buffer or path available from upload");
+        }
 
         // Make sure that the file is actually an image
         if (!mimetype.startsWith("image/")) {
@@ -242,8 +260,7 @@ export async function saveImage({
             throw Error("Could not create a valid file name");
         }
 
-        // Determine image dimensions using the buffer directly
-        let image_buffer = buffer;
+        // Determine image dimensions using the buffer
         const dimensions = probe.sync(image_buffer);
         if (dimensions === null) {
             throw new Error("Could not determine image dimensions");
@@ -301,13 +318,54 @@ export async function saveImage({
         if (previously_uploaded && errorOnDuplicate) {
             throw Error("File has already been uploaded");
         }
-        // Download the original image, and store metadata in database
+        // Generate image files and track metadata
+        // NOTE: Current implementation uses upsert for idempotency - if any variant generation
+        // fails, re-running the upload will overwrite/complete the variants. This provides
+        // eventual consistency. For stronger atomicity, consider: (1) generate all files first,
+        // (2) wrap all DB operations in prisma.$transaction(), (3) rollback files on DB failure.
         const full_size_filename = `${folder}/${name}-XXL${extCheck}`;
+        const generatedFiles: Array<{ src: string; width: number; height: number }> = [];
+
+        // Track WebP generation for reporting to admin
+        let webpSuccesses = 0;
+        let webpAttempts = 0;
+        const webpFailures: string[] = [];
+
+        // Generate original XXL file
         await sharp(image_buffer).toFile(`${UPLOAD_DIR}/${full_size_filename}`);
+        generatedFiles.push({
+            src: full_size_filename,
+            width: dimensions.width,
+            height: dimensions.height,
+        });
+
+        // Also generate WebP version of full-size image for better performance
+        webpAttempts++;
+        try {
+            const full_size_webp_filename = `${folder}/${name}-XXL.webp`;
+            const webp_info = await sharp(image_buffer)
+                .webp({ quality: 85, effort: 4 })
+                .toFile(`${UPLOAD_DIR}/${full_size_webp_filename}`);
+            generatedFiles.push({
+                src: full_size_webp_filename,
+                width: webp_info.width,
+                height: webp_info.height,
+            });
+            webpSuccesses++;
+        } catch (webpError) {
+            webpFailures.push("XXL");
+            logger.log(LogLevel.error, "WebP conversion failed for full-size image, continuing with original format", {
+                code: genErrorCode("0013"),
+                error: webpError,
+                filename: originalname,
+            });
+        }
 
         // Check if labels are provided to determine unlabeled_since timestamp
         const hasLabels = Array.isArray(labels) && labels.length > 0;
 
+        // Create/update image record and file records
+        // Using upsert provides idempotency - if upload is retried, it will complete/overwrite
         await prisma.image.upsert({
             where: { hash },
             create: {
@@ -324,36 +382,21 @@ export async function saveImage({
                 ...(hasLabels ? { unlabeled_since: null } : {}),
             },
         });
+
+        // Clear old file records and create new ones for generated files
         await prisma.image_file.deleteMany({ where: { hash } });
-        await prisma.image_file.create({
-            data: {
-                hash,
-                src: full_size_filename,
-                width: dimensions.width,
-                height: dimensions.height,
-            },
-        });
-        // Also generate WebP version of full-size image for better performance
-        try {
-            const full_size_webp_filename = `${folder}/${name}-XXL.webp`;
-            const webp_info = await sharp(image_buffer)
-                .webp({ quality: 85, effort: 4 })
-                .toFile(`${UPLOAD_DIR}/${full_size_webp_filename}`);
+        for (const file of generatedFiles) {
             await prisma.image_file.create({
                 data: {
                     hash,
-                    src: full_size_webp_filename,
-                    width: webp_info.width,
-                    height: webp_info.height,
+                    src: file.src,
+                    width: file.width,
+                    height: file.height,
                 },
             });
-        } catch (webpError) {
-            logger.log(LogLevel.error, "WebP conversion failed for full-size image, continuing with original format", {
-                code: genErrorCode("0013"),
-                error: webpError,
-                filename: originalname,
-            });
         }
+
+        // Create labels if provided
         if (Array.isArray(labels)) {
             await prisma.image_labels.deleteMany({ where: { hash } });
             for (let i = 0; i < labels.length; i++) {
@@ -366,6 +409,7 @@ export async function saveImage({
                 });
             }
         }
+
         // Find resize options
         const sizes = resizeOptions(dimensions.width, dimensions.height);
         for (const [key, value] of Object.entries(sizes)) {
@@ -391,6 +435,7 @@ export async function saveImage({
             });
 
             // Also generate WebP version for better performance (typically 30% smaller)
+            webpAttempts++;
             try {
                 const resize_webp_filename = `${folder}/${name}-${key}.webp`;
                 const webp_result = await sharp(image_buffer)
@@ -405,7 +450,9 @@ export async function saveImage({
                         height: webp_result.height,
                     },
                 });
+                webpSuccesses++;
             } catch (webpError) {
+                webpFailures.push(key);
                 logger.log(LogLevel.error, `WebP conversion failed for ${key} size, continuing with original format`, {
                     code: genErrorCode("0014"),
                     error: webpError,
@@ -414,12 +461,25 @@ export async function saveImage({
                 });
             }
         }
+
+        // Build response with WebP generation status
+        const warnings: string[] = [];
+        if (webpFailures.length > 0) {
+            warnings.push(
+                `WebP generation failed for ${webpFailures.length} variant(s): ${webpFailures.join(", ")}. ` +
+                `Original format is available but performance may be impacted.`,
+            );
+        }
+
         return {
             success: true,
             src: full_size_filename,
             hash,
             width: dimensions.width,
             height: dimensions.height,
+            warnings: warnings.length > 0 ? warnings : undefined,
+            webpVariantsGenerated: webpSuccesses,
+            totalVariantsAttempted: webpAttempts,
         };
     } catch (error) {
         console.error(error);
@@ -430,6 +490,19 @@ export async function saveImage({
             width: null,
             height: null,
         };
+    } finally {
+        // Clean up temp file if using disk storage
+        if (tempFilePath) {
+            try {
+                await fs.promises.unlink(tempFilePath);
+                logger.log(LogLevel.debug, `Cleaned up temp upload file: ${tempFilePath}`);
+            } catch (cleanupError) {
+                // Non-critical error - log but don't fail the upload
+                logger.log(LogLevel.warn, `Failed to clean up temp file: ${tempFilePath}`, {
+                    error: cleanupError,
+                });
+            }
+        }
     }
 }
 
@@ -443,6 +516,8 @@ export async function checkImageUsage(hash: string) {
         exists: false,
         usedInPlants: [] as string[],
         usedInLabels: [] as string[],
+        usedInHeroBanners: false,
+        usedInSeasonalContent: false,
         canDelete: true,
         warnings: [] as string[],
     };
@@ -453,6 +528,11 @@ export async function checkImageUsage(hash: string) {
         select: {
             hash: true,
             alt: true,
+            files: {
+                select: {
+                    src: true,
+                },
+            },
             plant_images: {
                 select: {
                     plantId: true,
@@ -485,14 +565,109 @@ export async function checkImageUsage(hash: string) {
     // Check labels
     if (image.image_labels && image.image_labels.length > 0) {
         usage.usedInLabels = image.image_labels.map((il: { label: string }) => il.label);
-        usage.warnings.push(
-            `Image has ${image.image_labels.length} label(s): ${usage.usedInLabels.join(", ")}`,
+
+        // Check for hero banner label
+        if (usage.usedInLabels.includes("hero-banner")) {
+            usage.usedInHeroBanners = true;
+            usage.warnings.push("Image is used in hero banner carousel");
+        }
+
+        // Check for seasonal label
+        if (usage.usedInLabels.includes("seasonal")) {
+            usage.usedInSeasonalContent = true;
+            usage.warnings.push("Image is used in seasonal content");
+        }
+
+        // Add general label warning if there are other labels
+        const otherLabels = usage.usedInLabels.filter(
+            (l) => l !== "hero-banner" && l !== "seasonal",
         );
+        if (otherLabels.length > 0) {
+            usage.warnings.push(
+                `Image has ${otherLabels.length} other label(s): ${otherLabels.join(", ")}`,
+            );
+        }
     }
 
-    // Note: Hero and seasonal images are stored in JSON, not in database
-    // We cannot easily check those here without loading the JSON file
-    // That check should be done at the API level if needed
+    // ENHANCED: Double-check JSON files for hero banner and seasonal usage
+    // This provides safety in case label sync fails or is out of sync
+    try {
+        const fs = await import("fs");
+        const path = await import("path");
+
+        const dataPath = path.join(
+            process.env.PROJECT_DIR || "",
+            process.env.NODE_ENV === "production"
+                ? "packages/server/dist/data"
+                : "packages/server/src/data",
+        );
+
+        const contentPath = path.join(dataPath, "landing-page-content.json");
+
+        if (fs.existsSync(contentPath)) {
+            const contentData = fs.readFileSync(contentPath, "utf8");
+            const content = JSON.parse(contentData);
+
+            // Get all file paths for this image
+            const imageSrcPaths = image.files.map((f: { src: string }) => f.src);
+
+            // Check hero banners in JSON
+            const heroBanners = content?.content?.hero?.banners || [];
+            for (const banner of heroBanners) {
+                if (banner.src) {
+                    // Normalize paths for comparison
+                    const normalizedBannerSrc = banner.src
+                        .replace(/^\//, "")
+                        .replace(/^images\//, "images/");
+
+                    if (imageSrcPaths.some((src: string) =>
+                        src === normalizedBannerSrc ||
+                        `images/${banner.src}` === src ||
+                        banner.src.includes(path.basename(src))
+                    )) {
+                        if (!usage.usedInHeroBanners) {
+                            usage.usedInHeroBanners = true;
+                            usage.warnings.push(
+                                "⚠️ Image is used in hero banner carousel (detected in landing page JSON)",
+                            );
+                        }
+                        break;
+                    }
+                }
+            }
+
+            // Check seasonal plants in JSON
+            const seasonalPlants = content?.content?.seasonal?.plants || [];
+            for (const plant of seasonalPlants) {
+                if (plant.image) {
+                    const normalizedPlantSrc = plant.image
+                        .replace(/^\//, "")
+                        .replace(/^images\//, "images/");
+
+                    if (imageSrcPaths.some((src: string) =>
+                        src === normalizedPlantSrc ||
+                        `images/${plant.image}` === src ||
+                        plant.image.includes(path.basename(src))
+                    )) {
+                        if (!usage.usedInSeasonalContent) {
+                            usage.usedInSeasonalContent = true;
+                            usage.warnings.push(
+                                "⚠️ Image is used in seasonal content (detected in landing page JSON)",
+                            );
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+    } catch (jsonCheckError) {
+        // Log error but don't fail the usage check
+        logger.log(LogLevel.warn, "Could not verify JSON usage for image", {
+            code: genErrorCode("0022"),
+            hash,
+            error: jsonCheckError,
+        });
+    }
 
     return usage;
 }
@@ -504,6 +679,42 @@ export async function checkImageUsage(hash: string) {
  * @returns Object with success status, deleted file count, and any errors
  */
 export async function deleteImage(
+    hash: string,
+    force: boolean = false,
+): Promise<{
+    success: boolean;
+    deletedFiles: number;
+    errors: string[];
+    usage?: ReturnType<typeof checkImageUsage> extends Promise<infer T> ? T : never;
+}> {
+    // Use distributed lock to prevent concurrent deletions of the same image
+    const result = await withDistributedLock(
+        hash,
+        "delete-image",
+        async () => await performImageDeletion(hash, force),
+        30000, // Wait up to 30 seconds for lock (increased for large images with many variants)
+    );
+
+    if (result === null) {
+        // Lock couldn't be acquired - another deletion is in progress
+        logger.log(LogLevel.warn, "Could not acquire lock for image deletion - operation already in progress", {
+            hash,
+        });
+        return {
+            success: false,
+            deletedFiles: 0,
+            errors: ["Image deletion already in progress by another request. Please try again in a few moments."],
+        };
+    }
+
+    return result;
+}
+
+/**
+ * Internal function that performs the actual deletion
+ * Separated from deleteImage to allow lock wrapping
+ */
+async function performImageDeletion(
     hash: string,
     force: boolean = false,
 ): Promise<{

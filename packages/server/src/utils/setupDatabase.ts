@@ -20,13 +20,17 @@ export const setupDatabase = async () => {
         getImageCleanupQueue(); // Idempotent - safe to call on every startup
         logger.log(LogLevel.info, "✅ Image cleanup worker initialized");
 
+        // Initialize label sync worker (daily scheduled sync)
+        logger.log(LogLevel.info, "Initializing label sync worker...");
+        const { getLabelSyncQueue } = await import("../worker/labelSync/queue.js");
+        getLabelSyncQueue(); // Idempotent - safe to call on every startup
+        logger.log(LogLevel.info, "✅ Label sync worker initialized");
+
         // Sync hero banner labels on startup (prevents orphaning after restart)
         logger.log(LogLevel.info, "Syncing hero banner labels...");
         const { syncHeroBannerLabels } = await import("../utils/imageLabelSync.js");
-        const { readLandingPageContent } = await import("../rest/landingPage/landingPageService.js");
-        const landingPageContent = readLandingPageContent();
-        await syncHeroBannerLabels(landingPageContent);
-        logger.log(LogLevel.info, "✅ Hero banner labels synchronized");
+        const result = await syncHeroBannerLabels(); // Content read automatically if not provided
+        logger.log(LogLevel.info, `✅ Hero banner labels synchronized: +${result.added}, -${result.removed}`);
     } catch (error) {
         logger.log(LogLevel.error, "Caught error in setupDatabase", { trace: "0011", error });
         // Don't let the app start if the database setup fails

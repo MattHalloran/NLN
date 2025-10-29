@@ -8,6 +8,7 @@ import { setupDatabase } from "./utils/setupDatabase.js";
 import restRouter from "./rest/index.js";
 import { generalApiLimiter } from "./middleware/rateLimiter.js";
 import { csrfProtection, csrfErrorHandler } from "./middleware/csrf.js";
+import { startLandingPageWatcher, stopLandingPageWatcher } from "./utils/landingPageWatcher.js";
 
 const SERVER_URL =
     process.env.VITE_SERVER_LOCATION === "local"
@@ -240,7 +241,30 @@ const main = async () => {
         auth.requireAdmin,
         express.static(`${process.env.PROJECT_DIR}/assets/private`),
     );
-    app.use("/api/images", express.static(`${process.env.PROJECT_DIR}/assets/images`));
+
+    // Image serving with optimized caching
+    // Images use UUID-based filenames (immutable) or semantic names that change infrequently
+    // Strategy: 30-day cache with ETag validation for balance of performance and freshness
+    app.use("/api/images", express.static(`${process.env.PROJECT_DIR}/assets/images`, {
+        maxAge: "30d",           // Browser caches for 30 days
+        etag: true,              // Enable ETag for conditional requests
+        lastModified: true,      // Include Last-Modified header
+        cacheControl: true,      // Set Cache-Control headers
+        setHeaders: (res, path) => {
+            // Most images are UUID-based (immutable), but some have semantic names
+            // For UUID-based files, we can be more aggressive with caching
+            const fileName = require("path").basename(path);
+            const isUuidBased = /^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}/i.test(fileName);
+
+            if (isUuidBased) {
+                // UUID-based filenames are effectively immutable (won't be reused)
+                res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+            } else {
+                // Semantic filenames might be reused, use moderate caching
+                res.setHeader("Cache-Control", "public, max-age=2592000, must-revalidate");
+            }
+        },
+    }));
 
     // Mount REST API routes
     app.use("/api/rest", restRouter);
@@ -274,6 +298,10 @@ const main = async () => {
             const err = error as Error;
             console.error(`⚠️  Health check failed: ${err.message}\n`);
         }
+
+        // Start watching landing page content file for changes
+        // This will auto-sync image labels when the file is modified
+        startLandingPageWatcher();
     });
 
     server.on("error", (error: Error & { code?: string }) => {
@@ -293,6 +321,10 @@ const main = async () => {
     // Graceful shutdown
     process.on("SIGINT", () => {
         logger.log(LogLevel.info, "Shutting down server...");
+
+        // Stop file watcher
+        stopLandingPageWatcher();
+
         server.close(() => {
             logger.log(LogLevel.info, "Server shutdown complete");
             process.exit(0);

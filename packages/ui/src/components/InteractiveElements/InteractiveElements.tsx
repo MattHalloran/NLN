@@ -199,14 +199,42 @@ export const InteractiveElements = () => {
                                         p: 4,
                                         color: "white",
                                     }}>
-                                        <Box sx={{ 
+                                        <Box sx={{
                                             mb: 2,
                                             display: "flex",
                                             justifyContent: "center",
                                             color: "white",
                                         }}>
                                             {seasonalPlants.length > 0 && (() => {
-                                                const IconComponent = getIconComponent(seasonalPlants[safeCurrentPlant]?.icon || "leaf");
+                                                const currentPlantData = seasonalPlants[safeCurrentPlant];
+
+                                                // Show image if available, otherwise fall back to icon
+                                                if (currentPlantData?.image) {
+                                                    return (
+                                                        <Box
+                                                            component="img"
+                                                            src={currentPlantData.image}
+                                                            alt={currentPlantData.imageAlt || currentPlantData.name}
+                                                            sx={{
+                                                                width: "100%",
+                                                                maxWidth: 200,
+                                                                height: 150,
+                                                                objectFit: "cover",
+                                                                borderRadius: 2,
+                                                                boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+                                                            }}
+                                                            onError={(e: any) => {
+                                                                // If image fails to load, hide it and show icon fallback
+                                                                e.target.style.display = "none";
+                                                                const iconFallback = e.target.nextElementSibling;
+                                                                if (iconFallback) iconFallback.style.display = "block";
+                                                            }}
+                                                        />
+                                                    );
+                                                }
+
+                                                // Fallback to icon
+                                                const IconComponent = getIconComponent(currentPlantData?.icon || "leaf");
                                                 return <IconComponent size={64} />;
                                             })()}
                                         </Box>

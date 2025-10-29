@@ -27,8 +27,8 @@ import {
     InputLabel,
 } from "@mui/material";
 import { useLandingPage } from "hooks/useLandingPage";
-import { useUpdateLandingPageContent } from "api/rest/hooks";
-import { BackButton, PageContainer, TopBar } from "components";
+import { useUpdateLandingPageContent, useAddImages } from "api/rest/hooks";
+import { BackButton, PageContainer, TopBar, Dropzone } from "components";
 import {
     Flower,
     Leaf,
@@ -42,6 +42,8 @@ import {
     RotateCcw,
     Leaf as LeafIcon,
     ChevronDown,
+    X as CloseIcon,
+    Image as ImageIcon,
 } from "lucide-react";
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { PubSub } from "utils/pubsub";
@@ -56,6 +58,10 @@ interface SeasonalPlant {
     icon: string;
     displayOrder: number;
     isActive: boolean;
+    // Optional image fields (icon is fallback)
+    image?: string;
+    imageAlt?: string;
+    imageHash?: string;
 }
 
 interface PlantTip {
@@ -289,6 +295,7 @@ export const AdminHomepageSeasonal = () => {
     const { palette } = useTheme();
     const { data, refetch } = useLandingPage();
     const updateLandingPageContent = useUpdateLandingPageContent();
+    const { mutate: addImages } = useAddImages();
 
     const [plants, setPlants] = useState<SeasonalPlant[]>([]);
     const [originalPlants, setOriginalPlants] = useState<SeasonalPlant[]>([]);
@@ -410,6 +417,84 @@ export const AdminHomepageSeasonal = () => {
         setEditingTip(updatedTip);
         setTips(tips.map((t) => (t.id === updatedTip.id ? updatedTip : t)));
     };
+
+    // Image upload handler for seasonal plants
+    const handlePlantImageUpload = useCallback(async (plantId: string, acceptedFiles: File[]) => {
+        if (acceptedFiles.length === 0) return;
+
+        try {
+            setIsLoading(true);
+            const file = acceptedFiles[0]; // Only use first file
+
+            // Upload image with "seasonal" label
+            const uploadResults = await addImages({ label: "seasonal", files: [file] });
+
+            if (uploadResults.length > 0 && uploadResults[0].success) {
+                const result = uploadResults[0];
+
+                // Update plant with image details
+                const updatedPlants = plants.map((p) => {
+                    if (p.id === plantId) {
+                        return {
+                            ...p,
+                            image: `/${result.src}`,
+                            imageAlt: file.name.replace(/\.[^/.]+$/, ""),
+                            imageHash: result.hash,
+                        };
+                    }
+                    return p;
+                });
+
+                setPlants(updatedPlants);
+
+                // Update editing plant if it's the one being edited
+                if (editingPlant?.id === plantId) {
+                    setEditingPlant({
+                        ...editingPlant,
+                        image: `/${result.src}`,
+                        imageAlt: file.name.replace(/\.[^/.]+$/, ""),
+                        imageHash: result.hash,
+                    });
+                }
+
+                PubSub.get().publishSnack({
+                    message: "Image uploaded successfully!",
+                    severity: SnackSeverity.Success,
+                });
+            } else {
+                throw new Error("Image upload failed");
+            }
+        } catch (error) {
+            handleApiError(error, "Failed to upload image");
+        } finally {
+            setIsLoading(false);
+        }
+    }, [plants, editingPlant, addImages, handleApiError]);
+
+    // Delete image handler for seasonal plants
+    const handleDeletePlantImage = useCallback((plantId: string) => {
+        const updatedPlants = plants.map((p) => {
+            if (p.id === plantId) {
+                // Remove image fields, fall back to icon
+                const { image, imageAlt, imageHash, ...rest } = p;
+                return rest as SeasonalPlant;
+            }
+            return p;
+        });
+
+        setPlants(updatedPlants);
+
+        // Update editing plant if it's the one being edited
+        if (editingPlant?.id === plantId) {
+            const { image, imageAlt, imageHash, ...rest } = editingPlant;
+            setEditingPlant(rest as SeasonalPlant);
+        }
+
+        PubSub.get().publishSnack({
+            message: "Image removed (icon will be used as fallback)",
+            severity: SnackSeverity.Info,
+        });
+    }, [plants, editingPlant]);
 
     return (
         <PageContainer variant="wide" sx={{ minHeight: "100vh", paddingBottom: 0 }}>
@@ -727,8 +812,57 @@ export const AdminHomepageSeasonal = () => {
                                                                 </FormControl>
                                                             </Grid>
                                                             <Grid item xs={12}>
+                                                                <Typography variant="caption" sx={{ mb: 1, display: "block", fontWeight: 600 }}>
+                                                                    Image (Optional)
+                                                                </Typography>
+                                                                {editingPlant.image ? (
+                                                                    <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                                                                        <Box
+                                                                            component="img"
+                                                                            src={`${editingPlant.image}`}
+                                                                            alt={editingPlant.imageAlt || editingPlant.name}
+                                                                            sx={{
+                                                                                width: 100,
+                                                                                height: 100,
+                                                                                objectFit: "cover",
+                                                                                borderRadius: 1,
+                                                                                border: "2px solid",
+                                                                                borderColor: "divider",
+                                                                            }}
+                                                                        />
+                                                                        <Box>
+                                                                            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
+                                                                                Image is set. Icon will be used as fallback.
+                                                                            </Typography>
+                                                                            <Button
+                                                                                size="small"
+                                                                                startIcon={<Trash2 size={16} />}
+                                                                                onClick={() => handleDeletePlantImage(editingPlant.id)}
+                                                                                color="error"
+                                                                            >
+                                                                                Remove Image
+                                                                            </Button>
+                                                                        </Box>
+                                                                    </Box>
+                                                                ) : (
+                                                                    <Box>
+                                                                        <Dropzone
+                                                                            dropzoneText="Drop image here or click"
+                                                                            onUpload={(files) => handlePlantImageUpload(editingPlant.id, files)}
+                                                                            uploadText="Upload Image"
+                                                                            acceptedFileTypes={["image/*"]}
+                                                                            maxFiles={1}
+                                                                            sxs={{ root: { maxWidth: "100%", mb: 0 } }}
+                                                                        />
+                                                                        <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1 }}>
+                                                                            Recommended: 800x600px or 600x600px. Icon below will be used as fallback.
+                                                                        </Typography>
+                                                                    </Box>
+                                                                )}
+                                                            </Grid>
+                                                            <Grid item xs={12}>
                                                                 <Typography variant="caption" sx={{ mb: 1, display: "block" }}>
-                                                                    Icon
+                                                                    Icon (Fallback) *Required
                                                                 </Typography>
                                                                 <ToggleButtonGroup
                                                                     value={editingPlant.icon}

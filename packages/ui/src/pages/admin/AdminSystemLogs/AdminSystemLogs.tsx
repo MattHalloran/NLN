@@ -18,6 +18,13 @@ import {
     CircularProgress,
     Alert,
     Stack,
+    IconButton,
+    Tooltip,
+    Snackbar,
+    Table,
+    TableBody,
+    TableRow,
+    TableCell,
 } from "@mui/material";
 import {
     ExpandMore as ExpandMoreIcon,
@@ -26,6 +33,7 @@ import {
     ErrorOutline as ErrorIcon,
     Warning as WarningIcon,
     Info as InfoIcon,
+    ContentCopy as CopyIcon,
 } from "@mui/icons-material";
 import { BackButton, PageContainer } from "components";
 import { TopBar } from "components/navigation/TopBar/TopBar";
@@ -79,6 +87,9 @@ export const AdminSystemLogs = () => {
     const [dateFrom, setDateFrom] = useState("");
     const [dateTo, setDateTo] = useState("");
     const [offset, setOffset] = useState(0);
+
+    // Copy notification state
+    const [copySnackbar, setCopySnackbar] = useState(false);
 
     const linesPerPage = 100;
 
@@ -177,6 +188,21 @@ export const AdminSystemLogs = () => {
         linkElement.setAttribute("href", dataUri);
         linkElement.setAttribute("download", exportFileDefaultName);
         linkElement.click();
+    };
+
+    // Copy text to clipboard
+    const copyToClipboard = async (text: string) => {
+        try {
+            await navigator.clipboard.writeText(text);
+            setCopySnackbar(true);
+        } catch (err) {
+            console.error("Failed to copy:", err);
+        }
+    };
+
+    // Copy log entry as JSON
+    const handleCopyLog = (log: LogEntry) => {
+        copyToClipboard(JSON.stringify(log, null, 2));
     };
 
     return (
@@ -400,16 +426,31 @@ export const AdminSystemLogs = () => {
 
                         {logs.map((log, index) => (
                             <Accordion key={index} disableGutters elevation={0} sx={{ border: "1px solid #e0e0e0" }}>
-                                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, width: "100%" }}>
+                                <AccordionSummary
+                                    expandIcon={<ExpandMoreIcon />}
+                                    sx={{
+                                        "& .MuiAccordionSummary-content": {
+                                            overflow: "hidden",
+                                        },
+                                    }}
+                                >
+                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, width: "100%", overflow: "hidden" }}>
                                         {getLevelIcon(log.level)}
                                         <Chip
                                             label={log.level.toUpperCase()}
                                             color={getLevelColor(log.level)}
                                             size="small"
-                                            sx={{ minWidth: 70 }}
+                                            sx={{ minWidth: 70, flexShrink: 0 }}
                                         />
-                                        <Typography variant="caption" color="textSecondary" sx={{ minWidth: 150 }}>
+                                        <Typography
+                                            variant="caption"
+                                            color="textSecondary"
+                                            sx={{
+                                                minWidth: { xs: 100, sm: 150 },
+                                                flexShrink: 0,
+                                                fontSize: { xs: "0.7rem", sm: "0.75rem" },
+                                            }}
+                                        >
                                             {log.timestamp}
                                         </Typography>
                                         <Typography
@@ -419,69 +460,185 @@ export const AdminSystemLogs = () => {
                                                 overflow: "hidden",
                                                 textOverflow: "ellipsis",
                                                 whiteSpace: "nowrap",
+                                                fontSize: { xs: "0.8rem", sm: "0.875rem" },
                                             }}
                                         >
                                             {log.message}
                                         </Typography>
+                                        <Tooltip title="Copy log as JSON">
+                                            <IconButton
+                                                size="small"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleCopyLog(log);
+                                                }}
+                                                sx={{ flexShrink: 0 }}
+                                            >
+                                                <CopyIcon fontSize="small" />
+                                            </IconButton>
+                                        </Tooltip>
                                     </Box>
                                 </AccordionSummary>
-                                <AccordionDetails>
-                                    <Box sx={{ fontFamily: "monospace", fontSize: "0.875rem" }}>
-                                        <Typography variant="body2" gutterBottom>
-                                            <strong>Message:</strong> {log.message}
-                                        </Typography>
-                                        {log.service && (
-                                            <Typography variant="body2" gutterBottom>
-                                                <strong>Service:</strong> {log.service}
-                                            </Typography>
-                                        )}
-                                        {log.path && (
-                                            <Typography variant="body2" gutterBottom>
-                                                <strong>Path:</strong> {log.path}
-                                            </Typography>
-                                        )}
-                                        {log.method && (
-                                            <Typography variant="body2" gutterBottom>
-                                                <strong>Method:</strong> {log.method}
-                                            </Typography>
-                                        )}
-                                        {log.ip && (
-                                            <Typography variant="body2" gutterBottom>
-                                                <strong>IP:</strong> {log.ip}
-                                            </Typography>
-                                        )}
+                                <AccordionDetails sx={{ backgroundColor: "#fafafa" }}>
+                                    <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                                        {/* Main log details */}
+                                        <Table size="small" sx={{ "& td": { border: 0, py: 0.5 } }}>
+                                            <TableBody>
+                                                <TableRow>
+                                                    <TableCell sx={{ fontWeight: 600, width: "120px", verticalAlign: "top" }}>
+                                                        Timestamp
+                                                    </TableCell>
+                                                    <TableCell sx={{ fontFamily: "monospace", fontSize: "0.875rem" }}>
+                                                        {log.timestamp}
+                                                    </TableCell>
+                                                </TableRow>
+                                                <TableRow>
+                                                    <TableCell sx={{ fontWeight: 600, verticalAlign: "top" }}>Level</TableCell>
+                                                    <TableCell>
+                                                        <Chip
+                                                            label={log.level.toUpperCase()}
+                                                            color={getLevelColor(log.level)}
+                                                            size="small"
+                                                        />
+                                                    </TableCell>
+                                                </TableRow>
+                                                <TableRow>
+                                                    <TableCell sx={{ fontWeight: 600, verticalAlign: "top" }}>Message</TableCell>
+                                                    <TableCell
+                                                        sx={{
+                                                            fontFamily: "monospace",
+                                                            fontSize: "0.875rem",
+                                                            wordBreak: "break-word",
+                                                            overflowWrap: "break-word",
+                                                        }}
+                                                    >
+                                                        {log.message}
+                                                    </TableCell>
+                                                </TableRow>
+                                                {log.service && (
+                                                    <TableRow>
+                                                        <TableCell sx={{ fontWeight: 600, verticalAlign: "top" }}>Service</TableCell>
+                                                        <TableCell sx={{ fontFamily: "monospace", fontSize: "0.875rem" }}>
+                                                            {log.service}
+                                                        </TableCell>
+                                                    </TableRow>
+                                                )}
+                                                {log.path && (
+                                                    <TableRow>
+                                                        <TableCell sx={{ fontWeight: 600, verticalAlign: "top" }}>Path</TableCell>
+                                                        <TableCell
+                                                            sx={{
+                                                                fontFamily: "monospace",
+                                                                fontSize: "0.875rem",
+                                                                wordBreak: "break-all",
+                                                            }}
+                                                        >
+                                                            {log.path}
+                                                        </TableCell>
+                                                    </TableRow>
+                                                )}
+                                                {log.method && (
+                                                    <TableRow>
+                                                        <TableCell sx={{ fontWeight: 600, verticalAlign: "top" }}>Method</TableCell>
+                                                        <TableCell sx={{ fontFamily: "monospace", fontSize: "0.875rem" }}>
+                                                            {log.method}
+                                                        </TableCell>
+                                                    </TableRow>
+                                                )}
+                                                {log.ip && (
+                                                    <TableRow>
+                                                        <TableCell sx={{ fontWeight: 600, verticalAlign: "top" }}>IP</TableCell>
+                                                        <TableCell sx={{ fontFamily: "monospace", fontSize: "0.875rem" }}>
+                                                            {log.ip}
+                                                        </TableCell>
+                                                    </TableRow>
+                                                )}
+                                                {/* Show all other properties */}
+                                                {Object.keys(log)
+                                                    .filter(
+                                                        (key) =>
+                                                            !["level", "message", "timestamp", "service", "stack", "path", "method", "ip"].includes(
+                                                                key,
+                                                            ),
+                                                    )
+                                                    .map((key) => (
+                                                        <TableRow key={key}>
+                                                            <TableCell sx={{ fontWeight: 600, verticalAlign: "top" }}>
+                                                                {key}
+                                                            </TableCell>
+                                                            <TableCell
+                                                                sx={{
+                                                                    fontFamily: "monospace",
+                                                                    fontSize: "0.875rem",
+                                                                    wordBreak: "break-word",
+                                                                    overflowWrap: "break-word",
+                                                                }}
+                                                            >
+                                                                {typeof log[key] === "object" ? (
+                                                                    <Paper
+                                                                        variant="outlined"
+                                                                        sx={{
+                                                                            p: 1.5,
+                                                                            backgroundColor: "#f5f5f5",
+                                                                            maxHeight: 200,
+                                                                            overflow: "auto",
+                                                                        }}
+                                                                    >
+                                                                        <pre style={{
+                                                                            margin: 0,
+                                                                            fontSize: "0.8rem",
+                                                                            whiteSpace: "pre-wrap",
+                                                                            wordBreak: "break-word",
+                                                                        }}>
+                                                                            {JSON.stringify(log[key], null, 2)}
+                                                                        </pre>
+                                                                    </Paper>
+                                                                ) : (
+                                                                    String(log[key])
+                                                                )}
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    ))}
+                                            </TableBody>
+                                        </Table>
+
+                                        {/* Stack trace section */}
                                         {log.stack && (
-                                            <Box sx={{ mt: 2 }}>
-                                                <Typography variant="body2" gutterBottom>
-                                                    <strong>Stack Trace:</strong>
-                                                </Typography>
+                                            <Box>
+                                                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
+                                                    <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                                                        Stack Trace
+                                                    </Typography>
+                                                    <Tooltip title="Copy stack trace">
+                                                        <IconButton
+                                                            size="small"
+                                                            onClick={() => copyToClipboard(log.stack || "")}
+                                                        >
+                                                            <CopyIcon fontSize="small" />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                </Box>
                                                 <Paper
                                                     variant="outlined"
                                                     sx={{
-                                                        p: 1,
+                                                        p: 1.5,
                                                         backgroundColor: "#f5f5f5",
                                                         overflow: "auto",
-                                                        maxHeight: 300,
+                                                        maxHeight: 400,
                                                     }}
                                                 >
-                                                    <pre style={{ margin: 0, whiteSpace: "pre-wrap" }}>{log.stack}</pre>
+                                                    <pre style={{
+                                                        margin: 0,
+                                                        fontFamily: "monospace",
+                                                        fontSize: "0.8rem",
+                                                        whiteSpace: "pre-wrap",
+                                                        wordBreak: "break-word",
+                                                    }}>
+                                                        {log.stack}
+                                                    </pre>
                                                 </Paper>
                                             </Box>
                                         )}
-                                        {/* Show all other properties */}
-                                        {Object.keys(log)
-                                            .filter(
-                                                (key) =>
-                                                    !["level", "message", "timestamp", "service", "stack", "path", "method", "ip"].includes(key),
-                                            )
-                                            .map((key) => (
-                                                <Typography key={key} variant="body2" gutterBottom>
-                                                    <strong>{key}:</strong>{" "}
-                                                    {typeof log[key] === "object"
-                                                        ? JSON.stringify(log[key], null, 2)
-                                                        : String(log[key])}
-                                                </Typography>
-                                            ))}
                                     </Box>
                                 </AccordionDetails>
                             </Accordion>
@@ -498,6 +655,15 @@ export const AdminSystemLogs = () => {
                     )}
                 </Paper>
             </PageContainer>
+
+            {/* Copy notification */}
+            <Snackbar
+                open={copySnackbar}
+                autoHideDuration={2000}
+                onClose={() => setCopySnackbar(false)}
+                message="Copied to clipboard"
+                anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+            />
         </>
     );
 };

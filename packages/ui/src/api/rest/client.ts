@@ -180,6 +180,10 @@ export interface LandingPageContent {
                 icon: string;
                 displayOrder: number;
                 isActive: boolean;
+                // Optional image fields (icon is fallback)
+                image?: string;
+                imageAlt?: string;
+                imageHash?: string;
             }>;
             tips: Array<{
                 id: string;

@@ -8,6 +8,21 @@ import path from "path";
 
 const router = Router();
 
+// Storage stats cache
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+let cachedStats: any = null;
+let cacheTimestamp: number = 0;
+
+/**
+ * Invalidate the storage stats cache
+ * Call this after operations that affect storage (e.g., cleanup)
+ */
+export function invalidateStorageStatsCache(): void {
+    cachedStats = null;
+    cacheTimestamp = 0;
+    logger.log(LogLevel.debug, "Storage stats cache invalidated");
+}
+
 /**
  * GET /api/rest/v1/storage/stats
  * Get storage statistics (admin only)
@@ -23,6 +38,15 @@ router.get("/stats", async (req: Request, res: Response) => {
 
         if (!prisma) {
             return res.status(500).json({ error: "Database connection not available" });
+        }
+
+        // Check cache first
+        const now = Date.now();
+        const cacheAge = now - cacheTimestamp;
+
+        if (cachedStats && cacheAge < CACHE_TTL_MS) {
+            logger.log(LogLevel.debug, `Serving cached storage stats (age: ${Math.round(cacheAge / 1000)}s)`);
+            return res.json(cachedStats);
         }
 
         // Image statistics
@@ -75,7 +99,7 @@ router.get("/stats", async (req: Request, res: Response) => {
 
         // Orphaned files (on disk but not in DB)
         const dbFiles = await prisma.image_file.findMany({ select: { src: true } });
-        const dbFilePaths = new Set(dbFiles.map((f) => path.basename(f.src)));
+        const dbFilePaths = new Set(dbFiles.map((f: { src: string }) => path.basename(f.src)));
         let orphanedFiles = 0;
 
         if (fs.existsSync(imagesDir)) {
@@ -91,7 +115,8 @@ router.get("/stats", async (req: Request, res: Response) => {
         // Next cleanup time
         const nextScheduledRun = await getNextCleanupTime();
 
-        return res.json({
+        // Build response object
+        const stats = {
             images: {
                 total: totalImages,
                 labeled: labeledImages,
@@ -110,6 +135,7 @@ router.get("/stats", async (req: Request, res: Response) => {
                 lastRunDeletedImages: lastCleanup?.deleted_images || 0,
                 lastRunDeletedFiles: lastCleanup?.deleted_files || 0,
                 lastRunOrphanedFiles: lastCleanup?.orphaned_files || 0,
+                lastRunOrphanedRecords: (lastCleanup as any)?.orphaned_records || 0,
                 lastRunDurationMs: lastCleanup?.duration_ms || null,
                 lastRunErrors: lastCleanup?.errors ? JSON.parse(lastCleanup.errors) : [],
                 nextScheduledRun,
@@ -119,7 +145,14 @@ router.get("/stats", async (req: Request, res: Response) => {
                 frequency: "weekly",
                 schedule: "Sundays at 2:00 AM",
             },
-        });
+        };
+
+        // Cache the result
+        cachedStats = stats;
+        cacheTimestamp = now;
+        logger.log(LogLevel.debug, "Storage stats cached for 5 minutes");
+
+        return res.json(stats);
     } catch (error: any) {
         logger.log(LogLevel.error, "Get storage stats error:", error);
         if (error instanceof CustomError) {
@@ -143,6 +176,9 @@ router.post("/cleanup", async (req: Request, res: Response) => {
         }
 
         logger.log(LogLevel.info, "Manual cleanup triggered by admin");
+
+        // Invalidate storage stats cache (cleanup will change stats)
+        invalidateStorageStatsCache();
 
         // Trigger cleanup job
         const job = await triggerManualCleanup();

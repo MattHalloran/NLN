@@ -1,5 +1,7 @@
 import { Router } from "express";
 import multer from "multer";
+import path from "path";
+import fs from "fs";
 import landingPageRouter from "./landingPage.js";
 import plantsRouter from "./plants.js";
 import authRouter from "./auth.js";
@@ -14,9 +16,27 @@ import { csrfTokenEndpoint } from "../middleware/csrf.js";
 
 const router = Router();
 
-// Configure multer for file uploads
+// Configure temp directory for uploads
+const TEMP_UPLOAD_DIR = path.join(process.env.PROJECT_DIR || "/root/NLN", "temp-uploads");
+
+// Ensure temp directory exists
+if (!fs.existsSync(TEMP_UPLOAD_DIR)) {
+    fs.mkdirSync(TEMP_UPLOAD_DIR, { recursive: true });
+}
+
+// Configure multer for file uploads using disk storage instead of memory
+// This prevents memory exhaustion from large concurrent uploads
 const upload = multer({
-    storage: multer.memoryStorage(),
+    storage: multer.diskStorage({
+        destination: (req, file, cb) => {
+            cb(null, TEMP_UPLOAD_DIR);
+        },
+        filename: (req, file, cb) => {
+            // Use unique filename to prevent collisions
+            const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1E9)}`;
+            cb(null, `${file.fieldname}-${uniqueSuffix}-${file.originalname}`);
+        },
+    }),
     limits: {
         fileSize: 10 * 1024 * 1024, // 10MB limit
     },

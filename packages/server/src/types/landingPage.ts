@@ -72,6 +72,10 @@ export interface SeasonalPlant {
     icon: string;
     displayOrder: number;
     isActive: boolean;
+    // Optional image fields (icon is fallback if no image)
+    image?: string;     // Image URL/path
+    imageAlt?: string;  // Alt text for accessibility
+    imageHash?: string; // Image hash for cleanup integration
 }
 
 export interface PlantTip {

@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync } from "fs";
 import { join } from "path";
 import { logger, LogLevel } from "../../logger.js";
-import { syncHeroBannerLabels } from "../../utils/imageLabelSync.js";
+import { syncHeroBannerLabels, syncSeasonalContentLabels } from "../../utils/imageLabelSync.js";
 import type {
     LandingPageContent,
     HeroBanner,
@@ -108,10 +108,13 @@ export const writeLandingPageContent = async (content: LandingPageContent): Prom
         };
 
         // CRITICAL: Synchronize image labels BEFORE writing file
-        // This ensures hero banner images are labeled correctly and prevents orphaning
+        // This ensures hero banner and seasonal content images are labeled correctly and prevents orphaning
         // If label sync fails, the file write is aborted (no partial state)
         await syncHeroBannerLabels(dataToWrite);
         logger.info("Image labels synchronized for hero banners");
+
+        await syncSeasonalContentLabels(dataToWrite);
+        logger.info("Image labels synchronized for seasonal content");
 
         // Only write the JSON file after successful label sync
         writeFileSync(contentPath, JSON.stringify(dataToWrite, null, 2), "utf8");

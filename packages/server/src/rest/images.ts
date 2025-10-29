@@ -4,7 +4,7 @@ import { CustomError } from "../error.js";
 import { saveImage, deleteImage, checkImageUsage } from "../utils/index.js";
 import { logger, LogLevel } from "../logger.js";
 import { auditAdminAction, AuditEventType } from "../utils/auditLogger.js";
-import { imageUploadLimiter } from "../middleware/rateLimiter.js";
+import { imageUploadLimiter, imageFileCountLimiter } from "../middleware/rateLimiter.js";
 import fs from "fs";
 import path from "path";
 
@@ -108,7 +108,7 @@ router.get("/", async (req: Request, res: Response) => {
  * Rate limited: 25 upload requests per 15 minutes
  * Max files per request: 15
  */
-router.post("/", imageUploadLimiter, async (req: Request, res: Response) => {
+router.post("/", imageUploadLimiter, imageFileCountLimiter, async (req: Request, res: Response) => {
     try {
         const { isAdmin } = req;
 
@@ -147,8 +147,17 @@ router.post("/", imageUploadLimiter, async (req: Request, res: Response) => {
 
         // Check storage quota before processing upload
         const currentStorageMB = calculateCurrentStorageMB();
-        // Conservative estimate: 100MB per image (includes all variants)
-        const estimatedUploadSizeMB = files.length * 100;
+
+        // Calculate estimated upload size based on actual file sizes
+        // Each image generates up to 16 variants (8 sizes × 2 formats: original + WebP)
+        // Typical multiplier: 2.5-3x original size for all variants
+        // We use 3.5x to remain conservative while being more realistic than 100MB flat rate
+        const estimatedUploadSizeMB = files.reduce((total, file) => {
+            const fileSizeMB = file.size / (1024 * 1024);
+            // Apply 3.5x multiplier for all variants (conservative but realistic)
+            return total + fileSizeMB * 3.5;
+        }, 0);
+
         const projectedStorageMB = currentStorageMB + estimatedUploadSizeMB;
 
         if (projectedStorageMB > MAX_IMAGE_STORAGE_MB) {
@@ -404,6 +413,139 @@ router.get("/:hash/usage", async (req: Request, res: Response) => {
             return res.status(401).json({ error: error.message, code: error.code });
         }
         return res.status(500).json({ error: "Failed to check image usage" });
+    }
+});
+
+/**
+ * GET /api/rest/v1/images/:hash/variants
+ * Get all variants for an image with detailed stats (admin only)
+ * Useful for debugging and verifying which variants exist
+ */
+router.get("/:hash/variants", async (req: Request, res: Response) => {
+    try {
+        const { hash } = req.params;
+        const { prisma, isAdmin } = req as any;
+
+        // Must be admin
+        if (!isAdmin) {
+            throw new CustomError(CODE.Unauthorized);
+        }
+
+        if (!hash || typeof hash !== "string") {
+            return res.status(400).json({ error: "Image hash required" });
+        }
+
+        if (!prisma) {
+            return res.status(500).json({ error: "Database connection not available" });
+        }
+
+        // Get image with all file variants
+        const image = await prisma.image.findUnique({
+            where: { hash },
+            select: {
+                hash: true,
+                alt: true,
+                description: true,
+                created_at: true,
+                files: {
+                    select: {
+                        src: true,
+                        width: true,
+                        height: true,
+                    },
+                },
+            },
+        });
+
+        if (!image) {
+            return res.status(404).json({ error: "Image not found" });
+        }
+
+        // Calculate file sizes and categorize variants
+        const variants: Array<{
+            src: string;
+            width: number;
+            height: number;
+            size: string;
+            format: string;
+            fileSizeBytes?: number;
+            fileSizeMB?: number;
+        }> = [];
+
+        let totalSizeBytes = 0;
+        let webpCount = 0;
+        let originalFormatCount = 0;
+
+        for (const file of image.files) {
+            try {
+                const filePath = path.join(process.env.PROJECT_DIR || "", "assets", file.src);
+                const stats = fs.existsSync(filePath) ? fs.statSync(filePath) : null;
+
+                // Extract size code and format from filename
+                const fileName = path.basename(file.src);
+                const sizeMatch = fileName.match(/-(XXS|XS|S|M|ML|L|XL|XXL)\.(webp|jpeg|jpg|png|bmp|gif|ico)/i);
+                const sizeCode = sizeMatch?.[1] || "unknown";
+                const format = sizeMatch?.[2]?.toLowerCase() || "unknown";
+
+                if (format === "webp") {
+                    webpCount++;
+                } else {
+                    originalFormatCount++;
+                }
+
+                const variant = {
+                    src: file.src,
+                    width: file.width,
+                    height: file.height,
+                    size: sizeCode,
+                    format,
+                    fileSizeBytes: stats?.size,
+                    fileSizeMB: stats ? Math.round((stats.size / 1024 / 1024) * 100) / 100 : undefined,
+                };
+
+                variants.push(variant);
+                if (stats) {
+                    totalSizeBytes += stats.size;
+                }
+            } catch (error) {
+                logger.log(LogLevel.warn, `Error getting stats for variant ${file.src}:`, error);
+                variants.push({
+                    src: file.src,
+                    width: file.width,
+                    height: file.height,
+                    size: "unknown",
+                    format: "unknown",
+                });
+            }
+        }
+
+        // Sort variants by size (XXL → XXS), then by format (original → webp)
+        const sizeOrder = ["XXL", "XL", "L", "ML", "M", "S", "XS", "XXS"];
+        variants.sort((a, b) => {
+            const sizeA = sizeOrder.indexOf(a.size);
+            const sizeB = sizeOrder.indexOf(b.size);
+            if (sizeA !== sizeB) return sizeA - sizeB;
+            // Within same size, show original format first
+            return a.format === "webp" ? 1 : -1;
+        });
+
+        return res.json({
+            hash: image.hash,
+            alt: image.alt,
+            description: image.description,
+            createdAt: image.created_at,
+            variantCount: variants.length,
+            webpVariants: webpCount,
+            originalFormatVariants: originalFormatCount,
+            totalStorageMB: Math.round((totalSizeBytes / 1024 / 1024) * 100) / 100,
+            variants,
+        });
+    } catch (error: any) {
+        logger.log(LogLevel.error, "Get image variants error:", error);
+        if (error instanceof CustomError) {
+            return res.status(401).json({ error: error.message, code: error.code });
+        }
+        return res.status(500).json({ error: "Failed to get image variants" });
     }
 });
 

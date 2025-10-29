@@ -1,5 +1,7 @@
 import rateLimit from "express-rate-limit";
+import type { Request, Response, NextFunction } from "express";
 import { logger, LogLevel } from "../logger.js";
+import { initializeRedis } from "../redisConn.js";
 
 // General API rate limiter - 100 requests per 15 minutes
 export const generalApiLimiter = rateLimit({
@@ -90,3 +92,75 @@ export const imageUploadLimiter = rateLimit({
         });
     },
 });
+
+/**
+ * File-count rate limiter - limits total files uploaded, not just requests
+ * Prevents burst attacks where attacker makes max-file requests repeatedly
+ *
+ * Limit: 100 files per 15 minutes per IP
+ * This means even if someone makes 25 requests, they can only upload 100 total files
+ * (vs 375 files with request-only limiting: 25 requests × 15 files)
+ */
+export async function imageFileCountLimiter(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+        const ip = req.ip || "unknown";
+        const key = `file-upload-count:${ip}`;
+        const windowMs = 15 * 60 * 1000; // 15 minutes
+        const maxFiles = 100; // Maximum files per window
+
+        // Get file count from request
+        type MulterRequest = Request & { files?: Express.Multer.File[] };
+        const fileCount = ((req as MulterRequest).files || []).length;
+
+        if (fileCount === 0) {
+            // No files in request, skip limiting
+            return next();
+        }
+
+        // Get Redis client
+        const redis = await initializeRedis();
+
+        // Get current count from Redis
+        const currentCountStr = await redis.get(key);
+        const currentCount = currentCountStr ? parseInt(currentCountStr, 10) : 0;
+
+        // Check if adding these files would exceed limit
+        if (currentCount + fileCount > maxFiles) {
+            logger.log(
+                LogLevel.warn,
+                `File upload rate limit exceeded for IP: ${ip} (current: ${currentCount}, attempting: ${fileCount}, limit: ${maxFiles})`,
+            );
+            res.status(429).json({
+                error: "Too many files uploaded. Please wait before uploading more images.",
+                code: "FILE_RATE_LIMIT_EXCEEDED",
+                currentCount,
+                attemptedFiles: fileCount,
+                maxFiles,
+                retryAfter: "15 minutes",
+                tip: "You've reached the file upload limit. Wait 15 minutes or upload fewer files per request.",
+            });
+            return;
+        }
+
+        // Increment counter in Redis
+        const newCount = currentCount + fileCount;
+        const ttl = await redis.ttl(key);
+
+        if (ttl <= 0) {
+            // Key doesn't exist or has no expiry - set with expiry
+            await redis.setEx(key, Math.floor(windowMs / 1000), newCount.toString());
+        } else {
+            // Key exists - increment and preserve TTL
+            await redis.set(key, newCount.toString(), { KEEPTTL: true });
+        }
+
+        logger.log(LogLevel.debug, `File upload count for IP ${ip}: ${newCount}/${maxFiles} files`);
+
+        // Continue to next middleware
+        next();
+    } catch (error) {
+        logger.log(LogLevel.error, "Error in file count rate limiter:", error);
+        // On error, allow request through but log the error
+        next();
+    }
+}

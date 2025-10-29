@@ -262,13 +262,14 @@ model image_labels {
 }
 
 model cleanup_log {
-    id              Int      @id @default(autoincrement())
-    type            String   @db.VarChar(64)
-    deleted_images  Int      @default(0)
-    deleted_files   Int      @default(0)
-    orphaned_files  Int      @default(0)
-    errors          String?  @db.VarChar(4096)
-    status          String   @db.VarChar(32)
-    duration_ms     Int?
-    created_at      DateTime @default(now()) @db.Timestamptz(6)
+    id               Int      @id @default(autoincrement())
+    type             String   @db.VarChar(64)
+    deleted_images   Int      @default(0)
+    deleted_files    Int      @default(0)
+    orphaned_files   Int      @default(0)
+    orphaned_records Int      @default(0)
+    errors           String?  @db.VarChar(4096)
+    status           String   @db.VarChar(32)
+    duration_ms      Int?
+    created_at       DateTime @default(now()) @db.Timestamptz(6)
 }

@@ -1,7 +1,7 @@
 {
   "metadata": {
     "version": "2.0",
-    "lastUpdated": "2025-10-22T17:50:49.795Z"
+    "lastUpdated": "2025-10-29T15:29:02.216Z"
   },
   "content": {
     "hero": {
@@ -125,63 +125,103 @@
     "seasonal": {
       "plants": [
         {
-          "id": "test-plant-1",
-          "name": "Test Spring Flower",
-          "description": "A beautiful spring flower for testing",
-          "season": "Spring",
-          "careLevel": "Easy",
-          "icon": "flower",
-          "displayOrder": 1,
-          "isActive": true
-        },
-        {
-          "id": "test-plant-2",
-          "name": "Test Summer Plant",
-          "description": "A summer plant for testing",
-          "season": "Summer",
+          "id": "japanese-maple",
+          "name": "Japanese Maple",
+          "description": "Stunning fall foliage with vibrant red and orange colors. Perfect for adding dramatic autumn color to your landscape.",
+          "season": "Fall",
           "careLevel": "Medium",
           "icon": "leaf",
+          "displayOrder": 1,
+          "isActive": true,
+          "image": "/images/fall-foliage-explorer-div-map-1761246676597-XXL.png",
+          "imageAlt": "fall-foliage-explorer-div-map-1761246676597",
+          "imageHash": "0f17053f7c1c1c1f"
+        },
+        {
+          "id": "winter-jasmine",
+          "name": "Winter Jasmine",
+          "description": "Bright yellow flowers bloom in winter, providing cheerful color during the coldest months.",
+          "season": "Winter",
+          "careLevel": "Easy",
+          "icon": "snowflake",
           "displayOrder": 2,
           "isActive": true
         },
         {
-          "id": "test-plant-3",
-          "name": "Inactive Test Plant",
-          "description": "An inactive plant for testing filtering",
-          "season": "Fall",
-          "careLevel": "Advanced",
-          "icon": "snowflake",
+          "id": "cherry-blossom",
+          "name": "Cherry Blossom",
+          "description": "Beautiful spring blooms create a stunning display. A classic choice for spring garden interest.",
+          "season": "Spring",
+          "careLevel": "Medium",
+          "icon": "flower",
           "displayOrder": 3,
-          "isActive": false
+          "isActive": true
+        },
+        {
+          "id": "hydrangea",
+          "name": "Hydrangea",
+          "description": "Large, colorful flower clusters bloom throughout summer. Excellent for adding bold color to shaded areas.",
+          "season": "Summer",
+          "careLevel": "Easy",
+          "icon": "flower2",
+          "displayOrder": 4,
+          "isActive": true
         }
       ],
       "tips": [
         {
-          "id": "test-tip-1",
-          "title": "Test Watering Tip",
-          "description": "Water your plants regularly for testing",
+          "id": "deep-watering",
+          "title": "Deep Watering Technique",
+          "description": "Water plants deeply but less frequently to encourage strong root development. Aim for 1-2 inches per week.",
           "category": "Watering",
           "season": "Year-round",
           "displayOrder": 1,
           "isActive": true
         },
         {
-          "id": "test-tip-2",
-          "title": "Test Fertilizing Tip",
-          "description": "Fertilize in spring for testing",
+          "id": "spring-fertilizing",
+          "title": "Spring Fertilizing Schedule",
+          "description": "Begin fertilizing in early spring when new growth appears. Use a balanced, slow-release fertilizer for best results.",
           "category": "Fertilizing",
           "season": "Spring",
           "displayOrder": 2,
           "isActive": true
         },
         {
-          "id": "test-tip-3",
-          "title": "Inactive Test Tip",
-          "description": "An inactive tip for testing filtering",
+          "id": "winter-protection",
+          "title": "Winter Plant Protection",
+          "description": "Wrap tender plants in burlap and mulch around the base to protect from freezing temperatures.",
           "category": "General",
           "season": "Winter",
           "displayOrder": 3,
-          "isActive": false
+          "isActive": true
+        },
+        {
+          "id": "summer-pruning",
+          "title": "Summer Pruning Tips",
+          "description": "Prune spring-blooming shrubs right after blooming ends. This ensures next year's buds have time to develop.",
+          "category": "Pruning",
+          "season": "Summer",
+          "displayOrder": 4,
+          "isActive": true
+        },
+        {
+          "id": "natural-pest-control",
+          "title": "Natural Pest Control",
+          "description": "Encourage beneficial insects with native plants. Ladybugs, lacewings, and birds are natural pest controllers.",
+          "category": "Pest Control",
+          "season": "Year-round",
+          "displayOrder": 5,
+          "isActive": true
+        },
+        {
+          "id": "fall-cleanup",
+          "title": "Fall Garden Cleanup",
+          "description": "Remove diseased plant material and fallen leaves to prevent pest and disease issues next season.",
+          "category": "General",
+          "season": "Fall",
+          "displayOrder": 6,
+          "isActive": true
         }
       ]
     },
