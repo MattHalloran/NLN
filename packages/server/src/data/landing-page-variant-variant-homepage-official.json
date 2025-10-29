@@ -114,11 +114,11 @@
           "url": "/about#contact"
         },
         {
-          "title": "Delivery & Installation",
-          "description": "Professional delivery and installation services available. Let our experienced team handle the heavy lifting and proper placement.",
-          "icon": "truck",
-          "action": "Learn More",
-          "url": "/about"
+          "title": "Questions? We're Here to Help",
+          "description": "Have questions about our plants, services, or your project? Our knowledgeable team is ready to assist you. Contact us for personalized support and guidance.",
+          "icon": "headset",
+          "action": "Contact Us",
+          "url": "/about#contact"
         }
       ]
     },

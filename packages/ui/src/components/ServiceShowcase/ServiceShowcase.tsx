@@ -10,7 +10,7 @@ import {
 } from "@mui/material";
 import { useState } from "react";
 import { useLocation } from "route";
-import { Sprout, Leaf, Home, Truck, Package, Wrench, LucideIcon } from "lucide-react";
+import { Sprout, Leaf, Home, Truck, Package, Wrench, Headset, LucideIcon } from "lucide-react";
 import { useLandingPage } from "hooks/useLandingPage";
 
 interface Service {
@@ -29,6 +29,7 @@ const SERVICE_ICONS: Record<string, LucideIcon> = {
     truck: Truck,
     package: Package,
     wrench: Wrench,
+    headset: Headset,
 };
 
 // Default services as fallback

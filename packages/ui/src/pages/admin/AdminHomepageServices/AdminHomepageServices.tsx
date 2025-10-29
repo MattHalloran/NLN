@@ -32,6 +32,7 @@ import {
     Truck,
     Package,
     Wrench,
+    Headset,
     Type as TextFieldsIcon,
     Grid3x3 as GridIcon,
     Eye as EyeIcon,
@@ -68,6 +69,7 @@ const SERVICE_ICONS = [
     { value: "truck", label: "Truck" },
     { value: "package", label: "Package" },
     { value: "wrench", label: "Wrench" },
+    { value: "headset", label: "Headset" },
 ];
 
 // Icon mapping for preview
@@ -78,6 +80,7 @@ const ICON_COMPONENTS: Record<string, any> = {
     truck: Truck,
     package: Package,
     wrench: Wrench,
+    headset: Headset,
 };
 
 // Preview component that shows how services will look
