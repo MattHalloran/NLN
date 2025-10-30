@@ -1,8 +1,8 @@
-import { Box, Card, CardContent, Stack, Typography, useTheme } from "@mui/material";
+import { Box, Card, CardContent, Stack, Typography, useTheme, Alert } from "@mui/material";
 import { BusinessContext } from "contexts/BusinessContext";
-import { Clock, MapPin, Phone, Mail } from "lucide-react";
-import { useContext } from "react";
-import { parseBusinessHours } from "utils/businessHours";
+import { Clock, MapPin, Phone, Mail, AlertCircle } from "lucide-react";
+import { useContext, useMemo } from "react";
+import { parseBusinessHours, checkBusinessHoursStatus } from "utils/businessHours";
 
 export const ContactInfo = ({
     ...props
@@ -16,6 +16,10 @@ export const ContactInfo = ({
     };
 
     const hours = parseBusinessHours(business?.hours || "");
+
+    const businessHoursStatus = useMemo(() => {
+        return checkBusinessHoursStatus(business?.hours || "");
+    }, [business?.hours]);
 
     const contactInfo = [
         {
@@ -134,6 +138,31 @@ export const ContactInfo = ({
                     </Stack>
                 </CardContent>
             </Card>
+
+            {/* Business Hours Status Alert */}
+            {!businessHoursStatus.isOpen && (
+                <Alert
+                    severity="info"
+                    icon={<AlertCircle size={18} />}
+                    sx={{
+                        fontSize: "0.8rem",
+                        padding: "8px 12px",
+                        alignItems: "center",
+                        "& .MuiAlert-icon": {
+                            padding: "0",
+                            marginRight: "8px",
+                            alignItems: "center",
+                        },
+                        "& .MuiAlert-message": {
+                            padding: "0",
+                            display: "flex",
+                            alignItems: "center",
+                        },
+                    }}
+                >
+                    {businessHoursStatus.message}
+                </Alert>
+            )}
 
             {/* Contact Methods */}
             <Stack spacing={1}>

@@ -9,13 +9,14 @@ import {
     useTheme,
     Chip,
     Divider,
+    Alert,
 } from "@mui/material";
 import { useLocation } from "route";
-import { Eye, Gift, Smartphone, Car, Clock, Phone, MapPin, Mail, Map } from "lucide-react";
+import { Eye, Gift, Smartphone, Car, Clock, Phone, MapPin, Mail, Map, AlertCircle } from "lucide-react";
 import { useLandingPage } from "hooks/useLandingPage";
-import { parseBusinessHours } from "utils/businessHours";
+import { parseBusinessHours, checkBusinessHoursStatus } from "utils/businessHours";
 import { BusinessContext } from "contexts/BusinessContext";
-import { useContext } from "react";
+import { useContext, useMemo } from "react";
 import { COMPANY_INFO } from "@local/shared";
 
 export const LocationVisit = () => {
@@ -27,6 +28,10 @@ export const LocationVisit = () => {
     const { data } = useLandingPage();
 
     const foundedYear = data?.content?.company?.foundedYear || COMPANY_INFO.FoundedYear;
+
+    const businessHoursStatus = useMemo(() => {
+        return checkBusinessHoursStatus(business?.hours || data?.contact?.hours || "");
+    }, [business?.hours, data?.contact?.hours]);
 
     const visitInfo = [
         {
@@ -352,6 +357,31 @@ export const LocationVisit = () => {
                                 </Box>
                             </CardContent>
                         </Card>
+
+                        {/* Business Hours Status Alert */}
+                        {!businessHoursStatus.isOpen && (
+                            <Alert
+                                severity="info"
+                                icon={<AlertCircle size={18} />}
+                                sx={{
+                                    mb: 3,
+                                    fontSize: "0.85rem",
+                                    alignItems: "center",
+                                    "& .MuiAlert-icon": {
+                                        padding: "0",
+                                        marginRight: "8px",
+                                        alignItems: "center",
+                                    },
+                                    "& .MuiAlert-message": {
+                                        padding: "0",
+                                        display: "flex",
+                                        alignItems: "center",
+                                    },
+                                }}
+                            >
+                                {businessHoursStatus.message}
+                            </Alert>
+                        )}
 
                         {/* Visit Information */}
                         <Box>

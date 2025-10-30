@@ -91,34 +91,46 @@
     "services": {
       "title": "Our Services",
       "subtitle": "Everything you need to create and maintain your perfect garden",
+      "cta": {
+        "title": "Ready to get started?",
+        "subtitle": "Browse our online catalog or contact us to discuss your project needs",
+        "primaryButton": {
+          "text": "Shop Online",
+          "url": "https://newlife.online-orders.sbiteam.com/"
+        },
+        "secondaryButton": {
+          "text": "Contact Us",
+          "url": "/about#contact"
+        }
+      },
       "items": [
         {
-          "title": "Plant Selection & Availability",
-          "description": "Browse our extensive collection of healthy plants, trees, and flowers. Check real-time availability and place orders online.",
+          "title": "Wholesale Plant Catalog",
+          "description": "Browse our extensive inventory of plants, trees, and shrubs. Wholesale pricing for landscapers, contractors, and garden centers.",
           "icon": "sprout",
-          "action": "Browse Plants",
+          "action": "View Catalog",
           "url": "https://newlife.online-orders.sbiteam.com/"
         },
         {
-          "title": "Expert Plant Care Advice",
-          "description": "Get personalized guidance from our certified horticulturists. Learn proper care techniques for your specific plants.",
+          "title": "Bulk Ordering & Pricing",
+          "description": "Order in quantity with competitive wholesale pricing.",
+          "icon": "package",
+          "action": "Get Pricing",
+          "url": "/about#contact"
+        },
+        {
+          "title": "Wholesale Delivery",
+          "description": "Professional delivery service for wholesale orders. Flexible scheduling to meet your project timelines.",
+          "icon": "truck",
+          "action": "Delivery Info",
+          "url": "/about#contact"
+        },
+        {
+          "title": "Real-Time Availability",
+          "description": "Check current stock levels and reserve plants online. Updated inventory ensures you get what you need when you need it.",
           "icon": "leaf",
-          "action": "Get Advice",
-          "url": "/about#contact"
-        },
-        {
-          "title": "Landscape Design Consultation",
-          "description": "Transform your outdoor space with professional landscape design. From concept to completion, we'll help bring your vision to life.",
-          "icon": "home",
-          "action": "Schedule Consultation",
-          "url": "/about#contact"
-        },
-        {
-          "title": "Questions? We're Here to Help",
-          "description": "Have questions about our plants, services, or your project? Our knowledgeable team is ready to assist you. Contact us for personalized support and guidance.",
-          "icon": "headset",
-          "action": "Contact Us",
-          "url": "/about#contact"
+          "action": "Check Stock",
+          "url": "https://newlife.online-orders.sbiteam.com/"
         }
       ]
     },

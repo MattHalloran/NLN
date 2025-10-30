@@ -55,9 +55,22 @@ interface Service {
     url: string;
 }
 
+interface CTAButton {
+    text: string;
+    url: string;
+}
+
+interface CTASettings {
+    title: string;
+    subtitle: string;
+    primaryButton: CTAButton;
+    secondaryButton: CTAButton;
+}
+
 interface ServicesSettings {
     title: string;
     subtitle: string;
+    cta: CTASettings;
     items: Service[];
 }
 
@@ -255,38 +268,50 @@ export const AdminHomepageServices = () => {
     const [services, setServices] = useState<ServicesSettings>({
         title: "Our Services",
         subtitle: "Everything you need to create and maintain your perfect garden",
+        cta: {
+            title: "Ready to get started?",
+            subtitle: "Browse our online catalog or contact us to discuss your project needs",
+            primaryButton: {
+                text: "Shop Online",
+                url: "https://newlife.online-orders.sbiteam.com/"
+            },
+            secondaryButton: {
+                text: "Contact Us",
+                url: "/about#contact"
+            }
+        },
         items: [
             {
-                title: "Plant Selection & Availability",
+                title: "Wholesale Plant Catalog",
                 description:
-                    "Browse our extensive collection of healthy plants, trees, and flowers. Check real-time availability and place orders online.",
+                    "Browse our extensive inventory of plants, trees, and shrubs. Wholesale pricing for landscapers, contractors, and garden centers.",
                 icon: "sprout",
-                action: "Browse Plants",
+                action: "View Catalog",
                 url: "https://newlife.online-orders.sbiteam.com/",
             },
             {
-                title: "Expert Plant Care Advice",
+                title: "Bulk Ordering & Pricing",
                 description:
-                    "Get personalized guidance from our certified horticulturists. Learn proper care techniques for your specific plants.",
-                icon: "leaf",
-                action: "Get Advice",
+                    "Order in quantity with competitive wholesale pricing.",
+                icon: "package",
+                action: "Get Pricing",
                 url: "/about#contact",
             },
             {
-                title: "Landscape Design Consultation",
+                title: "Wholesale Delivery",
                 description:
-                    "Transform your outdoor space with professional landscape design. From concept to completion, we'll help bring your vision to life.",
-                icon: "home",
-                action: "Schedule Consultation",
-                url: "/about#contact",
-            },
-            {
-                title: "Delivery & Installation",
-                description:
-                    "Professional delivery and installation services available. Let our experienced team handle the heavy lifting and proper placement.",
+                    "Professional delivery service for wholesale orders. Flexible scheduling to meet your project timelines.",
                 icon: "truck",
-                action: "Learn More",
-                url: "/about",
+                action: "Delivery Info",
+                url: "/about#contact",
+            },
+            {
+                title: "Real-Time Availability",
+                description:
+                    "Check current stock levels and reserve plants online. Updated inventory ensures you get what you need when you need it.",
+                icon: "leaf",
+                action: "Check Stock",
+                url: "https://newlife.online-orders.sbiteam.com/",
             },
         ],
     });
@@ -303,6 +328,7 @@ export const AdminHomepageServices = () => {
             const loadedServices = {
                 title: landingPageContent.content.services.title || services.title,
                 subtitle: landingPageContent.content.services.subtitle || services.subtitle,
+                cta: landingPageContent.content.services.cta || services.cta,
                 items: landingPageContent.content.services.items || services.items,
             };
             setServices(loadedServices);
@@ -892,6 +918,137 @@ export const AdminHomepageServices = () => {
                                             No service cards configured. Click "Add Service Card" above to create your first service card.
                                         </Alert>
                                     )}
+                                </AccordionDetails>
+                            </Accordion>
+
+                            {/* Accordion 3: Call-to-Action Section */}
+                            <Accordion
+                                defaultExpanded
+                                sx={{
+                                    border: "1px solid",
+                                    borderColor: "divider",
+                                    borderRadius: "8px !important",
+                                    "&:before": { display: "none" },
+                                    boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+                                    mb: 2,
+                                }}
+                            >
+                                <AccordionSummary
+                                    expandIcon={<ExpandMoreIcon />}
+                                    sx={{
+                                        bgcolor: "grey.50",
+                                        borderRadius: "8px 8px 0 0",
+                                        minHeight: 64,
+                                        "&:hover": {
+                                            bgcolor: "grey.100",
+                                        },
+                                        "& .MuiAccordionSummary-content": {
+                                            my: 2,
+                                        },
+                                    }}
+                                >
+                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                                        <Box
+                                            sx={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                width: 40,
+                                                height: 40,
+                                                borderRadius: 2,
+                                                bgcolor: "success.main",
+                                                color: "white",
+                                            }}
+                                        >
+                                            <Package size={20} />
+                                        </Box>
+                                        <Box>
+                                            <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                                                Call-to-Action Section
+                                            </Typography>
+                                            <Typography variant="caption" color="text.secondary">
+                                                Configure the "Ready to get started?" section
+                                            </Typography>
+                                        </Box>
+                                    </Box>
+                                </AccordionSummary>
+                                <AccordionDetails sx={{ p: 3, bgcolor: "background.paper" }}>
+                                    <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                                        <TextField
+                                            fullWidth
+                                            label="CTA Title"
+                                            value={services.cta.title}
+                                            onChange={(e) => setServices({ ...services, cta: { ...services.cta, title: e.target.value } })}
+                                            helperText="Main heading for the call-to-action section"
+                                            variant="outlined"
+                                            sx={{
+                                                "& .MuiOutlinedInput-root": {
+                                                    bgcolor: "background.paper",
+                                                },
+                                            }}
+                                        />
+                                        <TextField
+                                            fullWidth
+                                            label="CTA Subtitle"
+                                            value={services.cta.subtitle}
+                                            onChange={(e) => setServices({ ...services, cta: { ...services.cta, subtitle: e.target.value } })}
+                                            helperText="Subtitle text below the CTA heading"
+                                            variant="outlined"
+                                            multiline
+                                            rows={2}
+                                            sx={{
+                                                "& .MuiOutlinedInput-root": {
+                                                    bgcolor: "background.paper",
+                                                },
+                                            }}
+                                        />
+
+                                        <Box sx={{ mt: 2 }}>
+                                            <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>
+                                                Primary Button (Left)
+                                            </Typography>
+                                            <Box sx={{ display: "flex", gap: 2 }}>
+                                                <TextField
+                                                    sx={{ flex: 1 }}
+                                                    label="Button Text"
+                                                    value={services.cta.primaryButton.text}
+                                                    onChange={(e) => setServices({ ...services, cta: { ...services.cta, primaryButton: { ...services.cta.primaryButton, text: e.target.value } } })}
+                                                    size="small"
+                                                />
+                                                <TextField
+                                                    sx={{ flex: 2 }}
+                                                    label="Button URL"
+                                                    value={services.cta.primaryButton.url}
+                                                    onChange={(e) => setServices({ ...services, cta: { ...services.cta, primaryButton: { ...services.cta.primaryButton, url: e.target.value } } })}
+                                                    helperText="Internal path or external URL"
+                                                    size="small"
+                                                />
+                                            </Box>
+                                        </Box>
+
+                                        <Box>
+                                            <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>
+                                                Secondary Button (Right)
+                                            </Typography>
+                                            <Box sx={{ display: "flex", gap: 2 }}>
+                                                <TextField
+                                                    sx={{ flex: 1 }}
+                                                    label="Button Text"
+                                                    value={services.cta.secondaryButton.text}
+                                                    onChange={(e) => setServices({ ...services, cta: { ...services.cta, secondaryButton: { ...services.cta.secondaryButton, text: e.target.value } } })}
+                                                    size="small"
+                                                />
+                                                <TextField
+                                                    sx={{ flex: 2 }}
+                                                    label="Button URL"
+                                                    value={services.cta.secondaryButton.url}
+                                                    onChange={(e) => setServices({ ...services, cta: { ...services.cta, secondaryButton: { ...services.cta.secondaryButton, url: e.target.value } } })}
+                                                    helperText="Internal path or external URL"
+                                                    size="small"
+                                                />
+                                            </Box>
+                                        </Box>
+                                    </Box>
                                 </AccordionDetails>
                             </Accordion>
 

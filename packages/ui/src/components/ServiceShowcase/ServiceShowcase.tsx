@@ -35,36 +35,36 @@ const SERVICE_ICONS: Record<string, LucideIcon> = {
 // Default services as fallback
 const defaultServices: Service[] = [
     {
-        title: "Plant Selection & Availability",
+        title: "Wholesale Plant Catalog",
         description:
-            "Browse our extensive collection of healthy plants, trees, and flowers. Check real-time availability and place orders online.",
+            "Browse our extensive inventory of plants, trees, and shrubs. Wholesale pricing for landscapers, contractors, and garden centers.",
         icon: "sprout",
-        action: "Browse Plants",
+        action: "View Catalog",
         url: "https://newlife.online-orders.sbiteam.com/",
     },
     {
-        title: "Expert Plant Care Advice",
+        title: "Bulk Ordering & Pricing",
         description:
-            "Get personalized guidance from our certified horticulturists. Learn proper care techniques for your specific plants.",
-        icon: "leaf",
-        action: "Get Advice",
+            "Order in quantity with competitive wholesale pricing.",
+        icon: "package",
+        action: "Get Pricing",
         url: "/about#contact",
     },
     {
-        title: "Landscape Design Consultation",
+        title: "Wholesale Delivery",
         description:
-            "Transform your outdoor space with professional landscape design. From concept to completion, we'll help bring your vision to life.",
-        icon: "home",
-        action: "Schedule Consultation",
-        url: "/about#contact",
-    },
-    {
-        title: "Delivery & Installation",
-        description:
-            "Professional delivery and installation services available. Let our experienced team handle the heavy lifting and proper placement.",
+            "Professional delivery service for wholesale orders. Flexible scheduling to meet your project timelines.",
         icon: "truck",
-        action: "Learn More",
-        url: "/about",
+        action: "Delivery Info",
+        url: "/about#contact",
+    },
+    {
+        title: "Real-Time Availability",
+        description:
+            "Check current stock levels and reserve plants online. Updated inventory ensures you get what you need when you need it.",
+        icon: "leaf",
+        action: "Check Stock",
+        url: "https://newlife.online-orders.sbiteam.com/",
     },
 ];
 
@@ -80,6 +80,20 @@ export const ServiceShowcase = () => {
     const sectionTitle = servicesConfig?.title || "Our Services";
     const sectionSubtitle =
         servicesConfig?.subtitle || "Everything you need to create and maintain your perfect garden";
+
+    // Get CTA section config or use defaults
+    const ctaConfig = servicesConfig?.cta || {
+        title: "Ready to get started?",
+        subtitle: "Browse our online catalog or contact us to discuss your project needs",
+        primaryButton: {
+            text: "Shop Online",
+            url: "https://newlife.online-orders.sbiteam.com/"
+        },
+        secondaryButton: {
+            text: "Contact Us",
+            url: "/about#contact"
+        }
+    };
 
     const handleAction = (service: Service) => {
         if (service.url?.startsWith("http")) {
@@ -235,10 +249,10 @@ export const ServiceShowcase = () => {
                     }}
                 >
                     <Typography variant="h5" sx={{ fontWeight: 600, mb: 2 }}>
-                        Ready to get started?
+                        {ctaConfig.title}
                     </Typography>
                     <Typography variant="body1" sx={{ mb: 3, opacity: 0.9 }}>
-                        Visit our nursery today or browse our online selection
+                        {ctaConfig.subtitle}
                     </Typography>
                     <Box
                         sx={{ display: "flex", gap: 2, justifyContent: "center", flexWrap: "wrap" }}
@@ -247,9 +261,13 @@ export const ServiceShowcase = () => {
                             variant="contained"
                             color="secondary"
                             size="large"
-                            onClick={() =>
-                                window.open("https://newlife.online-orders.sbiteam.com/", "_blank")
-                            }
+                            onClick={() => {
+                                if (ctaConfig.primaryButton.url.startsWith("http")) {
+                                    window.open(ctaConfig.primaryButton.url, "_blank");
+                                } else {
+                                    setLocation(ctaConfig.primaryButton.url);
+                                }
+                            }}
                             sx={{
                                 px: 4,
                                 py: 1.5,
@@ -258,12 +276,18 @@ export const ServiceShowcase = () => {
                                 fontWeight: 600,
                             }}
                         >
-                            Shop Online
+                            {ctaConfig.primaryButton.text}
                         </Button>
                         <Button
                             variant="outlined"
                             size="large"
-                            onClick={() => setLocation("/about#contact")}
+                            onClick={() => {
+                                if (ctaConfig.secondaryButton.url.startsWith("http")) {
+                                    window.open(ctaConfig.secondaryButton.url, "_blank");
+                                } else {
+                                    setLocation(ctaConfig.secondaryButton.url);
+                                }
+                            }}
                             sx={{
                                 px: 4,
                                 py: 1.5,
@@ -278,7 +302,7 @@ export const ServiceShowcase = () => {
                                 },
                             }}
                         >
-                            Visit Us
+                            {ctaConfig.secondaryButton.text}
                         </Button>
                     </Box>
                 </Box>

@@ -1,5 +1,5 @@
 import { APP_LINKS } from "@local/shared";
-import { Box, ButtonBase as _ButtonBase, Container, Grid, IconButton as _IconButton, Link, Stack, Typography, useTheme } from "@mui/material";
+import { Box, ButtonBase as _ButtonBase, Container, Grid, IconButton as _IconButton, Link, Stack, Typography, useTheme, Tooltip } from "@mui/material";
 import AmericanHort from "assets/img/american-hort.png";
 import NJNLA from "assets/img/njnla_logo.jpg";
 import ProvenWinners from "assets/img/proven-winners.png";
@@ -16,17 +16,23 @@ import {
     Camera,
     ExternalLink,
     LogIn,
+    Clock,
 } from "lucide-react";
 import { isObject } from "lodash-es";
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useMemo } from "react";
 import { useLocation } from "route";
 import { getServerUrl } from "utils";
+import { checkBusinessHoursStatus } from "utils/businessHours";
 
 export const Footer = () => {
     const [, setLocation] = useLocation();
     const { palette } = useTheme();
     const session = useContext(SessionContext);
     const business = useContext(BusinessContext);
+
+    const businessHoursStatus = useMemo(() => {
+        return checkBusinessHoursStatus(business?.hours || "");
+    }, [business?.hours]);
 
     // Load RapidScan compliance seal script
     useEffect(() => {
@@ -53,24 +59,28 @@ export const Footer = () => {
             label: business?.ADDRESS?.Label || "Address",
             href: business?.ADDRESS?.Link,
             tooltip: "View in Google Maps",
+            isPhone: false,
         },
         {
             icon: <Phone size={18} />,
             label: business?.PHONE?.Label || "Phone",
             href: business?.PHONE?.Link,
             tooltip: "Call Us",
+            isPhone: true,
         },
         {
             icon: <Printer size={18} />,
             label: business?.FAX?.Label || "Fax",
             href: business?.FAX?.Link,
             tooltip: "Fax Us",
+            isPhone: false,
         },
         {
             icon: <Mail size={18} />,
             label: business?.EMAIL?.Label || "Email",
             href: business?.EMAIL?.Link,
             tooltip: "Email Us",
+            isPhone: false,
         },
     ];
 
@@ -228,41 +238,71 @@ export const Footer = () => {
                             {contactLinks.map((contact, index) => (
                                 contact.href && contact.label ? (
                                     <Grid item xs={12} sm={12} md={6} key={index}>
-                                        <Link
-                                            href={contact.href}
-                                            target={contact.href.startsWith("http") ? "_blank" : undefined}
-                                            rel={contact.href.startsWith("http") ? "noopener noreferrer" : undefined}
-                                            sx={{
-                                                color: "inherit",
-                                                textDecoration: "none",
-                                                display: "flex",
-                                                alignItems: "center",
-                                                gap: 1,
-                                                p: 1,
-                                                borderRadius: 1,
-                                                fontSize: "0.85rem",
-                                                transition: "all 0.3s ease",
-                                                "&:hover": {
-                                                    backgroundColor: "rgba(255, 255, 255, 0.1)",
-                                                    transform: "translateY(-2px)",
-                                                },
-                                            }}
-                                            title={contact.tooltip}
+                                        <Tooltip
+                                            title={
+                                                contact.isPhone && !businessHoursStatus.isOpen
+                                                    ? businessHoursStatus.message
+                                                    : contact.tooltip
+                                            }
+                                            arrow
+                                            placement="top"
                                         >
-                                            <Box sx={{ color: "#ffffff" }}>
-                                                {contact.icon}
-                                            </Box>
-                                            <Typography
-                                                variant="body2"
+                                            <Link
+                                                href={contact.href}
+                                                target={contact.href.startsWith("http") ? "_blank" : undefined}
+                                                rel={contact.href.startsWith("http") ? "noopener noreferrer" : undefined}
                                                 sx={{
+                                                    color: "inherit",
+                                                    textDecoration: "none",
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    gap: 1,
+                                                    p: 1,
+                                                    borderRadius: 1,
                                                     fontSize: "0.85rem",
-                                                    wordBreak: "break-word",
-                                                    overflowWrap: "break-word",
+                                                    transition: "all 0.3s ease",
+                                                    position: "relative",
+                                                    "&:hover": {
+                                                        backgroundColor: "rgba(255, 255, 255, 0.1)",
+                                                        transform: "translateY(-2px)",
+                                                    },
                                                 }}
                                             >
-                                                {contact.label}
-                                            </Typography>
-                                        </Link>
+                                                <Box sx={{ color: "#ffffff", position: "relative" }}>
+                                                    {contact.icon}
+                                                    {contact.isPhone && !businessHoursStatus.isOpen && (
+                                                        <Box
+                                                            sx={{
+                                                                position: "absolute",
+                                                                top: -4,
+                                                                right: -4,
+                                                                width: 14,
+                                                                height: 14,
+                                                                borderRadius: "50%",
+                                                                backgroundColor: "#ff9800",
+                                                                display: "flex",
+                                                                alignItems: "center",
+                                                                justifyContent: "center",
+                                                                border: "2px solid",
+                                                                borderColor: palette.mode === "light" ? "#1a4d3a" : "#0f2920",
+                                                            }}
+                                                        >
+                                                            <Clock size={8} />
+                                                        </Box>
+                                                    )}
+                                                </Box>
+                                                <Typography
+                                                    variant="body2"
+                                                    sx={{
+                                                        fontSize: "0.85rem",
+                                                        wordBreak: "break-word",
+                                                        overflowWrap: "break-word",
+                                                    }}
+                                                >
+                                                    {contact.label}
+                                                </Typography>
+                                            </Link>
+                                        </Tooltip>
                                     </Grid>
                                 ) : null
                             ))}
