@@ -563,6 +563,41 @@ export interface LogStatsResponse {
     };
 }
 
+export interface NewsletterSubscription {
+    id: number;
+    email: string;
+    variant_id: string | null;
+    source: string;
+    status: string;
+    created_at: string;
+}
+
+export interface NewsletterSubscribersResponse {
+    subscribers: NewsletterSubscription[];
+    pagination: {
+        page: number;
+        limit: number;
+        total: number;
+        totalPages: number;
+    };
+    stats: {
+        total: number;
+        byStatus: Record<string, number>;
+    };
+}
+
+export interface NewsletterStatsResponse {
+    byStatus: Record<string, number>;
+    byVariant: Array<{
+        variantId: string | null;
+        count: number;
+    }>;
+    recentActivity: {
+        last7Days: number;
+        last30Days: number;
+    };
+}
+
 // API client with typed methods
 export const restApi = {
     // Landing page
@@ -1173,6 +1208,69 @@ export const restApi = {
 
     async getLogStats(): Promise<LogStatsResponse> {
         return fetchApi<LogStatsResponse>("/logs/stats");
+    },
+
+    // Newsletter Management
+    async subscribeToNewsletter(input: {
+        email: string;
+        variantId?: string;
+        source?: string;
+    }): Promise<{ success: boolean; message: string }> {
+        return fetchApi<{ success: boolean; message: string }>("/newsletter/subscribe", {
+            method: "POST",
+            body: JSON.stringify(input),
+        });
+    },
+
+    async getNewsletterSubscribers(params?: {
+        page?: number;
+        limit?: number;
+        status?: string;
+        variantId?: string;
+        search?: string;
+    }): Promise<NewsletterSubscribersResponse> {
+        const queryParams = new URLSearchParams();
+        if (params?.page) queryParams.append("page", params.page.toString());
+        if (params?.limit) queryParams.append("limit", params.limit.toString());
+        if (params?.status) queryParams.append("status", params.status);
+        if (params?.variantId) queryParams.append("variantId", params.variantId);
+        if (params?.search) queryParams.append("search", params.search);
+
+        const queryString = queryParams.toString();
+        return fetchApi<NewsletterSubscribersResponse>(`/newsletter/subscribers${queryString ? `?${queryString}` : ""}`);
+    },
+
+    async exportNewsletterSubscribers(status?: string): Promise<Blob> {
+        const queryParams = new URLSearchParams();
+        if (status) queryParams.append("status", status);
+
+        const queryString = queryParams.toString();
+        const url = `${REST_BASE_URL}/newsletter/subscribers/export${queryString ? `?${queryString}` : ""}`;
+
+        const response = await fetch(url, {
+            method: "GET",
+            credentials: "include",
+        });
+
+        if (!response.ok) {
+            throw new ApiError(response.status, `Failed to export subscribers: ${response.statusText}`);
+        }
+
+        return response.blob();
+    },
+
+    async deleteNewsletterSubscriber(
+        id: number,
+        action: "unsubscribe" | "delete" = "unsubscribe",
+    ): Promise<{ success: boolean; message: string }> {
+        return fetchApi<{ success: boolean; message: string }>(`/newsletter/subscribers/${id}`, {
+            method: "DELETE",
+            body: JSON.stringify({ action }),
+        });
+    },
+
+    async getNewsletterStats(): Promise<NewsletterStatsResponse> {
+        return fetchApi<NewsletterStatsResponse>("/newsletter/stats");
     },
 };
 

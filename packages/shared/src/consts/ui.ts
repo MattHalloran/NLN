@@ -16,6 +16,7 @@ export const APP_LINKS = {
     AdminHomepageServices: "/admin/homepage/services",
     AdminInventory: "/admin/inventory",
     AdminLayout: "/admin/layout",
+    AdminNewsletterSubscribers: "/admin/newsletter-subscribers",
     AdminOrders: "/admin/orders",
     AdminStorage: "/admin/storage",
     AdminLogs: "/admin/logs",

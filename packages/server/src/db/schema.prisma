@@ -273,3 +273,16 @@ model cleanup_log {
     duration_ms      Int?
     created_at       DateTime @default(now()) @db.Timestamptz(6)
 }
+
+model newsletter_subscription {
+    id         Int      @id @default(autoincrement())
+    email      String   @unique(map: "newsletter_subscription_email_unique") @db.VarChar(255)
+    variant_id String?  @db.VarChar(128)
+    source     String   @default("homepage") @db.VarChar(64)
+    status     String   @default("active") @db.VarChar(32)
+    created_at DateTime @default(now()) @db.Timestamptz(6)
+
+    @@index([created_at], map: "newsletter_subscription_created_at_idx")
+    @@index([variant_id], map: "newsletter_subscription_variant_id_idx")
+    @@index([status], map: "newsletter_subscription_status_idx")
+}

@@ -93,6 +93,24 @@ export const imageUploadLimiter = rateLimit({
     },
 });
 
+// Newsletter subscription rate limiter - 5 subscriptions per hour
+// Prevents spam and abuse while allowing legitimate users to subscribe
+export const newsletterSubscribeLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 5, // Limit each IP to 5 newsletter subscriptions per hour
+    message: "Too many newsletter subscription attempts. Please try again later.",
+    standardHeaders: true,
+    legacyHeaders: false,
+    handler: (req, res) => {
+        logger.log(LogLevel.warn, `Newsletter subscribe rate limit exceeded for IP: ${req.ip}`);
+        res.status(429).json({
+            error: "Too many subscription attempts. Please try again later.",
+            code: "RATE_LIMIT_EXCEEDED",
+            retryAfter: "1 hour",
+        });
+    },
+});
+
 /**
  * File-count rate limiter - limits total files uploaded, not just requests
  * Prevents burst attacks where attacker makes max-file requests repeatedly

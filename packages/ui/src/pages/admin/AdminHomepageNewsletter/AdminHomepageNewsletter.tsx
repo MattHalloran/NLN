@@ -23,6 +23,7 @@ import {
     Sprout,
     Settings as SettingsIcon,
     Eye as EyeIcon,
+    Users as UsersIcon,
 } from "lucide-react";
 import { ExpandMore as ExpandMoreIcon } from "@mui/icons-material";
 import { BackButton, PageContainer } from "components";
@@ -34,6 +35,7 @@ import { useUpdateLandingPageSettings } from "api/rest/hooks";
 import { useCallback as _useCallback, useEffect, useState, useMemo } from "react";
 import { PubSub } from "utils/pubsub";
 import { SnackSeverity } from "components/dialogs/Snack/Snack";
+import { Link as RouterLink } from "route";
 
 interface NewsletterSettings {
     title: string;
@@ -242,6 +244,39 @@ export const AdminHomepageNewsletter = () => {
 
             <Box p={2}>
                 <ABTestEditingBanner />
+
+                {/* Link to Newsletter Subscribers */}
+                <Alert
+                    severity="info"
+                    icon={<UsersIcon size={20} />}
+                    sx={{
+                        mb: 3,
+                        borderLeft: "4px solid",
+                        borderColor: "info.main",
+                        bgcolor: "info.lighter",
+                        "& .MuiAlert-icon": {
+                            color: "info.main",
+                        },
+                    }}
+                    action={
+                        <Button
+                            component={RouterLink}
+                            to={APP_LINKS.AdminNewsletterSubscribers}
+                            size="small"
+                            variant="outlined"
+                            sx={{ textTransform: "none" }}
+                        >
+                            View Subscribers
+                        </Button>
+                    }
+                >
+                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                        Newsletter subscribers are being collected for lead generation
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                        View and manage newsletter subscription list, export to CSV, and track signup metrics
+                    </Typography>
+                </Alert>
 
                 {/* Unsaved changes warning */}
                 {hasChanges && (

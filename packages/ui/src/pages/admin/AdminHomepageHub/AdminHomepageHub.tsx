@@ -8,6 +8,7 @@ import {
     Mail,
     Palette,
     Briefcase,
+    Users,
 } from "lucide-react";
 import { BackButton, PageContainer } from "components";
 import { TopBar } from "components/navigation/TopBar/TopBar";
@@ -70,6 +71,14 @@ const getCardData = (): HomepageCardData[] => [
         icon: Mail,
         color: "#546e7a",
         stats: "Edit settings",
+    },
+    {
+        title: "Newsletter Subscribers",
+        description: "View and manage newsletter subscription list for lead generation",
+        link: APP_LINKS.AdminNewsletterSubscribers,
+        icon: Users,
+        color: "#546e7a",
+        stats: "View subscribers",
     },
     {
         title: "Branding & Theme",

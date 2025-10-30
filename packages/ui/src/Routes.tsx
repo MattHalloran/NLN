@@ -27,6 +27,7 @@ const {
     AdminHomepageSections,
     AdminHomepageServices,
     AdminMainPage,
+    AdminNewsletterSubscribers,
     AdminStoragePage,
     AdminSystemLogs,
 } = lazily(() => import("./pages/admin"));
@@ -235,6 +236,13 @@ export const Routes = () => {
                     <Suspense fallback={Fallback}>
                         <Page excludePageContainer restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
                             <AdminStoragePage />
+                        </Page>
+                    </Suspense>
+                </Route>
+                <Route path={APP_LINKS.AdminNewsletterSubscribers}>
+                    <Suspense fallback={Fallback}>
+                        <Page excludePageContainer restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
+                            <AdminNewsletterSubscribers />
                         </Page>
                     </Suspense>
                 </Route>

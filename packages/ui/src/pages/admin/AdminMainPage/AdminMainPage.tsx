@@ -12,6 +12,7 @@ import {
     BusinessCenter as BackOfficeIcon,
     Storage as StorageIcon,
     ListAlt as LogsIcon,
+    Mail as NewsletterIcon,
 } from "@mui/icons-material";
 import { useDashboardStats } from "api/rest/hooks";
 import { CardGrid as _CardGrid, PageContainer } from "components";
@@ -89,6 +90,14 @@ const getCardData = (_stats: any): AdminCardData[] => [
         icon: ContactIcon,
         color: "#546e7a",
         stats: "Update info",
+    },
+    {
+        title: "Newsletter Subscribers",
+        description: "View and manage newsletter subscription list for lead generation",
+        link: APP_LINKS.AdminNewsletterSubscribers,
+        icon: NewsletterIcon,
+        color: "#546e7a",
+        stats: "View subscribers",
     },
     {
         title: "Storage Management",

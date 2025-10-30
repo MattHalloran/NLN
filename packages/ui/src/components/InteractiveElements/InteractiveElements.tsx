@@ -20,6 +20,7 @@ import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import { Leaf, Lightbulb, Sprout, Flower, Snowflake, LucideIcon, Star } from "lucide-react";
 import { getServerUrl } from "utils";
+import { restApi } from "api/rest/client";
 
 // SeasonalPlant and PlantTip interfaces are defined in the API
 // but commented out here since they're not used directly
@@ -64,6 +65,8 @@ export const InteractiveElements = () => {
     const [selectedTipCategory, setSelectedTipCategory] = useState(0);
     const [email, setEmail] = useState("");
     const [subscribed, setSubscribed] = useState(false);
+    const [newsletterMessage, setNewsletterMessage] = useState<string>("");
+    const [newsletterError, setNewsletterError] = useState<string>("");
 
     // Fetch landing page content using REST API
     const { data } = useLandingPage();
@@ -101,7 +104,23 @@ export const InteractiveElements = () => {
 
     const handleNewsletterSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (email) {
+
+        if (!email) {
+            return;
+        }
+
+        // Clear previous messages
+        setNewsletterError("");
+        setNewsletterMessage("");
+
+        try {
+            // Submit newsletter subscription to API
+            const response = await restApi.subscribeToNewsletter({
+                email,
+                variantId: data?._meta?.variantId,
+                source: "homepage",
+            });
+
             // Track A/B test conversion for newsletter signup
             // Don't let tracking errors block the user experience
             try {
@@ -111,11 +130,25 @@ export const InteractiveElements = () => {
                 console.error("Failed to track A/B test conversion:", error);
             }
 
+            // Show success message
             setSubscribed(true);
+            setNewsletterMessage(response.message || "Thank you for subscribing!");
+
             setTimeout(() => {
                 setSubscribed(false);
+                setNewsletterMessage("");
                 setEmail("");
-            }, 3000);
+            }, 5000);
+        } catch (error: any) {
+            console.error("Newsletter subscription error:", error);
+            setNewsletterError(
+                error.data?.error || error.message || "Failed to subscribe. Please try again.",
+            );
+
+            // Clear error after 5 seconds
+            setTimeout(() => {
+                setNewsletterError("");
+            }, 5000);
         }
     };
 
@@ -433,51 +466,65 @@ export const InteractiveElements = () => {
                         </Typography>
 
                         {!subscribed ? (
-                            <Box
-                                component="form"
-                                onSubmit={handleNewsletterSubmit}
-                                sx={{
-                                    display: "flex",
-                                    gap: 2,
-                                    maxWidth: "500px",
-                                    mx: "auto",
-                                    flexDirection: { xs: "column", sm: "row" },
-                                }}
-                            >
-                                <TextField
-                                    type="email"
-                                    placeholder="Enter your email address"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    required
+                            <>
+                                <Box
+                                    component="form"
+                                    onSubmit={handleNewsletterSubmit}
                                     sx={{
-                                        flexGrow: 1,
-                                        "& .MuiOutlinedInput-root": {
-                                            backgroundColor: "white",
-                                            borderRadius: 2,
-                                        },
-                                    }}
-                                />
-                                <Button
-                                    type="submit"
-                                    variant="contained"
-                                    color="secondary"
-                                    size="large"
-                                    sx={{
-                                        px: 4,
-                                        borderRadius: 2,
-                                        textTransform: "none",
-                                        fontWeight: 600,
-                                        minWidth: { xs: "100%", sm: "150px" },
+                                        display: "flex",
+                                        gap: 2,
+                                        maxWidth: "500px",
+                                        mx: "auto",
+                                        flexDirection: { xs: "column", sm: "row" },
                                     }}
                                 >
-                                    Subscribe
-                                </Button>
-                            </Box>
+                                    <TextField
+                                        type="email"
+                                        placeholder="Enter your email address"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        required
+                                        sx={{
+                                            flexGrow: 1,
+                                            "& .MuiOutlinedInput-root": {
+                                                backgroundColor: "white",
+                                                borderRadius: 2,
+                                            },
+                                        }}
+                                    />
+                                    <Button
+                                        type="submit"
+                                        variant="contained"
+                                        color="secondary"
+                                        size="large"
+                                        sx={{
+                                            px: 4,
+                                            borderRadius: 2,
+                                            textTransform: "none",
+                                            fontWeight: 600,
+                                            minWidth: { xs: "100%", sm: "150px" },
+                                        }}
+                                    >
+                                        Subscribe
+                                    </Button>
+                                </Box>
+                                {newsletterError && (
+                                    <Typography
+                                        variant="body2"
+                                        sx={{
+                                            mt: 2,
+                                            color: palette.error.light,
+                                            fontWeight: 600,
+                                        }}
+                                    >
+                                        ⚠️ {newsletterError}
+                                    </Typography>
+                                )}
+                            </>
                         ) : (
                             <Box>
                                 <Typography variant="h6" sx={{ color: palette.secondary.main, fontWeight: 600 }}>
-                                    ✅ Thank you for subscribing!
+                                    ✅ {newsletterMessage || "Thank you for subscribing!"}
                                 </Typography>
                                 <Typography variant="body2" sx={{ opacity: 0.9, mt: 1 }}>
                                     You'll receive our next seasonal guide in your inbox soon.
