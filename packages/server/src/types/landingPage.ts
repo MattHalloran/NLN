@@ -210,6 +210,40 @@ export interface VariantMeta {
     variantId: string;
 }
 
+export interface AboutStory {
+    overline: string;
+    title: string;
+    subtitle: string;
+    paragraphs: string[];
+    cta: {
+        text: string;
+        link: string;
+    };
+}
+
+export interface AboutValue {
+    icon: string;
+    title: string;
+    description: string;
+}
+
+export interface AboutValues {
+    title: string;
+    items: AboutValue[];
+}
+
+export interface AboutMission {
+    title: string;
+    quote: string;
+    attribution: string;
+}
+
+export interface AboutContent {
+    story: AboutStory;
+    values: AboutValues;
+    mission: AboutMission;
+}
+
 export interface LandingPageContent {
     metadata: Metadata;
     content: {
@@ -218,6 +252,7 @@ export interface LandingPageContent {
         seasonal: SeasonalContent;
         newsletter: NewsletterContent;
         company: CompanyInfo;
+        about?: AboutContent;
     };
     contact: ContactInfo;
     theme: Theme;

@@ -1,6 +1,7 @@
 export * from "./AdminContactPage/AdminContactPage";
 export * from "./AdminGalleryPage/AdminGalleryPage";
 export { AdminHomepageABTestingNew as AdminHomepageABTesting } from "./AdminHomepageABTesting/AdminHomepageABTestingNew";
+export * from "./AdminHomepageAbout";
 export * from "./AdminHomepageBranding/AdminHomepageBranding";
 export * from "./AdminHomepageHeroBanner/AdminHomepageHeroBanner";
 export * from "./AdminHomepageHub/AdminHomepageHub";

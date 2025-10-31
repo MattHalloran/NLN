@@ -9,6 +9,7 @@ import {
     Palette,
     Briefcase,
     Users,
+    BookOpen,
 } from "lucide-react";
 import { BackButton, PageContainer } from "components";
 import { TopBar } from "components/navigation/TopBar/TopBar";
@@ -55,6 +56,14 @@ const getCardData = (): HomepageCardData[] => [
         icon: Leaf,
         color: "#546e7a",
         stats: "Update content",
+    },
+    {
+        title: "About Story",
+        description: "Customize your company story, core values, and mission statement",
+        link: APP_LINKS.AdminHomepageAbout,
+        icon: BookOpen,
+        color: "#546e7a",
+        stats: "Edit story",
     },
     {
         title: "Services Offered",

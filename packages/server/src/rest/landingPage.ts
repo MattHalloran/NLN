@@ -272,7 +272,7 @@ router.put("/", async (req: AuthenticatedRequest, res: Response) => {
             return res.status(403).json({ error: "Admin access required" });
         }
 
-        const { heroBanners, heroSettings, seasonalPlants, plantTips, settings, contactInfo } =
+        const { heroBanners, heroSettings, seasonalPlants, plantTips, settings, contactInfo, about } =
             req.body as {
                 heroBanners?: HeroBanner[];
                 heroSettings?: HeroSettings;
@@ -280,6 +280,28 @@ router.put("/", async (req: AuthenticatedRequest, res: Response) => {
                 plantTips?: PlantTip[];
                 settings?: Record<string, unknown>;
                 contactInfo?: { business?: BusinessContactData; hours?: string };
+                about?: {
+                    story: {
+                        overline: string;
+                        title: string;
+                        subtitle: string;
+                        paragraphs: string[];
+                        cta: { text: string; link: string };
+                    };
+                    values: {
+                        title: string;
+                        items: Array<{
+                            icon: string;
+                            title: string;
+                            description: string;
+                        }>;
+                    };
+                    mission: {
+                        title: string;
+                        quote: string;
+                        attribution: string;
+                    };
+                };
             };
 
         const updatedSections: string[] = [];
@@ -631,6 +653,37 @@ router.put("/", async (req: AuthenticatedRequest, res: Response) => {
                 currentContent.contact.hours = contactInfo.hours;
                 updatedSections.push("contactInfo.hours");
             }
+        }
+
+        // Update about section if provided
+        if (about) {
+            currentContent.content = currentContent.content || {
+                hero: {
+                    banners: [],
+                    settings: {
+                        autoPlay: false,
+                        autoPlayDelay: 5000,
+                        showDots: true,
+                        showArrows: true,
+                        fadeTransition: false,
+                    },
+                    text: {
+                        title: "",
+                        subtitle: "",
+                        description: "",
+                        businessHours: "",
+                        trustBadges: [],
+                        buttons: [],
+                    },
+                },
+                services: { title: "", subtitle: "", items: [] },
+                seasonal: { plants: [], tips: [] },
+                newsletter: { title: "", description: "", disclaimer: "", isActive: false },
+                company: { foundedYear: new Date().getFullYear(), description: "" },
+            };
+            currentContent.content.about = about;
+            updatedSections.push("about");
+            logger.info(`Updated about section with ${about.values.items.length} value items`);
         }
 
         if (updatedSections.length === 0) {

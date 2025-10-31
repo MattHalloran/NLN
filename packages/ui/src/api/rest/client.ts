@@ -162,6 +162,18 @@ export interface LandingPageContent {
         services: {
             title: string;
             subtitle: string;
+            cta?: {
+                title: string;
+                subtitle: string;
+                primaryButton: {
+                    text: string;
+                    url: string;
+                };
+                secondaryButton: {
+                    text: string;
+                    url: string;
+                };
+            };
             items: Array<{
                 title: string;
                 description: string;
@@ -204,6 +216,31 @@ export interface LandingPageContent {
         company: {
             foundedYear: number;
             description: string;
+        };
+        about?: {
+            story: {
+                overline: string;
+                title: string;
+                subtitle: string;
+                paragraphs: string[];
+                cta: {
+                    text: string;
+                    link: string;
+                };
+            };
+            values: {
+                title: string;
+                items: Array<{
+                    icon: string;
+                    title: string;
+                    description: string;
+                }>;
+            };
+            mission: {
+                title: string;
+                quote: string;
+                attribution: string;
+            };
         };
     };
     contact: {

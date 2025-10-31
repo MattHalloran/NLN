@@ -7,6 +7,7 @@ export const APP_LINKS = {
     AdminCustomers: "/admin/customers",
     AdminGallery: "/admin/gallery",
     AdminHomepage: "/admin/homepage",
+    AdminHomepageAbout: "/admin/homepage/about",
     AdminHomepageABTesting: "/admin/homepage/ab-testing",
     AdminHomepageBranding: "/admin/homepage/branding",
     AdminHomepageHeroBanner: "/admin/homepage/hero-banner",

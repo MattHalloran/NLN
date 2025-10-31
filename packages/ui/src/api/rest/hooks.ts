@@ -243,6 +243,31 @@ export function useUpdateLandingPageContent() {
                     business?: Record<string, unknown>;
                     hours?: string;
                 };
+                about?: {
+                    story: {
+                        overline: string;
+                        title: string;
+                        subtitle: string;
+                        paragraphs: string[];
+                        cta: {
+                            text: string;
+                            link: string;
+                        };
+                    };
+                    values: {
+                        title: string;
+                        items: Array<{
+                            icon: string;
+                            title: string;
+                            description: string;
+                        }>;
+                    };
+                    mission: {
+                        title: string;
+                        quote: string;
+                        attribution: string;
+                    };
+                };
             };
             queryParams?: {
                 variantId?: string;
