@@ -244,6 +244,51 @@ export interface AboutContent {
     mission: AboutMission;
 }
 
+export interface SocialProofStat {
+    number: string;
+    label: string;
+    subtext: string;
+}
+
+export interface SocialProofStrength {
+    icon: string;
+    title: string;
+    description: string;
+    highlight: string;
+}
+
+export interface SocialProofClientType {
+    icon: string;
+    label: string;
+}
+
+export interface SocialProofMission {
+    title: string;
+    quote: string;
+    attribution: string;
+}
+
+export interface SocialProofContent {
+    header: {
+        title: string;
+        subtitle: string;
+    };
+    stats: SocialProofStat[];
+    mission: SocialProofMission;
+    strengths: {
+        title: string;
+        items: SocialProofStrength[];
+    };
+    clientTypes: {
+        title: string;
+        items: SocialProofClientType[];
+    };
+    footer: {
+        description: string;
+        chips: string[];
+    };
+}
+
 export interface LandingPageContent {
     metadata: Metadata;
     content: {
@@ -253,6 +298,7 @@ export interface LandingPageContent {
         newsletter: NewsletterContent;
         company: CompanyInfo;
         about?: AboutContent;
+        socialProof?: SocialProofContent;
     };
     contact: ContactInfo;
     theme: Theme;

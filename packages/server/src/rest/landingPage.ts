@@ -272,7 +272,7 @@ router.put("/", async (req: AuthenticatedRequest, res: Response) => {
             return res.status(403).json({ error: "Admin access required" });
         }
 
-        const { heroBanners, heroSettings, seasonalPlants, plantTips, settings, contactInfo, about } =
+        const { heroBanners, heroSettings, seasonalPlants, plantTips, settings, contactInfo, about, socialProof } =
             req.body as {
                 heroBanners?: HeroBanner[];
                 heroSettings?: HeroSettings;
@@ -300,6 +300,42 @@ router.put("/", async (req: AuthenticatedRequest, res: Response) => {
                         title: string;
                         quote: string;
                         attribution: string;
+                    };
+                };
+                socialProof?: {
+                    header: {
+                        title: string;
+                        subtitle: string;
+                    };
+                    stats: Array<{
+                        number: string;
+                        label: string;
+                        subtext: string;
+                    }>;
+                    mission: {
+                        title: string;
+                        quote: string;
+                        attribution: string;
+                    };
+                    strengths: {
+                        title: string;
+                        items: Array<{
+                            icon: string;
+                            title: string;
+                            description: string;
+                            highlight: string;
+                        }>;
+                    };
+                    clientTypes: {
+                        title: string;
+                        items: Array<{
+                            icon: string;
+                            label: string;
+                        }>;
+                    };
+                    footer: {
+                        description: string;
+                        chips: string[];
                     };
                 };
             };
@@ -684,6 +720,37 @@ router.put("/", async (req: AuthenticatedRequest, res: Response) => {
             currentContent.content.about = about;
             updatedSections.push("about");
             logger.info(`Updated about section with ${about.values.items.length} value items`);
+        }
+
+        // Update social proof section if provided
+        if (socialProof) {
+            currentContent.content = currentContent.content || {
+                hero: {
+                    banners: [],
+                    settings: {
+                        autoPlay: false,
+                        autoPlayDelay: 5000,
+                        showDots: true,
+                        showArrows: true,
+                        fadeTransition: false,
+                    },
+                    text: {
+                        title: "",
+                        subtitle: "",
+                        description: "",
+                        businessHours: "",
+                        trustBadges: [],
+                        buttons: [],
+                    },
+                },
+                services: { title: "", subtitle: "", items: [] },
+                seasonal: { plants: [], tips: [] },
+                newsletter: { title: "", description: "", disclaimer: "", isActive: false },
+                company: { foundedYear: new Date().getFullYear(), description: "" },
+            };
+            currentContent.content.socialProof = socialProof;
+            updatedSections.push("socialProof");
+            logger.info(`Updated social proof section with ${socialProof.stats.length} stats, ${socialProof.strengths.items.length} strengths, ${socialProof.clientTypes.items.length} client types`);
         }
 
         if (updatedSections.length === 0) {

@@ -227,7 +227,7 @@ export const AdminSystemLogs = () => {
                 </Box>
 
                 {/* Stats Cards */}
-                {stats && (
+                {stats ? (
                     <Grid container spacing={2} sx={{ mb: 3 }}>
                         <Grid item xs={12} md={3}>
                             <Card>
@@ -295,7 +295,7 @@ export const AdminSystemLogs = () => {
                             </Card>
                         </Grid>
                     </Grid>
-                )}
+                ) : null}
 
                 {/* Filters */}
                 <Paper sx={{ p: 2, mb: 3 }}>

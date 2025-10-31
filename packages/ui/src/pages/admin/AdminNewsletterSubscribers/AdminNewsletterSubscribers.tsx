@@ -194,7 +194,7 @@ export const AdminNewsletterSubscribers = () => {
     return (
         <>
             <TopBar display="page" title="Newsletter Subscribers" />
-            <PageContainer maxWidth="xl">
+            <PageContainer variant="wide">
                 <BackButton to={APP_LINKS.AdminHomepage} />
 
                 <Box sx={{ mb: 4 }}>

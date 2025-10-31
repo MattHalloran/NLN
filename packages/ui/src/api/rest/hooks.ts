@@ -268,6 +268,42 @@ export function useUpdateLandingPageContent() {
                         attribution: string;
                     };
                 };
+                socialProof?: {
+                    header: {
+                        title: string;
+                        subtitle: string;
+                    };
+                    stats: Array<{
+                        number: string;
+                        label: string;
+                        subtext: string;
+                    }>;
+                    mission: {
+                        title: string;
+                        quote: string;
+                        attribution: string;
+                    };
+                    strengths: {
+                        title: string;
+                        items: Array<{
+                            icon: string;
+                            title: string;
+                            description: string;
+                            highlight: string;
+                        }>;
+                    };
+                    clientTypes: {
+                        title: string;
+                        items: Array<{
+                            icon: string;
+                            label: string;
+                        }>;
+                    };
+                    footer: {
+                        description: string;
+                        chips: string[];
+                    };
+                };
             };
             queryParams?: {
                 variantId?: string;

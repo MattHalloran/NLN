@@ -30,7 +30,7 @@ export interface ErrorBoundaryProps {
 }
 
 export interface PageContainerProps {
-    children?: boolean | null | undefined | JSX.Element | (boolean | null | undefined | JSX.Element)[];
+    children?: boolean | string | null | undefined | JSX.Element | (boolean | string | null | undefined | JSX.Element)[];
     sx?: SxType;
     /**
      * Layout variant for the page container

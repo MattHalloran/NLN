@@ -15,6 +15,7 @@ export const APP_LINKS = {
     AdminHomepageSeasonal: "/admin/homepage/seasonal",
     AdminHomepageSections: "/admin/homepage/sections",
     AdminHomepageServices: "/admin/homepage/services",
+    AdminHomepageSocialProof: "/admin/homepage/social-proof",
     AdminInventory: "/admin/inventory",
     AdminLayout: "/admin/layout",
     AdminNewsletterSubscribers: "/admin/newsletter-subscribers",

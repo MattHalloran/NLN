@@ -9,6 +9,7 @@ export * from "./AdminHomepageNewsletter/AdminHomepageNewsletter";
 export * from "./AdminHomepageSeasonal/AdminHomepageSeasonal";
 export * from "./AdminHomepageSections/AdminHomepageSections";
 export * from "./AdminHomepageServices/AdminHomepageServices";
+export * from "./AdminHomepageSocialProof";
 export * from "./AdminMainPage/AdminMainPage";
 export * from "./AdminNewsletterSubscribers";
 export * from "./AdminStoragePage/AdminStoragePage";

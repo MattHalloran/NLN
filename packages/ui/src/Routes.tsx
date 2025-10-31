@@ -27,6 +27,7 @@ const {
     AdminHomepageSeasonal,
     AdminHomepageSections,
     AdminHomepageServices,
+    AdminHomepageSocialProof,
     AdminMainPage,
     AdminNewsletterSubscribers,
     AdminStoragePage,
@@ -230,6 +231,13 @@ export const Routes = () => {
                     <Suspense fallback={Fallback}>
                         <Page excludePageContainer restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
                             <AdminHomepageServices />
+                        </Page>
+                    </Suspense>
+                </Route>
+                <Route path={APP_LINKS.AdminHomepageSocialProof}>
+                    <Suspense fallback={Fallback}>
+                        <Page excludePageContainer restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
+                            <AdminHomepageSocialProof />
                         </Page>
                     </Suspense>
                 </Route>

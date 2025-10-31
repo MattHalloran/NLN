@@ -74,6 +74,14 @@ const getCardData = (): HomepageCardData[] => [
         stats: "Manage services",
     },
     {
+        title: "Social Proof",
+        description: "Customize testimonials, stats, strengths, and trust indicators",
+        link: APP_LINKS.AdminHomepageSocialProof,
+        icon: Users,
+        color: "#546e7a",
+        stats: "Edit content",
+    },
+    {
         title: "Newsletter Settings",
         description: "Configure newsletter signup section and messaging",
         link: APP_LINKS.AdminHomepageNewsletter,
