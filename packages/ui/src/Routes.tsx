@@ -23,6 +23,7 @@ const {
     AdminHomepageBranding,
     AdminHomepageHeroBanner,
     AdminHomepageHub,
+    AdminHomepageLocation,
     AdminHomepageNewsletter,
     AdminHomepageSeasonal,
     AdminHomepageSections,
@@ -238,6 +239,13 @@ export const Routes = () => {
                     <Suspense fallback={Fallback}>
                         <Page excludePageContainer restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
                             <AdminHomepageSocialProof />
+                        </Page>
+                    </Suspense>
+                </Route>
+                <Route path={APP_LINKS.AdminHomepageLocation}>
+                    <Suspense fallback={Fallback}>
+                        <Page excludePageContainer restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
+                            <AdminHomepageLocation />
                         </Page>
                     </Suspense>
                 </Route>

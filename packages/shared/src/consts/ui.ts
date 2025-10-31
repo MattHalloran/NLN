@@ -11,6 +11,8 @@ export const APP_LINKS = {
     AdminHomepageABTesting: "/admin/homepage/ab-testing",
     AdminHomepageBranding: "/admin/homepage/branding",
     AdminHomepageHeroBanner: "/admin/homepage/hero-banner",
+    AdminHomepageHub: "/admin/homepage-hub",
+    AdminHomepageLocation: "/admin/homepage/location",
     AdminHomepageNewsletter: "/admin/homepage/newsletter",
     AdminHomepageSeasonal: "/admin/homepage/seasonal",
     AdminHomepageSections: "/admin/homepage/sections",

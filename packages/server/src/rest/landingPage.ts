@@ -272,7 +272,7 @@ router.put("/", async (req: AuthenticatedRequest, res: Response) => {
             return res.status(403).json({ error: "Admin access required" });
         }
 
-        const { heroBanners, heroSettings, seasonalPlants, plantTips, seasonalHeader, seasonalSections, newsletterButtonText, settings, contactInfo, about, socialProof } =
+        const { heroBanners, heroSettings, seasonalPlants, plantTips, seasonalHeader, seasonalSections, newsletterButtonText, settings, contactInfo, about, socialProof, location } =
             req.body as {
                 heroBanners?: HeroBanner[];
                 heroSettings?: HeroSettings;
@@ -342,6 +342,56 @@ router.put("/", async (req: AuthenticatedRequest, res: Response) => {
                     footer: {
                         description: string;
                         chips: string[];
+                    };
+                };
+                location?: {
+                    header: {
+                        title: string;
+                        subtitle: string;
+                        chip: string;
+                    };
+                    map: {
+                        style: "gradient" | "embedded";
+                        showGetDirectionsButton: boolean;
+                        buttonText: string;
+                    };
+                    contactMethods: {
+                        sectionTitle: string;
+                        order: ("phone" | "address" | "email")[];
+                        descriptions: {
+                            phone: string;
+                            address: string;
+                            email: string;
+                        };
+                    };
+                    businessHours: {
+                        title: string;
+                        chip: string;
+                    };
+                    visitInfo: {
+                        sectionTitle: string;
+                        items: Array<{
+                            id: string;
+                            title: string;
+                            icon: string;
+                            description: string;
+                            displayOrder: number;
+                            isActive: boolean;
+                        }>;
+                    };
+                    cta: {
+                        title: string;
+                        description: string;
+                        buttons: Array<{
+                            id: string;
+                            text: string;
+                            variant: "contained" | "outlined" | "text";
+                            color: "primary" | "secondary";
+                            action: "directions" | "contact" | "external";
+                            url?: string;
+                            displayOrder: number;
+                            isActive: boolean;
+                        }>;
                     };
                 };
             };
@@ -861,6 +911,37 @@ router.put("/", async (req: AuthenticatedRequest, res: Response) => {
             currentContent.content.socialProof = socialProof;
             updatedSections.push("socialProof");
             logger.info(`Updated social proof section with ${socialProof.stats.length} stats, ${socialProof.strengths.items.length} strengths, ${socialProof.clientTypes.items.length} client types`);
+        }
+
+        // Update location section if provided
+        if (location) {
+            currentContent.content = currentContent.content || {
+                hero: {
+                    banners: [],
+                    settings: {
+                        autoPlay: false,
+                        autoPlayDelay: 5000,
+                        showDots: true,
+                        showArrows: true,
+                        fadeTransition: false,
+                    },
+                    text: {
+                        title: "",
+                        subtitle: "",
+                        description: "",
+                        businessHours: "",
+                        trustBadges: [],
+                        buttons: [],
+                    },
+                },
+                services: { title: "", subtitle: "", items: [] },
+                seasonal: { plants: [], tips: [] },
+                newsletter: { title: "", description: "", disclaimer: "", isActive: false },
+                company: { foundedYear: new Date().getFullYear(), description: "" },
+            };
+            currentContent.content.location = location;
+            updatedSections.push("location");
+            logger.info(`Updated location section with ${location.visitInfo.items.length} visit info items and ${location.cta.buttons.length} CTA buttons`);
         }
 
         if (updatedSections.length === 0) {

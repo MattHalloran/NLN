@@ -303,6 +303,61 @@ export interface SocialProofContent {
     };
 }
 
+export interface LocationVisitInfo {
+    id: string;
+    title: string;
+    icon: string;
+    description: string;
+    displayOrder: number;
+    isActive: boolean;
+}
+
+export interface LocationButton {
+    id: string;
+    text: string;
+    variant: "contained" | "outlined" | "text";
+    color: "primary" | "secondary";
+    action: "directions" | "contact" | "external";
+    url?: string;
+    displayOrder: number;
+    isActive: boolean;
+}
+
+export interface LocationContent {
+    header: {
+        title: string;
+        subtitle: string;
+        chip: string;
+    };
+    map: {
+        style: "gradient" | "embedded";
+        showGetDirectionsButton: boolean;
+        buttonText: string;
+    };
+    contactMethods: {
+        sectionTitle: string;
+        order: ("phone" | "address" | "email")[];
+        descriptions: {
+            phone: string;
+            address: string;
+            email: string;
+        };
+    };
+    businessHours: {
+        title: string;
+        chip: string;
+    };
+    visitInfo: {
+        sectionTitle: string;
+        items: LocationVisitInfo[];
+    };
+    cta: {
+        title: string;
+        description: string;
+        buttons: LocationButton[];
+    };
+}
+
 export interface LandingPageContent {
     metadata: Metadata;
     content: {
@@ -313,6 +368,7 @@ export interface LandingPageContent {
         company: CompanyInfo;
         about?: AboutContent;
         socialProof?: SocialProofContent;
+        location?: LocationContent;
     };
     contact: ContactInfo;
     theme: Theme;

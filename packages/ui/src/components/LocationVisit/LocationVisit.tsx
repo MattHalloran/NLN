@@ -12,12 +12,29 @@ import {
     Alert,
 } from "@mui/material";
 import { useLocation } from "route";
-import { Eye, Gift, Smartphone, Car, Clock, Phone, MapPin, Mail, Map, AlertCircle } from "lucide-react";
+import { Eye, Gift, Smartphone, Car, Clock, Phone, MapPin, Mail, Map, AlertCircle, Truck, Package, Users } from "lucide-react";
 import { useLandingPage } from "hooks/useLandingPage";
 import { parseBusinessHours, checkBusinessHoursStatus } from "utils/businessHours";
 import { BusinessContext } from "contexts/BusinessContext";
 import { useContext, useMemo } from "react";
 import { COMPANY_INFO } from "@local/shared";
+
+// Icon mapping for visit info items
+const VISIT_INFO_ICON_MAP: Record<string, React.ComponentType<{ size?: number; color?: string }>> = {
+    eye: Eye,
+    gift: Gift,
+    smartphone: Smartphone,
+    car: Car,
+    truck: Truck,
+    "map-pin": MapPin,
+    package: Package,
+    users: Users,
+};
+
+// Helper function to replace tokens
+const replaceTokens = (text: string, foundedYear: number): string => {
+    return text.replace(/{foundedYear}/g, String(foundedYear));
+};
 
 export const LocationVisit = () => {
     const { palette } = useTheme();
@@ -33,32 +50,127 @@ export const LocationVisit = () => {
         return checkBusinessHoursStatus(business?.hours || data?.contact?.hours || "");
     }, [business?.hours, data?.contact?.hours]);
 
-    const visitInfo = [
+    // Get location content from API with fallbacks
+    const locationContent = data?.content?.location;
+
+    const headerTitle = locationContent?.header?.title || "Visit Our Nursery";
+    const headerSubtitle = replaceTokens(
+        locationContent?.header?.subtitle || `Southern New Jersey's premier wholesale nursery since {foundedYear}`,
+        foundedYear
+    );
+    const headerChip = locationContent?.header?.chip || "Wholesale Only - Trade Customers Welcome";
+
+    const mapSettings = locationContent?.map || {
+        style: "gradient" as const,
+        showGetDirectionsButton: true,
+        buttonText: "Get Directions",
+    };
+
+    const contactMethodsConfig = locationContent?.contactMethods || {
+        sectionTitle: "Get in Touch",
+        order: ["phone" as const, "address" as const, "email" as const],
+        descriptions: {
+            phone: "Call for availability and wholesale pricing",
+            address: "Visit our 70+ acre wholesale nursery facility",
+            email: "Email us for quotes and availability lists",
+        },
+    };
+
+    const businessHoursConfig = locationContent?.businessHours || {
+        title: "Business Hours",
+        chip: "Wholesale Hours - Trade Only",
+    };
+
+    // Visit info items from API with fallbacks
+    const defaultVisitInfo = [
         {
+            id: "1",
             title: "What to Expect",
-            icon: Eye,
-            description:
-                "Browse over 70 acres of top-quality trees and shrubs, carefully grown for landscape professionals",
+            icon: "eye",
+            description: "Browse over 70 acres of top-quality trees and shrubs, carefully grown for landscape professionals",
+            displayOrder: 0,
+            isActive: true,
         },
         {
+            id: "2",
             title: "Wholesale Focus",
-            icon: Gift,
-            description:
-                "Specializing in 3 to 25-gallon container plants for landscapers, contractors, and garden centers",
+            icon: "gift",
+            description: "Specializing in 3 to 25-gallon container plants for landscapers, contractors, and garden centers",
+            displayOrder: 1,
+            isActive: true,
         },
         {
+            id: "3",
             title: "Professional Service",
-            icon: Smartphone,
-            description:
-                "Expert horticultural advice from our experienced team with over 40 years in the industry",
+            icon: "smartphone",
+            description: "Expert horticultural advice from our experienced team with over 40 years in the industry",
+            displayOrder: 2,
+            isActive: true,
         },
         {
+            id: "4",
             title: "Easy Access",
-            icon: Car,
-            description:
-                "Convenient location in Bridgeton with ample parking and loading facilities for commercial vehicles",
+            icon: "car",
+            description: "Convenient location in Bridgeton with ample parking and loading facilities for commercial vehicles",
+            displayOrder: 3,
+            isActive: true,
         },
     ];
+
+    const visitInfoSectionTitle = locationContent?.visitInfo?.sectionTitle || "Plan Your Visit";
+    const visitInfo = useMemo(() => {
+        const items = locationContent?.visitInfo?.items || defaultVisitInfo;
+        return items
+            .filter((item) => item.isActive)
+            .sort((a, b) => a.displayOrder - b.displayOrder)
+            .map((item) => ({
+                title: item.title,
+                icon: VISIT_INFO_ICON_MAP[item.icon] || Eye,
+                description: item.description,
+            }));
+    }, [locationContent?.visitInfo?.items]);
+
+    // CTA section from API with fallbacks
+    const ctaConfig = locationContent?.cta || {
+        title: "Ready to Visit?",
+        description: "Wholesale customers welcome! Visit during business hours or call ahead for availability and pricing.",
+        buttons: [
+            {
+                id: "1",
+                text: "Get Directions",
+                variant: "contained" as const,
+                color: "primary" as const,
+                action: "directions" as const,
+                displayOrder: 0,
+                isActive: true,
+            },
+            {
+                id: "2",
+                text: "Contact Us First",
+                variant: "outlined" as const,
+                color: "primary" as const,
+                action: "contact" as const,
+                displayOrder: 1,
+                isActive: true,
+            },
+            {
+                id: "3",
+                text: "Browse Online First",
+                variant: "text" as const,
+                color: "secondary" as const,
+                action: "external" as const,
+                url: "https://newlife.online-orders.sbiteam.com/",
+                displayOrder: 2,
+                isActive: true,
+            },
+        ],
+    };
+
+    const ctaButtons = useMemo(() => {
+        return ctaConfig.buttons
+            .filter((btn) => btn.isActive)
+            .sort((a, b) => a.displayOrder - b.displayOrder);
+    }, [ctaConfig.buttons]);
 
     // Get real business hours from API or use fallback
     const businessHours = data?.contact?.hours
@@ -77,31 +189,36 @@ export const LocationVisit = () => {
                   { day: "Note", time: "Closed daily 12:00 PM - 1:00 PM" },
               ];
 
-    const contactMethods = [
-        {
+    // Build contact methods with dynamic ordering
+    const contactMethodsMap = {
+        phone: {
             method: "Phone",
             value: business?.PHONE?.Label || "(856) 455-3601",
             href: business?.PHONE?.Link || "tel:+18564553601",
-            description: "Call for availability and wholesale pricing",
+            description: contactMethodsConfig.descriptions.phone,
             icon: Phone,
         },
-        {
+        address: {
             method: "Address",
             value: business?.ADDRESS?.Label || "106 S Woodruff Rd, Bridgeton, NJ 08302",
             href:
                 business?.ADDRESS?.Link ||
                 "https://maps.google.com/?q=106+S+Woodruff+Rd+Bridgeton+NJ+08302",
-            description: "Visit our 70+ acre wholesale nursery facility",
+            description: contactMethodsConfig.descriptions.address,
             icon: MapPin,
         },
-        {
+        email: {
             method: "Email",
             value: business?.EMAIL?.Label || "info@newlifenurseryinc.com",
             href: business?.EMAIL?.Link || "mailto:info@newlifenurseryinc.com",
-            description: "Email us for quotes and availability lists",
+            description: contactMethodsConfig.descriptions.email,
             icon: Mail,
         },
-    ];
+    };
+
+    const contactMethods = useMemo(() => {
+        return contactMethodsConfig.order.map((key) => contactMethodsMap[key]).filter(Boolean);
+    }, [contactMethodsConfig.order, business]);
 
     const getDirections = () => {
         // Use the dynamic link from business context, or fallback to hardcoded address
@@ -126,7 +243,7 @@ export const LocationVisit = () => {
                             fontSize: { xs: "2rem", md: "3rem" },
                         }}
                     >
-                        Visit Our Nursery
+                        {headerTitle}
                     </Typography>
                     <Typography
                         variant="h6"
@@ -137,10 +254,10 @@ export const LocationVisit = () => {
                             mb: 3,
                         }}
                     >
-                        Southern New Jersey's premier wholesale nursery since {foundedYear}
+                        {headerSubtitle}
                     </Typography>
                     <Chip
-                        label="Wholesale Only - Trade Customers Welcome"
+                        label={headerChip}
                         color="primary"
                         sx={{ fontSize: "1rem", py: 2, px: 1 }}
                     />
@@ -190,26 +307,28 @@ export const LocationVisit = () => {
                                 </Box>
 
                                 {/* Interactive Map Overlay */}
-                                <Box
-                                    sx={{
-                                        position: "absolute",
-                                        bottom: 16,
-                                        right: 16,
-                                    }}
-                                >
-                                    <Button
-                                        variant="contained"
-                                        color="secondary"
-                                        onClick={getDirections}
+                                {mapSettings.showGetDirectionsButton && (
+                                    <Box
                                         sx={{
-                                            borderRadius: 2,
-                                            textTransform: "none",
-                                            fontWeight: 600,
+                                            position: "absolute",
+                                            bottom: 16,
+                                            right: 16,
                                         }}
                                     >
-                                        Get Directions
-                                    </Button>
-                                </Box>
+                                        <Button
+                                            variant="contained"
+                                            color="secondary"
+                                            onClick={getDirections}
+                                            sx={{
+                                                borderRadius: 2,
+                                                textTransform: "none",
+                                                fontWeight: 600,
+                                            }}
+                                        >
+                                            {mapSettings.buttonText}
+                                        </Button>
+                                    </Box>
+                                )}
                             </Box>
                         </Card>
 
@@ -219,7 +338,7 @@ export const LocationVisit = () => {
                                 variant="h6"
                                 sx={{ fontWeight: 600, mb: 3, color: palette.primary.main }}
                             >
-                                Get in Touch
+                                {contactMethodsConfig.sectionTitle}
                             </Typography>
                             {contactMethods.map((contact, index) => (
                                 <Card
@@ -317,7 +436,7 @@ export const LocationVisit = () => {
                                         variant="h5"
                                         sx={{ fontWeight: 600, textAlign: "center" }}
                                     >
-                                        Business Hours
+                                        {businessHoursConfig.title}
                                     </Typography>
                                 </Box>
                                 {hours.map((schedule, index) => (
@@ -346,7 +465,7 @@ export const LocationVisit = () => {
                                 ))}
                                 <Box sx={{ textAlign: "center", mt: 3 }}>
                                     <Chip
-                                        label="Wholesale Hours - Trade Only"
+                                        label={businessHoursConfig.chip}
                                         sx={{
                                             backgroundColor: "rgba(255, 255, 255, 0.2)",
                                             color: "white",
@@ -389,7 +508,7 @@ export const LocationVisit = () => {
                                 variant="h6"
                                 sx={{ fontWeight: 600, mb: 3, color: palette.primary.main }}
                             >
-                                Plan Your Visit
+                                {visitInfoSectionTitle}
                             </Typography>
                             <Grid container spacing={2}>
                                 {visitInfo.map((info, index) => (
@@ -462,11 +581,10 @@ export const LocationVisit = () => {
                         variant="h5"
                         sx={{ fontWeight: 600, mb: 2, color: palette.primary.main }}
                     >
-                        Ready to Visit?
+                        {ctaConfig.title}
                     </Typography>
                     <Typography variant="body1" sx={{ mb: 3, color: palette.text.secondary }}>
-                        Wholesale customers welcome! Visit during business hours or call ahead for
-                        availability and pricing.
+                        {ctaConfig.description}
                     </Typography>
                     <Box
                         sx={{
@@ -476,53 +594,42 @@ export const LocationVisit = () => {
                             flexWrap: "wrap",
                         }}
                     >
-                        <Button
-                            variant="contained"
-                            color="primary"
-                            size="large"
-                            onClick={getDirections}
-                            sx={{
-                                px: 4,
-                                py: 1.5,
-                                borderRadius: 2,
-                                textTransform: "none",
-                                fontWeight: 600,
-                            }}
-                        >
-                            Get Directions
-                        </Button>
-                        <Button
-                            variant="outlined"
-                            color="primary"
-                            size="large"
-                            onClick={() => setLocation("/about#contact")}
-                            sx={{
-                                px: 4,
-                                py: 1.5,
-                                borderRadius: 2,
-                                textTransform: "none",
-                                fontWeight: 600,
-                            }}
-                        >
-                            Contact Us First
-                        </Button>
-                        <Button
-                            variant="text"
-                            color="secondary"
-                            size="large"
-                            onClick={() =>
-                                window.open("https://newlife.online-orders.sbiteam.com/", "_blank")
-                            }
-                            sx={{
-                                px: 4,
-                                py: 1.5,
-                                borderRadius: 2,
-                                textTransform: "none",
-                                fontWeight: 600,
-                            }}
-                        >
-                            Browse Online First
-                        </Button>
+                        {ctaButtons.map((button) => {
+                            const handleClick = () => {
+                                switch (button.action) {
+                                    case "directions":
+                                        getDirections();
+                                        break;
+                                    case "contact":
+                                        setLocation("/about#contact");
+                                        break;
+                                    case "external":
+                                        if (button.url) {
+                                            window.open(button.url, "_blank");
+                                        }
+                                        break;
+                                }
+                            };
+
+                            return (
+                                <Button
+                                    key={button.id}
+                                    variant={button.variant}
+                                    color={button.color}
+                                    size="large"
+                                    onClick={handleClick}
+                                    sx={{
+                                        px: 4,
+                                        py: 1.5,
+                                        borderRadius: 2,
+                                        textTransform: "none",
+                                        fontWeight: 600,
+                                    }}
+                                >
+                                    {button.text}
+                                </Button>
+                            );
+                        })}
                     </Box>
                 </Box>
             </Container>

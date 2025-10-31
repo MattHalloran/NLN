@@ -304,6 +304,56 @@ export function useUpdateLandingPageContent() {
                         chips: string[];
                     };
                 };
+                location?: {
+                    header: {
+                        title: string;
+                        subtitle: string;
+                        chip: string;
+                    };
+                    map: {
+                        style: "gradient" | "embedded";
+                        showGetDirectionsButton: boolean;
+                        buttonText: string;
+                    };
+                    contactMethods: {
+                        sectionTitle: string;
+                        order: ("phone" | "address" | "email")[];
+                        descriptions: {
+                            phone: string;
+                            address: string;
+                            email: string;
+                        };
+                    };
+                    businessHours: {
+                        title: string;
+                        chip: string;
+                    };
+                    visitInfo: {
+                        sectionTitle: string;
+                        items: Array<{
+                            id: string;
+                            title: string;
+                            icon: string;
+                            description: string;
+                            displayOrder: number;
+                            isActive: boolean;
+                        }>;
+                    };
+                    cta: {
+                        title: string;
+                        description: string;
+                        buttons: Array<{
+                            id: string;
+                            text: string;
+                            variant: "contained" | "outlined" | "text";
+                            color: "primary" | "secondary";
+                            action: "directions" | "contact" | "external";
+                            url?: string;
+                            displayOrder: number;
+                            isActive: boolean;
+                        }>;
+                    };
+                };
             };
             queryParams?: {
                 variantId?: string;

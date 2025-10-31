@@ -10,6 +10,7 @@ import {
     Briefcase,
     Users,
     BookOpen,
+    MapPin,
 } from "lucide-react";
 import { BackButton, PageContainer } from "components";
 import { TopBar } from "components/navigation/TopBar/TopBar";
@@ -80,6 +81,14 @@ const getCardData = (): HomepageCardData[] => [
         icon: Users,
         color: "#546e7a",
         stats: "Edit content",
+    },
+    {
+        title: "Location & Visit",
+        description: "Customize the visit section including contact methods, visit info, and CTA buttons",
+        link: APP_LINKS.AdminHomepageLocation,
+        icon: MapPin,
+        color: "#546e7a",
+        stats: "Edit location",
     },
     {
         title: "Newsletter Settings",
