@@ -274,62 +274,112 @@ export const LocationVisit = () => {
                                 mb: 3,
                             }}
                         >
-                            {/* Map Placeholder */}
-                            <Box
-                                sx={{
-                                    height: "300px",
-                                    background: `linear-gradient(135deg, ${palette.primary.light} 0%, ${palette.secondary.light} 100%)`,
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    color: "white",
-                                    position: "relative",
-                                }}
-                            >
-                                <Box sx={{ textAlign: "center" }}>
-                                    <Box
-                                        sx={{
-                                            mb: 2,
-                                            display: "flex",
-                                            justifyContent: "center",
-                                            color: "white",
-                                        }}
-                                    >
-                                        <Map size={64} />
-                                    </Box>
-                                    <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
-                                        {business?.BUSINESS_NAME?.Short || "New Life Nursery Inc."}
-                                    </Typography>
-                                    <Typography variant="body1" sx={{ opacity: 0.9 }}>
-                                        {business?.ADDRESS?.Label ||
-                                            "106 S Woodruff Rd, Bridgeton, NJ"}
-                                    </Typography>
-                                </Box>
-
-                                {/* Interactive Map Overlay */}
-                                {mapSettings.showGetDirectionsButton && (
-                                    <Box
-                                        sx={{
-                                            position: "absolute",
-                                            bottom: 16,
-                                            right: 16,
-                                        }}
-                                    >
-                                        <Button
-                                            variant="contained"
-                                            color="secondary"
-                                            onClick={getDirections}
+                            {/* Map - Embedded or Gradient Placeholder */}
+                            {mapSettings.style === "embedded" ? (
+                                // Embedded Google Maps iframe
+                                <Box
+                                    sx={{
+                                        height: "400px",
+                                        position: "relative",
+                                        bgcolor: "grey.100",
+                                    }}
+                                >
+                                    <iframe
+                                        title="Location Map"
+                                        width="100%"
+                                        height="100%"
+                                        style={{ border: 0 }}
+                                        loading="lazy"
+                                        referrerPolicy="no-referrer-when-downgrade"
+                                        src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${encodeURIComponent(
+                                            business?.ADDRESS?.Label ||
+                                                "106 S Woodruff Rd, Bridgeton, NJ 08302"
+                                        )}&zoom=15`}
+                                    />
+                                    {/* Directions button overlay on embedded map */}
+                                    {mapSettings.showGetDirectionsButton && (
+                                        <Box
                                             sx={{
-                                                borderRadius: 2,
-                                                textTransform: "none",
-                                                fontWeight: 600,
+                                                position: "absolute",
+                                                bottom: 16,
+                                                right: 16,
+                                                pointerEvents: "auto",
                                             }}
                                         >
-                                            {mapSettings.buttonText}
-                                        </Button>
+                                            <Button
+                                                variant="contained"
+                                                color="secondary"
+                                                onClick={getDirections}
+                                                sx={{
+                                                    borderRadius: 2,
+                                                    textTransform: "none",
+                                                    fontWeight: 600,
+                                                    boxShadow: 3,
+                                                }}
+                                            >
+                                                {mapSettings.buttonText}
+                                            </Button>
+                                        </Box>
+                                    )}
+                                </Box>
+                            ) : (
+                                // Gradient placeholder (original design)
+                                <Box
+                                    sx={{
+                                        height: "300px",
+                                        background: `linear-gradient(135deg, ${palette.primary.light} 0%, ${palette.secondary.light} 100%)`,
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        color: "white",
+                                        position: "relative",
+                                    }}
+                                >
+                                    <Box sx={{ textAlign: "center" }}>
+                                        <Box
+                                            sx={{
+                                                mb: 2,
+                                                display: "flex",
+                                                justifyContent: "center",
+                                                color: "white",
+                                            }}
+                                        >
+                                            <Map size={64} />
+                                        </Box>
+                                        <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
+                                            {business?.BUSINESS_NAME?.Short || "New Life Nursery Inc."}
+                                        </Typography>
+                                        <Typography variant="body1" sx={{ opacity: 0.9 }}>
+                                            {business?.ADDRESS?.Label ||
+                                                "106 S Woodruff Rd, Bridgeton, NJ"}
+                                        </Typography>
                                     </Box>
-                                )}
-                            </Box>
+
+                                    {/* Interactive Map Overlay */}
+                                    {mapSettings.showGetDirectionsButton && (
+                                        <Box
+                                            sx={{
+                                                position: "absolute",
+                                                bottom: 16,
+                                                right: 16,
+                                            }}
+                                        >
+                                            <Button
+                                                variant="contained"
+                                                color="secondary"
+                                                onClick={getDirections}
+                                                sx={{
+                                                    borderRadius: 2,
+                                                    textTransform: "none",
+                                                    fontWeight: 600,
+                                                }}
+                                            >
+                                                {mapSettings.buttonText}
+                                            </Button>
+                                        </Box>
+                                    )}
+                                </Box>
+                            )}
                         </Card>
 
                         {/* Contact Methods */}

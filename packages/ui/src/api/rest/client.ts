@@ -206,11 +206,25 @@ export interface LandingPageContent {
                 displayOrder: number;
                 isActive: boolean;
             }>;
+            header?: {
+                title: string;
+                subtitle: string;
+            };
+            sections?: {
+                plants: {
+                    currentSeasonTitle: string;
+                    otherSeasonTitleTemplate: string;
+                };
+                tips: {
+                    title: string;
+                };
+            };
         };
         newsletter: {
             title: string;
             description: string;
             disclaimer: string;
+            buttonText?: string;
             isActive: boolean;
         };
         company: {
@@ -900,6 +914,117 @@ export const restApi = {
             contactInfo?: {
                 business?: Record<string, unknown>;
                 hours?: string;
+            };
+            about?: {
+                story: {
+                    overline: string;
+                    title: string;
+                    subtitle: string;
+                    paragraphs: string[];
+                    cta: {
+                        text: string;
+                        link: string;
+                    };
+                };
+                values: {
+                    title: string;
+                    items: Array<{
+                        icon: string;
+                        title: string;
+                        description: string;
+                    }>;
+                };
+                mission: {
+                    title: string;
+                    quote: string;
+                    attribution: string;
+                };
+            };
+            socialProof?: {
+                header: {
+                    title: string;
+                    subtitle: string;
+                };
+                stats: Array<{
+                    number: string;
+                    label: string;
+                    subtext: string;
+                }>;
+                mission: {
+                    title: string;
+                    quote: string;
+                    attribution: string;
+                };
+                strengths: {
+                    title: string;
+                    items: Array<{
+                        icon: string;
+                        title: string;
+                        description: string;
+                        highlight: string;
+                    }>;
+                };
+                clientTypes: {
+                    title: string;
+                    items: Array<{
+                        icon: string;
+                        label: string;
+                    }>;
+                };
+                footer: {
+                    description: string;
+                    chips: string[];
+                };
+            };
+            location?: {
+                header: {
+                    title: string;
+                    subtitle: string;
+                    chip: string;
+                };
+                map: {
+                    style: "gradient" | "embedded";
+                    showGetDirectionsButton: boolean;
+                    buttonText: string;
+                };
+                contactMethods: {
+                    sectionTitle: string;
+                    order: ("phone" | "address" | "email")[];
+                    descriptions: {
+                        phone: string;
+                        address: string;
+                        email: string;
+                    };
+                };
+                businessHours: {
+                    title: string;
+                    chip: string;
+                };
+                visitInfo: {
+                    sectionTitle: string;
+                    items: Array<{
+                        id: string;
+                        title: string;
+                        icon: string;
+                        description: string;
+                        displayOrder: number;
+                        isActive: boolean;
+                    }>;
+                };
+                cta: {
+                    title: string;
+                    description: string;
+                    buttons: Array<{
+                        id: string;
+                        text: string;
+                        variant: "contained" | "outlined" | "text";
+                        color: "primary" | "secondary";
+                        action: "directions" | "contact" | "external";
+                        url?: string;
+                        displayOrder: number;
+                        isActive: boolean;
+                    }>;
+                };
             };
         },
         queryParams?: {

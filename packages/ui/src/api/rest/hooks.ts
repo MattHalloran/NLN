@@ -354,6 +354,64 @@ export function useUpdateLandingPageContent() {
                         }>;
                     };
                 };
+                seasonal?: {
+                    plants?: Array<{
+                        id: string;
+                        name: string;
+                        description: string;
+                        season: string;
+                        careLevel: string;
+                        icon: string;
+                        displayOrder: number;
+                        isActive: boolean;
+                        image?: string;
+                        imageAlt?: string;
+                        imageHash?: string;
+                    }>;
+                    tips?: Array<{
+                        id: string;
+                        title: string;
+                        description: string;
+                        category: string;
+                        season: string;
+                        displayOrder: number;
+                        isActive: boolean;
+                    }>;
+                    header?: {
+                        title: string;
+                        subtitle: string;
+                    };
+                    sections?: {
+                        plants: {
+                            currentSeasonTitle: string;
+                            otherSeasonTitleTemplate: string;
+                        };
+                        tips: {
+                            title: string;
+                        };
+                    };
+                };
+                newsletter?: {
+                    title?: string;
+                    description?: string;
+                    disclaimer?: string;
+                    buttonText?: string;
+                    isActive?: boolean;
+                };
+                seasonalHeader?: {
+                    title: string;
+                    subtitle: string;
+                };
+                seasonalSections?: {
+                    plants: {
+                        currentSeasonTitle: string;
+                        otherSeasonTitleTemplate: string;
+                    };
+                    tips: {
+                        title: string;
+                    };
+                };
+                newsletterButtonText?: string;
             };
             queryParams?: {
                 variantId?: string;

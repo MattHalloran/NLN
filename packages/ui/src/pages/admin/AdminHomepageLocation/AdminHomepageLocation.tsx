@@ -324,61 +324,108 @@ const LocationPreview = ({
                             mb: 3,
                         }}
                     >
-                        <Box
-                            sx={{
-                                height: "200px",
-                                background: `linear-gradient(135deg, ${palette.primary.light} 0%, ${palette.secondary.light} 100%)`,
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                color: "white",
-                                position: "relative",
-                            }}
-                        >
-                            <Box sx={{ textAlign: "center" }}>
-                                <Box
-                                    sx={{
-                                        mb: 1.5,
-                                        display: "flex",
-                                        justifyContent: "center",
-                                        color: "white",
-                                    }}
-                                >
-                                    <Map size={48} />
-                                </Box>
-                                <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5, fontSize: "1rem" }}>
-                                    New Life Nursery Inc.
-                                </Typography>
-                                <Typography variant="body2" sx={{ opacity: 0.9, fontSize: "0.85rem" }}>
-                                    106 S Woodruff Rd, Bridgeton, NJ
-                                </Typography>
-                            </Box>
-
-                            {locationData.map.showGetDirectionsButton && (
-                                <Box
-                                    sx={{
-                                        position: "absolute",
-                                        bottom: 12,
-                                        right: 12,
-                                    }}
-                                >
-                                    <Button
-                                        variant="contained"
-                                        color="secondary"
-                                        size="small"
+                        {locationData.map.style === "embedded" ? (
+                            // Embedded Google Maps Preview
+                            <Box
+                                sx={{
+                                    height: "250px",
+                                    position: "relative",
+                                    bgcolor: "grey.100",
+                                }}
+                            >
+                                <iframe
+                                    title="Location Map Preview"
+                                    width="100%"
+                                    height="100%"
+                                    style={{ border: 0 }}
+                                    loading="lazy"
+                                    referrerPolicy="no-referrer-when-downgrade"
+                                    src="https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=106+S+Woodruff+Rd+Bridgeton+NJ+08302&zoom=15"
+                                />
+                                {locationData.map.showGetDirectionsButton && (
+                                    <Box
                                         sx={{
-                                            borderRadius: 2,
-                                            textTransform: "none",
-                                            fontWeight: 600,
-                                            fontSize: "0.8rem",
-                                            pointerEvents: "none",
+                                            position: "absolute",
+                                            bottom: 12,
+                                            right: 12,
                                         }}
                                     >
-                                        {locationData.map.buttonText}
-                                    </Button>
+                                        <Button
+                                            variant="contained"
+                                            color="secondary"
+                                            size="small"
+                                            sx={{
+                                                borderRadius: 2,
+                                                textTransform: "none",
+                                                fontWeight: 600,
+                                                fontSize: "0.8rem",
+                                                pointerEvents: "none",
+                                                boxShadow: 3,
+                                            }}
+                                        >
+                                            {locationData.map.buttonText}
+                                        </Button>
+                                    </Box>
+                                )}
+                            </Box>
+                        ) : (
+                            // Gradient Placeholder
+                            <Box
+                                sx={{
+                                    height: "200px",
+                                    background: `linear-gradient(135deg, ${palette.primary.light} 0%, ${palette.secondary.light} 100%)`,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    color: "white",
+                                    position: "relative",
+                                }}
+                            >
+                                <Box sx={{ textAlign: "center" }}>
+                                    <Box
+                                        sx={{
+                                            mb: 1.5,
+                                            display: "flex",
+                                            justifyContent: "center",
+                                            color: "white",
+                                        }}
+                                    >
+                                        <Map size={48} />
+                                    </Box>
+                                    <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5, fontSize: "1rem" }}>
+                                        New Life Nursery Inc.
+                                    </Typography>
+                                    <Typography variant="body2" sx={{ opacity: 0.9, fontSize: "0.85rem" }}>
+                                        106 S Woodruff Rd, Bridgeton, NJ
+                                    </Typography>
                                 </Box>
-                            )}
-                        </Box>
+
+                                {locationData.map.showGetDirectionsButton && (
+                                    <Box
+                                        sx={{
+                                            position: "absolute",
+                                            bottom: 12,
+                                            right: 12,
+                                        }}
+                                    >
+                                        <Button
+                                            variant="contained"
+                                            color="secondary"
+                                            size="small"
+                                            sx={{
+                                                borderRadius: 2,
+                                                textTransform: "none",
+                                                fontWeight: 600,
+                                                fontSize: "0.8rem",
+                                                pointerEvents: "none",
+                                            }}
+                                        >
+                                            {locationData.map.buttonText}
+                                        </Button>
+                                    </Box>
+                                )}
+                            </Box>
+                        )}
                     </Card>
 
                     {/* Contact Methods - Matches homepage */}
@@ -1203,8 +1250,8 @@ export const AdminHomepageLocation = () => {
                                                     bgcolor: "background.paper",
                                                 }}
                                             >
-                                                <MenuItem value="gradient">Gradient Placeholder</MenuItem>
-                                                <MenuItem value="embedded">Embedded Map (Future)</MenuItem>
+                                                <MenuItem value="gradient">Gradient Placeholder (Simple)</MenuItem>
+                                                <MenuItem value="embedded">Google Maps Embed (Interactive)</MenuItem>
                                             </Select>
                                         </FormControl>
                                         <Paper

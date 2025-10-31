@@ -272,6 +272,9 @@ router.put("/", async (req: AuthenticatedRequest, res: Response) => {
             return res.status(403).json({ error: "Admin access required" });
         }
 
+        logger.info(`[DEBUG] Request body keys: ${Object.keys(req.body).join(", ")}`);
+        logger.info(`[DEBUG] Request body location present: ${!!req.body.location}`);
+
         const { heroBanners, heroSettings, seasonalPlants, plantTips, seasonalHeader, seasonalSections, newsletterButtonText, settings, contactInfo, about, socialProof, location } =
             req.body as {
                 heroBanners?: HeroBanner[];

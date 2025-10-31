@@ -1,7 +1,7 @@
 {
   "metadata": {
     "version": "2.0",
-    "lastUpdated": "2025-10-30T17:17:11.141Z"
+    "lastUpdated": "2025-10-31T18:07:50.855Z"
   },
   "content": {
     "hero": {
@@ -403,6 +403,96 @@
           "Licensed NJ Nursery",
           "Wholesale Only",
           "Est. {foundedYear}"
+        ]
+      }
+    },
+    "location": {
+      "header": {
+        "title": "Visit Our Nursery",
+        "subtitle": "Southern New Jersey's premier wholesale nursery since {foundedYear}",
+        "chip": "Wholesale Only - Trade Customers Welcome"
+      },
+      "map": {
+        "style": "embedded",
+        "showGetDirectionsButton": true,
+        "buttonText": "Get Directions"
+      },
+      "contactMethods": {
+        "sectionTitle": "Get in Touch",
+        "order": [
+          "phone",
+          "address",
+          "email"
+        ],
+        "descriptions": {
+          "phone": "Call for availability and wholesale pricing",
+          "address": "Visit our 70+ acre wholesale nursery facility",
+          "email": "Email us for quotes and availability lists"
+        }
+      },
+      "businessHours": {
+        "title": "Business Hours",
+        "chip": "Wholesale Hours - Trade Only"
+      },
+      "visitInfo": {
+        "sectionTitle": "Plan Your Visit",
+        "items": [
+          {
+            "id": "f951bc6f-9f78-4d8d-9ee9-2bf7575673dc",
+            "title": "What to Expect",
+            "icon": "eye",
+            "description": "Browse over 70 acres of top-quality trees and shrubs, carefully grown for landscape professionals",
+            "displayOrder": 0,
+            "isActive": true
+          },
+          {
+            "id": "1200b2fb-7ac3-4678-a33f-a1e9b400c67e",
+            "title": "Wholesale Focus",
+            "icon": "gift",
+            "description": "Specializing in 3 to 25-gallon container plants for landscapers, contractors, and garden centers",
+            "displayOrder": 1,
+            "isActive": true
+          },
+          {
+            "id": "0a33ec3b-d928-4a4a-ac20-d4c13fade6ff",
+            "title": "Professional Service",
+            "icon": "smartphone",
+            "description": "Expert horticultural advice from our experienced team with over 40 years in the industry",
+            "displayOrder": 2,
+            "isActive": true
+          },
+          {
+            "id": "abb3286e-afd9-4097-8496-f9627437e0dc",
+            "title": "Easy Access",
+            "icon": "car",
+            "description": "Convenient location in Bridgeton with ample parking and loading facilities for commercial vehicles",
+            "displayOrder": 3,
+            "isActive": true
+          }
+        ]
+      },
+      "cta": {
+        "title": "Ready to Visit?",
+        "description": "Wholesale customers welcome! Visit during business hours or call ahead for availability and pricing.",
+        "buttons": [
+          {
+            "id": "1186d6ee-bd28-431a-82bd-824098a5ec31",
+            "text": "Get Directions",
+            "variant": "contained",
+            "color": "primary",
+            "action": "directions",
+            "displayOrder": 0,
+            "isActive": true
+          },
+          {
+            "id": "867d07a0-8f03-489f-8c8e-5d9dc1df4b92",
+            "text": "Contact Us First",
+            "variant": "outlined",
+            "color": "primary",
+            "action": "contact",
+            "displayOrder": 1,
+            "isActive": true
+          }
         ]
       }
     }
