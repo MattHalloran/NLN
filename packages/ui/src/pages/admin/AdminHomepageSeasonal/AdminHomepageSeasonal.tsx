@@ -348,6 +348,25 @@ export const AdminHomepageSeasonal = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [deletingImageId, setDeletingImageId] = useState<string | null>(null);
 
+    // Section text settings state
+    const [sectionText, setSectionText] = useState({
+        header: {
+            title: "Seasonal Highlights & Expert Tips",
+            subtitle: "Discover what's blooming now and get expert care advice for every season"
+        },
+        sections: {
+            plants: {
+                currentSeasonTitle: "What's Blooming Now",
+                otherSeasonTitleTemplate: "Perfect for {season}"
+            },
+            tips: {
+                title: "Expert Plant Care Tips"
+            }
+        },
+        newsletterButtonText: "Subscribe"
+    });
+    const [originalSectionText, setOriginalSectionText] = useState(sectionText);
+
     // Load data from API
     useEffect(() => {
         if (data?.content?.seasonal) {
@@ -358,6 +377,26 @@ export const AdminHomepageSeasonal = () => {
             setOriginalPlants(JSON.parse(JSON.stringify(loadedPlants)));
             setTips(JSON.parse(JSON.stringify(loadedTips)));
             setOriginalTips(JSON.parse(JSON.stringify(loadedTips)));
+
+            // Load section text settings
+            const loadedSectionText = {
+                header: data.content.seasonal.header || {
+                    title: "Seasonal Highlights & Expert Tips",
+                    subtitle: "Discover what's blooming now and get expert care advice for every season"
+                },
+                sections: data.content.seasonal.sections || {
+                    plants: {
+                        currentSeasonTitle: "What's Blooming Now",
+                        otherSeasonTitleTemplate: "Perfect for {season}"
+                    },
+                    tips: {
+                        title: "Expert Plant Care Tips"
+                    }
+                },
+                newsletterButtonText: data.content.newsletter?.buttonText || "Subscribe"
+            };
+            setSectionText(JSON.parse(JSON.stringify(loadedSectionText)));
+            setOriginalSectionText(JSON.parse(JSON.stringify(loadedSectionText)));
         }
     }, [data]);
 
@@ -365,8 +404,9 @@ export const AdminHomepageSeasonal = () => {
     const hasChanges = useMemo(() => {
         const plantsChanged = JSON.stringify(plants) !== JSON.stringify(originalPlants);
         const tipsChanged = JSON.stringify(tips) !== JSON.stringify(originalTips);
-        return plantsChanged || tipsChanged;
-    }, [plants, originalPlants, tips, originalTips]);
+        const sectionTextChanged = JSON.stringify(sectionText) !== JSON.stringify(originalSectionText);
+        return plantsChanged || tipsChanged || sectionTextChanged;
+    }, [plants, originalPlants, tips, originalTips, sectionText, originalSectionText]);
 
     const handleApiError = useCallback((error: any, defaultMessage: string) => {
         const message = error?.message || defaultMessage;
@@ -387,12 +427,16 @@ export const AdminHomepageSeasonal = () => {
                 data: {
                     seasonalPlants: plants,
                     plantTips: tips,
+                    seasonalHeader: sectionText.header,
+                    seasonalSections: sectionText.sections,
+                    newsletterButtonText: sectionText.newsletterButtonText,
                 },
                 queryParams,
             });
             await refetch();
             setOriginalPlants(JSON.parse(JSON.stringify(plants)));
             setOriginalTips(JSON.parse(JSON.stringify(tips)));
+            setOriginalSectionText(JSON.parse(JSON.stringify(sectionText)));
             handleApiSuccess("Seasonal content saved successfully!");
         } catch (error) {
             handleApiError(error, "Failed to save seasonal content");
@@ -404,6 +448,7 @@ export const AdminHomepageSeasonal = () => {
     const handleCancel = () => {
         setPlants(JSON.parse(JSON.stringify(originalPlants)));
         setTips(JSON.parse(JSON.stringify(originalTips)));
+        setSectionText(JSON.parse(JSON.stringify(originalSectionText)));
         setEditingPlant(null);
         setEditingTip(null);
     };
@@ -719,6 +764,174 @@ export const AdminHomepageSeasonal = () => {
                                     </Grid>
                                 </Grid>
                             </Paper>
+
+                            {/* Section Text Settings Accordion */}
+                            <Accordion
+                                defaultExpanded
+                                sx={{
+                                    border: "1px solid",
+                                    borderColor: "divider",
+                                    borderRadius: "8px !important",
+                                    "&:before": { display: "none" },
+                                    boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+                                }}
+                            >
+                                <AccordionSummary
+                                    expandIcon={<ChevronDown size={20} />}
+                                    sx={{
+                                        bgcolor: "grey.50",
+                                        borderRadius: "8px 8px 0 0",
+                                        minHeight: 64,
+                                        "&:hover": { bgcolor: "grey.100" },
+                                    }}
+                                >
+                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                                        <Box
+                                            sx={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                width: 40,
+                                                height: 40,
+                                                borderRadius: 2,
+                                                bgcolor: "secondary.main",
+                                                color: "white",
+                                            }}
+                                        >
+                                            <LeafIcon size={20} />
+                                        </Box>
+                                        <Box>
+                                            <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                                                Section Text Settings
+                                            </Typography>
+                                            <Typography variant="caption" color="text.secondary">
+                                                Customize all text in the seasonal section
+                                            </Typography>
+                                        </Box>
+                                    </Box>
+                                </AccordionSummary>
+                                <AccordionDetails sx={{ p: 3 }}>
+                                    <Grid container spacing={3}>
+                                        {/* Main Section Header */}
+                                        <Grid item xs={12}>
+                                            <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2, color: palette.primary.main }}>
+                                                Main Section Header
+                                            </Typography>
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <TextField
+                                                fullWidth
+                                                label="Section Title"
+                                                value={sectionText.header.title}
+                                                onChange={(e) => setSectionText({
+                                                    ...sectionText,
+                                                    header: { ...sectionText.header, title: e.target.value }
+                                                })}
+                                                helperText="Main heading for the seasonal section"
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <TextField
+                                                fullWidth
+                                                label="Section Subtitle"
+                                                value={sectionText.header.subtitle}
+                                                onChange={(e) => setSectionText({
+                                                    ...sectionText,
+                                                    header: { ...sectionText.header, subtitle: e.target.value }
+                                                })}
+                                                helperText="Subtitle under the main heading"
+                                            />
+                                        </Grid>
+
+                                        {/* Plants Section */}
+                                        <Grid item xs={12}>
+                                            <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2, mt: 2, color: palette.primary.main }}>
+                                                Plants Carousel Settings
+                                            </Typography>
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <TextField
+                                                fullWidth
+                                                label="Current Season Title"
+                                                value={sectionText.sections.plants.currentSeasonTitle}
+                                                onChange={(e) => setSectionText({
+                                                    ...sectionText,
+                                                    sections: {
+                                                        ...sectionText.sections,
+                                                        plants: { ...sectionText.sections.plants, currentSeasonTitle: e.target.value }
+                                                    }
+                                                })}
+                                                helperText="Title when showing current season plants"
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <TextField
+                                                fullWidth
+                                                label="Other Season Title Template"
+                                                value={sectionText.sections.plants.otherSeasonTitleTemplate}
+                                                onChange={(e) => setSectionText({
+                                                    ...sectionText,
+                                                    sections: {
+                                                        ...sectionText.sections,
+                                                        plants: { ...sectionText.sections.plants, otherSeasonTitleTemplate: e.target.value }
+                                                    }
+                                                })}
+                                                helperText="Use {season} as placeholder (e.g., 'Perfect for {season}')"
+                                            />
+                                        </Grid>
+
+                                        {/* Tips Section */}
+                                        <Grid item xs={12}>
+                                            <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2, mt: 2, color: palette.primary.main }}>
+                                                Tips Section Settings
+                                            </Typography>
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <TextField
+                                                fullWidth
+                                                label="Tips Section Title"
+                                                value={sectionText.sections.tips.title}
+                                                onChange={(e) => setSectionText({
+                                                    ...sectionText,
+                                                    sections: {
+                                                        ...sectionText.sections,
+                                                        tips: { title: e.target.value }
+                                                    }
+                                                })}
+                                                helperText="Heading for the expert tips section"
+                                            />
+                                        </Grid>
+
+                                        {/* Newsletter Button */}
+                                        <Grid item xs={12}>
+                                            <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2, mt: 2, color: palette.primary.main }}>
+                                                Newsletter Settings
+                                            </Typography>
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <TextField
+                                                fullWidth
+                                                label="Subscribe Button Text"
+                                                value={sectionText.newsletterButtonText}
+                                                onChange={(e) => setSectionText({
+                                                    ...sectionText,
+                                                    newsletterButtonText: e.target.value
+                                                })}
+                                                helperText="Text on the newsletter subscription button"
+                                            />
+                                        </Grid>
+
+                                        <Grid item xs={12}>
+                                            <Alert severity="info" sx={{ mt: 2 }}>
+                                                <Typography variant="caption">
+                                                    These text settings allow you to customize all the section headings and titles.
+                                                    Changes will be reflected on the homepage after saving.
+                                                </Typography>
+                                            </Alert>
+                                        </Grid>
+                                    </Grid>
+                                </AccordionDetails>
+                            </Accordion>
 
                             {/* Seasonal Plants Accordion */}
                             <Accordion

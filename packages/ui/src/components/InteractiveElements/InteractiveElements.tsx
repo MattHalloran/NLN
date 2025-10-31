@@ -76,6 +76,23 @@ export const InteractiveElements = () => {
     const plantTips = data?.content?.seasonal?.tips || [];
     const newsletterSettings = data?.content?.newsletter;
 
+    // Get customizable text fields with fallbacks
+    const seasonalHeader = data?.content?.seasonal?.header || {
+        title: "Seasonal Highlights & Expert Tips",
+        subtitle: "Discover what's blooming now and get expert care advice for every season"
+    };
+
+    const plantsSectionSettings = data?.content?.seasonal?.sections?.plants || {
+        currentSeasonTitle: "What's Blooming Now",
+        otherSeasonTitleTemplate: "Perfect for {season}"
+    };
+
+    const tipsSectionSettings = data?.content?.seasonal?.sections?.tips || {
+        title: "Expert Plant Care Tips"
+    };
+
+    const newsletterButtonText = newsletterSettings?.buttonText || "Subscribe";
+
     // Sort plants by season, putting current season first
     const seasonalPlants = useMemo(() => sortPlantsBySeason(rawPlants), [rawPlants]);
     const currentSeason = useMemo(() => getCurrentSeason(), []);
@@ -166,27 +183,27 @@ export const InteractiveElements = () => {
             <Container maxWidth="lg">
                 {/* Header */}
                 <Box sx={{ textAlign: "center", mb: 6 }}>
-                    <Typography 
-                        variant="h3" 
-                        component="h2" 
-                        sx={{ 
+                    <Typography
+                        variant="h3"
+                        component="h2"
+                        sx={{
                             fontWeight: 700,
                             color: palette.primary.main,
                             mb: 2,
                             fontSize: { xs: "2rem", md: "3rem" },
                         }}
                     >
-                        Seasonal Highlights & Expert Tips
+                        {seasonalHeader.title}
                     </Typography>
-                    <Typography 
-                        variant="h6" 
-                        sx={{ 
+                    <Typography
+                        variant="h6"
+                        sx={{
                             color: palette.text.secondary,
                             maxWidth: "600px",
                             mx: "auto",
                         }}
                     >
-                        Discover what's blooming now and get expert care advice for every season
+                        {seasonalHeader.subtitle}
                     </Typography>
                 </Box>
 
@@ -204,10 +221,10 @@ export const InteractiveElements = () => {
                                     }}
                                 >
                                     {seasonalPlants.length > 0 && seasonalPlants[safeCurrentPlant]?.season === currentSeason
-                                        ? "What's Blooming Now"
+                                        ? plantsSectionSettings.currentSeasonTitle
                                         : seasonalPlants.length > 0
-                                            ? `Perfect for ${seasonalPlants[safeCurrentPlant]?.season}`
-                                            : "What's Blooming Now"}
+                                            ? plantsSectionSettings.otherSeasonTitleTemplate.replace('{season}', seasonalPlants[safeCurrentPlant]?.season || '')
+                                            : plantsSectionSettings.currentSeasonTitle}
                                 </Typography>
                             </Box>
                             
@@ -361,14 +378,14 @@ export const InteractiveElements = () => {
                         <Box>
                             <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 3 }}>
                                 <Lightbulb size={24} color={palette.primary.main} />
-                                <Typography 
-                                    variant="h5" 
-                                    sx={{ 
+                                <Typography
+                                    variant="h5"
+                                    sx={{
                                         fontWeight: 600,
                                         color: palette.primary.main,
                                     }}
                                 >
-                                    Expert Plant Care Tips
+                                    {tipsSectionSettings.title}
                                 </Typography>
                             </Box>
 
@@ -505,7 +522,7 @@ export const InteractiveElements = () => {
                                             minWidth: { xs: "100%", sm: "150px" },
                                         }}
                                     >
-                                        Subscribe
+                                        {newsletterButtonText}
                                     </Button>
                                 </Box>
                                 {newsletterError && (

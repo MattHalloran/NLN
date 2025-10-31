@@ -135,6 +135,19 @@
       ]
     },
     "seasonal": {
+      "header": {
+        "title": "Seasonal Highlights & Expert Tips",
+        "subtitle": "Discover what's blooming now and get expert care advice for every season"
+      },
+      "sections": {
+        "plants": {
+          "currentSeasonTitle": "What's Blooming Now",
+          "otherSeasonTitleTemplate": "Perfect for {season}"
+        },
+        "tips": {
+          "title": "Expert Plant Care Tips"
+        }
+      },
       "plants": [
         {
           "id": "japanese-maple",
@@ -238,6 +251,7 @@
       "title": "Stay in the Grow",
       "description": "Get seasonal care tips, new arrival notifications, and exclusive offers delivered to your inbox",
       "disclaimer": "No spam, just helpful gardening tips. Unsubscribe anytime.",
+      "buttonText": "Subscribe",
       "isActive": true
     },
     "company": {

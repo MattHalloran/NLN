@@ -272,12 +272,18 @@ router.put("/", async (req: AuthenticatedRequest, res: Response) => {
             return res.status(403).json({ error: "Admin access required" });
         }
 
-        const { heroBanners, heroSettings, seasonalPlants, plantTips, settings, contactInfo, about, socialProof } =
+        const { heroBanners, heroSettings, seasonalPlants, plantTips, seasonalHeader, seasonalSections, newsletterButtonText, settings, contactInfo, about, socialProof } =
             req.body as {
                 heroBanners?: HeroBanner[];
                 heroSettings?: HeroSettings;
                 seasonalPlants?: SeasonalPlant[];
                 plantTips?: PlantTip[];
+                seasonalHeader?: { title: string; subtitle: string };
+                seasonalSections?: {
+                    plants: { currentSeasonTitle: string; otherSeasonTitleTemplate: string };
+                    tips: { title: string };
+                };
+                newsletterButtonText?: string;
                 settings?: Record<string, unknown>;
                 contactInfo?: { business?: BusinessContactData; hours?: string };
                 about?: {
@@ -533,6 +539,110 @@ router.put("/", async (req: AuthenticatedRequest, res: Response) => {
             };
             currentContent.content.seasonal.tips = plantTips;
             updatedSections.push("plantTips");
+        }
+
+        // Update seasonal header text if provided
+        if (seasonalHeader) {
+            currentContent.content = currentContent.content || {
+                hero: {
+                    banners: [],
+                    settings: {
+                        autoPlay: false,
+                        autoPlayDelay: 5000,
+                        showDots: true,
+                        showArrows: true,
+                        fadeTransition: false,
+                    },
+                    text: {
+                        title: "",
+                        subtitle: "",
+                        description: "",
+                        businessHours: "",
+                        trustBadges: [],
+                        buttons: [],
+                    },
+                },
+                services: { title: "", subtitle: "", items: [] },
+                seasonal: { plants: [], tips: [] },
+                newsletter: { title: "", description: "", disclaimer: "", isActive: false },
+                company: { foundedYear: new Date().getFullYear(), description: "" },
+            };
+            currentContent.content.seasonal = currentContent.content.seasonal || {
+                plants: [],
+                tips: [],
+            };
+            currentContent.content.seasonal.header = seasonalHeader;
+            updatedSections.push("seasonalHeader");
+        }
+
+        // Update seasonal sections text if provided
+        if (seasonalSections) {
+            currentContent.content = currentContent.content || {
+                hero: {
+                    banners: [],
+                    settings: {
+                        autoPlay: false,
+                        autoPlayDelay: 5000,
+                        showDots: true,
+                        showArrows: true,
+                        fadeTransition: false,
+                    },
+                    text: {
+                        title: "",
+                        subtitle: "",
+                        description: "",
+                        businessHours: "",
+                        trustBadges: [],
+                        buttons: [],
+                    },
+                },
+                services: { title: "", subtitle: "", items: [] },
+                seasonal: { plants: [], tips: [] },
+                newsletter: { title: "", description: "", disclaimer: "", isActive: false },
+                company: { foundedYear: new Date().getFullYear(), description: "" },
+            };
+            currentContent.content.seasonal = currentContent.content.seasonal || {
+                plants: [],
+                tips: [],
+            };
+            currentContent.content.seasonal.sections = seasonalSections;
+            updatedSections.push("seasonalSections");
+        }
+
+        // Update newsletter button text if provided
+        if (newsletterButtonText !== undefined) {
+            currentContent.content = currentContent.content || {
+                hero: {
+                    banners: [],
+                    settings: {
+                        autoPlay: false,
+                        autoPlayDelay: 5000,
+                        showDots: true,
+                        showArrows: true,
+                        fadeTransition: false,
+                    },
+                    text: {
+                        title: "",
+                        subtitle: "",
+                        description: "",
+                        businessHours: "",
+                        trustBadges: [],
+                        buttons: [],
+                    },
+                },
+                services: { title: "", subtitle: "", items: [] },
+                seasonal: { plants: [], tips: [] },
+                newsletter: { title: "", description: "", disclaimer: "", isActive: false },
+                company: { foundedYear: new Date().getFullYear(), description: "" },
+            };
+            currentContent.content.newsletter = currentContent.content.newsletter || {
+                title: "",
+                description: "",
+                disclaimer: "",
+                isActive: false,
+            };
+            currentContent.content.newsletter.buttonText = newsletterButtonText;
+            updatedSections.push("newsletterButtonText");
         }
 
         // Update general settings if provided

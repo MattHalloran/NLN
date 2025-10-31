@@ -91,12 +91,26 @@ export interface PlantTip {
 export interface SeasonalContent {
     plants: SeasonalPlant[];
     tips: PlantTip[];
+    header?: {
+        title: string;
+        subtitle: string;
+    };
+    sections?: {
+        plants: {
+            currentSeasonTitle: string;
+            otherSeasonTitleTemplate: string;
+        };
+        tips: {
+            title: string;
+        };
+    };
 }
 
 export interface NewsletterContent {
     title: string;
     description: string;
     disclaimer: string;
+    buttonText?: string;
     isActive: boolean;
 }
 
