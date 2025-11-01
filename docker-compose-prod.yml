@@ -48,6 +48,7 @@ services:
       CSRF_SECRET: "${CSRF_SECRET}"
       PROJECT_DIR: "${PROJECT_DIR:-/srv/app}"
       PORT_SERVER: "${PORT_SERVER:-5331}"
+      SERVER_LOCATION: "${SERVER_LOCATION}"
       VITE_SERVER_LOCATION: "${SERVER_LOCATION}"
       REDIS_CONN: "redis:${PORT_REDIS}"
       DB_CONN: "db:${PORT_DB}"

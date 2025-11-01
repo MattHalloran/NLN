@@ -202,7 +202,12 @@ if [[ "${ENV_FILE}" == *"prod"* ]]; then
     fi
 
     if [ "${SERVER_LOCATION}" != "dns" ]; then
-        warning "SERVER_LOCATION is '${SERVER_LOCATION}' - usually should be 'dns' for production"
+        error "SERVER_LOCATION must be 'dns' for production, got: '${SERVER_LOCATION}'"
+        error "Production requires SERVER_LOCATION=dns to restrict CORS to production domains only"
+        error "Change SERVER_LOCATION=dns in ${ENV_FILE} before deploying to VPS"
+        VALIDATION_FAILED=1
+    else
+        info "✓ SERVER_LOCATION is correctly set to 'dns' for production"
     fi
 fi
 
