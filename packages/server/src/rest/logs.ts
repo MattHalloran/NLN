@@ -17,7 +17,7 @@ interface LogEntry {
     message: string;
     timestamp: string;
     service?: string;
-    [key: string]: any;
+    [key: string]: unknown;
 }
 
 interface LogsResponse {
@@ -31,7 +31,10 @@ interface LogsResponse {
  * Parse JSON log lines from log file content
  */
 function parseLogLines(content: string): LogEntry[] {
-    const lines = content.trim().split("\n").filter((line) => line.trim());
+    const lines = content
+        .trim()
+        .split("\n")
+        .filter((line) => line.trim());
     const logs: LogEntry[] = [];
 
     for (const line of lines) {
@@ -55,7 +58,7 @@ function filterLogs(
     level?: string,
     search?: string,
     dateFrom?: string,
-    dateTo?: string,
+    dateTo?: string
 ): LogEntry[] {
     let filtered = logs;
 
@@ -130,7 +133,9 @@ router.get("/", async (req: Request, res: Response) => {
 
         // Validate file parameter
         if (file !== "combined" && file !== "error") {
-            return res.status(400).json({ error: "Invalid file parameter. Must be 'combined' or 'error'" });
+            return res
+                .status(400)
+                .json({ error: "Invalid file parameter. Must be 'combined' or 'error'" });
         }
 
         const logFile = path.join(LOG_DIR, `${file}.log`);
@@ -155,7 +160,7 @@ router.get("/", async (req: Request, res: Response) => {
         const { stdout } = await execAsync(`tail -n ${totalLinesToRead} "${logFile}"`);
 
         // Parse logs
-        let allLogs = parseLogLines(stdout);
+        const allLogs = parseLogLines(stdout);
 
         // Reverse so newest is first
         allLogs.reverse();
@@ -166,7 +171,7 @@ router.get("/", async (req: Request, res: Response) => {
             level as string | undefined,
             search as string | undefined,
             dateFrom as string | undefined,
-            dateTo as string | undefined,
+            dateTo as string | undefined
         );
 
         // Apply pagination AFTER filtering
@@ -181,7 +186,7 @@ router.get("/", async (req: Request, res: Response) => {
         };
 
         return res.json(response);
-    } catch (error: any) {
+    } catch (error: unknown) {
         logger.log(LogLevel.error, "Get logs error:", error);
         if (error instanceof CustomError) {
             return res.status(401).json({ error: error.message, code: error.code });
@@ -259,7 +264,7 @@ router.get("/stats", async (req: Request, res: Response) => {
                 note: "Log files rotate automatically when they reach 100MB, keeping last 30 files",
             },
         });
-    } catch (error: any) {
+    } catch (error: unknown) {
         logger.log(LogLevel.error, "Get log stats error:", error);
         if (error instanceof CustomError) {
             return res.status(401).json({ error: error.message, code: error.code });

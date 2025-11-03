@@ -145,11 +145,15 @@ DOMAIN=$(echo "${UI_URL%/}" | sed -E 's|https?://([^/]+)|\1|')
 echo "Got domain ${DOMAIN} from UI_URL ${UI_URL}"
 
 # Generate sitemap.xml
-npx tsx ./src/sitemap.ts
-if [ $? -ne 0 ]; then
-    error "Failed to generate sitemap.xml"
-    echo "${HERE}/../packages/ui/src/sitemap.ts"
-    # This is not a critical error, so we don't exit
+# Explicitly pass UI_URL to ensure it's available in the tsx environment
+if [ -n "$UI_URL" ]; then
+    UI_URL="$UI_URL" npx tsx ./src/sitemap.ts
+    if [ $? -ne 0 ]; then
+        warning "Failed to generate sitemap.xml - continuing anyway"
+        # This is not a critical error, so we don't exit
+    fi
+else
+    warning "UI_URL not set, skipping sitemap generation"
 fi
 
 # Replace placeholder url in public files

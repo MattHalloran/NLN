@@ -6,6 +6,7 @@ import imghash from "imghash";
 import path from "path";
 import probe from "probe-image-size";
 import sharp from "sharp";
+import { Readable } from "stream";
 import { LogLevel, genErrorCode, logger } from "../logger";
 import { AddImageResponse } from "../schema/types";
 import { withDistributedLock } from "./distributedLock.js";
@@ -37,7 +38,7 @@ const MIN_IMAGE_DIMENSION = 10; // Minimum dimension to ensure valid images
  */
 export function clean(
     file: string,
-    defaultFolder?: string,
+    defaultFolder?: string
 ): {
     name?: string;
     ext?: string;
@@ -69,7 +70,7 @@ export function clean(
  */
 export async function findFileName(
     file: string,
-    defaultFolder?: string,
+    defaultFolder?: string
 ): Promise<{
     name?: string;
     ext?: string;
@@ -99,9 +100,9 @@ export async function findFileName(
  * @param numBytes Maximum number of bytes to read from stream
  * @returns Buffer of file's contents
  */
-function streamToBuffer(
+function _streamToBuffer(
     stream: fs.ReadStream,
-    numBytes: number = MAX_BUFFER_SIZE,
+    numBytes: number = MAX_BUFFER_SIZE
 ): Promise<Buffer> {
     return new Promise((resolve, reject) => {
         const _buf: Buffer[] = [];
@@ -150,7 +151,7 @@ export async function saveFile(
     filename: string,
     mimetype: any,
     overwrite?: boolean,
-    acceptedTypes?: string[],
+    acceptedTypes?: string[]
 ) {
     try {
         const { name, ext, folder } = await (overwrite
@@ -277,7 +278,7 @@ export async function saveImage({
                 maxDimension: MAX_IMAGE_DIMENSION,
             });
             throw new Error(
-                `Image dimensions (${width}×${height}) exceed maximum allowed (${MAX_IMAGE_DIMENSION}×${MAX_IMAGE_DIMENSION}). Please resize the image before uploading.`,
+                `Image dimensions (${width}×${height}) exceed maximum allowed (${MAX_IMAGE_DIMENSION}×${MAX_IMAGE_DIMENSION}). Please resize the image before uploading.`
             );
         }
         if (width < MIN_IMAGE_DIMENSION || height < MIN_IMAGE_DIMENSION) {
@@ -288,7 +289,7 @@ export async function saveImage({
                 minDimension: MIN_IMAGE_DIMENSION,
             });
             throw new Error(
-                `Image dimensions (${width}×${height}) are too small. Minimum dimension is ${MIN_IMAGE_DIMENSION}px.`,
+                `Image dimensions (${width}×${height}) are too small. Minimum dimension is ${MIN_IMAGE_DIMENSION}px.`
             );
         }
 
@@ -354,11 +355,15 @@ export async function saveImage({
             webpSuccesses++;
         } catch (webpError) {
             webpFailures.push("XXL");
-            logger.log(LogLevel.error, "WebP conversion failed for full-size image, continuing with original format", {
-                code: genErrorCode("0013"),
-                error: webpError,
-                filename: originalname,
-            });
+            logger.log(
+                LogLevel.error,
+                "WebP conversion failed for full-size image, continuing with original format",
+                {
+                    code: genErrorCode("0013"),
+                    error: webpError,
+                    filename: originalname,
+                }
+            );
         }
 
         // Check if labels are provided to determine unlabeled_since timestamp
@@ -453,12 +458,16 @@ export async function saveImage({
                 webpSuccesses++;
             } catch (webpError) {
                 webpFailures.push(key);
-                logger.log(LogLevel.error, `WebP conversion failed for ${key} size, continuing with original format`, {
-                    code: genErrorCode("0014"),
-                    error: webpError,
-                    filename: originalname,
-                    size: key,
-                });
+                logger.log(
+                    LogLevel.error,
+                    `WebP conversion failed for ${key} size, continuing with original format`,
+                    {
+                        code: genErrorCode("0014"),
+                        error: webpError,
+                        filename: originalname,
+                        size: key,
+                    }
+                );
             }
         }
 
@@ -467,7 +476,7 @@ export async function saveImage({
         if (webpFailures.length > 0) {
             warnings.push(
                 `WebP generation failed for ${webpFailures.length} variant(s): ${webpFailures.join(", ")}. ` +
-                `Original format is available but performance may be impacted.`,
+                    "Original format is available but performance may be impacted."
             );
         }
 
@@ -554,11 +563,9 @@ export async function checkImageUsage(hash: string) {
 
     // Check plant usage
     if (image.plant_images && image.plant_images.length > 0) {
-        usage.usedInPlants = image.plant_images.map(
-            (pi: { plantId: string }) => pi.plantId,
-        );
+        usage.usedInPlants = image.plant_images.map((pi: { plantId: string }) => pi.plantId);
         usage.warnings.push(
-            `Image is used by ${image.plant_images.length} plant(s): ${usage.usedInPlants.join(", ")}`,
+            `Image is used by ${image.plant_images.length} plant(s): ${usage.usedInPlants.join(", ")}`
         );
     }
 
@@ -580,11 +587,11 @@ export async function checkImageUsage(hash: string) {
 
         // Add general label warning if there are other labels
         const otherLabels = usage.usedInLabels.filter(
-            (l) => l !== "hero-banner" && l !== "seasonal",
+            (l) => l !== "hero-banner" && l !== "seasonal"
         );
         if (otherLabels.length > 0) {
             usage.warnings.push(
-                `Image has ${otherLabels.length} other label(s): ${otherLabels.join(", ")}`,
+                `Image has ${otherLabels.length} other label(s): ${otherLabels.join(", ")}`
             );
         }
     }
@@ -599,7 +606,7 @@ export async function checkImageUsage(hash: string) {
             process.env.PROJECT_DIR || "",
             process.env.NODE_ENV === "production"
                 ? "packages/server/dist/data"
-                : "packages/server/src/data",
+                : "packages/server/src/data"
         );
 
         const contentPath = path.join(dataPath, "landing-page-content.json");
@@ -620,15 +627,18 @@ export async function checkImageUsage(hash: string) {
                         .replace(/^\//, "")
                         .replace(/^images\//, "images/");
 
-                    if (imageSrcPaths.some((src: string) =>
-                        src === normalizedBannerSrc ||
-                        `images/${banner.src}` === src ||
-                        banner.src.includes(path.basename(src))
-                    )) {
+                    if (
+                        imageSrcPaths.some(
+                            (src: string) =>
+                                src === normalizedBannerSrc ||
+                                `images/${banner.src}` === src ||
+                                banner.src.includes(path.basename(src))
+                        )
+                    ) {
                         if (!usage.usedInHeroBanners) {
                             usage.usedInHeroBanners = true;
                             usage.warnings.push(
-                                "⚠️ Image is used in hero banner carousel (detected in landing page JSON)",
+                                "⚠️ Image is used in hero banner carousel (detected in landing page JSON)"
                             );
                         }
                         break;
@@ -644,15 +654,18 @@ export async function checkImageUsage(hash: string) {
                         .replace(/^\//, "")
                         .replace(/^images\//, "images/");
 
-                    if (imageSrcPaths.some((src: string) =>
-                        src === normalizedPlantSrc ||
-                        `images/${plant.image}` === src ||
-                        plant.image.includes(path.basename(src))
-                    )) {
+                    if (
+                        imageSrcPaths.some(
+                            (src: string) =>
+                                src === normalizedPlantSrc ||
+                                `images/${plant.image}` === src ||
+                                plant.image.includes(path.basename(src))
+                        )
+                    ) {
                         if (!usage.usedInSeasonalContent) {
                             usage.usedInSeasonalContent = true;
                             usage.warnings.push(
-                                "⚠️ Image is used in seasonal content (detected in landing page JSON)",
+                                "⚠️ Image is used in seasonal content (detected in landing page JSON)"
                             );
                         }
                         break;
@@ -680,7 +693,7 @@ export async function checkImageUsage(hash: string) {
  */
 export async function deleteImage(
     hash: string,
-    force: boolean = false,
+    force: boolean = false
 ): Promise<{
     success: boolean;
     deletedFiles: number;
@@ -692,18 +705,24 @@ export async function deleteImage(
         hash,
         "delete-image",
         async () => await performImageDeletion(hash, force),
-        30000, // Wait up to 30 seconds for lock (increased for large images with many variants)
+        30000 // Wait up to 30 seconds for lock (increased for large images with many variants)
     );
 
     if (result === null) {
         // Lock couldn't be acquired - another deletion is in progress
-        logger.log(LogLevel.warn, "Could not acquire lock for image deletion - operation already in progress", {
-            hash,
-        });
+        logger.log(
+            LogLevel.warn,
+            "Could not acquire lock for image deletion - operation already in progress",
+            {
+                hash,
+            }
+        );
         return {
             success: false,
             deletedFiles: 0,
-            errors: ["Image deletion already in progress by another request. Please try again in a few moments."],
+            errors: [
+                "Image deletion already in progress by another request. Please try again in a few moments.",
+            ],
         };
     }
 
@@ -716,7 +735,7 @@ export async function deleteImage(
  */
 async function performImageDeletion(
     hash: string,
-    force: boolean = false,
+    force: boolean = false
 ): Promise<{
     success: boolean;
     deletedFiles: number;
@@ -789,7 +808,7 @@ async function performImageDeletion(
         // If any file deletions failed, don't delete from database
         // This prevents broken references to missing files (worse than orphaned files)
         if (failedDeletes.length > 0) {
-            logger.log(LogLevel.error, `File deletion incomplete, aborting DB deletion`, {
+            logger.log(LogLevel.error, "File deletion incomplete, aborting DB deletion", {
                 code: genErrorCode("0018"),
                 hash,
                 totalFiles: filePaths.length,
@@ -797,7 +816,7 @@ async function performImageDeletion(
                 failedFiles: failedDeletes.length,
             });
             errors.push(
-                `Only ${deletedFiles}/${filePaths.length} files deleted. Database record preserved for retry.`,
+                `Only ${deletedFiles}/${filePaths.length} files deleted. Database record preserved for retry.`
             );
             return { success: false, deletedFiles, errors, usage };
         }
@@ -817,7 +836,7 @@ async function performImageDeletion(
                     await tx.image.delete({ where: { hash } });
                 });
 
-                logger.log(LogLevel.info, `Successfully deleted image and all files`, {
+                logger.log(LogLevel.info, "Successfully deleted image and all files", {
                     hash,
                     filesDeleted: deletedFiles,
                     dbDeleteAttempt: attempt,
@@ -830,30 +849,40 @@ async function performImageDeletion(
 
                 if (attempt < MAX_DB_DELETE_RETRIES) {
                     const delay = RETRY_DELAY_MS * attempt; // Linear backoff
-                    logger.log(LogLevel.warn, `DB deletion attempt ${attempt} failed, retrying in ${delay}ms`, {
-                        code: genErrorCode("0019"),
-                        hash,
-                        attempt,
-                        error: dbError,
-                    });
+                    logger.log(
+                        LogLevel.warn,
+                        `DB deletion attempt ${attempt} failed, retrying in ${delay}ms`,
+                        {
+                            code: genErrorCode("0019"),
+                            hash,
+                            attempt,
+                            error: dbError,
+                        }
+                    );
 
                     // Wait before retry
-                    await new Promise(resolve => setTimeout(resolve, delay));
+                    await new Promise((resolve) => setTimeout(resolve, delay));
                 } else {
                     // Final attempt failed
-                    logger.log(LogLevel.error, `CRITICAL: Files deleted but database deletion failed after ${MAX_DB_DELETE_RETRIES} attempts`, {
-                        code: genErrorCode("0019"),
-                        hash,
-                        deletedFiles,
-                        error: dbError,
-                        note: "Database still references deleted files. Run orphan cleanup or manual DB cleanup required.",
-                    });
+                    logger.log(
+                        LogLevel.error,
+                        `CRITICAL: Files deleted but database deletion failed after ${MAX_DB_DELETE_RETRIES} attempts`,
+                        {
+                            code: genErrorCode("0019"),
+                            hash,
+                            deletedFiles,
+                            error: dbError,
+                            note: "Database still references deleted files. Run orphan cleanup or manual DB cleanup required.",
+                        }
+                    );
                 }
             }
         }
 
         if (!dbDeletionSuccess) {
-            errors.push(`Database deletion failed after ${MAX_DB_DELETE_RETRIES} attempts: ${lastDbError}`);
+            errors.push(
+                `Database deletion failed after ${MAX_DB_DELETE_RETRIES} attempts: ${lastDbError}`
+            );
             return { success: false, deletedFiles, errors, usage };
         }
 
@@ -899,14 +928,13 @@ export function readFiles(files: string[]): (string | null)[] {
 export async function saveFiles(
     files: Express.Multer.File[],
     overwrite = true,
-    acceptedTypes?: string[],
+    acceptedTypes?: string[]
 ): Promise<(string | null)[]> {
     const data: (string | null)[] = [];
     for (const file of files) {
         const { buffer, originalname, mimetype } = file;
 
         // Create a readable stream from buffer for saveFile
-        const { Readable } = require("stream");
         const stream = new Readable();
         stream.push(buffer);
         stream.push(null);
@@ -916,7 +944,7 @@ export async function saveFiles(
             originalname,
             mimetype,
             overwrite,
-            acceptedTypes,
+            acceptedTypes
         );
         data.push(success ? finalFilename : null);
     }

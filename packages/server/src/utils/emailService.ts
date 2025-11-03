@@ -98,7 +98,7 @@ export class EmailService {
         if (!process.env.SITE_EMAIL_USERNAME || !process.env.SITE_EMAIL_PASSWORD) {
             logger.log(
                 LogLevel.warn,
-                "Email credentials not configured - emails will fail in production mode",
+                "Email credentials not configured - emails will fail in production mode"
             );
             return;
         }
@@ -110,7 +110,7 @@ export class EmailService {
 
         logger.log(
             LogLevel.info,
-            `📧 Configuring SMTP transport: ${smtpHost}:${smtpPort} (secure: ${smtpSecure})`,
+            `📧 Configuring SMTP transport: ${smtpHost}:${smtpPort} (secure: ${smtpSecure})`
         );
 
         this.transporter = nodemailer.createTransport({
@@ -203,7 +203,7 @@ export class EmailService {
             case "disabled":
                 logger.log(
                     LogLevel.info,
-                    `📧 Email sending disabled - would have sent to: ${emailData.to.join(", ")}`,
+                    `📧 Email sending disabled - would have sent to: ${emailData.to.join(", ")}`
                 );
                 return {
                     success: true,
@@ -225,7 +225,7 @@ export class EmailService {
                     },
                 };
 
-            case "file":
+            case "file": {
                 const filepath = await this.saveEmailToFile(emailData);
                 this.logEmailToConsole(emailData);
                 logger.log(LogLevel.info, `📧 Email saved to file: ${filepath}`);
@@ -238,8 +238,9 @@ export class EmailService {
                         filePath: filepath,
                     },
                 };
+            }
 
-            case "redirect":
+            case "redirect": {
                 const redirectEmail = this.getDevEmailRedirectAddress();
                 const modifiedSubject = `[DEV-REDIRECT] [TO: ${emailData.to.join(", ")}] ${emailData.subject}`;
                 const modifiedText = `ORIGINAL RECIPIENTS: ${emailData.to.join(", ")}\n\n${emailData.text}`;
@@ -256,7 +257,7 @@ export class EmailService {
 
                     logger.log(
                         LogLevel.info,
-                        `📧 Email redirected from ${emailData.to.join(", ")} to ${redirectEmail}`,
+                        `📧 Email redirected from ${emailData.to.join(", ")} to ${redirectEmail}`
                     );
                     return {
                         success: info.rejected.length === 0,
@@ -282,27 +283,28 @@ export class EmailService {
                         },
                     };
                 }
+            }
 
-            case "staging":
+            case "staging": {
                 // In staging, only send to allowed emails/domains
                 const allowedRecipients = emailData.to.filter((email) =>
-                    this.isAllowedEmailInStaging(email),
+                    this.isAllowedEmailInStaging(email)
                 );
                 const blockedRecipients = emailData.to.filter(
-                    (email) => !this.isAllowedEmailInStaging(email),
+                    (email) => !this.isAllowedEmailInStaging(email)
                 );
 
                 if (blockedRecipients.length > 0) {
                     logger.log(
                         LogLevel.warn,
-                        `📧 Blocked emails in staging: ${blockedRecipients.join(", ")}`,
+                        `📧 Blocked emails in staging: ${blockedRecipients.join(", ")}`
                     );
                 }
 
                 if (allowedRecipients.length === 0) {
                     logger.log(
                         LogLevel.info,
-                        `📧 All recipients blocked in staging mode: ${emailData.to.join(", ")}`,
+                        `📧 All recipients blocked in staging mode: ${emailData.to.join(", ")}`
                     );
                     return {
                         success: true,
@@ -348,6 +350,7 @@ export class EmailService {
                         },
                     };
                 }
+            }
 
             case "production":
             default:
@@ -363,7 +366,7 @@ export class EmailService {
                     // Log production emails for audit trail
                     logger.log(
                         LogLevel.info,
-                        `📧 Production email sent to: ${emailData.to.join(", ")}`,
+                        `📧 Production email sent to: ${emailData.to.join(", ")}`
                     );
 
                     return {

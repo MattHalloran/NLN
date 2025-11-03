@@ -3526,10 +3526,10 @@ axe-core@^4.10.3:
   resolved "https://registry.yarnpkg.com/axe-core/-/axe-core-4.11.0.tgz#16f74d6482e343ff263d4f4503829e9ee91a86b6"
   integrity sha512-ilYanEU8vxxBexpJd8cWM4ElSQq4QctCLKih0TSfjIfCQTeyH/6zVrmIJfLPrKTKJRbiG+cfnZbQIjAlJmF1jQ==
 
-axios@^1.11.0:
-  version "1.11.0"
-  resolved "https://registry.npmjs.org/axios/-/axios-1.11.0.tgz"
-  integrity sha512-1Lx3WLFQWm3ooKDYZD1eXmoGO9fxYQjrycfHFC8P0sCfQVXyROp0p9PFWBehewBOdCwHc+f/b8I0fMto5eSfwA==
+axios@^1.12.0:
+  version "1.13.1"
+  resolved "https://registry.yarnpkg.com/axios/-/axios-1.13.1.tgz#45b62dc8fe04e0e92274e08b98e910ba3d7963a7"
+  integrity sha512-hU4EGxxt+j7TQijx1oYdAjw4xuIp1wRQSsbMFwSthCWeBQur1eF+qJ5iQ5sN3Tw8YRzQNKb8jszgBdMDVqwJcw==
   dependencies:
     follow-redirects "^1.15.6"
     form-data "^4.0.4"
@@ -7077,10 +7077,10 @@ node-releases@^2.0.19:
   resolved "https://registry.npmjs.org/node-releases/-/node-releases-2.0.20.tgz"
   integrity sha512-7gK6zSXEH6neM212JgfYFXe+GmZQM+fia5SsusuBIUgnPheLFBmIPhtFoAQRj8/7wASYQnbDlHPVwY0BefoFgA==
 
-nodemailer@^6.6.0:
-  version "6.10.1"
-  resolved "https://registry.npmjs.org/nodemailer/-/nodemailer-6.10.1.tgz"
-  integrity sha512-Z+iLaBGVaSjbIzQ4pX6XV41HrooLsQ10ZWPUehGmuantvzWoDVBnmsdUcOIDM1t+yPor5pDhVlDESgOMEGxhHA==
+nodemailer@^7.0.10:
+  version "7.0.10"
+  resolved "https://registry.yarnpkg.com/nodemailer/-/nodemailer-7.0.10.tgz#540062dbbe574220b42e79d2d949956d3eac5a46"
+  integrity sha512-Us/Se1WtT0ylXgNFfyFSx4LElllVLJXQjWi2Xz17xWw7amDKO2MLtFnVp1WACy7GkVGs+oBlRopVNUzlrGSw1w==
 
 nodemon@^3.1.10:
   version "3.1.10"
@@ -9055,12 +9055,12 @@ tweetnacl@^0.14.3:
   resolved "https://registry.npmjs.org/tweetnacl/-/tweetnacl-0.14.5.tgz"
   integrity sha512-KXXFFdAbFXY4geFIwoyNK+f5Z1b7swfXABfL7HXCmoIWMKU3dmS26672A4EeQtDzLKy7SXmfBu51JolvEKwtGA==
 
-twilio@^5.9.0:
-  version "5.9.0"
-  resolved "https://registry.npmjs.org/twilio/-/twilio-5.9.0.tgz"
-  integrity sha512-Ij+xT9MZZSjP64lsy+x6vYsCCb5m2Db9KffkMXBrN3zWbG3rbkXxl+MZVVzrvpwEdSbQD0vMuin+TTlQ6kR6Xg==
+twilio@^5.10.4:
+  version "5.10.4"
+  resolved "https://registry.yarnpkg.com/twilio/-/twilio-5.10.4.tgz#d20053f9e70147ccd0124cef95c3e0f6fd4bef04"
+  integrity sha512-5dUsT3/O1+WxyJop2a6a4r92NAgtEQL7+oSU4t466NPhDaPOOBH/uomxnYHD5GWouYo7CZ/B7XSOwlhEUAHpWg==
   dependencies:
-    axios "^1.11.0"
+    axios "^1.12.0"
     dayjs "^1.11.9"
     https-proxy-agent "^5.0.0"
     jsonwebtoken "^9.0.2"
