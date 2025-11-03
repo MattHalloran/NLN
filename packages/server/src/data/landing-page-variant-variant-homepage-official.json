@@ -1,582 +1,567 @@
 {
-  "metadata": {
-    "version": "2.0",
-    "lastUpdated": "2025-10-31T18:07:50.855Z"
-  },
-  "content": {
-    "hero": {
-      "banners": [
-        {
-          "id": "hero-butterfly-prod",
-          "src": "/hero-butterfly-XXL.jpg",
-          "alt": "Butterfly at New Life Nursery",
-          "description": "Beautiful butterfly visiting our nursery",
-          "width": 1901,
-          "height": 1426,
-          "displayOrder": 1,
-          "isActive": true
-        },
-        {
-          "id": "hero-chicks-prod",
-          "src": "/hero-chicks-XXL.jpg",
-          "alt": "Baby chicks at New Life Nursery",
-          "description": "Adorable baby chicks",
-          "width": 1008,
-          "height": 756,
-          "displayOrder": 2,
-          "isActive": true
-        },
-        {
-          "id": "hero-plants-prod",
-          "src": "/hero-plants-XXL.jpg",
-          "alt": "Plant selection at New Life Nursery",
-          "description": "Wide variety of plants available",
-          "width": 4032,
-          "height": 3024,
-          "displayOrder": 3,
-          "isActive": true
-        },
-        {
-          "id": "hero-rainbow-prod",
-          "src": "/hero-rainbow-XXL.jpg",
-          "alt": "Rainbow over New Life Nursery",
-          "description": "Beautiful rainbow at the nursery",
-          "width": 2560,
-          "height": 1920,
-          "displayOrder": 4,
-          "isActive": true
-        }
-      ],
-      "settings": {
-        "autoPlay": true,
-        "autoPlayDelay": 5000,
-        "showDots": true,
-        "showArrows": false,
-        "fadeTransition": true
-      },
-      "text": {
-        "title": "Beautiful, healthy plants",
-        "subtitle": "At competitive prices",
-        "description": "Serving landscape professionals for over 40 years with the finest selection of wholesale plants, trees, and shrubs",
-        "businessHours": "OPEN 7 DAYS A WEEK | Mon-Sat 8AM-6PM | Sun 9AM-5PM",
-        "useContactInfoHours": false,
-        "trustBadges": [
-          {
-            "icon": "users",
-            "text": "Family Owned Since 1981"
-          },
-          {
-            "icon": "award",
-            "text": "Licensed & Certified"
-          },
-          {
-            "icon": "leaf",
-            "text": "Expert Plant Care"
-          }
-        ],
-        "buttons": [
-          {
-            "text": "Browse Plants",
-            "link": "https://newlife.online-orders.sbiteam.com/",
-            "type": "primary"
-          },
-          {
-            "text": "Visit Our Nursery",
-            "link": "/about",
-            "type": "secondary"
-          }
-        ]
-      }
+    "metadata": {
+        "version": "2.0",
+        "lastUpdated": "2025-10-31T18:07:50.855Z"
     },
-    "services": {
-      "title": "Our Services",
-      "subtitle": "Everything you need to create and maintain your perfect garden",
-      "cta": {
-        "title": "Ready to get started?",
-        "subtitle": "Browse our online catalog or contact us to discuss your project needs",
-        "primaryButton": {
-          "text": "Shop Online",
-          "url": "https://newlife.online-orders.sbiteam.com/"
+    "content": {
+        "hero": {
+            "banners": [
+                {
+                    "id": "hero-butterfly-prod",
+                    "src": "/hero-butterfly-XXL.jpg",
+                    "alt": "Butterfly at New Life Nursery",
+                    "description": "Beautiful butterfly visiting our nursery",
+                    "width": 1901,
+                    "height": 1426,
+                    "displayOrder": 1,
+                    "isActive": true
+                },
+                {
+                    "id": "hero-chicks-prod",
+                    "src": "/hero-chicks-XXL.jpg",
+                    "alt": "Baby chicks at New Life Nursery",
+                    "description": "Adorable baby chicks",
+                    "width": 1008,
+                    "height": 756,
+                    "displayOrder": 2,
+                    "isActive": true
+                },
+                {
+                    "id": "hero-plants-prod",
+                    "src": "/hero-plants-XXL.jpg",
+                    "alt": "Plant selection at New Life Nursery",
+                    "description": "Wide variety of plants available",
+                    "width": 4032,
+                    "height": 3024,
+                    "displayOrder": 3,
+                    "isActive": true
+                },
+                {
+                    "id": "hero-rainbow-prod",
+                    "src": "/hero-rainbow-XXL.jpg",
+                    "alt": "Rainbow over New Life Nursery",
+                    "description": "Beautiful rainbow at the nursery",
+                    "width": 2560,
+                    "height": 1920,
+                    "displayOrder": 4,
+                    "isActive": true
+                }
+            ],
+            "settings": {
+                "autoPlay": true,
+                "autoPlayDelay": 5000,
+                "showDots": true,
+                "showArrows": false,
+                "fadeTransition": true
+            },
+            "text": {
+                "title": "Beautiful, healthy plants",
+                "subtitle": "At competitive prices",
+                "description": "Your trusted wholesale plant source for over 40 years, with the finest selection of plants, trees, and shrubs",
+                "businessHours": "OPEN 7 DAYS A WEEK | Mon-Sat 8AM-6PM | Sun 9AM-5PM",
+                "useContactInfoHours": false,
+                "trustBadges": [
+                    {
+                        "icon": "users",
+                        "text": "Family Owned Since 1981"
+                    },
+                    {
+                        "icon": "award",
+                        "text": "Licensed & Certified"
+                    },
+                    {
+                        "icon": "leaf",
+                        "text": "Wide Plant Selection"
+                    }
+                ],
+                "buttons": [
+                    {
+                        "text": "Browse Plants",
+                        "link": "https://newlife.online-orders.sbiteam.com/",
+                        "type": "primary"
+                    },
+                    {
+                        "text": "Visit Our Nursery",
+                        "link": "/about",
+                        "type": "secondary"
+                    }
+                ]
+            }
         },
-        "secondaryButton": {
-          "text": "Contact Us",
-          "url": "/about#contact"
-        }
-      },
-      "items": [
-        {
-          "title": "Wholesale Plant Catalog",
-          "description": "Browse our extensive inventory of plants, trees, and shrubs. Wholesale pricing for landscapers, contractors, and garden centers.",
-          "icon": "sprout",
-          "action": "View Catalog",
-          "url": "https://newlife.online-orders.sbiteam.com/"
+        "services": {
+            "title": "Our Services",
+            "subtitle": "Everything you need to create and maintain your perfect garden",
+            "cta": {
+                "title": "Ready to get started?",
+                "subtitle": "Browse our online catalog or contact us to discuss your project needs",
+                "primaryButton": {
+                    "text": "Shop Online",
+                    "url": "https://newlife.online-orders.sbiteam.com/"
+                },
+                "secondaryButton": {
+                    "text": "Contact Us",
+                    "url": "/about#contact"
+                }
+            },
+            "items": [
+                {
+                    "title": "Wholesale Plant Catalog",
+                    "description": "Browse our extensive inventory of plants, trees, and shrubs. Wholesale pricing for landscapers, contractors, and garden centers.",
+                    "icon": "sprout",
+                    "action": "View Catalog",
+                    "url": "https://newlife.online-orders.sbiteam.com/"
+                },
+                {
+                    "title": "Bulk Ordering & Pricing",
+                    "description": "Order in quantity with competitive wholesale pricing.",
+                    "icon": "package",
+                    "action": "Get Pricing",
+                    "url": "/about#contact"
+                },
+                {
+                    "title": "Wholesale Delivery",
+                    "description": "Professional delivery service for wholesale orders. Flexible scheduling to meet your project timelines.",
+                    "icon": "truck",
+                    "action": "Delivery Info",
+                    "url": "/about#contact"
+                },
+                {
+                    "title": "Real-Time Availability",
+                    "description": "Check current stock levels and reserve plants online. Updated inventory ensures you get what you need when you need it.",
+                    "icon": "leaf",
+                    "action": "Check Stock",
+                    "url": "https://newlife.online-orders.sbiteam.com/"
+                }
+            ]
         },
-        {
-          "title": "Bulk Ordering & Pricing",
-          "description": "Order in quantity with competitive wholesale pricing.",
-          "icon": "package",
-          "action": "Get Pricing",
-          "url": "/about#contact"
+        "seasonal": {
+            "header": {
+                "title": "Seasonal Highlights & Expert Tips",
+                "subtitle": "Discover what's blooming now and get expert care advice for every season"
+            },
+            "sections": {
+                "plants": {
+                    "currentSeasonTitle": "What's Blooming Now",
+                    "otherSeasonTitleTemplate": "Perfect for {season}"
+                },
+                "tips": {
+                    "title": "Expert Plant Care Tips"
+                }
+            },
+            "plants": [
+                {
+                    "id": "japanese-maple",
+                    "name": "Japanese Maple",
+                    "description": "Stunning fall foliage with vibrant red and orange colors. Perfect for adding dramatic autumn color to your landscape.",
+                    "season": "Fall",
+                    "careLevel": "Medium",
+                    "icon": "leaf",
+                    "displayOrder": 1,
+                    "isActive": true
+                },
+                {
+                    "id": "winter-jasmine",
+                    "name": "Winter Jasmine",
+                    "description": "Bright yellow flowers bloom in winter, providing cheerful color during the coldest months.",
+                    "season": "Winter",
+                    "careLevel": "Easy",
+                    "icon": "snowflake",
+                    "displayOrder": 2,
+                    "isActive": true
+                },
+                {
+                    "id": "cherry-blossom",
+                    "name": "Cherry Blossom",
+                    "description": "Beautiful spring blooms create a stunning display. A classic choice for spring garden interest.",
+                    "season": "Spring",
+                    "careLevel": "Medium",
+                    "icon": "flower",
+                    "displayOrder": 3,
+                    "isActive": true
+                },
+                {
+                    "id": "hydrangea",
+                    "name": "Hydrangea",
+                    "description": "Large, colorful flower clusters bloom throughout summer. Excellent for adding bold color to shaded areas.",
+                    "season": "Summer",
+                    "careLevel": "Easy",
+                    "icon": "flower2",
+                    "displayOrder": 4,
+                    "isActive": true
+                }
+            ],
+            "tips": [
+                {
+                    "id": "deep-watering",
+                    "title": "Deep Watering Technique",
+                    "description": "Water plants deeply but less frequently to encourage strong root development. Aim for 1-2 inches per week.",
+                    "category": "Watering",
+                    "season": "Year-round",
+                    "displayOrder": 1,
+                    "isActive": true
+                },
+                {
+                    "id": "spring-fertilizing",
+                    "title": "Spring Fertilizing Schedule",
+                    "description": "Begin fertilizing in early spring when new growth appears. Use a balanced, slow-release fertilizer for best results.",
+                    "category": "Fertilizing",
+                    "season": "Spring",
+                    "displayOrder": 2,
+                    "isActive": true
+                },
+                {
+                    "id": "winter-protection",
+                    "title": "Winter Plant Protection",
+                    "description": "Wrap tender plants in burlap and mulch around the base to protect from freezing temperatures.",
+                    "category": "General",
+                    "season": "Winter",
+                    "displayOrder": 3,
+                    "isActive": true
+                },
+                {
+                    "id": "summer-pruning",
+                    "title": "Summer Pruning Tips",
+                    "description": "Prune spring-blooming shrubs right after blooming ends. This ensures next year's buds have time to develop.",
+                    "category": "Pruning",
+                    "season": "Summer",
+                    "displayOrder": 4,
+                    "isActive": true
+                },
+                {
+                    "id": "natural-pest-control",
+                    "title": "Natural Pest Control",
+                    "description": "Encourage beneficial insects with native plants. Ladybugs, lacewings, and birds are natural pest controllers.",
+                    "category": "Pest Control",
+                    "season": "Year-round",
+                    "displayOrder": 5,
+                    "isActive": true
+                },
+                {
+                    "id": "fall-cleanup",
+                    "title": "Fall Garden Cleanup",
+                    "description": "Remove diseased plant material and fallen leaves to prevent pest and disease issues next season.",
+                    "category": "General",
+                    "season": "Fall",
+                    "displayOrder": 6,
+                    "isActive": true
+                }
+            ]
         },
-        {
-          "title": "Wholesale Delivery",
-          "description": "Professional delivery service for wholesale orders. Flexible scheduling to meet your project timelines.",
-          "icon": "truck",
-          "action": "Delivery Info",
-          "url": "/about#contact"
-        },
-        {
-          "title": "Real-Time Availability",
-          "description": "Check current stock levels and reserve plants online. Updated inventory ensures you get what you need when you need it.",
-          "icon": "leaf",
-          "action": "Check Stock",
-          "url": "https://newlife.online-orders.sbiteam.com/"
-        }
-      ]
-    },
-    "seasonal": {
-      "header": {
-        "title": "Seasonal Highlights & Expert Tips",
-        "subtitle": "Discover what's blooming now and get expert care advice for every season"
-      },
-      "sections": {
-        "plants": {
-          "currentSeasonTitle": "What's Blooming Now",
-          "otherSeasonTitleTemplate": "Perfect for {season}"
-        },
-        "tips": {
-          "title": "Expert Plant Care Tips"
-        }
-      },
-      "plants": [
-        {
-          "id": "japanese-maple",
-          "name": "Japanese Maple",
-          "description": "Stunning fall foliage with vibrant red and orange colors. Perfect for adding dramatic autumn color to your landscape.",
-          "season": "Fall",
-          "careLevel": "Medium",
-          "icon": "leaf",
-          "displayOrder": 1,
-          "isActive": true
-        },
-        {
-          "id": "winter-jasmine",
-          "name": "Winter Jasmine",
-          "description": "Bright yellow flowers bloom in winter, providing cheerful color during the coldest months.",
-          "season": "Winter",
-          "careLevel": "Easy",
-          "icon": "snowflake",
-          "displayOrder": 2,
-          "isActive": true
-        },
-        {
-          "id": "cherry-blossom",
-          "name": "Cherry Blossom",
-          "description": "Beautiful spring blooms create a stunning display. A classic choice for spring garden interest.",
-          "season": "Spring",
-          "careLevel": "Medium",
-          "icon": "flower",
-          "displayOrder": 3,
-          "isActive": true
-        },
-        {
-          "id": "hydrangea",
-          "name": "Hydrangea",
-          "description": "Large, colorful flower clusters bloom throughout summer. Excellent for adding bold color to shaded areas.",
-          "season": "Summer",
-          "careLevel": "Easy",
-          "icon": "flower2",
-          "displayOrder": 4,
-          "isActive": true
-        }
-      ],
-      "tips": [
-        {
-          "id": "deep-watering",
-          "title": "Deep Watering Technique",
-          "description": "Water plants deeply but less frequently to encourage strong root development. Aim for 1-2 inches per week.",
-          "category": "Watering",
-          "season": "Year-round",
-          "displayOrder": 1,
-          "isActive": true
-        },
-        {
-          "id": "spring-fertilizing",
-          "title": "Spring Fertilizing Schedule",
-          "description": "Begin fertilizing in early spring when new growth appears. Use a balanced, slow-release fertilizer for best results.",
-          "category": "Fertilizing",
-          "season": "Spring",
-          "displayOrder": 2,
-          "isActive": true
-        },
-        {
-          "id": "winter-protection",
-          "title": "Winter Plant Protection",
-          "description": "Wrap tender plants in burlap and mulch around the base to protect from freezing temperatures.",
-          "category": "General",
-          "season": "Winter",
-          "displayOrder": 3,
-          "isActive": true
-        },
-        {
-          "id": "summer-pruning",
-          "title": "Summer Pruning Tips",
-          "description": "Prune spring-blooming shrubs right after blooming ends. This ensures next year's buds have time to develop.",
-          "category": "Pruning",
-          "season": "Summer",
-          "displayOrder": 4,
-          "isActive": true
-        },
-        {
-          "id": "natural-pest-control",
-          "title": "Natural Pest Control",
-          "description": "Encourage beneficial insects with native plants. Ladybugs, lacewings, and birds are natural pest controllers.",
-          "category": "Pest Control",
-          "season": "Year-round",
-          "displayOrder": 5,
-          "isActive": true
-        },
-        {
-          "id": "fall-cleanup",
-          "title": "Fall Garden Cleanup",
-          "description": "Remove diseased plant material and fallen leaves to prevent pest and disease issues next season.",
-          "category": "General",
-          "season": "Fall",
-          "displayOrder": 6,
-          "isActive": true
-        }
-      ]
-    },
-    "newsletter": {
-      "title": "Stay in the Grow",
-      "description": "Get seasonal care tips, new arrival notifications, and exclusive offers delivered to your inbox",
-      "disclaimer": "No spam, just helpful gardening tips. Unsubscribe anytime.",
-      "buttonText": "Subscribe",
-      "isActive": true
-    },
-    "company": {
-      "foundedYear": 1981,
-      "description": "Expert plant care and community service"
-    },
-    "about": {
-      "story": {
-        "overline": "Our Story",
-        "title": "Growing Excellence Since {foundedYear}",
-        "subtitle": "What started as a family vision has grown into Southern New Jersey's premier wholesale nursery.",
-        "paragraphs": [
-          "Founded by the Gianaris family in {foundedYear}, New Life Nursery Inc. began with a simple mission: to grow top quality material for buyers who are interested in the best. Today, after more than four decades, we continue as a family-owned and operated business, maintaining the traditional values and horticultural expertise that built our reputation.",
-          "With over 70 acres in production in Bridgeton, New Jersey, we specialize in growing beautiful, healthy, and consistent plant material at competitive prices. Our wholesale operation serves landscape professionals and businesses throughout the region with sizes ranging from 3-gallon shrubs to 25-gallon specimen trees."
-        ],
-        "cta": {
-          "text": "Visit Our Nursery",
-          "link": "/about#contact"
-        }
-      },
-      "values": {
-        "title": "What Makes Us Different",
-        "items": [
-          {
-            "icon": "star",
-            "title": "Quality First",
-            "description": "We source only the healthiest plants and provide expert care guidance to ensure your success."
-          },
-          {
-            "icon": "home",
-            "title": "Local Expertise",
-            "description": "40+ years of experience with Southern New Jersey growing conditions and climate-appropriate plant selection."
-          },
-          {
-            "icon": "heart",
-            "title": "Family Heritage",
-            "description": "Family-owned and operated by the Gianaris family, maintaining traditional values and expertise."
-          },
-          {
-            "icon": "globe",
-            "title": "Sustainability",
-            "description": "Committed to environmentally responsible practices and promoting native plant species."
-          }
-        ]
-      },
-      "mission": {
-        "title": "Our Mission",
-        "quote": "Growing top quality material for buyers who are interested in the best.",
-        "attribution": "The Gianaris Family"
-      }
-    },
-    "socialProof": {
-      "header": {
-        "title": "Why Choose New Life Nursery",
-        "subtitle": "Southern New Jersey's trusted wholesale nursery partner for over four decades"
-      },
-      "stats": [
-        {
-          "number": "{yearsInBusiness}+",
-          "label": "Years of Excellence",
-          "subtext": "Since {foundedYear}"
-        },
-        {
-          "number": "100+",
-          "label": "Plant Varieties",
-          "subtext": "Extensive Selection"
-        },
-        {
-          "number": "3-25",
-          "label": "Gallon Sizes",
-          "subtext": "Full Range"
-        },
-        {
-          "number": "500+",
-          "label": "Trade Partners",
-          "subtext": "Wholesale Only"
-        }
-      ],
-      "mission": {
-        "title": "Our Founding Mission Since {foundedYear}",
-        "quote": "Growing top quality material for buyers who are interested in the best.",
-        "attribution": "The Gianaris Family"
-      },
-      "strengths": {
-        "title": "What Sets Us Apart",
-        "items": [
-          {
-            "icon": "users",
-            "title": "Family Heritage",
-            "description": "Owned and operated by the Gianaris family for over four decades, maintaining traditional values and personal service.",
-            "highlight": "Family-Owned Since {foundedYear}"
-          },
-          {
-            "icon": "leaf",
-            "title": "Extensive Inventory",
-            "description": "We maintain one of Southern New Jersey's largest selections of quality nursery stock across a wide range of varieties and sizes.",
-            "highlight": "Diverse Selection"
-          },
-          {
-            "icon": "award",
-            "title": "Quality Commitment",
-            "description": "Our founding motto remains unchanged: Growing top quality material for buyers who are interested in the best.",
-            "highlight": "Premium Quality Only"
-          },
-          {
-            "icon": "clock",
-            "title": "Trade-Friendly Hours",
-            "description": "Opening early, we help contractors get loaded and to job sites early.",
-            "highlight": "Early Opening"
-          },
-          {
-            "icon": "truck",
-            "title": "Wholesale Expertise",
-            "description": "Specializing exclusively in wholesale, we understand the unique needs of landscapers and contractors.",
-            "highlight": "Trade Professionals Only"
-          },
-          {
-            "icon": "shield",
-            "title": "Licensed & Certified",
-            "description": "Fully licensed New Jersey nursery meeting all state requirements for commercial plant production and sales.",
-            "highlight": "NJ Licensed Nursery"
-          }
-        ]
-      },
-      "clientTypes": {
-        "title": "Proudly Serving Trade Professionals",
-        "items": [
-          {
-            "icon": "building",
-            "label": "Landscape Contractors"
-          },
-          {
-            "icon": "sprout",
-            "label": "Garden Centers"
-          },
-          {
-            "icon": "users",
-            "label": "Property Developers"
-          },
-          {
-            "icon": "leaf",
-            "label": "Municipalities"
-          }
-        ]
-      },
-      "footer": {
-        "description": "References available upon request for qualified wholesale buyers",
-        "chips": [
-          "Licensed NJ Nursery",
-          "Wholesale Only",
-          "Est. {foundedYear}"
-        ]
-      }
-    },
-    "location": {
-      "header": {
-        "title": "Visit Our Nursery",
-        "subtitle": "Southern New Jersey's premier wholesale nursery since {foundedYear}",
-        "chip": "Wholesale Only - Trade Customers Welcome"
-      },
-      "map": {
-        "style": "embedded",
-        "showGetDirectionsButton": true,
-        "buttonText": "Get Directions"
-      },
-      "contactMethods": {
-        "sectionTitle": "Get in Touch",
-        "order": [
-          "phone",
-          "address",
-          "email"
-        ],
-        "descriptions": {
-          "phone": "Call for availability and wholesale pricing",
-          "address": "Visit our 70+ acre wholesale nursery facility",
-          "email": "Email us for quotes and availability lists"
-        }
-      },
-      "businessHours": {
-        "title": "Business Hours",
-        "chip": "Wholesale Hours - Trade Only"
-      },
-      "visitInfo": {
-        "sectionTitle": "Plan Your Visit",
-        "items": [
-          {
-            "id": "f951bc6f-9f78-4d8d-9ee9-2bf7575673dc",
-            "title": "What to Expect",
-            "icon": "eye",
-            "description": "Browse over 70 acres of top-quality trees and shrubs, carefully grown for landscape professionals",
-            "displayOrder": 0,
+        "newsletter": {
+            "title": "Stay in the Grow",
+            "description": "Get seasonal care tips, new arrival notifications, and exclusive offers delivered to your inbox",
+            "disclaimer": "No spam, just helpful gardening tips. Unsubscribe anytime.",
+            "buttonText": "Subscribe",
             "isActive": true
-          },
-          {
-            "id": "1200b2fb-7ac3-4678-a33f-a1e9b400c67e",
-            "title": "Wholesale Focus",
-            "icon": "gift",
-            "description": "Specializing in 3 to 25-gallon container plants for landscapers, contractors, and garden centers",
-            "displayOrder": 1,
-            "isActive": true
-          },
-          {
-            "id": "0a33ec3b-d928-4a4a-ac20-d4c13fade6ff",
-            "title": "Professional Service",
-            "icon": "smartphone",
-            "description": "Expert horticultural advice from our experienced team with over 40 years in the industry",
-            "displayOrder": 2,
-            "isActive": true
-          },
-          {
-            "id": "abb3286e-afd9-4097-8496-f9627437e0dc",
-            "title": "Easy Access",
-            "icon": "car",
-            "description": "Convenient location in Bridgeton with ample parking and loading facilities for commercial vehicles",
-            "displayOrder": 3,
-            "isActive": true
-          }
-        ]
-      },
-      "cta": {
-        "title": "Ready to Visit?",
-        "description": "Wholesale customers welcome! Visit during business hours or call ahead for availability and pricing.",
-        "buttons": [
-          {
-            "id": "1186d6ee-bd28-431a-82bd-824098a5ec31",
-            "text": "Get Directions",
-            "variant": "contained",
-            "color": "primary",
-            "action": "directions",
-            "displayOrder": 0,
-            "isActive": true
-          },
-          {
-            "id": "867d07a0-8f03-489f-8c8e-5d9dc1df4b92",
-            "text": "Contact Us First",
-            "variant": "outlined",
-            "color": "primary",
-            "action": "contact",
-            "displayOrder": 1,
-            "isActive": true
-          }
-        ]
-      }
+        },
+        "company": {
+            "foundedYear": 1981,
+            "description": "Expert plant care and community service"
+        },
+        "about": {
+            "story": {
+                "overline": "Our Story",
+                "title": "Growing Excellence Since {foundedYear}",
+                "subtitle": "What started as a family vision has grown into Southern New Jersey's premier wholesale nursery.",
+                "paragraphs": [
+                    "Founded by the Gianaris family in {foundedYear}, New Life Nursery Inc. began with a simple mission: to grow top quality material for buyers who are interested in the best. Today, after more than four decades, we continue as a family-owned and operated business, maintaining the traditional values and horticultural expertise that built our reputation.",
+                    "With over 70 acres in production in Bridgeton, New Jersey, we specialize in growing beautiful, healthy, and consistent plant material at competitive prices. Our wholesale operation serves landscape professionals and businesses throughout the region with sizes ranging from 3-gallon shrubs to 25-gallon specimen trees."
+                ],
+                "cta": {
+                    "text": "Visit Our Nursery",
+                    "link": "/about#contact"
+                }
+            },
+            "values": {
+                "title": "What Makes Us Different",
+                "items": [
+                    {
+                        "icon": "star",
+                        "title": "Quality First",
+                        "description": "We source only the healthiest plants and provide expert care guidance to ensure your success."
+                    },
+                    {
+                        "icon": "home",
+                        "title": "Local Expertise",
+                        "description": "40+ years of experience with Southern New Jersey growing conditions and climate-appropriate plant selection."
+                    },
+                    {
+                        "icon": "heart",
+                        "title": "Family Heritage",
+                        "description": "Family-owned and operated by the Gianaris family, maintaining traditional values and expertise."
+                    },
+                    {
+                        "icon": "globe",
+                        "title": "Sustainability",
+                        "description": "Committed to environmentally responsible practices and promoting native plant species."
+                    }
+                ]
+            },
+            "mission": {
+                "title": "Our Mission",
+                "quote": "Growing top quality material for buyers who are interested in the best.",
+                "attribution": "The Gianaris Family"
+            }
+        },
+        "socialProof": {
+            "header": {
+                "title": "Why Choose New Life Nursery",
+                "subtitle": "Southern New Jersey's trusted wholesale nursery partner for over four decades"
+            },
+            "stats": [
+                {
+                    "number": "{yearsInBusiness}+",
+                    "label": "Years of Excellence",
+                    "subtext": "Since {foundedYear}"
+                },
+                {
+                    "number": "100+",
+                    "label": "Plant Varieties",
+                    "subtext": "Extensive Selection"
+                },
+                {
+                    "number": "3-25",
+                    "label": "Gallon Sizes",
+                    "subtext": "Full Range"
+                },
+                {
+                    "number": "500+",
+                    "label": "Trade Partners",
+                    "subtext": "Wholesale Only"
+                }
+            ],
+            "mission": {
+                "title": "Our Founding Mission Since {foundedYear}",
+                "quote": "Growing top quality material for buyers who are interested in the best.",
+                "attribution": "The Gianaris Family"
+            },
+            "strengths": {
+                "title": "What Sets Us Apart",
+                "items": [
+                    {
+                        "icon": "users",
+                        "title": "Family Heritage",
+                        "description": "Owned and operated by the Gianaris family for over four decades, maintaining traditional values and personal service.",
+                        "highlight": "Family-Owned Since {foundedYear}"
+                    },
+                    {
+                        "icon": "leaf",
+                        "title": "Extensive Inventory",
+                        "description": "We maintain one of Southern New Jersey's largest selections of quality nursery stock across a wide range of varieties and sizes.",
+                        "highlight": "Diverse Selection"
+                    },
+                    {
+                        "icon": "award",
+                        "title": "Quality Commitment",
+                        "description": "Our founding motto remains unchanged: Growing top quality material for buyers who are interested in the best.",
+                        "highlight": "Premium Quality Only"
+                    },
+                    {
+                        "icon": "clock",
+                        "title": "Trade-Friendly Hours",
+                        "description": "Opening early, we help contractors get loaded and to job sites early.",
+                        "highlight": "Early Opening"
+                    },
+                    {
+                        "icon": "truck",
+                        "title": "Wholesale Expertise",
+                        "description": "Specializing exclusively in wholesale, we understand the unique needs of landscapers and contractors.",
+                        "highlight": "Trade Professionals Only"
+                    },
+                    {
+                        "icon": "shield",
+                        "title": "Licensed & Certified",
+                        "description": "Fully licensed New Jersey nursery meeting all state requirements for commercial plant production and sales.",
+                        "highlight": "NJ Licensed Nursery"
+                    }
+                ]
+            },
+            "clientTypes": {
+                "title": "Proudly Serving Trade Professionals",
+                "items": [
+                    {
+                        "icon": "building",
+                        "label": "Landscape Contractors"
+                    },
+                    {
+                        "icon": "sprout",
+                        "label": "Garden Centers"
+                    },
+                    {
+                        "icon": "users",
+                        "label": "Property Developers"
+                    },
+                    {
+                        "icon": "leaf",
+                        "label": "Municipalities"
+                    }
+                ]
+            },
+            "footer": {
+                "description": "References available upon request for qualified wholesale buyers",
+                "chips": ["Licensed NJ Nursery", "Wholesale Only", "Est. {foundedYear}"]
+            }
+        },
+        "location": {
+            "header": {
+                "title": "Visit Our Nursery",
+                "subtitle": "Southern New Jersey's premier wholesale nursery since {foundedYear}",
+                "chip": "Wholesale Only - Trade Customers Welcome"
+            },
+            "map": {
+                "style": "embedded",
+                "showGetDirectionsButton": true,
+                "buttonText": "Get Directions"
+            },
+            "contactMethods": {
+                "sectionTitle": "Get in Touch",
+                "order": ["phone", "address", "email"],
+                "descriptions": {
+                    "phone": "Call for availability and wholesale pricing",
+                    "address": "Visit our 70+ acre wholesale nursery facility",
+                    "email": "Email us for quotes and availability lists"
+                }
+            },
+            "businessHours": {
+                "title": "Business Hours",
+                "chip": "Wholesale Hours - Trade Only"
+            },
+            "visitInfo": {
+                "sectionTitle": "Plan Your Visit",
+                "items": [
+                    {
+                        "id": "f951bc6f-9f78-4d8d-9ee9-2bf7575673dc",
+                        "title": "What to Expect",
+                        "icon": "eye",
+                        "description": "Browse over 70 acres of top-quality trees and shrubs, carefully grown for landscape professionals",
+                        "displayOrder": 0,
+                        "isActive": true
+                    },
+                    {
+                        "id": "1200b2fb-7ac3-4678-a33f-a1e9b400c67e",
+                        "title": "Wholesale Focus",
+                        "icon": "gift",
+                        "description": "Specializing in 3 to 25-gallon container plants for landscapers, contractors, and garden centers",
+                        "displayOrder": 1,
+                        "isActive": true
+                    },
+                    {
+                        "id": "0a33ec3b-d928-4a4a-ac20-d4c13fade6ff",
+                        "title": "Professional Service",
+                        "icon": "smartphone",
+                        "description": "Expert horticultural advice from our experienced team with over 40 years in the industry",
+                        "displayOrder": 2,
+                        "isActive": true
+                    },
+                    {
+                        "id": "abb3286e-afd9-4097-8496-f9627437e0dc",
+                        "title": "Easy Access",
+                        "icon": "car",
+                        "description": "Convenient location in Bridgeton with ample parking and loading facilities for commercial vehicles",
+                        "displayOrder": 3,
+                        "isActive": true
+                    }
+                ]
+            },
+            "cta": {
+                "title": "Ready to Visit?",
+                "description": "Wholesale customers welcome! Visit during business hours or call ahead for availability and pricing.",
+                "buttons": [
+                    {
+                        "id": "1186d6ee-bd28-431a-82bd-824098a5ec31",
+                        "text": "Get Directions",
+                        "variant": "contained",
+                        "color": "primary",
+                        "action": "directions",
+                        "displayOrder": 0,
+                        "isActive": true
+                    },
+                    {
+                        "id": "867d07a0-8f03-489f-8c8e-5d9dc1df4b92",
+                        "text": "Contact Us First",
+                        "variant": "outlined",
+                        "color": "primary",
+                        "action": "contact",
+                        "displayOrder": 1,
+                        "isActive": true
+                    }
+                ]
+            }
+        }
+    },
+    "contact": {
+        "name": "New Life Nursery Inc.",
+        "address": {
+            "street": "106 South Woodruff Road",
+            "city": "Bridgeton",
+            "state": "NJ",
+            "zip": "08302",
+            "full": "106 South Woodruff Road Bridgeton, NJ 08302",
+            "googleMapsUrl": "https://www.google.com/maps/place/106+S+Woodruff+Rd,+Bridgeton,+NJ+08302/@39.4559443,-75.1793432,17z/"
+        },
+        "phone": {
+            "display": "+1 (856) 455-3601",
+            "link": "tel:+18564553601"
+        },
+        "fax": {
+            "display": "+1 (856) 451-1530",
+            "link": "tel:+18564511530"
+        },
+        "email": {
+            "display": "info@newlifenurseryinc.com",
+            "link": "mailto:info@newlifenurseryinc.com"
+        },
+        "website": "https://newlifenurseryinc.com",
+        "social": {
+            "facebook": "https://www.facebook.com/newlifenurseryinc",
+            "instagram": "https://www.instagram.com/newlifenurseryinc"
+        },
+        "hours": "| Day           | Hours |\n| ------------- |:-------------:         |\n| MON-SUN      | 8:00 AM to 6:00 PM     |\n"
+    },
+    "theme": {
+        "colors": {
+            "light": {
+                "primary": "#2d6730",
+                "secondary": "#1976d2",
+                "accent": "#4CAF50",
+                "background": "#e9f1e9",
+                "paper": "#ffffff"
+            },
+            "dark": {
+                "primary": "#515774",
+                "secondary": "#4372a3",
+                "accent": "#5b99da",
+                "background": "#181818",
+                "paper": "#2e2e2e"
+            },
+            "primary": "#2E7D32",
+            "secondary": "#FF6B35",
+            "accent": "#4CAF50"
+        }
+    },
+    "layout": {
+        "sections": {
+            "order": ["hero", "services", "social-proof", "about", "seasonal", "location"],
+            "enabled": {
+                "hero": true,
+                "services": true,
+                "social-proof": true,
+                "about": true,
+                "seasonal": true,
+                "location": true
+            }
+        },
+        "features": {
+            "showSeasonalContent": true,
+            "showNewsletter": true,
+            "showSocialProof": true,
+            "enableAnimations": true
+        }
+    },
+    "experiments": {
+        "abTesting": {
+            "enabled": false,
+            "activeTestId": null
+        }
     }
-  },
-  "contact": {
-    "name": "New Life Nursery Inc.",
-    "address": {
-      "street": "106 South Woodruff Road",
-      "city": "Bridgeton",
-      "state": "NJ",
-      "zip": "08302",
-      "full": "106 South Woodruff Road Bridgeton, NJ 08302",
-      "googleMapsUrl": "https://www.google.com/maps/place/106+S+Woodruff+Rd,+Bridgeton,+NJ+08302/@39.4559443,-75.1793432,17z/"
-    },
-    "phone": {
-      "display": "+1 (856) 455-3601",
-      "link": "tel:+18564553601"
-    },
-    "fax": {
-      "display": "+1 (856) 451-1530",
-      "link": "tel:+18564511530"
-    },
-    "email": {
-      "display": "info@newlifenurseryinc.com",
-      "link": "mailto:info@newlifenurseryinc.com"
-    },
-    "website": "https://newlifenurseryinc.com",
-    "social": {
-      "facebook": "https://www.facebook.com/newlifenurseryinc",
-      "instagram": "https://www.instagram.com/newlifenurseryinc"
-    },
-    "hours": "| Day           | Hours |\n| ------------- |:-------------:         |\n| MON-SUN      | 8:00 AM to 6:00 PM     |\n"
-  },
-  "theme": {
-    "colors": {
-      "light": {
-        "primary": "#2d6730",
-        "secondary": "#1976d2",
-        "accent": "#4CAF50",
-        "background": "#e9f1e9",
-        "paper": "#ffffff"
-      },
-      "dark": {
-        "primary": "#515774",
-        "secondary": "#4372a3",
-        "accent": "#5b99da",
-        "background": "#181818",
-        "paper": "#2e2e2e"
-      },
-      "primary": "#2E7D32",
-      "secondary": "#FF6B35",
-      "accent": "#4CAF50"
-    }
-  },
-  "layout": {
-    "sections": {
-      "order": [
-        "hero",
-        "services",
-        "social-proof",
-        "about",
-        "seasonal",
-        "location"
-      ],
-      "enabled": {
-        "hero": true,
-        "services": true,
-        "social-proof": true,
-        "about": true,
-        "seasonal": true,
-        "location": true
-      }
-    },
-    "features": {
-      "showSeasonalContent": true,
-      "showNewsletter": true,
-      "showSocialProof": true,
-      "enableAnimations": true
-    }
-  },
-  "experiments": {
-    "abTesting": {
-      "enabled": false,
-      "activeTestId": null
-    }
-  }
 }

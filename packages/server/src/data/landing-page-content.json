@@ -1,330 +1,323 @@
 {
-  "metadata": {
-    "version": "2.0",
-    "lastUpdated": "2025-10-29T18:15:30.062Z"
-  },
-  "content": {
-    "hero": {
-      "banners": [
-        {
-          "id": "hero-butterfly-prod",
-          "src": "/hero-butterfly-XXL.jpg",
-          "alt": "Butterfly at New Life Nursery",
-          "description": "Beautiful butterfly visiting our nursery",
-          "width": 1901,
-          "height": 1426,
-          "displayOrder": 1,
-          "isActive": true
-        },
-        {
-          "id": "hero-chicks-prod",
-          "src": "/hero-chicks-XXL.jpg",
-          "alt": "Baby chicks at New Life Nursery",
-          "description": "Adorable baby chicks",
-          "width": 1008,
-          "height": 756,
-          "displayOrder": 2,
-          "isActive": true
-        },
-        {
-          "id": "hero-plants-prod",
-          "src": "/hero-plants-XXL.jpg",
-          "alt": "Plant selection at New Life Nursery",
-          "description": "Wide variety of plants available",
-          "width": 4032,
-          "height": 3024,
-          "displayOrder": 3,
-          "isActive": true
-        },
-        {
-          "id": "hero-rainbow-prod",
-          "src": "/hero-rainbow-XXL.jpg",
-          "alt": "Rainbow over New Life Nursery",
-          "description": "Beautiful rainbow at the nursery",
-          "width": 2560,
-          "height": 1920,
-          "displayOrder": 4,
-          "isActive": true
-        }
-      ],
-      "settings": {
-        "autoPlay": true,
-        "autoPlayDelay": 5000,
-        "showDots": true,
-        "showArrows": false,
-        "fadeTransition": true
-      },
-      "text": {
-        "title": "Beautiful, healthy plants",
-        "subtitle": "At competitive prices",
-        "description": "Serving landscape professionals for over 40 years with the finest selection of wholesale plants, trees, and shrubs",
-        "businessHours": "OPEN 7 DAYS A WEEK | Mon-Sat 8AM-6PM | Sun 9AM-5PM",
-        "useContactInfoHours": false,
-        "trustBadges": [
-          {
-            "icon": "users",
-            "text": "Family Owned Since 1981"
-          },
-          {
-            "icon": "award",
-            "text": "Licensed & Certified"
-          },
-          {
-            "icon": "leaf",
-            "text": "Expert Plant Care"
-          }
-        ],
-        "buttons": [
-          {
-            "text": "Browse Plants",
-            "link": "https://newlife.online-orders.sbiteam.com/",
-            "type": "primary"
-          },
-          {
-            "text": "Visit Our Nursery",
-            "link": "/about",
-            "type": "secondary"
-          }
-        ]
-      }
+    "metadata": {
+        "version": "2.0",
+        "lastUpdated": "2025-10-29T18:15:30.062Z"
     },
-    "services": {
-      "title": "Our Services",
-      "subtitle": "Everything you need to create and maintain your perfect garden",
-      "cta": {
-        "title": "Ready to get started?",
-        "subtitle": "Browse our online catalog or contact us to discuss your project needs",
-        "primaryButton": {
-          "text": "Shop Online",
-          "url": "https://newlife.online-orders.sbiteam.com/"
+    "content": {
+        "hero": {
+            "banners": [
+                {
+                    "id": "hero-butterfly-prod",
+                    "src": "/hero-butterfly-XXL.jpg",
+                    "alt": "Butterfly at New Life Nursery",
+                    "description": "Beautiful butterfly visiting our nursery",
+                    "width": 1901,
+                    "height": 1426,
+                    "displayOrder": 1,
+                    "isActive": true
+                },
+                {
+                    "id": "hero-chicks-prod",
+                    "src": "/hero-chicks-XXL.jpg",
+                    "alt": "Baby chicks at New Life Nursery",
+                    "description": "Adorable baby chicks",
+                    "width": 1008,
+                    "height": 756,
+                    "displayOrder": 2,
+                    "isActive": true
+                },
+                {
+                    "id": "hero-plants-prod",
+                    "src": "/hero-plants-XXL.jpg",
+                    "alt": "Plant selection at New Life Nursery",
+                    "description": "Wide variety of plants available",
+                    "width": 4032,
+                    "height": 3024,
+                    "displayOrder": 3,
+                    "isActive": true
+                },
+                {
+                    "id": "hero-rainbow-prod",
+                    "src": "/hero-rainbow-XXL.jpg",
+                    "alt": "Rainbow over New Life Nursery",
+                    "description": "Beautiful rainbow at the nursery",
+                    "width": 2560,
+                    "height": 1920,
+                    "displayOrder": 4,
+                    "isActive": true
+                }
+            ],
+            "settings": {
+                "autoPlay": true,
+                "autoPlayDelay": 5000,
+                "showDots": true,
+                "showArrows": false,
+                "fadeTransition": true
+            },
+            "text": {
+                "title": "Beautiful, healthy plants",
+                "subtitle": "At competitive prices",
+                "description": "Your trusted wholesale plant source for over 40 years, with the finest selection of plants, trees, and shrubs",
+                "businessHours": "OPEN 7 DAYS A WEEK | Mon-Sat 8AM-6PM | Sun 9AM-5PM",
+                "useContactInfoHours": false,
+                "trustBadges": [
+                    {
+                        "icon": "users",
+                        "text": "Family Owned Since 1981"
+                    },
+                    {
+                        "icon": "award",
+                        "text": "Licensed & Certified"
+                    },
+                    {
+                        "icon": "leaf",
+                        "text": "Wide Plant Selection"
+                    }
+                ],
+                "buttons": [
+                    {
+                        "text": "Browse Plants",
+                        "link": "https://newlife.online-orders.sbiteam.com/",
+                        "type": "primary"
+                    },
+                    {
+                        "text": "Visit Our Nursery",
+                        "link": "/about",
+                        "type": "secondary"
+                    }
+                ]
+            }
         },
-        "secondaryButton": {
-          "text": "Contact Us",
-          "url": "/about#contact"
+        "services": {
+            "title": "Our Services",
+            "subtitle": "Everything you need to create and maintain your perfect garden",
+            "cta": {
+                "title": "Ready to get started?",
+                "subtitle": "Browse our online catalog or contact us to discuss your project needs",
+                "primaryButton": {
+                    "text": "Shop Online",
+                    "url": "https://newlife.online-orders.sbiteam.com/"
+                },
+                "secondaryButton": {
+                    "text": "Contact Us",
+                    "url": "/about#contact"
+                }
+            },
+            "items": [
+                {
+                    "title": "Wholesale Plant Catalog",
+                    "description": "Browse our extensive inventory of plants, trees, and shrubs. Wholesale pricing for landscapers, contractors, and garden centers.",
+                    "icon": "sprout",
+                    "action": "View Catalog",
+                    "url": "https://newlife.online-orders.sbiteam.com/"
+                },
+                {
+                    "title": "Bulk Ordering & Pricing",
+                    "description": "Order in quantity with competitive wholesale pricing.",
+                    "icon": "package",
+                    "action": "Get Pricing",
+                    "url": "/about#contact"
+                },
+                {
+                    "title": "Wholesale Delivery",
+                    "description": "Professional delivery service for wholesale orders. Flexible scheduling to meet your project timelines.",
+                    "icon": "truck",
+                    "action": "Delivery Info",
+                    "url": "/about#contact"
+                },
+                {
+                    "title": "Real-Time Availability",
+                    "description": "Check current stock levels and reserve plants online. Updated inventory ensures you get what you need when you need it.",
+                    "icon": "leaf",
+                    "action": "Check Stock",
+                    "url": "https://newlife.online-orders.sbiteam.com/"
+                }
+            ]
+        },
+        "seasonal": {
+            "plants": [
+                {
+                    "id": "japanese-maple",
+                    "name": "Japanese Maple",
+                    "description": "Stunning fall foliage with vibrant red and orange colors. Perfect for adding dramatic autumn color to your landscape.",
+                    "season": "Fall",
+                    "careLevel": "Medium",
+                    "icon": "leaf",
+                    "displayOrder": 1,
+                    "isActive": true
+                },
+                {
+                    "id": "winter-jasmine",
+                    "name": "Winter Jasmine",
+                    "description": "Bright yellow flowers bloom in winter, providing cheerful color during the coldest months.",
+                    "season": "Winter",
+                    "careLevel": "Easy",
+                    "icon": "snowflake",
+                    "displayOrder": 2,
+                    "isActive": true
+                },
+                {
+                    "id": "cherry-blossom",
+                    "name": "Cherry Blossom",
+                    "description": "Beautiful spring blooms create a stunning display. A classic choice for spring garden interest.",
+                    "season": "Spring",
+                    "careLevel": "Medium",
+                    "icon": "flower",
+                    "displayOrder": 3,
+                    "isActive": true
+                },
+                {
+                    "id": "hydrangea",
+                    "name": "Hydrangea",
+                    "description": "Large, colorful flower clusters bloom throughout summer. Excellent for adding bold color to shaded areas.",
+                    "season": "Summer",
+                    "careLevel": "Easy",
+                    "icon": "flower2",
+                    "displayOrder": 4,
+                    "isActive": true
+                }
+            ],
+            "tips": [
+                {
+                    "id": "deep-watering",
+                    "title": "Deep Watering Technique",
+                    "description": "Water plants deeply but less frequently to encourage strong root development. Aim for 1-2 inches per week.",
+                    "category": "Watering",
+                    "season": "Year-round",
+                    "displayOrder": 1,
+                    "isActive": true
+                },
+                {
+                    "id": "spring-fertilizing",
+                    "title": "Spring Fertilizing Schedule",
+                    "description": "Begin fertilizing in early spring when new growth appears. Use a balanced, slow-release fertilizer for best results.",
+                    "category": "Fertilizing",
+                    "season": "Spring",
+                    "displayOrder": 2,
+                    "isActive": true
+                },
+                {
+                    "id": "winter-protection",
+                    "title": "Winter Plant Protection",
+                    "description": "Wrap tender plants in burlap and mulch around the base to protect from freezing temperatures.",
+                    "category": "General",
+                    "season": "Winter",
+                    "displayOrder": 3,
+                    "isActive": true
+                },
+                {
+                    "id": "summer-pruning",
+                    "title": "Summer Pruning Tips",
+                    "description": "Prune spring-blooming shrubs right after blooming ends. This ensures next year's buds have time to develop.",
+                    "category": "Pruning",
+                    "season": "Summer",
+                    "displayOrder": 4,
+                    "isActive": true
+                },
+                {
+                    "id": "natural-pest-control",
+                    "title": "Natural Pest Control",
+                    "description": "Encourage beneficial insects with native plants. Ladybugs, lacewings, and birds are natural pest controllers.",
+                    "category": "Pest Control",
+                    "season": "Year-round",
+                    "displayOrder": 5,
+                    "isActive": true
+                },
+                {
+                    "id": "fall-cleanup",
+                    "title": "Fall Garden Cleanup",
+                    "description": "Remove diseased plant material and fallen leaves to prevent pest and disease issues next season.",
+                    "category": "General",
+                    "season": "Fall",
+                    "displayOrder": 6,
+                    "isActive": true
+                }
+            ]
+        },
+        "newsletter": {
+            "title": "Stay in the Grow",
+            "description": "Get seasonal care tips, new arrival notifications, and exclusive offers delivered to your inbox",
+            "disclaimer": "No spam, just helpful gardening tips. Unsubscribe anytime.",
+            "isActive": true
+        },
+        "company": {
+            "foundedYear": 1981,
+            "description": "Expert plant care and community service"
         }
-      },
-      "items": [
-        {
-          "title": "Wholesale Plant Catalog",
-          "description": "Browse our extensive inventory of plants, trees, and shrubs. Wholesale pricing for landscapers, contractors, and garden centers.",
-          "icon": "sprout",
-          "action": "View Catalog",
-          "url": "https://newlife.online-orders.sbiteam.com/"
-        },
-        {
-          "title": "Bulk Ordering & Pricing",
-          "description": "Order in quantity with competitive wholesale pricing.",
-          "icon": "package",
-          "action": "Get Pricing",
-          "url": "/about#contact"
-        },
-        {
-          "title": "Wholesale Delivery",
-          "description": "Professional delivery service for wholesale orders. Flexible scheduling to meet your project timelines.",
-          "icon": "truck",
-          "action": "Delivery Info",
-          "url": "/about#contact"
-        },
-        {
-          "title": "Real-Time Availability",
-          "description": "Check current stock levels and reserve plants online. Updated inventory ensures you get what you need when you need it.",
-          "icon": "leaf",
-          "action": "Check Stock",
-          "url": "https://newlife.online-orders.sbiteam.com/"
-        }
-      ]
     },
-    "seasonal": {
-      "plants": [
-        {
-          "id": "japanese-maple",
-          "name": "Japanese Maple",
-          "description": "Stunning fall foliage with vibrant red and orange colors. Perfect for adding dramatic autumn color to your landscape.",
-          "season": "Fall",
-          "careLevel": "Medium",
-          "icon": "leaf",
-          "displayOrder": 1,
-          "isActive": true
+    "contact": {
+        "name": "New Life Nursery Inc.",
+        "address": {
+            "street": "106 South Woodruff Road",
+            "city": "Bridgeton",
+            "state": "NJ",
+            "zip": "08302",
+            "full": "106 South Woodruff Road Bridgeton, NJ 08302",
+            "googleMapsUrl": "https://www.google.com/maps/place/106+S+Woodruff+Rd,+Bridgeton,+NJ+08302/@39.4559443,-75.1793432,17z/"
         },
-        {
-          "id": "winter-jasmine",
-          "name": "Winter Jasmine",
-          "description": "Bright yellow flowers bloom in winter, providing cheerful color during the coldest months.",
-          "season": "Winter",
-          "careLevel": "Easy",
-          "icon": "snowflake",
-          "displayOrder": 2,
-          "isActive": true
+        "phone": {
+            "display": "+1 (856) 455-3601",
+            "link": "tel:+18564553601"
         },
-        {
-          "id": "cherry-blossom",
-          "name": "Cherry Blossom",
-          "description": "Beautiful spring blooms create a stunning display. A classic choice for spring garden interest.",
-          "season": "Spring",
-          "careLevel": "Medium",
-          "icon": "flower",
-          "displayOrder": 3,
-          "isActive": true
+        "fax": {
+            "display": "+1 (856) 451-1530",
+            "link": "tel:+18564511530"
         },
-        {
-          "id": "hydrangea",
-          "name": "Hydrangea",
-          "description": "Large, colorful flower clusters bloom throughout summer. Excellent for adding bold color to shaded areas.",
-          "season": "Summer",
-          "careLevel": "Easy",
-          "icon": "flower2",
-          "displayOrder": 4,
-          "isActive": true
-        }
-      ],
-      "tips": [
-        {
-          "id": "deep-watering",
-          "title": "Deep Watering Technique",
-          "description": "Water plants deeply but less frequently to encourage strong root development. Aim for 1-2 inches per week.",
-          "category": "Watering",
-          "season": "Year-round",
-          "displayOrder": 1,
-          "isActive": true
+        "email": {
+            "display": "info@newlifenurseryinc.com",
+            "link": "mailto:info@newlifenurseryinc.com"
         },
-        {
-          "id": "spring-fertilizing",
-          "title": "Spring Fertilizing Schedule",
-          "description": "Begin fertilizing in early spring when new growth appears. Use a balanced, slow-release fertilizer for best results.",
-          "category": "Fertilizing",
-          "season": "Spring",
-          "displayOrder": 2,
-          "isActive": true
+        "website": "https://newlifenurseryinc.com",
+        "social": {
+            "facebook": "https://www.facebook.com/newlifenurseryinc",
+            "instagram": "https://www.instagram.com/newlifenurseryinc"
         },
-        {
-          "id": "winter-protection",
-          "title": "Winter Plant Protection",
-          "description": "Wrap tender plants in burlap and mulch around the base to protect from freezing temperatures.",
-          "category": "General",
-          "season": "Winter",
-          "displayOrder": 3,
-          "isActive": true
-        },
-        {
-          "id": "summer-pruning",
-          "title": "Summer Pruning Tips",
-          "description": "Prune spring-blooming shrubs right after blooming ends. This ensures next year's buds have time to develop.",
-          "category": "Pruning",
-          "season": "Summer",
-          "displayOrder": 4,
-          "isActive": true
-        },
-        {
-          "id": "natural-pest-control",
-          "title": "Natural Pest Control",
-          "description": "Encourage beneficial insects with native plants. Ladybugs, lacewings, and birds are natural pest controllers.",
-          "category": "Pest Control",
-          "season": "Year-round",
-          "displayOrder": 5,
-          "isActive": true
-        },
-        {
-          "id": "fall-cleanup",
-          "title": "Fall Garden Cleanup",
-          "description": "Remove diseased plant material and fallen leaves to prevent pest and disease issues next season.",
-          "category": "General",
-          "season": "Fall",
-          "displayOrder": 6,
-          "isActive": true
-        }
-      ]
+        "hours": "| Day           | Hours |\n| ------------- |:-------------:         |\n| MON-SUN      | 8:00 AM to 6:00 PM     |\n"
     },
-    "newsletter": {
-      "title": "Stay in the Grow",
-      "description": "Get seasonal care tips, new arrival notifications, and exclusive offers delivered to your inbox",
-      "disclaimer": "No spam, just helpful gardening tips. Unsubscribe anytime.",
-      "isActive": true
+    "theme": {
+        "colors": {
+            "light": {
+                "primary": "#2d6730",
+                "secondary": "#1976d2",
+                "accent": "#4CAF50",
+                "background": "#e9f1e9",
+                "paper": "#ffffff"
+            },
+            "dark": {
+                "primary": "#515774",
+                "secondary": "#4372a3",
+                "accent": "#5b99da",
+                "background": "#181818",
+                "paper": "#2e2e2e"
+            },
+            "primary": "#2E7D32",
+            "secondary": "#FF6B35",
+            "accent": "#4CAF50"
+        }
     },
-    "company": {
-      "foundedYear": 1981,
-      "description": "Expert plant care and community service"
+    "layout": {
+        "sections": {
+            "order": ["hero", "services", "social-proof", "about", "seasonal", "location"],
+            "enabled": {
+                "hero": true,
+                "services": true,
+                "social-proof": true,
+                "about": true,
+                "seasonal": true,
+                "location": true
+            }
+        },
+        "features": {
+            "showSeasonalContent": true,
+            "showNewsletter": true,
+            "showSocialProof": true,
+            "enableAnimations": true
+        }
+    },
+    "experiments": {
+        "abTesting": {
+            "enabled": false,
+            "activeTestId": null
+        }
     }
-  },
-  "contact": {
-    "name": "New Life Nursery Inc.",
-    "address": {
-      "street": "106 South Woodruff Road",
-      "city": "Bridgeton",
-      "state": "NJ",
-      "zip": "08302",
-      "full": "106 South Woodruff Road Bridgeton, NJ 08302",
-      "googleMapsUrl": "https://www.google.com/maps/place/106+S+Woodruff+Rd,+Bridgeton,+NJ+08302/@39.4559443,-75.1793432,17z/"
-    },
-    "phone": {
-      "display": "+1 (856) 455-3601",
-      "link": "tel:+18564553601"
-    },
-    "fax": {
-      "display": "+1 (856) 451-1530",
-      "link": "tel:+18564511530"
-    },
-    "email": {
-      "display": "info@newlifenurseryinc.com",
-      "link": "mailto:info@newlifenurseryinc.com"
-    },
-    "website": "https://newlifenurseryinc.com",
-    "social": {
-      "facebook": "https://www.facebook.com/newlifenurseryinc",
-      "instagram": "https://www.instagram.com/newlifenurseryinc"
-    },
-    "hours": "| Day           | Hours |\n| ------------- |:-------------:         |\n| MON-SUN      | 8:00 AM to 6:00 PM     |\n"
-  },
-  "theme": {
-    "colors": {
-      "light": {
-        "primary": "#2d6730",
-        "secondary": "#1976d2",
-        "accent": "#4CAF50",
-        "background": "#e9f1e9",
-        "paper": "#ffffff"
-      },
-      "dark": {
-        "primary": "#515774",
-        "secondary": "#4372a3",
-        "accent": "#5b99da",
-        "background": "#181818",
-        "paper": "#2e2e2e"
-      },
-      "primary": "#2E7D32",
-      "secondary": "#FF6B35",
-      "accent": "#4CAF50"
-    }
-  },
-  "layout": {
-    "sections": {
-      "order": [
-        "hero",
-        "services",
-        "social-proof",
-        "about",
-        "seasonal",
-        "location"
-      ],
-      "enabled": {
-        "hero": true,
-        "services": true,
-        "social-proof": true,
-        "about": true,
-        "seasonal": true,
-        "location": true
-      }
-    },
-    "features": {
-      "showSeasonalContent": true,
-      "showNewsletter": true,
-      "showSocialProof": true,
-      "enableAnimations": true
-    }
-  },
-  "experiments": {
-    "abTesting": {
-      "enabled": false,
-      "activeTestId": null
-    }
-  }
 }

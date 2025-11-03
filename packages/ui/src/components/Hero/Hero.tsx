@@ -33,7 +33,10 @@ const textPopStyle = {
     textShadow: "2px 2px 4px rgba(0,0,0,0.8), 0px 0px 20px rgba(0,0,0,0.5)",
 };
 
-export const Hero = ({ text = DEFAULT_HERO_TEXT, subtext = DEFAULT_HERO_SUBTEXT }: HeroProps = {}) => {
+export const Hero = ({
+    text = DEFAULT_HERO_TEXT,
+    subtext = DEFAULT_HERO_SUBTEXT,
+}: HeroProps = {}) => {
     const [, setLocation] = useLocation();
     const { palette } = useTheme();
 
@@ -108,12 +111,16 @@ export const Hero = ({ text = DEFAULT_HERO_TEXT, subtext = DEFAULT_HERO_SUBTEXT 
                 >
                     {(
                         heroText?.trustBadges || [
-                            { icon: "users", text: `Family Owned Since ${companyInfo?.foundedYear || COMPANY_INFO.FoundedYear}` },
+                            {
+                                icon: "users",
+                                text: `Family Owned Since ${companyInfo?.foundedYear || COMPANY_INFO.FoundedYear}`,
+                            },
                             { icon: "award", text: "Licensed & Certified" },
-                            { icon: "leaf", text: "Expert Plant Care" },
+                            { icon: "leaf", text: "Wide Plant Selection" },
                         ]
                     ).map((badge, index) => {
-                        const IconComponent = TRUST_BADGE_ICONS[badge.icon as keyof typeof TRUST_BADGE_ICONS] || Leaf;
+                        const IconComponent =
+                            TRUST_BADGE_ICONS[badge.icon as keyof typeof TRUST_BADGE_ICONS] || Leaf;
                         return (
                             <Chip
                                 key={index}
