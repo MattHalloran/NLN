@@ -30,6 +30,8 @@ services:
       - app
     volumes:
       - ./packages/ui/dist:${PROJECT_DIR:-/srv/app}/packages/ui/dist:z
+      - ./scripts:${PROJECT_DIR:-/srv/app}/scripts:ro
+      - ./packages/ui/scripts:${PROJECT_DIR:-/srv/app}/packages/ui/scripts:ro
     depends_on:
       server:
         condition: service_healthy
@@ -39,7 +41,7 @@ services:
       interval: 20s
       timeout: 5s
       retries: 5
-    command: /bin/sh -c "chmod +x ${PROJECT_DIR:-/srv/app}/scripts/* && ${PROJECT_DIR:-/srv/app}/scripts/ui.sh"
+    command: /bin/sh -c "${PROJECT_DIR:-/srv/app}/scripts/ui.sh"
   server:
     build:
       context: .
@@ -101,7 +103,7 @@ services:
       interval: 20s
       timeout: 5s
       retries: 10
-    command: /bin/sh -c "chmod +x ${PROJECT_DIR:-/srv/app}/scripts/* && ${PROJECT_DIR:-/srv/app}/scripts/server.sh"
+    command: /bin/sh -c "${PROJECT_DIR:-/srv/app}/scripts/server.sh"
   db:
     image: postgres:13-alpine
     restart: always

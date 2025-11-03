@@ -81,13 +81,19 @@ else
     fi
 fi
 
-info 'Generating Prisma schema...'
-yarn prisma generate --schema=${PRISMA_SCHEMA_FILE}
-if [ $? -ne 0 ]; then
-    error "Failed to generate Prisma schema"
-    exit 1
+# In production, Prisma client is already generated during build
+# Only regenerate in development mode or if generation succeeds
+if [ "${NODE_ENV}" = "development" ]; then
+    info 'Generating Prisma schema...'
+    yarn prisma generate --schema=${PRISMA_SCHEMA_FILE}
+    if [ $? -ne 0 ]; then
+        error "Failed to generate Prisma schema"
+        exit 1
+    fi
+    success 'Prisma schema generated'
+else
+    info 'Skipping Prisma schema generation (already generated during build)'
 fi
-success 'Prisma schema generated'
 
 info 'Starting server...'
 cd ${PROJECT_DIR}/packages/server
