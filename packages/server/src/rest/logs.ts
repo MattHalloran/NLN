@@ -17,6 +17,10 @@ interface LogEntry {
     message: string;
     timestamp: string;
     service?: string;
+    stack?: string;
+    ip?: string;
+    path?: string;
+    userAgent?: string;
     [key: string]: unknown;
 }
 
