@@ -33,24 +33,29 @@ The deployment process is a two-phase manual workflow:
 
 ## Recent Improvements
 
-### 1. Environment Validation (`validate-env.sh`)
+### 1. Automatic Environment File Loading (docker-compose-prod.yml)
+- **What**: Production docker-compose now automatically loads `.env-prod` via `env_file` directive
+- **Why**: Simplifies deployment commands and prevents using wrong environment file
+- **Impact**: No longer need to specify `--env-file .env-prod` when starting containers
+
+### 2. Environment Validation (`validate-env.sh`)
 - **What**: Validates all required environment variables before deployment
 - **Why**: Prevents deployment failures due to missing or malformed configuration
 - **When**: Runs automatically at the start of `build.sh` and `deploy.sh`
 
-### 2. Health Check Polling (in `deploy.sh`)
+### 3. Health Check Polling (in `deploy.sh`)
 - **What**: Waits for all containers to become healthy before declaring success
 - **Why**: Prevents "deployment succeeded" messages when containers actually failed
 - **Timeout**: 5 minutes with status updates every 15 seconds
 - **What it checks**: All 4 containers (ui, server, db, redis) must be healthy or running
 
-### 3. Pre-Migration Database Backup (in `server.sh`)
+### 4. Pre-Migration Database Backup (in `server.sh`)
 - **What**: Creates a SQL dump backup immediately before running migrations
 - **Where**: `data/migration-backups/pre-migration-YYYYMMDD-HHMMSS.sql`
 - **Why**: Provides a restore point if migrations corrupt data
 - **Retention**: Keeps the last 10 backups automatically
 
-### 4. Rollback Script (`rollback.sh`)
+### 5. Rollback Script (`rollback.sh`)
 - **What**: Automated rollback to a previous version
 - **Why**: Quick recovery from failed deployments
 - **What it does**:
@@ -60,7 +65,7 @@ The deployment process is a two-phase manual workflow:
   - Loads old Docker images
   - Starts containers with health checks
 
-### 5. Improved Error Handling
+### 6. Improved Error Handling
 - **Git pull failures**: Now exits with error instead of warning
 - **Migration failures**: Now exits with error and provides restore instructions
 - **Container startup failures**: Now detected and reported
@@ -127,6 +132,8 @@ cd /srv/app  # or wherever your app is located
 ./scripts/deploy.sh -v 2.2.6
 ```
 
+**Note**: The production docker-compose file (`docker-compose-prod.yml`) now automatically loads `.env-prod` via the `env_file` directive. No need to manually specify `--env-file` when starting containers.
+
 The deploy script will:
 1. ✓ Validate environment configuration
 2. ✓ Backup current database to `/var/tmp/{VERSION}/postgres`
@@ -135,7 +142,7 @@ The deploy script will:
 5. ✓ Run setup.sh
 6. ✓ Load Docker images
 7. ✓ Stop old containers
-8. ✓ Start new containers
+8. ✓ Start new containers (automatically uses `.env-prod`)
 9. ✓ **Wait for health checks** (NEW!)
 10. ✓ Verify server is responding
 
@@ -199,8 +206,9 @@ This will:
 
 4. **Start containers**:
    ```bash
-   docker-compose --env-file /var/tmp/2.2.5/.env-prod -f docker-compose-prod.yml up -d
+   docker-compose -f docker-compose-prod.yml up -d
    ```
+   Note: The `.env-prod` file is automatically loaded via the `env_file` directive in `docker-compose-prod.yml`
 
 5. **Monitor startup**:
    ```bash

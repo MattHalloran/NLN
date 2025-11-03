@@ -1,5 +1,6 @@
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
+import { visualizer } from "rollup-plugin-visualizer";
 import { defineConfig } from "vite";
 import viteCompression from "vite-plugin-compression";
 
@@ -21,6 +22,13 @@ export default defineConfig({
             threshold: 10240,
             algorithm: "brotliCompress",
             ext: ".br",
+        }),
+        // Bundle analyzer - generates stats.html after build
+        visualizer({
+            filename: "./dist/stats.html",
+            open: false,
+            gzipSize: true,
+            brotliSize: true,
         }),
     ],
     assetsInclude: ["**/*.md"],
@@ -59,7 +67,10 @@ export default defineConfig({
             { find: "stores", replacement: path.resolve(__dirname, "./src/stores") },
             { find: "utils", replacement: path.resolve(__dirname, "./src/utils") },
             { find: "Routes", replacement: path.resolve(__dirname, "./src/Routes") },
-            { find: "serviceWorkerRegistration", replacement: path.resolve(__dirname, "./src/serviceWorkerRegistration") },
+            {
+                find: "serviceWorkerRegistration",
+                replacement: path.resolve(__dirname, "./src/serviceWorkerRegistration"),
+            },
             { find: "styles", replacement: path.resolve(__dirname, "./src/styles") },
             // Imports from the shared folder
             { find: "@local/shared", replacement: path.resolve(__dirname, "../shared/src") },
@@ -78,30 +89,16 @@ export default defineConfig({
         // Minification options
         minify: "esbuild",
         esbuild: {
-            // Remove console logs and debugger statements in production
-            drop: ["console", "debugger"],
             // Optimize for modern browsers
+            // Note: Removed drop: ["console", "debugger"] as it can cause module initialization issues
             target: "esnext",
         },
         rollupOptions: {
             output: {
                 // Create more compact output
                 compact: true,
-                // Simplified manual chunk splitting - let Vite handle most of it
-                manualChunks: (id) => {
-                    // Exclude archived code from bundle
-                    if (id.includes("/archived/")) {
-                        return undefined;
-                    }
-
-                    // Only split out the largest vendor libraries
-                    if (id.includes("node_modules")) {
-                        if (id.includes("@mui") || id.includes("@emotion")) {
-                            return "vendor-mui";
-                        }
-                        // Let all other node_modules (including React, react-dnd, etc.) bundle together naturally
-                    }
-                },
+                // Let Vite handle all chunking automatically to avoid circular dependencies
+                // Manual chunking can create complex dependency graphs that break module initialization
             },
         },
     },

@@ -1,5 +1,5 @@
 # Stage 0: Copy required files and install dependencies
-FROM node:20-alpine as stage0
+FROM node:20-alpine AS stage0
 
 # Set working directory
 ARG PROJECT_DIR
@@ -22,10 +22,10 @@ RUN yarn global add modclean
 RUN modclean --run
 
 # Stage 1: Copy files from stage 0, copy RSA keys, and set port
-FROM node:20-alpine as stage1
+FROM node:20-alpine AS stage1
 
-# Install bash and lsof for production scripts
-RUN apk add --no-cache bash lsof
+# Install bash, lsof, and postgresql-client for production scripts and database backups
+RUN apk add --no-cache bash lsof postgresql-client
 
 # Set working directory
 ARG PROJECT_DIR

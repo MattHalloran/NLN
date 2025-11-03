@@ -2,6 +2,7 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import express from "express";
 import helmet from "helmet";
+import path from "path";
 import * as auth from "./auth.js";
 import { genErrorCode, logger, LogLevel } from "./logger.js";
 import { setupDatabase } from "./utils/setupDatabase.js";
@@ -19,7 +20,13 @@ const main = async () => {
     logger.log(LogLevel.info, "Starting server...");
 
     // Pre-flight checks: Verify all required environment variables
-    const requiredEnvVars = ["JWT_SECRET", "CSRF_SECRET", "PROJECT_DIR", "ADMIN_EMAIL", "ADMIN_PASSWORD"];
+    const requiredEnvVars = [
+        "JWT_SECRET",
+        "CSRF_SECRET",
+        "PROJECT_DIR",
+        "ADMIN_EMAIL",
+        "ADMIN_PASSWORD",
+    ];
     const missingVars = requiredEnvVars.filter((name) => !process.env[name]);
 
     if (missingVars.length > 0) {
@@ -119,10 +126,14 @@ const main = async () => {
             },
 
             // Cross-Origin-Resource-Policy: Controls resource sharing
-            // In development, allow cross-origin to support localhost:3001 -> localhost:5331
-            // In production, use same-origin for security
+            // In development or local production testing, allow cross-origin to support localhost:3001 -> localhost:5331
+            // In true production (VPS), use same-origin for security
             crossOriginResourcePolicy: {
-                policy: process.env.NODE_ENV === "development" ? "cross-origin" : "same-origin",
+                policy:
+                    process.env.NODE_ENV === "development" ||
+                    process.env.SERVER_LOCATION === "local"
+                        ? "cross-origin"
+                        : "same-origin",
             },
         })
     );
@@ -140,16 +151,16 @@ const main = async () => {
 
     // For parsing application/json - use raw body parser to completely bypass body-parser
     // This avoids body-parser's buggy handling of special characters like '!'
-    app.use(express.raw({ type: 'application/json', limit: '10mb' }));
+    app.use(express.raw({ type: "application/json", limit: "10mb" }));
     app.use((req, _res, next) => {
         if (Buffer.isBuffer(req.body) && req.body.length > 0) {
             try {
-                const bodyString = req.body.toString('utf8');
+                const bodyString = req.body.toString("utf8");
                 req.body = JSON.parse(bodyString);
             } catch (error) {
                 logger.log(LogLevel.error, "JSON parse error in request body", {
                     code: genErrorCode("0017"),
-                    error
+                    error,
                 });
             }
         }
@@ -179,8 +190,8 @@ const main = async () => {
 
     // Add additional domains from VIRTUAL_HOST if set
     if (process.env.VIRTUAL_HOST) {
-        const virtualHosts = process.env.VIRTUAL_HOST.split(",").map(h => h.trim());
-        virtualHosts.forEach(host => {
+        const virtualHosts = process.env.VIRTUAL_HOST.split(",").map((h) => h.trim());
+        virtualHosts.forEach((host) => {
             if (!allowedOrigins.includes(`https://${host}`)) {
                 allowedOrigins.push(`https://${host}`);
             }
@@ -213,7 +224,7 @@ const main = async () => {
                     callback(new Error(`Origin ${origin} not allowed by CORS policy`));
                 }
             },
-        }),
+        })
     );
 
     // CRITICAL: Authentication MUST come before CSRF protection
@@ -239,32 +250,36 @@ const main = async () => {
     app.use(
         "/api/private",
         auth.requireAdmin,
-        express.static(`${process.env.PROJECT_DIR}/assets/private`),
+        express.static(`${process.env.PROJECT_DIR}/assets/private`)
     );
 
     // Image serving with optimized caching
     // Images use UUID-based filenames (immutable) or semantic names that change infrequently
     // Strategy: 30-day cache with ETag validation for balance of performance and freshness
-    app.use("/api/images", express.static(`${process.env.PROJECT_DIR}/assets/images`, {
-        maxAge: "30d",           // Browser caches for 30 days
-        etag: true,              // Enable ETag for conditional requests
-        lastModified: true,      // Include Last-Modified header
-        cacheControl: true,      // Set Cache-Control headers
-        setHeaders: (res, path) => {
-            // Most images are UUID-based (immutable), but some have semantic names
-            // For UUID-based files, we can be more aggressive with caching
-            const fileName = require("path").basename(path);
-            const isUuidBased = /^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}/i.test(fileName);
+    app.use(
+        "/api/images",
+        express.static(`${process.env.PROJECT_DIR}/assets/images`, {
+            maxAge: "30d", // Browser caches for 30 days
+            etag: true, // Enable ETag for conditional requests
+            lastModified: true, // Include Last-Modified header
+            cacheControl: true, // Set Cache-Control headers
+            setHeaders: (res, filePath) => {
+                // Most images are UUID-based (immutable), but some have semantic names
+                // For UUID-based files, we can be more aggressive with caching
+                const fileName = path.basename(filePath);
+                const isUuidBased =
+                    /^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}/i.test(fileName);
 
-            if (isUuidBased) {
-                // UUID-based filenames are effectively immutable (won't be reused)
-                res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
-            } else {
-                // Semantic filenames might be reused, use moderate caching
-                res.setHeader("Cache-Control", "public, max-age=2592000, must-revalidate");
-            }
-        },
-    }));
+                if (isUuidBased) {
+                    // UUID-based filenames are effectively immutable (won't be reused)
+                    res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+                } else {
+                    // Semantic filenames might be reused, use moderate caching
+                    res.setHeader("Cache-Control", "public, max-age=2592000, must-revalidate");
+                }
+            },
+        })
+    );
 
     // Mount REST API routes
     app.use("/api/rest", restRouter);

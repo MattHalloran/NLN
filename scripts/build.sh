@@ -45,11 +45,11 @@ while getopts ":v:d:he:" opt; do
     esac
 done
 
-# Load variables from .env file
-if [ -f "${HERE}/../.env" ]; then
-    . "${HERE}/../.env"
+# Load variables from ENV_FILE (defaults to .env-prod, can be overridden with -e flag)
+if [ -f "${ENV_FILE}" ]; then
+    . "${ENV_FILE}"
 else
-    error "Could not find .env file. Exiting..."
+    error "Could not find environment file: ${ENV_FILE}. Exiting..."
     exit 1
 fi
 
@@ -145,7 +145,7 @@ DOMAIN=$(echo "${UI_URL%/}" | sed -E 's|https?://([^/]+)|\1|')
 echo "Got domain ${DOMAIN} from UI_URL ${UI_URL}"
 
 # Generate sitemap.xml
-npx tsx node ./src/tools/sitemap.ts
+npx tsx ./src/sitemap.ts
 if [ $? -ne 0 ]; then
     error "Failed to generate sitemap.xml"
     echo "${HERE}/../packages/ui/src/sitemap.ts"
@@ -153,12 +153,20 @@ if [ $? -ne 0 ]; then
 fi
 
 # Replace placeholder url in public files
-sed -i'' "s|<UI_URL>|${UI_URL}|g" "${HERE}/../packages/ui/dist/manifest.dark.json"
-sed -i'' "s|\*.<DOMAIN>|*.${DOMAIN}|g" "${HERE}/../packages/ui/dist/manifest.dark.json"
-sed -i'' "s|<UI_URL>|${UI_URL}|g" "${HERE}/../packages/ui/dist/manifest.light.json"
-sed -i'' "s|\*.<DOMAIN>|*.${DOMAIN}|g" "${HERE}/../packages/ui/dist/manifest.light.json"
-sed -i'' "s|<UI_URL>|${UI_URL}|g" "${HERE}/../packages/ui/dist/robots.txt"
-sed -i'' "s|<UI_URL>|${UI_URL}|g" "${HERE}/../packages/ui/dist/search.xml"
+if [ -f "${HERE}/../packages/ui/dist/manifest.dark.json" ]; then
+    sed -i'' "s|<UI_URL>|${UI_URL}|g" "${HERE}/../packages/ui/dist/manifest.dark.json"
+    sed -i'' "s|\*.<DOMAIN>|*.${DOMAIN}|g" "${HERE}/../packages/ui/dist/manifest.dark.json"
+fi
+if [ -f "${HERE}/../packages/ui/dist/manifest.light.json" ]; then
+    sed -i'' "s|<UI_URL>|${UI_URL}|g" "${HERE}/../packages/ui/dist/manifest.light.json"
+    sed -i'' "s|\*.<DOMAIN>|*.${DOMAIN}|g" "${HERE}/../packages/ui/dist/manifest.light.json"
+fi
+if [ -f "${HERE}/../packages/ui/dist/robots.txt" ]; then
+    sed -i'' "s|<UI_URL>|${UI_URL}|g" "${HERE}/../packages/ui/dist/robots.txt"
+fi
+if [ -f "${HERE}/../packages/ui/dist/search.xml" ]; then
+    sed -i'' "s|<UI_URL>|${UI_URL}|g" "${HERE}/../packages/ui/dist/search.xml"
+fi
 
 # Compress multiple build locations
 info "Compressing build..."
