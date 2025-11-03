@@ -132,6 +132,29 @@ The build script will:
 
 ### Step 3: Deploy (On Production Server)
 
+#### Simplified Workflow (Recommended)
+
+Complete deployment from your development machine with these tested commands:
+
+```bash
+# Set version
+VERSION="3.0.1"
+
+# Build and transfer
+./scripts/build.sh -v ${VERSION} -e .env-prod -d y
+
+# Deploy remotely
+SITE_IP=$(grep SITE_IP .env-prod | cut -d= -f2)
+PROJECT_DIR=$(grep PROJECT_DIR .env-prod | cut -d= -f2)
+
+ssh -i ~/.ssh/id_rsa_${SITE_IP} root@${SITE_IP} \
+  "cd ${PROJECT_DIR} && ./scripts/deploy.sh -v ${VERSION}"
+
+# Quick verification
+ssh -i ~/.ssh/id_rsa_${SITE_IP} root@${SITE_IP} \
+  'docker ps --format "table {{.Names}}\t{{.Status}}"'
+```
+
 #### Option A: SSH In and Deploy Manually
 
 ```bash
@@ -153,17 +176,17 @@ SITE_IP=$(grep SITE_IP .env-prod | cut -d= -f2)
 VERSION="<VERSION>"
 PROJECT_DIR=$(grep PROJECT_DIR .env-prod | cut -d= -f2)
 
-# Deploy with one command
+# Deploy with one command (simplified)
 ssh -i ~/.ssh/id_rsa_${SITE_IP} root@${SITE_IP} \
-  "cd ${PROJECT_DIR} && git stash && git fetch && git pull && chmod +x ./scripts/* && ./scripts/deploy.sh -v ${VERSION}"
+  "cd ${PROJECT_DIR} && ./scripts/deploy.sh -v ${VERSION}"
 ```
 
 This one-liner will:
 1. Connect to production server via SSH
-2. Stash any uncommitted changes
-3. Fetch and pull latest code from git
-4. Make scripts executable
-5. Run the deploy script with the specified version
+2. Navigate to project directory
+3. Run the deploy script with the specified version
+
+**Note**: The deploy script (`deploy.sh`) handles git operations internally (lines 182-184), so you don't need to run `git stash && git fetch && git pull` manually.
 
 **Note**: The production docker-compose file (`docker-compose-prod.yml`) now automatically loads `.env-prod` via the `env_file` directive. No need to manually specify `--env-file` when starting containers.
 
@@ -227,6 +250,16 @@ ssh -i ~/.ssh/id_rsa_${SITE_IP} root@${SITE_IP} "docker ps --format 'table {{.Na
 # Verify website is accessible
 curl ${UI_URL}
 curl ${SERVER_URL}/healthcheck
+```
+
+#### Quick Verification One-Liner
+
+For a quick status check combining container status and recent logs:
+
+```bash
+SITE_IP=$(grep SITE_IP .env-prod | cut -d= -f2)
+ssh -i ~/.ssh/id_rsa_${SITE_IP} root@${SITE_IP} \
+  'echo "=== Container Status ===" && docker ps --format "table {{.Names}}\t{{.Status}}" && echo -e "\n=== Server Logs (last 10 lines) ===" && docker logs --tail 10 nln_server'
 ```
 
 ## Rollback Procedure
@@ -345,6 +378,44 @@ This will:
 - This is normal for Redis in some configurations
 - Verify it's running: `docker exec nln_redis redis-cli ping`
 
+### Nginx Reverse Proxy Issues
+
+**"nginx-proxy-le container constantly restarting"**
+- Check logs: `docker logs nginx-proxy-le`
+- Common error: "can't get nginx-proxy container ID"
+- Solution: Restart nginx proxy containers:
+  ```bash
+  docker restart nginx-proxy nginx-proxy-le
+  ```
+- If still restarting, you can temporarily stop it:
+  ```bash
+  docker stop nginx-proxy-le
+  ```
+  The main nginx-proxy will continue to work for HTTPS (existing certificates)
+
+**"502 Bad Gateway after deployment"**
+- Verify all app containers are healthy: `docker ps`
+- Check if nginx can reach containers:
+  ```bash
+  docker logs nginx-proxy | tail -20
+  ```
+- Look for "Connection refused" errors pointing to container IPs
+- Verify container networking configuration (see "UI Container Network Binding" below)
+- Try restarting nginx-proxy:
+  ```bash
+  docker restart nginx-proxy
+  ```
+
+**UI container not accessible from nginx-proxy**
+- The serve configuration may be binding to localhost instead of 0.0.0.0
+- Check with: `docker logs nln_ui | grep "Accepting connections"`
+- Should see: `Accepting connections at http://0.0.0.0:3001` or similar
+- If it shows `http://localhost:3000`, nginx-proxy cannot reach it
+- Temporary workaround: Restart the UI container
+  ```bash
+  docker restart nln_ui
+  ```
+
 ## Known Issues & Limitations
 
 ### Still Present
@@ -376,6 +447,27 @@ This will:
    - Version must be manually entered and updated
    - **Impact**: Potential for version number mistakes
    - **Mitigation**: Double-check version numbers
+
+6. **UI Container Network Binding**
+   - The UI container's serve configuration may occasionally bind to localhost instead of all interfaces
+   - **Symptoms**:
+     - Containers show as healthy
+     - `docker logs nln_ui` shows `Accepting connections at http://localhost:3000`
+     - Website returns 502 Bad Gateway
+     - nginx-proxy logs show "Connection refused" to container IP
+   - **Impact**: Website not accessible despite healthy containers
+   - **Mitigation**: Restart the UI container with `docker restart nln_ui`
+   - **Verification**:
+     ```bash
+     # Check what interface UI is listening on
+     docker logs nln_ui | grep "Accepting connections"
+
+     # Get container IP
+     docker inspect nln_ui --format="{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}"
+
+     # Test connectivity from host (should return 200)
+     curl -I http://<CONTAINER_IP>:3001
+     ```
 
 ### Recently Fixed
 
@@ -480,5 +572,6 @@ For issues not covered in this guide:
 
 ## Version History
 
+- **2025-11-03**: Simplified one-liner deployment command, added nginx proxy troubleshooting, documented UI networking issue
 - **2025-01-14**: Added environment validation, health checks, pre-migration backups, rollback script
 - **2024-01-23**: Initial deployment process
