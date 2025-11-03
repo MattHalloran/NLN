@@ -3,7 +3,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import landingPageRouter from "./landingPage.js";
-import plantsRouter from "./plants.js";
+// ARCHIVED: import plantsRouter from "./plants.js"; // Plants feature removed
 import authRouter from "./auth.js";
 // ARCHIVED: import customersRouter from "./customers.js"; // Customer management moved to external system
 import imagesRouter from "./images.js";
@@ -34,7 +34,7 @@ const upload = multer({
         },
         filename: (req, file, cb) => {
             // Use unique filename to prevent collisions
-            const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1E9)}`;
+            const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
             cb(null, `${file.fieldname}-${uniqueSuffix}-${file.originalname}`);
         },
     }),
@@ -56,7 +56,7 @@ v1Router.get("/csrf-token", csrfTokenEndpoint);
 
 // Mount route handlers
 v1Router.use("/landing-page", landingPageRouter);
-v1Router.use("/plants", plantsRouter);
+// ARCHIVED: v1Router.use("/plants", plantsRouter); // Plants feature removed
 v1Router.use("/auth", authRouter);
 // ARCHIVED: v1Router.use("/customers", customersRouter); // Customer management moved to external system
 v1Router.use("/images", upload.array("files"), imagesRouter);
@@ -108,7 +108,7 @@ router.get("/", (_req, res) => {
                     stats: "/api/rest/v1/dashboard/stats",
                 },
                 landingPage: "/api/rest/v1/landing-page",
-                plants: "/api/rest/v1/plants",
+                // ARCHIVED: plants endpoint removed
             },
         },
     });

@@ -373,60 +373,7 @@ describe("REST API Integration Tests", () => {
         });
     });
 
-    describe("Plant Endpoints (Example)", () => {
-        beforeEach(async () => {
-            // Create test plants
-            await prisma.plant.create({
-                data: {
-                    latinName: "Rosa rubiginosa",
-                    featured: true,
-                    traits: {
-                        create: [
-                            { name: "sunlight", value: "Full Sun" },
-                            { name: "water", value: "Moderate" },
-                        ],
-                    },
-                    skus: {
-                        create: {
-                            sku: "ROSE-001",
-                            price: 15.99,
-                            availability: 25,
-                            status: "Active",
-                        },
-                    },
-                },
-            });
-
-            await prisma.plant.create({
-                data: {
-                    latinName: "Lavandula angustifolia",
-                    featured: false,
-                    skus: {
-                        create: {
-                            sku: "LAV-001",
-                            price: 12.99,
-                            availability: 50,
-                            status: "Active",
-                        },
-                    },
-                },
-            });
-        });
-
-        it("should get all plants", async () => {
-            const response = await request(app).get("/api/rest/v1/plants");
-
-            expect(response.status).toBe(200);
-            // Verify response structure based on actual endpoint implementation
-        });
-
-        it("should get featured plants", async () => {
-            const response = await request(app).get("/api/rest/v1/plants?featured=true");
-
-            expect(response.status).toBe(200);
-            // Verify only featured plants are returned
-        });
-    });
+    // ARCHIVED: Plant endpoint tests removed (plants feature no longer in use)
 
     describe("Error Handling", () => {
         it("should return 404 for non-existent endpoint", async () => {
