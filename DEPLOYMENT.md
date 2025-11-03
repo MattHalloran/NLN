@@ -75,6 +75,8 @@ The deployment process is a two-phase manual workflow:
 ### On Development Machine
 - Access to production server via SSH
 - SSH keys configured (`~/.ssh/id_rsa_{SITE_IP}`)
+  - Use `./scripts/keylessSsh.sh -e .env-prod` to set up if needed
+  - Use `./scripts/connectToServer.sh` to connect interactively
 - `.env-prod` file configured with production settings
 
 ### On Production Server
@@ -106,7 +108,10 @@ git status
 
 ```bash
 cd /path/to/NLN
-./scripts/build.sh -v 2.2.6 -e .env-prod -d y
+./scripts/build.sh -v <VERSION> -e .env-prod -d y
+
+# Example:
+# ./scripts/build.sh -v 3.0.1 -e .env-prod -d y
 ```
 
 Arguments:
@@ -127,10 +132,38 @@ The build script will:
 
 ### Step 3: Deploy (On Production Server)
 
+#### Option A: SSH In and Deploy Manually
+
 ```bash
-cd /srv/app  # or wherever your app is located
-./scripts/deploy.sh -v 2.2.6
+# Connect to production server
+./scripts/connectToServer.sh
+
+# Once connected, navigate to project and deploy
+cd ${PROJECT_DIR}  # e.g., /root/NLN or /srv/app
+./scripts/deploy.sh -v <VERSION>
 ```
+
+#### Option B: Remote Deployment (One-Liner)
+
+Deploy directly from your development machine without manually SSH'ing in:
+
+```bash
+# Set variables from your .env-prod
+SITE_IP=$(grep SITE_IP .env-prod | cut -d= -f2)
+VERSION="<VERSION>"
+PROJECT_DIR=$(grep PROJECT_DIR .env-prod | cut -d= -f2)
+
+# Deploy with one command
+ssh -i ~/.ssh/id_rsa_${SITE_IP} root@${SITE_IP} \
+  "cd ${PROJECT_DIR} && git stash && git fetch && git pull && chmod +x ./scripts/* && ./scripts/deploy.sh -v ${VERSION}"
+```
+
+This one-liner will:
+1. Connect to production server via SSH
+2. Stash any uncommitted changes
+3. Fetch and pull latest code from git
+4. Make scripts executable
+5. Run the deploy script with the specified version
 
 **Note**: The production docker-compose file (`docker-compose-prod.yml`) now automatically loads `.env-prod` via the `env_file` directive. No need to manually specify `--env-file` when starting containers.
 
@@ -150,6 +183,8 @@ The deploy script will:
 
 After deployment completes successfully:
 
+#### Option A: Verify from Production Server
+
 ```bash
 # Check container status
 docker ps
@@ -159,11 +194,39 @@ docker logs nln_server
 docker logs nln_ui
 
 # Verify website is accessible
-curl https://newlifenurseryinc.com/
-curl https://newlifenurseryinc.com/api/healthcheck
+curl ${SERVER_URL}/healthcheck
 
 # Check migration backups were created
 ls -lh data/migration-backups/
+```
+
+#### Option B: Verify Remotely from Development Machine
+
+```bash
+# Set variables from your .env-prod
+SITE_IP=$(grep SITE_IP .env-prod | cut -d= -f2)
+PROJECT_DIR=$(grep PROJECT_DIR .env-prod | cut -d= -f2)
+SERVER_URL=$(grep SERVER_URL .env-prod | cut -d= -f2)
+UI_URL=$(grep UI_URL .env-prod | cut -d= -f2)
+
+# Check container status
+ssh -i ~/.ssh/id_rsa_${SITE_IP} root@${SITE_IP} "docker ps"
+
+# View server logs (last 50 lines)
+ssh -i ~/.ssh/id_rsa_${SITE_IP} root@${SITE_IP} "docker logs --tail 50 nln_server"
+
+# View UI logs (last 50 lines)
+ssh -i ~/.ssh/id_rsa_${SITE_IP} root@${SITE_IP} "docker logs --tail 50 nln_ui"
+
+# Follow logs in real-time (press Ctrl+C to stop)
+ssh -i ~/.ssh/id_rsa_${SITE_IP} root@${SITE_IP} "docker logs -f nln_server"
+
+# Check all container health
+ssh -i ~/.ssh/id_rsa_${SITE_IP} root@${SITE_IP} "docker ps --format 'table {{.Names}}\t{{.Status}}'"
+
+# Verify website is accessible
+curl ${UI_URL}
+curl ${SERVER_URL}/healthcheck
 ```
 
 ## Rollback Procedure
@@ -174,14 +237,17 @@ If deployment fails or you discover issues:
 
 ```bash
 # On production server
-./scripts/rollback.sh -v 2.2.5
+./scripts/rollback.sh -v <PREVIOUS_VERSION>
+
+# Example: Roll back to version 3.0.0
+# ./scripts/rollback.sh -v 3.0.0
 ```
 
 This will:
 1. Create emergency backup of current state
 2. Stop current containers
-3. Restore database from version 2.2.5 backup
-4. Load Docker images from version 2.2.5
+3. Restore database from specified version backup
+4. Load Docker images from specified version
 5. Start containers
 6. Wait for health checks
 7. Verify successful rollback
@@ -195,13 +261,14 @@ This will:
 
 2. **Restore database**:
    ```bash
+   ROLLBACK_VERSION="<PREVIOUS_VERSION>"  # e.g., "3.0.0"
    rm -rf data/postgres
-   cp -rp /var/tmp/2.2.5/postgres data/
+   cp -rp /var/tmp/${ROLLBACK_VERSION}/postgres data/
    ```
 
 3. **Load old images**:
    ```bash
-   docker load -i /var/tmp/2.2.5/production-docker-images.tar.gz
+   docker load -i /var/tmp/${ROLLBACK_VERSION}/production-docker-images.tar.gz
    ```
 
 4. **Start containers**:
