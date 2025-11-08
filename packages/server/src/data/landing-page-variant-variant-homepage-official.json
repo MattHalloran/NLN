@@ -1,18 +1,18 @@
 {
     "metadata": {
         "version": "2.0",
-        "lastUpdated": "2025-10-31T18:07:50.855Z"
+        "lastUpdated": "2025-11-07T15:06:11.593Z"
     },
     "content": {
         "hero": {
             "banners": [
                 {
-                    "id": "hero-butterfly-prod",
-                    "src": "/hero-butterfly-XXL.jpg",
-                    "alt": "Butterfly at New Life Nursery",
-                    "description": "Beautiful butterfly visiting our nursery",
-                    "width": 1901,
-                    "height": 1426,
+                    "id": "hero-1762443525032-40e6t4z7j",
+                    "src": "/images/Newlife-16-XXL.jpeg",
+                    "alt": "Fall 2025 Highlights",
+                    "description": "All the colors of Autumn",
+                    "width": 0,
+                    "height": 0,
                     "displayOrder": 1,
                     "isActive": true
                 },
@@ -20,20 +20,30 @@
                     "id": "hero-chicks-prod",
                     "src": "/hero-chicks-XXL.jpg",
                     "alt": "Baby chicks at New Life Nursery",
-                    "description": "Adorable baby chicks",
+                    "description": "Baby chicks enjoying the warmth of the greenhouse ",
                     "width": 1008,
                     "height": 756,
                     "displayOrder": 2,
+                    "isActive": false
+                },
+                {
+                    "id": "hero-butterfly-prod",
+                    "src": "/hero-butterfly-XXL.jpg",
+                    "alt": "Butterfly at New Life Nursery",
+                    "description": "Our Buddleia attract all types of gorgeous butterflies all summer long",
+                    "width": 1901,
+                    "height": 1426,
+                    "displayOrder": 3,
                     "isActive": true
                 },
                 {
                     "id": "hero-plants-prod",
                     "src": "/hero-plants-XXL.jpg",
                     "alt": "Plant selection at New Life Nursery",
-                    "description": "Wide variety of plants available",
+                    "description": "We pride ourselves on growing strong, beautiful rhododendron varieties ",
                     "width": 4032,
                     "height": 3024,
-                    "displayOrder": 3,
+                    "displayOrder": 4,
                     "isActive": true
                 },
                 {
@@ -43,8 +53,18 @@
                     "description": "Beautiful rainbow at the nursery",
                     "width": 2560,
                     "height": 1920,
-                    "displayOrder": 4,
-                    "isActive": true
+                    "displayOrder": 5,
+                    "isActive": false
+                },
+                {
+                    "id": "hero-1762443588648-nyqjl3prs",
+                    "src": "/images/Wedding -1-24 1-XXL.JPG",
+                    "alt": "Featured Fall Plants",
+                    "description": "A nice sampling of plant material showing nice fall colors",
+                    "width": 0,
+                    "height": 0,
+                    "displayOrder": 6,
+                    "isActive": false
                 }
             ],
             "settings": {
@@ -57,8 +77,8 @@
             "text": {
                 "title": "Beautiful, healthy plants",
                 "subtitle": "At competitive prices",
-                "description": "Your trusted wholesale plant source for over 40 years, with the finest selection of plants, trees, and shrubs",
-                "businessHours": "OPEN 7 DAYS A WEEK | Mon-Sat 8AM-6PM | Sun 9AM-5PM",
+                "description": "Your trusted wholesale plant source for over 40 years, with the finest selection of wholesale plants, trees, and shrubs",
+                "businessHours": "OPEN MONDAY - FRIDAY ",
                 "useContactInfoHours": false,
                 "trustBadges": [
                     {
@@ -137,11 +157,11 @@
         "seasonal": {
             "header": {
                 "title": "Seasonal Highlights & Expert Tips",
-                "subtitle": "Discover what's blooming now and get expert care advice for every season"
+                "subtitle": "Discover what's showing color now and get expert care advice for every season"
             },
             "sections": {
                 "plants": {
-                    "currentSeasonTitle": "What's Blooming Now",
+                    "currentSeasonTitle": "HOT LIST!",
                     "otherSeasonTitleTemplate": "Perfect for {season}"
                 },
                 "tips": {
@@ -151,64 +171,84 @@
             "plants": [
                 {
                     "id": "japanese-maple",
-                    "name": "Japanese Maple",
-                    "description": "Stunning fall foliage with vibrant red and orange colors. Perfect for adding dramatic autumn color to your landscape.",
+                    "name": "Nyssa sylvatica / Black Gum",
+                    "description": "A medium to large deciduous tree known for its striking fall foliage, which includes vibrant shades of scarlet, orange, and yellow. ",
                     "season": "Fall",
-                    "careLevel": "Medium",
+                    "careLevel": "Easy",
                     "icon": "leaf",
                     "displayOrder": 1,
-                    "isActive": true
-                },
-                {
-                    "id": "winter-jasmine",
-                    "name": "Winter Jasmine",
-                    "description": "Bright yellow flowers bloom in winter, providing cheerful color during the coldest months.",
-                    "season": "Winter",
-                    "careLevel": "Easy",
-                    "icon": "snowflake",
-                    "displayOrder": 2,
-                    "isActive": true
+                    "isActive": true,
+                    "image": "/images/Newlife-15-XXL.jpeg",
+                    "imageAlt": "Newlife-15",
+                    "imageHash": "15e3e782e3e0ff00"
                 },
                 {
                     "id": "cherry-blossom",
-                    "name": "Cherry Blossom",
-                    "description": "Beautiful spring blooms create a stunning display. A classic choice for spring garden interest.",
-                    "season": "Spring",
+                    "name": "Pieris japonica 'Historyland Supreme' ",
+                    "description": "A low-maintenance shrub with clusters of small, white, bell-shaped flowers that bloom from late winter to spring.",
+                    "season": "Fall",
                     "careLevel": "Medium",
                     "icon": "flower",
                     "displayOrder": 3,
-                    "isActive": true
+                    "isActive": true,
+                    "image": "/images/Newlife-5-XXL.jpeg",
+                    "imageAlt": "Newlife-5",
+                    "imageHash": "fca0f381e3c203e7"
                 },
                 {
                     "id": "hydrangea",
-                    "name": "Hydrangea",
-                    "description": "Large, colorful flower clusters bloom throughout summer. Excellent for adding bold color to shaded areas.",
-                    "season": "Summer",
-                    "careLevel": "Easy",
+                    "name": "Chamaecyparis obtusa 'Crippsii' ",
+                    "description": "Its year-round bright golden-yellow foliage and pyramidal shape make this one of our most requested varieties. Available in both 3-gallon and 7-gallon containers. ",
+                    "season": "Winter",
+                    "careLevel": "Medium",
                     "icon": "flower2",
                     "displayOrder": 4,
-                    "isActive": true
+                    "isActive": true,
+                    "image": "/images/Newlife-7-XXL.jpeg",
+                    "imageAlt": "Newlife-7",
+                    "imageHash": "ff00e7c0c3c3e7c0"
+                },
+                {
+                    "id": "plant-1762361742695-kswnl0jjt",
+                    "name": "Let's Dance Can Do! ® Hydrangea",
+                    "description": "Extra cold-hardy down to Zone 4 and the fastest hydrangea to rebloom from summer to fall!",
+                    "season": "Fall",
+                    "careLevel": "Easy",
+                    "icon": "leaf",
+                    "displayOrder": 5,
+                    "isActive": true,
+                    "image": "/images/Newlife-12-XXL.jpeg",
+                    "imageAlt": "Newlife-12",
+                    "imageHash": "f8c8ff00c783189f"
+                },
+                {
+                    "id": "plant-1762527276409-pnscewqe0",
+                    "name": "Glow Pop® Japanese Holly",
+                    "description": "A compact plant with vibrant golden foliage that will set black fruit when male pollinator is present",
+                    "season": "Fall",
+                    "careLevel": "Easy",
+                    "icon": "leaf",
+                    "displayOrder": 6,
+                    "isActive": true,
+                    "image": "/images/Newlife-3-XXL.jpeg",
+                    "imageAlt": "Newlife-3",
+                    "imageHash": "f870fe8080ef98f8"
+                },
+                {
+                    "id": "plant-1762527632975-iaqea3tz2",
+                    "name": "Nandina domestica 'Firepower' ",
+                    "description": "Known for its gorgeous color variations, the Firepower Heavenly Bamboo begins with fresh green growth that matures to shades of red that lasts all winter. ",
+                    "season": "Fall",
+                    "careLevel": "Easy",
+                    "icon": "leaf",
+                    "displayOrder": 7,
+                    "isActive": true,
+                    "image": "/images/Newlife-4-XXL.jpeg",
+                    "imageAlt": "Newlife-4",
+                    "imageHash": "fc60ff00c7c201ef"
                 }
             ],
             "tips": [
-                {
-                    "id": "deep-watering",
-                    "title": "Deep Watering Technique",
-                    "description": "Water plants deeply but less frequently to encourage strong root development. Aim for 1-2 inches per week.",
-                    "category": "Watering",
-                    "season": "Year-round",
-                    "displayOrder": 1,
-                    "isActive": true
-                },
-                {
-                    "id": "spring-fertilizing",
-                    "title": "Spring Fertilizing Schedule",
-                    "description": "Begin fertilizing in early spring when new growth appears. Use a balanced, slow-release fertilizer for best results.",
-                    "category": "Fertilizing",
-                    "season": "Spring",
-                    "displayOrder": 2,
-                    "isActive": true
-                },
                 {
                     "id": "winter-protection",
                     "title": "Winter Plant Protection",
@@ -216,15 +256,6 @@
                     "category": "General",
                     "season": "Winter",
                     "displayOrder": 3,
-                    "isActive": true
-                },
-                {
-                    "id": "summer-pruning",
-                    "title": "Summer Pruning Tips",
-                    "description": "Prune spring-blooming shrubs right after blooming ends. This ensures next year's buds have time to develop.",
-                    "category": "Pruning",
-                    "season": "Summer",
-                    "displayOrder": 4,
                     "isActive": true
                 },
                 {
@@ -315,12 +346,12 @@
                     "subtext": "Since {foundedYear}"
                 },
                 {
-                    "number": "100+",
+                    "number": "500+",
                     "label": "Plant Varieties",
                     "subtext": "Extensive Selection"
                 },
                 {
-                    "number": "3-25",
+                    "number": "1-15",
                     "label": "Gallon Sizes",
                     "subtext": "Full Range"
                 },
@@ -516,7 +547,7 @@
             "facebook": "https://www.facebook.com/newlifenurseryinc",
             "instagram": "https://www.instagram.com/newlifenurseryinc"
         },
-        "hours": "| Day           | Hours |\n| ------------- |:-------------:         |\n| MON-SUN      | 8:00 AM to 6:00 PM     |\n"
+        "hours": "| Day           | Hours |\n| ------------- |:-------------:         |\n| MON-THU      | 8:00 AM to 4:00 PM     |\n| FRI      | 8:00 AM to 3:00 PM     |\n| Note          | Closed daily from 12:00 pm to 1:00 pm    |\n"
     },
     "theme": {
         "colors": {

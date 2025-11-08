@@ -1,18 +1,18 @@
 {
-  "variant-homepage-official": {
-    "id": "variant-homepage-official",
-    "name": "Official Homepage",
-    "description": "The current production homepage design",
-    "status": "enabled",
-    "isOfficial": true,
-    "trafficAllocation": 100,
-    "metrics": {
-      "views": 228,
-      "conversions": 2,
-      "bounces": 13
-    },
-    "createdAt": "2025-01-01T00:00:00Z",
-    "updatedAt": "2025-10-31T18:07:56.492Z",
-    "lastModified": "2025-10-31T18:07:50.861Z"
-  }
+    "variant-homepage-official": {
+        "id": "variant-homepage-official",
+        "name": "Official Homepage",
+        "description": "The current production homepage design",
+        "status": "enabled",
+        "isOfficial": true,
+        "trafficAllocation": 100,
+        "metrics": {
+            "views": 358,
+            "conversions": 2,
+            "bounces": 13
+        },
+        "createdAt": "2025-01-01T00:00:00Z",
+        "updatedAt": "2025-11-08T15:08:22.295Z",
+        "lastModified": "2025-11-07T15:06:11.594Z"
+    }
 }

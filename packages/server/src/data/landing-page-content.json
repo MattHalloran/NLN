@@ -1,7 +1,7 @@
 {
     "metadata": {
         "version": "2.0",
-        "lastUpdated": "2025-10-29T18:15:30.062Z"
+        "lastUpdated": "2025-11-07T15:22:28.717Z"
     },
     "content": {
         "hero": {
@@ -57,7 +57,7 @@
             "text": {
                 "title": "Beautiful, healthy plants",
                 "subtitle": "At competitive prices",
-                "description": "Your trusted wholesale plant source for over 40 years, with the finest selection of plants, trees, and shrubs",
+                "description": "Serving landscape professionals for over 40 years with the finest selection of wholesale plants, trees, and shrubs",
                 "businessHours": "OPEN 7 DAYS A WEEK | Mon-Sat 8AM-6PM | Sun 9AM-5PM",
                 "useContactInfoHours": false,
                 "trustBadges": [
@@ -71,7 +71,7 @@
                     },
                     {
                         "icon": "leaf",
-                        "text": "Wide Plant Selection"
+                        "text": "Expert Plant Care"
                     }
                 ],
                 "buttons": [
@@ -297,7 +297,7 @@
     },
     "layout": {
         "sections": {
-            "order": ["hero", "services", "social-proof", "about", "seasonal", "location"],
+            "order": ["hero", "services", "seasonal", "social-proof", "about", "location"],
             "enabled": {
                 "hero": true,
                 "services": true,
