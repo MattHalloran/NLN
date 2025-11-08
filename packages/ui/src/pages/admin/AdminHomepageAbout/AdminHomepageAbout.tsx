@@ -42,6 +42,7 @@ import { TopBar } from "components/navigation/TopBar/TopBar";
 import { useLandingPage } from "hooks/useLandingPage";
 import { useABTestQueryParams } from "hooks/useABTestQueryParams";
 import { useUpdateLandingPageContent } from "api/rest/hooks";
+import { useBlockNavigation } from "hooks/useBlockNavigation";
 import { useState, useEffect, useMemo } from "react";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { PubSub } from "utils/pubsub";
@@ -113,15 +114,16 @@ const getDefaultAboutData = (): AboutData => ({
     story: {
         overline: "Our Story",
         title: "Growing Excellence Since {foundedYear}",
-        subtitle: "What started as a family vision has grown into Southern New Jersey's premier wholesale nursery.",
+        subtitle:
+            "What started as a family vision has grown into Southern New Jersey's premier wholesale nursery.",
         paragraphs: [
             "Founded by the Gianaris family in {foundedYear}, New Life Nursery Inc. began with a simple mission: to grow top quality material for buyers who are interested in the best. Today, after more than four decades, we continue as a family-owned and operated business, maintaining the traditional values and horticultural expertise that built our reputation.",
-            "With over 70 acres in production in Bridgeton, New Jersey, we specialize in growing beautiful, healthy, and consistent plant material at competitive prices. Our wholesale operation serves landscape professionals and businesses throughout the region with sizes ranging from 3-gallon shrubs to 25-gallon specimen trees."
+            "With over 70 acres in production in Bridgeton, New Jersey, we specialize in growing beautiful, healthy, and consistent plant material at competitive prices. Our wholesale operation serves landscape professionals and businesses throughout the region with sizes ranging from 3-gallon shrubs to 25-gallon specimen trees.",
         ],
         cta: {
             text: "Visit Our Nursery",
-            link: "/about#contact"
-        }
+            link: "/about#contact",
+        },
     },
     values: {
         title: "What Makes Us Different",
@@ -129,34 +131,44 @@ const getDefaultAboutData = (): AboutData => ({
             {
                 icon: "star",
                 title: "Quality First",
-                description: "We source only the healthiest plants and provide expert care guidance to ensure your success."
+                description:
+                    "We source only the healthiest plants and provide expert care guidance to ensure your success.",
             },
             {
                 icon: "home",
                 title: "Local Expertise",
-                description: "40+ years of experience with Southern New Jersey growing conditions and climate-appropriate plant selection."
+                description:
+                    "40+ years of experience with Southern New Jersey growing conditions and climate-appropriate plant selection.",
             },
             {
                 icon: "heart",
                 title: "Family Heritage",
-                description: "Family-owned and operated by the Gianaris family, maintaining traditional values and expertise."
+                description:
+                    "Family-owned and operated by the Gianaris family, maintaining traditional values and expertise.",
             },
             {
                 icon: "globe",
                 title: "Sustainability",
-                description: "Committed to environmentally responsible practices and promoting native plant species."
-            }
-        ]
+                description:
+                    "Committed to environmentally responsible practices and promoting native plant species.",
+            },
+        ],
     },
     mission: {
         title: "Our Mission",
         quote: "Growing top quality material for buyers who are interested in the best.",
-        attribution: "The Gianaris Family"
-    }
+        attribution: "The Gianaris Family",
+    },
 });
 
 // Preview component that shows how the about section will look
-const AboutStoryPreview = ({ aboutData, foundedYear }: { aboutData: AboutData; foundedYear: number }) => {
+const AboutStoryPreview = ({
+    aboutData,
+    foundedYear,
+}: {
+    aboutData: AboutData;
+    foundedYear: number;
+}) => {
     const { palette } = useTheme();
 
     const storyData = aboutData.story;
@@ -183,16 +195,19 @@ const AboutStoryPreview = ({ aboutData, foundedYear }: { aboutData: AboutData; f
             }}
         >
             {/* Background Pattern */}
-            <Box sx={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                opacity: 0.1,
-                backgroundImage: "url('data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"><circle cx=\"50\" cy=\"50\" r=\"2\" fill=\"white\"/></svg>')",
-                backgroundSize: "50px 50px",
-            }} />
+            <Box
+                sx={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    opacity: 0.1,
+                    backgroundImage:
+                        'url(\'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="2" fill="white"/></svg>\')',
+                    backgroundSize: "50px 50px",
+                }}
+            />
 
             <Box sx={{ position: "relative", zIndex: 1, p: 3 }}>
                 {/* Story Content - Simplified for preview */}
@@ -244,7 +259,9 @@ const AboutStoryPreview = ({ aboutData, foundedYear }: { aboutData: AboutData; f
                                 fontSize: "0.8rem",
                             }}
                         >
-                            {paragraph.length > 200 ? paragraph.substring(0, 200) + "..." : paragraph}
+                            {paragraph.length > 200
+                                ? paragraph.substring(0, 200) + "..."
+                                : paragraph}
                         </Typography>
                     ))}
 
@@ -288,19 +305,23 @@ const AboutStoryPreview = ({ aboutData, foundedYear }: { aboutData: AboutData; f
                             const IconComponent = VALUE_ICON_MAP[value.icon] || Star;
                             return (
                                 <Grid item xs={6} key={index}>
-                                    <Card sx={{
-                                        backgroundColor: "rgba(255, 255, 255, 0.1)",
-                                        backdropFilter: "blur(10px)",
-                                        border: "1px solid rgba(255, 255, 255, 0.2)",
-                                        borderRadius: 2,
-                                    }}>
+                                    <Card
+                                        sx={{
+                                            backgroundColor: "rgba(255, 255, 255, 0.1)",
+                                            backdropFilter: "blur(10px)",
+                                            border: "1px solid rgba(255, 255, 255, 0.2)",
+                                            borderRadius: 2,
+                                        }}
+                                    >
                                         <CardContent sx={{ p: 2, textAlign: "center" }}>
-                                            <Box sx={{
-                                                mb: 1,
-                                                display: "flex",
-                                                justifyContent: "center",
-                                                color: "white",
-                                            }}>
+                                            <Box
+                                                sx={{
+                                                    mb: 1,
+                                                    display: "flex",
+                                                    justifyContent: "center",
+                                                    color: "white",
+                                                }}
+                                            >
                                                 <IconComponent size={24} />
                                             </Box>
 
@@ -326,7 +347,9 @@ const AboutStoryPreview = ({ aboutData, foundedYear }: { aboutData: AboutData; f
                                                     display: "block",
                                                 }}
                                             >
-                                                {value.description.length > 80 ? value.description.substring(0, 80) + "..." : value.description}
+                                                {value.description.length > 80
+                                                    ? value.description.substring(0, 80) + "..."
+                                                    : value.description}
                                             </Typography>
                                         </CardContent>
                                     </Card>
@@ -337,14 +360,16 @@ const AboutStoryPreview = ({ aboutData, foundedYear }: { aboutData: AboutData; f
                 </Box>
 
                 {/* Mission Statement */}
-                <Box sx={{
-                    p: 2,
-                    backgroundColor: "rgba(255, 255, 255, 0.1)",
-                    borderRadius: 2,
-                    textAlign: "center",
-                    backdropFilter: "blur(10px)",
-                    border: "1px solid rgba(255, 255, 255, 0.2)",
-                }}>
+                <Box
+                    sx={{
+                        p: 2,
+                        backgroundColor: "rgba(255, 255, 255, 0.1)",
+                        borderRadius: 2,
+                        textAlign: "center",
+                        backdropFilter: "blur(10px)",
+                        border: "1px solid rgba(255, 255, 255, 0.2)",
+                    }}
+                >
                     <Typography
                         variant="subtitle1"
                         sx={{
@@ -386,7 +411,7 @@ const AboutStoryPreview = ({ aboutData, foundedYear }: { aboutData: AboutData; f
 export const AdminHomepageAbout = () => {
     const { palette } = useTheme();
     const { data: landingPageData, refetch } = useLandingPage();
-    const { mutate: updateContent, loading: isSaving } = useUpdateLandingPageContent();
+    const { mutate: updateContent } = useUpdateLandingPageContent();
     const { variantId } = useABTestQueryParams();
 
     // State for form data and change tracking
@@ -414,6 +439,9 @@ export const AdminHomepageAbout = () => {
         return JSON.stringify(aboutData) !== JSON.stringify(originalAboutData);
     }, [aboutData, originalAboutData]);
 
+    // Block navigation when there are unsaved changes
+    useBlockNavigation(hasChanges);
+
     const handleApiError = (error: any, defaultMessage: string) => {
         const message = error?.message || defaultMessage;
         PubSub.get().publishSnack({ message, severity: SnackSeverity.Error });
@@ -425,87 +453,93 @@ export const AdminHomepageAbout = () => {
 
     // Story section handlers
     const updateStoryField = (field: keyof StoryData, value: any) => {
-        setAboutData(prev => ({
+        setAboutData((prev) => ({
             ...prev,
-            story: { ...prev.story, [field]: value }
+            story: { ...prev.story, [field]: value },
         }));
     };
 
     const updateParagraph = (index: number, value: string) => {
-        setAboutData(prev => ({
+        setAboutData((prev) => ({
             ...prev,
             story: {
                 ...prev.story,
-                paragraphs: prev.story.paragraphs.map((p, i) => i === index ? value : p)
-            }
+                paragraphs: prev.story.paragraphs.map((p, i) => (i === index ? value : p)),
+            },
         }));
     };
 
     const addParagraph = () => {
-        setAboutData(prev => ({
+        setAboutData((prev) => ({
             ...prev,
             story: {
                 ...prev.story,
-                paragraphs: [...prev.story.paragraphs, ""]
-            }
+                paragraphs: [...prev.story.paragraphs, ""],
+            },
         }));
     };
 
     const removeParagraph = (index: number) => {
         if (aboutData.story.paragraphs.length <= 1) {
-            handleApiError(new Error("At least one paragraph is required"), "Cannot remove last paragraph");
+            handleApiError(
+                new Error("At least one paragraph is required"),
+                "Cannot remove last paragraph",
+            );
             return;
         }
-        setAboutData(prev => ({
+        setAboutData((prev) => ({
             ...prev,
             story: {
                 ...prev.story,
-                paragraphs: prev.story.paragraphs.filter((_, i) => i !== index)
-            }
+                paragraphs: prev.story.paragraphs.filter((_, i) => i !== index),
+            },
         }));
     };
 
     // Values section handlers
     const updateValuesTitle = (value: string) => {
-        setAboutData(prev => ({
+        setAboutData((prev) => ({
             ...prev,
-            values: { ...prev.values, title: value }
+            values: { ...prev.values, title: value },
         }));
     };
 
     const updateValueItem = (index: number, field: keyof ValueItem, value: string) => {
-        setAboutData(prev => ({
+        setAboutData((prev) => ({
             ...prev,
             values: {
                 ...prev.values,
                 items: prev.values.items.map((item, i) =>
-                    i === index ? { ...item, [field]: value } : item
-                )
-            }
+                    i === index ? { ...item, [field]: value } : item,
+                ),
+            },
         }));
     };
 
     const addValueItem = () => {
-        setAboutData(prev => ({
+        setAboutData((prev) => ({
             ...prev,
             values: {
                 ...prev.values,
-                items: [...prev.values.items, { icon: "star", title: "", description: "" }]
-            }
+                items: [...prev.values.items, { icon: "star", title: "", description: "" }],
+            },
         }));
     };
 
     const removeValueItem = (index: number) => {
         if (aboutData.values.items.length <= 1) {
-            handleApiError(new Error("At least one value item is required"), "Cannot remove last value item");
+            handleApiError(
+                new Error("At least one value item is required"),
+                "Cannot remove last value item",
+            );
             return;
         }
-        setAboutData(prev => ({
+        setAboutData((prev) => ({
             ...prev,
             values: {
                 ...prev.values,
-                items: prev.values.items.filter((_, i) => i !== index)
-            }
+                items: prev.values.items.filter((_, i) => i !== index),
+            },
         }));
     };
 
@@ -516,17 +550,17 @@ export const AdminHomepageAbout = () => {
         const [reorderedItem] = items.splice(result.source.index, 1);
         items.splice(result.destination.index, 0, reorderedItem);
 
-        setAboutData(prev => ({
+        setAboutData((prev) => ({
             ...prev,
-            values: { ...prev.values, items }
+            values: { ...prev.values, items },
         }));
     };
 
     // Mission section handlers
     const updateMissionField = (field: keyof MissionData, value: string) => {
-        setAboutData(prev => ({
+        setAboutData((prev) => ({
             ...prev,
-            mission: { ...prev.mission, [field]: value }
+            mission: { ...prev.mission, [field]: value },
         }));
     };
 
@@ -564,7 +598,12 @@ export const AdminHomepageAbout = () => {
                 display="page"
                 title="About Story Settings"
                 help="Configure your company story, values, and mission statement"
-                startComponent={<BackButton to={APP_LINKS.AdminHomepage} ariaLabel="Back to Homepage Management" />}
+                startComponent={
+                    <BackButton
+                        to={APP_LINKS.AdminHomepage}
+                        ariaLabel="Back to Homepage Management"
+                    />
+                }
             />
 
             <Box p={2}>
@@ -657,7 +696,14 @@ export const AdminHomepageAbout = () => {
                                         boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
                                     }}
                                 >
-                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3 }}>
+                                    <Box
+                                        sx={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: 1.5,
+                                            mb: 3,
+                                        }}
+                                    >
                                         <Box
                                             sx={{
                                                 display: "flex",
@@ -673,7 +719,10 @@ export const AdminHomepageAbout = () => {
                                             <BookOpen size={20} />
                                         </Box>
                                         <Box>
-                                            <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                                            <Typography
+                                                variant="h6"
+                                                sx={{ fontWeight: 600, lineHeight: 1.2 }}
+                                            >
                                                 Live Preview
                                             </Typography>
                                             <Typography variant="caption" color="text.secondary">
@@ -681,7 +730,10 @@ export const AdminHomepageAbout = () => {
                                             </Typography>
                                         </Box>
                                     </Box>
-                                    <AboutStoryPreview aboutData={aboutData} foundedYear={foundedYear} />
+                                    <AboutStoryPreview
+                                        aboutData={aboutData}
+                                        foundedYear={foundedYear}
+                                    />
                                     <Alert
                                         severity="info"
                                         sx={{
@@ -698,452 +750,649 @@ export const AdminHomepageAbout = () => {
                                 </Paper>
                             </Box>
 
-                {/* Accordion 1: Story Section */}
-                <Accordion
-                    defaultExpanded
-                    sx={{
-                        border: "1px solid",
-                        borderColor: "divider",
-                        borderRadius: "8px !important",
-                        "&:before": { display: "none" },
-                        boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-                        mb: 2,
-                    }}
-                >
-                    <AccordionSummary
-                        expandIcon={<ExpandMoreIcon />}
-                        sx={{
-                            bgcolor: "grey.50",
-                            borderRadius: "8px 8px 0 0",
-                            minHeight: 64,
-                            "&:hover": {
-                                bgcolor: "grey.100",
-                            },
-                            "& .MuiAccordionSummary-content": {
-                                my: 2,
-                            },
-                        }}
-                    >
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                            <Box
+                            {/* Accordion 1: Story Section */}
+                            <Accordion
+                                defaultExpanded
                                 sx={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    width: 40,
-                                    height: 40,
-                                    borderRadius: 2,
-                                    bgcolor: "primary.main",
-                                    color: "white",
-                                }}
-                            >
-                                <TextFieldsIcon size={20} />
-                            </Box>
-                            <Box>
-                                <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
-                                    Story Section
-                                </Typography>
-                                <Typography variant="caption" color="text.secondary">
-                                    Configure company story and narrative
-                                </Typography>
-                            </Box>
-                        </Box>
-                    </AccordionSummary>
-                    <AccordionDetails sx={{ p: 3, bgcolor: "background.paper" }}>
-                        <Grid container spacing={3}>
-                            <Grid item xs={12}>
-                                <TextField
-                                    fullWidth
-                                    label="Overline Text"
-                                    value={aboutData.story.overline}
-                                    onChange={(e) => updateStoryField("overline", e.target.value)}
-                                    helperText="Small text that appears above the title"
-                                />
-                            </Grid>
-                            <Grid item xs={12}>
-                                <TextField
-                                    fullWidth
-                                    label="Title"
-                                    value={aboutData.story.title}
-                                    onChange={(e) => updateStoryField("title", e.target.value)}
-                                    helperText="Main headline (use {foundedYear} for dynamic year)"
-                                />
-                            </Grid>
-                            <Grid item xs={12}>
-                                <TextField
-                                    fullWidth
-                                    label="Subtitle"
-                                    value={aboutData.story.subtitle}
-                                    onChange={(e) => updateStoryField("subtitle", e.target.value)}
-                                    multiline
-                                    rows={2}
-                                    helperText="Introductory text below the title"
-                                />
-                            </Grid>
-
-                            {/* Paragraphs */}
-                            <Grid item xs={12}>
-                                <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
-                                    Story Paragraphs
-                                </Typography>
-                                {aboutData.story.paragraphs.map((paragraph, index) => (
-                                    <Box key={index} sx={{ mb: 2, display: "flex", gap: 1, alignItems: "flex-start" }}>
-                                        <TextField
-                                            fullWidth
-                                            label={`Paragraph ${index + 1}`}
-                                            value={paragraph}
-                                            onChange={(e) => updateParagraph(index, e.target.value)}
-                                            multiline
-                                            rows={4}
-                                        />
-                                        <IconButton
-                                            color="error"
-                                            onClick={() => removeParagraph(index)}
-                                            disabled={aboutData.story.paragraphs.length <= 1}
-                                        >
-                                            <Trash2 size={20} />
-                                        </IconButton>
-                                    </Box>
-                                ))}
-                                <Button
-                                    startIcon={<Plus size={20} />}
-                                    onClick={addParagraph}
-                                    variant="outlined"
-                                    size="small"
-                                >
-                                    Add Paragraph
-                                </Button>
-                            </Grid>
-
-                            {/* CTA Button */}
-                            <Grid item xs={12} sm={6}>
-                                <TextField
-                                    fullWidth
-                                    label="CTA Button Text"
-                                    value={aboutData.story.cta.text}
-                                    onChange={(e) => updateStoryField("cta", { ...aboutData.story.cta, text: e.target.value })}
-                                />
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
-                                <TextField
-                                    fullWidth
-                                    label="CTA Button Link"
-                                    value={aboutData.story.cta.link}
-                                    onChange={(e) => updateStoryField("cta", { ...aboutData.story.cta, link: e.target.value })}
-                                    helperText="Internal links start with /, external with http"
-                                />
-                            </Grid>
-                        </Grid>
-                    </AccordionDetails>
-                </Accordion>
-
-                {/* Accordion 2: Values Section */}
-                <Accordion
-                    defaultExpanded
-                    sx={{
-                        border: "1px solid",
-                        borderColor: "divider",
-                        borderRadius: "8px !important",
-                        "&:before": { display: "none" },
-                        boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-                        mb: 2,
-                    }}
-                >
-                    <AccordionSummary
-                        expandIcon={<ExpandMoreIcon />}
-                        sx={{
-                            bgcolor: "grey.50",
-                            borderRadius: "8px 8px 0 0",
-                            minHeight: 64,
-                            "&:hover": {
-                                bgcolor: "grey.100",
-                            },
-                            "& .MuiAccordionSummary-content": {
-                                my: 2,
-                            },
-                        }}
-                    >
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                            <Box
-                                sx={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    width: 40,
-                                    height: 40,
-                                    borderRadius: 2,
-                                    bgcolor: "secondary.main",
-                                    color: "white",
-                                }}
-                            >
-                                <ValuesIcon size={20} />
-                            </Box>
-                            <Box>
-                                <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
-                                    Values Section
-                                </Typography>
-                                <Typography variant="caption" color="text.secondary">
-                                    Define company values and differentiators
-                                </Typography>
-                            </Box>
-                        </Box>
-                    </AccordionSummary>
-                    <AccordionDetails sx={{ p: 3, bgcolor: "background.paper" }}>
-                        <Grid container spacing={3}>
-                            <Grid item xs={12}>
-                                <TextField
-                                    fullWidth
-                                    label="Values Section Title"
-                                    value={aboutData.values.title}
-                                    onChange={(e) => updateValuesTitle(e.target.value)}
-                                />
-                            </Grid>
-
-                            <Grid item xs={12}>
-                                <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
-                                    Value Items (Drag to reorder)
-                                </Typography>
-                                <DragDropContext onDragEnd={onDragEnd}>
-                                    <Droppable droppableId="values">
-                                        {(provided) => (
-                                            <div {...provided.droppableProps} ref={provided.innerRef}>
-                                                {aboutData.values.items.map((item, index) => (
-                                                    <Draggable key={index} draggableId={`value-${index}`} index={index}>
-                                                        {(provided, snapshot) => (
-                                                            <Card
-                                                                ref={provided.innerRef}
-                                                                {...provided.draggableProps}
-                                                                sx={{
-                                                                    mb: 2,
-                                                                    opacity: snapshot.isDragging ? 0.8 : 1,
-                                                                    backgroundColor: snapshot.isDragging ? palette.action.hover : "white",
-                                                                }}
-                                                            >
-                                                                <CardContent>
-                                                                    <Box sx={{ display: "flex", gap: 2, mb: 2, alignItems: "center" }}>
-                                                                        <div {...provided.dragHandleProps}>
-                                                                            <GripVertical size={24} style={{ cursor: "grab" }} />
-                                                                        </div>
-                                                                        <Typography variant="subtitle2" sx={{ flexGrow: 1 }}>
-                                                                            Value Item {index + 1}
-                                                                        </Typography>
-                                                                        <IconButton
-                                                                            color="error"
-                                                                            size="small"
-                                                                            onClick={() => removeValueItem(index)}
-                                                                            disabled={aboutData.values.items.length <= 1}
-                                                                        >
-                                                                            <Trash2 size={18} />
-                                                                        </IconButton>
-                                                                    </Box>
-
-                                                                    <Grid container spacing={2}>
-                                                                        <Grid item xs={12} sm={4}>
-                                                                            <FormControl fullWidth size="small">
-                                                                                <InputLabel>Icon</InputLabel>
-                                                                                <Select
-                                                                                    value={item.icon}
-                                                                                    label="Icon"
-                                                                                    onChange={(e) => updateValueItem(index, "icon", e.target.value)}
-                                                                                >
-                                                                                    {VALUE_ICONS.map((iconOption) => {
-                                                                                        const IconComponent = iconOption.icon;
-                                                                                        return (
-                                                                                            <MenuItem key={iconOption.value} value={iconOption.value}>
-                                                                                                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                                                                                    <IconComponent size={16} />
-                                                                                                    {iconOption.label}
-                                                                                                </Box>
-                                                                                            </MenuItem>
-                                                                                        );
-                                                                                    })}
-                                                                                </Select>
-                                                                            </FormControl>
-                                                                        </Grid>
-                                                                        <Grid item xs={12} sm={8}>
-                                                                            <TextField
-                                                                                fullWidth
-                                                                                label="Title"
-                                                                                size="small"
-                                                                                value={item.title}
-                                                                                onChange={(e) => updateValueItem(index, "title", e.target.value)}
-                                                                            />
-                                                                        </Grid>
-                                                                        <Grid item xs={12}>
-                                                                            <TextField
-                                                                                fullWidth
-                                                                                label="Description"
-                                                                                multiline
-                                                                                rows={2}
-                                                                                value={item.description}
-                                                                                onChange={(e) => updateValueItem(index, "description", e.target.value)}
-                                                                            />
-                                                                        </Grid>
-                                                                    </Grid>
-                                                                </CardContent>
-                                                            </Card>
-                                                        )}
-                                                    </Draggable>
-                                                ))}
-                                                {provided.placeholder}
-                                            </div>
-                                        )}
-                                    </Droppable>
-                                </DragDropContext>
-
-                                <Button
-                                    startIcon={<Plus size={20} />}
-                                    onClick={addValueItem}
-                                    variant="outlined"
-                                    size="small"
-                                >
-                                    Add Value Item
-                                </Button>
-                            </Grid>
-                        </Grid>
-                    </AccordionDetails>
-                </Accordion>
-
-                {/* Accordion 3: Mission Section */}
-                <Accordion
-                    defaultExpanded
-                    sx={{
-                        border: "1px solid",
-                        borderColor: "divider",
-                        borderRadius: "8px !important",
-                        "&:before": { display: "none" },
-                        boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-                        mb: 2,
-                    }}
-                >
-                    <AccordionSummary
-                        expandIcon={<ExpandMoreIcon />}
-                        sx={{
-                            bgcolor: "grey.50",
-                            borderRadius: "8px 8px 0 0",
-                            minHeight: 64,
-                            "&:hover": {
-                                bgcolor: "grey.100",
-                            },
-                            "& .MuiAccordionSummary-content": {
-                                my: 2,
-                            },
-                        }}
-                    >
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                            <Box
-                                sx={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    width: 40,
-                                    height: 40,
-                                    borderRadius: 2,
-                                    bgcolor: "success.main",
-                                    color: "white",
-                                }}
-                            >
-                                <MissionIcon size={20} />
-                            </Box>
-                            <Box>
-                                <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
-                                    Mission Section
-                                </Typography>
-                                <Typography variant="caption" color="text.secondary">
-                                    Define your company mission statement
-                                </Typography>
-                            </Box>
-                        </Box>
-                    </AccordionSummary>
-                    <AccordionDetails sx={{ p: 3, bgcolor: "background.paper" }}>
-                        <Grid container spacing={3}>
-                            <Grid item xs={12}>
-                                <TextField
-                                    fullWidth
-                                    label="Mission Title"
-                                    value={aboutData.mission.title}
-                                    onChange={(e) => updateMissionField("title", e.target.value)}
-                                />
-                            </Grid>
-                            <Grid item xs={12}>
-                                <TextField
-                                    fullWidth
-                                    label="Mission Quote"
-                                    value={aboutData.mission.quote}
-                                    onChange={(e) => updateMissionField("quote", e.target.value)}
-                                    multiline
-                                    rows={3}
-                                    helperText="The main mission statement quote"
-                                />
-                            </Grid>
-                            <Grid item xs={12}>
-                                <TextField
-                                    fullWidth
-                                    label="Attribution"
-                                    value={aboutData.mission.attribution}
-                                    onChange={(e) => updateMissionField("attribution", e.target.value)}
-                                    helperText="Who the quote is attributed to"
-                                />
-                            </Grid>
-                        </Grid>
-                    </AccordionDetails>
-                </Accordion>
-
-                        {/* Action Buttons at Bottom */}
-                        {hasChanges && (
-                            <Paper
-                                elevation={0}
-                                sx={{
-                                    mt: 3,
-                                    p: 2,
-                                    display: "flex",
-                                    gap: 2,
-                                    bgcolor: "grey.50",
                                     border: "1px solid",
                                     borderColor: "divider",
-                                    borderRadius: 2,
+                                    borderRadius: "8px !important",
+                                    "&:before": { display: "none" },
+                                    boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+                                    mb: 2,
                                 }}
                             >
-                                <Button
-                                    variant="contained"
-                                    size="large"
-                                    onClick={handleSaveAllChanges}
-                                    disabled={isLoading}
+                                <AccordionSummary
+                                    expandIcon={<ExpandMoreIcon />}
                                     sx={{
-                                        px: 4,
-                                        fontWeight: 600,
-                                        boxShadow: 2,
+                                        bgcolor: "grey.50",
+                                        borderRadius: "8px 8px 0 0",
+                                        minHeight: 64,
                                         "&:hover": {
-                                            boxShadow: 4,
+                                            bgcolor: "grey.100",
+                                        },
+                                        "& .MuiAccordionSummary-content": {
+                                            my: 2,
                                         },
                                     }}
                                 >
-                                    {isLoading ? "Saving..." : "Save All Changes"}
-                                </Button>
-                                <Button
-                                    variant="outlined"
-                                    size="large"
-                                    onClick={handleCancelChanges}
-                                    sx={{
-                                        px: 4,
-                                        fontWeight: 600,
-                                        borderWidth: 2,
-                                        "&:hover": {
-                                            borderWidth: 2,
-                                        },
-                                    }}
-                                >
-                                    Cancel
-                                </Button>
-                            </Paper>
-                        )}
+                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                                        <Box
+                                            sx={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                width: 40,
+                                                height: 40,
+                                                borderRadius: 2,
+                                                bgcolor: "primary.main",
+                                                color: "white",
+                                            }}
+                                        >
+                                            <TextFieldsIcon size={20} />
+                                        </Box>
+                                        <Box>
+                                            <Typography
+                                                variant="h6"
+                                                sx={{ fontWeight: 600, lineHeight: 1.2 }}
+                                            >
+                                                Story Section
+                                            </Typography>
+                                            <Typography variant="caption" color="text.secondary">
+                                                Configure company story and narrative
+                                            </Typography>
+                                        </Box>
+                                    </Box>
+                                </AccordionSummary>
+                                <AccordionDetails sx={{ p: 3, bgcolor: "background.paper" }}>
+                                    <Grid container spacing={3}>
+                                        <Grid item xs={12}>
+                                            <TextField
+                                                fullWidth
+                                                label="Overline Text"
+                                                value={aboutData.story.overline}
+                                                onChange={(e) =>
+                                                    updateStoryField("overline", e.target.value)
+                                                }
+                                                helperText="Small text that appears above the title"
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12}>
+                                            <TextField
+                                                fullWidth
+                                                label="Title"
+                                                value={aboutData.story.title}
+                                                onChange={(e) =>
+                                                    updateStoryField("title", e.target.value)
+                                                }
+                                                helperText="Main headline (use {foundedYear} for dynamic year)"
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12}>
+                                            <TextField
+                                                fullWidth
+                                                label="Subtitle"
+                                                value={aboutData.story.subtitle}
+                                                onChange={(e) =>
+                                                    updateStoryField("subtitle", e.target.value)
+                                                }
+                                                multiline
+                                                rows={2}
+                                                helperText="Introductory text below the title"
+                                            />
+                                        </Grid>
 
-                        {/* Help Text */}
-                        <Alert severity="info" sx={{ mt: 3 }}>
-                            <Typography variant="caption">
-                                <strong>Tip:</strong> Use the token {"{foundedYear}"} in any text field to automatically display your company's founding year (currently: {foundedYear}). This keeps your content dynamic and up-to-date.
-                            </Typography>
-                        </Alert>
+                                        {/* Paragraphs */}
+                                        <Grid item xs={12}>
+                                            <Typography
+                                                variant="subtitle1"
+                                                sx={{ fontWeight: 600, mb: 2 }}
+                                            >
+                                                Story Paragraphs
+                                            </Typography>
+                                            {aboutData.story.paragraphs.map((paragraph, index) => (
+                                                <Box
+                                                    key={index}
+                                                    sx={{
+                                                        mb: 2,
+                                                        display: "flex",
+                                                        gap: 1,
+                                                        alignItems: "flex-start",
+                                                    }}
+                                                >
+                                                    <TextField
+                                                        fullWidth
+                                                        label={`Paragraph ${index + 1}`}
+                                                        value={paragraph}
+                                                        onChange={(e) =>
+                                                            updateParagraph(index, e.target.value)
+                                                        }
+                                                        multiline
+                                                        rows={4}
+                                                    />
+                                                    <IconButton
+                                                        color="error"
+                                                        onClick={() => removeParagraph(index)}
+                                                        disabled={
+                                                            aboutData.story.paragraphs.length <= 1
+                                                        }
+                                                    >
+                                                        <Trash2 size={20} />
+                                                    </IconButton>
+                                                </Box>
+                                            ))}
+                                            <Button
+                                                startIcon={<Plus size={20} />}
+                                                onClick={addParagraph}
+                                                variant="outlined"
+                                                size="small"
+                                            >
+                                                Add Paragraph
+                                            </Button>
+                                        </Grid>
+
+                                        {/* CTA Button */}
+                                        <Grid item xs={12} sm={6}>
+                                            <TextField
+                                                fullWidth
+                                                label="CTA Button Text"
+                                                value={aboutData.story.cta.text}
+                                                onChange={(e) =>
+                                                    updateStoryField("cta", {
+                                                        ...aboutData.story.cta,
+                                                        text: e.target.value,
+                                                    })
+                                                }
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} sm={6}>
+                                            <TextField
+                                                fullWidth
+                                                label="CTA Button Link"
+                                                value={aboutData.story.cta.link}
+                                                onChange={(e) =>
+                                                    updateStoryField("cta", {
+                                                        ...aboutData.story.cta,
+                                                        link: e.target.value,
+                                                    })
+                                                }
+                                                helperText="Internal links start with /, external with http"
+                                            />
+                                        </Grid>
+                                    </Grid>
+                                </AccordionDetails>
+                            </Accordion>
+
+                            {/* Accordion 2: Values Section */}
+                            <Accordion
+                                defaultExpanded
+                                sx={{
+                                    border: "1px solid",
+                                    borderColor: "divider",
+                                    borderRadius: "8px !important",
+                                    "&:before": { display: "none" },
+                                    boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+                                    mb: 2,
+                                }}
+                            >
+                                <AccordionSummary
+                                    expandIcon={<ExpandMoreIcon />}
+                                    sx={{
+                                        bgcolor: "grey.50",
+                                        borderRadius: "8px 8px 0 0",
+                                        minHeight: 64,
+                                        "&:hover": {
+                                            bgcolor: "grey.100",
+                                        },
+                                        "& .MuiAccordionSummary-content": {
+                                            my: 2,
+                                        },
+                                    }}
+                                >
+                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                                        <Box
+                                            sx={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                width: 40,
+                                                height: 40,
+                                                borderRadius: 2,
+                                                bgcolor: "secondary.main",
+                                                color: "white",
+                                            }}
+                                        >
+                                            <ValuesIcon size={20} />
+                                        </Box>
+                                        <Box>
+                                            <Typography
+                                                variant="h6"
+                                                sx={{ fontWeight: 600, lineHeight: 1.2 }}
+                                            >
+                                                Values Section
+                                            </Typography>
+                                            <Typography variant="caption" color="text.secondary">
+                                                Define company values and differentiators
+                                            </Typography>
+                                        </Box>
+                                    </Box>
+                                </AccordionSummary>
+                                <AccordionDetails sx={{ p: 3, bgcolor: "background.paper" }}>
+                                    <Grid container spacing={3}>
+                                        <Grid item xs={12}>
+                                            <TextField
+                                                fullWidth
+                                                label="Values Section Title"
+                                                value={aboutData.values.title}
+                                                onChange={(e) => updateValuesTitle(e.target.value)}
+                                            />
+                                        </Grid>
+
+                                        <Grid item xs={12}>
+                                            <Typography
+                                                variant="subtitle1"
+                                                sx={{ fontWeight: 600, mb: 2 }}
+                                            >
+                                                Value Items (Drag to reorder)
+                                            </Typography>
+                                            <DragDropContext onDragEnd={onDragEnd}>
+                                                <Droppable droppableId="values">
+                                                    {(provided) => (
+                                                        <div
+                                                            {...provided.droppableProps}
+                                                            ref={provided.innerRef}
+                                                        >
+                                                            {aboutData.values.items.map(
+                                                                (item, index) => (
+                                                                    <Draggable
+                                                                        key={index}
+                                                                        draggableId={`value-${index}`}
+                                                                        index={index}
+                                                                    >
+                                                                        {(provided, snapshot) => (
+                                                                            <Card
+                                                                                ref={
+                                                                                    provided.innerRef
+                                                                                }
+                                                                                {...provided.draggableProps}
+                                                                                sx={{
+                                                                                    mb: 2,
+                                                                                    opacity:
+                                                                                        snapshot.isDragging
+                                                                                            ? 0.8
+                                                                                            : 1,
+                                                                                    backgroundColor:
+                                                                                        snapshot.isDragging
+                                                                                            ? palette
+                                                                                                  .action
+                                                                                                  .hover
+                                                                                            : "white",
+                                                                                }}
+                                                                            >
+                                                                                <CardContent>
+                                                                                    <Box
+                                                                                        sx={{
+                                                                                            display:
+                                                                                                "flex",
+                                                                                            gap: 2,
+                                                                                            mb: 2,
+                                                                                            alignItems:
+                                                                                                "center",
+                                                                                        }}
+                                                                                    >
+                                                                                        <div
+                                                                                            {...provided.dragHandleProps}
+                                                                                        >
+                                                                                            <GripVertical
+                                                                                                size={
+                                                                                                    24
+                                                                                                }
+                                                                                                style={{
+                                                                                                    cursor: "grab",
+                                                                                                }}
+                                                                                            />
+                                                                                        </div>
+                                                                                        <Typography
+                                                                                            variant="subtitle2"
+                                                                                            sx={{
+                                                                                                flexGrow: 1,
+                                                                                            }}
+                                                                                        >
+                                                                                            Value
+                                                                                            Item{" "}
+                                                                                            {index +
+                                                                                                1}
+                                                                                        </Typography>
+                                                                                        <IconButton
+                                                                                            color="error"
+                                                                                            size="small"
+                                                                                            onClick={() =>
+                                                                                                removeValueItem(
+                                                                                                    index,
+                                                                                                )
+                                                                                            }
+                                                                                            disabled={
+                                                                                                aboutData
+                                                                                                    .values
+                                                                                                    .items
+                                                                                                    .length <=
+                                                                                                1
+                                                                                            }
+                                                                                        >
+                                                                                            <Trash2
+                                                                                                size={
+                                                                                                    18
+                                                                                                }
+                                                                                            />
+                                                                                        </IconButton>
+                                                                                    </Box>
+
+                                                                                    <Grid
+                                                                                        container
+                                                                                        spacing={2}
+                                                                                    >
+                                                                                        <Grid
+                                                                                            item
+                                                                                            xs={12}
+                                                                                            sm={4}
+                                                                                        >
+                                                                                            <FormControl
+                                                                                                fullWidth
+                                                                                                size="small"
+                                                                                            >
+                                                                                                <InputLabel>
+                                                                                                    Icon
+                                                                                                </InputLabel>
+                                                                                                <Select
+                                                                                                    value={
+                                                                                                        item.icon
+                                                                                                    }
+                                                                                                    label="Icon"
+                                                                                                    onChange={(
+                                                                                                        e,
+                                                                                                    ) =>
+                                                                                                        updateValueItem(
+                                                                                                            index,
+                                                                                                            "icon",
+                                                                                                            e
+                                                                                                                .target
+                                                                                                                .value,
+                                                                                                        )
+                                                                                                    }
+                                                                                                >
+                                                                                                    {VALUE_ICONS.map(
+                                                                                                        (
+                                                                                                            iconOption,
+                                                                                                        ) => {
+                                                                                                            const IconComponent =
+                                                                                                                iconOption.icon;
+                                                                                                            return (
+                                                                                                                <MenuItem
+                                                                                                                    key={
+                                                                                                                        iconOption.value
+                                                                                                                    }
+                                                                                                                    value={
+                                                                                                                        iconOption.value
+                                                                                                                    }
+                                                                                                                >
+                                                                                                                    <Box
+                                                                                                                        sx={{
+                                                                                                                            display:
+                                                                                                                                "flex",
+                                                                                                                            alignItems:
+                                                                                                                                "center",
+                                                                                                                            gap: 1,
+                                                                                                                        }}
+                                                                                                                    >
+                                                                                                                        <IconComponent
+                                                                                                                            size={
+                                                                                                                                16
+                                                                                                                            }
+                                                                                                                        />
+                                                                                                                        {
+                                                                                                                            iconOption.label
+                                                                                                                        }
+                                                                                                                    </Box>
+                                                                                                                </MenuItem>
+                                                                                                            );
+                                                                                                        },
+                                                                                                    )}
+                                                                                                </Select>
+                                                                                            </FormControl>
+                                                                                        </Grid>
+                                                                                        <Grid
+                                                                                            item
+                                                                                            xs={12}
+                                                                                            sm={8}
+                                                                                        >
+                                                                                            <TextField
+                                                                                                fullWidth
+                                                                                                label="Title"
+                                                                                                size="small"
+                                                                                                value={
+                                                                                                    item.title
+                                                                                                }
+                                                                                                onChange={(
+                                                                                                    e,
+                                                                                                ) =>
+                                                                                                    updateValueItem(
+                                                                                                        index,
+                                                                                                        "title",
+                                                                                                        e
+                                                                                                            .target
+                                                                                                            .value,
+                                                                                                    )
+                                                                                                }
+                                                                                            />
+                                                                                        </Grid>
+                                                                                        <Grid
+                                                                                            item
+                                                                                            xs={12}
+                                                                                        >
+                                                                                            <TextField
+                                                                                                fullWidth
+                                                                                                label="Description"
+                                                                                                multiline
+                                                                                                rows={
+                                                                                                    2
+                                                                                                }
+                                                                                                value={
+                                                                                                    item.description
+                                                                                                }
+                                                                                                onChange={(
+                                                                                                    e,
+                                                                                                ) =>
+                                                                                                    updateValueItem(
+                                                                                                        index,
+                                                                                                        "description",
+                                                                                                        e
+                                                                                                            .target
+                                                                                                            .value,
+                                                                                                    )
+                                                                                                }
+                                                                                            />
+                                                                                        </Grid>
+                                                                                    </Grid>
+                                                                                </CardContent>
+                                                                            </Card>
+                                                                        )}
+                                                                    </Draggable>
+                                                                ),
+                                                            )}
+                                                            {provided.placeholder}
+                                                        </div>
+                                                    )}
+                                                </Droppable>
+                                            </DragDropContext>
+
+                                            <Button
+                                                startIcon={<Plus size={20} />}
+                                                onClick={addValueItem}
+                                                variant="outlined"
+                                                size="small"
+                                            >
+                                                Add Value Item
+                                            </Button>
+                                        </Grid>
+                                    </Grid>
+                                </AccordionDetails>
+                            </Accordion>
+
+                            {/* Accordion 3: Mission Section */}
+                            <Accordion
+                                defaultExpanded
+                                sx={{
+                                    border: "1px solid",
+                                    borderColor: "divider",
+                                    borderRadius: "8px !important",
+                                    "&:before": { display: "none" },
+                                    boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+                                    mb: 2,
+                                }}
+                            >
+                                <AccordionSummary
+                                    expandIcon={<ExpandMoreIcon />}
+                                    sx={{
+                                        bgcolor: "grey.50",
+                                        borderRadius: "8px 8px 0 0",
+                                        minHeight: 64,
+                                        "&:hover": {
+                                            bgcolor: "grey.100",
+                                        },
+                                        "& .MuiAccordionSummary-content": {
+                                            my: 2,
+                                        },
+                                    }}
+                                >
+                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                                        <Box
+                                            sx={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                width: 40,
+                                                height: 40,
+                                                borderRadius: 2,
+                                                bgcolor: "success.main",
+                                                color: "white",
+                                            }}
+                                        >
+                                            <MissionIcon size={20} />
+                                        </Box>
+                                        <Box>
+                                            <Typography
+                                                variant="h6"
+                                                sx={{ fontWeight: 600, lineHeight: 1.2 }}
+                                            >
+                                                Mission Section
+                                            </Typography>
+                                            <Typography variant="caption" color="text.secondary">
+                                                Define your company mission statement
+                                            </Typography>
+                                        </Box>
+                                    </Box>
+                                </AccordionSummary>
+                                <AccordionDetails sx={{ p: 3, bgcolor: "background.paper" }}>
+                                    <Grid container spacing={3}>
+                                        <Grid item xs={12}>
+                                            <TextField
+                                                fullWidth
+                                                label="Mission Title"
+                                                value={aboutData.mission.title}
+                                                onChange={(e) =>
+                                                    updateMissionField("title", e.target.value)
+                                                }
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12}>
+                                            <TextField
+                                                fullWidth
+                                                label="Mission Quote"
+                                                value={aboutData.mission.quote}
+                                                onChange={(e) =>
+                                                    updateMissionField("quote", e.target.value)
+                                                }
+                                                multiline
+                                                rows={3}
+                                                helperText="The main mission statement quote"
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12}>
+                                            <TextField
+                                                fullWidth
+                                                label="Attribution"
+                                                value={aboutData.mission.attribution}
+                                                onChange={(e) =>
+                                                    updateMissionField(
+                                                        "attribution",
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                helperText="Who the quote is attributed to"
+                                            />
+                                        </Grid>
+                                    </Grid>
+                                </AccordionDetails>
+                            </Accordion>
+
+                            {/* Action Buttons at Bottom */}
+                            {hasChanges && (
+                                <Paper
+                                    elevation={0}
+                                    sx={{
+                                        mt: 3,
+                                        p: 2,
+                                        display: "flex",
+                                        gap: 2,
+                                        bgcolor: "grey.50",
+                                        border: "1px solid",
+                                        borderColor: "divider",
+                                        borderRadius: 2,
+                                    }}
+                                >
+                                    <Button
+                                        variant="contained"
+                                        size="large"
+                                        onClick={handleSaveAllChanges}
+                                        disabled={isLoading}
+                                        sx={{
+                                            px: 4,
+                                            fontWeight: 600,
+                                            boxShadow: 2,
+                                            "&:hover": {
+                                                boxShadow: 4,
+                                            },
+                                        }}
+                                    >
+                                        {isLoading ? "Saving..." : "Save All Changes"}
+                                    </Button>
+                                    <Button
+                                        variant="outlined"
+                                        size="large"
+                                        onClick={handleCancelChanges}
+                                        sx={{
+                                            px: 4,
+                                            fontWeight: 600,
+                                            borderWidth: 2,
+                                            "&:hover": {
+                                                borderWidth: 2,
+                                            },
+                                        }}
+                                    >
+                                        Cancel
+                                    </Button>
+                                </Paper>
+                            )}
+
+                            {/* Help Text */}
+                            <Alert severity="info" sx={{ mt: 3 }}>
+                                <Typography variant="caption">
+                                    <strong>Tip:</strong> Use the token {"{foundedYear}"} in any
+                                    text field to automatically display your company's founding year
+                                    (currently: {foundedYear}). This keeps your content dynamic and
+                                    up-to-date.
+                                </Typography>
+                            </Alert>
                         </Box>
                     </Grid>
 
@@ -1163,7 +1412,9 @@ export const AdminHomepageAbout = () => {
                                     boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
                                 }}
                             >
-                                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3 }}>
+                                <Box
+                                    sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3 }}
+                                >
                                     <Box
                                         sx={{
                                             display: "flex",
@@ -1179,7 +1430,10 @@ export const AdminHomepageAbout = () => {
                                         <BookOpen size={20} />
                                     </Box>
                                     <Box>
-                                        <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                                        <Typography
+                                            variant="h6"
+                                            sx={{ fontWeight: 600, lineHeight: 1.2 }}
+                                        >
                                             Live Preview
                                         </Typography>
                                         <Typography variant="caption" color="text.secondary">
@@ -1187,7 +1441,10 @@ export const AdminHomepageAbout = () => {
                                         </Typography>
                                     </Box>
                                 </Box>
-                                <AboutStoryPreview aboutData={aboutData} foundedYear={foundedYear} />
+                                <AboutStoryPreview
+                                    aboutData={aboutData}
+                                    foundedYear={foundedYear}
+                                />
                                 <Alert
                                     severity="info"
                                     sx={{
@@ -1201,8 +1458,9 @@ export const AdminHomepageAbout = () => {
                                     }}
                                 >
                                     <Typography variant="caption">
-                                        This preview updates in real-time as you make changes. The actual about section may look slightly
-                                        different based on screen size.
+                                        This preview updates in real-time as you make changes. The
+                                        actual about section may look slightly different based on
+                                        screen size.
                                     </Typography>
                                 </Alert>
                             </Paper>

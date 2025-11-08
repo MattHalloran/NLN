@@ -40,6 +40,7 @@ import {
     useUpdateLandingPageContent,
 } from "api/rest/hooks";
 import { useABTestQueryParams } from "hooks/useABTestQueryParams";
+import { useBlockNavigation } from "hooks/useBlockNavigation";
 import { BackButton, Dropzone, PageContainer } from "components";
 import { ABTestEditingBanner } from "components/admin/ABTestEditingBanner/ABTestEditingBanner";
 import { TopBar } from "components/navigation/TopBar/TopBar";
@@ -545,6 +546,9 @@ export const AdminHomepageHeroBanner = () => {
         ctaButtons,
         originalCtaButtons,
     ]);
+
+    // Block navigation when there are unsaved changes
+    useBlockNavigation(hasChanges);
 
     const handleApiError = useCallback((error: unknown, defaultMessage: string) => {
         const message = (error as Error)?.message || defaultMessage;

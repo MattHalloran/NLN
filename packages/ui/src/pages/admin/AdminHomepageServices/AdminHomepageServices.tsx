@@ -12,7 +12,6 @@ import {
     MenuItem,
     FormControl,
     InputLabel,
-    IconButton,
     Accordion,
     AccordionSummary,
     AccordionDetails,
@@ -44,6 +43,7 @@ import { TopBar } from "components/navigation/TopBar/TopBar";
 import { useLandingPage } from "hooks/useLandingPage";
 import { useABTestQueryParams } from "hooks/useABTestQueryParams";
 import { useUpdateLandingPageSettings } from "api/rest/hooks";
+import { useBlockNavigation } from "hooks/useBlockNavigation";
 import { useCallback as _useCallback, useEffect, useState, useMemo } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
@@ -273,12 +273,12 @@ export const AdminHomepageServices = () => {
             subtitle: "Browse our online catalog or contact us to discuss your project needs",
             primaryButton: {
                 text: "Shop Online",
-                url: "https://newlife.online-orders.sbiteam.com/"
+                url: "https://newlife.online-orders.sbiteam.com/",
             },
             secondaryButton: {
                 text: "Contact Us",
-                url: "/about#contact"
-            }
+                url: "/about#contact",
+            },
         },
         items: [
             {
@@ -291,8 +291,7 @@ export const AdminHomepageServices = () => {
             },
             {
                 title: "Bulk Ordering & Pricing",
-                description:
-                    "Order in quantity with competitive wholesale pricing.",
+                description: "Order in quantity with competitive wholesale pricing.",
                 icon: "package",
                 action: "Get Pricing",
                 url: "/about#contact",
@@ -316,7 +315,11 @@ export const AdminHomepageServices = () => {
         ],
     });
     const [originalServices, setOriginalServices] = useState<ServicesSettings>(services);
-    const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: "success" | "error" }>({
+    const [snackbar, setSnackbar] = useState<{
+        open: boolean;
+        message: string;
+        severity: "success" | "error";
+    }>({
         open: false,
         message: "",
         severity: "success",
@@ -341,6 +344,9 @@ export const AdminHomepageServices = () => {
         () => JSON.stringify(services) !== JSON.stringify(originalServices),
         [services, originalServices],
     );
+
+    // Block navigation when there are unsaved changes
+    useBlockNavigation(hasChanges);
 
     const handleSave = async () => {
         try {
@@ -418,7 +424,12 @@ export const AdminHomepageServices = () => {
                 display="page"
                 title="Services Section Settings"
                 help="Configure all aspects of your services section"
-                startComponent={<BackButton to={APP_LINKS.AdminHomepage} ariaLabel="Back to Homepage Management" />}
+                startComponent={
+                    <BackButton
+                        to={APP_LINKS.AdminHomepage}
+                        ariaLabel="Back to Homepage Management"
+                    />
+                }
             />
 
             <Box p={2}>
@@ -514,7 +525,14 @@ export const AdminHomepageServices = () => {
                                         boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
                                     }}
                                 >
-                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3 }}>
+                                    <Box
+                                        sx={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: 1.5,
+                                            mb: 3,
+                                        }}
+                                    >
                                         <Box
                                             sx={{
                                                 display: "flex",
@@ -530,7 +548,10 @@ export const AdminHomepageServices = () => {
                                             <EyeIcon size={20} />
                                         </Box>
                                         <Box>
-                                            <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                                            <Typography
+                                                variant="h6"
+                                                sx={{ fontWeight: 600, lineHeight: 1.2 }}
+                                            >
                                                 Live Preview
                                             </Typography>
                                             <Typography variant="caption" color="text.secondary">
@@ -601,7 +622,10 @@ export const AdminHomepageServices = () => {
                                             <TextFieldsIcon size={20} />
                                         </Box>
                                         <Box>
-                                            <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                                            <Typography
+                                                variant="h6"
+                                                sx={{ fontWeight: 600, lineHeight: 1.2 }}
+                                            >
                                                 Section Header
                                             </Typography>
                                             <Typography variant="caption" color="text.secondary">
@@ -616,7 +640,9 @@ export const AdminHomepageServices = () => {
                                             fullWidth
                                             label="Section Title"
                                             value={services.title}
-                                            onChange={(e) => setServices({ ...services, title: e.target.value })}
+                                            onChange={(e) =>
+                                                setServices({ ...services, title: e.target.value })
+                                            }
                                             helperText="Main heading for the services section"
                                             variant="outlined"
                                             sx={{
@@ -629,7 +655,12 @@ export const AdminHomepageServices = () => {
                                             fullWidth
                                             label="Section Subtitle"
                                             value={services.subtitle}
-                                            onChange={(e) => setServices({ ...services, subtitle: e.target.value })}
+                                            onChange={(e) =>
+                                                setServices({
+                                                    ...services,
+                                                    subtitle: e.target.value,
+                                                })
+                                            }
                                             helperText="Subtitle text below the main heading"
                                             variant="outlined"
                                             sx={{
@@ -668,7 +699,14 @@ export const AdminHomepageServices = () => {
                                         },
                                     }}
                                 >
-                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, width: "100%" }}>
+                                    <Box
+                                        sx={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: 1.5,
+                                            width: "100%",
+                                        }}
+                                    >
                                         <Box
                                             sx={{
                                                 display: "flex",
@@ -684,11 +722,15 @@ export const AdminHomepageServices = () => {
                                             <GridIcon size={20} />
                                         </Box>
                                         <Box sx={{ flex: 1 }}>
-                                            <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                                            <Typography
+                                                variant="h6"
+                                                sx={{ fontWeight: 600, lineHeight: 1.2 }}
+                                            >
                                                 Service Cards
                                             </Typography>
                                             <Typography variant="caption" color="text.secondary">
-                                                Manage your service offerings ({services.items.length} cards)
+                                                Manage your service offerings (
+                                                {services.items.length} cards)
                                             </Typography>
                                         </Box>
                                     </Box>
@@ -725,7 +767,8 @@ export const AdminHomepageServices = () => {
                                             }}
                                         >
                                             <Typography variant="caption">
-                                                Drag cards to reorder them. Services are displayed on the homepage in the order shown below.
+                                                Drag cards to reorder them. Services are displayed
+                                                on the homepage in the order shown below.
                                             </Typography>
                                         </Alert>
                                     )}
@@ -733,9 +776,16 @@ export const AdminHomepageServices = () => {
                                     <DragDropContext onDragEnd={handleDragEnd}>
                                         <Droppable droppableId="services">
                                             {(provided) => (
-                                                <Box {...provided.droppableProps} ref={provided.innerRef}>
+                                                <Box
+                                                    {...provided.droppableProps}
+                                                    ref={provided.innerRef}
+                                                >
                                                     {services.items.map((service, index) => (
-                                                        <Draggable key={index} draggableId={`service-${index}`} index={index}>
+                                                        <Draggable
+                                                            key={index}
+                                                            draggableId={`service-${index}`}
+                                                            index={index}
+                                                        >
                                                             {(provided, snapshot) => (
                                                                 <Paper
                                                                     ref={provided.innerRef}
@@ -743,42 +793,61 @@ export const AdminHomepageServices = () => {
                                                                     elevation={0}
                                                                     sx={{
                                                                         mb: 2.5,
-                                                                        opacity: snapshot.isDragging ? 0.7 : 1,
+                                                                        opacity: snapshot.isDragging
+                                                                            ? 0.7
+                                                                            : 1,
                                                                         border: "2px solid",
-                                                                        borderColor: snapshot.isDragging
-                                                                            ? "primary.main"
-                                                                            : "divider",
+                                                                        borderColor:
+                                                                            snapshot.isDragging
+                                                                                ? "primary.main"
+                                                                                : "divider",
                                                                         borderRadius: 2,
                                                                         overflow: "hidden",
                                                                         transition: "all 0.2s",
-                                                                        boxShadow: snapshot.isDragging
-                                                                            ? "0 8px 16px rgba(0,0,0,0.15)"
-                                                                            : "0 1px 3px rgba(0,0,0,0.05)",
+                                                                        boxShadow:
+                                                                            snapshot.isDragging
+                                                                                ? "0 8px 16px rgba(0,0,0,0.15)"
+                                                                                : "0 1px 3px rgba(0,0,0,0.05)",
                                                                         "&:hover": {
-                                                                            boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                                                                            borderColor: "primary.light",
+                                                                            boxShadow:
+                                                                                "0 4px 12px rgba(0,0,0,0.1)",
+                                                                            borderColor:
+                                                                                "primary.light",
                                                                         },
                                                                     }}
                                                                 >
-                                                                    <Box sx={{ display: "flex", alignItems: "stretch" }}>
+                                                                    <Box
+                                                                        sx={{
+                                                                            display: "flex",
+                                                                            alignItems: "stretch",
+                                                                        }}
+                                                                    >
                                                                         <Box
                                                                             {...provided.dragHandleProps}
                                                                             sx={{
                                                                                 display: "flex",
-                                                                                flexDirection: "column",
-                                                                                alignItems: "center",
-                                                                                justifyContent: "center",
+                                                                                flexDirection:
+                                                                                    "column",
+                                                                                alignItems:
+                                                                                    "center",
+                                                                                justifyContent:
+                                                                                    "center",
                                                                                 px: 2,
                                                                                 cursor: "grab",
-                                                                                backgroundColor: "grey.50",
-                                                                                borderRight: "1px solid",
-                                                                                borderColor: "divider",
+                                                                                backgroundColor:
+                                                                                    "grey.50",
+                                                                                borderRight:
+                                                                                    "1px solid",
+                                                                                borderColor:
+                                                                                    "divider",
                                                                                 "&:active": {
                                                                                     cursor: "grabbing",
                                                                                 },
                                                                             }}
                                                                         >
-                                                                            <GripVertical size={20} />
+                                                                            <GripVertical
+                                                                                size={20}
+                                                                            />
                                                                             <Typography
                                                                                 variant="caption"
                                                                                 sx={{
@@ -791,20 +860,38 @@ export const AdminHomepageServices = () => {
                                                                             </Typography>
                                                                         </Box>
 
-                                                                        <Box sx={{ flex: 1, p: 2.5 }}>
-                                                                            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                                                                        <Box
+                                                                            sx={{ flex: 1, p: 2.5 }}
+                                                                        >
+                                                                            <Box
+                                                                                sx={{
+                                                                                    display: "flex",
+                                                                                    flexDirection:
+                                                                                        "column",
+                                                                                    gap: 2,
+                                                                                }}
+                                                                            >
                                                                                 <TextField
                                                                                     fullWidth
                                                                                     label="Service Title"
-                                                                                    value={service.title}
+                                                                                    value={
+                                                                                        service.title
+                                                                                    }
                                                                                     onChange={(e) =>
-                                                                                        handleUpdateService(index, "title", e.target.value)
+                                                                                        handleUpdateService(
+                                                                                            index,
+                                                                                            "title",
+                                                                                            e.target
+                                                                                                .value,
+                                                                                        )
                                                                                     }
                                                                                     size="small"
                                                                                     sx={{
-                                                                                        "& .MuiOutlinedInput-root": {
-                                                                                            bgcolor: "background.paper",
-                                                                                        },
+                                                                                        "& .MuiOutlinedInput-root":
+                                                                                            {
+                                                                                                bgcolor:
+                                                                                                    "background.paper",
+                                                                                            },
                                                                                     }}
                                                                                 />
 
@@ -813,56 +900,134 @@ export const AdminHomepageServices = () => {
                                                                                     multiline
                                                                                     rows={3}
                                                                                     label="Description"
-                                                                                    value={service.description}
+                                                                                    value={
+                                                                                        service.description
+                                                                                    }
                                                                                     onChange={(e) =>
-                                                                                        handleUpdateService(index, "description", e.target.value)
+                                                                                        handleUpdateService(
+                                                                                            index,
+                                                                                            "description",
+                                                                                            e.target
+                                                                                                .value,
+                                                                                        )
                                                                                     }
                                                                                     size="small"
                                                                                     sx={{
-                                                                                        "& .MuiOutlinedInput-root": {
-                                                                                            bgcolor: "background.paper",
-                                                                                        },
+                                                                                        "& .MuiOutlinedInput-root":
+                                                                                            {
+                                                                                                bgcolor:
+                                                                                                    "background.paper",
+                                                                                            },
                                                                                     }}
                                                                                 />
 
-                                                                                <Box sx={{ display: "flex", gap: 2 }}>
-                                                                                    <FormControl sx={{ flex: 1 }} size="small">
-                                                                                        <InputLabel>Icon</InputLabel>
+                                                                                <Box
+                                                                                    sx={{
+                                                                                        display:
+                                                                                            "flex",
+                                                                                        gap: 2,
+                                                                                    }}
+                                                                                >
+                                                                                    <FormControl
+                                                                                        sx={{
+                                                                                            flex: 1,
+                                                                                        }}
+                                                                                        size="small"
+                                                                                    >
+                                                                                        <InputLabel>
+                                                                                            Icon
+                                                                                        </InputLabel>
                                                                                         <Select
-                                                                                            value={service.icon}
+                                                                                            value={
+                                                                                                service.icon
+                                                                                            }
                                                                                             label="Icon"
-                                                                                            onChange={(e) =>
-                                                                                                handleUpdateService(index, "icon", e.target.value)
+                                                                                            onChange={(
+                                                                                                e,
+                                                                                            ) =>
+                                                                                                handleUpdateService(
+                                                                                                    index,
+                                                                                                    "icon",
+                                                                                                    e
+                                                                                                        .target
+                                                                                                        .value,
+                                                                                                )
                                                                                             }
                                                                                             sx={{
-                                                                                                bgcolor: "background.paper",
+                                                                                                bgcolor:
+                                                                                                    "background.paper",
                                                                                             }}
                                                                                         >
-                                                                                            {SERVICE_ICONS.map((icon) => (
-                                                                                                <MenuItem key={icon.value} value={icon.value}>
-                                                                                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                                                                                        {(() => {
-                                                                                                            const IconComp = ICON_COMPONENTS[icon.value];
-                                                                                                            return IconComp ? <IconComp size={16} /> : null;
-                                                                                                        })()}
-                                                                                                        <Typography>{icon.label}</Typography>
-                                                                                                    </Box>
-                                                                                                </MenuItem>
-                                                                                            ))}
+                                                                                            {SERVICE_ICONS.map(
+                                                                                                (
+                                                                                                    icon,
+                                                                                                ) => (
+                                                                                                    <MenuItem
+                                                                                                        key={
+                                                                                                            icon.value
+                                                                                                        }
+                                                                                                        value={
+                                                                                                            icon.value
+                                                                                                        }
+                                                                                                    >
+                                                                                                        <Box
+                                                                                                            sx={{
+                                                                                                                display:
+                                                                                                                    "flex",
+                                                                                                                alignItems:
+                                                                                                                    "center",
+                                                                                                                gap: 1,
+                                                                                                            }}
+                                                                                                        >
+                                                                                                            {(() => {
+                                                                                                                const IconComp =
+                                                                                                                    ICON_COMPONENTS[
+                                                                                                                        icon
+                                                                                                                            .value
+                                                                                                                    ];
+                                                                                                                return IconComp ? (
+                                                                                                                    <IconComp
+                                                                                                                        size={
+                                                                                                                            16
+                                                                                                                        }
+                                                                                                                    />
+                                                                                                                ) : null;
+                                                                                                            })()}
+                                                                                                            <Typography>
+                                                                                                                {
+                                                                                                                    icon.label
+                                                                                                                }
+                                                                                                            </Typography>
+                                                                                                        </Box>
+                                                                                                    </MenuItem>
+                                                                                                ),
+                                                                                            )}
                                                                                         </Select>
                                                                                     </FormControl>
 
                                                                                     <TextField
                                                                                         sx={{
                                                                                             flex: 1,
-                                                                                            "& .MuiOutlinedInput-root": {
-                                                                                                bgcolor: "background.paper",
-                                                                                            },
+                                                                                            "& .MuiOutlinedInput-root":
+                                                                                                {
+                                                                                                    bgcolor:
+                                                                                                        "background.paper",
+                                                                                                },
                                                                                         }}
                                                                                         label="Button Text"
-                                                                                        value={service.action}
-                                                                                        onChange={(e) =>
-                                                                                            handleUpdateService(index, "action", e.target.value)
+                                                                                        value={
+                                                                                            service.action
+                                                                                        }
+                                                                                        onChange={(
+                                                                                            e,
+                                                                                        ) =>
+                                                                                            handleUpdateService(
+                                                                                                index,
+                                                                                                "action",
+                                                                                                e
+                                                                                                    .target
+                                                                                                    .value,
+                                                                                            )
                                                                                         }
                                                                                         size="small"
                                                                                     />
@@ -871,30 +1036,58 @@ export const AdminHomepageServices = () => {
                                                                                 <TextField
                                                                                     fullWidth
                                                                                     label="Button URL"
-                                                                                    value={service.url}
+                                                                                    value={
+                                                                                        service.url
+                                                                                    }
                                                                                     onChange={(e) =>
-                                                                                        handleUpdateService(index, "url", e.target.value)
+                                                                                        handleUpdateService(
+                                                                                            index,
+                                                                                            "url",
+                                                                                            e.target
+                                                                                                .value,
+                                                                                        )
                                                                                     }
                                                                                     helperText="Internal path (e.g., /about) or external URL (e.g., https://...)"
                                                                                     size="small"
                                                                                     sx={{
-                                                                                        "& .MuiOutlinedInput-root": {
-                                                                                            bgcolor: "background.paper",
-                                                                                        },
+                                                                                        "& .MuiOutlinedInput-root":
+                                                                                            {
+                                                                                                bgcolor:
+                                                                                                    "background.paper",
+                                                                                            },
                                                                                     }}
                                                                                 />
 
-                                                                                <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+                                                                                <Box
+                                                                                    sx={{
+                                                                                        display:
+                                                                                            "flex",
+                                                                                        justifyContent:
+                                                                                            "flex-end",
+                                                                                    }}
+                                                                                >
                                                                                     <Button
                                                                                         variant="outlined"
                                                                                         color="error"
-                                                                                        startIcon={<Trash2 size={16} />}
-                                                                                        onClick={() => handleRemoveService(index)}
+                                                                                        startIcon={
+                                                                                            <Trash2
+                                                                                                size={
+                                                                                                    16
+                                                                                                }
+                                                                                            />
+                                                                                        }
+                                                                                        onClick={() =>
+                                                                                            handleRemoveService(
+                                                                                                index,
+                                                                                            )
+                                                                                        }
                                                                                         size="small"
                                                                                         sx={{
-                                                                                            "&:hover": {
-                                                                                                bgcolor: "error.lighter",
-                                                                                            },
+                                                                                            "&:hover":
+                                                                                                {
+                                                                                                    bgcolor:
+                                                                                                        "error.lighter",
+                                                                                                },
                                                                                         }}
                                                                                     >
                                                                                         Remove Card
@@ -915,7 +1108,8 @@ export const AdminHomepageServices = () => {
 
                                     {services.items.length === 0 && (
                                         <Alert severity="warning">
-                                            No service cards configured. Click "Add Service Card" above to create your first service card.
+                                            No service cards configured. Click "Add Service Card"
+                                            above to create your first service card.
                                         </Alert>
                                     )}
                                 </AccordionDetails>
@@ -963,7 +1157,10 @@ export const AdminHomepageServices = () => {
                                             <Package size={20} />
                                         </Box>
                                         <Box>
-                                            <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                                            <Typography
+                                                variant="h6"
+                                                sx={{ fontWeight: 600, lineHeight: 1.2 }}
+                                            >
                                                 Call-to-Action Section
                                             </Typography>
                                             <Typography variant="caption" color="text.secondary">
@@ -978,7 +1175,12 @@ export const AdminHomepageServices = () => {
                                             fullWidth
                                             label="CTA Title"
                                             value={services.cta.title}
-                                            onChange={(e) => setServices({ ...services, cta: { ...services.cta, title: e.target.value } })}
+                                            onChange={(e) =>
+                                                setServices({
+                                                    ...services,
+                                                    cta: { ...services.cta, title: e.target.value },
+                                                })
+                                            }
                                             helperText="Main heading for the call-to-action section"
                                             variant="outlined"
                                             sx={{
@@ -991,7 +1193,15 @@ export const AdminHomepageServices = () => {
                                             fullWidth
                                             label="CTA Subtitle"
                                             value={services.cta.subtitle}
-                                            onChange={(e) => setServices({ ...services, cta: { ...services.cta, subtitle: e.target.value } })}
+                                            onChange={(e) =>
+                                                setServices({
+                                                    ...services,
+                                                    cta: {
+                                                        ...services.cta,
+                                                        subtitle: e.target.value,
+                                                    },
+                                                })
+                                            }
                                             helperText="Subtitle text below the CTA heading"
                                             variant="outlined"
                                             multiline
@@ -1004,7 +1214,10 @@ export const AdminHomepageServices = () => {
                                         />
 
                                         <Box sx={{ mt: 2 }}>
-                                            <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>
+                                            <Typography
+                                                variant="subtitle2"
+                                                sx={{ mb: 2, fontWeight: 600 }}
+                                            >
                                                 Primary Button (Left)
                                             </Typography>
                                             <Box sx={{ display: "flex", gap: 2 }}>
@@ -1012,14 +1225,36 @@ export const AdminHomepageServices = () => {
                                                     sx={{ flex: 1 }}
                                                     label="Button Text"
                                                     value={services.cta.primaryButton.text}
-                                                    onChange={(e) => setServices({ ...services, cta: { ...services.cta, primaryButton: { ...services.cta.primaryButton, text: e.target.value } } })}
+                                                    onChange={(e) =>
+                                                        setServices({
+                                                            ...services,
+                                                            cta: {
+                                                                ...services.cta,
+                                                                primaryButton: {
+                                                                    ...services.cta.primaryButton,
+                                                                    text: e.target.value,
+                                                                },
+                                                            },
+                                                        })
+                                                    }
                                                     size="small"
                                                 />
                                                 <TextField
                                                     sx={{ flex: 2 }}
                                                     label="Button URL"
                                                     value={services.cta.primaryButton.url}
-                                                    onChange={(e) => setServices({ ...services, cta: { ...services.cta, primaryButton: { ...services.cta.primaryButton, url: e.target.value } } })}
+                                                    onChange={(e) =>
+                                                        setServices({
+                                                            ...services,
+                                                            cta: {
+                                                                ...services.cta,
+                                                                primaryButton: {
+                                                                    ...services.cta.primaryButton,
+                                                                    url: e.target.value,
+                                                                },
+                                                            },
+                                                        })
+                                                    }
                                                     helperText="Internal path or external URL"
                                                     size="small"
                                                 />
@@ -1027,7 +1262,10 @@ export const AdminHomepageServices = () => {
                                         </Box>
 
                                         <Box>
-                                            <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>
+                                            <Typography
+                                                variant="subtitle2"
+                                                sx={{ mb: 2, fontWeight: 600 }}
+                                            >
                                                 Secondary Button (Right)
                                             </Typography>
                                             <Box sx={{ display: "flex", gap: 2 }}>
@@ -1035,14 +1273,36 @@ export const AdminHomepageServices = () => {
                                                     sx={{ flex: 1 }}
                                                     label="Button Text"
                                                     value={services.cta.secondaryButton.text}
-                                                    onChange={(e) => setServices({ ...services, cta: { ...services.cta, secondaryButton: { ...services.cta.secondaryButton, text: e.target.value } } })}
+                                                    onChange={(e) =>
+                                                        setServices({
+                                                            ...services,
+                                                            cta: {
+                                                                ...services.cta,
+                                                                secondaryButton: {
+                                                                    ...services.cta.secondaryButton,
+                                                                    text: e.target.value,
+                                                                },
+                                                            },
+                                                        })
+                                                    }
                                                     size="small"
                                                 />
                                                 <TextField
                                                     sx={{ flex: 2 }}
                                                     label="Button URL"
                                                     value={services.cta.secondaryButton.url}
-                                                    onChange={(e) => setServices({ ...services, cta: { ...services.cta, secondaryButton: { ...services.cta.secondaryButton, url: e.target.value } } })}
+                                                    onChange={(e) =>
+                                                        setServices({
+                                                            ...services,
+                                                            cta: {
+                                                                ...services.cta,
+                                                                secondaryButton: {
+                                                                    ...services.cta.secondaryButton,
+                                                                    url: e.target.value,
+                                                                },
+                                                            },
+                                                        })
+                                                    }
                                                     helperText="Internal path or external URL"
                                                     size="small"
                                                 />
@@ -1122,7 +1382,9 @@ export const AdminHomepageServices = () => {
                                     boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
                                 }}
                             >
-                                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3 }}>
+                                <Box
+                                    sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3 }}
+                                >
                                     <Box
                                         sx={{
                                             display: "flex",
@@ -1138,7 +1400,10 @@ export const AdminHomepageServices = () => {
                                         <EyeIcon size={20} />
                                     </Box>
                                     <Box>
-                                        <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                                        <Typography
+                                            variant="h6"
+                                            sx={{ fontWeight: 600, lineHeight: 1.2 }}
+                                        >
                                             Live Preview
                                         </Typography>
                                         <Typography variant="caption" color="text.secondary">
@@ -1164,8 +1429,9 @@ export const AdminHomepageServices = () => {
                                     }}
                                 >
                                     <Typography variant="caption">
-                                        This preview updates in real-time as you make changes. The actual services section may look slightly
-                                        different based on screen size.
+                                        This preview updates in real-time as you make changes. The
+                                        actual services section may look slightly different based on
+                                        screen size.
                                     </Typography>
                                 </Alert>
                             </Paper>

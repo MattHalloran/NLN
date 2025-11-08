@@ -20,13 +20,28 @@ import {
     AccordionSummary,
     AccordionDetails,
 } from "@mui/material";
-import { Save, RotateCcw, Palette, Building, Sun, Moon, Menu, ShoppingCart, Heart, User, AlertTriangle, CheckCircle, ChevronDown } from "lucide-react";
+import {
+    Save,
+    RotateCcw,
+    Palette,
+    Building,
+    Sun,
+    Moon,
+    Menu,
+    ShoppingCart,
+    Heart,
+    User,
+    AlertTriangle,
+    CheckCircle,
+    ChevronDown,
+} from "lucide-react";
 import { BackButton, PageContainer } from "components";
 import { ABTestEditingBanner } from "components/admin/ABTestEditingBanner";
 import { TopBar } from "components/navigation/TopBar/TopBar";
 import { useLandingPage } from "hooks/useLandingPage";
 import { useABTestQueryParams } from "hooks/useABTestQueryParams";
 import { useUpdateLandingPageSettings } from "api/rest/hooks";
+import { useBlockNavigation } from "hooks/useBlockNavigation";
 import { useCallback as _useCallback, useEffect, useState, useMemo, useRef } from "react";
 import { PubSub } from "utils";
 import { validateThemeContrast, type ContrastIssue } from "utils/colorContrast";
@@ -187,9 +202,14 @@ const RealisticPreview = ({ colors, mode }: PreviewProps) => {
                                     mb: 1.5,
                                 }}
                             >
-                                <Typography sx={{ color: "#ffffff", fontWeight: 700 }}>1</Typography>
+                                <Typography sx={{ color: "#ffffff", fontWeight: 700 }}>
+                                    1
+                                </Typography>
                             </Box>
-                            <Typography variant="body2" sx={{ color: textColor, fontWeight: 600, mb: 0.5 }}>
+                            <Typography
+                                variant="body2"
+                                sx={{ color: textColor, fontWeight: 600, mb: 0.5 }}
+                            >
                                 Feature One
                             </Typography>
                             <Typography variant="caption" sx={{ color: textSecondary }}>
@@ -220,9 +240,14 @@ const RealisticPreview = ({ colors, mode }: PreviewProps) => {
                                     mb: 1.5,
                                 }}
                             >
-                                <Typography sx={{ color: "#ffffff", fontWeight: 700 }}>2</Typography>
+                                <Typography sx={{ color: "#ffffff", fontWeight: 700 }}>
+                                    2
+                                </Typography>
                             </Box>
-                            <Typography variant="body2" sx={{ color: textColor, fontWeight: 600, mb: 0.5 }}>
+                            <Typography
+                                variant="body2"
+                                sx={{ color: textColor, fontWeight: 600, mb: 0.5 }}
+                            >
                                 Feature Two
                             </Typography>
                             <Typography variant="caption" sx={{ color: textSecondary }}>
@@ -253,9 +278,14 @@ const RealisticPreview = ({ colors, mode }: PreviewProps) => {
                                     mb: 1.5,
                                 }}
                             >
-                                <Typography sx={{ color: "#ffffff", fontWeight: 700 }}>3</Typography>
+                                <Typography sx={{ color: "#ffffff", fontWeight: 700 }}>
+                                    3
+                                </Typography>
                             </Box>
-                            <Typography variant="body2" sx={{ color: textColor, fontWeight: 600, mb: 0.5 }}>
+                            <Typography
+                                variant="body2"
+                                sx={{ color: textColor, fontWeight: 600, mb: 0.5 }}
+                            >
                                 Feature Three
                             </Typography>
                             <Typography variant="caption" sx={{ color: textSecondary }}>
@@ -288,7 +318,10 @@ const RealisticPreview = ({ colors, mode }: PreviewProps) => {
                             sx={{
                                 borderColor: colors.secondary,
                                 color: colors.secondary,
-                                "&:hover": { borderColor: colors.secondary, backgroundColor: "transparent" },
+                                "&:hover": {
+                                    borderColor: colors.secondary,
+                                    backgroundColor: "transparent",
+                                },
                             }}
                         >
                             Secondary Action
@@ -312,7 +345,11 @@ export const AdminHomepageBranding = () => {
     const [originalBranding, setOriginalBranding] = useState<BrandingSettings>(DEFAULT_BRANDING);
     const [previewMode, setPreviewMode] = useState<"light" | "dark">("light");
     const [editingMode, setEditingMode] = useState<"light" | "dark">("light");
-    const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: "success" | "error" }>({
+    const [snackbar, setSnackbar] = useState<{
+        open: boolean;
+        message: string;
+        severity: "success" | "error";
+    }>({
         open: false,
         message: "",
         severity: "success",
@@ -341,7 +378,8 @@ export const AdminHomepageBranding = () => {
             // Exact match or combined Paper/Background issue
             return (
                 issueColorLower === colorLower ||
-                (issueColorLower === "paper/background" && (colorLower === "paper" || colorLower === "background"))
+                (issueColorLower === "paper/background" &&
+                    (colorLower === "paper" || colorLower === "background"))
             );
         });
     };
@@ -354,7 +392,7 @@ export const AdminHomepageBranding = () => {
     }, [lightIssues, darkIssues]);
 
     // Get critical errors from both modes
-    const allCriticalErrors = useMemo(() => {
+    const _allCriticalErrors = useMemo(() => {
         return [...lightIssues, ...darkIssues].filter((issue) => issue.severity === "error");
     }, [lightIssues, darkIssues]);
 
@@ -375,7 +413,8 @@ export const AdminHomepageBranding = () => {
             colorSettings = {
                 light: {
                     primary: (colors.primary as string) || DEFAULT_BRANDING.colors.light.primary,
-                    secondary: (colors.secondary as string) || DEFAULT_BRANDING.colors.light.secondary,
+                    secondary:
+                        (colors.secondary as string) || DEFAULT_BRANDING.colors.light.secondary,
                     accent: (colors.accent as string) || DEFAULT_BRANDING.colors.light.accent,
                     background: DEFAULT_BRANDING.colors.light.background,
                     paper: DEFAULT_BRANDING.colors.light.paper,
@@ -410,6 +449,9 @@ export const AdminHomepageBranding = () => {
         () => JSON.stringify(branding) !== JSON.stringify(originalBranding),
         [branding, originalBranding],
     );
+
+    // Block navigation when there are unsaved changes
+    useBlockNavigation(hasChanges);
 
     const handleSave = async () => {
         // Validate all colors for both light and dark modes
@@ -520,7 +562,12 @@ export const AdminHomepageBranding = () => {
                 display="page"
                 title="Branding & Theme"
                 help="Customize company information and brand colors for light and dark modes"
-                startComponent={<BackButton to={APP_LINKS.AdminHomepage} ariaLabel="Back to Homepage Management" />}
+                startComponent={
+                    <BackButton
+                        to={APP_LINKS.AdminHomepage}
+                        ariaLabel="Back to Homepage Management"
+                    />
+                }
             />
 
             <Box p={2}>
@@ -616,7 +663,14 @@ export const AdminHomepageBranding = () => {
                                         boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
                                     }}
                                 >
-                                    <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 3 }}>
+                                    <Box
+                                        sx={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "space-between",
+                                            mb: 3,
+                                        }}
+                                    >
                                         <Typography variant="h6" sx={{ fontWeight: 600 }}>
                                             Live Preview
                                         </Typography>
@@ -636,7 +690,10 @@ export const AdminHomepageBranding = () => {
                                             </ToggleButton>
                                         </ToggleButtonGroup>
                                     </Box>
-                                    <RealisticPreview colors={branding.colors[previewMode]} mode={previewMode} />
+                                    <RealisticPreview
+                                        colors={branding.colors[previewMode]}
+                                        mode={previewMode}
+                                    />
                                     <Alert
                                         severity="info"
                                         sx={{
@@ -663,7 +720,14 @@ export const AdminHomepageBranding = () => {
                                 }}
                             >
                                 <CardContent>
-                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 3 }}>
+                                    <Box
+                                        sx={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: 1,
+                                            mb: 3,
+                                        }}
+                                    >
                                         <Building size={24} />
                                         <Typography variant="h6" sx={{ fontWeight: 600 }}>
                                             Company Information
@@ -681,12 +745,16 @@ export const AdminHomepageBranding = () => {
                                                     ...branding,
                                                     companyInfo: {
                                                         ...branding.companyInfo,
-                                                        foundedYear: parseInt(e.target.value) || 1981,
+                                                        foundedYear:
+                                                            parseInt(e.target.value) || 1981,
                                                     },
                                                 })
                                             }
                                             helperText="Year the company was founded"
-                                            inputProps={{ min: 1900, max: new Date().getFullYear() }}
+                                            inputProps={{
+                                                min: 1900,
+                                                max: new Date().getFullYear(),
+                                            }}
                                         />
 
                                         <TextField
@@ -712,7 +780,9 @@ export const AdminHomepageBranding = () => {
                             {(lightIssues.length > 0 || darkIssues.length > 0) && (
                                 <Card
                                     sx={{
-                                        borderLeft: hasCriticalErrors ? "4px solid #d32f2f" : "4px solid #ed6c02",
+                                        borderLeft: hasCriticalErrors
+                                            ? "4px solid #d32f2f"
+                                            : "4px solid #ed6c02",
                                         border: "1px solid",
                                         borderColor: "divider",
                                         borderRadius: 2,
@@ -720,79 +790,173 @@ export const AdminHomepageBranding = () => {
                                     }}
                                 >
                                     <CardContent>
-                                        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
-                                            <AlertTriangle size={24} color={hasCriticalErrors ? "#d32f2f" : "#ed6c02"} />
+                                        <Box
+                                            sx={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: 1,
+                                                mb: 2,
+                                            }}
+                                        >
+                                            <AlertTriangle
+                                                size={24}
+                                                color={hasCriticalErrors ? "#d32f2f" : "#ed6c02"}
+                                            />
                                             <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                                                Accessibility {hasCriticalErrors ? "Errors" : "Warnings"}
+                                                Accessibility{" "}
+                                                {hasCriticalErrors ? "Errors" : "Warnings"}
                                             </Typography>
                                         </Box>
 
-                                        <Alert severity={hasCriticalErrors ? "error" : "warning"} sx={{ mb: 2 }}>
+                                        <Alert
+                                            severity={hasCriticalErrors ? "error" : "warning"}
+                                            sx={{ mb: 2 }}
+                                        >
                                             {hasCriticalErrors ? (
                                                 <>
-                                                    <strong>Critical:</strong> Your theme has accessibility issues that will cause Lighthouse
+                                                    <strong>Critical:</strong> Your theme has
+                                                    accessibility issues that will cause Lighthouse
                                                     failures. Fix these before saving.
-                                                    {lightIssues.some((i) => i.severity === "error") &&
-                                                        darkIssues.some((i) => i.severity === "error") && <> Issues found in both light and dark modes.</>}
-                                                    {lightIssues.some((i) => i.severity === "error") &&
-                                                        !darkIssues.some((i) => i.severity === "error") && <> Issues found in light mode only.</>}
-                                                    {!lightIssues.some((i) => i.severity === "error") &&
-                                                        darkIssues.some((i) => i.severity === "error") && <> Issues found in dark mode only.</>}
+                                                    {lightIssues.some(
+                                                        (i) => i.severity === "error",
+                                                    ) &&
+                                                        darkIssues.some(
+                                                            (i) => i.severity === "error",
+                                                        ) && (
+                                                            <>
+                                                                {" "}
+                                                                Issues found in both light and dark
+                                                                modes.
+                                                            </>
+                                                        )}
+                                                    {lightIssues.some(
+                                                        (i) => i.severity === "error",
+                                                    ) &&
+                                                        !darkIssues.some(
+                                                            (i) => i.severity === "error",
+                                                        ) && <> Issues found in light mode only.</>}
+                                                    {!lightIssues.some(
+                                                        (i) => i.severity === "error",
+                                                    ) &&
+                                                        darkIssues.some(
+                                                            (i) => i.severity === "error",
+                                                        ) && <> Issues found in dark mode only.</>}
                                                 </>
                                             ) : (
                                                 <>
-                                                    <strong>Warning:</strong> Some color combinations may have minor accessibility issues.
-                                                    Consider improving contrast for better user experience.
+                                                    <strong>Warning:</strong> Some color
+                                                    combinations may have minor accessibility
+                                                    issues. Consider improving contrast for better
+                                                    user experience.
                                                 </>
                                             )}
                                         </Alert>
 
                                         {/* Light Mode Issues */}
                                         {lightIssues.length > 0 && (
-                                            <Accordion defaultExpanded={lightIssues.some((i) => i.severity === "error")}>
-                                                <AccordionSummary expandIcon={<ChevronDown size={20} />}>
-                                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                            <Accordion
+                                                defaultExpanded={lightIssues.some(
+                                                    (i) => i.severity === "error",
+                                                )}
+                                            >
+                                                <AccordionSummary
+                                                    expandIcon={<ChevronDown size={20} />}
+                                                >
+                                                    <Box
+                                                        sx={{
+                                                            display: "flex",
+                                                            alignItems: "center",
+                                                            gap: 1,
+                                                        }}
+                                                    >
                                                         <Sun size={18} />
                                                         <Typography>
-                                                            Light Mode: {lightIssues.length} {lightIssues.length === 1 ? "issue" : "issues"}
-                                                            {lightIssues.some((i) => i.severity === "error") && (
-                                                                <Typography component="span" color="error" sx={{ ml: 1, fontWeight: 600 }}>
-                                                                    ({lightIssues.filter((i) => i.severity === "error").length} critical)
+                                                            Light Mode: {lightIssues.length}{" "}
+                                                            {lightIssues.length === 1
+                                                                ? "issue"
+                                                                : "issues"}
+                                                            {lightIssues.some(
+                                                                (i) => i.severity === "error",
+                                                            ) && (
+                                                                <Typography
+                                                                    component="span"
+                                                                    color="error"
+                                                                    sx={{ ml: 1, fontWeight: 600 }}
+                                                                >
+                                                                    (
+                                                                    {
+                                                                        lightIssues.filter(
+                                                                            (i) =>
+                                                                                i.severity ===
+                                                                                "error",
+                                                                        ).length
+                                                                    }{" "}
+                                                                    critical)
                                                                 </Typography>
                                                             )}
                                                         </Typography>
                                                     </Box>
                                                 </AccordionSummary>
                                                 <AccordionDetails>
-                                                    <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                                                    <Box
+                                                        sx={{
+                                                            display: "flex",
+                                                            flexDirection: "column",
+                                                            gap: 2,
+                                                        }}
+                                                    >
                                                         {lightIssues.map((issue, idx) => (
-                                                            <Alert key={idx} severity={issue.severity} sx={{ width: "100%" }}>
-                                                                <Typography variant="body2" sx={{ mb: 1 }}>
-                                                                    <strong>{issue.colorName}:</strong> {issue.description}
+                                                            <Alert
+                                                                key={idx}
+                                                                severity={issue.severity}
+                                                                sx={{ width: "100%" }}
+                                                            >
+                                                                <Typography
+                                                                    variant="body2"
+                                                                    sx={{ mb: 1 }}
+                                                                >
+                                                                    <strong>
+                                                                        {issue.colorName}:
+                                                                    </strong>{" "}
+                                                                    {issue.description}
                                                                 </Typography>
-                                                                <Box sx={{ display: "flex", gap: 2, mt: 1, alignItems: "center" }}>
+                                                                <Box
+                                                                    sx={{
+                                                                        display: "flex",
+                                                                        gap: 2,
+                                                                        mt: 1,
+                                                                        alignItems: "center",
+                                                                    }}
+                                                                >
                                                                     <Box
                                                                         sx={{
                                                                             width: 40,
                                                                             height: 40,
-                                                                            backgroundColor: issue.backgroundColor,
+                                                                            backgroundColor:
+                                                                                issue.backgroundColor,
                                                                             border: "1px solid #ccc",
                                                                             borderRadius: 1,
                                                                         }}
                                                                     />
-                                                                    <Typography variant="caption">on</Typography>
+                                                                    <Typography variant="caption">
+                                                                        on
+                                                                    </Typography>
                                                                     <Box
                                                                         sx={{
                                                                             width: 40,
                                                                             height: 40,
-                                                                            backgroundColor: issue.textColor,
+                                                                            backgroundColor:
+                                                                                issue.textColor,
                                                                             border: "1px solid #ccc",
                                                                             borderRadius: 1,
                                                                         }}
                                                                     />
                                                                     {issue.ratio !== null && (
                                                                         <Typography variant="caption">
-                                                                            = {issue.ratio.toFixed(2)}:1 (need {issue.required}:1)
+                                                                            ={" "}
+                                                                            {issue.ratio.toFixed(2)}
+                                                                            :1 (need{" "}
+                                                                            {issue.required}:1)
                                                                         </Typography>
                                                                     )}
                                                                 </Box>
@@ -806,52 +970,109 @@ export const AdminHomepageBranding = () => {
                                         {/* Dark Mode Issues */}
                                         {darkIssues.length > 0 && (
                                             <Accordion
-                                                defaultExpanded={darkIssues.some((i) => i.severity === "error")}
+                                                defaultExpanded={darkIssues.some(
+                                                    (i) => i.severity === "error",
+                                                )}
                                                 sx={{ mt: lightIssues.length > 0 ? 2 : 0 }}
                                             >
-                                                <AccordionSummary expandIcon={<ChevronDown size={20} />}>
-                                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                                <AccordionSummary
+                                                    expandIcon={<ChevronDown size={20} />}
+                                                >
+                                                    <Box
+                                                        sx={{
+                                                            display: "flex",
+                                                            alignItems: "center",
+                                                            gap: 1,
+                                                        }}
+                                                    >
                                                         <Moon size={18} />
                                                         <Typography>
-                                                            Dark Mode: {darkIssues.length} {darkIssues.length === 1 ? "issue" : "issues"}
-                                                            {darkIssues.some((i) => i.severity === "error") && (
-                                                                <Typography component="span" color="error" sx={{ ml: 1, fontWeight: 600 }}>
-                                                                    ({darkIssues.filter((i) => i.severity === "error").length} critical)
+                                                            Dark Mode: {darkIssues.length}{" "}
+                                                            {darkIssues.length === 1
+                                                                ? "issue"
+                                                                : "issues"}
+                                                            {darkIssues.some(
+                                                                (i) => i.severity === "error",
+                                                            ) && (
+                                                                <Typography
+                                                                    component="span"
+                                                                    color="error"
+                                                                    sx={{ ml: 1, fontWeight: 600 }}
+                                                                >
+                                                                    (
+                                                                    {
+                                                                        darkIssues.filter(
+                                                                            (i) =>
+                                                                                i.severity ===
+                                                                                "error",
+                                                                        ).length
+                                                                    }{" "}
+                                                                    critical)
                                                                 </Typography>
                                                             )}
                                                         </Typography>
                                                     </Box>
                                                 </AccordionSummary>
                                                 <AccordionDetails>
-                                                    <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                                                    <Box
+                                                        sx={{
+                                                            display: "flex",
+                                                            flexDirection: "column",
+                                                            gap: 2,
+                                                        }}
+                                                    >
                                                         {darkIssues.map((issue, idx) => (
-                                                            <Alert key={idx} severity={issue.severity} sx={{ width: "100%" }}>
-                                                                <Typography variant="body2" sx={{ mb: 1 }}>
-                                                                    <strong>{issue.colorName}:</strong> {issue.description}
+                                                            <Alert
+                                                                key={idx}
+                                                                severity={issue.severity}
+                                                                sx={{ width: "100%" }}
+                                                            >
+                                                                <Typography
+                                                                    variant="body2"
+                                                                    sx={{ mb: 1 }}
+                                                                >
+                                                                    <strong>
+                                                                        {issue.colorName}:
+                                                                    </strong>{" "}
+                                                                    {issue.description}
                                                                 </Typography>
-                                                                <Box sx={{ display: "flex", gap: 2, mt: 1, alignItems: "center" }}>
+                                                                <Box
+                                                                    sx={{
+                                                                        display: "flex",
+                                                                        gap: 2,
+                                                                        mt: 1,
+                                                                        alignItems: "center",
+                                                                    }}
+                                                                >
                                                                     <Box
                                                                         sx={{
                                                                             width: 40,
                                                                             height: 40,
-                                                                            backgroundColor: issue.backgroundColor,
+                                                                            backgroundColor:
+                                                                                issue.backgroundColor,
                                                                             border: "1px solid #ccc",
                                                                             borderRadius: 1,
                                                                         }}
                                                                     />
-                                                                    <Typography variant="caption">on</Typography>
+                                                                    <Typography variant="caption">
+                                                                        on
+                                                                    </Typography>
                                                                     <Box
                                                                         sx={{
                                                                             width: 40,
                                                                             height: 40,
-                                                                            backgroundColor: issue.textColor,
+                                                                            backgroundColor:
+                                                                                issue.textColor,
                                                                             border: "1px solid #ccc",
                                                                             borderRadius: 1,
                                                                         }}
                                                                     />
                                                                     {issue.ratio !== null && (
                                                                         <Typography variant="caption">
-                                                                            = {issue.ratio.toFixed(2)}:1 (need {issue.required}:1)
+                                                                            ={" "}
+                                                                            {issue.ratio.toFixed(2)}
+                                                                            :1 (need{" "}
+                                                                            {issue.required}:1)
                                                                         </Typography>
                                                                     )}
                                                                 </Box>
@@ -875,7 +1096,14 @@ export const AdminHomepageBranding = () => {
                                 }}
                             >
                                 <CardContent>
-                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+                                    <Box
+                                        sx={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: 1,
+                                            mb: 2,
+                                        }}
+                                    >
                                         <Palette size={24} />
                                         <Typography variant="h6" sx={{ fontWeight: 600 }}>
                                             Theme Colors
@@ -884,18 +1112,26 @@ export const AdminHomepageBranding = () => {
 
                                     {lightIssues.length === 0 && darkIssues.length === 0 && (
                                         <Alert severity="success" sx={{ mb: 3 }}>
-                                            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                            <Box
+                                                sx={{
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    gap: 1,
+                                                }}
+                                            >
                                                 <CheckCircle size={20} />
                                                 <Typography>
-                                                    All colors in both light and dark modes meet WCAG accessibility standards!
+                                                    All colors in both light and dark modes meet
+                                                    WCAG accessibility standards!
                                                 </Typography>
                                             </Box>
                                         </Alert>
                                     )}
 
                                     <Alert severity="info" sx={{ mb: 3 }}>
-                                        Customize colors for both light and dark modes. Use hex format (e.g., #2E7D32). Colors are
-                                        automatically validated for WCAG accessibility compliance.
+                                        Customize colors for both light and dark modes. Use hex
+                                        format (e.g., #2E7D32). Colors are automatically validated
+                                        for WCAG accessibility compliance.
                                     </Alert>
 
                                     {/* Theme Mode Toggle */}
@@ -924,11 +1160,15 @@ export const AdminHomepageBranding = () => {
                                                 fullWidth
                                                 label="Primary Color"
                                                 value={currentColors.primary}
-                                                onChange={(e) => handleColorChange("primary", e.target.value)}
+                                                onChange={(e) =>
+                                                    handleColorChange("primary", e.target.value)
+                                                }
                                                 helperText="Main brand color (used for primary buttons, navbar, etc.)"
                                                 error={
                                                     !isValidHexColor(currentColors.primary) ||
-                                                    getColorIssues("primary").some((i) => i.severity === "error")
+                                                    getColorIssues("primary").some(
+                                                        (i) => i.severity === "error",
+                                                    )
                                                 }
                                                 InputProps={{
                                                     startAdornment: (
@@ -936,9 +1176,18 @@ export const AdminHomepageBranding = () => {
                                                             <input
                                                                 type="color"
                                                                 value={
-                                                                    isValidHexColor(currentColors.primary) ? currentColors.primary : "#000000"
+                                                                    isValidHexColor(
+                                                                        currentColors.primary,
+                                                                    )
+                                                                        ? currentColors.primary
+                                                                        : "#000000"
                                                                 }
-                                                                onChange={(e) => handleColorChange("primary", e.target.value)}
+                                                                onChange={(e) =>
+                                                                    handleColorChange(
+                                                                        "primary",
+                                                                        e.target.value,
+                                                                    )
+                                                                }
                                                                 style={{
                                                                     width: 40,
                                                                     height: 40,
@@ -953,8 +1202,14 @@ export const AdminHomepageBranding = () => {
                                                 }}
                                             />
                                             {getColorIssues("primary").map((issue, idx) => (
-                                                <Alert key={idx} severity={issue.severity} sx={{ mt: 1 }}>
-                                                    <Typography variant="caption">{issue.description}</Typography>
+                                                <Alert
+                                                    key={idx}
+                                                    severity={issue.severity}
+                                                    sx={{ mt: 1 }}
+                                                >
+                                                    <Typography variant="caption">
+                                                        {issue.description}
+                                                    </Typography>
                                                 </Alert>
                                             ))}
                                         </Box>
@@ -965,11 +1220,15 @@ export const AdminHomepageBranding = () => {
                                                 fullWidth
                                                 label="Secondary Color"
                                                 value={currentColors.secondary}
-                                                onChange={(e) => handleColorChange("secondary", e.target.value)}
+                                                onChange={(e) =>
+                                                    handleColorChange("secondary", e.target.value)
+                                                }
                                                 helperText="Secondary brand color (used for gradients and highlights)"
                                                 error={
                                                     !isValidHexColor(currentColors.secondary) ||
-                                                    getColorIssues("secondary").some((i) => i.severity === "error")
+                                                    getColorIssues("secondary").some(
+                                                        (i) => i.severity === "error",
+                                                    )
                                                 }
                                                 InputProps={{
                                                     startAdornment: (
@@ -977,9 +1236,18 @@ export const AdminHomepageBranding = () => {
                                                             <input
                                                                 type="color"
                                                                 value={
-                                                                    isValidHexColor(currentColors.secondary) ? currentColors.secondary : "#000000"
+                                                                    isValidHexColor(
+                                                                        currentColors.secondary,
+                                                                    )
+                                                                        ? currentColors.secondary
+                                                                        : "#000000"
                                                                 }
-                                                                onChange={(e) => handleColorChange("secondary", e.target.value)}
+                                                                onChange={(e) =>
+                                                                    handleColorChange(
+                                                                        "secondary",
+                                                                        e.target.value,
+                                                                    )
+                                                                }
                                                                 style={{
                                                                     width: 40,
                                                                     height: 40,
@@ -994,8 +1262,14 @@ export const AdminHomepageBranding = () => {
                                                 }}
                                             />
                                             {getColorIssues("secondary").map((issue, idx) => (
-                                                <Alert key={idx} severity={issue.severity} sx={{ mt: 1 }}>
-                                                    <Typography variant="caption">{issue.description}</Typography>
+                                                <Alert
+                                                    key={idx}
+                                                    severity={issue.severity}
+                                                    sx={{ mt: 1 }}
+                                                >
+                                                    <Typography variant="caption">
+                                                        {issue.description}
+                                                    </Typography>
                                                 </Alert>
                                             ))}
                                         </Box>
@@ -1006,19 +1280,34 @@ export const AdminHomepageBranding = () => {
                                                 fullWidth
                                                 label="Accent Color"
                                                 value={currentColors.accent}
-                                                onChange={(e) => handleColorChange("accent", e.target.value)}
+                                                onChange={(e) =>
+                                                    handleColorChange("accent", e.target.value)
+                                                }
                                                 helperText="Accent color (used for CTAs and special highlights)"
                                                 error={
                                                     !isValidHexColor(currentColors.accent) ||
-                                                    getColorIssues("accent").some((i) => i.severity === "error")
+                                                    getColorIssues("accent").some(
+                                                        (i) => i.severity === "error",
+                                                    )
                                                 }
                                                 InputProps={{
                                                     startAdornment: (
                                                         <InputAdornment position="start">
                                                             <input
                                                                 type="color"
-                                                                value={isValidHexColor(currentColors.accent) ? currentColors.accent : "#000000"}
-                                                                onChange={(e) => handleColorChange("accent", e.target.value)}
+                                                                value={
+                                                                    isValidHexColor(
+                                                                        currentColors.accent,
+                                                                    )
+                                                                        ? currentColors.accent
+                                                                        : "#000000"
+                                                                }
+                                                                onChange={(e) =>
+                                                                    handleColorChange(
+                                                                        "accent",
+                                                                        e.target.value,
+                                                                    )
+                                                                }
                                                                 style={{
                                                                     width: 40,
                                                                     height: 40,
@@ -1033,8 +1322,14 @@ export const AdminHomepageBranding = () => {
                                                 }}
                                             />
                                             {getColorIssues("accent").map((issue, idx) => (
-                                                <Alert key={idx} severity={issue.severity} sx={{ mt: 1 }}>
-                                                    <Typography variant="caption">{issue.description}</Typography>
+                                                <Alert
+                                                    key={idx}
+                                                    severity={issue.severity}
+                                                    sx={{ mt: 1 }}
+                                                >
+                                                    <Typography variant="caption">
+                                                        {issue.description}
+                                                    </Typography>
                                                 </Alert>
                                             ))}
                                         </Box>
@@ -1045,11 +1340,15 @@ export const AdminHomepageBranding = () => {
                                                 fullWidth
                                                 label="Background Color"
                                                 value={currentColors.background}
-                                                onChange={(e) => handleColorChange("background", e.target.value)}
+                                                onChange={(e) =>
+                                                    handleColorChange("background", e.target.value)
+                                                }
                                                 helperText="Main background color for pages"
                                                 error={
                                                     !isValidHexColor(currentColors.background) ||
-                                                    getColorIssues("background").some((i) => i.severity === "error")
+                                                    getColorIssues("background").some(
+                                                        (i) => i.severity === "error",
+                                                    )
                                                 }
                                                 InputProps={{
                                                     startAdornment: (
@@ -1057,9 +1356,18 @@ export const AdminHomepageBranding = () => {
                                                             <input
                                                                 type="color"
                                                                 value={
-                                                                    isValidHexColor(currentColors.background) ? currentColors.background : "#000000"
+                                                                    isValidHexColor(
+                                                                        currentColors.background,
+                                                                    )
+                                                                        ? currentColors.background
+                                                                        : "#000000"
                                                                 }
-                                                                onChange={(e) => handleColorChange("background", e.target.value)}
+                                                                onChange={(e) =>
+                                                                    handleColorChange(
+                                                                        "background",
+                                                                        e.target.value,
+                                                                    )
+                                                                }
                                                                 style={{
                                                                     width: 40,
                                                                     height: 40,
@@ -1074,8 +1382,14 @@ export const AdminHomepageBranding = () => {
                                                 }}
                                             />
                                             {getColorIssues("background").map((issue, idx) => (
-                                                <Alert key={idx} severity={issue.severity} sx={{ mt: 1 }}>
-                                                    <Typography variant="caption">{issue.description}</Typography>
+                                                <Alert
+                                                    key={idx}
+                                                    severity={issue.severity}
+                                                    sx={{ mt: 1 }}
+                                                >
+                                                    <Typography variant="caption">
+                                                        {issue.description}
+                                                    </Typography>
                                                 </Alert>
                                             ))}
                                         </Box>
@@ -1086,19 +1400,34 @@ export const AdminHomepageBranding = () => {
                                                 fullWidth
                                                 label="Paper/Card Color"
                                                 value={currentColors.paper}
-                                                onChange={(e) => handleColorChange("paper", e.target.value)}
+                                                onChange={(e) =>
+                                                    handleColorChange("paper", e.target.value)
+                                                }
                                                 helperText="Background color for cards and elevated surfaces"
                                                 error={
                                                     !isValidHexColor(currentColors.paper) ||
-                                                    getColorIssues("paper").some((i) => i.severity === "error")
+                                                    getColorIssues("paper").some(
+                                                        (i) => i.severity === "error",
+                                                    )
                                                 }
                                                 InputProps={{
                                                     startAdornment: (
                                                         <InputAdornment position="start">
                                                             <input
                                                                 type="color"
-                                                                value={isValidHexColor(currentColors.paper) ? currentColors.paper : "#ffffff"}
-                                                                onChange={(e) => handleColorChange("paper", e.target.value)}
+                                                                value={
+                                                                    isValidHexColor(
+                                                                        currentColors.paper,
+                                                                    )
+                                                                        ? currentColors.paper
+                                                                        : "#ffffff"
+                                                                }
+                                                                onChange={(e) =>
+                                                                    handleColorChange(
+                                                                        "paper",
+                                                                        e.target.value,
+                                                                    )
+                                                                }
                                                                 style={{
                                                                     width: 40,
                                                                     height: 40,
@@ -1113,8 +1442,14 @@ export const AdminHomepageBranding = () => {
                                                 }}
                                             />
                                             {getColorIssues("paper").map((issue, idx) => (
-                                                <Alert key={idx} severity={issue.severity} sx={{ mt: 1 }}>
-                                                    <Typography variant="caption">{issue.description}</Typography>
+                                                <Alert
+                                                    key={idx}
+                                                    severity={issue.severity}
+                                                    sx={{ mt: 1 }}
+                                                >
+                                                    <Typography variant="caption">
+                                                        {issue.description}
+                                                    </Typography>
                                                 </Alert>
                                             ))}
                                         </Box>
@@ -1140,8 +1475,9 @@ export const AdminHomepageBranding = () => {
                                     {hasCriticalErrors && (
                                         <Alert severity="error">
                                             <Typography variant="body2">
-                                                Cannot save changes while there are critical accessibility errors. Please fix the contrast
-                                                issues highlighted above.
+                                                Cannot save changes while there are critical
+                                                accessibility errors. Please fix the contrast issues
+                                                highlighted above.
                                             </Typography>
                                         </Alert>
                                     )}
@@ -1151,7 +1487,11 @@ export const AdminHomepageBranding = () => {
                                             size="large"
                                             startIcon={<Save size={20} />}
                                             onClick={handleSave}
-                                            disabled={!hasChanges || updateSettings.loading || hasCriticalErrors}
+                                            disabled={
+                                                !hasChanges ||
+                                                updateSettings.loading ||
+                                                hasCriticalErrors
+                                            }
                                             sx={{
                                                 px: 4,
                                                 fontWeight: 600,
@@ -1202,7 +1542,9 @@ export const AdminHomepageBranding = () => {
                                     boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
                                 }}
                             >
-                                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3 }}>
+                                <Box
+                                    sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3 }}
+                                >
                                     <Box
                                         sx={{
                                             display: "flex",
@@ -1218,7 +1560,10 @@ export const AdminHomepageBranding = () => {
                                         <Palette size={20} />
                                     </Box>
                                     <Box sx={{ flex: 1 }}>
-                                        <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                                        <Typography
+                                            variant="h6"
+                                            sx={{ fontWeight: 600, lineHeight: 1.2 }}
+                                        >
                                             Live Preview
                                         </Typography>
                                         <Typography variant="caption" color="text.secondary">
@@ -1239,7 +1584,10 @@ export const AdminHomepageBranding = () => {
                                         </ToggleButton>
                                     </ToggleButtonGroup>
                                 </Box>
-                                <RealisticPreview colors={branding.colors[previewMode]} mode={previewMode} />
+                                <RealisticPreview
+                                    colors={branding.colors[previewMode]}
+                                    mode={previewMode}
+                                />
                                 <Alert
                                     severity="info"
                                     sx={{
@@ -1253,8 +1601,9 @@ export const AdminHomepageBranding = () => {
                                     }}
                                 >
                                     <Typography variant="caption">
-                                        This preview updates in real-time as you make changes. The actual theme may look slightly
-                                        different based on screen size and components.
+                                        This preview updates in real-time as you make changes. The
+                                        actual theme may look slightly different based on screen
+                                        size and components.
                                     </Typography>
                                 </Alert>
                             </Paper>

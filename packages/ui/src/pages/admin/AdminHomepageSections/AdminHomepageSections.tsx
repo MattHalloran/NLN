@@ -17,36 +17,38 @@ import { useUpdateSectionConfiguration } from "api/rest/hooks";
 import { BackButton, PageContainer } from "components";
 import { TopBar } from "components/navigation/TopBar/TopBar";
 import { useLandingPage } from "hooks/useLandingPage";
-import { useCallback as _useCallback, useEffect, useState } from "react";
+import { useBlockNavigation } from "hooks/useBlockNavigation";
+import { useCallback as _useCallback, useEffect, useState, useMemo } from "react";
 
 // Section metadata for section configuration
-const SECTION_METADATA: Record<string, { name: string; description: string; required?: boolean }> = {
-    hero: {
-        name: "Hero Banner",
-        description: "Main hero section with carousel and call-to-action",
-        required: true,
-    },
-    services: {
-        name: "Services Showcase",
-        description: "Display of available services (plants, advice, design, delivery)",
-    },
-    "social-proof": {
-        name: "Social Proof",
-        description: "Customer testimonials and trust indicators",
-    },
-    about: {
-        name: "About Story",
-        description: "Company history and story section",
-    },
-    seasonal: {
-        name: "Seasonal Content",
-        description: "What's blooming now and expert care tips",
-    },
-    location: {
-        name: "Location & Visit",
-        description: "Contact information and visit details",
-    },
-};
+const SECTION_METADATA: Record<string, { name: string; description: string; required?: boolean }> =
+    {
+        hero: {
+            name: "Hero Banner",
+            description: "Main hero section with carousel and call-to-action",
+            required: true,
+        },
+        services: {
+            name: "Services Showcase",
+            description: "Display of available services (plants, advice, design, delivery)",
+        },
+        "social-proof": {
+            name: "Social Proof",
+            description: "Customer testimonials and trust indicators",
+        },
+        about: {
+            name: "About Story",
+            description: "Company history and story section",
+        },
+        seasonal: {
+            name: "Seasonal Content",
+            description: "What's blooming now and expert care tips",
+        },
+        location: {
+            name: "Location & Visit",
+            description: "Contact information and visit details",
+        },
+    };
 
 export const AdminHomepageSections = () => {
     const updateSections = useUpdateSectionConfiguration();
@@ -63,9 +65,13 @@ export const AdminHomepageSections = () => {
             location: true,
         },
     });
-    const [originalSectionConfig, setOriginalSectionConfig] = useState<SectionConfiguration>(sectionConfig);
-    const [hasSectionChanges, setHasSectionChanges] = useState(false);
-    const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: "success" | "error" }>({
+    const [originalSectionConfig, setOriginalSectionConfig] =
+        useState<SectionConfiguration>(sectionConfig);
+    const [snackbar, setSnackbar] = useState<{
+        open: boolean;
+        message: string;
+        severity: "success" | "error";
+    }>({
         open: false,
         message: "",
         severity: "success",
@@ -81,10 +87,12 @@ export const AdminHomepageSections = () => {
     }, [landingPageContent]);
 
     // Check for unsaved section changes
-    useEffect(() => {
-        const changed = JSON.stringify(sectionConfig) !== JSON.stringify(originalSectionConfig);
-        setHasSectionChanges(changed);
+    const hasChanges = useMemo(() => {
+        return JSON.stringify(sectionConfig) !== JSON.stringify(originalSectionConfig);
     }, [sectionConfig, originalSectionConfig]);
+
+    // Block navigation when there are unsaved changes
+    useBlockNavigation(hasChanges);
 
     const handleSectionDragEnd = (result: any) => {
         if (!result.destination) return;
@@ -137,12 +145,17 @@ export const AdminHomepageSections = () => {
                 display="page"
                 title="Section Configuration"
                 help="Control which sections appear on your homepage and their display order"
-                startComponent={<BackButton to={APP_LINKS.AdminHomepage} ariaLabel="Back to Homepage Management" />}
+                startComponent={
+                    <BackButton
+                        to={APP_LINKS.AdminHomepage}
+                        ariaLabel="Back to Homepage Management"
+                    />
+                }
             />
 
             <Box p={2}>
                 {/* Unsaved changes warning */}
-                {hasSectionChanges && (
+                {hasChanges && (
                     <Alert severity="warning" sx={{ mb: 3 }}>
                         You have unsaved changes. Don't forget to save before leaving!
                     </Alert>
@@ -162,7 +175,8 @@ export const AdminHomepageSections = () => {
                             </li>
                             <li>
                                 <Typography variant="body2">
-                                    Toggle sections on/off using the switches (Hero banner is always enabled)
+                                    Toggle sections on/off using the switches (Hero banner is always
+                                    enabled)
                                 </Typography>
                             </li>
                             <li>
@@ -258,13 +272,21 @@ export const AdminHomepageSections = () => {
                                                                     />
                                                                 )}
                                                                 <Switch
-                                                                    checked={sectionConfig.enabled[sectionId]}
+                                                                    checked={
+                                                                        sectionConfig.enabled[
+                                                                            sectionId
+                                                                        ]
+                                                                    }
                                                                     onChange={() =>
-                                                                        handleToggleSection(sectionId)
+                                                                        handleToggleSection(
+                                                                            sectionId,
+                                                                        )
                                                                     }
                                                                     disabled={metadata.required}
                                                                 />
-                                                                {sectionConfig.enabled[sectionId] ? (
+                                                                {sectionConfig.enabled[
+                                                                    sectionId
+                                                                ] ? (
                                                                     <Eye size={20} />
                                                                 ) : (
                                                                     <EyeOff size={20} />
@@ -290,7 +312,7 @@ export const AdminHomepageSections = () => {
                         color="primary"
                         startIcon={<Save size={20} />}
                         onClick={handleSaveSections}
-                        disabled={!hasSectionChanges || updateSections.loading}
+                        disabled={!hasChanges || updateSections.loading}
                     >
                         {updateSections.loading ? "Saving..." : "Save Changes"}
                     </Button>
@@ -298,7 +320,7 @@ export const AdminHomepageSections = () => {
                         variant="outlined"
                         startIcon={<RotateCcw size={20} />}
                         onClick={handleCancelSectionChanges}
-                        disabled={!hasSectionChanges}
+                        disabled={!hasChanges}
                     >
                         Cancel
                     </Button>

@@ -2,13 +2,11 @@ import { APP_LINKS } from "@local/shared";
 import {
     Box,
     Button,
-    Card,
     TextField,
     Switch,
     FormControlLabel,
     Typography,
     Alert,
-    Divider,
     Grid,
     Paper,
     Accordion,
@@ -32,6 +30,7 @@ import { TopBar } from "components/navigation/TopBar/TopBar";
 import { useLandingPage } from "hooks/useLandingPage";
 import { useABTestQueryParams } from "hooks/useABTestQueryParams";
 import { useUpdateLandingPageSettings } from "api/rest/hooks";
+import { useBlockNavigation } from "hooks/useBlockNavigation";
 import { useCallback as _useCallback, useEffect, useState, useMemo } from "react";
 import { PubSub } from "utils/pubsub";
 import { SnackSeverity } from "components/dialogs/Snack/Snack";
@@ -45,11 +44,7 @@ interface NewsletterSettings {
 }
 
 // Preview component that shows how the newsletter will look
-const NewsletterPreview = ({
-    newsletter,
-}: {
-    newsletter: NewsletterSettings;
-}) => {
+const NewsletterPreview = ({ newsletter }: { newsletter: NewsletterSettings }) => {
     const { palette } = useTheme();
     const [email, setEmail] = useState("");
     const [subscribed, setSubscribed] = useState(false);
@@ -99,7 +94,15 @@ const NewsletterPreview = ({
                 borderColor: "divider",
             }}
         >
-            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 1, mb: 2 }}>
+            <Box
+                sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 1,
+                    mb: 2,
+                }}
+            >
                 <Sprout size={24} color="white" />
                 <Typography variant="h5" sx={{ fontWeight: 600 }}>
                     {newsletter.title}
@@ -153,7 +156,10 @@ const NewsletterPreview = ({
                 </Box>
             ) : (
                 <Box>
-                    <Typography variant="h6" sx={{ color: palette.secondary.main, fontWeight: 600 }}>
+                    <Typography
+                        variant="h6"
+                        sx={{ color: palette.secondary.main, fontWeight: 600 }}
+                    >
                         ✅ Thank you for subscribing!
                     </Typography>
                     <Typography variant="body2" sx={{ opacity: 0.9, mt: 1 }}>
@@ -179,7 +185,8 @@ export const AdminHomepageNewsletter = () => {
 
     const [newsletter, setNewsletter] = useState<NewsletterSettings>({
         title: "Stay in the Grow",
-        description: "Get seasonal care tips, new arrival notifications, and exclusive offers delivered to your inbox",
+        description:
+            "Get seasonal care tips, new arrival notifications, and exclusive offers delivered to your inbox",
         disclaimer: "No spam, just helpful gardening tips. Unsubscribe anytime.",
         isActive: true,
     });
@@ -200,6 +207,9 @@ export const AdminHomepageNewsletter = () => {
         () => JSON.stringify(newsletter) !== JSON.stringify(originalNewsletter),
         [newsletter, originalNewsletter],
     );
+
+    // Block navigation when there are unsaved changes
+    useBlockNavigation(hasChanges);
 
     const handleSave = async () => {
         try {
@@ -239,7 +249,12 @@ export const AdminHomepageNewsletter = () => {
                 display="page"
                 title="Newsletter Settings"
                 help="Configure the newsletter signup section on your homepage"
-                startComponent={<BackButton to={APP_LINKS.AdminHomepage} ariaLabel="Back to Homepage Management" />}
+                startComponent={
+                    <BackButton
+                        to={APP_LINKS.AdminHomepage}
+                        ariaLabel="Back to Homepage Management"
+                    />
+                }
             />
 
             <Box p={2}>
@@ -274,7 +289,8 @@ export const AdminHomepageNewsletter = () => {
                         Newsletter subscribers are being collected for lead generation
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                        View and manage newsletter subscription list, export to CSV, and track signup metrics
+                        View and manage newsletter subscription list, export to CSV, and track
+                        signup metrics
                     </Typography>
                 </Alert>
 
@@ -367,7 +383,14 @@ export const AdminHomepageNewsletter = () => {
                                         boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
                                     }}
                                 >
-                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3 }}>
+                                    <Box
+                                        sx={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: 1.5,
+                                            mb: 3,
+                                        }}
+                                    >
                                         <Box
                                             sx={{
                                                 display: "flex",
@@ -383,7 +406,10 @@ export const AdminHomepageNewsletter = () => {
                                             <EyeIcon size={20} />
                                         </Box>
                                         <Box>
-                                            <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                                            <Typography
+                                                variant="h6"
+                                                sx={{ fontWeight: 600, lineHeight: 1.2 }}
+                                            >
                                                 Live Preview
                                             </Typography>
                                             <Typography variant="caption" color="text.secondary">
@@ -450,7 +476,10 @@ export const AdminHomepageNewsletter = () => {
                                             <Mail size={24} />
                                         </Box>
                                         <Box>
-                                            <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                                            <Typography
+                                                variant="h6"
+                                                sx={{ fontWeight: 600, lineHeight: 1.2 }}
+                                            >
                                                 Newsletter Content
                                             </Typography>
                                             <Typography variant="caption" color="text.secondary">
@@ -466,7 +495,12 @@ export const AdminHomepageNewsletter = () => {
                                             fullWidth
                                             label="Newsletter Title"
                                             value={newsletter.title}
-                                            onChange={(e) => setNewsletter({ ...newsletter, title: e.target.value })}
+                                            onChange={(e) =>
+                                                setNewsletter({
+                                                    ...newsletter,
+                                                    title: e.target.value,
+                                                })
+                                            }
                                             helperText="Main heading for the newsletter section"
                                             variant="outlined"
                                             sx={{
@@ -484,7 +518,10 @@ export const AdminHomepageNewsletter = () => {
                                             label="Newsletter Description"
                                             value={newsletter.description}
                                             onChange={(e) =>
-                                                setNewsletter({ ...newsletter, description: e.target.value })
+                                                setNewsletter({
+                                                    ...newsletter,
+                                                    description: e.target.value,
+                                                })
                                             }
                                             helperText="Describe what users will receive in the newsletter"
                                             variant="outlined"
@@ -501,7 +538,10 @@ export const AdminHomepageNewsletter = () => {
                                             label="Disclaimer Text"
                                             value={newsletter.disclaimer}
                                             onChange={(e) =>
-                                                setNewsletter({ ...newsletter, disclaimer: e.target.value })
+                                                setNewsletter({
+                                                    ...newsletter,
+                                                    disclaimer: e.target.value,
+                                                })
                                             }
                                             helperText="Privacy disclaimer shown below signup form"
                                             variant="outlined"
@@ -557,7 +597,10 @@ export const AdminHomepageNewsletter = () => {
                                             <SettingsIcon size={24} />
                                         </Box>
                                         <Box>
-                                            <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                                            <Typography
+                                                variant="h6"
+                                                sx={{ fontWeight: 600, lineHeight: 1.2 }}
+                                            >
                                                 Newsletter Settings
                                             </Typography>
                                             <Typography variant="caption" color="text.secondary">
@@ -582,17 +625,26 @@ export const AdminHomepageNewsletter = () => {
                                                 <Switch
                                                     checked={newsletter.isActive}
                                                     onChange={(e) =>
-                                                        setNewsletter({ ...newsletter, isActive: e.target.checked })
+                                                        setNewsletter({
+                                                            ...newsletter,
+                                                            isActive: e.target.checked,
+                                                        })
                                                     }
                                                     color="success"
                                                 />
                                             }
                                             label={
                                                 <Box>
-                                                    <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                                                    <Typography
+                                                        variant="body1"
+                                                        sx={{ fontWeight: 500 }}
+                                                    >
                                                         Enable Newsletter Section
                                                     </Typography>
-                                                    <Typography variant="body2" color="text.secondary">
+                                                    <Typography
+                                                        variant="body2"
+                                                        color="text.secondary"
+                                                    >
                                                         Show newsletter signup on homepage
                                                     </Typography>
                                                 </Box>
@@ -671,7 +723,9 @@ export const AdminHomepageNewsletter = () => {
                                     boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
                                 }}
                             >
-                                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3 }}>
+                                <Box
+                                    sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3 }}
+                                >
                                     <Box
                                         sx={{
                                             display: "flex",
@@ -687,7 +741,10 @@ export const AdminHomepageNewsletter = () => {
                                         <EyeIcon size={20} />
                                     </Box>
                                     <Box>
-                                        <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                                        <Typography
+                                            variant="h6"
+                                            sx={{ fontWeight: 600, lineHeight: 1.2 }}
+                                        >
                                             Live Preview
                                         </Typography>
                                         <Typography variant="caption" color="text.secondary">
@@ -709,8 +766,9 @@ export const AdminHomepageNewsletter = () => {
                                     }}
                                 >
                                     <Typography variant="caption">
-                                        This preview updates in real-time as you make changes. The actual newsletter
-                                        section will appear at the bottom of the homepage.
+                                        This preview updates in real-time as you make changes. The
+                                        actual newsletter section will appear at the bottom of the
+                                        homepage.
                                     </Typography>
                                 </Alert>
                             </Paper>

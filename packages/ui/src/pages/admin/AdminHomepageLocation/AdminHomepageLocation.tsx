@@ -20,9 +20,7 @@ import {
     FormControlLabel,
     Switch,
     Paper,
-    Stack,
     Chip,
-    Avatar,
     Divider,
 } from "@mui/material";
 import {
@@ -40,14 +38,12 @@ import {
     Map,
     Phone,
     Clock,
-    Target,
     Info as InfoIcon,
     Mail,
 } from "lucide-react";
 import {
     ExpandMore as ExpandMoreIcon,
     TextFields as TextFieldsIcon,
-    Settings as SettingsIcon,
     ContactPhone as ContactPhoneIcon,
     AccessTime as AccessTimeIcon,
     TouchApp as ButtonIcon,
@@ -58,6 +54,7 @@ import { TopBar } from "components/navigation/TopBar/TopBar";
 import { useLandingPage } from "hooks/useLandingPage";
 import { useABTestQueryParams } from "hooks/useABTestQueryParams";
 import { useUpdateLandingPageContent } from "api/rest/hooks";
+import { useBlockNavigation } from "hooks/useBlockNavigation";
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { PubSub } from "utils/pubsub";
@@ -175,7 +172,7 @@ const getDefaultLocationData = (): LocationData => ({
         sectionTitle: "Plan Your Visit",
         items: [
             {
-                id: crypto.randomUUID(),
+                id: window.crypto.randomUUID(),
                 title: "What to Expect",
                 icon: "eye",
                 description:
@@ -184,7 +181,7 @@ const getDefaultLocationData = (): LocationData => ({
                 isActive: true,
             },
             {
-                id: crypto.randomUUID(),
+                id: window.crypto.randomUUID(),
                 title: "Wholesale Focus",
                 icon: "gift",
                 description:
@@ -193,7 +190,7 @@ const getDefaultLocationData = (): LocationData => ({
                 isActive: true,
             },
             {
-                id: crypto.randomUUID(),
+                id: window.crypto.randomUUID(),
                 title: "Professional Service",
                 icon: "smartphone",
                 description:
@@ -202,7 +199,7 @@ const getDefaultLocationData = (): LocationData => ({
                 isActive: true,
             },
             {
-                id: crypto.randomUUID(),
+                id: window.crypto.randomUUID(),
                 title: "Easy Access",
                 icon: "car",
                 description:
@@ -218,7 +215,7 @@ const getDefaultLocationData = (): LocationData => ({
             "Wholesale customers welcome! Visit during business hours or call ahead for availability and pricing.",
         buttons: [
             {
-                id: crypto.randomUUID(),
+                id: window.crypto.randomUUID(),
                 text: "Get Directions",
                 variant: "contained",
                 color: "primary",
@@ -227,7 +224,7 @@ const getDefaultLocationData = (): LocationData => ({
                 isActive: true,
             },
             {
-                id: crypto.randomUUID(),
+                id: window.crypto.randomUUID(),
                 text: "Contact Us First",
                 variant: "outlined",
                 color: "primary",
@@ -392,10 +389,16 @@ const LocationPreview = ({
                                     >
                                         <Map size={48} />
                                     </Box>
-                                    <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5, fontSize: "1rem" }}>
+                                    <Typography
+                                        variant="h6"
+                                        sx={{ fontWeight: 600, mb: 0.5, fontSize: "1rem" }}
+                                    >
                                         New Life Nursery Inc.
                                     </Typography>
-                                    <Typography variant="body2" sx={{ opacity: 0.9, fontSize: "0.85rem" }}>
+                                    <Typography
+                                        variant="body2"
+                                        sx={{ opacity: 0.9, fontSize: "0.85rem" }}
+                                    >
                                         106 S Woodruff Rd, Bridgeton, NJ
                                     </Typography>
                                 </Box>
@@ -432,7 +435,12 @@ const LocationPreview = ({
                     <Box>
                         <Typography
                             variant="h6"
-                            sx={{ fontWeight: 600, mb: 2, color: palette.primary.main, fontSize: "1rem" }}
+                            sx={{
+                                fontWeight: 600,
+                                mb: 2,
+                                color: palette.primary.main,
+                                fontSize: "1rem",
+                            }}
                         >
                             {locationData.contactMethods.sectionTitle}
                         </Typography>
@@ -467,8 +475,12 @@ const LocationPreview = ({
                                                 <IconComponent size={20} />
                                             </Box>
                                             <Box sx={{ flexGrow: 1 }}>
-                                                <Typography variant="subtitle2" sx={{ fontWeight: 600, fontSize: "0.9rem" }}>
-                                                    {method.charAt(0).toUpperCase() + method.slice(1)}
+                                                <Typography
+                                                    variant="subtitle2"
+                                                    sx={{ fontWeight: 600, fontSize: "0.9rem" }}
+                                                >
+                                                    {method.charAt(0).toUpperCase() +
+                                                        method.slice(1)}
                                                 </Typography>
                                                 <Typography
                                                     variant="body2"
@@ -483,9 +495,16 @@ const LocationPreview = ({
                                                 </Typography>
                                                 <Typography
                                                     variant="caption"
-                                                    sx={{ color: palette.text.secondary, fontSize: "0.75rem" }}
+                                                    sx={{
+                                                        color: palette.text.secondary,
+                                                        fontSize: "0.75rem",
+                                                    }}
                                                 >
-                                                    {locationData.contactMethods.descriptions[method]}
+                                                    {
+                                                        locationData.contactMethods.descriptions[
+                                                            method
+                                                        ]
+                                                    }
                                                 </Typography>
                                             </Box>
                                         </Box>
@@ -519,7 +538,14 @@ const LocationPreview = ({
                                 }}
                             >
                                 <Clock size={20} color="white" />
-                                <Typography variant="h6" sx={{ fontWeight: 600, textAlign: "center", fontSize: "1.1rem" }}>
+                                <Typography
+                                    variant="h6"
+                                    sx={{
+                                        fontWeight: 600,
+                                        textAlign: "center",
+                                        fontSize: "1.1rem",
+                                    }}
+                                >
                                     {locationData.businessHours.title}
                                 </Typography>
                             </Box>
@@ -533,15 +559,23 @@ const LocationPreview = ({
                                             py: 1,
                                         }}
                                     >
-                                        <Typography variant="body2" sx={{ fontWeight: 500, fontSize: "0.85rem" }}>
+                                        <Typography
+                                            variant="body2"
+                                            sx={{ fontWeight: 500, fontSize: "0.85rem" }}
+                                        >
                                             {schedule.day}
                                         </Typography>
-                                        <Typography variant="body2" sx={{ fontWeight: 600, fontSize: "0.85rem" }}>
+                                        <Typography
+                                            variant="body2"
+                                            sx={{ fontWeight: 600, fontSize: "0.85rem" }}
+                                        >
                                             {schedule.time}
                                         </Typography>
                                     </Box>
                                     {index < mockHours.length - 1 && (
-                                        <Divider sx={{ backgroundColor: "rgba(255, 255, 255, 0.3)" }} />
+                                        <Divider
+                                            sx={{ backgroundColor: "rgba(255, 255, 255, 0.3)" }}
+                                        />
                                     )}
                                 </Box>
                             ))}
@@ -565,7 +599,12 @@ const LocationPreview = ({
                         <Box>
                             <Typography
                                 variant="h6"
-                                sx={{ fontWeight: 600, mb: 2, color: palette.primary.main, fontSize: "1rem" }}
+                                sx={{
+                                    fontWeight: 600,
+                                    mb: 2,
+                                    color: palette.primary.main,
+                                    fontSize: "1rem",
+                                }}
                             >
                                 {locationData.visitInfo.sectionTitle}
                             </Typography>
@@ -635,10 +674,21 @@ const LocationPreview = ({
                     border: `2px solid ${palette.primary.light}`,
                 }}
             >
-                <Typography variant="h6" sx={{ fontWeight: 600, mb: 1.5, color: palette.primary.main, fontSize: "1.1rem" }}>
+                <Typography
+                    variant="h6"
+                    sx={{
+                        fontWeight: 600,
+                        mb: 1.5,
+                        color: palette.primary.main,
+                        fontSize: "1.1rem",
+                    }}
+                >
                     {locationData.cta.title}
                 </Typography>
-                <Typography variant="body2" sx={{ mb: 2, color: palette.text.secondary, fontSize: "0.85rem" }}>
+                <Typography
+                    variant="body2"
+                    sx={{ mb: 2, color: palette.text.secondary, fontSize: "0.85rem" }}
+                >
                     {locationData.cta.description}
                 </Typography>
                 <Box
@@ -677,13 +727,14 @@ const LocationPreview = ({
 export const AdminHomepageLocation = () => {
     const { palette } = useTheme();
     const { data, loading, refetch } = useLandingPage();
-    const { variantId, isEditingVariant } = useABTestQueryParams();
+    const { variantId } = useABTestQueryParams();
     const updateContentMutation = useUpdateLandingPageContent();
 
     const foundedYear = data?.content?.company?.foundedYear || COMPANY_INFO.FoundedYear;
 
     const [locationData, setLocationData] = useState<LocationData>(getDefaultLocationData());
-    const [originalLocationData, setOriginalLocationData] = useState<LocationData>(getDefaultLocationData());
+    const [originalLocationData, setOriginalLocationData] =
+        useState<LocationData>(getDefaultLocationData());
     const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
@@ -701,6 +752,9 @@ export const AdminHomepageLocation = () => {
     const hasChanges = useMemo(() => {
         return JSON.stringify(locationData) !== JSON.stringify(originalLocationData);
     }, [locationData, originalLocationData]);
+
+    // Block navigation when there are unsaved changes
+    useBlockNavigation(hasChanges);
 
     const handleApiError = useCallback((error: any, defaultMessage: string) => {
         const message = error?.message || defaultMessage;
@@ -737,7 +791,7 @@ export const AdminHomepageLocation = () => {
     // Handlers for visit info items
     const handleAddVisitInfoItem = useCallback(() => {
         const newItem: LocationVisitInfoItem = {
-            id: crypto.randomUUID(),
+            id: window.crypto.randomUUID(),
             title: "New Item",
             icon: "eye",
             description: "Description here",
@@ -768,7 +822,7 @@ export const AdminHomepageLocation = () => {
                 },
             });
         },
-        [locationData]
+        [locationData],
     );
 
     const handleVisitInfoDragEnd = useCallback(
@@ -792,13 +846,13 @@ export const AdminHomepageLocation = () => {
                 },
             });
         },
-        [locationData]
+        [locationData],
     );
 
     // Handlers for CTA buttons
     const handleAddButton = useCallback(() => {
         const newButton: LocationButton = {
-            id: crypto.randomUUID(),
+            id: window.crypto.randomUUID(),
             text: "New Button",
             variant: "contained",
             color: "primary",
@@ -830,7 +884,7 @@ export const AdminHomepageLocation = () => {
                 },
             });
         },
-        [locationData]
+        [locationData],
     );
 
     const handleButtonDragEnd = useCallback(
@@ -854,7 +908,7 @@ export const AdminHomepageLocation = () => {
                 },
             });
         },
-        [locationData]
+        [locationData],
     );
 
     // Handler for contact methods ordering
@@ -874,17 +928,17 @@ export const AdminHomepageLocation = () => {
                 },
             });
         },
-        [locationData]
+        [locationData],
     );
 
     const sortedVisitInfoItems = useMemo(
         () => [...locationData.visitInfo.items].sort((a, b) => a.displayOrder - b.displayOrder),
-        [locationData.visitInfo.items]
+        [locationData.visitInfo.items],
     );
 
     const sortedButtons = useMemo(
         () => [...locationData.cta.buttons].sort((a, b) => a.displayOrder - b.displayOrder),
-        [locationData.cta.buttons]
+        [locationData.cta.buttons],
     );
 
     const contactMethodLabels: Record<string, string> = {
@@ -900,7 +954,10 @@ export const AdminHomepageLocation = () => {
                     display="page"
                     title="Location & Visit Section"
                     startComponent={
-                        <BackButton to={APP_LINKS.AdminHomepage} ariaLabel="Back to Homepage Management" />
+                        <BackButton
+                            to={APP_LINKS.AdminHomepage}
+                            ariaLabel="Back to Homepage Management"
+                        />
                     }
                 />
                 <Box p={2}>
@@ -916,7 +973,12 @@ export const AdminHomepageLocation = () => {
                 display="page"
                 title="Location & Visit Section Settings"
                 help="Configure all aspects of your location and visit section"
-                startComponent={<BackButton to={APP_LINKS.AdminHomepage} ariaLabel="Back to Homepage Management" />}
+                startComponent={
+                    <BackButton
+                        to={APP_LINKS.AdminHomepage}
+                        ariaLabel="Back to Homepage Management"
+                    />
+                }
             />
 
             <Box p={2}>
@@ -1002,12 +1064,12 @@ export const AdminHomepageLocation = () => {
                     }}
                 >
                     <Typography variant="body2" sx={{ mb: 0.5 }}>
-                        <strong>Template Tokens:</strong> Use <code>{"{foundedYear}"}</code> to automatically insert{" "}
-                        {foundedYear}
+                        <strong>Template Tokens:</strong> Use <code>{"{foundedYear}"}</code> to
+                        automatically insert {foundedYear}
                     </Typography>
                     <Typography variant="body2">
-                        <strong>Note:</strong> Phone, address, email values and hours are managed in the Branding &
-                        Theme section.
+                        <strong>Note:</strong> Phone, address, email values and hours are managed in
+                        the Branding & Theme section.
                     </Typography>
                 </Alert>
 
@@ -1029,7 +1091,14 @@ export const AdminHomepageLocation = () => {
                                         boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
                                     }}
                                 >
-                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3 }}>
+                                    <Box
+                                        sx={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: 1.5,
+                                            mb: 3,
+                                        }}
+                                    >
                                         <Box
                                             sx={{
                                                 display: "flex",
@@ -1045,7 +1114,10 @@ export const AdminHomepageLocation = () => {
                                             <MapPinIcon size={20} />
                                         </Box>
                                         <Box>
-                                            <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                                            <Typography
+                                                variant="h6"
+                                                sx={{ fontWeight: 600, lineHeight: 1.2 }}
+                                            >
                                                 Live Preview
                                             </Typography>
                                             <Typography variant="caption" color="text.secondary">
@@ -1053,7 +1125,10 @@ export const AdminHomepageLocation = () => {
                                             </Typography>
                                         </Box>
                                     </Box>
-                                    <LocationPreview locationData={locationData} foundedYear={foundedYear} />
+                                    <LocationPreview
+                                        locationData={locationData}
+                                        foundedYear={foundedYear}
+                                    />
                                     <Alert
                                         severity="info"
                                         sx={{
@@ -1112,7 +1187,10 @@ export const AdminHomepageLocation = () => {
                                             <TextFieldsIcon />
                                         </Box>
                                         <Box>
-                                            <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                                            <Typography
+                                                variant="h6"
+                                                sx={{ fontWeight: 600, lineHeight: 1.2 }}
+                                            >
                                                 Header Settings
                                             </Typography>
                                             <Typography variant="caption" color="text.secondary">
@@ -1130,7 +1208,10 @@ export const AdminHomepageLocation = () => {
                                             onChange={(e) => {
                                                 setLocationData({
                                                     ...locationData,
-                                                    header: { ...locationData.header, title: e.target.value },
+                                                    header: {
+                                                        ...locationData.header,
+                                                        title: e.target.value,
+                                                    },
                                                 });
                                             }}
                                             variant="outlined"
@@ -1147,7 +1228,10 @@ export const AdminHomepageLocation = () => {
                                             onChange={(e) => {
                                                 setLocationData({
                                                     ...locationData,
-                                                    header: { ...locationData.header, subtitle: e.target.value },
+                                                    header: {
+                                                        ...locationData.header,
+                                                        subtitle: e.target.value,
+                                                    },
                                                 });
                                             }}
                                             helperText={`Preview: ${replaceTokens(locationData.header.subtitle, foundedYear)}`}
@@ -1165,7 +1249,10 @@ export const AdminHomepageLocation = () => {
                                             onChange={(e) => {
                                                 setLocationData({
                                                     ...locationData,
-                                                    header: { ...locationData.header, chip: e.target.value },
+                                                    header: {
+                                                        ...locationData.header,
+                                                        chip: e.target.value,
+                                                    },
                                                 });
                                             }}
                                             variant="outlined"
@@ -1221,7 +1308,10 @@ export const AdminHomepageLocation = () => {
                                             <Map size={20} />
                                         </Box>
                                         <Box>
-                                            <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                                            <Typography
+                                                variant="h6"
+                                                sx={{ fontWeight: 600, lineHeight: 1.2 }}
+                                            >
                                                 Map Settings
                                             </Typography>
                                             <Typography variant="caption" color="text.secondary">
@@ -1242,7 +1332,9 @@ export const AdminHomepageLocation = () => {
                                                         ...locationData,
                                                         map: {
                                                             ...locationData.map,
-                                                            style: e.target.value as "gradient" | "embedded",
+                                                            style: e.target.value as
+                                                                | "gradient"
+                                                                | "embedded",
                                                         },
                                                     });
                                                 }}
@@ -1250,8 +1342,12 @@ export const AdminHomepageLocation = () => {
                                                     bgcolor: "background.paper",
                                                 }}
                                             >
-                                                <MenuItem value="gradient">Gradient Placeholder (Simple)</MenuItem>
-                                                <MenuItem value="embedded">Google Maps Embed (Interactive)</MenuItem>
+                                                <MenuItem value="gradient">
+                                                    Gradient Placeholder (Simple)
+                                                </MenuItem>
+                                                <MenuItem value="embedded">
+                                                    Google Maps Embed (Interactive)
+                                                </MenuItem>
                                             </Select>
                                         </FormControl>
                                         <Paper
@@ -1267,20 +1363,26 @@ export const AdminHomepageLocation = () => {
                                             <FormControlLabel
                                                 control={
                                                     <Switch
-                                                        checked={locationData.map.showGetDirectionsButton}
+                                                        checked={
+                                                            locationData.map.showGetDirectionsButton
+                                                        }
                                                         onChange={(e) => {
                                                             setLocationData({
                                                                 ...locationData,
                                                                 map: {
                                                                     ...locationData.map,
-                                                                    showGetDirectionsButton: e.target.checked,
+                                                                    showGetDirectionsButton:
+                                                                        e.target.checked,
                                                                 },
                                                             });
                                                         }}
                                                     />
                                                 }
                                                 label={
-                                                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                                    <Typography
+                                                        variant="body2"
+                                                        sx={{ fontWeight: 500 }}
+                                                    >
                                                         Show Get Directions Button
                                                     </Typography>
                                                 }
@@ -1293,7 +1395,10 @@ export const AdminHomepageLocation = () => {
                                             onChange={(e) => {
                                                 setLocationData({
                                                     ...locationData,
-                                                    map: { ...locationData.map, buttonText: e.target.value },
+                                                    map: {
+                                                        ...locationData.map,
+                                                        buttonText: e.target.value,
+                                                    },
                                                 });
                                             }}
                                             disabled={!locationData.map.showGetDirectionsButton}
@@ -1349,7 +1454,10 @@ export const AdminHomepageLocation = () => {
                                             <ContactPhoneIcon />
                                         </Box>
                                         <Box>
-                                            <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                                            <Typography
+                                                variant="h6"
+                                                sx={{ fontWeight: 600, lineHeight: 1.2 }}
+                                            >
                                                 Contact Methods
                                             </Typography>
                                             <Typography variant="caption" color="text.secondary">
@@ -1380,52 +1488,87 @@ export const AdminHomepageLocation = () => {
                                             }}
                                         />
                                         <Box>
-                                            <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 600 }}>
+                                            <Typography
+                                                variant="subtitle2"
+                                                sx={{ mb: 1.5, fontWeight: 600 }}
+                                            >
                                                 Order (drag to reorder):
                                             </Typography>
                                             <DragDropContext onDragEnd={handleContactMethodDragEnd}>
                                                 <Droppable droppableId="contact-methods">
                                                     {(provided) => (
-                                                        <Box {...provided.droppableProps} ref={provided.innerRef}>
-                                                            {locationData.contactMethods.order.map((method, index) => (
-                                                                <Draggable key={method} draggableId={method} index={index}>
-                                                                    {(provided, snapshot) => (
-                                                                        <Paper
-                                                                            ref={provided.innerRef}
-                                                                            {...provided.draggableProps}
-                                                                            elevation={0}
-                                                                            sx={{
-                                                                                mb: 1,
-                                                                                display: "flex",
-                                                                                alignItems: "center",
-                                                                                gap: 2,
-                                                                                p: 1.5,
-                                                                                border: "2px solid",
-                                                                                borderColor: snapshot.isDragging
-                                                                                    ? "primary.main"
-                                                                                    : "divider",
-                                                                                borderRadius: 2,
-                                                                                bgcolor: "background.paper",
-                                                                                transition: "all 0.2s",
-                                                                                "&:hover": {
-                                                                                    borderColor: "primary.light",
-                                                                                    boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-                                                                                },
-                                                                            }}
-                                                                        >
-                                                                            <Box {...provided.dragHandleProps}>
-                                                                                <GripVertical
-                                                                                    size={20}
-                                                                                    color={palette.text.secondary}
-                                                                                />
-                                                                            </Box>
-                                                                            <Typography sx={{ fontWeight: 600, minWidth: 80 }}>
-                                                                                {contactMethodLabels[method]}
-                                                                            </Typography>
-                                                                        </Paper>
-                                                                    )}
-                                                                </Draggable>
-                                                            ))}
+                                                        <Box
+                                                            {...provided.droppableProps}
+                                                            ref={provided.innerRef}
+                                                        >
+                                                            {locationData.contactMethods.order.map(
+                                                                (method, index) => (
+                                                                    <Draggable
+                                                                        key={method}
+                                                                        draggableId={method}
+                                                                        index={index}
+                                                                    >
+                                                                        {(provided, snapshot) => (
+                                                                            <Paper
+                                                                                ref={
+                                                                                    provided.innerRef
+                                                                                }
+                                                                                {...provided.draggableProps}
+                                                                                elevation={0}
+                                                                                sx={{
+                                                                                    mb: 1,
+                                                                                    display: "flex",
+                                                                                    alignItems:
+                                                                                        "center",
+                                                                                    gap: 2,
+                                                                                    p: 1.5,
+                                                                                    border: "2px solid",
+                                                                                    borderColor:
+                                                                                        snapshot.isDragging
+                                                                                            ? "primary.main"
+                                                                                            : "divider",
+                                                                                    borderRadius: 2,
+                                                                                    bgcolor:
+                                                                                        "background.paper",
+                                                                                    transition:
+                                                                                        "all 0.2s",
+                                                                                    "&:hover": {
+                                                                                        borderColor:
+                                                                                            "primary.light",
+                                                                                        boxShadow:
+                                                                                            "0 2px 8px rgba(0,0,0,0.08)",
+                                                                                    },
+                                                                                }}
+                                                                            >
+                                                                                <Box
+                                                                                    {...provided.dragHandleProps}
+                                                                                >
+                                                                                    <GripVertical
+                                                                                        size={20}
+                                                                                        color={
+                                                                                            palette
+                                                                                                .text
+                                                                                                .secondary
+                                                                                        }
+                                                                                    />
+                                                                                </Box>
+                                                                                <Typography
+                                                                                    sx={{
+                                                                                        fontWeight: 600,
+                                                                                        minWidth: 80,
+                                                                                    }}
+                                                                                >
+                                                                                    {
+                                                                                        contactMethodLabels[
+                                                                                            method
+                                                                                        ]
+                                                                                    }
+                                                                                </Typography>
+                                                                            </Paper>
+                                                                        )}
+                                                                    </Draggable>
+                                                                ),
+                                                            )}
                                                             {provided.placeholder}
                                                         </Box>
                                                     )}
@@ -1442,7 +1585,8 @@ export const AdminHomepageLocation = () => {
                                                     contactMethods: {
                                                         ...locationData.contactMethods,
                                                         descriptions: {
-                                                            ...locationData.contactMethods.descriptions,
+                                                            ...locationData.contactMethods
+                                                                .descriptions,
                                                             phone: e.target.value,
                                                         },
                                                     },
@@ -1464,7 +1608,8 @@ export const AdminHomepageLocation = () => {
                                                     contactMethods: {
                                                         ...locationData.contactMethods,
                                                         descriptions: {
-                                                            ...locationData.contactMethods.descriptions,
+                                                            ...locationData.contactMethods
+                                                                .descriptions,
                                                             address: e.target.value,
                                                         },
                                                     },
@@ -1486,7 +1631,8 @@ export const AdminHomepageLocation = () => {
                                                     contactMethods: {
                                                         ...locationData.contactMethods,
                                                         descriptions: {
-                                                            ...locationData.contactMethods.descriptions,
+                                                            ...locationData.contactMethods
+                                                                .descriptions,
                                                             email: e.target.value,
                                                         },
                                                     },
@@ -1544,11 +1690,15 @@ export const AdminHomepageLocation = () => {
                                             <AccessTimeIcon />
                                         </Box>
                                         <Box>
-                                            <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                                            <Typography
+                                                variant="h6"
+                                                sx={{ fontWeight: 600, lineHeight: 1.2 }}
+                                            >
                                                 Business Hours Labels
                                             </Typography>
                                             <Typography variant="caption" color="text.secondary">
-                                                Configure section title and badge (hours managed in Branding)
+                                                Configure section title and badge (hours managed in
+                                                Branding)
                                             </Typography>
                                         </Box>
                                     </Box>
@@ -1562,7 +1712,10 @@ export const AdminHomepageLocation = () => {
                                             onChange={(e) => {
                                                 setLocationData({
                                                     ...locationData,
-                                                    businessHours: { ...locationData.businessHours, title: e.target.value },
+                                                    businessHours: {
+                                                        ...locationData.businessHours,
+                                                        title: e.target.value,
+                                                    },
                                                 });
                                             }}
                                             sx={{
@@ -1578,7 +1731,10 @@ export const AdminHomepageLocation = () => {
                                             onChange={(e) => {
                                                 setLocationData({
                                                     ...locationData,
-                                                    businessHours: { ...locationData.businessHours, chip: e.target.value },
+                                                    businessHours: {
+                                                        ...locationData.businessHours,
+                                                        chip: e.target.value,
+                                                    },
                                                 });
                                             }}
                                             sx={{
@@ -1633,13 +1789,21 @@ export const AdminHomepageLocation = () => {
                                             <InfoIcon size={20} />
                                         </Box>
                                         <Box>
-                                            <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                                            <Typography
+                                                variant="h6"
+                                                sx={{ fontWeight: 600, lineHeight: 1.2 }}
+                                            >
                                                 Visit Information Cards
                                             </Typography>
                                             <Typography variant="caption" color="text.secondary">
                                                 Add info cards about visiting your location (
                                                 {locationData.visitInfo.items.length} items,{" "}
-                                                {locationData.visitInfo.items.filter((i) => i.isActive).length} active)
+                                                {
+                                                    locationData.visitInfo.items.filter(
+                                                        (i) => i.isActive,
+                                                    ).length
+                                                }{" "}
+                                                active)
                                             </Typography>
                                         </Box>
                                     </Box>
@@ -1666,8 +1830,18 @@ export const AdminHomepageLocation = () => {
                                             }}
                                         />
                                         <Box>
-                                            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
-                                                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                                            <Box
+                                                sx={{
+                                                    display: "flex",
+                                                    justifyContent: "space-between",
+                                                    alignItems: "center",
+                                                    mb: 2,
+                                                }}
+                                            >
+                                                <Typography
+                                                    variant="subtitle2"
+                                                    sx={{ fontWeight: 600 }}
+                                                >
                                                     Items (drag to reorder):
                                                 </Typography>
                                                 <Button
@@ -1689,235 +1863,381 @@ export const AdminHomepageLocation = () => {
                                             <DragDropContext onDragEnd={handleVisitInfoDragEnd}>
                                                 <Droppable droppableId="visit-info-items">
                                                     {(provided) => (
-                                                        <Box {...provided.droppableProps} ref={provided.innerRef}>
-                                                            {sortedVisitInfoItems.map((item, index) => (
-                                                                <Draggable key={item.id} draggableId={item.id} index={index}>
-                                                                    {(provided, snapshot) => (
-                                                                        <Paper
-                                                                            ref={provided.innerRef}
-                                                                            {...provided.draggableProps}
-                                                                            elevation={0}
-                                                                            sx={{
-                                                                                mb: 2,
-                                                                                p: 2.5,
-                                                                                border: "2px solid",
-                                                                                borderColor: snapshot.isDragging
-                                                                                    ? "primary.main"
-                                                                                    : item.isActive
-                                                                                    ? "success.light"
-                                                                                    : "divider",
-                                                                                borderRadius: 2,
-                                                                                transition: "all 0.2s",
-                                                                                opacity: snapshot.isDragging ? 0.7 : 1,
-                                                                                boxShadow: snapshot.isDragging
-                                                                                    ? "0 8px 16px rgba(0,0,0,0.15)"
-                                                                                    : "0 1px 3px rgba(0,0,0,0.05)",
-                                                                                "&:hover": {
-                                                                                    borderColor: item.isActive
-                                                                                        ? "success.main"
-                                                                                        : "primary.light",
-                                                                                    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                                                                                },
-                                                                            }}
-                                                                        >
-                                                                            <Box sx={{ display: "flex", gap: 2 }}>
-                                                                                <Box {...provided.dragHandleProps}>
-                                                                                    <GripVertical
-                                                                                        size={20}
-                                                                                        color={palette.text.secondary}
-                                                                                    />
-                                                                                </Box>
-                                                                                <Box sx={{ flex: 1 }}>
-                                                                                    <Grid container spacing={2}>
-                                                                                        <Grid item xs={12} sm={6}>
-                                                                                            <TextField
-                                                                                                fullWidth
-                                                                                                label="Title"
-                                                                                                value={item.title}
-                                                                                                onChange={(e) => {
-                                                                                                    const updated =
-                                                                                                        locationData.visitInfo.items.map(
-                                                                                                            (i) =>
-                                                                                                                i.id === item.id
-                                                                                                                    ? {
-                                                                                                                          ...i,
-                                                                                                                          title: e
-                                                                                                                              .target
-                                                                                                                              .value,
-                                                                                                                      }
-                                                                                                                    : i
-                                                                                                        );
-                                                                                                    setLocationData({
-                                                                                                        ...locationData,
-                                                                                                        visitInfo: {
-                                                                                                            ...locationData.visitInfo,
-                                                                                                            items: updated,
-                                                                                                        },
-                                                                                                    });
-                                                                                                }}
-                                                                                                size="small"
-                                                                                                sx={{
-                                                                                                    "& .MuiOutlinedInput-root": {
-                                                                                                        bgcolor:
-                                                                                                            "background.paper",
-                                                                                                    },
-                                                                                                }}
-                                                                                            />
-                                                                                        </Grid>
-                                                                                        <Grid item xs={12} sm={6}>
-                                                                                            <FormControl fullWidth size="small">
-                                                                                                <InputLabel>Icon</InputLabel>
-                                                                                                <Select
-                                                                                                    value={item.icon}
-                                                                                                    label="Icon"
-                                                                                                    onChange={(e) => {
+                                                        <Box
+                                                            {...provided.droppableProps}
+                                                            ref={provided.innerRef}
+                                                        >
+                                                            {sortedVisitInfoItems.map(
+                                                                (item, index) => (
+                                                                    <Draggable
+                                                                        key={item.id}
+                                                                        draggableId={item.id}
+                                                                        index={index}
+                                                                    >
+                                                                        {(provided, snapshot) => (
+                                                                            <Paper
+                                                                                ref={
+                                                                                    provided.innerRef
+                                                                                }
+                                                                                {...provided.draggableProps}
+                                                                                elevation={0}
+                                                                                sx={{
+                                                                                    mb: 2,
+                                                                                    p: 2.5,
+                                                                                    border: "2px solid",
+                                                                                    borderColor:
+                                                                                        snapshot.isDragging
+                                                                                            ? "primary.main"
+                                                                                            : item.isActive
+                                                                                              ? "success.light"
+                                                                                              : "divider",
+                                                                                    borderRadius: 2,
+                                                                                    transition:
+                                                                                        "all 0.2s",
+                                                                                    opacity:
+                                                                                        snapshot.isDragging
+                                                                                            ? 0.7
+                                                                                            : 1,
+                                                                                    boxShadow:
+                                                                                        snapshot.isDragging
+                                                                                            ? "0 8px 16px rgba(0,0,0,0.15)"
+                                                                                            : "0 1px 3px rgba(0,0,0,0.05)",
+                                                                                    "&:hover": {
+                                                                                        borderColor:
+                                                                                            item.isActive
+                                                                                                ? "success.main"
+                                                                                                : "primary.light",
+                                                                                        boxShadow:
+                                                                                            "0 4px 12px rgba(0,0,0,0.1)",
+                                                                                    },
+                                                                                }}
+                                                                            >
+                                                                                <Box
+                                                                                    sx={{
+                                                                                        display:
+                                                                                            "flex",
+                                                                                        gap: 2,
+                                                                                    }}
+                                                                                >
+                                                                                    <Box
+                                                                                        {...provided.dragHandleProps}
+                                                                                    >
+                                                                                        <GripVertical
+                                                                                            size={
+                                                                                                20
+                                                                                            }
+                                                                                            color={
+                                                                                                palette
+                                                                                                    .text
+                                                                                                    .secondary
+                                                                                            }
+                                                                                        />
+                                                                                    </Box>
+                                                                                    <Box
+                                                                                        sx={{
+                                                                                            flex: 1,
+                                                                                        }}
+                                                                                    >
+                                                                                        <Grid
+                                                                                            container
+                                                                                            spacing={
+                                                                                                2
+                                                                                            }
+                                                                                        >
+                                                                                            <Grid
+                                                                                                item
+                                                                                                xs={
+                                                                                                    12
+                                                                                                }
+                                                                                                sm={
+                                                                                                    6
+                                                                                                }
+                                                                                            >
+                                                                                                <TextField
+                                                                                                    fullWidth
+                                                                                                    label="Title"
+                                                                                                    value={
+                                                                                                        item.title
+                                                                                                    }
+                                                                                                    onChange={(
+                                                                                                        e,
+                                                                                                    ) => {
                                                                                                         const updated =
                                                                                                             locationData.visitInfo.items.map(
-                                                                                                                (i) =>
-                                                                                                                    i.id === item.id
+                                                                                                                (
+                                                                                                                    i,
+                                                                                                                ) =>
+                                                                                                                    i.id ===
+                                                                                                                    item.id
                                                                                                                         ? {
                                                                                                                               ...i,
-                                                                                                                              icon: e
+                                                                                                                              title: e
                                                                                                                                   .target
                                                                                                                                   .value,
                                                                                                                           }
-                                                                                                                        : i
+                                                                                                                        : i,
                                                                                                             );
-                                                                                                        setLocationData({
-                                                                                                            ...locationData,
-                                                                                                            visitInfo: {
-                                                                                                                ...locationData.visitInfo,
-                                                                                                                items: updated,
+                                                                                                        setLocationData(
+                                                                                                            {
+                                                                                                                ...locationData,
+                                                                                                                visitInfo:
+                                                                                                                    {
+                                                                                                                        ...locationData.visitInfo,
+                                                                                                                        items: updated,
+                                                                                                                    },
                                                                                                             },
-                                                                                                        });
+                                                                                                        );
                                                                                                     }}
+                                                                                                    size="small"
                                                                                                     sx={{
-                                                                                                        bgcolor: "background.paper",
+                                                                                                        "& .MuiOutlinedInput-root":
+                                                                                                            {
+                                                                                                                bgcolor:
+                                                                                                                    "background.paper",
+                                                                                                            },
                                                                                                     }}
+                                                                                                />
+                                                                                            </Grid>
+                                                                                            <Grid
+                                                                                                item
+                                                                                                xs={
+                                                                                                    12
+                                                                                                }
+                                                                                                sm={
+                                                                                                    6
+                                                                                                }
+                                                                                            >
+                                                                                                <FormControl
+                                                                                                    fullWidth
+                                                                                                    size="small"
                                                                                                 >
-                                                                                                    {VISIT_INFO_ICONS.map((icon) => {
-                                                                                                        const IconComp = icon.icon;
-                                                                                                        return (
-                                                                                                            <MenuItem
-                                                                                                                key={icon.value}
-                                                                                                                value={icon.value}
-                                                                                                            >
-                                                                                                                <Box
-                                                                                                                    sx={{
-                                                                                                                        display: "flex",
-                                                                                                                        alignItems:
-                                                                                                                            "center",
-                                                                                                                        gap: 1,
-                                                                                                                    }}
-                                                                                                                >
-                                                                                                                    <IconComp size={16} />
-                                                                                                                    <Typography>
-                                                                                                                        {icon.label}
-                                                                                                                    </Typography>
-                                                                                                                </Box>
-                                                                                                            </MenuItem>
-                                                                                                        );
-                                                                                                    })}
-                                                                                                </Select>
-                                                                                            </FormControl>
-                                                                                        </Grid>
-                                                                                        <Grid item xs={12}>
-                                                                                            <TextField
-                                                                                                fullWidth
-                                                                                                multiline
-                                                                                                rows={2}
-                                                                                                label="Description"
-                                                                                                value={item.description}
-                                                                                                onChange={(e) => {
-                                                                                                    const updated =
-                                                                                                        locationData.visitInfo.items.map(
-                                                                                                            (i) =>
-                                                                                                                i.id === item.id
-                                                                                                                    ? {
-                                                                                                                          ...i,
-                                                                                                                          description:
-                                                                                                                              e.target
-                                                                                                                                  .value,
-                                                                                                                      }
-                                                                                                                    : i
-                                                                                                        );
-                                                                                                    setLocationData({
-                                                                                                        ...locationData,
-                                                                                                        visitInfo: {
-                                                                                                            ...locationData.visitInfo,
-                                                                                                            items: updated,
-                                                                                                        },
-                                                                                                    });
-                                                                                                }}
-                                                                                                size="small"
-                                                                                                sx={{
-                                                                                                    "& .MuiOutlinedInput-root": {
-                                                                                                        bgcolor:
-                                                                                                            "background.paper",
-                                                                                                    },
-                                                                                                }}
-                                                                                            />
-                                                                                        </Grid>
-                                                                                        <Grid item xs={12}>
-                                                                                            <FormControlLabel
-                                                                                                control={
-                                                                                                    <Switch
-                                                                                                        checked={item.isActive}
-                                                                                                        onChange={(e) => {
+                                                                                                    <InputLabel>
+                                                                                                        Icon
+                                                                                                    </InputLabel>
+                                                                                                    <Select
+                                                                                                        value={
+                                                                                                            item.icon
+                                                                                                        }
+                                                                                                        label="Icon"
+                                                                                                        onChange={(
+                                                                                                            e,
+                                                                                                        ) => {
                                                                                                             const updated =
                                                                                                                 locationData.visitInfo.items.map(
-                                                                                                                    (i) =>
+                                                                                                                    (
+                                                                                                                        i,
+                                                                                                                    ) =>
                                                                                                                         i.id ===
                                                                                                                         item.id
                                                                                                                             ? {
                                                                                                                                   ...i,
-                                                                                                                                  isActive:
-                                                                                                                                      e
-                                                                                                                                          .target
-                                                                                                                                          .checked,
+                                                                                                                                  icon: e
+                                                                                                                                      .target
+                                                                                                                                      .value,
                                                                                                                               }
-                                                                                                                            : i
+                                                                                                                            : i,
                                                                                                                 );
-                                                                                                            setLocationData({
-                                                                                                                ...locationData,
-                                                                                                                visitInfo: {
-                                                                                                                    ...locationData.visitInfo,
-                                                                                                                    items: updated,
+                                                                                                            setLocationData(
+                                                                                                                {
+                                                                                                                    ...locationData,
+                                                                                                                    visitInfo:
+                                                                                                                        {
+                                                                                                                            ...locationData.visitInfo,
+                                                                                                                            items: updated,
+                                                                                                                        },
                                                                                                                 },
-                                                                                                            });
+                                                                                                            );
                                                                                                         }}
-                                                                                                        color="success"
-                                                                                                    />
-                                                                                                }
-                                                                                                label={
-                                                                                                    <Typography
-                                                                                                        variant="body2"
-                                                                                                        sx={{ fontWeight: 500 }}
+                                                                                                        sx={{
+                                                                                                            bgcolor:
+                                                                                                                "background.paper",
+                                                                                                        }}
                                                                                                     >
-                                                                                                        Active
-                                                                                                    </Typography>
+                                                                                                        {VISIT_INFO_ICONS.map(
+                                                                                                            (
+                                                                                                                icon,
+                                                                                                            ) => {
+                                                                                                                const IconComp =
+                                                                                                                    icon.icon;
+                                                                                                                return (
+                                                                                                                    <MenuItem
+                                                                                                                        key={
+                                                                                                                            icon.value
+                                                                                                                        }
+                                                                                                                        value={
+                                                                                                                            icon.value
+                                                                                                                        }
+                                                                                                                    >
+                                                                                                                        <Box
+                                                                                                                            sx={{
+                                                                                                                                display:
+                                                                                                                                    "flex",
+                                                                                                                                alignItems:
+                                                                                                                                    "center",
+                                                                                                                                gap: 1,
+                                                                                                                            }}
+                                                                                                                        >
+                                                                                                                            <IconComp
+                                                                                                                                size={
+                                                                                                                                    16
+                                                                                                                                }
+                                                                                                                            />
+                                                                                                                            <Typography>
+                                                                                                                                {
+                                                                                                                                    icon.label
+                                                                                                                                }
+                                                                                                                            </Typography>
+                                                                                                                        </Box>
+                                                                                                                    </MenuItem>
+                                                                                                                );
+                                                                                                            },
+                                                                                                        )}
+                                                                                                    </Select>
+                                                                                                </FormControl>
+                                                                                            </Grid>
+                                                                                            <Grid
+                                                                                                item
+                                                                                                xs={
+                                                                                                    12
                                                                                                 }
-                                                                                            />
+                                                                                            >
+                                                                                                <TextField
+                                                                                                    fullWidth
+                                                                                                    multiline
+                                                                                                    rows={
+                                                                                                        2
+                                                                                                    }
+                                                                                                    label="Description"
+                                                                                                    value={
+                                                                                                        item.description
+                                                                                                    }
+                                                                                                    onChange={(
+                                                                                                        e,
+                                                                                                    ) => {
+                                                                                                        const updated =
+                                                                                                            locationData.visitInfo.items.map(
+                                                                                                                (
+                                                                                                                    i,
+                                                                                                                ) =>
+                                                                                                                    i.id ===
+                                                                                                                    item.id
+                                                                                                                        ? {
+                                                                                                                              ...i,
+                                                                                                                              description:
+                                                                                                                                  e
+                                                                                                                                      .target
+                                                                                                                                      .value,
+                                                                                                                          }
+                                                                                                                        : i,
+                                                                                                            );
+                                                                                                        setLocationData(
+                                                                                                            {
+                                                                                                                ...locationData,
+                                                                                                                visitInfo:
+                                                                                                                    {
+                                                                                                                        ...locationData.visitInfo,
+                                                                                                                        items: updated,
+                                                                                                                    },
+                                                                                                            },
+                                                                                                        );
+                                                                                                    }}
+                                                                                                    size="small"
+                                                                                                    sx={{
+                                                                                                        "& .MuiOutlinedInput-root":
+                                                                                                            {
+                                                                                                                bgcolor:
+                                                                                                                    "background.paper",
+                                                                                                            },
+                                                                                                    }}
+                                                                                                />
+                                                                                            </Grid>
+                                                                                            <Grid
+                                                                                                item
+                                                                                                xs={
+                                                                                                    12
+                                                                                                }
+                                                                                            >
+                                                                                                <FormControlLabel
+                                                                                                    control={
+                                                                                                        <Switch
+                                                                                                            checked={
+                                                                                                                item.isActive
+                                                                                                            }
+                                                                                                            onChange={(
+                                                                                                                e,
+                                                                                                            ) => {
+                                                                                                                const updated =
+                                                                                                                    locationData.visitInfo.items.map(
+                                                                                                                        (
+                                                                                                                            i,
+                                                                                                                        ) =>
+                                                                                                                            i.id ===
+                                                                                                                            item.id
+                                                                                                                                ? {
+                                                                                                                                      ...i,
+                                                                                                                                      isActive:
+                                                                                                                                          e
+                                                                                                                                              .target
+                                                                                                                                              .checked,
+                                                                                                                                  }
+                                                                                                                                : i,
+                                                                                                                    );
+                                                                                                                setLocationData(
+                                                                                                                    {
+                                                                                                                        ...locationData,
+                                                                                                                        visitInfo:
+                                                                                                                            {
+                                                                                                                                ...locationData.visitInfo,
+                                                                                                                                items: updated,
+                                                                                                                            },
+                                                                                                                    },
+                                                                                                                );
+                                                                                                            }}
+                                                                                                            color="success"
+                                                                                                        />
+                                                                                                    }
+                                                                                                    label={
+                                                                                                        <Typography
+                                                                                                            variant="body2"
+                                                                                                            sx={{
+                                                                                                                fontWeight: 500,
+                                                                                                            }}
+                                                                                                        >
+                                                                                                            Active
+                                                                                                        </Typography>
+                                                                                                    }
+                                                                                                />
+                                                                                            </Grid>
                                                                                         </Grid>
-                                                                                    </Grid>
+                                                                                    </Box>
+                                                                                    <IconButton
+                                                                                        size="small"
+                                                                                        color="error"
+                                                                                        onClick={() =>
+                                                                                            handleDeleteVisitInfoItem(
+                                                                                                item.id,
+                                                                                            )
+                                                                                        }
+                                                                                        sx={{
+                                                                                            "&:hover":
+                                                                                                {
+                                                                                                    bgcolor:
+                                                                                                        "error.lighter",
+                                                                                                },
+                                                                                        }}
+                                                                                    >
+                                                                                        <Trash2
+                                                                                            size={
+                                                                                                20
+                                                                                            }
+                                                                                        />
+                                                                                    </IconButton>
                                                                                 </Box>
-                                                                                <IconButton
-                                                                                    size="small"
-                                                                                    color="error"
-                                                                                    onClick={() => handleDeleteVisitInfoItem(item.id)}
-                                                                                    sx={{
-                                                                                        "&:hover": {
-                                                                                            bgcolor: "error.lighter",
-                                                                                        },
-                                                                                    }}
-                                                                                >
-                                                                                    <Trash2 size={20} />
-                                                                                </IconButton>
-                                                                            </Box>
-                                                                        </Paper>
-                                                                    )}
-                                                                </Draggable>
-                                                            ))}
+                                                                            </Paper>
+                                                                        )}
+                                                                    </Draggable>
+                                                                ),
+                                                            )}
                                                             {provided.placeholder}
                                                         </Box>
                                                     )}
@@ -1970,13 +2290,21 @@ export const AdminHomepageLocation = () => {
                                             <ButtonIcon />
                                         </Box>
                                         <Box>
-                                            <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                                            <Typography
+                                                variant="h6"
+                                                sx={{ fontWeight: 600, lineHeight: 1.2 }}
+                                            >
                                                 Call-to-Action Section
                                             </Typography>
                                             <Typography variant="caption" color="text.secondary">
                                                 Add action buttons to drive user engagement (
                                                 {locationData.cta.buttons.length} buttons,{" "}
-                                                {locationData.cta.buttons.filter((b) => b.isActive).length} active)
+                                                {
+                                                    locationData.cta.buttons.filter(
+                                                        (b) => b.isActive,
+                                                    ).length
+                                                }{" "}
+                                                active)
                                             </Typography>
                                         </Box>
                                     </Box>
@@ -1990,7 +2318,10 @@ export const AdminHomepageLocation = () => {
                                             onChange={(e) => {
                                                 setLocationData({
                                                     ...locationData,
-                                                    cta: { ...locationData.cta, title: e.target.value },
+                                                    cta: {
+                                                        ...locationData.cta,
+                                                        title: e.target.value,
+                                                    },
                                                 });
                                             }}
                                             sx={{
@@ -2008,7 +2339,10 @@ export const AdminHomepageLocation = () => {
                                             onChange={(e) => {
                                                 setLocationData({
                                                     ...locationData,
-                                                    cta: { ...locationData.cta, description: e.target.value },
+                                                    cta: {
+                                                        ...locationData.cta,
+                                                        description: e.target.value,
+                                                    },
                                                 });
                                             }}
                                             sx={{
@@ -2018,8 +2352,18 @@ export const AdminHomepageLocation = () => {
                                             }}
                                         />
                                         <Box>
-                                            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
-                                                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                                            <Box
+                                                sx={{
+                                                    display: "flex",
+                                                    justifyContent: "space-between",
+                                                    alignItems: "center",
+                                                    mb: 2,
+                                                }}
+                                            >
+                                                <Typography
+                                                    variant="subtitle2"
+                                                    sx={{ fontWeight: 600 }}
+                                                >
                                                     Buttons (drag to reorder):
                                                 </Typography>
                                                 <Button
@@ -2041,9 +2385,16 @@ export const AdminHomepageLocation = () => {
                                             <DragDropContext onDragEnd={handleButtonDragEnd}>
                                                 <Droppable droppableId="cta-buttons">
                                                     {(provided) => (
-                                                        <Box {...provided.droppableProps} ref={provided.innerRef}>
+                                                        <Box
+                                                            {...provided.droppableProps}
+                                                            ref={provided.innerRef}
+                                                        >
                                                             {sortedButtons.map((button, index) => (
-                                                                <Draggable key={button.id} draggableId={button.id} index={index}>
+                                                                <Draggable
+                                                                    key={button.id}
+                                                                    draggableId={button.id}
+                                                                    index={index}
+                                                                >
                                                                     {(provided, snapshot) => (
                                                                         <Paper
                                                                             ref={provided.innerRef}
@@ -2053,80 +2404,135 @@ export const AdminHomepageLocation = () => {
                                                                                 mb: 2,
                                                                                 p: 2.5,
                                                                                 border: "2px solid",
-                                                                                borderColor: snapshot.isDragging
-                                                                                    ? "primary.main"
-                                                                                    : button.isActive
-                                                                                    ? "success.light"
-                                                                                    : "divider",
+                                                                                borderColor:
+                                                                                    snapshot.isDragging
+                                                                                        ? "primary.main"
+                                                                                        : button.isActive
+                                                                                          ? "success.light"
+                                                                                          : "divider",
                                                                                 borderRadius: 2,
-                                                                                transition: "all 0.2s",
-                                                                                opacity: snapshot.isDragging ? 0.7 : 1,
-                                                                                boxShadow: snapshot.isDragging
-                                                                                    ? "0 8px 16px rgba(0,0,0,0.15)"
-                                                                                    : "0 1px 3px rgba(0,0,0,0.05)",
+                                                                                transition:
+                                                                                    "all 0.2s",
+                                                                                opacity:
+                                                                                    snapshot.isDragging
+                                                                                        ? 0.7
+                                                                                        : 1,
+                                                                                boxShadow:
+                                                                                    snapshot.isDragging
+                                                                                        ? "0 8px 16px rgba(0,0,0,0.15)"
+                                                                                        : "0 1px 3px rgba(0,0,0,0.05)",
                                                                                 "&:hover": {
-                                                                                    borderColor: button.isActive
-                                                                                        ? "success.main"
-                                                                                        : "primary.light",
-                                                                                    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                                                                                    borderColor:
+                                                                                        button.isActive
+                                                                                            ? "success.main"
+                                                                                            : "primary.light",
+                                                                                    boxShadow:
+                                                                                        "0 4px 12px rgba(0,0,0,0.1)",
                                                                                 },
                                                                             }}
                                                                         >
-                                                                            <Box sx={{ display: "flex", gap: 2 }}>
-                                                                                <Box {...provided.dragHandleProps}>
+                                                                            <Box
+                                                                                sx={{
+                                                                                    display: "flex",
+                                                                                    gap: 2,
+                                                                                }}
+                                                                            >
+                                                                                <Box
+                                                                                    {...provided.dragHandleProps}
+                                                                                >
                                                                                     <GripVertical
                                                                                         size={20}
-                                                                                        color={palette.text.secondary}
+                                                                                        color={
+                                                                                            palette
+                                                                                                .text
+                                                                                                .secondary
+                                                                                        }
                                                                                     />
                                                                                 </Box>
-                                                                                <Box sx={{ flex: 1 }}>
-                                                                                    <Grid container spacing={2}>
-                                                                                        <Grid item xs={12} sm={6}>
+                                                                                <Box
+                                                                                    sx={{ flex: 1 }}
+                                                                                >
+                                                                                    <Grid
+                                                                                        container
+                                                                                        spacing={2}
+                                                                                    >
+                                                                                        <Grid
+                                                                                            item
+                                                                                            xs={12}
+                                                                                            sm={6}
+                                                                                        >
                                                                                             <TextField
                                                                                                 fullWidth
                                                                                                 label="Button Text"
-                                                                                                value={button.text}
-                                                                                                onChange={(e) => {
+                                                                                                value={
+                                                                                                    button.text
+                                                                                                }
+                                                                                                onChange={(
+                                                                                                    e,
+                                                                                                ) => {
                                                                                                     const updated =
                                                                                                         locationData.cta.buttons.map(
-                                                                                                            (b) =>
-                                                                                                                b.id === button.id
+                                                                                                            (
+                                                                                                                b,
+                                                                                                            ) =>
+                                                                                                                b.id ===
+                                                                                                                button.id
                                                                                                                     ? {
                                                                                                                           ...b,
                                                                                                                           text: e
                                                                                                                               .target
                                                                                                                               .value,
                                                                                                                       }
-                                                                                                                    : b
+                                                                                                                    : b,
                                                                                                         );
-                                                                                                    setLocationData({
-                                                                                                        ...locationData,
-                                                                                                        cta: {
-                                                                                                            ...locationData.cta,
-                                                                                                            buttons: updated,
+                                                                                                    setLocationData(
+                                                                                                        {
+                                                                                                            ...locationData,
+                                                                                                            cta: {
+                                                                                                                ...locationData.cta,
+                                                                                                                buttons:
+                                                                                                                    updated,
+                                                                                                            },
                                                                                                         },
-                                                                                                    });
+                                                                                                    );
                                                                                                 }}
                                                                                                 size="small"
                                                                                                 sx={{
-                                                                                                    "& .MuiOutlinedInput-root": {
-                                                                                                        bgcolor:
-                                                                                                            "background.paper",
-                                                                                                    },
+                                                                                                    "& .MuiOutlinedInput-root":
+                                                                                                        {
+                                                                                                            bgcolor:
+                                                                                                                "background.paper",
+                                                                                                        },
                                                                                                 }}
                                                                                             />
                                                                                         </Grid>
-                                                                                        <Grid item xs={12} sm={6}>
-                                                                                            <FormControl fullWidth size="small">
-                                                                                                <InputLabel>Variant</InputLabel>
+                                                                                        <Grid
+                                                                                            item
+                                                                                            xs={12}
+                                                                                            sm={6}
+                                                                                        >
+                                                                                            <FormControl
+                                                                                                fullWidth
+                                                                                                size="small"
+                                                                                            >
+                                                                                                <InputLabel>
+                                                                                                    Variant
+                                                                                                </InputLabel>
                                                                                                 <Select
-                                                                                                    value={button.variant}
+                                                                                                    value={
+                                                                                                        button.variant
+                                                                                                    }
                                                                                                     label="Variant"
-                                                                                                    onChange={(e) => {
+                                                                                                    onChange={(
+                                                                                                        e,
+                                                                                                    ) => {
                                                                                                         const updated =
                                                                                                             locationData.cta.buttons.map(
-                                                                                                                (b) =>
-                                                                                                                    b.id === button.id
+                                                                                                                (
+                                                                                                                    b,
+                                                                                                                ) =>
+                                                                                                                    b.id ===
+                                                                                                                    button.id
                                                                                                                         ? {
                                                                                                                               ...b,
                                                                                                                               variant:
@@ -2134,18 +2540,22 @@ export const AdminHomepageLocation = () => {
                                                                                                                                       .target
                                                                                                                                       .value as LocationButton["variant"],
                                                                                                                           }
-                                                                                                                        : b
+                                                                                                                        : b,
                                                                                                             );
-                                                                                                        setLocationData({
-                                                                                                            ...locationData,
-                                                                                                            cta: {
-                                                                                                                ...locationData.cta,
-                                                                                                                buttons: updated,
+                                                                                                        setLocationData(
+                                                                                                            {
+                                                                                                                ...locationData,
+                                                                                                                cta: {
+                                                                                                                    ...locationData.cta,
+                                                                                                                    buttons:
+                                                                                                                        updated,
+                                                                                                                },
                                                                                                             },
-                                                                                                        });
+                                                                                                        );
                                                                                                     }}
                                                                                                     sx={{
-                                                                                                        bgcolor: "background.paper",
+                                                                                                        bgcolor:
+                                                                                                            "background.paper",
                                                                                                     }}
                                                                                                 >
                                                                                                     <MenuItem value="contained">
@@ -2154,137 +2564,211 @@ export const AdminHomepageLocation = () => {
                                                                                                     <MenuItem value="outlined">
                                                                                                         Outlined
                                                                                                     </MenuItem>
-                                                                                                    <MenuItem value="text">Text</MenuItem>
+                                                                                                    <MenuItem value="text">
+                                                                                                        Text
+                                                                                                    </MenuItem>
                                                                                                 </Select>
                                                                                             </FormControl>
                                                                                         </Grid>
-                                                                                        <Grid item xs={12} sm={6}>
-                                                                                            <FormControl fullWidth size="small">
-                                                                                                <InputLabel>Color</InputLabel>
+                                                                                        <Grid
+                                                                                            item
+                                                                                            xs={12}
+                                                                                            sm={6}
+                                                                                        >
+                                                                                            <FormControl
+                                                                                                fullWidth
+                                                                                                size="small"
+                                                                                            >
+                                                                                                <InputLabel>
+                                                                                                    Color
+                                                                                                </InputLabel>
                                                                                                 <Select
-                                                                                                    value={button.color}
+                                                                                                    value={
+                                                                                                        button.color
+                                                                                                    }
                                                                                                     label="Color"
-                                                                                                    onChange={(e) => {
+                                                                                                    onChange={(
+                                                                                                        e,
+                                                                                                    ) => {
                                                                                                         const updated =
                                                                                                             locationData.cta.buttons.map(
-                                                                                                                (b) =>
-                                                                                                                    b.id === button.id
+                                                                                                                (
+                                                                                                                    b,
+                                                                                                                ) =>
+                                                                                                                    b.id ===
+                                                                                                                    button.id
                                                                                                                         ? {
                                                                                                                               ...b,
                                                                                                                               color: e
                                                                                                                                   .target
                                                                                                                                   .value as LocationButton["color"],
                                                                                                                           }
-                                                                                                                        : b
+                                                                                                                        : b,
                                                                                                             );
-                                                                                                        setLocationData({
-                                                                                                            ...locationData,
-                                                                                                            cta: {
-                                                                                                                ...locationData.cta,
-                                                                                                                buttons: updated,
+                                                                                                        setLocationData(
+                                                                                                            {
+                                                                                                                ...locationData,
+                                                                                                                cta: {
+                                                                                                                    ...locationData.cta,
+                                                                                                                    buttons:
+                                                                                                                        updated,
+                                                                                                                },
                                                                                                             },
-                                                                                                        });
+                                                                                                        );
                                                                                                     }}
                                                                                                     sx={{
-                                                                                                        bgcolor: "background.paper",
+                                                                                                        bgcolor:
+                                                                                                            "background.paper",
                                                                                                     }}
                                                                                                 >
-                                                                                                    <MenuItem value="primary">Primary</MenuItem>
+                                                                                                    <MenuItem value="primary">
+                                                                                                        Primary
+                                                                                                    </MenuItem>
                                                                                                     <MenuItem value="secondary">
                                                                                                         Secondary
                                                                                                     </MenuItem>
                                                                                                 </Select>
                                                                                             </FormControl>
                                                                                         </Grid>
-                                                                                        <Grid item xs={12} sm={6}>
-                                                                                            <FormControl fullWidth size="small">
-                                                                                                <InputLabel>Action</InputLabel>
+                                                                                        <Grid
+                                                                                            item
+                                                                                            xs={12}
+                                                                                            sm={6}
+                                                                                        >
+                                                                                            <FormControl
+                                                                                                fullWidth
+                                                                                                size="small"
+                                                                                            >
+                                                                                                <InputLabel>
+                                                                                                    Action
+                                                                                                </InputLabel>
                                                                                                 <Select
-                                                                                                    value={button.action}
+                                                                                                    value={
+                                                                                                        button.action
+                                                                                                    }
                                                                                                     label="Action"
-                                                                                                    onChange={(e) => {
+                                                                                                    onChange={(
+                                                                                                        e,
+                                                                                                    ) => {
                                                                                                         const updated =
                                                                                                             locationData.cta.buttons.map(
-                                                                                                                (b) =>
-                                                                                                                    b.id === button.id
+                                                                                                                (
+                                                                                                                    b,
+                                                                                                                ) =>
+                                                                                                                    b.id ===
+                                                                                                                    button.id
                                                                                                                         ? {
                                                                                                                               ...b,
                                                                                                                               action: e
                                                                                                                                   .target
                                                                                                                                   .value as LocationButton["action"],
                                                                                                                           }
-                                                                                                                        : b
+                                                                                                                        : b,
                                                                                                             );
-                                                                                                        setLocationData({
-                                                                                                            ...locationData,
-                                                                                                            cta: {
-                                                                                                                ...locationData.cta,
-                                                                                                                buttons: updated,
+                                                                                                        setLocationData(
+                                                                                                            {
+                                                                                                                ...locationData,
+                                                                                                                cta: {
+                                                                                                                    ...locationData.cta,
+                                                                                                                    buttons:
+                                                                                                                        updated,
+                                                                                                                },
                                                                                                             },
-                                                                                                        });
+                                                                                                        );
                                                                                                     }}
                                                                                                     sx={{
-                                                                                                        bgcolor: "background.paper",
+                                                                                                        bgcolor:
+                                                                                                            "background.paper",
                                                                                                     }}
                                                                                                 >
                                                                                                     <MenuItem value="directions">
-                                                                                                        Get Directions
+                                                                                                        Get
+                                                                                                        Directions
                                                                                                     </MenuItem>
                                                                                                     <MenuItem value="contact">
-                                                                                                        Contact Page
+                                                                                                        Contact
+                                                                                                        Page
                                                                                                     </MenuItem>
                                                                                                     <MenuItem value="external">
-                                                                                                        External URL
+                                                                                                        External
+                                                                                                        URL
                                                                                                     </MenuItem>
                                                                                                 </Select>
                                                                                             </FormControl>
                                                                                         </Grid>
-                                                                                        {button.action === "external" && (
-                                                                                            <Grid item xs={12}>
+                                                                                        {button.action ===
+                                                                                            "external" && (
+                                                                                            <Grid
+                                                                                                item
+                                                                                                xs={
+                                                                                                    12
+                                                                                                }
+                                                                                            >
                                                                                                 <TextField
                                                                                                     fullWidth
                                                                                                     label="URL"
-                                                                                                    value={button.url || ""}
-                                                                                                    onChange={(e) => {
+                                                                                                    value={
+                                                                                                        button.url ||
+                                                                                                        ""
+                                                                                                    }
+                                                                                                    onChange={(
+                                                                                                        e,
+                                                                                                    ) => {
                                                                                                         const updated =
                                                                                                             locationData.cta.buttons.map(
-                                                                                                                (b) =>
-                                                                                                                    b.id === button.id
+                                                                                                                (
+                                                                                                                    b,
+                                                                                                                ) =>
+                                                                                                                    b.id ===
+                                                                                                                    button.id
                                                                                                                         ? {
                                                                                                                               ...b,
                                                                                                                               url: e
                                                                                                                                   .target
                                                                                                                                   .value,
                                                                                                                           }
-                                                                                                                        : b
+                                                                                                                        : b,
                                                                                                             );
-                                                                                                        setLocationData({
-                                                                                                            ...locationData,
-                                                                                                            cta: {
-                                                                                                                ...locationData.cta,
-                                                                                                                buttons: updated,
+                                                                                                        setLocationData(
+                                                                                                            {
+                                                                                                                ...locationData,
+                                                                                                                cta: {
+                                                                                                                    ...locationData.cta,
+                                                                                                                    buttons:
+                                                                                                                        updated,
+                                                                                                                },
                                                                                                             },
-                                                                                                        });
+                                                                                                        );
                                                                                                     }}
                                                                                                     size="small"
                                                                                                     sx={{
-                                                                                                        "& .MuiOutlinedInput-root": {
-                                                                                                            bgcolor:
-                                                                                                                "background.paper",
-                                                                                                        },
+                                                                                                        "& .MuiOutlinedInput-root":
+                                                                                                            {
+                                                                                                                bgcolor:
+                                                                                                                    "background.paper",
+                                                                                                            },
                                                                                                     }}
                                                                                                 />
                                                                                             </Grid>
                                                                                         )}
-                                                                                        <Grid item xs={12}>
+                                                                                        <Grid
+                                                                                            item
+                                                                                            xs={12}
+                                                                                        >
                                                                                             <FormControlLabel
                                                                                                 control={
                                                                                                     <Switch
-                                                                                                        checked={button.isActive}
-                                                                                                        onChange={(e) => {
+                                                                                                        checked={
+                                                                                                            button.isActive
+                                                                                                        }
+                                                                                                        onChange={(
+                                                                                                            e,
+                                                                                                        ) => {
                                                                                                             const updated =
                                                                                                                 locationData.cta.buttons.map(
-                                                                                                                    (b) =>
+                                                                                                                    (
+                                                                                                                        b,
+                                                                                                                    ) =>
                                                                                                                         b.id ===
                                                                                                                         button.id
                                                                                                                             ? {
@@ -2294,15 +2778,18 @@ export const AdminHomepageLocation = () => {
                                                                                                                                           .target
                                                                                                                                           .checked,
                                                                                                                               }
-                                                                                                                            : b
+                                                                                                                            : b,
                                                                                                                 );
-                                                                                                            setLocationData({
-                                                                                                                ...locationData,
-                                                                                                                cta: {
-                                                                                                                    ...locationData.cta,
-                                                                                                                    buttons: updated,
+                                                                                                            setLocationData(
+                                                                                                                {
+                                                                                                                    ...locationData,
+                                                                                                                    cta: {
+                                                                                                                        ...locationData.cta,
+                                                                                                                        buttons:
+                                                                                                                            updated,
+                                                                                                                    },
                                                                                                                 },
-                                                                                                            });
+                                                                                                            );
                                                                                                         }}
                                                                                                         color="success"
                                                                                                     />
@@ -2310,7 +2797,9 @@ export const AdminHomepageLocation = () => {
                                                                                                 label={
                                                                                                     <Typography
                                                                                                         variant="body2"
-                                                                                                        sx={{ fontWeight: 500 }}
+                                                                                                        sx={{
+                                                                                                            fontWeight: 500,
+                                                                                                        }}
                                                                                                     >
                                                                                                         Active
                                                                                                     </Typography>
@@ -2322,14 +2811,21 @@ export const AdminHomepageLocation = () => {
                                                                                 <IconButton
                                                                                     size="small"
                                                                                     color="error"
-                                                                                    onClick={() => handleDeleteButton(button.id)}
+                                                                                    onClick={() =>
+                                                                                        handleDeleteButton(
+                                                                                            button.id,
+                                                                                        )
+                                                                                    }
                                                                                     sx={{
                                                                                         "&:hover": {
-                                                                                            bgcolor: "error.lighter",
+                                                                                            bgcolor:
+                                                                                                "error.lighter",
                                                                                         },
                                                                                     }}
                                                                                 >
-                                                                                    <Trash2 size={20} />
+                                                                                    <Trash2
+                                                                                        size={20}
+                                                                                    />
                                                                                 </IconButton>
                                                                             </Box>
                                                                         </Paper>
@@ -2413,7 +2909,9 @@ export const AdminHomepageLocation = () => {
                                     boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
                                 }}
                             >
-                                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3 }}>
+                                <Box
+                                    sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3 }}
+                                >
                                     <Box
                                         sx={{
                                             display: "flex",
@@ -2429,7 +2927,10 @@ export const AdminHomepageLocation = () => {
                                         <MapPinIcon size={20} />
                                     </Box>
                                     <Box>
-                                        <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                                        <Typography
+                                            variant="h6"
+                                            sx={{ fontWeight: 600, lineHeight: 1.2 }}
+                                        >
                                             Live Preview
                                         </Typography>
                                         <Typography variant="caption" color="text.secondary">
@@ -2437,7 +2938,10 @@ export const AdminHomepageLocation = () => {
                                         </Typography>
                                     </Box>
                                 </Box>
-                                <LocationPreview locationData={locationData} foundedYear={foundedYear} />
+                                <LocationPreview
+                                    locationData={locationData}
+                                    foundedYear={foundedYear}
+                                />
                                 <Alert
                                     severity="info"
                                     sx={{
@@ -2451,8 +2955,9 @@ export const AdminHomepageLocation = () => {
                                     }}
                                 >
                                     <Typography variant="caption">
-                                        This preview updates in real-time as you make changes. The actual section may
-                                        look slightly different based on screen size.
+                                        This preview updates in real-time as you make changes. The
+                                        actual section may look slightly different based on screen
+                                        size.
                                     </Typography>
                                 </Alert>
                             </Paper>
