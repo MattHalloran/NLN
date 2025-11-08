@@ -44,8 +44,7 @@ const defaultServices: Service[] = [
     },
     {
         title: "Bulk Ordering & Pricing",
-        description:
-            "Order in quantity with competitive wholesale pricing.",
+        description: "Order in quantity with competitive wholesale pricing.",
         icon: "package",
         action: "Get Pricing",
         url: "/about#contact",
@@ -79,7 +78,8 @@ export const ServiceShowcase = () => {
     const services = servicesConfig?.items || defaultServices;
     const sectionTitle = servicesConfig?.title || "Our Services";
     const sectionSubtitle =
-        servicesConfig?.subtitle || "Everything you need to create and maintain your perfect garden";
+        servicesConfig?.subtitle ||
+        "Everything you need to create and maintain your perfect garden";
 
     // Get CTA section config or use defaults
     const ctaConfig = servicesConfig?.cta || {
@@ -87,12 +87,12 @@ export const ServiceShowcase = () => {
         subtitle: "Browse our online catalog or contact us to discuss your project needs",
         primaryButton: {
             text: "Shop Online",
-            url: "https://newlife.online-orders.sbiteam.com/"
+            url: "https://newlife.online-orders.sbiteam.com/",
         },
         secondaryButton: {
             text: "Contact Us",
-            url: "/about#contact"
-        }
+            url: "/about#contact",
+        },
     };
 
     const handleAction = (service: Service) => {
@@ -180,7 +180,8 @@ export const ServiceShowcase = () => {
                                         }}
                                     >
                                         {(() => {
-                                            const IconComponent = SERVICE_ICONS[service.icon] || Sprout;
+                                            const IconComponent =
+                                                SERVICE_ICONS[service.icon] || Sprout;
                                             return <IconComponent size={48} />;
                                         })()}
                                     </Box>

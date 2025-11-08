@@ -67,11 +67,13 @@ export const HomePage = () => {
         // Only track if we have a variant and haven't tracked this specific variant yet
         if (currentVariantId && trackedViewVariantId.current !== currentVariantId) {
             trackedViewVariantId.current = currentVariantId;
-            restApi.trackVariantEvent(currentVariantId, {
-                eventType: "view",
-            }).catch((err) => {
-                handleError(err, "HomePage", "trackViewEvent");
-            });
+            restApi
+                .trackVariantEvent(currentVariantId, {
+                    eventType: "view",
+                })
+                .catch((err) => {
+                    handleError(err, "HomePage", "trackViewEvent");
+                });
         }
     }, [landingPageData?._meta?.variantId]);
 
@@ -100,19 +102,20 @@ export const HomePage = () => {
 
                 if (navigator.sendBeacon) {
                     // Use Blob with explicit content type for proper JSON parsing on server
-                    const blob = new Blob(
-                        [JSON.stringify({ eventType: "bounce" })],
-                        { type: "application/json" }
-                    );
+                    const blob = new Blob([JSON.stringify({ eventType: "bounce" })], {
+                        type: "application/json",
+                    });
                     const url = `${getServerUrl()}/rest/v1/landing-page/variants/${currentVariantId}/track`;
                     navigator.sendBeacon(url, blob);
                 } else {
                     // Fallback for browsers that don't support sendBeacon
-                    restApi.trackVariantEvent(currentVariantId, {
-                        eventType: "bounce",
-                    }).catch((err) => {
-                        handleError(err, "HomePage", "trackBounceEvent");
-                    });
+                    restApi
+                        .trackVariantEvent(currentVariantId, {
+                            eventType: "bounce",
+                        })
+                        .catch((err) => {
+                            handleError(err, "HomePage", "trackBounceEvent");
+                        });
                 }
             }
         };

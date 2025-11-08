@@ -9,7 +9,17 @@ import {
     useTheme,
     Divider,
 } from "@mui/material";
-import { Building2, Users, TreePine, Clock, Award, Truck, Shield, Sprout, LucideIcon } from "lucide-react";
+import {
+    Building2,
+    Users,
+    TreePine,
+    Clock,
+    Award,
+    Truck,
+    Shield,
+    Sprout,
+    LucideIcon,
+} from "lucide-react";
 import { useContext, useMemo } from "react";
 import { BusinessContext } from "contexts/BusinessContext";
 import { getEarliestOpeningTime } from "utils/businessHours";
@@ -57,18 +67,22 @@ export const SocialProof = () => {
     // Header
     const header = socialProofData?.header || {
         title: "Why Choose New Life Nursery",
-        subtitle: "Southern New Jersey's trusted wholesale nursery partner for over four decades"
+        subtitle: "Southern New Jersey's trusted wholesale nursery partner for over four decades",
     };
 
     // Stats with token replacement
     const stats = useMemo(() => {
         const rawStats = socialProofData?.stats || [
-            { number: `${yearsInBusiness}+`, label: "Years of Excellence", subtext: `Since ${foundedYear}` },
+            {
+                number: `${yearsInBusiness}+`,
+                label: "Years of Excellence",
+                subtext: `Since ${foundedYear}`,
+            },
             { number: "100+", label: "Plant Varieties", subtext: "Extensive Selection" },
             { number: "3-25", label: "Gallon Sizes", subtext: "Full Range" },
             { number: "500+", label: "Trade Partners", subtext: "Wholesale Only" },
         ];
-        return rawStats.map(stat => ({
+        return rawStats.map((stat) => ({
             number: replaceTokens(stat.number, foundedYear, yearsInBusiness),
             label: stat.label,
             subtext: replaceTokens(stat.subtext, foundedYear, yearsInBusiness),
@@ -80,7 +94,7 @@ export const SocialProof = () => {
         const rawMission = socialProofData?.mission || {
             title: `Our Founding Mission Since ${foundedYear}`,
             quote: "Growing top quality material for buyers who are interested in the best.",
-            attribution: "The Gianaris Family"
+            attribution: "The Gianaris Family",
         };
         return {
             title: replaceTokens(rawMission.title, foundedYear, yearsInBusiness),
@@ -102,19 +116,22 @@ export const SocialProof = () => {
                 {
                     icon: "users",
                     title: "Family Heritage",
-                    description: "Owned and operated by the Gianaris family for over four decades, maintaining traditional values and personal service.",
+                    description:
+                        "Owned and operated by the Gianaris family for over four decades, maintaining traditional values and personal service.",
                     highlight: `Family-Owned Since ${foundedYear}`,
                 },
                 {
                     icon: "leaf",
                     title: "Extensive Inventory",
-                    description: "We maintain one of Southern New Jersey's largest selections of quality nursery stock across a wide range of varieties and sizes.",
+                    description:
+                        "We maintain one of Southern New Jersey's largest selections of quality nursery stock across a wide range of varieties and sizes.",
                     highlight: "Diverse Selection",
                 },
                 {
                     icon: "award",
                     title: "Quality Commitment",
-                    description: "Our founding motto remains unchanged: Growing top quality material for buyers who are interested in the best.",
+                    description:
+                        "Our founding motto remains unchanged: Growing top quality material for buyers who are interested in the best.",
                     highlight: "Premium Quality Only",
                 },
                 {
@@ -130,21 +147,23 @@ export const SocialProof = () => {
                 {
                     icon: "truck",
                     title: "Wholesale Expertise",
-                    description: "Specializing exclusively in wholesale, we understand the unique needs of landscapers and contractors.",
+                    description:
+                        "Specializing exclusively in wholesale, we understand the unique needs of landscapers and contractors.",
                     highlight: "Trade Professionals Only",
                 },
                 {
                     icon: "shield",
                     title: "Licensed & Certified",
-                    description: "Fully licensed New Jersey nursery meeting all state requirements for commercial plant production and sales.",
+                    description:
+                        "Fully licensed New Jersey nursery meeting all state requirements for commercial plant production and sales.",
                     highlight: "NJ Licensed Nursery",
                 },
-            ]
+            ],
         };
 
         return {
             title: rawStrengths.title,
-            items: rawStrengths.items.map(item => ({
+            items: rawStrengths.items.map((item) => ({
                 icon: item.icon,
                 title: item.title,
                 description: item.description,
@@ -155,21 +174,23 @@ export const SocialProof = () => {
 
     // Client types
     const clientTypes = useMemo(() => {
-        return socialProofData?.clientTypes || {
-            title: "Proudly Serving Trade Professionals",
-            items: DEFAULT_CLIENT_TYPES
-        };
+        return (
+            socialProofData?.clientTypes || {
+                title: "Proudly Serving Trade Professionals",
+                items: DEFAULT_CLIENT_TYPES,
+            }
+        );
     }, [socialProofData]);
 
     // Footer with token replacement
     const footer = useMemo(() => {
         const rawFooter = socialProofData?.footer || {
             description: "References available upon request for qualified wholesale buyers",
-            chips: ["Licensed NJ Nursery", "Wholesale Only", `Est. ${foundedYear}`]
+            chips: ["Licensed NJ Nursery", "Wholesale Only", `Est. ${foundedYear}`],
         };
         return {
             description: rawFooter.description,
-            chips: rawFooter.chips.map(chip => replaceTokens(chip, foundedYear, yearsInBusiness)),
+            chips: rawFooter.chips.map((chip) => replaceTokens(chip, foundedYear, yearsInBusiness)),
         };
     }, [socialProofData, foundedYear, yearsInBusiness]);
 
@@ -278,7 +299,7 @@ export const SocialProof = () => {
                             bottom: 0,
                             opacity: 0.1,
                             backgroundImage:
-                                "url('data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"><circle cx=\"50\" cy=\"50\" r=\"2\" fill=\"white\"/></svg>')",
+                                'url(\'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="2" fill="white"/></svg>\')',
                             backgroundSize: "50px 50px",
                         }}
                     />
@@ -354,7 +375,13 @@ export const SocialProof = () => {
                                     }}
                                 >
                                     <CardContent sx={{ p: 3 }}>
-                                        <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2 }}>
+                                        <Box
+                                            sx={{
+                                                display: "flex",
+                                                alignItems: "flex-start",
+                                                gap: 2,
+                                            }}
+                                        >
                                             <Box
                                                 sx={{
                                                     p: 1.5,

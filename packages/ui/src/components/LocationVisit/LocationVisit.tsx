@@ -12,7 +12,21 @@ import {
     Alert,
 } from "@mui/material";
 import { useLocation } from "route";
-import { Eye, Gift, Smartphone, Car, Clock, Phone, MapPin, Mail, Map, AlertCircle, Truck, Package, Users } from "lucide-react";
+import {
+    Eye,
+    Gift,
+    Smartphone,
+    Car,
+    Clock,
+    Phone,
+    MapPin,
+    Mail,
+    Map,
+    AlertCircle,
+    Truck,
+    Package,
+    Users,
+} from "lucide-react";
 import { useLandingPage } from "hooks/useLandingPage";
 import { parseBusinessHours, checkBusinessHoursStatus } from "utils/businessHours";
 import { BusinessContext } from "contexts/BusinessContext";
@@ -20,7 +34,10 @@ import { useContext, useMemo } from "react";
 import { COMPANY_INFO } from "@local/shared";
 
 // Icon mapping for visit info items
-const VISIT_INFO_ICON_MAP: Record<string, React.ComponentType<{ size?: number; color?: string }>> = {
+const VISIT_INFO_ICON_MAP: Record<
+    string,
+    React.ComponentType<{ size?: number; color?: string }>
+> = {
     eye: Eye,
     gift: Gift,
     smartphone: Smartphone,
@@ -35,6 +52,46 @@ const VISIT_INFO_ICON_MAP: Record<string, React.ComponentType<{ size?: number; c
 const replaceTokens = (text: string, foundedYear: number): string => {
     return text.replace(/{foundedYear}/g, String(foundedYear));
 };
+
+// Default visit info items (fallback)
+const DEFAULT_VISIT_INFO = [
+    {
+        id: "1",
+        title: "What to Expect",
+        icon: "eye",
+        description:
+            "Browse over 70 acres of top-quality trees and shrubs, carefully grown for landscape professionals",
+        displayOrder: 0,
+        isActive: true,
+    },
+    {
+        id: "2",
+        title: "Wholesale Focus",
+        icon: "gift",
+        description:
+            "Specializing in 3 to 25-gallon container plants for landscapers, contractors, and garden centers",
+        displayOrder: 1,
+        isActive: true,
+    },
+    {
+        id: "3",
+        title: "Professional Service",
+        icon: "smartphone",
+        description:
+            "Expert horticultural advice from our experienced team with over 40 years in the industry",
+        displayOrder: 2,
+        isActive: true,
+    },
+    {
+        id: "4",
+        title: "Easy Access",
+        icon: "car",
+        description:
+            "Convenient location in Bridgeton with ample parking and loading facilities for commercial vehicles",
+        displayOrder: 3,
+        isActive: true,
+    },
+];
 
 export const LocationVisit = () => {
     const { palette } = useTheme();
@@ -55,8 +112,9 @@ export const LocationVisit = () => {
 
     const headerTitle = locationContent?.header?.title || "Visit Our Nursery";
     const headerSubtitle = replaceTokens(
-        locationContent?.header?.subtitle || `Southern New Jersey's premier wholesale nursery since {foundedYear}`,
-        foundedYear
+        locationContent?.header?.subtitle ||
+            "Southern New Jersey's premier wholesale nursery since {foundedYear}",
+        foundedYear,
     );
     const headerChip = locationContent?.header?.chip || "Wholesale Only - Trade Customers Welcome";
 
@@ -81,45 +139,9 @@ export const LocationVisit = () => {
         chip: "Wholesale Hours - Trade Only",
     };
 
-    // Visit info items from API with fallbacks
-    const defaultVisitInfo = [
-        {
-            id: "1",
-            title: "What to Expect",
-            icon: "eye",
-            description: "Browse over 70 acres of top-quality trees and shrubs, carefully grown for landscape professionals",
-            displayOrder: 0,
-            isActive: true,
-        },
-        {
-            id: "2",
-            title: "Wholesale Focus",
-            icon: "gift",
-            description: "Specializing in 3 to 25-gallon container plants for landscapers, contractors, and garden centers",
-            displayOrder: 1,
-            isActive: true,
-        },
-        {
-            id: "3",
-            title: "Professional Service",
-            icon: "smartphone",
-            description: "Expert horticultural advice from our experienced team with over 40 years in the industry",
-            displayOrder: 2,
-            isActive: true,
-        },
-        {
-            id: "4",
-            title: "Easy Access",
-            icon: "car",
-            description: "Convenient location in Bridgeton with ample parking and loading facilities for commercial vehicles",
-            displayOrder: 3,
-            isActive: true,
-        },
-    ];
-
     const visitInfoSectionTitle = locationContent?.visitInfo?.sectionTitle || "Plan Your Visit";
     const visitInfo = useMemo(() => {
-        const items = locationContent?.visitInfo?.items || defaultVisitInfo;
+        const items = locationContent?.visitInfo?.items || DEFAULT_VISIT_INFO;
         return items
             .filter((item) => item.isActive)
             .sort((a, b) => a.displayOrder - b.displayOrder)
@@ -133,7 +155,8 @@ export const LocationVisit = () => {
     // CTA section from API with fallbacks
     const ctaConfig = locationContent?.cta || {
         title: "Ready to Visit?",
-        description: "Wholesale customers welcome! Visit during business hours or call ahead for availability and pricing.",
+        description:
+            "Wholesale customers welcome! Visit during business hours or call ahead for availability and pricing.",
         buttons: [
             {
                 id: "1",
@@ -173,9 +196,7 @@ export const LocationVisit = () => {
     }, [ctaConfig.buttons]);
 
     // Get real business hours from API or use fallback
-    const businessHours = data?.contact?.hours
-        ? parseBusinessHours(data.contact.hours)
-        : [];
+    const businessHours = data?.contact?.hours ? parseBusinessHours(data.contact.hours) : [];
     const hours =
         businessHours.length > 0
             ? businessHours.map((hour) => {
@@ -190,35 +211,34 @@ export const LocationVisit = () => {
               ];
 
     // Build contact methods with dynamic ordering
-    const contactMethodsMap = {
-        phone: {
-            method: "Phone",
-            value: business?.PHONE?.Label || "(856) 455-3601",
-            href: business?.PHONE?.Link || "tel:+18564553601",
-            description: contactMethodsConfig.descriptions.phone,
-            icon: Phone,
-        },
-        address: {
-            method: "Address",
-            value: business?.ADDRESS?.Label || "106 S Woodruff Rd, Bridgeton, NJ 08302",
-            href:
-                business?.ADDRESS?.Link ||
-                "https://maps.google.com/?q=106+S+Woodruff+Rd+Bridgeton+NJ+08302",
-            description: contactMethodsConfig.descriptions.address,
-            icon: MapPin,
-        },
-        email: {
-            method: "Email",
-            value: business?.EMAIL?.Label || "info@newlifenurseryinc.com",
-            href: business?.EMAIL?.Link || "mailto:info@newlifenurseryinc.com",
-            description: contactMethodsConfig.descriptions.email,
-            icon: Mail,
-        },
-    };
-
     const contactMethods = useMemo(() => {
+        const contactMethodsMap = {
+            phone: {
+                method: "Phone",
+                value: business?.PHONE?.Label || "(856) 455-3601",
+                href: business?.PHONE?.Link || "tel:+18564553601",
+                description: contactMethodsConfig.descriptions.phone,
+                icon: Phone,
+            },
+            address: {
+                method: "Address",
+                value: business?.ADDRESS?.Label || "106 S Woodruff Rd, Bridgeton, NJ 08302",
+                href:
+                    business?.ADDRESS?.Link ||
+                    "https://maps.google.com/?q=106+S+Woodruff+Rd+Bridgeton+NJ+08302",
+                description: contactMethodsConfig.descriptions.address,
+                icon: MapPin,
+            },
+            email: {
+                method: "Email",
+                value: business?.EMAIL?.Label || "info@newlifenurseryinc.com",
+                href: business?.EMAIL?.Link || "mailto:info@newlifenurseryinc.com",
+                description: contactMethodsConfig.descriptions.email,
+                icon: Mail,
+            },
+        };
         return contactMethodsConfig.order.map((key) => contactMethodsMap[key]).filter(Boolean);
-    }, [contactMethodsConfig.order, business]);
+    }, [contactMethodsConfig.order, contactMethodsConfig.descriptions, business]);
 
     const getDirections = () => {
         // Use the dynamic link from business context, or fallback to hardcoded address
@@ -293,7 +313,7 @@ export const LocationVisit = () => {
                                         referrerPolicy="no-referrer-when-downgrade"
                                         src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${encodeURIComponent(
                                             business?.ADDRESS?.Label ||
-                                                "106 S Woodruff Rd, Bridgeton, NJ 08302"
+                                                "106 S Woodruff Rd, Bridgeton, NJ 08302",
                                         )}&zoom=15`}
                                     />
                                     {/* Directions button overlay on embedded map */}
@@ -347,7 +367,8 @@ export const LocationVisit = () => {
                                             <Map size={64} />
                                         </Box>
                                         <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
-                                            {business?.BUSINESS_NAME?.Short || "New Life Nursery Inc."}
+                                            {business?.BUSINESS_NAME?.Short ||
+                                                "New Life Nursery Inc."}
                                         </Typography>
                                         <Typography variant="body1" sx={{ opacity: 0.9 }}>
                                             {business?.ADDRESS?.Label ||

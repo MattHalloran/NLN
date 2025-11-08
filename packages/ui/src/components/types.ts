@@ -11,8 +11,8 @@ export interface CardGridProps {
 
 export interface ErrorBoundaryProps {
     children: React.ReactNode;
-    /** 
-     * Optional fallback component to render instead of default error UI 
+    /**
+     * Optional fallback component to render instead of default error UI
      */
     fallback?: React.ComponentType<{
         error: Error;
@@ -30,14 +30,20 @@ export interface ErrorBoundaryProps {
 }
 
 export interface PageContainerProps {
-    children?: boolean | string | null | undefined | JSX.Element | (boolean | string | null | undefined | JSX.Element)[];
+    children?:
+        | boolean
+        | string
+        | null
+        | undefined
+        | JSX.Element
+        | (boolean | string | null | undefined | JSX.Element)[];
     sx?: SxType;
     /**
      * Layout variant for the page container
      * - 'default': Max width of 700px, suitable for single-column content
      * - 'wide': Max width of 1400px, suitable for two-column layouts with previews
      */
-    variant?: 'default' | 'wide';
+    variant?: "default" | "wide";
 }
 
 export type NavbarProps = {
@@ -55,4 +61,4 @@ export type NavbarProps = {
     title?: string | undefined;
     /** Replaces title if provided */
     titleComponent?: JSX.Element;
-}
+};

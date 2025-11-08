@@ -6,11 +6,6 @@ const VARIANT_STORAGE_KEY = "variantAssignment";
 const VARIANT_TIMESTAMP_KEY = "variantAssignmentTimestamp";
 const VARIANT_SESSION_DURATION_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
-interface StoredVariantData {
-    variantId: string;
-    timestamp: number;
-}
-
 // Helper to get stored variant assignment from localStorage with expiration check
 export const getStoredVariantId = (): string | null => {
     try {
@@ -85,7 +80,7 @@ export const useLandingPageStore = create<LandingPageState>((set, get) => {
 
                 try {
                     // Get stored variant assignment (if user was previously assigned)
-                    let storedVariantId = getStoredVariantId();
+                    const storedVariantId = getStoredVariantId();
 
                     // First attempt: Try with stored variant ID
                     let data: LandingPageContent;
@@ -96,11 +91,16 @@ export const useLandingPageStore = create<LandingPageState>((set, get) => {
                         });
                     } catch (firstAttemptError: any) {
                         // If the stored variant doesn't exist or is disabled (404/400), clear it and retry
-                        if (storedVariantId && (firstAttemptError?.status === 404 || firstAttemptError?.status === 400)) {
+                        if (
+                            storedVariantId &&
+                            (firstAttemptError?.status === 404 || firstAttemptError?.status === 400)
+                        ) {
                             handleError(
-                                new Error(`Stored variant ${storedVariantId} is no longer valid. Requesting new assignment.`),
+                                new Error(
+                                    `Stored variant ${storedVariantId} is no longer valid. Requesting new assignment.`,
+                                ),
                                 "landingPageStore",
-                                "fetchLandingPage"
+                                "fetchLandingPage",
                             );
                             clearStoredVariant();
 

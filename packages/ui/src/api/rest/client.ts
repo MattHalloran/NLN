@@ -6,18 +6,18 @@ const REST_BASE_URL = `${getServerUrl()}/rest/v1`;
 
 // Error class for API errors
 export class ApiError extends Error {
-    constructor(public status: number, message: string, public data?: unknown) {
+    constructor(
+        public status: number,
+        message: string,
+        public data?: unknown,
+    ) {
         super(message);
         this.name = "ApiError";
     }
 }
 
 // Generic fetch wrapper with error handling
-async function fetchApi<T>(
-    endpoint: string,
-    options?: RequestInit,
-    retryCount = 0,
-): Promise<T> {
+async function fetchApi<T>(endpoint: string, options?: RequestInit, retryCount = 0): Promise<T> {
     const url = `${REST_BASE_URL}${endpoint}`;
 
     // Get CSRF token for state-changing requests
@@ -25,13 +25,11 @@ async function fetchApi<T>(
     let csrfHeaders = {};
 
     if (requiresCsrfToken(method)) {
-        console.log(`[CSRF] Request ${method} ${endpoint} requires CSRF token`);
         const csrfToken = await getCsrfToken();
         if (csrfToken) {
             csrfHeaders = {
                 "X-CSRF-Token": csrfToken,
             };
-            console.log(`[CSRF] Including CSRF token in request:`, csrfToken.substring(0, 20) + "...");
         } else {
             console.error(`[CSRF] Failed to get CSRF token for ${method} ${endpoint}!`);
             throw new ApiError(500, "Failed to get CSRF token", { code: "CSRF_TOKEN_UNAVAILABLE" });
@@ -60,7 +58,6 @@ async function fetchApi<T>(
                 errorData?.code === "CSRF_VALIDATION_FAILED" &&
                 retryCount === 0
             ) {
-                console.log("[CSRF] CSRF validation failed, refreshing token and retrying...");
                 await refreshCsrfToken();
                 return fetchApi<T>(endpoint, options, retryCount + 1);
             }
@@ -79,10 +76,7 @@ async function fetchApi<T>(
         }
 
         // Network or other errors
-        throw new ApiError(
-            0,
-            error instanceof Error ? error.message : "Network error occurred",
-        );
+        throw new ApiError(0, error instanceof Error ? error.message : "Network error occurred");
     }
 }
 
@@ -675,7 +669,7 @@ export interface LogEntry {
     path?: string;
     method?: string;
     userAgent?: string;
-    [key: string]: any;
+    [key: string]: unknown;
 }
 
 export interface LogsResponse {
@@ -757,10 +751,7 @@ export const restApi = {
     },
 
     async invalidateLandingPageCache(): Promise<{ success: boolean }> {
-        return fetchApi<{ success: boolean }>(
-            "/landing-page/invalidate-cache",
-            { method: "POST" },
-        );
+        return fetchApi<{ success: boolean }>("/landing-page/invalidate-cache", { method: "POST" });
     },
 
     // Plants
@@ -772,7 +763,7 @@ export const restApi = {
         offset?: number;
     }): Promise<Plant[]> {
         const queryParams = new URLSearchParams();
-        
+
         if (params?.inStock !== undefined) {
             queryParams.append("inStock", String(params.inStock));
         }
@@ -806,18 +797,23 @@ export const restApi = {
         queryParams?: {
             variantId?: string;
         },
-    ): Promise<{ success: boolean; message: string; updated: { business: boolean; hours: boolean } }> {
+    ): Promise<{
+        success: boolean;
+        message: string;
+        updated: { business: boolean; hours: boolean };
+    }> {
         const params = new URLSearchParams();
         if (queryParams?.variantId) params.append("variantId", queryParams.variantId);
 
         const queryString = params.toString();
-        return fetchApi<{ success: boolean; message: string; updated: { business: boolean; hours: boolean } }>(
-            `/landing-page/contact-info${queryString ? `?${queryString}` : ""}`,
-            {
-                method: "PUT",
-                body: JSON.stringify(data),
-            },
-        );
+        return fetchApi<{
+            success: boolean;
+            message: string;
+            updated: { business: boolean; hours: boolean };
+        }>(`/landing-page/contact-info${queryString ? `?${queryString}` : ""}`, {
+            method: "PUT",
+            body: JSON.stringify(data),
+        });
     },
 
     // Unified landing page content updates
@@ -1045,7 +1041,11 @@ export const restApi = {
     },
 
     // Authentication
-    async login(input: { email: string; password: string; verificationCode?: string }): Promise<CustomerSession> {
+    async login(input: {
+        email: string;
+        password: string;
+        verificationCode?: string;
+    }): Promise<CustomerSession> {
         return fetchApi<CustomerSession>("/auth/login", {
             method: "POST",
             body: JSON.stringify(input),
@@ -1092,7 +1092,10 @@ export const restApi = {
         return fetchApi<Image[]>(`/images?label=${encodeURIComponent(input.label)}`);
     },
 
-    async addImages(input: { label: string; files: File[] }): Promise<Array<{ success: boolean; src: string; hash: string }>> {
+    async addImages(input: {
+        label: string;
+        files: File[];
+    }): Promise<Array<{ success: boolean; src: string; hash: string }>> {
         const formData = new FormData();
         formData.append("label", input.label);
         input.files.forEach((file) => {
@@ -1100,15 +1103,17 @@ export const restApi = {
         });
 
         // Internal function to make the request with retry logic
-        const makeRequest = async (retryCount = 0): Promise<Array<{ success: boolean; src: string; hash: string }>> => {
+        const makeRequest = async (
+            retryCount = 0,
+        ): Promise<Array<{ success: boolean; src: string; hash: string }>> => {
             // Get CSRF token for each attempt
-            console.log(`[CSRF] Request POST /images requires CSRF token`);
             const csrfToken = await getCsrfToken();
             if (!csrfToken) {
-                console.error(`[CSRF] Failed to get CSRF token for POST /images!`);
-                throw new ApiError(500, "Failed to get CSRF token", { code: "CSRF_TOKEN_UNAVAILABLE" });
+                console.error("[CSRF] Failed to get CSRF token for POST /images!");
+                throw new ApiError(500, "Failed to get CSRF token", {
+                    code: "CSRF_TOKEN_UNAVAILABLE",
+                });
             }
-            console.log(`[CSRF] Including CSRF token in request:`, csrfToken.substring(0, 20) + "...");
 
             const url = `${REST_BASE_URL}/images`;
             const response = await fetch(url, {
@@ -1129,7 +1134,6 @@ export const restApi = {
                     errorData?.code === "CSRF_VALIDATION_FAILED" &&
                     retryCount === 0
                 ) {
-                    console.log("[CSRF] CSRF validation failed for image upload, refreshing token and retrying...");
                     await refreshCsrfToken();
                     return makeRequest(retryCount + 1);
                 }
@@ -1161,7 +1165,10 @@ export const restApi = {
         });
     },
 
-    async deleteImage(hash: string, force?: boolean): Promise<{
+    async deleteImage(
+        hash: string,
+        force?: boolean,
+    ): Promise<{
         success: boolean;
         deletedFiles: number;
         message: string;
@@ -1209,13 +1216,13 @@ export const restApi = {
         // Internal function to make the request with retry logic
         const makeRequest = async (retryCount = 0): Promise<{ success: boolean }> => {
             // Get CSRF token for each attempt
-            console.log(`[CSRF] Request POST /assets/write requires CSRF token`);
             const csrfToken = await getCsrfToken();
             if (!csrfToken) {
-                console.error(`[CSRF] Failed to get CSRF token for POST /assets/write!`);
-                throw new ApiError(500, "Failed to get CSRF token", { code: "CSRF_TOKEN_UNAVAILABLE" });
+                console.error("[CSRF] Failed to get CSRF token for POST /assets/write!");
+                throw new ApiError(500, "Failed to get CSRF token", {
+                    code: "CSRF_TOKEN_UNAVAILABLE",
+                });
             }
-            console.log(`[CSRF] Including CSRF token in request:`, csrfToken.substring(0, 20) + "...");
 
             const url = `${REST_BASE_URL}/assets/write`;
             const response = await fetch(url, {
@@ -1236,7 +1243,6 @@ export const restApi = {
                     errorData?.code === "CSRF_VALIDATION_FAILED" &&
                     retryCount === 0
                 ) {
-                    console.log("[CSRF] CSRF validation failed for asset write, refreshing token and retrying...");
                     await refreshCsrfToken();
                     return makeRequest(retryCount + 1);
                 }
@@ -1260,20 +1266,21 @@ export const restApi = {
     },
 
     // Section Management
-    async updateSectionConfiguration(sections: SectionConfiguration): Promise<{ success: boolean; message: string }> {
-        return fetchApi<{ success: boolean; message: string }>(
-            "/landing-page/sections",
-            {
-                method: "PUT",
-                body: JSON.stringify({ sections }),
-            },
-        );
+    async updateSectionConfiguration(
+        sections: SectionConfiguration,
+    ): Promise<{ success: boolean; message: string }> {
+        return fetchApi<{ success: boolean; message: string }>("/landing-page/sections", {
+            method: "PUT",
+            body: JSON.stringify({ sections }),
+        });
     },
 
     // Landing Page Settings Management
     // UPDATED: Now accepts DeepPartial for type-safe nested updates
     async updateLandingPageSettings(
-        settings: DeepPartial<Pick<LandingPageContent, "content" | "theme" | "layout" | "experiments">>,
+        settings: DeepPartial<
+            Pick<LandingPageContent, "content" | "theme" | "layout" | "experiments">
+        >,
         queryParams?: {
             variantId?: string;
         },
@@ -1315,12 +1322,15 @@ export const restApi = {
         });
     },
 
-    async updateVariant(id: string, variant: Partial<{
-        name: string;
-        description: string;
-        status: "enabled" | "disabled";
-        trafficAllocation: number;
-    }>): Promise<LandingPageVariant> {
+    async updateVariant(
+        id: string,
+        variant: Partial<{
+            name: string;
+            description: string;
+            status: "enabled" | "disabled";
+            trafficAllocation: number;
+        }>,
+    ): Promise<LandingPageVariant> {
         return fetchApi<LandingPageVariant>(`/landing-page/variants/${id}`, {
             method: "PUT",
             body: JSON.stringify(variant),
@@ -1351,14 +1361,17 @@ export const restApi = {
         event: {
             eventType: "view" | "conversion" | "bounce";
         },
-    ): Promise<{ success: boolean; metrics?: { views: number; conversions: number; bounces: number } }> {
-        return fetchApi<{ success: boolean; metrics?: { views: number; conversions: number; bounces: number } }>(
-            `/landing-page/variants/${variantId}/track`,
-            {
-                method: "POST",
-                body: JSON.stringify(event),
-            },
-        );
+    ): Promise<{
+        success: boolean;
+        metrics?: { views: number; conversions: number; bounces: number };
+    }> {
+        return fetchApi<{
+            success: boolean;
+            metrics?: { views: number; conversions: number; bounces: number };
+        }>(`/landing-page/variants/${variantId}/track`, {
+            method: "POST",
+            body: JSON.stringify(event),
+        });
     },
 
     async toggleVariant(id: string): Promise<LandingPageVariant> {
@@ -1386,14 +1399,20 @@ export const restApi = {
         });
     },
 
-    async getCleanupHistory(params?: { status?: string; limit?: number; offset?: number }): Promise<CleanupHistory> {
+    async getCleanupHistory(params?: {
+        status?: string;
+        limit?: number;
+        offset?: number;
+    }): Promise<CleanupHistory> {
         const queryParams = new URLSearchParams();
         if (params?.status) queryParams.append("status", params.status);
         if (params?.limit) queryParams.append("limit", params.limit.toString());
         if (params?.offset) queryParams.append("offset", params.offset.toString());
 
         const queryString = queryParams.toString();
-        return fetchApi<CleanupHistory>(`/storage/cleanup/history${queryString ? `?${queryString}` : ""}`);
+        return fetchApi<CleanupHistory>(
+            `/storage/cleanup/history${queryString ? `?${queryString}` : ""}`,
+        );
     },
 
     async getCleanupPreview(): Promise<CleanupPreview> {
@@ -1408,19 +1427,33 @@ export const restApi = {
         return fetchApi<OrphanedRecordsResponse>("/storage/orphaned-records");
     },
 
-    async cleanOrphanedFiles(): Promise<{ success: boolean; deletedCount: number; freedMB: number; errors?: string[] }> {
-        return fetchApi<{ success: boolean; deletedCount: number; freedMB: number; errors?: string[] }>(
-            "/storage/orphaned-files",
+    async cleanOrphanedFiles(): Promise<{
+        success: boolean;
+        deletedCount: number;
+        freedMB: number;
+        errors?: string[];
+    }> {
+        return fetchApi<{
+            success: boolean;
+            deletedCount: number;
+            freedMB: number;
+            errors?: string[];
+        }>("/storage/orphaned-files", {
+            method: "DELETE",
+        });
+    },
+
+    async cleanOrphanedRecords(): Promise<{
+        success: boolean;
+        deletedCount: number;
+        errors?: string[];
+    }> {
+        return fetchApi<{ success: boolean; deletedCount: number; errors?: string[] }>(
+            "/storage/orphaned-records",
             {
                 method: "DELETE",
             },
         );
-    },
-
-    async cleanOrphanedRecords(): Promise<{ success: boolean; deletedCount: number; errors?: string[] }> {
-        return fetchApi<{ success: boolean; deletedCount: number; errors?: string[] }>("/storage/orphaned-records", {
-            method: "DELETE",
-        });
     },
 
     async getRecentActivity(): Promise<RecentActivity> {
@@ -1485,7 +1518,9 @@ export const restApi = {
         if (params?.search) queryParams.append("search", params.search);
 
         const queryString = queryParams.toString();
-        return fetchApi<NewsletterSubscribersResponse>(`/newsletter/subscribers${queryString ? `?${queryString}` : ""}`);
+        return fetchApi<NewsletterSubscribersResponse>(
+            `/newsletter/subscribers${queryString ? `?${queryString}` : ""}`,
+        );
     },
 
     async exportNewsletterSubscribers(status?: string): Promise<Blob> {
@@ -1501,7 +1536,10 @@ export const restApi = {
         });
 
         if (!response.ok) {
-            throw new ApiError(response.status, `Failed to export subscribers: ${response.statusText}`);
+            throw new ApiError(
+                response.status,
+                `Failed to export subscribers: ${response.statusText}`,
+            );
         }
 
         return response.blob();

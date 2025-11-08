@@ -94,36 +94,39 @@ export const AdminSystemLogs = () => {
     const linesPerPage = 100;
 
     // Fetch logs
-    const fetchLogs = useCallback(async (resetOffset = false) => {
-        setLoading(true);
-        setError(null);
+    const fetchLogs = useCallback(
+        async (resetOffset = false) => {
+            setLoading(true);
+            setError(null);
 
-        try {
-            const currentOffset = resetOffset ? 0 : offset;
-            const response = await restApi.getLogs({
-                file: logFile,
-                lines: linesPerPage,
-                offset: currentOffset,
-                level: level !== "all" ? level : undefined,
-                search: search || undefined,
-                dateFrom: dateFrom || undefined,
-                dateTo: dateTo || undefined,
-            });
+            try {
+                const currentOffset = resetOffset ? 0 : offset;
+                const response = await restApi.getLogs({
+                    file: logFile,
+                    lines: linesPerPage,
+                    offset: currentOffset,
+                    level: level !== "all" ? level : undefined,
+                    search: search || undefined,
+                    dateFrom: dateFrom || undefined,
+                    dateTo: dateTo || undefined,
+                });
 
-            if (resetOffset) {
-                setLogs(response.logs);
-                setOffset(0);
-            } else {
-                setLogs((prev) => [...prev, ...response.logs]);
+                if (resetOffset) {
+                    setLogs(response.logs);
+                    setOffset(0);
+                } else {
+                    setLogs((prev) => [...prev, ...response.logs]);
+                }
+
+                setHasMore(response.hasMore);
+            } catch (err) {
+                setError(err instanceof Error ? err.message : "Failed to fetch logs");
+            } finally {
+                setLoading(false);
             }
-
-            setHasMore(response.hasMore);
-        } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to fetch logs");
-        } finally {
-            setLoading(false);
-        }
-    }, [logFile, level, search, dateFrom, dateTo, offset]);
+        },
+        [logFile, level, search, dateFrom, dateTo, offset],
+    );
 
     // Fetch stats
     const fetchStats = useCallback(async () => {
@@ -309,7 +312,9 @@ export const AdminSystemLogs = () => {
                                 <Select
                                     value={logFile}
                                     label="Log File"
-                                    onChange={(e) => setLogFile(e.target.value as "combined" | "error")}
+                                    onChange={(e) =>
+                                        setLogFile(e.target.value as "combined" | "error")
+                                    }
                                 >
                                     <MenuItem value="combined">Combined</MenuItem>
                                     <MenuItem value="error">Errors Only</MenuItem>
@@ -319,7 +324,11 @@ export const AdminSystemLogs = () => {
                         <Grid item xs={12} sm={6} md={2}>
                             <FormControl fullWidth size="small">
                                 <InputLabel>Level</InputLabel>
-                                <Select value={level} label="Level" onChange={(e) => setLevel(e.target.value)}>
+                                <Select
+                                    value={level}
+                                    label="Level"
+                                    onChange={(e) => setLevel(e.target.value)}
+                                >
                                     <MenuItem value="all">All Levels</MenuItem>
                                     <MenuItem value="error">Error</MenuItem>
                                     <MenuItem value="warn">Warning</MenuItem>
@@ -410,7 +419,14 @@ export const AdminSystemLogs = () => {
 
                 {/* Logs Display */}
                 <Paper sx={{ p: 2 }}>
-                    <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
+                    <Box
+                        sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            mb: 2,
+                        }}
+                    >
                         <Typography variant="h6">
                             Logs ({logs.length} {hasMore && "showing, more available"})
                         </Typography>
@@ -425,7 +441,12 @@ export const AdminSystemLogs = () => {
                         ) : null}
 
                         {logs.map((log, index) => (
-                            <Accordion key={index} disableGutters elevation={0} sx={{ border: "1px solid #e0e0e0" }}>
+                            <Accordion
+                                key={index}
+                                disableGutters
+                                elevation={0}
+                                sx={{ border: "1px solid #e0e0e0" }}
+                            >
                                 <AccordionSummary
                                     expandIcon={<ExpandMoreIcon />}
                                     sx={{
@@ -434,7 +455,15 @@ export const AdminSystemLogs = () => {
                                         },
                                     }}
                                 >
-                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, width: "100%", overflow: "hidden" }}>
+                                    <Box
+                                        sx={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: 1,
+                                            width: "100%",
+                                            overflow: "hidden",
+                                        }}
+                                    >
                                         {getLevelIcon(log.level)}
                                         <Chip
                                             label={log.level.toUpperCase()}
@@ -485,15 +514,33 @@ export const AdminSystemLogs = () => {
                                         <Table size="small" sx={{ "& td": { border: 0, py: 0.5 } }}>
                                             <TableBody>
                                                 <TableRow>
-                                                    <TableCell sx={{ fontWeight: 600, width: "120px", verticalAlign: "top" }}>
+                                                    <TableCell
+                                                        sx={{
+                                                            fontWeight: 600,
+                                                            width: "120px",
+                                                            verticalAlign: "top",
+                                                        }}
+                                                    >
                                                         Timestamp
                                                     </TableCell>
-                                                    <TableCell sx={{ fontFamily: "monospace", fontSize: "0.875rem" }}>
+                                                    <TableCell
+                                                        sx={{
+                                                            fontFamily: "monospace",
+                                                            fontSize: "0.875rem",
+                                                        }}
+                                                    >
                                                         {log.timestamp}
                                                     </TableCell>
                                                 </TableRow>
                                                 <TableRow>
-                                                    <TableCell sx={{ fontWeight: 600, verticalAlign: "top" }}>Level</TableCell>
+                                                    <TableCell
+                                                        sx={{
+                                                            fontWeight: 600,
+                                                            verticalAlign: "top",
+                                                        }}
+                                                    >
+                                                        Level
+                                                    </TableCell>
                                                     <TableCell>
                                                         <Chip
                                                             label={log.level.toUpperCase()}
@@ -503,7 +550,14 @@ export const AdminSystemLogs = () => {
                                                     </TableCell>
                                                 </TableRow>
                                                 <TableRow>
-                                                    <TableCell sx={{ fontWeight: 600, verticalAlign: "top" }}>Message</TableCell>
+                                                    <TableCell
+                                                        sx={{
+                                                            fontWeight: 600,
+                                                            verticalAlign: "top",
+                                                        }}
+                                                    >
+                                                        Message
+                                                    </TableCell>
                                                     <TableCell
                                                         sx={{
                                                             fontFamily: "monospace",
@@ -517,15 +571,34 @@ export const AdminSystemLogs = () => {
                                                 </TableRow>
                                                 {log.service && (
                                                     <TableRow>
-                                                        <TableCell sx={{ fontWeight: 600, verticalAlign: "top" }}>Service</TableCell>
-                                                        <TableCell sx={{ fontFamily: "monospace", fontSize: "0.875rem" }}>
+                                                        <TableCell
+                                                            sx={{
+                                                                fontWeight: 600,
+                                                                verticalAlign: "top",
+                                                            }}
+                                                        >
+                                                            Service
+                                                        </TableCell>
+                                                        <TableCell
+                                                            sx={{
+                                                                fontFamily: "monospace",
+                                                                fontSize: "0.875rem",
+                                                            }}
+                                                        >
                                                             {log.service}
                                                         </TableCell>
                                                     </TableRow>
                                                 )}
                                                 {log.path && (
                                                     <TableRow>
-                                                        <TableCell sx={{ fontWeight: 600, verticalAlign: "top" }}>Path</TableCell>
+                                                        <TableCell
+                                                            sx={{
+                                                                fontWeight: 600,
+                                                                verticalAlign: "top",
+                                                            }}
+                                                        >
+                                                            Path
+                                                        </TableCell>
                                                         <TableCell
                                                             sx={{
                                                                 fontFamily: "monospace",
@@ -539,16 +612,40 @@ export const AdminSystemLogs = () => {
                                                 )}
                                                 {log.method && (
                                                     <TableRow>
-                                                        <TableCell sx={{ fontWeight: 600, verticalAlign: "top" }}>Method</TableCell>
-                                                        <TableCell sx={{ fontFamily: "monospace", fontSize: "0.875rem" }}>
+                                                        <TableCell
+                                                            sx={{
+                                                                fontWeight: 600,
+                                                                verticalAlign: "top",
+                                                            }}
+                                                        >
+                                                            Method
+                                                        </TableCell>
+                                                        <TableCell
+                                                            sx={{
+                                                                fontFamily: "monospace",
+                                                                fontSize: "0.875rem",
+                                                            }}
+                                                        >
                                                             {log.method}
                                                         </TableCell>
                                                     </TableRow>
                                                 )}
                                                 {log.ip && (
                                                     <TableRow>
-                                                        <TableCell sx={{ fontWeight: 600, verticalAlign: "top" }}>IP</TableCell>
-                                                        <TableCell sx={{ fontFamily: "monospace", fontSize: "0.875rem" }}>
+                                                        <TableCell
+                                                            sx={{
+                                                                fontWeight: 600,
+                                                                verticalAlign: "top",
+                                                            }}
+                                                        >
+                                                            IP
+                                                        </TableCell>
+                                                        <TableCell
+                                                            sx={{
+                                                                fontFamily: "monospace",
+                                                                fontSize: "0.875rem",
+                                                            }}
+                                                        >
                                                             {log.ip}
                                                         </TableCell>
                                                     </TableRow>
@@ -557,13 +654,25 @@ export const AdminSystemLogs = () => {
                                                 {Object.keys(log)
                                                     .filter(
                                                         (key) =>
-                                                            !["level", "message", "timestamp", "service", "stack", "path", "method", "ip"].includes(
-                                                                key,
-                                                            ),
+                                                            ![
+                                                                "level",
+                                                                "message",
+                                                                "timestamp",
+                                                                "service",
+                                                                "stack",
+                                                                "path",
+                                                                "method",
+                                                                "ip",
+                                                            ].includes(key),
                                                     )
                                                     .map((key) => (
                                                         <TableRow key={key}>
-                                                            <TableCell sx={{ fontWeight: 600, verticalAlign: "top" }}>
+                                                            <TableCell
+                                                                sx={{
+                                                                    fontWeight: 600,
+                                                                    verticalAlign: "top",
+                                                                }}
+                                                            >
                                                                 {key}
                                                             </TableCell>
                                                             <TableCell
@@ -579,18 +688,27 @@ export const AdminSystemLogs = () => {
                                                                         variant="outlined"
                                                                         sx={{
                                                                             p: 1.5,
-                                                                            backgroundColor: "#f5f5f5",
+                                                                            backgroundColor:
+                                                                                "#f5f5f5",
                                                                             maxHeight: 200,
                                                                             overflow: "auto",
                                                                         }}
                                                                     >
-                                                                        <pre style={{
-                                                                            margin: 0,
-                                                                            fontSize: "0.8rem",
-                                                                            whiteSpace: "pre-wrap",
-                                                                            wordBreak: "break-word",
-                                                                        }}>
-                                                                            {JSON.stringify(log[key], null, 2)}
+                                                                        <pre
+                                                                            style={{
+                                                                                margin: 0,
+                                                                                fontSize: "0.8rem",
+                                                                                whiteSpace:
+                                                                                    "pre-wrap",
+                                                                                wordBreak:
+                                                                                    "break-word",
+                                                                            }}
+                                                                        >
+                                                                            {JSON.stringify(
+                                                                                log[key],
+                                                                                null,
+                                                                                2,
+                                                                            )}
                                                                         </pre>
                                                                     </Paper>
                                                                 ) : (
@@ -605,14 +723,26 @@ export const AdminSystemLogs = () => {
                                         {/* Stack trace section */}
                                         {log.stack && (
                                             <Box>
-                                                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
-                                                    <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                                                <Box
+                                                    sx={{
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        justifyContent: "space-between",
+                                                        mb: 1,
+                                                    }}
+                                                >
+                                                    <Typography
+                                                        variant="subtitle2"
+                                                        sx={{ fontWeight: 600 }}
+                                                    >
                                                         Stack Trace
                                                     </Typography>
                                                     <Tooltip title="Copy stack trace">
                                                         <IconButton
                                                             size="small"
-                                                            onClick={() => copyToClipboard(log.stack || "")}
+                                                            onClick={() =>
+                                                                copyToClipboard(log.stack || "")
+                                                            }
                                                         >
                                                             <CopyIcon fontSize="small" />
                                                         </IconButton>
@@ -627,13 +757,15 @@ export const AdminSystemLogs = () => {
                                                         maxHeight: 400,
                                                     }}
                                                 >
-                                                    <pre style={{
-                                                        margin: 0,
-                                                        fontFamily: "monospace",
-                                                        fontSize: "0.8rem",
-                                                        whiteSpace: "pre-wrap",
-                                                        wordBreak: "break-word",
-                                                    }}>
+                                                    <pre
+                                                        style={{
+                                                            margin: 0,
+                                                            fontFamily: "monospace",
+                                                            fontSize: "0.8rem",
+                                                            whiteSpace: "pre-wrap",
+                                                            wordBreak: "break-word",
+                                                        }}
+                                                    >
                                                         {log.stack}
                                                     </pre>
                                                 </Paper>

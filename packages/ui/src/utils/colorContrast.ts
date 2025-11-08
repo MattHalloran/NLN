@@ -164,7 +164,7 @@ export const validateThemeContrast = (
         issues.push({
             colorName: "Paper",
             backgroundColor: colors.paper,
-            textColor: textColor,
+            textColor,
             ratio: paperTextRatio,
             required: WCAG_LEVELS.AA_NORMAL,
             description: `${mode === "light" ? "Black" : "White"} text on paper color has poor contrast (${paperTextRatio.toFixed(2)}:1). Need at least ${WCAG_LEVELS.AA_NORMAL}:1 for WCAG AA compliance.`,
@@ -178,7 +178,7 @@ export const validateThemeContrast = (
         issues.push({
             colorName: "Background",
             backgroundColor: colors.background,
-            textColor: textColor,
+            textColor,
             ratio: backgroundTextRatio,
             required: WCAG_LEVELS.AA_NORMAL,
             description: `${mode === "light" ? "Black" : "White"} text on background color has poor contrast (${backgroundTextRatio.toFixed(2)}:1). Need at least ${WCAG_LEVELS.AA_NORMAL}:1 for WCAG AA compliance.`,

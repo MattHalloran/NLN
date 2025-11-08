@@ -81,13 +81,13 @@ const PerformanceIndicator: React.FC<{
     baseline: number;
     label: string;
     reversed?: boolean; // true for metrics where lower is better (e.g., bounce rate)
-}> = ({ value, baseline, label, reversed = false }) => {
+}> = ({ value, baseline, _label, reversed = false }) => {
     if (baseline === 0) return null;
 
     const diff = value - baseline;
     const percentDiff = (diff / baseline) * 100;
     const isBetter = reversed ? diff < 0 : diff > 0;
-    const isWorse = reversed ? diff > 0 : diff < 0;
+    const _isWorse = reversed ? diff > 0 : diff < 0;
 
     if (Math.abs(percentDiff) < 0.5) return null; // Not significant enough
 
@@ -115,7 +115,7 @@ const PerformanceIndicator: React.FC<{
 const TrafficAllocationBar: React.FC<{
     variants: LandingPageVariant[];
 }> = ({ variants }) => {
-    const enabledVariants = variants.filter(v => v.status === "enabled");
+    const enabledVariants = variants.filter((v) => v.status === "enabled");
     const total = enabledVariants.reduce((sum, v) => sum + v.trafficAllocation, 0);
 
     return (
@@ -130,7 +130,14 @@ const TrafficAllocationBar: React.FC<{
                 borderColor: "divider",
             }}
         >
-            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+            <Box
+                sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    mb: 2,
+                }}
+            >
                 <Box>
                     <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
                         Traffic Distribution
@@ -146,7 +153,15 @@ const TrafficAllocationBar: React.FC<{
                 />
             </Box>
 
-            <Box sx={{ position: "relative", height: 48, borderRadius: 2, overflow: "hidden", bgcolor: "grey.100" }}>
+            <Box
+                sx={{
+                    position: "relative",
+                    height: 48,
+                    borderRadius: 2,
+                    overflow: "hidden",
+                    bgcolor: "grey.100",
+                }}
+            >
                 {enabledVariants.length === 0 ? (
                     <Box
                         sx={{
@@ -169,7 +184,9 @@ const TrafficAllocationBar: React.FC<{
                                 <Box
                                     sx={{
                                         width: `${variant.trafficAllocation}%`,
-                                        bgcolor: variant.isOfficial ? "warning.main" : `hsl(${idx * 137.5}, 70%, 50%)`,
+                                        bgcolor: variant.isOfficial
+                                            ? "warning.main"
+                                            : `hsl(${idx * 137.5}, 70%, 50%)`,
                                         display: "flex",
                                         alignItems: "center",
                                         justifyContent: "center",
@@ -185,7 +202,8 @@ const TrafficAllocationBar: React.FC<{
                                         },
                                     }}
                                 >
-                                    {variant.trafficAllocation >= 10 && `${variant.trafficAllocation}%`}
+                                    {variant.trafficAllocation >= 10 &&
+                                        `${variant.trafficAllocation}%`}
                                 </Box>
                             </Tooltip>
                         ))}
@@ -201,7 +219,9 @@ const TrafficAllocationBar: React.FC<{
                             label={variant.name}
                             size="small"
                             sx={{
-                                bgcolor: variant.isOfficial ? "warning.main" : `hsl(${idx * 137.5}, 70%, 50%)`,
+                                bgcolor: variant.isOfficial
+                                    ? "warning.main"
+                                    : `hsl(${idx * 137.5}, 70%, 50%)`,
                                 color: "white",
                                 fontWeight: 600,
                             }}
@@ -252,19 +272,29 @@ export const AdminHomepageABTestingNew = () => {
     const toggleVariant = useToggleVariant();
 
     const [createDialogOpen, setCreateDialogOpen] = useState(false);
-    const [deleteConfirmVariant, setDeleteConfirmVariant] = useState<LandingPageVariant | null>(null);
+    const [deleteConfirmVariant, setDeleteConfirmVariant] = useState<LandingPageVariant | null>(
+        null,
+    );
     const [newVariantName, setNewVariantName] = useState("");
     const [newVariantDescription, setNewVariantDescription] = useState("");
     const [newVariantTraffic, setNewVariantTraffic] = useState(0);
     const [copyFromVariantId, setCopyFromVariantId] = useState("");
 
     const handleApiSuccess = useCallback((message: string) => {
-        PubSub.get().publishSnack({ message, severity: SnackSeverity.Success, autoHideDuration: 3000 });
+        PubSub.get().publishSnack({
+            message,
+            severity: SnackSeverity.Success,
+            autoHideDuration: 3000,
+        });
     }, []);
 
     const handleApiError = useCallback((error: any, fallbackMessage: string) => {
         const message = error?.message || fallbackMessage;
-        PubSub.get().publishSnack({ message, severity: SnackSeverity.Error, autoHideDuration: 5000 });
+        PubSub.get().publishSnack({
+            message,
+            severity: SnackSeverity.Error,
+            autoHideDuration: 5000,
+        });
     }, []);
 
     const handleCreateVariant = useCallback(async () => {
@@ -290,57 +320,78 @@ export const AdminHomepageABTestingNew = () => {
         } catch (error: any) {
             handleApiError(error, "Failed to create variant");
         }
-    }, [newVariantName, newVariantDescription, newVariantTraffic, copyFromVariantId, createVariant, refetch, handleApiSuccess, handleApiError]);
+    }, [
+        newVariantName,
+        newVariantDescription,
+        newVariantTraffic,
+        copyFromVariantId,
+        createVariant,
+        refetch,
+        handleApiSuccess,
+        handleApiError,
+    ]);
 
-    const handleDeleteVariant = useCallback(async (variant: LandingPageVariant) => {
-        if (variant.isOfficial) {
-            handleApiError(null, "Cannot delete the official variant");
-            return;
-        }
+    const handleDeleteVariant = useCallback(
+        async (variant: LandingPageVariant) => {
+            if (variant.isOfficial) {
+                handleApiError(null, "Cannot delete the official variant");
+                return;
+            }
 
-        if (variant.status === "enabled") {
-            handleApiError(null, "Cannot delete an enabled variant. Disable it first.");
-            return;
-        }
+            if (variant.status === "enabled") {
+                handleApiError(null, "Cannot delete an enabled variant. Disable it first.");
+                return;
+            }
 
-        try {
-            await deleteVariant.mutate(variant.id);
-            handleApiSuccess("Variant deleted successfully!");
-            setDeleteConfirmVariant(null);
-            await refetch();
-        } catch (error: any) {
-            handleApiError(error, "Failed to delete variant");
-        }
-    }, [deleteVariant, refetch, handleApiSuccess, handleApiError]);
+            try {
+                await deleteVariant.mutate(variant.id);
+                handleApiSuccess("Variant deleted successfully!");
+                setDeleteConfirmVariant(null);
+                await refetch();
+            } catch (error: any) {
+                handleApiError(error, "Failed to delete variant");
+            }
+        },
+        [deleteVariant, refetch, handleApiSuccess, handleApiError],
+    );
 
-    const handlePromoteVariant = useCallback(async (variantId: string) => {
-        try {
-            await promoteVariant.mutate(variantId);
-            handleApiSuccess("Variant promoted to official successfully!");
-            await refetch();
-        } catch (error: any) {
-            handleApiError(error, "Failed to promote variant");
-        }
-    }, [promoteVariant, refetch, handleApiSuccess, handleApiError]);
+    const handlePromoteVariant = useCallback(
+        async (variantId: string) => {
+            try {
+                await promoteVariant.mutate(variantId);
+                handleApiSuccess("Variant promoted to official successfully!");
+                await refetch();
+            } catch (error: any) {
+                handleApiError(error, "Failed to promote variant");
+            }
+        },
+        [promoteVariant, refetch, handleApiSuccess, handleApiError],
+    );
 
-    const handleToggleVariant = useCallback(async (variantId: string) => {
-        try {
-            await toggleVariant.mutate(variantId);
-            handleApiSuccess("Variant status toggled successfully!");
-            await refetch();
-        } catch (error: any) {
-            handleApiError(error, "Failed to toggle variant");
-        }
-    }, [toggleVariant, refetch, handleApiSuccess, handleApiError]);
+    const handleToggleVariant = useCallback(
+        async (variantId: string) => {
+            try {
+                await toggleVariant.mutate(variantId);
+                handleApiSuccess("Variant status toggled successfully!");
+                await refetch();
+            } catch (error: any) {
+                handleApiError(error, "Failed to toggle variant");
+            }
+        },
+        [toggleVariant, refetch, handleApiSuccess, handleApiError],
+    );
 
-    const handleEditVariant = useCallback((variantId: string) => {
-        // Save the selected variant to localStorage so admin stays on this variant
-        // when navigating to other pages (including the landing page for preview)
-        saveVariantId(variantId);
+    const handleEditVariant = useCallback(
+        (variantId: string) => {
+            // Save the selected variant to localStorage so admin stays on this variant
+            // when navigating to other pages (including the landing page for preview)
+            saveVariantId(variantId);
 
-        // Navigate to the hero banner page with variantId query param
-        navigate(`${APP_LINKS.AdminHomepageHeroBanner}?variantId=${variantId}`);
-    }, [navigate]);
+            // Navigate to the hero banner page with variantId query param
+            navigate(`${APP_LINKS.AdminHomepageHeroBanner}?variantId=${variantId}`);
+        },
+        [navigate],
+    );
 
     const handlePreviewVariant = useCallback((variantId: string) => {
         // Save the selected variant and open homepage in new tab
@@ -359,9 +410,12 @@ export const AdminHomepageABTestingNew = () => {
         }
     };
 
-    const officialVariant = variants?.find(v => v.isOfficial);
-    const testVariants = variants?.filter(v => !v.isOfficial) || [];
-    const totalTraffic = variants?.filter(v => v.status === "enabled").reduce((sum, v) => sum + v.trafficAllocation, 0) || 0;
+    const officialVariant = variants?.find((v) => v.isOfficial);
+    const testVariants = variants?.filter((v) => !v.isOfficial) || [];
+    const totalTraffic =
+        variants
+            ?.filter((v) => v.status === "enabled")
+            .reduce((sum, v) => sum + v.trafficAllocation, 0) || 0;
     const availableTraffic = Math.max(0, 100 - totalTraffic);
 
     // Helper function to suggest traffic allocation for new variant
@@ -373,7 +427,10 @@ export const AdminHomepageABTestingNew = () => {
         } else {
             // Suggest 20% and show warning that user needs to adjust others
             setNewVariantTraffic(20);
-            handleApiError(null, `No available traffic. Consider reducing the official variant to ${officialVariant?.trafficAllocation ? officialVariant.trafficAllocation - 20 : 80}%`);
+            handleApiError(
+                null,
+                `No available traffic. Consider reducing the official variant to ${officialVariant?.trafficAllocation ? officialVariant.trafficAllocation - 20 : 80}%`,
+            );
         }
     };
 
@@ -383,7 +440,12 @@ export const AdminHomepageABTestingNew = () => {
                 display="page"
                 title="Variant Testing"
                 help="Create and manage landing page variants to optimize performance"
-                startComponent={<BackButton to={APP_LINKS.AdminHomepage} ariaLabel="Back to Homepage Management" />}
+                startComponent={
+                    <BackButton
+                        to={APP_LINKS.AdminHomepage}
+                        ariaLabel="Back to Homepage Management"
+                    />
+                }
             />
 
             <Box p={3}>
@@ -405,15 +467,15 @@ export const AdminHomepageABTestingNew = () => {
                         <Typography variant="body2" sx={{ fontSize: "0.875rem" }}>
                             {totalTraffic > 100 ? (
                                 <>
-                                    <strong>Over-allocated by {totalTraffic - 100}%.</strong> Reduce traffic on one or more variants.
+                                    <strong>Over-allocated by {totalTraffic - 100}%.</strong> Reduce
+                                    traffic on one or more variants.
                                 </>
                             ) : (
                                 <>
-                                    <strong>{100 - totalTraffic}% unallocated.</strong> {
-                                        officialVariant && officialVariant.status === "enabled"
-                                            ? `Consider increasing the official variant from ${officialVariant.trafficAllocation}% to ${officialVariant.trafficAllocation + (100 - totalTraffic)}%.`
-                                            : "Enable additional variants or adjust allocations."
-                                    }
+                                    <strong>{100 - totalTraffic}% unallocated.</strong>{" "}
+                                    {officialVariant && officialVariant.status === "enabled"
+                                        ? `Consider increasing the official variant from ${officialVariant.trafficAllocation}% to ${officialVariant.trafficAllocation + (100 - totalTraffic)}%.`
+                                        : "Enable additional variants or adjust allocations."}
                                 </>
                             )}
                         </Typography>
@@ -426,7 +488,14 @@ export const AdminHomepageABTestingNew = () => {
                 )}
 
                 {/* Header Section */}
-                <Box sx={{ mb: 4, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <Box
+                    sx={{
+                        mb: 4,
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "flex-start",
+                    }}
+                >
                     <Box>
                         <Typography variant="h4" gutterBottom sx={{ fontWeight: 600 }}>
                             Landing Page Variants
@@ -474,30 +543,51 @@ export const AdminHomepageABTestingNew = () => {
                             bgcolor: "background.paper",
                         }}
                     >
-                        <TimelineIcon sx={{ fontSize: 96, color: "primary.light", mb: 3, opacity: 0.5 }} />
+                        <TimelineIcon
+                            sx={{ fontSize: 96, color: "primary.light", mb: 3, opacity: 0.5 }}
+                        />
                         <Typography variant="h4" gutterBottom sx={{ fontWeight: 700, mb: 2 }}>
                             Start A/B Testing Your Landing Page
                         </Typography>
-                        <Typography variant="body1" color="text.secondary" sx={{ mb: 4, maxWidth: 600, mx: "auto", lineHeight: 1.8 }}>
-                            Create multiple variants of your landing page to test different designs, copy, and layouts.
-                            Track real performance metrics and find out what resonates best with your audience.
+                        <Typography
+                            variant="body1"
+                            color="text.secondary"
+                            sx={{ mb: 4, maxWidth: 600, mx: "auto", lineHeight: 1.8 }}
+                        >
+                            Create multiple variants of your landing page to test different designs,
+                            copy, and layouts. Track real performance metrics and find out what
+                            resonates best with your audience.
                         </Typography>
                         <Stack direction="row" spacing={2} justifyContent="center" sx={{ mb: 3 }}>
                             <Box sx={{ textAlign: "center", px: 2 }}>
-                                <VisibilityIcon sx={{ fontSize: 32, color: "primary.main", mb: 1 }} />
-                                <Typography variant="caption" color="text.secondary" display="block">
+                                <VisibilityIcon
+                                    sx={{ fontSize: 32, color: "primary.main", mb: 1 }}
+                                />
+                                <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    display="block"
+                                >
                                     Track Views
                                 </Typography>
                             </Box>
                             <Box sx={{ textAlign: "center", px: 2 }}>
                                 <TouchAppIcon sx={{ fontSize: 32, color: "success.main", mb: 1 }} />
-                                <Typography variant="caption" color="text.secondary" display="block">
+                                <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    display="block"
+                                >
                                     Measure Conversions
                                 </Typography>
                             </Box>
                             <Box sx={{ textAlign: "center", px: 2 }}>
                                 <TrendingUpIcon sx={{ fontSize: 32, color: "info.main", mb: 1 }} />
-                                <Typography variant="caption" color="text.secondary" display="block">
+                                <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    display="block"
+                                >
                                     Optimize Performance
                                 </Typography>
                             </Box>
@@ -524,7 +614,11 @@ export const AdminHomepageABTestingNew = () => {
                 {/* Official Variant */}
                 {!loading && officialVariant && (
                     <Box sx={{ mb: 4 }}>
-                        <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, display: "flex", alignItems: "center", gap: 1 }}>
+                        <Typography
+                            variant="h6"
+                            gutterBottom
+                            sx={{ fontWeight: 600, display: "flex", alignItems: "center", gap: 1 }}
+                        >
                             <StarIcon sx={{ color: "warning.main" }} />
                             Official Variant
                         </Typography>
@@ -545,9 +639,22 @@ export const AdminHomepageABTestingNew = () => {
                                     borderColor: "divider",
                                 }}
                             >
-                                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                                <Box
+                                    sx={{
+                                        display: "flex",
+                                        justifyContent: "space-between",
+                                        alignItems: "flex-start",
+                                    }}
+                                >
                                     <Box sx={{ flex: 1 }}>
-                                        <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1 }}>
+                                        <Box
+                                            sx={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: 2,
+                                                mb: 1,
+                                            }}
+                                        >
                                             <Typography variant="h5" sx={{ fontWeight: 600 }}>
                                                 {officialVariant.name}
                                             </Typography>
@@ -576,8 +683,14 @@ export const AdminHomepageABTestingNew = () => {
                                             <Button
                                                 variant="outlined"
                                                 startIcon={<OpenInNewIcon />}
-                                                onClick={() => handlePreviewVariant(officialVariant.id)}
-                                                sx={{ borderRadius: 2, textTransform: "none", fontWeight: 600 }}
+                                                onClick={() =>
+                                                    handlePreviewVariant(officialVariant.id)
+                                                }
+                                                sx={{
+                                                    borderRadius: 2,
+                                                    textTransform: "none",
+                                                    fontWeight: 600,
+                                                }}
                                             >
                                                 Preview
                                             </Button>
@@ -586,7 +699,11 @@ export const AdminHomepageABTestingNew = () => {
                                             variant="contained"
                                             startIcon={<EditIcon />}
                                             onClick={() => handleEditVariant(officialVariant.id)}
-                                            sx={{ borderRadius: 2, textTransform: "none", fontWeight: 600 }}
+                                            sx={{
+                                                borderRadius: 2,
+                                                textTransform: "none",
+                                                fontWeight: 600,
+                                            }}
                                         >
                                             Edit Content
                                         </Button>
@@ -630,14 +747,20 @@ export const AdminHomepageABTestingNew = () => {
                                     {/* Last Modified */}
                                     <Grid item xs={12} md={3}>
                                         <Box>
-                                            <Typography variant="body2" color="text.secondary" gutterBottom sx={{ fontWeight: 500, mb: 1 }}>
+                                            <Typography
+                                                variant="body2"
+                                                color="text.secondary"
+                                                gutterBottom
+                                                sx={{ fontWeight: 500, mb: 1 }}
+                                            >
                                                 Last Modified
                                             </Typography>
                                             <Typography variant="h5" sx={{ fontWeight: 700 }}>
                                                 {officialVariant.lastModified
-                                                    ? new Date(officialVariant.lastModified).toLocaleDateString()
-                                                    : "Never"
-                                                }
+                                                    ? new Date(
+                                                          officialVariant.lastModified,
+                                                      ).toLocaleDateString()
+                                                    : "Never"}
                                             </Typography>
                                         </Box>
                                     </Grid>
@@ -655,13 +778,22 @@ export const AdminHomepageABTestingNew = () => {
                         </Typography>
                         <Stack spacing={3}>
                             {testVariants.map((variant) => {
-                                const convRate = calculateConversionRate(variant.metrics.conversions, variant.metrics.views);
-                                const bounceRate = calculateBounceRate(variant.metrics.bounces, variant.metrics.views);
+                                const convRate = calculateConversionRate(
+                                    variant.metrics.conversions,
+                                    variant.metrics.views,
+                                );
+                                const bounceRate = calculateBounceRate(
+                                    variant.metrics.bounces,
+                                    variant.metrics.views,
+                                );
                                 const hasData = variant.metrics.views > 0;
 
                                 // Simple comparison to official
                                 const officialConvRate = officialVariant
-                                    ? calculateConversionRate(officialVariant.metrics.conversions, officialVariant.metrics.views)
+                                    ? calculateConversionRate(
+                                          officialVariant.metrics.conversions,
+                                          officialVariant.metrics.views,
+                                      )
                                     : 0;
                                 const isPerformingBetter = hasData && convRate > officialConvRate;
 
@@ -674,7 +806,9 @@ export const AdminHomepageABTestingNew = () => {
                                             overflow: "hidden",
                                             transition: "all 0.2s ease-in-out",
                                             border: isPerformingBetter ? 2 : 0,
-                                            borderColor: isPerformingBetter ? "success.main" : "transparent",
+                                            borderColor: isPerformingBetter
+                                                ? "success.main"
+                                                : "transparent",
                                             "&:hover": {
                                                 boxShadow: 6,
                                                 transform: "translateY(-2px)",
@@ -685,20 +819,43 @@ export const AdminHomepageABTestingNew = () => {
                                         <Box
                                             sx={{
                                                 p: 3,
-                                                bgcolor: variant.status === "enabled" ? "primary.50" : "background.paper",
+                                                bgcolor:
+                                                    variant.status === "enabled"
+                                                        ? "primary.50"
+                                                        : "background.paper",
                                                 borderBottom: 1,
                                                 borderColor: "divider",
                                             }}
                                         >
-                                            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                                            <Box
+                                                sx={{
+                                                    display: "flex",
+                                                    justifyContent: "space-between",
+                                                    alignItems: "flex-start",
+                                                }}
+                                            >
                                                 <Box sx={{ flex: 1 }}>
-                                                    <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1 }}>
-                                                        <Typography variant="h5" sx={{ fontWeight: 600 }}>
+                                                    <Box
+                                                        sx={{
+                                                            display: "flex",
+                                                            alignItems: "center",
+                                                            gap: 2,
+                                                            mb: 1,
+                                                        }}
+                                                    >
+                                                        <Typography
+                                                            variant="h5"
+                                                            sx={{ fontWeight: 600 }}
+                                                        >
                                                             {variant.name}
                                                         </Typography>
                                                         <Chip
                                                             label={variant.status.toUpperCase()}
-                                                            color={getStatusColor(variant.status) as any}
+                                                            color={
+                                                                getStatusColor(
+                                                                    variant.status,
+                                                                ) as any
+                                                            }
                                                             size="small"
                                                             sx={{ fontWeight: 600 }}
                                                         />
@@ -719,7 +876,10 @@ export const AdminHomepageABTestingNew = () => {
                                                         )}
                                                     </Box>
                                                     {variant.description && (
-                                                        <Typography variant="body2" color="text.secondary">
+                                                        <Typography
+                                                            variant="body2"
+                                                            color="text.secondary"
+                                                        >
                                                             {variant.description}
                                                         </Typography>
                                                     )}
@@ -732,8 +892,14 @@ export const AdminHomepageABTestingNew = () => {
                                                             variant="outlined"
                                                             size="small"
                                                             startIcon={<OpenInNewIcon />}
-                                                            onClick={() => handlePreviewVariant(variant.id)}
-                                                            sx={{ borderRadius: 2, textTransform: "none", fontWeight: 600 }}
+                                                            onClick={() =>
+                                                                handlePreviewVariant(variant.id)
+                                                            }
+                                                            sx={{
+                                                                borderRadius: 2,
+                                                                textTransform: "none",
+                                                                fontWeight: 600,
+                                                            }}
                                                         >
                                                             Preview
                                                         </Button>
@@ -743,23 +909,53 @@ export const AdminHomepageABTestingNew = () => {
                                                             variant="contained"
                                                             size="small"
                                                             startIcon={<EditIcon />}
-                                                            onClick={() => handleEditVariant(variant.id)}
-                                                            sx={{ borderRadius: 2, textTransform: "none", fontWeight: 600 }}
+                                                            onClick={() =>
+                                                                handleEditVariant(variant.id)
+                                                            }
+                                                            sx={{
+                                                                borderRadius: 2,
+                                                                textTransform: "none",
+                                                                fontWeight: 600,
+                                                            }}
                                                         >
                                                             Edit
                                                         </Button>
                                                     </Tooltip>
-                                                    <Tooltip title={variant.status === "enabled" ? "Disable Variant" : "Enable Variant"}>
+                                                    <Tooltip
+                                                        title={
+                                                            variant.status === "enabled"
+                                                                ? "Disable Variant"
+                                                                : "Enable Variant"
+                                                        }
+                                                    >
                                                         <Button
                                                             variant="outlined"
                                                             size="small"
-                                                            color={variant.status === "enabled" ? "warning" : "success"}
-                                                            startIcon={variant.status === "enabled" ? <ToggleOffIcon /> : <ToggleOnIcon />}
-                                                            onClick={() => handleToggleVariant(variant.id)}
+                                                            color={
+                                                                variant.status === "enabled"
+                                                                    ? "warning"
+                                                                    : "success"
+                                                            }
+                                                            startIcon={
+                                                                variant.status === "enabled" ? (
+                                                                    <ToggleOffIcon />
+                                                                ) : (
+                                                                    <ToggleOnIcon />
+                                                                )
+                                                            }
+                                                            onClick={() =>
+                                                                handleToggleVariant(variant.id)
+                                                            }
                                                             disabled={toggleVariant.loading}
-                                                            sx={{ borderRadius: 2, textTransform: "none", fontWeight: 600 }}
+                                                            sx={{
+                                                                borderRadius: 2,
+                                                                textTransform: "none",
+                                                                fontWeight: 600,
+                                                            }}
                                                         >
-                                                            {variant.status === "enabled" ? "Disable" : "Enable"}
+                                                            {variant.status === "enabled"
+                                                                ? "Disable"
+                                                                : "Enable"}
                                                         </Button>
                                                     </Tooltip>
                                                     {isPerformingBetter && (
@@ -769,20 +965,36 @@ export const AdminHomepageABTestingNew = () => {
                                                                 size="small"
                                                                 color="success"
                                                                 startIcon={<StarIcon />}
-                                                                onClick={() => handlePromoteVariant(variant.id)}
+                                                                onClick={() =>
+                                                                    handlePromoteVariant(variant.id)
+                                                                }
                                                                 disabled={promoteVariant.loading}
-                                                                sx={{ borderRadius: 2, textTransform: "none", fontWeight: 600 }}
+                                                                sx={{
+                                                                    borderRadius: 2,
+                                                                    textTransform: "none",
+                                                                    fontWeight: 600,
+                                                                }}
                                                             >
                                                                 Promote
                                                             </Button>
                                                         </Tooltip>
                                                     )}
-                                                    <Tooltip title={variant.status === "enabled" ? "Disable variant before deleting" : "Delete Variant"}>
+                                                    <Tooltip
+                                                        title={
+                                                            variant.status === "enabled"
+                                                                ? "Disable variant before deleting"
+                                                                : "Delete Variant"
+                                                        }
+                                                    >
                                                         <span>
                                                             <IconButton
                                                                 size="small"
-                                                                onClick={() => setDeleteConfirmVariant(variant)}
-                                                                disabled={variant.status === "enabled"}
+                                                                onClick={() =>
+                                                                    setDeleteConfirmVariant(variant)
+                                                                }
+                                                                disabled={
+                                                                    variant.status === "enabled"
+                                                                }
                                                                 color="error"
                                                                 sx={{
                                                                     borderRadius: 2,
@@ -801,12 +1013,20 @@ export const AdminHomepageABTestingNew = () => {
                                         {/* Metrics */}
                                         <CardContent sx={{ p: 3 }}>
                                             {!hasData && (
-                                                <Alert severity="info" sx={{ mb: 3, borderRadius: 2 }} icon={<InfoIcon />}>
-                                                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                                                <Alert
+                                                    severity="info"
+                                                    sx={{ mb: 3, borderRadius: 2 }}
+                                                    icon={<InfoIcon />}
+                                                >
+                                                    <Typography
+                                                        variant="body2"
+                                                        sx={{ fontWeight: 600 }}
+                                                    >
                                                         No data collected yet
                                                     </Typography>
                                                     <Typography variant="body2">
-                                                        Enable this variant to start tracking performance metrics.
+                                                        Enable this variant to start tracking
+                                                        performance metrics.
                                                     </Typography>
                                                 </Alert>
                                             )}
@@ -854,8 +1074,10 @@ export const AdminHomepageABTestingNew = () => {
                                                                 <PerformanceIndicator
                                                                     value={bounceRate}
                                                                     baseline={calculateBounceRate(
-                                                                        officialVariant.metrics.bounces,
-                                                                        officialVariant.metrics.views
+                                                                        officialVariant.metrics
+                                                                            .bounces,
+                                                                        officialVariant.metrics
+                                                                            .views,
                                                                     )}
                                                                     label="bounce"
                                                                     reversed={true}
@@ -868,14 +1090,23 @@ export const AdminHomepageABTestingNew = () => {
                                                 {/* Last Modified */}
                                                 <Grid item xs={12} md={3}>
                                                     <Box>
-                                                        <Typography variant="body2" color="text.secondary" gutterBottom sx={{ fontWeight: 500, mb: 1 }}>
+                                                        <Typography
+                                                            variant="body2"
+                                                            color="text.secondary"
+                                                            gutterBottom
+                                                            sx={{ fontWeight: 500, mb: 1 }}
+                                                        >
                                                             Last Modified
                                                         </Typography>
-                                                        <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                                                        <Typography
+                                                            variant="h5"
+                                                            sx={{ fontWeight: 700 }}
+                                                        >
                                                             {variant.lastModified
-                                                                ? new Date(variant.lastModified).toLocaleDateString()
-                                                                : "Never"
-                                                            }
+                                                                ? new Date(
+                                                                      variant.lastModified,
+                                                                  ).toLocaleDateString()
+                                                                : "Never"}
                                                         </Typography>
                                                     </Box>
                                                 </Grid>
@@ -967,12 +1198,20 @@ export const AdminHomepageABTestingNew = () => {
                                     placeholder="0"
                                     fullWidth
                                     value={newVariantTraffic}
-                                    onChange={(e) => setNewVariantTraffic(Math.max(0, Math.min(100, Number(e.target.value))))}
+                                    onChange={(e) =>
+                                        setNewVariantTraffic(
+                                            Math.max(0, Math.min(100, Number(e.target.value))),
+                                        )
+                                    }
                                     disabled={createVariant.loading}
                                     variant="outlined"
                                     InputProps={{
                                         sx: { borderRadius: 2 },
-                                        endAdornment: <Typography sx={{ color: "text.secondary", ml: 1 }}>%</Typography>,
+                                        endAdornment: (
+                                            <Typography sx={{ color: "text.secondary", ml: 1 }}>
+                                                %
+                                            </Typography>
+                                        ),
                                     }}
                                     helperText={
                                         availableTraffic > 0
@@ -981,7 +1220,13 @@ export const AdminHomepageABTestingNew = () => {
                                     }
                                     error={availableTraffic === 0 && newVariantTraffic > 0}
                                 />
-                                <Tooltip title={availableTraffic > 0 ? `Allocate ${availableTraffic}%` : "Suggest 20%"}>
+                                <Tooltip
+                                    title={
+                                        availableTraffic > 0
+                                            ? `Allocate ${availableTraffic}%`
+                                            : "Suggest 20%"
+                                    }
+                                >
                                     <Button
                                         variant="outlined"
                                         onClick={handleSuggestTraffic}
@@ -1018,23 +1263,27 @@ export const AdminHomepageABTestingNew = () => {
                                     <MenuItem key={v.id} value={v.id}>
                                         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                                             <ContentCopyIcon fontSize="small" />
-                                            {v.name} {v.isOfficial && <Chip label="Official" size="small" color="warning" />}
+                                            {v.name}{" "}
+                                            {v.isOfficial && (
+                                                <Chip
+                                                    label="Official"
+                                                    size="small"
+                                                    color="warning"
+                                                />
+                                            )}
                                         </Box>
                                     </MenuItem>
                                 ))}
                             </Select>
                         </FormControl>
-                        <Alert
-                            severity="info"
-                            icon={<InfoIcon />}
-                            sx={{ borderRadius: 2 }}
-                        >
+                        <Alert severity="info" icon={<InfoIcon />} sx={{ borderRadius: 2 }}>
                             <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
                                 Next Steps
                             </Typography>
                             <Typography variant="body2">
-                                The variant will be created in <strong>disabled</strong> status. After creation, you'll be able to
-                                edit its content and enable it when ready to start collecting data.
+                                The variant will be created in <strong>disabled</strong> status.
+                                After creation, you'll be able to edit its content and enable it
+                                when ready to start collecting data.
                             </Typography>
                         </Alert>
                     </Stack>
@@ -1101,7 +1350,8 @@ export const AdminHomepageABTestingNew = () => {
                         </Typography>
                     </Alert>
                     <Typography variant="body1">
-                        Are you sure you want to delete <strong>"{deleteConfirmVariant?.name}"</strong>?
+                        Are you sure you want to delete{" "}
+                        <strong>"{deleteConfirmVariant?.name}"</strong>?
                     </Typography>
                 </DialogContent>
                 <Divider />
@@ -1120,7 +1370,9 @@ export const AdminHomepageABTestingNew = () => {
                         Cancel
                     </Button>
                     <Button
-                        onClick={() => deleteConfirmVariant && handleDeleteVariant(deleteConfirmVariant)}
+                        onClick={() =>
+                            deleteConfirmVariant && handleDeleteVariant(deleteConfirmVariant)
+                        }
                         color="error"
                         variant="contained"
                         disabled={deleteVariant.loading}

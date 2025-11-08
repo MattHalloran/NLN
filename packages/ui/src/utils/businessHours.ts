@@ -168,7 +168,11 @@ const parseDayRange = (dayStr: string): string[] => {
     // Check if it's a range (e.g., "MON-FRI")
     if (upperDayStr.includes("-")) {
         const parts = upperDayStr.split("-").map((p) => p.trim());
-        if (parts.length === 2 && dayMap[parts[0]] !== undefined && dayMap[parts[1]] !== undefined) {
+        if (
+            parts.length === 2 &&
+            dayMap[parts[0]] !== undefined &&
+            dayMap[parts[1]] !== undefined
+        ) {
             const start = dayMap[parts[0]];
             const end = dayMap[parts[1]];
             const result: string[] = [];
@@ -204,7 +208,7 @@ const parseDayRange = (dayStr: string): string[] => {
  */
 export const checkBusinessHoursStatus = (
     hoursMarkdown: string,
-    currentDate: Date = new Date()
+    currentDate: Date = new Date(),
 ): BusinessHoursStatus => {
     try {
         if (!hoursMarkdown) {
@@ -276,9 +280,7 @@ export const checkBusinessHoursStatus = (
                                 daysInRange.includes(checkDay) &&
                                 !hours.toLowerCase().includes("closed")
                             ) {
-                                const timeMatch = hours.match(
-                                    /(\d{1,2}:\d{2}\s*(?:AM|PM|am|pm))/i
-                                );
+                                const timeMatch = hours.match(/(\d{1,2}:\d{2}\s*(?:AM|PM|am|pm))/i);
                                 if (timeMatch) {
                                     nextOpenDay = checkDay;
                                     nextOpenTime = timeMatch[1].trim();
@@ -315,7 +317,7 @@ export const checkBusinessHoursStatus = (
         for (const shift of shifts) {
             // Match pattern like "8:00 AM to 5:00 PM"
             const rangeMatch = shift.match(
-                /(\d{1,2}:\d{2}\s*(?:AM|PM|am|pm))\s+(?:to|-)\s+(\d{1,2}:\d{2}\s*(?:AM|PM|am|pm))/i
+                /(\d{1,2}:\d{2}\s*(?:AM|PM|am|pm))\s+(?:to|-)\s+(\d{1,2}:\d{2}\s*(?:AM|PM|am|pm))/i,
             );
 
             if (rangeMatch) {
