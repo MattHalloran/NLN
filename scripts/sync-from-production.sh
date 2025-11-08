@@ -227,10 +227,11 @@ if [ "$SYNC_DATA" = true ]; then
     fi
 
     # Download JSON files from production
+    # NOTE: Production uses dist/data (compiled/live data), not src/data (source code defaults)
     info "Downloading JSON files from production..."
     mkdir -p "${TEMP_DIR}/data"
     scp -i ~/.ssh/id_rsa_${SITE_IP} \
-        "${remote_server}:${PROJECT_DIR:-/root/NLN}/packages/server/src/data/*.json" \
+        "${remote_server}:${PROJECT_DIR:-/root/NLN}/packages/server/dist/data/*.json" \
         "${TEMP_DIR}/data/" 2>/dev/null
 
     if [ $? -eq 0 ]; then
