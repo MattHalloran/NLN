@@ -1,53 +1,52 @@
 import { APP_LINKS } from "@local/shared";
 import {
+    Accordion,
+    AccordionDetails,
+    AccordionSummary,
+    Alert,
     Box,
     Button,
     Card,
     CardContent,
     Chip,
+    FormControl,
+    FormControlLabel,
     Grid,
     IconButton,
+    InputLabel,
+    MenuItem,
     Paper,
+    Select,
     Stack,
+    Switch,
     TextField,
+    ToggleButton,
+    ToggleButtonGroup,
     Typography,
     useTheme,
-    Accordion,
-    AccordionSummary,
-    AccordionDetails,
-    Alert,
-    FormControlLabel,
-    Switch,
-    ToggleButtonGroup,
-    ToggleButton,
-    Select,
-    MenuItem,
-    FormControl,
-    InputLabel,
 } from "@mui/material";
-import { useLandingPage } from "hooks/useLandingPage";
-import { useUpdateLandingPageContent, useAddImages } from "api/rest/hooks";
+import { useAddImages, useUpdateLandingPageContent } from "api/rest/hooks";
+import { BackButton, Dropzone, PageContainer, TopBar } from "components";
 import { useABTestQueryParams } from "hooks/useABTestQueryParams";
-import { useBlockNavigation } from "hooks/useBlockNavigation";
-import { BackButton, PageContainer, TopBar, Dropzone } from "components";
-import { getServerUrl } from "utils";
+import { useAdminForm } from "hooks/useAdminForm";
+import { useLandingPage } from "hooks/useLandingPage";
 import {
+    ChevronDown,
     Flower,
+    Images,
     Leaf,
+    Leaf as LeafIcon,
     Lightbulb,
     Plus,
+    RotateCcw,
+    Save,
     Snowflake,
     Sprout,
     Star,
     Trash2,
-    Save,
-    RotateCcw,
-    Leaf as LeafIcon,
-    ChevronDown,
 } from "lucide-react";
-import { useState, useCallback, useMemo, useEffect } from "react";
-import { PubSub } from "utils/pubsub";
-import { SnackSeverity } from "components/dialogs/Snack/Snack";
+import { useCallback, useMemo, useState } from "react";
+import { getServerUrl } from "utils";
 
 interface SeasonalPlant {
     id: string;
@@ -72,6 +71,31 @@ interface PlantTip {
     season: string;
     displayOrder: number;
     isActive: boolean;
+}
+
+interface SeasonalData {
+    plants: SeasonalPlant[];
+    tips: PlantTip[];
+    sectionText: {
+        header: {
+            title: string;
+            subtitle: string;
+        };
+        sections: {
+            plants: {
+                currentSeasonTitle: string;
+                otherSeasonTitleTemplate: string;
+            };
+            tips: {
+                title: string;
+            };
+        };
+        newsletterButtonText: string;
+    };
+    galleryButton: {
+        text: string;
+        enabled: boolean;
+    };
 }
 
 const iconOptions = [
@@ -110,7 +134,23 @@ const sortPlantsBySeason = (plants: SeasonalPlant[]): SeasonalPlant[] => {
 };
 
 // Preview Component - Shows how the seasonal section looks on the homepage
-const SeasonalPreview = ({ plants, tips }: { plants: SeasonalPlant[]; tips: PlantTip[] }) => {
+const SeasonalPreview = ({
+    plants,
+    tips,
+    galleryButton,
+    sectionText,
+}: {
+    plants: SeasonalPlant[];
+    tips: PlantTip[];
+    galleryButton?: { text: string; enabled: boolean };
+    sectionText?: {
+        header: { title: string; subtitle: string };
+        sections: {
+            plants: { currentSeasonTitle: string; otherSeasonTitleTemplate: string };
+            tips: { title: string };
+        };
+    };
+}) => {
     const { palette } = useTheme();
     const [currentPlant, setCurrentPlant] = useState(0);
     const [selectedCategory, setSelectedCategory] = useState(0);
@@ -166,11 +206,40 @@ const SeasonalPreview = ({ plants, tips }: { plants: SeasonalPlant[]; tips: Plan
                         mb: 0.5,
                     }}
                 >
-                    Seasonal Highlights & Expert Tips
+                    {sectionText?.header?.title || "Seasonal Highlights & Expert Tips"}
                 </Typography>
-                <Typography variant="caption" sx={{ color: palette.text.secondary }}>
-                    Discover what's blooming now and get expert care advice
+                <Typography
+                    variant="caption"
+                    sx={{
+                        color: palette.text.secondary,
+                        display: "block",
+                        mb: (galleryButton?.enabled ?? true) ? 1.5 : 0,
+                    }}
+                >
+                    {sectionText?.header?.subtitle ||
+                        "Discover what's blooming now and get expert care advice"}
                 </Typography>
+
+                {/* Gallery Button Preview */}
+                {(galleryButton?.enabled ?? true) && (
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        size="small"
+                        startIcon={<Images size={16} />}
+                        sx={{
+                            px: 2,
+                            py: 0.75,
+                            fontSize: "0.75rem",
+                            fontWeight: 600,
+                            borderRadius: 1.5,
+                            textTransform: "none",
+                            boxShadow: 2,
+                        }}
+                    >
+                        {galleryButton?.text || "View Gallery"}
+                    </Button>
+                )}
             </Box>
 
             <Box sx={{ p: 2 }}>
@@ -186,10 +255,19 @@ const SeasonalPreview = ({ plants, tips }: { plants: SeasonalPlant[]; tips: Plan
                                 >
                                     {activePlants.length > 0 &&
                                     activePlants[safeCurrentPlant]?.season === currentSeason
-                                        ? "What's Blooming Now"
+                                        ? sectionText?.sections?.plants?.currentSeasonTitle ||
+                                          "What's Blooming Now"
                                         : activePlants.length > 0
-                                          ? `Perfect for ${activePlants[safeCurrentPlant]?.season}`
-                                          : "What's Blooming Now"}
+                                          ? (
+                                                sectionText?.sections?.plants
+                                                    ?.otherSeasonTitleTemplate ||
+                                                "Perfect for {season}"
+                                            ).replace(
+                                                "{season}",
+                                                activePlants[safeCurrentPlant]?.season || "",
+                                            )
+                                          : sectionText?.sections?.plants?.currentSeasonTitle ||
+                                            "What's Blooming Now"}
                                 </Typography>
                             </Box>
 
@@ -332,7 +410,7 @@ const SeasonalPreview = ({ plants, tips }: { plants: SeasonalPlant[]; tips: Plan
                                     variant="subtitle2"
                                     sx={{ fontWeight: 600, color: palette.primary.main }}
                                 >
-                                    Expert Plant Care Tips
+                                    {sectionText?.sections?.tips?.title || "Expert Plant Care Tips"}
                                 </Typography>
                             </Box>
 
@@ -415,133 +493,86 @@ const SeasonalPreview = ({ plants, tips }: { plants: SeasonalPlant[]; tips: Plan
 export const AdminHomepageSeasonal = () => {
     const { palette } = useTheme();
     const { variantId: queryVariantId } = useABTestQueryParams();
-    const { data, refetch } = useLandingPage();
+    const { data, refetch: refetchLandingPage } = useLandingPage();
     const updateLandingPageContent = useUpdateLandingPageContent();
     const { mutate: addImages } = useAddImages();
 
     // Use variantId from URL query params, or fall back to the loaded data's variant
     const variantId = queryVariantId || data?._meta?.variantId;
 
-    const [plants, setPlants] = useState<SeasonalPlant[]>([]);
-    const [originalPlants, setOriginalPlants] = useState<SeasonalPlant[]>([]);
-    const [tips, setTips] = useState<PlantTip[]>([]);
-    const [originalTips, setOriginalTips] = useState<PlantTip[]>([]);
+    // UI-only state (not form data)
     const [editingPlant, setEditingPlant] = useState<SeasonalPlant | null>(null);
     const [editingTip, setEditingTip] = useState<PlantTip | null>(null);
-    const [isLoading, setIsLoading] = useState(false);
     const [deletingImageId, setDeletingImageId] = useState<string | null>(null);
 
-    // Section text settings state
-    const [sectionText, setSectionText] = useState({
-        header: {
-            title: "Seasonal Highlights & Expert Tips",
-            subtitle: "Discover what's blooming now and get expert care advice for every season",
-        },
-        sections: {
-            plants: {
-                currentSeasonTitle: "What's Blooming Now",
-                otherSeasonTitleTemplate: "Perfect for {season}",
-            },
-            tips: {
-                title: "Expert Plant Care Tips",
-            },
-        },
-        newsletterButtonText: "Subscribe",
-    });
-    const [originalSectionText, setOriginalSectionText] = useState(sectionText);
-
-    // Load data from API
-    useEffect(() => {
-        if (data?.content?.seasonal) {
-            const loadedPlants = data.content.seasonal.plants || [];
-            const loadedTips = data.content.seasonal.tips || [];
-
-            setPlants(JSON.parse(JSON.stringify(loadedPlants)));
-            setOriginalPlants(JSON.parse(JSON.stringify(loadedPlants)));
-            setTips(JSON.parse(JSON.stringify(loadedTips)));
-            setOriginalTips(JSON.parse(JSON.stringify(loadedTips)));
-
-            // Load section text settings
-            const loadedSectionText = {
-                header: data.content.seasonal.header || {
-                    title: "Seasonal Highlights & Expert Tips",
-                    subtitle:
-                        "Discover what's blooming now and get expert care advice for every season",
-                },
-                sections: data.content.seasonal.sections || {
-                    plants: {
-                        currentSeasonTitle: "What's Blooming Now",
-                        otherSeasonTitleTemplate: "Perfect for {season}",
+    // Use the standardized useAdminForm hook
+    const form = useAdminForm<SeasonalData>({
+        fetchFn: async () => {
+            const defaultData: SeasonalData = {
+                plants: [],
+                tips: [],
+                sectionText: {
+                    header: {
+                        title: "Seasonal Highlights & Expert Tips",
+                        subtitle:
+                            "Discover what's blooming now and get expert care advice for every season",
                     },
-                    tips: {
-                        title: "Expert Plant Care Tips",
+                    sections: {
+                        plants: {
+                            currentSeasonTitle: "What's Blooming Now",
+                            otherSeasonTitleTemplate: "Perfect for {season}",
+                        },
+                        tips: {
+                            title: "Expert Plant Care Tips",
+                        },
                     },
+                    newsletterButtonText: "Subscribe",
                 },
-                newsletterButtonText: data.content.newsletter?.buttonText || "Subscribe",
+                galleryButton: {
+                    text: "View Gallery",
+                    enabled: true,
+                },
             };
-            setSectionText(JSON.parse(JSON.stringify(loadedSectionText)));
-            setOriginalSectionText(JSON.parse(JSON.stringify(loadedSectionText)));
-        }
-    }, [data]);
 
-    // Check for unsaved changes
-    const hasChanges = useMemo(() => {
-        const plantsChanged = JSON.stringify(plants) !== JSON.stringify(originalPlants);
-        const tipsChanged = JSON.stringify(tips) !== JSON.stringify(originalTips);
-        const sectionTextChanged =
-            JSON.stringify(sectionText) !== JSON.stringify(originalSectionText);
-        return plantsChanged || tipsChanged || sectionTextChanged;
-    }, [plants, originalPlants, tips, originalTips, sectionText, originalSectionText]);
+            if (!data?.content?.seasonal) {
+                return defaultData;
+            }
 
-    // Block navigation when there are unsaved changes
-    useBlockNavigation(hasChanges);
-
-    const handleApiError = useCallback((error: any, defaultMessage: string) => {
-        const message = error?.message || defaultMessage;
-        PubSub.get().publishSnack({ message, severity: SnackSeverity.Error });
-    }, []);
-
-    const handleApiSuccess = useCallback((message: string) => {
-        PubSub.get().publishSnack({ message, severity: SnackSeverity.Success });
-    }, []);
-
-    const handleSaveAll = async () => {
-        try {
-            setIsLoading(true);
-
+            return {
+                plants: data.content.seasonal.plants || [],
+                tips: data.content.seasonal.tips || [],
+                sectionText: {
+                    header: data.content.seasonal.header || defaultData.sectionText.header,
+                    sections: data.content.seasonal.sections || defaultData.sectionText.sections,
+                    newsletterButtonText: data.content.newsletter?.buttonText || "Subscribe",
+                },
+                galleryButton: data.content.seasonal.galleryButton || defaultData.galleryButton,
+            };
+        },
+        saveFn: async (seasonalData) => {
             const queryParams = variantId ? { variantId } : undefined;
-
             await updateLandingPageContent.mutate({
                 data: {
-                    seasonalPlants: plants,
-                    plantTips: tips,
-                    seasonalHeader: sectionText.header,
-                    seasonalSections: sectionText.sections,
-                    newsletterButtonText: sectionText.newsletterButtonText,
+                    seasonalPlants: seasonalData.plants,
+                    plantTips: seasonalData.tips,
+                    seasonalHeader: seasonalData.sectionText.header,
+                    seasonalSections: seasonalData.sectionText.sections,
+                    newsletterButtonText: seasonalData.sectionText.newsletterButtonText,
+                    seasonalGalleryButton: seasonalData.galleryButton,
                 },
                 queryParams,
             });
-            await refetch();
-            setOriginalPlants(JSON.parse(JSON.stringify(plants)));
-            setOriginalTips(JSON.parse(JSON.stringify(tips)));
-            setOriginalSectionText(JSON.parse(JSON.stringify(sectionText)));
-            handleApiSuccess("Seasonal content saved successfully!");
-        } catch (error) {
-            handleApiError(error, "Failed to save seasonal content");
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const handleCancel = () => {
-        setPlants(JSON.parse(JSON.stringify(originalPlants)));
-        setTips(JSON.parse(JSON.stringify(originalTips)));
-        setSectionText(JSON.parse(JSON.stringify(originalSectionText)));
-        setEditingPlant(null);
-        setEditingTip(null);
-    };
+            return seasonalData;
+        },
+        refetchDependencies: [refetchLandingPage],
+        pageName: "seasonal-content",
+        endpointName: "/api/v1/landing-page",
+        successMessage: "Seasonal content saved successfully!",
+        errorMessagePrefix: "Failed to save seasonal content",
+    });
 
     const handleAddPlant = () => {
+        if (!form.data) return;
         const newPlant: SeasonalPlant = {
             id: `plant-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
             name: "",
@@ -549,62 +580,82 @@ export const AdminHomepageSeasonal = () => {
             season: "Spring",
             careLevel: "Easy",
             icon: "leaf",
-            displayOrder: plants.length + 1,
+            displayOrder: form.data.plants.length + 1,
             isActive: true,
         };
-        setPlants([...plants, newPlant]);
+        form.setData({
+            ...form.data,
+            plants: [...form.data.plants, newPlant],
+        });
         setEditingPlant(newPlant);
     };
 
     const handleAddTip = () => {
+        if (!form.data) return;
         const newTip: PlantTip = {
             id: `tip-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
             title: "",
             description: "",
             category: "General",
             season: "Year-round",
-            displayOrder: tips.length + 1,
+            displayOrder: form.data.tips.length + 1,
             isActive: true,
         };
-        setTips([...tips, newTip]);
+        form.setData({
+            ...form.data,
+            tips: [...form.data.tips, newTip],
+        });
         setEditingTip(newTip);
     };
 
     const handleDeletePlant = (id: string) => {
+        if (!form.data) return;
         if (window.confirm("Delete this plant?")) {
-            setPlants(plants.filter((p) => p.id !== id));
+            form.setData({
+                ...form.data,
+                plants: form.data.plants.filter((p) => p.id !== id),
+            });
             if (editingPlant?.id === id) setEditingPlant(null);
         }
     };
 
     const handleDeleteTip = (id: string) => {
+        if (!form.data) return;
         if (window.confirm("Delete this tip?")) {
-            setTips(tips.filter((t) => t.id !== id));
+            form.setData({
+                ...form.data,
+                tips: form.data.tips.filter((t) => t.id !== id),
+            });
             if (editingTip?.id === id) setEditingTip(null);
         }
     };
 
     const handlePlantFieldChange = (field: keyof SeasonalPlant, value: any) => {
-        if (!editingPlant) return;
+        if (!editingPlant || !form.data) return;
         const updatedPlant = { ...editingPlant, [field]: value };
         setEditingPlant(updatedPlant);
-        setPlants(plants.map((p) => (p.id === updatedPlant.id ? updatedPlant : p)));
+        form.setData({
+            ...form.data,
+            plants: form.data.plants.map((p) => (p.id === updatedPlant.id ? updatedPlant : p)),
+        });
     };
 
     const handleTipFieldChange = (field: keyof PlantTip, value: any) => {
-        if (!editingTip) return;
+        if (!editingTip || !form.data) return;
         const updatedTip = { ...editingTip, [field]: value };
         setEditingTip(updatedTip);
-        setTips(tips.map((t) => (t.id === updatedTip.id ? updatedTip : t)));
+        form.setData({
+            ...form.data,
+            tips: form.data.tips.map((t) => (t.id === updatedTip.id ? updatedTip : t)),
+        });
     };
 
     // Image upload handler for seasonal plants
     const handlePlantImageUpload = useCallback(
         async (plantId: string, acceptedFiles: File[]) => {
-            if (acceptedFiles.length === 0) return;
+            if (acceptedFiles.length === 0 || !form.data) return;
 
             try {
-                setIsLoading(true);
                 const file = acceptedFiles[0]; // Only use first file
 
                 // Upload image with "seasonal" label
@@ -614,7 +665,7 @@ export const AdminHomepageSeasonal = () => {
                     const result = uploadResults[0];
 
                     // Update plant with image details
-                    const updatedPlants = plants.map((p) => {
+                    const updatedPlants = form.data.plants.map((p) => {
                         if (p.id === plantId) {
                             return {
                                 ...p,
@@ -626,7 +677,10 @@ export const AdminHomepageSeasonal = () => {
                         return p;
                     });
 
-                    setPlants(updatedPlants);
+                    form.setData({
+                        ...form.data,
+                        plants: updatedPlants,
+                    });
 
                     // Update editing plant if it's the one being edited
                     if (editingPlant?.id === plantId) {
@@ -637,77 +691,68 @@ export const AdminHomepageSeasonal = () => {
                             imageHash: result.hash,
                         });
                     }
-
-                    PubSub.get().publishSnack({
-                        message: "Image uploaded successfully!",
-                        severity: SnackSeverity.Success,
-                    });
                 } else {
                     throw new Error("Image upload failed");
                 }
             } catch (error) {
-                handleApiError(error, "Failed to upload image");
-            } finally {
-                setIsLoading(false);
+                console.error("Failed to upload image:", error);
             }
         },
-        [plants, editingPlant, addImages, handleApiError],
+        [form.data, editingPlant, addImages],
     );
 
     // Delete image handler for seasonal plants
-    const handleDeletePlantImage = useCallback((plantId: string) => {
-        // Set deleting state immediately to prevent double-clicks
-        setDeletingImageId(plantId);
+    const handleDeletePlantImage = useCallback(
+        (plantId: string) => {
+            if (!form.data) return;
 
-        // Use functional state update to avoid stale closure
-        setPlants((prevPlants) =>
-            prevPlants.map((p) => {
-                if (p.id === plantId) {
-                    // Create a new object without image fields
-                    const newPlant: SeasonalPlant = {
-                        id: p.id,
-                        name: p.name,
-                        description: p.description,
-                        season: p.season,
-                        careLevel: p.careLevel,
-                        icon: p.icon,
-                        displayOrder: p.displayOrder,
-                        isActive: p.isActive,
-                        // Explicitly do not include image, imageAlt, imageHash
-                    };
-                    return newPlant;
-                }
-                return p;
-            }),
-        );
+            // Set deleting state immediately to prevent double-clicks
+            setDeletingImageId(plantId);
 
-        // Update editing plant if it's the one being edited
-        setEditingPlant((prevEditingPlant) => {
-            if (prevEditingPlant?.id === plantId) {
+            // Update form data to remove image fields
+            form.setData({
+                ...form.data,
+                plants: form.data.plants.map((p) => {
+                    if (p.id === plantId) {
+                        // Create a new object without image fields
+                        const newPlant: SeasonalPlant = {
+                            id: p.id,
+                            name: p.name,
+                            description: p.description,
+                            season: p.season,
+                            careLevel: p.careLevel,
+                            icon: p.icon,
+                            displayOrder: p.displayOrder,
+                            isActive: p.isActive,
+                            // Explicitly do not include image, imageAlt, imageHash
+                        };
+                        return newPlant;
+                    }
+                    return p;
+                }),
+            });
+
+            // Update editing plant if it's the one being edited
+            if (editingPlant?.id === plantId) {
                 const newPlant: SeasonalPlant = {
-                    id: prevEditingPlant.id,
-                    name: prevEditingPlant.name,
-                    description: prevEditingPlant.description,
-                    season: prevEditingPlant.season,
-                    careLevel: prevEditingPlant.careLevel,
-                    icon: prevEditingPlant.icon,
-                    displayOrder: prevEditingPlant.displayOrder,
-                    isActive: prevEditingPlant.isActive,
+                    id: editingPlant.id,
+                    name: editingPlant.name,
+                    description: editingPlant.description,
+                    season: editingPlant.season,
+                    careLevel: editingPlant.careLevel,
+                    icon: editingPlant.icon,
+                    displayOrder: editingPlant.displayOrder,
+                    isActive: editingPlant.isActive,
                     // Explicitly do not include image, imageAlt, imageHash
                 };
-                return newPlant;
+                setEditingPlant(newPlant);
             }
-            return prevEditingPlant;
-        });
 
-        PubSub.get().publishSnack({
-            message: "Image removed (icon will be used as fallback)",
-            severity: SnackSeverity.Info,
-        });
-
-        // Clear deleting state after state updates
-        setTimeout(() => setDeletingImageId(null), 100);
-    }, []);
+            // Clear deleting state after state updates
+            setTimeout(() => setDeletingImageId(null), 100);
+        },
+        [form.data, editingPlant],
+    );
 
     return (
         <PageContainer variant="wide" sx={{ minHeight: "100vh", paddingBottom: 0 }}>
@@ -725,7 +770,7 @@ export const AdminHomepageSeasonal = () => {
 
             <Box p={2}>
                 {/* Unsaved changes warning */}
-                {hasChanges && (
+                {form.isDirty && (
                     <Alert
                         severity="warning"
                         sx={{
@@ -742,7 +787,7 @@ export const AdminHomepageSeasonal = () => {
                 )}
 
                 {/* Action Buttons at Top */}
-                {hasChanges && (
+                {form.isDirty && (
                     <Paper
                         elevation={0}
                         sx={{
@@ -760,8 +805,8 @@ export const AdminHomepageSeasonal = () => {
                             variant="contained"
                             size="large"
                             startIcon={<Save size={20} />}
-                            onClick={handleSaveAll}
-                            disabled={isLoading}
+                            onClick={form.save}
+                            disabled={form.isSaving}
                             sx={{
                                 px: 4,
                                 fontWeight: 600,
@@ -769,13 +814,17 @@ export const AdminHomepageSeasonal = () => {
                                 "&:hover": { boxShadow: 4 },
                             }}
                         >
-                            {isLoading ? "Saving..." : "Save All Changes"}
+                            {form.isSaving ? "Saving..." : "Save All Changes"}
                         </Button>
                         <Button
                             variant="outlined"
                             size="large"
                             startIcon={<RotateCcw size={20} />}
-                            onClick={handleCancel}
+                            onClick={() => {
+                                form.cancel();
+                                setEditingPlant(null);
+                                setEditingTip(null);
+                            }}
                             sx={{
                                 px: 4,
                                 fontWeight: 600,
@@ -809,7 +858,12 @@ export const AdminHomepageSeasonal = () => {
                                     <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
                                         Live Preview
                                     </Typography>
-                                    <SeasonalPreview plants={plants} tips={tips} />
+                                    <SeasonalPreview
+                                        plants={form.data?.plants || []}
+                                        tips={form.data?.tips || []}
+                                        galleryButton={form.data?.galleryButton}
+                                        sectionText={form.data?.sectionText}
+                                    />
                                     <Alert severity="info" sx={{ mt: 2 }}>
                                         <Typography variant="caption">
                                             This preview updates in real-time as you make changes.
@@ -833,7 +887,8 @@ export const AdminHomepageSeasonal = () => {
                                         <Box sx={{ textAlign: "center" }}>
                                             <Leaf size={32} color={palette.primary.main} />
                                             <Typography variant="h5" sx={{ mt: 1 }}>
-                                                {plants.filter((p) => p.isActive).length}
+                                                {form.data?.plants.filter((p) => p.isActive)
+                                                    .length || 0}
                                             </Typography>
                                             <Typography variant="caption" color="text.secondary">
                                                 Active Plants
@@ -844,7 +899,8 @@ export const AdminHomepageSeasonal = () => {
                                         <Box sx={{ textAlign: "center" }}>
                                             <Lightbulb size={32} color={palette.secondary.main} />
                                             <Typography variant="h5" sx={{ mt: 1 }}>
-                                                {tips.filter((t) => t.isActive).length}
+                                                {form.data?.tips.filter((t) => t.isActive).length ||
+                                                    0}
                                             </Typography>
                                             <Typography variant="caption" color="text.secondary">
                                                 Active Tips
@@ -855,7 +911,8 @@ export const AdminHomepageSeasonal = () => {
                                         <Box sx={{ textAlign: "center" }}>
                                             <LeafIcon size={32} color={palette.info.main} />
                                             <Typography variant="h5" sx={{ mt: 1 }}>
-                                                {plants.length + tips.length}
+                                                {(form.data?.plants.length || 0) +
+                                                    (form.data?.tips.length || 0)}
                                             </Typography>
                                             <Typography variant="caption" color="text.secondary">
                                                 Total Items
@@ -932,16 +989,20 @@ export const AdminHomepageSeasonal = () => {
                                             <TextField
                                                 fullWidth
                                                 label="Section Title"
-                                                value={sectionText.header.title}
-                                                onChange={(e) =>
-                                                    setSectionText({
-                                                        ...sectionText,
-                                                        header: {
-                                                            ...sectionText.header,
-                                                            title: e.target.value,
+                                                value={form.data?.sectionText.header.title}
+                                                onChange={(e) => {
+                                                    if (!form.data) return;
+                                                    form.setData({
+                                                        ...form.data,
+                                                        sectionText: {
+                                                            ...form.data.sectionText,
+                                                            header: {
+                                                                ...form.data.sectionText.header,
+                                                                title: e.target.value,
+                                                            },
                                                         },
-                                                    })
-                                                }
+                                                    });
+                                                }}
                                                 helperText="Main heading for the seasonal section"
                                             />
                                         </Grid>
@@ -949,16 +1010,20 @@ export const AdminHomepageSeasonal = () => {
                                             <TextField
                                                 fullWidth
                                                 label="Section Subtitle"
-                                                value={sectionText.header.subtitle}
-                                                onChange={(e) =>
-                                                    setSectionText({
-                                                        ...sectionText,
-                                                        header: {
-                                                            ...sectionText.header,
-                                                            subtitle: e.target.value,
+                                                value={form.data?.sectionText.header.subtitle}
+                                                onChange={(e) => {
+                                                    if (!form.data) return;
+                                                    form.setData({
+                                                        ...form.data,
+                                                        sectionText: {
+                                                            ...form.data.sectionText,
+                                                            header: {
+                                                                ...form.data.sectionText.header,
+                                                                subtitle: e.target.value,
+                                                            },
                                                         },
-                                                    })
-                                                }
+                                                    });
+                                                }}
                                                 helperText="Subtitle under the main heading"
                                             />
                                         </Grid>
@@ -982,20 +1047,27 @@ export const AdminHomepageSeasonal = () => {
                                                 fullWidth
                                                 label="Current Season Title"
                                                 value={
-                                                    sectionText.sections.plants.currentSeasonTitle
+                                                    form.data?.sectionText.sections.plants
+                                                        .currentSeasonTitle
                                                 }
-                                                onChange={(e) =>
-                                                    setSectionText({
-                                                        ...sectionText,
-                                                        sections: {
-                                                            ...sectionText.sections,
-                                                            plants: {
-                                                                ...sectionText.sections.plants,
-                                                                currentSeasonTitle: e.target.value,
+                                                onChange={(e) => {
+                                                    if (!form.data) return;
+                                                    form.setData({
+                                                        ...form.data,
+                                                        sectionText: {
+                                                            ...form.data.sectionText,
+                                                            sections: {
+                                                                ...form.data.sectionText.sections,
+                                                                plants: {
+                                                                    ...form.data.sectionText
+                                                                        .sections.plants,
+                                                                    currentSeasonTitle:
+                                                                        e.target.value,
+                                                                },
                                                             },
                                                         },
-                                                    })
-                                                }
+                                                    });
+                                                }}
                                                 helperText="Title when showing current season plants"
                                             />
                                         </Grid>
@@ -1004,22 +1076,27 @@ export const AdminHomepageSeasonal = () => {
                                                 fullWidth
                                                 label="Other Season Title Template"
                                                 value={
-                                                    sectionText.sections.plants
+                                                    form.data?.sectionText.sections.plants
                                                         .otherSeasonTitleTemplate
                                                 }
-                                                onChange={(e) =>
-                                                    setSectionText({
-                                                        ...sectionText,
-                                                        sections: {
-                                                            ...sectionText.sections,
-                                                            plants: {
-                                                                ...sectionText.sections.plants,
-                                                                otherSeasonTitleTemplate:
-                                                                    e.target.value,
+                                                onChange={(e) => {
+                                                    if (!form.data) return;
+                                                    form.setData({
+                                                        ...form.data,
+                                                        sectionText: {
+                                                            ...form.data.sectionText,
+                                                            sections: {
+                                                                ...form.data.sectionText.sections,
+                                                                plants: {
+                                                                    ...form.data.sectionText
+                                                                        .sections.plants,
+                                                                    otherSeasonTitleTemplate:
+                                                                        e.target.value,
+                                                                },
                                                             },
                                                         },
-                                                    })
-                                                }
+                                                    });
+                                                }}
                                                 helperText="Use {season} as placeholder (e.g., 'Perfect for {season}')"
                                             />
                                         </Grid>
@@ -1042,16 +1119,20 @@ export const AdminHomepageSeasonal = () => {
                                             <TextField
                                                 fullWidth
                                                 label="Tips Section Title"
-                                                value={sectionText.sections.tips.title}
-                                                onChange={(e) =>
-                                                    setSectionText({
-                                                        ...sectionText,
-                                                        sections: {
-                                                            ...sectionText.sections,
-                                                            tips: { title: e.target.value },
+                                                value={form.data?.sectionText.sections.tips.title}
+                                                onChange={(e) => {
+                                                    if (!form.data) return;
+                                                    form.setData({
+                                                        ...form.data,
+                                                        sectionText: {
+                                                            ...form.data.sectionText,
+                                                            sections: {
+                                                                ...form.data.sectionText.sections,
+                                                                tips: { title: e.target.value },
+                                                            },
                                                         },
-                                                    })
-                                                }
+                                                    });
+                                                }}
                                                 helperText="Heading for the expert tips section"
                                             />
                                         </Grid>
@@ -1074,14 +1155,72 @@ export const AdminHomepageSeasonal = () => {
                                             <TextField
                                                 fullWidth
                                                 label="Subscribe Button Text"
-                                                value={sectionText.newsletterButtonText}
-                                                onChange={(e) =>
-                                                    setSectionText({
-                                                        ...sectionText,
-                                                        newsletterButtonText: e.target.value,
-                                                    })
-                                                }
+                                                value={form.data?.sectionText.newsletterButtonText}
+                                                onChange={(e) => {
+                                                    if (!form.data) return;
+                                                    form.setData({
+                                                        ...form.data,
+                                                        sectionText: {
+                                                            ...form.data.sectionText,
+                                                            newsletterButtonText: e.target.value,
+                                                        },
+                                                    });
+                                                }}
                                                 helperText="Text on the newsletter subscription button"
+                                            />
+                                        </Grid>
+
+                                        {/* Gallery Button Settings */}
+                                        <Grid item xs={12}>
+                                            <Typography
+                                                variant="subtitle1"
+                                                sx={{
+                                                    fontWeight: 600,
+                                                    mb: 2,
+                                                    mt: 2,
+                                                    color: palette.primary.main,
+                                                }}
+                                            >
+                                                Gallery Button Settings
+                                            </Typography>
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <TextField
+                                                fullWidth
+                                                label="Gallery Button Text"
+                                                value={form.data?.galleryButton.text}
+                                                onChange={(e) => {
+                                                    if (!form.data) return;
+                                                    form.setData({
+                                                        ...form.data,
+                                                        galleryButton: {
+                                                            ...form.data.galleryButton,
+                                                            text: e.target.value,
+                                                        },
+                                                    });
+                                                }}
+                                                helperText="Text displayed on the gallery button"
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <FormControlLabel
+                                                control={
+                                                    <Switch
+                                                        checked={form.data?.galleryButton.enabled}
+                                                        onChange={(e) => {
+                                                            if (!form.data) return;
+                                                            form.setData({
+                                                                ...form.data,
+                                                                galleryButton: {
+                                                                    ...form.data.galleryButton,
+                                                                    enabled: e.target.checked,
+                                                                },
+                                                            });
+                                                        }}
+                                                    />
+                                                }
+                                                label="Show Gallery Button"
+                                                sx={{ mt: 1 }}
                                             />
                                         </Grid>
 
@@ -1138,7 +1277,7 @@ export const AdminHomepageSeasonal = () => {
                                                 variant="h6"
                                                 sx={{ fontWeight: 600, lineHeight: 1.2 }}
                                             >
-                                                Seasonal Plants ({plants.length})
+                                                Seasonal Plants ({form.data?.plants.length || 0})
                                             </Typography>
                                             <Typography variant="caption" color="text.secondary">
                                                 Manage plants that appear in the carousel
@@ -1162,7 +1301,7 @@ export const AdminHomepageSeasonal = () => {
                                             Add New Plant
                                         </Button>
 
-                                        {plants.map((plant) => (
+                                        {form.data?.plants.map((plant) => (
                                             <Paper
                                                 key={plant.id}
                                                 elevation={0}
@@ -1570,7 +1709,7 @@ export const AdminHomepageSeasonal = () => {
                                                 variant="h6"
                                                 sx={{ fontWeight: 600, lineHeight: 1.2 }}
                                             >
-                                                Plant Care Tips ({tips.length})
+                                                Plant Care Tips ({form.data?.tips.length || 0})
                                             </Typography>
                                             <Typography variant="caption" color="text.secondary">
                                                 Manage expert advice and tips
@@ -1594,7 +1733,7 @@ export const AdminHomepageSeasonal = () => {
                                             Add New Tip
                                         </Button>
 
-                                        {tips.map((tip) => (
+                                        {form.data?.tips.map((tip) => (
                                             <Paper
                                                 key={tip.id}
                                                 elevation={0}
@@ -1811,7 +1950,7 @@ export const AdminHomepageSeasonal = () => {
                             </Accordion>
 
                             {/* Action Buttons at Bottom */}
-                            {hasChanges && (
+                            {form.isDirty && (
                                 <Paper
                                     elevation={0}
                                     sx={{
@@ -1828,8 +1967,8 @@ export const AdminHomepageSeasonal = () => {
                                         variant="contained"
                                         size="large"
                                         startIcon={<Save size={20} />}
-                                        onClick={handleSaveAll}
-                                        disabled={isLoading}
+                                        onClick={form.save}
+                                        disabled={form.isSaving}
                                         sx={{
                                             px: 4,
                                             fontWeight: 600,
@@ -1837,13 +1976,17 @@ export const AdminHomepageSeasonal = () => {
                                             "&:hover": { boxShadow: 4 },
                                         }}
                                     >
-                                        {isLoading ? "Saving..." : "Save All Changes"}
+                                        {form.isSaving ? "Saving..." : "Save All Changes"}
                                     </Button>
                                     <Button
                                         variant="outlined"
                                         size="large"
                                         startIcon={<RotateCcw size={20} />}
-                                        onClick={handleCancel}
+                                        onClick={() => {
+                                            form.cancel();
+                                            setEditingPlant(null);
+                                            setEditingTip(null);
+                                        }}
                                         sx={{
                                             px: 4,
                                             fontWeight: 600,
@@ -1903,7 +2046,12 @@ export const AdminHomepageSeasonal = () => {
                                         </Typography>
                                     </Box>
                                 </Box>
-                                <SeasonalPreview plants={plants} tips={tips} />
+                                <SeasonalPreview
+                                    plants={form.data?.plants || []}
+                                    tips={form.data?.tips || []}
+                                    galleryButton={form.data?.galleryButton}
+                                    sectionText={form.data?.sectionText}
+                                />
                                 <Alert
                                     severity="info"
                                     sx={{

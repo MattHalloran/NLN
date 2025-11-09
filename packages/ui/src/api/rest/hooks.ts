@@ -1,15 +1,13 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
-    restApi,
-    LandingPageContent,
-    Plant,
-    CustomerSession,
-    CustomerContact as _CustomerContact,
-    Image,
-    DashboardStats,
-    LandingPageVariant,
-    SectionConfiguration as _SectionConfiguration,
     AnalyticsEvent,
+    CustomerSession,
+    DashboardStats,
+    Image,
+    LandingPageContent,
+    LandingPageVariant,
+    Plant,
+    restApi,
 } from "./client";
 
 // Generic hook for REST API calls
@@ -186,6 +184,10 @@ export function useUpdateLandingPageContent() {
                     displayOrder: number;
                     isActive: boolean;
                 }>;
+                seasonalGalleryButton?: {
+                    text: string;
+                    enabled: boolean;
+                };
                 settings?: {
                     hero: {
                         title: string;
@@ -685,9 +687,9 @@ export function useCleanupJobStatus() {
 
 // Re-export commonly used types from client
 export type {
+    DashboardStats,
     Image,
     LandingPageContent,
-    Plant,
-    DashboardStats,
     LandingPageVariant,
+    Plant,
 } from "./client";

@@ -16,9 +16,10 @@ import {
 import { useState, useMemo } from "react";
 import { useLandingPage } from "hooks/useLandingPage";
 import { useABTestTracking } from "hooks";
+import { useLocation } from "route";
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
-import { Leaf, Lightbulb, Sprout, Flower, Snowflake, LucideIcon, Star } from "lucide-react";
+import { Leaf, Lightbulb, Sprout, Flower, Snowflake, LucideIcon, Star, Images } from "lucide-react";
 import { getServerUrl } from "utils";
 import { restApi } from "api/rest/client";
 
@@ -79,6 +80,7 @@ const sortPlantsBySeason = (plants: SeasonalPlant[]): SeasonalPlant[] => {
 
 export const InteractiveElements = () => {
     const { palette } = useTheme();
+    const [, setLocation] = useLocation();
     const [currentPlant, setCurrentPlant] = useState(0);
     const [selectedTipCategory, setSelectedTipCategory] = useState(0);
     const [email, setEmail] = useState("");
@@ -92,6 +94,7 @@ export const InteractiveElements = () => {
 
     const plantTips = data?.content?.seasonal?.tips || [];
     const newsletterSettings = data?.content?.newsletter;
+    const galleryButton = data?.content?.seasonal?.galleryButton;
 
     // Get customizable text fields with fallbacks
     const seasonalHeader = data?.content?.seasonal?.header || {
@@ -236,10 +239,38 @@ export const InteractiveElements = () => {
                             color: palette.text.secondary,
                             maxWidth: "600px",
                             mx: "auto",
+                            mb: galleryButton?.enabled ? 3 : 0,
                         }}
                     >
                         {seasonalHeader.subtitle}
                     </Typography>
+
+                    {/* Gallery Button */}
+                    {galleryButton?.enabled && (
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            size="large"
+                            startIcon={<Images size={20} />}
+                            onClick={() => setLocation("/gallery")}
+                            sx={{
+                                px: 4,
+                                py: 1.5,
+                                fontSize: "1rem",
+                                fontWeight: 600,
+                                borderRadius: 2,
+                                textTransform: "none",
+                                boxShadow: 3,
+                                "&:hover": {
+                                    boxShadow: 6,
+                                    transform: "translateY(-2px)",
+                                },
+                                transition: "all 0.2s ease-in-out",
+                            }}
+                        >
+                            {galleryButton?.text || "View Gallery"}
+                        </Button>
+                    )}
                 </Box>
 
                 <Grid container spacing={6}>

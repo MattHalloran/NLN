@@ -47,11 +47,8 @@ import { TopBar } from "components/navigation/TopBar/TopBar";
 import { useLandingPage } from "hooks/useLandingPage";
 import { useABTestQueryParams } from "hooks/useABTestQueryParams";
 import { useUpdateLandingPageContent } from "api/rest/hooks";
-import { useBlockNavigation } from "hooks/useBlockNavigation";
-import { useState, useEffect, useMemo } from "react";
+import { useAdminForm } from "hooks/useAdminForm";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
-import { PubSub } from "utils/pubsub";
-import { SnackSeverity } from "components/dialogs/Snack/Snack";
 
 // Available icons for selection
 const SOCIAL_PROOF_ICONS = [
@@ -502,282 +499,271 @@ const SocialProofPreview = ({
 };
 
 export const AdminHomepageSocialProof = () => {
-    const { data: landingPageData, refetch } = useLandingPage();
+    const { data: landingPageData, refetch: refetchLandingPage } = useLandingPage();
     const { mutate: updateContent } = useUpdateLandingPageContent();
     const { variantId } = useABTestQueryParams();
 
     const foundedYear = landingPageData?.content?.company?.foundedYear || COMPANY_INFO.FoundedYear;
     const yearsInBusiness = new Date().getFullYear() - foundedYear;
 
-    const [socialProofData, setSocialProofData] = useState<SocialProofData>(
-        getDefaultSocialProofData(foundedYear),
-    );
-    const [originalData, setOriginalData] = useState<SocialProofData>(
-        getDefaultSocialProofData(foundedYear),
-    );
-    const [isLoading, setIsLoading] = useState(false);
-
-    // Load initial data
-    useEffect(() => {
-        if (landingPageData?.content?.socialProof) {
-            setSocialProofData(landingPageData.content.socialProof);
-            setOriginalData(JSON.parse(JSON.stringify(landingPageData.content.socialProof)));
-        } else {
-            const defaultData = getDefaultSocialProofData(foundedYear);
-            setSocialProofData(defaultData);
-            setOriginalData(JSON.parse(JSON.stringify(defaultData)));
-        }
-    }, [landingPageData, foundedYear]);
-
-    const hasChanges = useMemo(() => {
-        return JSON.stringify(socialProofData) !== JSON.stringify(originalData);
-    }, [socialProofData, originalData]);
-
-    // Block navigation when there are unsaved changes
-    useBlockNavigation(hasChanges);
+    // Use the admin form hook
+    const form = useAdminForm<SocialProofData>({
+        fetchFn: async () => {
+            if (landingPageData?.content?.socialProof) {
+                return landingPageData.content.socialProof;
+            }
+            return getDefaultSocialProofData(foundedYear);
+        },
+        saveFn: async (data) => {
+            const queryParams = variantId ? { variantId } : undefined;
+            await updateContent({
+                data: { socialProof: data },
+                queryParams,
+            });
+            return data;
+        },
+        refetchDependencies: [refetchLandingPage],
+        pageName: "social-proof-section",
+        endpointName: "/api/v1/landing-page",
+        successMessage: "Social proof settings saved successfully!",
+        errorMessagePrefix: "Failed to save changes",
+    });
 
     const handleApiError = (error: any, defaultMessage: string) => {
-        const message = error?.message || defaultMessage;
-        PubSub.get().publishSnack({ message, severity: SnackSeverity.Error });
-    };
-
-    const handleApiSuccess = (message: string) => {
-        PubSub.get().publishSnack({ message, severity: SnackSeverity.Success });
+        console.error(error?.message || defaultMessage);
     };
 
     // Header handlers
     const updateHeader = (field: keyof SocialProofData["header"], value: string) => {
-        setSocialProofData((prev) => ({
-            ...prev,
-            header: { ...prev.header, [field]: value },
-        }));
+        if (!form.data) return;
+        form.setData({
+            ...form.data,
+            header: { ...form.data.header, [field]: value },
+        });
     };
 
     // Stats handlers
     const updateStat = (index: number, field: keyof SocialProofStat, value: string) => {
-        setSocialProofData((prev) => ({
-            ...prev,
-            stats: prev.stats.map((stat, i) => (i === index ? { ...stat, [field]: value } : stat)),
-        }));
+        if (!form.data) return;
+        form.setData({
+            ...form.data,
+            stats: form.data.stats.map((stat, i) =>
+                i === index ? { ...stat, [field]: value } : stat,
+            ),
+        });
     };
 
     const addStat = () => {
-        setSocialProofData((prev) => ({
-            ...prev,
-            stats: [...prev.stats, { number: "", label: "", subtext: "" }],
-        }));
+        if (!form.data) return;
+        form.setData({
+            ...form.data,
+            stats: [...form.data.stats, { number: "", label: "", subtext: "" }],
+        });
     };
 
     const removeStat = (index: number) => {
-        if (socialProofData.stats.length <= 1) {
+        if (!form.data) return;
+        if (form.data.stats.length <= 1) {
             handleApiError(new Error("At least one stat is required"), "Cannot remove last stat");
             return;
         }
-        setSocialProofData((prev) => ({
-            ...prev,
-            stats: prev.stats.filter((_, i) => i !== index),
-        }));
+        form.setData({
+            ...form.data,
+            stats: form.data.stats.filter((_, i) => i !== index),
+        });
     };
 
     const onDragEndStats = (result: DropResult) => {
-        if (!result.destination) return;
-        const items = Array.from(socialProofData.stats);
+        if (!result.destination || !form.data) return;
+        const items = Array.from(form.data.stats);
         const [reorderedItem] = items.splice(result.source.index, 1);
         items.splice(result.destination.index, 0, reorderedItem);
-        setSocialProofData((prev) => ({ ...prev, stats: items }));
+        form.setData({ ...form.data, stats: items });
     };
 
     // Mission handlers
     const updateMission = (field: keyof SocialProofData["mission"], value: string) => {
-        setSocialProofData((prev) => ({
-            ...prev,
-            mission: { ...prev.mission, [field]: value },
-        }));
+        if (!form.data) return;
+        form.setData({
+            ...form.data,
+            mission: { ...form.data.mission, [field]: value },
+        });
     };
 
     // Strengths handlers
     const updateStrengthsTitle = (value: string) => {
-        setSocialProofData((prev) => ({
-            ...prev,
-            strengths: { ...prev.strengths, title: value },
-        }));
+        if (!form.data) return;
+        form.setData({
+            ...form.data,
+            strengths: { ...form.data.strengths, title: value },
+        });
     };
 
     const updateStrength = (index: number, field: keyof SocialProofStrength, value: string) => {
-        setSocialProofData((prev) => ({
-            ...prev,
+        if (!form.data) return;
+        form.setData({
+            ...form.data,
             strengths: {
-                ...prev.strengths,
-                items: prev.strengths.items.map((item, i) =>
+                ...form.data.strengths,
+                items: form.data.strengths.items.map((item, i) =>
                     i === index ? { ...item, [field]: value } : item,
                 ),
             },
-        }));
+        });
     };
 
     const addStrength = () => {
-        setSocialProofData((prev) => ({
-            ...prev,
+        if (!form.data) return;
+        form.setData({
+            ...form.data,
             strengths: {
-                ...prev.strengths,
+                ...form.data.strengths,
                 items: [
-                    ...prev.strengths.items,
+                    ...form.data.strengths.items,
                     { icon: "users", title: "", description: "", highlight: "" },
                 ],
             },
-        }));
+        });
     };
 
     const removeStrength = (index: number) => {
-        if (socialProofData.strengths.items.length <= 1) {
+        if (!form.data) return;
+        if (form.data.strengths.items.length <= 1) {
             handleApiError(
                 new Error("At least one strength is required"),
                 "Cannot remove last strength",
             );
             return;
         }
-        setSocialProofData((prev) => ({
-            ...prev,
+        form.setData({
+            ...form.data,
             strengths: {
-                ...prev.strengths,
-                items: prev.strengths.items.filter((_, i) => i !== index),
+                ...form.data.strengths,
+                items: form.data.strengths.items.filter((_, i) => i !== index),
             },
-        }));
+        });
     };
 
     const onDragEndStrengths = (result: DropResult) => {
-        if (!result.destination) return;
-        const items = Array.from(socialProofData.strengths.items);
+        if (!result.destination || !form.data) return;
+        const items = Array.from(form.data.strengths.items);
         const [reorderedItem] = items.splice(result.source.index, 1);
         items.splice(result.destination.index, 0, reorderedItem);
-        setSocialProofData((prev) => ({
-            ...prev,
-            strengths: { ...prev.strengths, items },
-        }));
+        form.setData({
+            ...form.data,
+            strengths: { ...form.data.strengths, items },
+        });
     };
 
     // Client Types handlers
     const updateClientTypesTitle = (value: string) => {
-        setSocialProofData((prev) => ({
-            ...prev,
-            clientTypes: { ...prev.clientTypes, title: value },
-        }));
+        if (!form.data) return;
+        form.setData({
+            ...form.data,
+            clientTypes: { ...form.data.clientTypes, title: value },
+        });
     };
 
     const updateClientType = (index: number, field: keyof SocialProofClientType, value: string) => {
-        setSocialProofData((prev) => ({
-            ...prev,
+        if (!form.data) return;
+        form.setData({
+            ...form.data,
             clientTypes: {
-                ...prev.clientTypes,
-                items: prev.clientTypes.items.map((item, i) =>
+                ...form.data.clientTypes,
+                items: form.data.clientTypes.items.map((item, i) =>
                     i === index ? { ...item, [field]: value } : item,
                 ),
             },
-        }));
+        });
     };
 
     const addClientType = () => {
-        setSocialProofData((prev) => ({
-            ...prev,
+        if (!form.data) return;
+        form.setData({
+            ...form.data,
             clientTypes: {
-                ...prev.clientTypes,
-                items: [...prev.clientTypes.items, { icon: "users", label: "" }],
+                ...form.data.clientTypes,
+                items: [...form.data.clientTypes.items, { icon: "users", label: "" }],
             },
-        }));
+        });
     };
 
     const removeClientType = (index: number) => {
-        if (socialProofData.clientTypes.items.length <= 1) {
+        if (!form.data) return;
+        if (form.data.clientTypes.items.length <= 1) {
             handleApiError(
                 new Error("At least one client type is required"),
                 "Cannot remove last client type",
             );
             return;
         }
-        setSocialProofData((prev) => ({
-            ...prev,
+        form.setData({
+            ...form.data,
             clientTypes: {
-                ...prev.clientTypes,
-                items: prev.clientTypes.items.filter((_, i) => i !== index),
+                ...form.data.clientTypes,
+                items: form.data.clientTypes.items.filter((_, i) => i !== index),
             },
-        }));
+        });
     };
 
     const onDragEndClientTypes = (result: DropResult) => {
-        if (!result.destination) return;
-        const items = Array.from(socialProofData.clientTypes.items);
+        if (!result.destination || !form.data) return;
+        const items = Array.from(form.data.clientTypes.items);
         const [reorderedItem] = items.splice(result.source.index, 1);
         items.splice(result.destination.index, 0, reorderedItem);
-        setSocialProofData((prev) => ({
-            ...prev,
-            clientTypes: { ...prev.clientTypes, items },
-        }));
+        form.setData({
+            ...form.data,
+            clientTypes: { ...form.data.clientTypes, items },
+        });
     };
 
     // Footer handlers
     const updateFooterDescription = (value: string) => {
-        setSocialProofData((prev) => ({
-            ...prev,
-            footer: { ...prev.footer, description: value },
-        }));
+        if (!form.data) return;
+        form.setData({
+            ...form.data,
+            footer: { ...form.data.footer, description: value },
+        });
     };
 
     const updateFooterChip = (index: number, value: string) => {
-        setSocialProofData((prev) => ({
-            ...prev,
+        if (!form.data) return;
+        form.setData({
+            ...form.data,
             footer: {
-                ...prev.footer,
-                chips: prev.footer.chips.map((chip, i) => (i === index ? value : chip)),
+                ...form.data.footer,
+                chips: form.data.footer.chips.map((chip, i) => (i === index ? value : chip)),
             },
-        }));
+        });
     };
 
     const addFooterChip = () => {
-        setSocialProofData((prev) => ({
-            ...prev,
+        if (!form.data) return;
+        form.setData({
+            ...form.data,
             footer: {
-                ...prev.footer,
-                chips: [...prev.footer.chips, ""],
+                ...form.data.footer,
+                chips: [...form.data.footer.chips, ""],
             },
-        }));
+        });
     };
 
     const removeFooterChip = (index: number) => {
-        if (socialProofData.footer.chips.length <= 1) {
+        if (!form.data) return;
+        if (form.data.footer.chips.length <= 1) {
             handleApiError(new Error("At least one chip is required"), "Cannot remove last chip");
             return;
         }
-        setSocialProofData((prev) => ({
-            ...prev,
+        form.setData({
+            ...form.data,
             footer: {
-                ...prev.footer,
-                chips: prev.footer.chips.filter((_, i) => i !== index),
+                ...form.data.footer,
+                chips: form.data.footer.chips.filter((_, i) => i !== index),
             },
-        }));
+        });
     };
 
-    // Save and reset handlers
-    const handleSaveAllChanges = async () => {
-        try {
-            setIsLoading(true);
-            const queryParams = variantId ? { variantId } : undefined;
-            await updateContent({
-                data: { socialProof: socialProofData },
-                queryParams,
-            });
-            await refetch();
-            handleApiSuccess("Social proof settings saved successfully!");
-            setOriginalData(JSON.parse(JSON.stringify(socialProofData)));
-        } catch (error: any) {
-            handleApiError(error, "Failed to save changes");
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const handleCancelChanges = () => {
-        setSocialProofData(JSON.parse(JSON.stringify(originalData)));
-    };
+    // No custom save/cancel handlers needed - using form.save() and form.cancel() directly
 
     return (
         <PageContainer variant="wide" sx={{ minHeight: "100vh", paddingBottom: 0 }}>
@@ -796,7 +782,7 @@ export const AdminHomepageSocialProof = () => {
             <Box p={2}>
                 <ABTestEditingBanner />
 
-                {hasChanges && (
+                {form.isDirty && (
                     <Alert severity="warning" sx={{ mb: 3 }}>
                         <Typography variant="body2" sx={{ fontWeight: 500 }}>
                             You have unsaved changes. Don't forget to save before leaving!
@@ -804,7 +790,7 @@ export const AdminHomepageSocialProof = () => {
                     </Alert>
                 )}
 
-                {hasChanges && (
+                {form.isDirty && (
                     <Paper
                         elevation={0}
                         sx={{
@@ -821,16 +807,16 @@ export const AdminHomepageSocialProof = () => {
                         <Button
                             variant="contained"
                             size="large"
-                            onClick={handleSaveAllChanges}
-                            disabled={isLoading}
+                            onClick={form.save}
+                            disabled={form.isSaving}
                             sx={{ px: 4, fontWeight: 600 }}
                         >
-                            {isLoading ? "Saving..." : "Save All Changes"}
+                            {form.isSaving ? "Saving..." : "Save All Changes"}
                         </Button>
                         <Button
                             variant="outlined"
                             size="large"
-                            onClick={handleCancelChanges}
+                            onClick={form.cancel}
                             sx={{ px: 4, fontWeight: 600 }}
                         >
                             Cancel
@@ -858,7 +844,9 @@ export const AdminHomepageSocialProof = () => {
                                         Live Preview
                                     </Typography>
                                     <SocialProofPreview
-                                        socialProofData={socialProofData}
+                                        socialProofData={
+                                            form.data || getDefaultSocialProofData(foundedYear)
+                                        }
                                         foundedYear={foundedYear}
                                         yearsInBusiness={yearsInBusiness}
                                     />
@@ -910,7 +898,7 @@ export const AdminHomepageSocialProof = () => {
                                             <TextField
                                                 fullWidth
                                                 label="Title"
-                                                value={socialProofData.header.title}
+                                                value={form.data?.header.title}
                                                 onChange={(e) =>
                                                     updateHeader("title", e.target.value)
                                                 }
@@ -922,7 +910,7 @@ export const AdminHomepageSocialProof = () => {
                                                 multiline
                                                 rows={2}
                                                 label="Subtitle"
-                                                value={socialProofData.header.subtitle}
+                                                value={form.data?.header.subtitle}
                                                 onChange={(e) =>
                                                     updateHeader("subtitle", e.target.value)
                                                 }
@@ -979,7 +967,7 @@ export const AdminHomepageSocialProof = () => {
                                                     {...provided.droppableProps}
                                                     ref={provided.innerRef}
                                                 >
-                                                    {socialProofData.stats.map((stat, index) => (
+                                                    {form.data?.stats.map((stat, index) => (
                                                         <Draggable
                                                             key={index}
                                                             draggableId={`stat-${index}`}
@@ -1026,9 +1014,10 @@ export const AdminHomepageSocialProof = () => {
                                                                                     )
                                                                                 }
                                                                                 disabled={
-                                                                                    socialProofData
-                                                                                        .stats
-                                                                                        .length <= 1
+                                                                                    (form.data
+                                                                                        ?.stats
+                                                                                        .length ||
+                                                                                        0) <= 1
                                                                                 }
                                                                             >
                                                                                 <Trash2 size={18} />
@@ -1168,7 +1157,7 @@ export const AdminHomepageSocialProof = () => {
                                             <TextField
                                                 fullWidth
                                                 label="Title"
-                                                value={socialProofData.mission.title}
+                                                value={form.data?.mission.title}
                                                 onChange={(e) =>
                                                     updateMission("title", e.target.value)
                                                 }
@@ -1180,7 +1169,7 @@ export const AdminHomepageSocialProof = () => {
                                                 multiline
                                                 rows={3}
                                                 label="Quote"
-                                                value={socialProofData.mission.quote}
+                                                value={form.data?.mission.quote}
                                                 onChange={(e) =>
                                                     updateMission("quote", e.target.value)
                                                 }
@@ -1190,7 +1179,7 @@ export const AdminHomepageSocialProof = () => {
                                             <TextField
                                                 fullWidth
                                                 label="Attribution"
-                                                value={socialProofData.mission.attribution}
+                                                value={form.data?.mission.attribution}
                                                 onChange={(e) =>
                                                     updateMission("attribution", e.target.value)
                                                 }
@@ -1243,7 +1232,7 @@ export const AdminHomepageSocialProof = () => {
                                     <TextField
                                         fullWidth
                                         label="Section Title"
-                                        value={socialProofData.strengths.title}
+                                        value={form.data?.strengths.title}
                                         onChange={(e) => updateStrengthsTitle(e.target.value)}
                                         sx={{ mb: 2 }}
                                     />
@@ -1254,7 +1243,7 @@ export const AdminHomepageSocialProof = () => {
                                                     {...provided.droppableProps}
                                                     ref={provided.innerRef}
                                                 >
-                                                    {socialProofData.strengths.items.map(
+                                                    {form.data?.strengths.items.map(
                                                         (strength, index) => (
                                                             <Draggable
                                                                 key={index}
@@ -1305,11 +1294,11 @@ export const AdminHomepageSocialProof = () => {
                                                                                         )
                                                                                     }
                                                                                     disabled={
-                                                                                        socialProofData
-                                                                                            .strengths
+                                                                                        (form.data
+                                                                                            ?.strengths
                                                                                             .items
-                                                                                            .length <=
-                                                                                        1
+                                                                                            .length ||
+                                                                                            0) <= 1
                                                                                     }
                                                                                 >
                                                                                     <Trash2
@@ -1524,7 +1513,7 @@ export const AdminHomepageSocialProof = () => {
                                     <TextField
                                         fullWidth
                                         label="Section Title"
-                                        value={socialProofData.clientTypes.title}
+                                        value={form.data?.clientTypes.title}
                                         onChange={(e) => updateClientTypesTitle(e.target.value)}
                                         sx={{ mb: 2 }}
                                     />
@@ -1535,7 +1524,7 @@ export const AdminHomepageSocialProof = () => {
                                                     {...provided.droppableProps}
                                                     ref={provided.innerRef}
                                                 >
-                                                    {socialProofData.clientTypes.items.map(
+                                                    {form.data?.clientTypes.items.map(
                                                         (client, index) => (
                                                             <Draggable
                                                                 key={index}
@@ -1586,11 +1575,11 @@ export const AdminHomepageSocialProof = () => {
                                                                                         )
                                                                                     }
                                                                                     disabled={
-                                                                                        socialProofData
-                                                                                            .clientTypes
+                                                                                        (form.data
+                                                                                            ?.clientTypes
                                                                                             .items
-                                                                                            .length <=
-                                                                                        1
+                                                                                            .length ||
+                                                                                            0) <= 1
                                                                                     }
                                                                                 >
                                                                                     <Trash2
@@ -1766,7 +1755,7 @@ export const AdminHomepageSocialProof = () => {
                                                 multiline
                                                 rows={2}
                                                 label="Description"
-                                                value={socialProofData.footer.description}
+                                                value={form.data?.footer.description}
                                                 onChange={(e) =>
                                                     updateFooterDescription(e.target.value)
                                                 }
@@ -1776,7 +1765,7 @@ export const AdminHomepageSocialProof = () => {
                                             <Typography variant="subtitle2" sx={{ mb: 1 }}>
                                                 Footer Chips
                                             </Typography>
-                                            {socialProofData.footer.chips.map((chip, index) => (
+                                            {form.data?.footer.chips.map((chip, index) => (
                                                 <Box
                                                     key={index}
                                                     sx={{ display: "flex", gap: 1, mb: 1 }}
@@ -1794,7 +1783,8 @@ export const AdminHomepageSocialProof = () => {
                                                         color="error"
                                                         onClick={() => removeFooterChip(index)}
                                                         disabled={
-                                                            socialProofData.footer.chips.length <= 1
+                                                            (form.data?.footer.chips.length || 0) <=
+                                                            1
                                                         }
                                                     >
                                                         <Trash2 size={18} />
@@ -1814,7 +1804,7 @@ export const AdminHomepageSocialProof = () => {
                                 </AccordionDetails>
                             </Accordion>
 
-                            {hasChanges && (
+                            {form.isDirty && (
                                 <Paper
                                     elevation={0}
                                     sx={{
@@ -1831,16 +1821,16 @@ export const AdminHomepageSocialProof = () => {
                                     <Button
                                         variant="contained"
                                         size="large"
-                                        onClick={handleSaveAllChanges}
-                                        disabled={isLoading}
+                                        onClick={form.save}
+                                        disabled={form.isSaving}
                                         sx={{ px: 4, fontWeight: 600 }}
                                     >
-                                        {isLoading ? "Saving..." : "Save All Changes"}
+                                        {form.isSaving ? "Saving..." : "Save All Changes"}
                                     </Button>
                                     <Button
                                         variant="outlined"
                                         size="large"
-                                        onClick={handleCancelChanges}
+                                        onClick={form.cancel}
                                         sx={{ px: 4, fontWeight: 600 }}
                                     >
                                         Cancel
@@ -1876,7 +1866,9 @@ export const AdminHomepageSocialProof = () => {
                                     Live Preview
                                 </Typography>
                                 <SocialProofPreview
-                                    socialProofData={socialProofData}
+                                    socialProofData={
+                                        form.data || getDefaultSocialProofData(foundedYear)
+                                    }
                                     foundedYear={foundedYear}
                                     yearsInBusiness={yearsInBusiness}
                                 />
