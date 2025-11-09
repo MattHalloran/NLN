@@ -8,15 +8,12 @@ import {
     Image,
     DashboardStats,
     LandingPageVariant,
-    SectionConfiguration,
+    SectionConfiguration as _SectionConfiguration,
     AnalyticsEvent,
 } from "./client";
 
 // Generic hook for REST API calls
-function useRestQuery<T>(
-    queryFn: () => Promise<T>,
-    dependencies: unknown[] = [],
-) {
+function useRestQuery<T>(queryFn: () => Promise<T>, dependencies: unknown[] = []) {
     const [data, setData] = useState<T | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
@@ -57,7 +54,7 @@ function useRestQuery<T>(
                 abortControllerRef.current.abort();
             }
         };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, dependencies);
 
     return { data, loading, error, refetch };
@@ -85,13 +82,10 @@ export function usePlants(params?: {
 }
 
 export function usePlant(id: string | null) {
-    return useRestQuery<Plant>(
-        () => {
-            if (!id) throw new Error("Plant ID is required");
-            return restApi.getPlant(id);
-        },
-        [id],
-    );
+    return useRestQuery<Plant>(() => {
+        if (!id) throw new Error("Plant ID is required");
+        return restApi.getPlant(id);
+    }, [id]);
 }
 
 // Hook for mutations (POST, PUT, DELETE)
@@ -102,23 +96,26 @@ export function useRestMutation<TArgs = unknown, TResult = unknown>(
     const [error, setError] = useState<Error | null>(null);
     const [data, setData] = useState<TResult | null>(null);
 
-    const mutate = useCallback(async (args: TArgs) => {
-        setLoading(true);
-        setError(null);
-
-        try {
-            const result = await mutationFn(args);
-            setData(result);
+    const mutate = useCallback(
+        async (args: TArgs) => {
+            setLoading(true);
             setError(null);
-            return result;
-        } catch (err) {
-            const error = err instanceof Error ? err : new Error("Unknown error");
-            setError(error);
-            throw error;
-        } finally {
-            setLoading(false);
-        }
-    }, [mutationFn]);
+
+            try {
+                const result = await mutationFn(args);
+                setData(result);
+                setError(null);
+                return result;
+            } catch (err) {
+                const error = err instanceof Error ? err : new Error("Unknown error");
+                setError(error);
+                throw error;
+            } finally {
+                setLoading(false);
+            }
+        },
+        [mutationFn],
+    );
 
     const reset = useCallback(() => {
         setData(null);
@@ -131,19 +128,18 @@ export function useRestMutation<TArgs = unknown, TResult = unknown>(
 
 // Example mutation hook
 export function useInvalidateLandingPageCache() {
-    return useRestMutation(
-        () => restApi.invalidateLandingPageCache(),
-    );
+    return useRestMutation(() => restApi.invalidateLandingPageCache());
 }
 
 // Contact info update hook
 export function useUpdateContactInfo() {
     return useRestMutation<
-        { data: { business?: Record<string, unknown>; hours?: string }; queryParams?: { variantId?: string } },
+        {
+            data: { business?: Record<string, unknown>; hours?: string };
+            queryParams?: { variantId?: string };
+        },
         { success: boolean; message: string; updated: { business: boolean; hours: boolean } }
-    >(
-        ({ data, queryParams }) => restApi.updateContactInfo(data, queryParams),
-    );
+    >(({ data, queryParams }) => restApi.updateContactInfo(data, queryParams));
 }
 
 // Unified landing page content update hook
@@ -418,9 +414,7 @@ export function useUpdateLandingPageContent() {
             };
         },
         { success: boolean; message: string; updatedSections: string[] }
-    >(
-        ({ data, queryParams }) => restApi.updateLandingPageContent(data, queryParams),
-    );
+    >(({ data, queryParams }) => restApi.updateLandingPageContent(data, queryParams));
 }
 
 // ============================================
@@ -440,9 +434,7 @@ export function useLogin() {
 }
 
 export function useLogout() {
-    return useRestMutation<void, { success: boolean }>(
-        () => restApi.logout(),
-    );
+    return useRestMutation<void, { success: boolean }>(() => restApi.logout());
 }
 
 export function useSignUp() {
@@ -457,26 +449,18 @@ export function useSignUp() {
             password: string;
         },
         CustomerSession
-    >(
-        (input) => restApi.signUp(input),
-    );
+    >((input) => restApi.signUp(input));
 }
 
 export function useResetPassword() {
-    return useRestMutation<
-        { token: string; password: string },
-        CustomerSession
-    >(
-        (input) => restApi.resetPassword(input),
+    return useRestMutation<{ token: string; password: string }, CustomerSession>((input) =>
+        restApi.resetPassword(input),
     );
 }
 
 export function useRequestPasswordChange() {
-    return useRestMutation<
-        { email: string },
-        { success: boolean }
-    >(
-        (input) => restApi.requestPasswordChange(input),
+    return useRestMutation<{ email: string }, { success: boolean }>((input) =>
+        restApi.requestPasswordChange(input),
     );
 }
 
@@ -485,19 +469,14 @@ export function useRequestPasswordChange() {
 // ============================================
 
 export function useImagesByLabel(label: string) {
-    return useRestQuery<Image[]>(
-        () => restApi.getImagesByLabel({ label }),
-        [label],
-    );
+    return useRestQuery<Image[]>(() => restApi.getImagesByLabel({ label }), [label]);
 }
 
 export function useAddImages() {
     return useRestMutation<
         { label: string; files: File[] },
         Array<{ success: boolean; src: string; hash: string }>
-    >(
-        (input) => restApi.addImages(input),
-    );
+    >((input) => restApi.addImages(input));
 }
 
 export function useUpdateImages() {
@@ -511,9 +490,7 @@ export function useUpdateImages() {
             }>;
         },
         { success: boolean }
-    >(
-        (input) => restApi.updateImages(input),
-    );
+    >((input) => restApi.updateImages(input));
 }
 
 export function useDeleteImage() {
@@ -532,9 +509,7 @@ export function useDeleteImage() {
             };
             errors?: string[];
         }
-    >(
-        (input) => restApi.deleteImage(input.hash, input.force),
-    );
+    >((input) => restApi.deleteImage(input.hash, input.force));
 }
 
 export function useCheckImageUsage(hash: string) {
@@ -544,10 +519,7 @@ export function useCheckImageUsage(hash: string) {
         usedInLabels: string[];
         canDelete: boolean;
         warnings: string[];
-    }>(
-        () => restApi.checkImageUsage(hash),
-        [hash],
-    );
+    }>(() => restApi.checkImageUsage(hash), [hash]);
 }
 
 // ============================================
@@ -562,9 +534,7 @@ export function useReadAssets(files: string[]) {
 }
 
 export function useWriteAssets() {
-    return useRestMutation<File[], { success: boolean }>(
-        (files) => restApi.writeAssets(files),
-    );
+    return useRestMutation<File[], { success: boolean }>((files) => restApi.writeAssets(files));
 }
 
 // ============================================
@@ -572,23 +542,7 @@ export function useWriteAssets() {
 // ============================================
 
 export function useDashboardStats() {
-    return useRestQuery<DashboardStats>(
-        () => restApi.getDashboardStats(),
-        [],
-    );
-}
-
-// ============================================
-// Section Management Hooks
-// ============================================
-
-export function useUpdateSectionConfiguration() {
-    return useRestMutation<
-        SectionConfiguration,
-        { success: boolean; message: string }
-    >(
-        (sections) => restApi.updateSectionConfiguration(sections),
-    );
+    return useRestQuery<DashboardStats>(() => restApi.getDashboardStats(), []);
 }
 
 // Deep partial utility type for nested updates
@@ -601,15 +555,15 @@ type DeepPartial<T> = T extends object
 export function useUpdateLandingPageSettings() {
     return useRestMutation<
         {
-            settings: DeepPartial<Pick<LandingPageContent, "content" | "theme" | "layout" | "experiments">>;
+            settings: DeepPartial<
+                Pick<LandingPageContent, "content" | "theme" | "layout" | "experiments">
+            >;
             queryParams?: {
                 variantId?: string;
             };
         },
         { success: boolean; message: string; updatedFields: string[] }
-    >(
-        ({ settings, queryParams }) => restApi.updateLandingPageSettings(settings, queryParams),
-    );
+    >(({ settings, queryParams }) => restApi.updateLandingPageSettings(settings, queryParams));
 }
 
 // ============================================
@@ -617,8 +571,8 @@ export function useUpdateLandingPageSettings() {
 // ============================================
 
 export function useTrackAnalyticsEvent() {
-    return useRestMutation<AnalyticsEvent, { success: boolean }>(
-        (event) => restApi.trackAnalyticsEvent(event),
+    return useRestMutation<AnalyticsEvent, { success: boolean }>((event) =>
+        restApi.trackAnalyticsEvent(event),
     );
 }
 
@@ -627,20 +581,14 @@ export function useTrackAnalyticsEvent() {
 // ============================================
 
 export function useVariants() {
-    return useRestQuery<LandingPageVariant[]>(
-        () => restApi.getVariants(),
-        [],
-    );
+    return useRestQuery<LandingPageVariant[]>(() => restApi.getVariants(), []);
 }
 
 export function useVariant(id: string | null) {
-    return useRestQuery<LandingPageVariant>(
-        () => {
-            if (!id) throw new Error("Variant ID is required");
-            return restApi.getVariant(id);
-        },
-        [id],
-    );
+    return useRestQuery<LandingPageVariant>(() => {
+        if (!id) throw new Error("Variant ID is required");
+        return restApi.getVariant(id);
+    }, [id]);
 }
 
 export function useCreateVariant() {
@@ -652,9 +600,7 @@ export function useCreateVariant() {
             copyFromVariantId?: string;
         },
         LandingPageVariant
-    >(
-        (variant) => restApi.createVariant(variant),
-    );
+    >((variant) => restApi.createVariant(variant));
 }
 
 export function useUpdateVariant() {
@@ -669,14 +615,12 @@ export function useUpdateVariant() {
             }>;
         },
         LandingPageVariant
-    >(
-        ({ id, variant }) => restApi.updateVariant(id, variant),
-    );
+    >(({ id, variant }) => restApi.updateVariant(id, variant));
 }
 
 export function useDeleteVariant() {
-    return useRestMutation<string, { success: boolean; message: string }>(
-        (id) => restApi.deleteVariant(id),
+    return useRestMutation<string, { success: boolean; message: string }>((id) =>
+        restApi.deleteVariant(id),
     );
 }
 
@@ -684,63 +628,45 @@ export function usePromoteVariant() {
     return useRestMutation<
         string,
         { success: boolean; message: string; variant: LandingPageVariant }
-    >(
-        (id) => restApi.promoteVariant(id),
-    );
+    >((id) => restApi.promoteVariant(id));
 }
 
 export function useToggleVariant() {
-    return useRestMutation<string, LandingPageVariant>(
-        (id) => restApi.toggleVariant(id),
-    );
+    return useRestMutation<string, LandingPageVariant>((id) => restApi.toggleVariant(id));
 }
 
 // Storage Management hooks
 export function useStorageStats() {
-    return useRestQuery(
-        () => restApi.getStorageStats(),
-        [],
-    );
+    return useRestQuery(() => restApi.getStorageStats(), []);
 }
 
 export function useTriggerCleanup() {
-    return useRestMutation<void, { success: boolean; message: string; jobId: string }>(
-        () => restApi.triggerCleanup(),
+    return useRestMutation<void, { success: boolean; message: string; jobId: string }>(() =>
+        restApi.triggerCleanup(),
     );
 }
 
 export function useCleanupHistory(params?: { status?: string; limit?: number; offset?: number }) {
-    return useRestQuery(
-        () => restApi.getCleanupHistory(params),
-        [JSON.stringify(params)],
-    );
+    return useRestQuery(() => restApi.getCleanupHistory(params), [JSON.stringify(params)]);
 }
 
 export function useCleanupPreview() {
-    return useRestQuery(
-        () => restApi.getCleanupPreview(),
-        [],
-    );
+    return useRestQuery(() => restApi.getCleanupPreview(), []);
 }
 
 export function useOrphanedFiles() {
-    return useRestQuery(
-        () => restApi.getOrphanedFiles(),
-        [],
-    );
+    return useRestQuery(() => restApi.getOrphanedFiles(), []);
 }
 
 export function useOrphanedRecords() {
-    return useRestQuery(
-        () => restApi.getOrphanedRecords(),
-        [],
-    );
+    return useRestQuery(() => restApi.getOrphanedRecords(), []);
 }
 
 export function useCleanOrphanedFiles() {
-    return useRestMutation<void, { success: boolean; deletedCount: number; freedMB: number; errors?: string[] }>(
-        () => restApi.cleanOrphanedFiles(),
-    );
+    return useRestMutation<
+        void,
+        { success: boolean; deletedCount: number; freedMB: number; errors?: string[] }
+    >(() => restApi.cleanOrphanedFiles());
 }
 
 export function useCleanOrphanedRecords() {
@@ -750,17 +676,11 @@ export function useCleanOrphanedRecords() {
 }
 
 export function useRecentActivity() {
-    return useRestQuery(
-        () => restApi.getRecentActivity(),
-        [],
-    );
+    return useRestQuery(() => restApi.getRecentActivity(), []);
 }
 
 export function useCleanupJobStatus() {
-    return useRestQuery(
-        () => restApi.getCleanupJobStatus(),
-        [],
-    );
+    return useRestQuery(() => restApi.getCleanupJobStatus(), []);
 }
 
 // Re-export commonly used types from client

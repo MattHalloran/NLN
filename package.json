@@ -24,6 +24,7 @@
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:report": "playwright show-report",
     "test:e2e:codegen": "playwright codegen http://localhost:3001",
+    "smoke-test": "npx tsx scripts/smoke-test-admin.ts",
     "lighthouse": "TMPDIR=/tmp TEMP=/tmp TMP=/tmp lhci autorun",
     "lighthouse:prod": "./scripts/lighthouse-prod.sh",
     "lighthouse:collect": "TMPDIR=/tmp TEMP=/tmp TMP=/tmp lhci collect",

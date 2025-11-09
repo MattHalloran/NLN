@@ -86,7 +86,7 @@ export const useLandingPageStore = create<LandingPageState>((set, get) => {
                     let data: LandingPageContent;
                     try {
                         data = await restApi.getLandingPageContent({
-                            onlyActive: false, // Fetch ALL data (including inactive) - components can filter as needed
+                            onlyActive: true, // Only fetch active content for display
                             variantId: storedVariantId || undefined,
                         });
                     } catch (firstAttemptError: any) {
@@ -106,7 +106,7 @@ export const useLandingPageStore = create<LandingPageState>((set, get) => {
 
                             // Retry without stored variant ID - backend will assign a new one
                             data = await restApi.getLandingPageContent({
-                                onlyActive: false,
+                                onlyActive: true,
                                 variantId: undefined,
                             });
                         } else {

@@ -6,7 +6,7 @@ import type { LandingPageContent, LandingPageVariant } from "../../types/landing
 // In production, data files are in dist folder, in development they're in src
 const dataPath = join(
     process.env.PROJECT_DIR || "",
-    process.env.NODE_ENV === "production" ? "packages/server/dist/data" : "packages/server/src/data",
+    process.env.NODE_ENV === "production" ? "packages/server/dist/data" : "packages/server/src/data"
 );
 
 /**
@@ -89,7 +89,7 @@ export const deleteVariantContent = (variantId: string): void => {
             unlinkSync(variantFile);
             logger.info(`Variant content file for ${variantId} deleted`);
         } catch (err) {
-            logger.warn(`Could not delete ${variantFile}:`, err);
+            logger.log(LogLevel.warn, `Could not delete ${variantFile}:`, err);
         }
     } catch (error) {
         logger.log(LogLevel.error, `Error deleting variant content for ${variantId}:`, error);
@@ -107,7 +107,9 @@ export const getEnabledVariants = (): LandingPageVariant[] => {
 /**
  * Assign variant based on traffic allocation (weighted random)
  */
-export const assignVariantWeighted = (variants: LandingPageVariant[]): LandingPageVariant | null => {
+export const assignVariantWeighted = (
+    variants: LandingPageVariant[]
+): LandingPageVariant | null => {
     if (variants.length === 0) {
         return null;
     }

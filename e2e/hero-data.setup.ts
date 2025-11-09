@@ -11,11 +11,39 @@ setup("seed hero banner test data", async ({ authenticatedPage }) => {
   console.log("Seeding hero banner test data...");
 
   try {
+    // Navigate to the app to ensure CSRF token is initialized
+    await authenticatedPage.goto("http://localhost:3001");
+    await authenticatedPage.waitForLoadState("networkidle");
+
+    // Fetch CSRF token from the server
+    const csrfResponse = await authenticatedPage.request.get("http://localhost:5331/api/rest/v1/csrf-token", {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!csrfResponse.ok()) {
+      throw new Error(`Failed to fetch CSRF token: ${csrfResponse.status()}`);
+    }
+
+    const csrfData = await csrfResponse.json();
+    const csrfToken = csrfData.csrfToken;
+
+    if (!csrfToken) {
+      throw new Error("No CSRF token returned from server");
+    }
+
+    console.log(`Got CSRF token: ${csrfToken.substring(0, 20)}...`);
+
     // Use the authenticated page's request context which has the stored session
     const response = await authenticatedPage.request.put("http://localhost:5331/api/rest/v1/landing-page", {
       data: {
         heroBanners: testHeroBanners,
         heroSettings: testHeroSettings,
+      },
+      headers: {
+        "X-CSRF-Token": csrfToken,
+        "Content-Type": "application/json",
       },
     });
 

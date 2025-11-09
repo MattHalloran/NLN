@@ -16,7 +16,11 @@ import {
     writeLandingPageContent,
     aggregateLandingPageContent,
 } from "./landingPage/landingPageService.js";
-import { getCachedContent, setCachedContent, invalidateCache } from "./landingPage/landingPageCache.js";
+import {
+    getCachedContent,
+    setCachedContent,
+    invalidateCache,
+} from "./landingPage/landingPageCache.js";
 import {
     readVariants,
     writeVariants,
@@ -84,7 +88,7 @@ router.get("/", async (req: Request, res: Response) => {
                                     .filter((b: HeroBanner) => b.isActive)
                                     .sort(
                                         (a: HeroBanner, b: HeroBanner) =>
-                                            a.displayOrder - b.displayOrder,
+                                            a.displayOrder - b.displayOrder
                                     );
                         }
 
@@ -94,7 +98,7 @@ router.get("/", async (req: Request, res: Response) => {
                                     .filter((p: SeasonalPlant) => p.isActive)
                                     .sort(
                                         (a: SeasonalPlant, b: SeasonalPlant) =>
-                                            a.displayOrder - b.displayOrder,
+                                            a.displayOrder - b.displayOrder
                                     );
                         }
 
@@ -104,7 +108,7 @@ router.get("/", async (req: Request, res: Response) => {
                                     .filter((t: PlantTip) => t.isActive)
                                     .sort(
                                         (a: PlantTip, b: PlantTip) =>
-                                            a.displayOrder - b.displayOrder,
+                                            a.displayOrder - b.displayOrder
                                     );
                         }
                     }
@@ -117,18 +121,27 @@ router.get("/", async (req: Request, res: Response) => {
 
                         return res.json(contentWithMeta);
                     } catch (jsonError) {
-                        logger.log(LogLevel.error, "Error sending variant JSON response:", jsonError);
-                        logger.log(LogLevel.error, "Content object keys:", Object.keys(contentWithMeta));
+                        logger.log(
+                            LogLevel.error,
+                            "Error sending variant JSON response:",
+                            jsonError
+                        );
+                        logger.log(
+                            LogLevel.error,
+                            "Content object keys:",
+                            Object.keys(contentWithMeta)
+                        );
                         throw jsonError;
                     }
                 }
 
-                logger.warn(
-                    `Variant content file not found for ${variantId}. Falling through to new assignment.`,
+                logger.log(
+                    LogLevel.warn,
+                    `Variant content file not found for ${variantId}. Falling through to new assignment.`
                 );
             } else {
                 logger.info(
-                    `Variant ${variantId} not found or not enabled. Assigning new variant.`,
+                    `Variant ${variantId} not found or not enabled. Assigning new variant.`
                 );
             }
         }
@@ -160,7 +173,7 @@ router.get("/", async (req: Request, res: Response) => {
                                     .filter((b: HeroBanner) => b.isActive)
                                     .sort(
                                         (a: HeroBanner, b: HeroBanner) =>
-                                            a.displayOrder - b.displayOrder,
+                                            a.displayOrder - b.displayOrder
                                     );
                         }
 
@@ -170,7 +183,7 @@ router.get("/", async (req: Request, res: Response) => {
                                     .filter((p: SeasonalPlant) => p.isActive)
                                     .sort(
                                         (a: SeasonalPlant, b: SeasonalPlant) =>
-                                            a.displayOrder - b.displayOrder,
+                                            a.displayOrder - b.displayOrder
                                     );
                         }
 
@@ -180,7 +193,7 @@ router.get("/", async (req: Request, res: Response) => {
                                     .filter((t: PlantTip) => t.isActive)
                                     .sort(
                                         (a: PlantTip, b: PlantTip) =>
-                                            a.displayOrder - b.displayOrder,
+                                            a.displayOrder - b.displayOrder
                                     );
                         }
                     }
@@ -193,14 +206,23 @@ router.get("/", async (req: Request, res: Response) => {
 
                         return res.json(contentWithMeta);
                     } catch (jsonError) {
-                        logger.log(LogLevel.error, "Error sending auto-assigned variant JSON response:", jsonError);
-                        logger.log(LogLevel.error, "Content object keys:", Object.keys(contentWithMeta));
+                        logger.log(
+                            LogLevel.error,
+                            "Error sending auto-assigned variant JSON response:",
+                            jsonError
+                        );
+                        logger.log(
+                            LogLevel.error,
+                            "Content object keys:",
+                            Object.keys(contentWithMeta)
+                        );
                         throw jsonError;
                     }
                 }
 
-                logger.warn(
-                    `Variant content file not found for ${assignedVariant.id}. Falling back to official content.`,
+                logger.log(
+                    LogLevel.warn,
+                    `Variant content file not found for ${assignedVariant.id}. Falling back to official content.`
                 );
             }
         }
@@ -275,129 +297,141 @@ router.put("/", async (req: AuthenticatedRequest, res: Response) => {
         logger.info(`[DEBUG] Request body keys: ${Object.keys(req.body).join(", ")}`);
         logger.info(`[DEBUG] Request body location present: ${!!req.body.location}`);
 
-        const { heroBanners, heroSettings, seasonalPlants, plantTips, seasonalHeader, seasonalSections, newsletterButtonText, settings, contactInfo, about, socialProof, location } =
-            req.body as {
-                heroBanners?: HeroBanner[];
-                heroSettings?: HeroSettings;
-                seasonalPlants?: SeasonalPlant[];
-                plantTips?: PlantTip[];
-                seasonalHeader?: { title: string; subtitle: string };
-                seasonalSections?: {
-                    plants: { currentSeasonTitle: string; otherSeasonTitleTemplate: string };
-                    tips: { title: string };
+        const {
+            heroBanners,
+            heroSettings,
+            seasonalPlants,
+            plantTips,
+            seasonalHeader,
+            seasonalSections,
+            newsletterButtonText,
+            settings,
+            contactInfo,
+            about,
+            socialProof,
+            location,
+        } = req.body as {
+            heroBanners?: HeroBanner[];
+            heroSettings?: HeroSettings;
+            seasonalPlants?: SeasonalPlant[];
+            plantTips?: PlantTip[];
+            seasonalHeader?: { title: string; subtitle: string };
+            seasonalSections?: {
+                plants: { currentSeasonTitle: string; otherSeasonTitleTemplate: string };
+                tips: { title: string };
+            };
+            newsletterButtonText?: string;
+            settings?: Record<string, unknown>;
+            contactInfo?: { business?: BusinessContactData; hours?: string };
+            about?: {
+                story: {
+                    overline: string;
+                    title: string;
+                    subtitle: string;
+                    paragraphs: string[];
+                    cta: { text: string; link: string };
                 };
-                newsletterButtonText?: string;
-                settings?: Record<string, unknown>;
-                contactInfo?: { business?: BusinessContactData; hours?: string };
-                about?: {
-                    story: {
-                        overline: string;
+                values: {
+                    title: string;
+                    items: Array<{
+                        icon: string;
                         title: string;
-                        subtitle: string;
-                        paragraphs: string[];
-                        cta: { text: string; link: string };
-                    };
-                    values: {
-                        title: string;
-                        items: Array<{
-                            icon: string;
-                            title: string;
-                            description: string;
-                        }>;
-                    };
-                    mission: {
-                        title: string;
-                        quote: string;
-                        attribution: string;
-                    };
-                };
-                socialProof?: {
-                    header: {
-                        title: string;
-                        subtitle: string;
-                    };
-                    stats: Array<{
-                        number: string;
-                        label: string;
-                        subtext: string;
+                        description: string;
                     }>;
-                    mission: {
-                        title: string;
-                        quote: string;
-                        attribution: string;
-                    };
-                    strengths: {
-                        title: string;
-                        items: Array<{
-                            icon: string;
-                            title: string;
-                            description: string;
-                            highlight: string;
-                        }>;
-                    };
-                    clientTypes: {
-                        title: string;
-                        items: Array<{
-                            icon: string;
-                            label: string;
-                        }>;
-                    };
-                    footer: {
-                        description: string;
-                        chips: string[];
-                    };
                 };
-                location?: {
-                    header: {
-                        title: string;
-                        subtitle: string;
-                        chip: string;
-                    };
-                    map: {
-                        style: "gradient" | "embedded";
-                        showGetDirectionsButton: boolean;
-                        buttonText: string;
-                    };
-                    contactMethods: {
-                        sectionTitle: string;
-                        order: ("phone" | "address" | "email")[];
-                        descriptions: {
-                            phone: string;
-                            address: string;
-                            email: string;
-                        };
-                    };
-                    businessHours: {
-                        title: string;
-                        chip: string;
-                    };
-                    visitInfo: {
-                        sectionTitle: string;
-                        items: Array<{
-                            id: string;
-                            title: string;
-                            icon: string;
-                            description: string;
-                            displayOrder: number;
-                            isActive: boolean;
-                        }>;
-                    };
-                    cta: {
-                        title: string;
-                        description: string;
-                        buttons: Array<{
-                            id: string;
-                            text: string;
-                            variant: "contained" | "outlined" | "text";
-                            color: "primary" | "secondary";
-                            action: "directions" | "contact" | "external";
-                            url?: string;
-                            displayOrder: number;
-                            isActive: boolean;
-                        }>;
-                    };
+                mission: {
+                    title: string;
+                    quote: string;
+                    attribution: string;
                 };
             };
+            socialProof?: {
+                header: {
+                    title: string;
+                    subtitle: string;
+                };
+                stats: Array<{
+                    number: string;
+                    label: string;
+                    subtext: string;
+                }>;
+                mission: {
+                    title: string;
+                    quote: string;
+                    attribution: string;
+                };
+                strengths: {
+                    title: string;
+                    items: Array<{
+                        icon: string;
+                        title: string;
+                        description: string;
+                        highlight: string;
+                    }>;
+                };
+                clientTypes: {
+                    title: string;
+                    items: Array<{
+                        icon: string;
+                        label: string;
+                    }>;
+                };
+                footer: {
+                    description: string;
+                    chips: string[];
+                };
+            };
+            location?: {
+                header: {
+                    title: string;
+                    subtitle: string;
+                    chip: string;
+                };
+                map: {
+                    style: "gradient" | "embedded";
+                    showGetDirectionsButton: boolean;
+                    buttonText: string;
+                };
+                contactMethods: {
+                    sectionTitle: string;
+                    order: ("phone" | "address" | "email")[];
+                    descriptions: {
+                        phone: string;
+                        address: string;
+                        email: string;
+                    };
+                };
+                businessHours: {
+                    title: string;
+                    chip: string;
+                };
+                visitInfo: {
+                    sectionTitle: string;
+                    items: Array<{
+                        id: string;
+                        title: string;
+                        icon: string;
+                        description: string;
+                        displayOrder: number;
+                        isActive: boolean;
+                    }>;
+                };
+                cta: {
+                    title: string;
+                    description: string;
+                    buttons: Array<{
+                        id: string;
+                        text: string;
+                        variant: "contained" | "outlined" | "text";
+                        color: "primary" | "secondary";
+                        action: "directions" | "contact" | "external";
+                        url?: string;
+                        displayOrder: number;
+                        isActive: boolean;
+                    }>;
+                };
+            };
+        };
 
         const updatedSections: string[] = [];
 
@@ -913,7 +947,9 @@ router.put("/", async (req: AuthenticatedRequest, res: Response) => {
             };
             currentContent.content.socialProof = socialProof;
             updatedSections.push("socialProof");
-            logger.info(`Updated social proof section with ${socialProof.stats.length} stats, ${socialProof.strengths.items.length} strengths, ${socialProof.clientTypes.items.length} client types`);
+            logger.info(
+                `Updated social proof section with ${socialProof.stats.length} stats, ${socialProof.strengths.items.length} strengths, ${socialProof.clientTypes.items.length} client types`
+            );
         }
 
         // Update location section if provided
@@ -944,7 +980,9 @@ router.put("/", async (req: AuthenticatedRequest, res: Response) => {
             };
             currentContent.content.location = location;
             updatedSections.push("location");
-            logger.info(`Updated location section with ${location.visitInfo.items.length} visit info items and ${location.cta.buttons.length} CTA buttons`);
+            logger.info(
+                `Updated location section with ${location.visitInfo.items.length} visit info items and ${location.cta.buttons.length} CTA buttons`
+            );
         }
 
         if (updatedSections.length === 0) {
@@ -996,8 +1034,13 @@ router.put("/", async (req: AuthenticatedRequest, res: Response) => {
             {
                 updatedSections,
                 isVariant,
-            },
+            }
         );
+
+        // Return the full updated content to avoid need for separate refetch
+        const finalContent = activeVariantId
+            ? readVariantContent(activeVariantId)
+            : readLandingPageContent();
 
         return res.json({
             success: true,
@@ -1007,6 +1050,7 @@ router.put("/", async (req: AuthenticatedRequest, res: Response) => {
             updatedSections,
             isVariant,
             variantId: activeVariantId,
+            data: finalContent, // Include full updated data
         });
     } catch (error) {
         logger.log(LogLevel.error, "Error updating landing page content:", error);
@@ -1149,6 +1193,11 @@ router.put("/contact-info", async (req: Request, res: Response) => {
             // Continue even if cache invalidation fails - write succeeded
         }
 
+        // Return the full updated content to avoid need for separate refetch
+        const finalContent = activeVariantId
+            ? readVariantContent(activeVariantId)
+            : readLandingPageContent();
+
         return res.json({
             success: true,
             message: activeVariantId
@@ -1160,6 +1209,7 @@ router.put("/contact-info", async (req: Request, res: Response) => {
             },
             isVariant,
             variantId: activeVariantId,
+            data: finalContent, // Include full updated data
         });
     } catch (error) {
         logger.log(LogLevel.error, "Error updating contact info:", error);
@@ -1261,6 +1311,11 @@ router.put("/settings", async (req: Request, res: Response) => {
         // Invalidate cache
         await invalidateCache();
 
+        // Return the full updated content to avoid need for separate refetch
+        const finalContent = activeVariantId
+            ? readVariantContent(activeVariantId)
+            : readLandingPageContent();
+
         return res.json({
             success: true,
             message: activeVariantId
@@ -1269,98 +1324,12 @@ router.put("/settings", async (req: Request, res: Response) => {
             updatedFields: Object.keys(updates),
             isVariant,
             variantId: activeVariantId,
+            data: finalContent, // Include full updated data
         });
     } catch (error) {
         logger.log(LogLevel.error, "Error updating landing page settings:", error);
         return res.status(500).json({
             error: "Failed to update landing page settings",
-            message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
-        });
-    }
-});
-
-// PUT endpoint to update section configuration (admin only)
-// Supports editing variants via query params: ?variantId=xxx
-router.put("/sections", async (req: Request, res: Response) => {
-    try {
-        if (!(req as any).isAdmin) {
-            return res.status(403).json({ error: "Admin access required" });
-        }
-
-        const { sections } = req.body;
-
-        if (!sections || !sections.order || !sections.enabled) {
-            return res.status(400).json({ error: "Invalid section configuration" });
-        }
-
-        const variantId = req.query.variantId as string | undefined;
-
-        let currentContent: LandingPageContent;
-        let isVariant = false;
-        let activeVariantId: string | undefined;
-
-        // Editing a variant by variantId
-        if (variantId) {
-            const variantContent = readVariantContent(variantId);
-            if (!variantContent) {
-                return res.status(404).json({ error: `Variant ${variantId} not found` });
-            }
-            currentContent = variantContent;
-            isVariant = true;
-            activeVariantId = variantId;
-        }
-        // Editing official landing page
-        else {
-            currentContent = readLandingPageContent();
-        }
-
-        currentContent.layout = currentContent.layout || {};
-
-        // Update sections
-        currentContent.layout.sections = sections;
-
-        // Write updated content
-        try {
-            if (activeVariantId) {
-                // NEW SYSTEM: Write variant content
-                writeVariantContent(activeVariantId, currentContent);
-
-                // Update variant's lastModified timestamp
-                const variants = readVariants();
-                const variantIndex = variants.findIndex((v) => v.id === activeVariantId);
-                if (variantIndex !== -1) {
-                    variants[variantIndex].lastModified = new Date().toISOString();
-                    variants[variantIndex].updatedAt = new Date().toISOString();
-                    writeVariants(variants);
-                }
-            } else {
-                // Write official landing page (now async with image label sync)
-                await writeLandingPageContent(currentContent);
-            }
-        } catch (error) {
-            logger.log(LogLevel.error, "Error writing landing page content:", error);
-            return res.status(500).json({
-                error: "Failed to write landing page content",
-                message:
-                    process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
-            });
-        }
-
-        // Invalidate cache
-        await invalidateCache();
-
-        return res.json({
-            success: true,
-            message: activeVariantId
-                ? `Variant ${activeVariantId} sections updated successfully`
-                : "Section configuration updated successfully",
-            isVariant,
-            variantId: activeVariantId,
-        });
-    } catch (error) {
-        logger.log(LogLevel.error, "Error updating section configuration:", error);
-        return res.status(500).json({
-            error: "Failed to update section configuration",
             message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
         });
     }
@@ -1479,11 +1448,17 @@ router.post("/variants", async (req: Request, res: Response) => {
         writeVariants(variants);
 
         // Audit log: variant created
-        auditAdminAction(req, AuditEventType.ADMIN_VARIANT_CREATE, `variant/${newVariant.id}`, undefined, {
-            name,
-            description,
-            copyFrom: copyFromVariantId || "official",
-        });
+        auditAdminAction(
+            req,
+            AuditEventType.ADMIN_VARIANT_CREATE,
+            `variant/${newVariant.id}`,
+            undefined,
+            {
+                name,
+                description,
+                copyFrom: copyFromVariantId || "official",
+            }
+        );
 
         return res.status(201).json(newVariant);
     } catch (error) {
@@ -1542,7 +1517,7 @@ router.put("/variants/:id", async (req: Request, res: Response) => {
             AuditEventType.ADMIN_VARIANT_UPDATE,
             `variant/${req.params.id}`,
             undefined,
-            { name, status, trafficAllocation },
+            { name, status, trafficAllocation }
         );
 
         return res.json(variants[variantIndex]);
@@ -1591,9 +1566,15 @@ router.delete("/variants/:id", async (req: Request, res: Response) => {
         writeVariants(variants);
 
         // Audit log: variant deleted
-        auditAdminAction(req, AuditEventType.ADMIN_VARIANT_DELETE, `variant/${req.params.id}`, undefined, {
-            variantName: variant.name,
-        });
+        auditAdminAction(
+            req,
+            AuditEventType.ADMIN_VARIANT_DELETE,
+            `variant/${req.params.id}`,
+            undefined,
+            {
+                variantName: variant.name,
+            }
+        );
 
         return res.json({
             success: true,
@@ -1636,7 +1617,7 @@ router.post("/variants/:id/promote", async (req: Request, res: Response) => {
             variants[currentOfficialIndex].isOfficial = false;
             variants[currentOfficialIndex].updatedAt = new Date().toISOString();
             logger.info(
-                `Demoted variant ${variants[currentOfficialIndex].id} from official status`,
+                `Demoted variant ${variants[currentOfficialIndex].id} from official status`
             );
         }
 
@@ -1647,7 +1628,7 @@ router.post("/variants/:id/promote", async (req: Request, res: Response) => {
         // Copy variant content to the official landing page (with image label sync)
         await writeLandingPageContent(variantContent);
         logger.info(
-            `Promoted variant ${variant.id} to official. Content copied to landing-page-content.json`,
+            `Promoted variant ${variant.id} to official. Content copied to landing-page-content.json`
         );
 
         writeVariants(variants);
@@ -1660,8 +1641,11 @@ router.post("/variants/:id/promote", async (req: Request, res: Response) => {
             req,
             AuditEventType.ADMIN_VARIANT_PROMOTE,
             `variant/${req.params.id}`,
-            { previousOfficial: currentOfficialIndex !== -1 ? variants[currentOfficialIndex].id : null },
-            { newOfficial: variant.id, variantName: variant.name },
+            {
+                previousOfficial:
+                    currentOfficialIndex !== -1 ? variants[currentOfficialIndex].id : null,
+            },
+            { newOfficial: variant.id, variantName: variant.name }
         );
 
         return res.json({
@@ -1706,7 +1690,11 @@ router.post("/variants/:id/track", async (req: Request, res: Response) => {
             writeVariants(variants);
             logger.info(`Tracked ${eventType} for variant ${req.params.id}`);
         } catch (writeError) {
-            logger.log(LogLevel.error, "Error writing variants during analytics tracking:", writeError);
+            logger.log(
+                LogLevel.error,
+                "Error writing variants during analytics tracking:",
+                writeError
+            );
             throw writeError;
         }
 

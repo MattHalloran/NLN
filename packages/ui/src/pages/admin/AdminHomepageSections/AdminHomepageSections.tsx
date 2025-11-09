@@ -1,24 +1,15 @@
 import { APP_LINKS } from "@local/shared";
-import {
-    Box,
-    Button,
-    Card,
-    CardContent,
-    Typography,
-    Switch,
-    Chip,
-    Snackbar,
-    Alert,
-} from "@mui/material";
+import { Box, Button, Card, CardContent, Typography, Switch, Chip, Alert } from "@mui/material";
 import { GripVertical, Eye, EyeOff, Save, RotateCcw } from "lucide-react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { SectionConfiguration } from "api/rest/client";
-import { useUpdateSectionConfiguration } from "api/rest/hooks";
+import { useUpdateLandingPageSettings } from "api/rest/hooks";
+import { useABTestQueryParams } from "hooks/useABTestQueryParams";
 import { BackButton, PageContainer } from "components";
 import { TopBar } from "components/navigation/TopBar/TopBar";
 import { useLandingPage } from "hooks/useLandingPage";
-import { useBlockNavigation } from "hooks/useBlockNavigation";
-import { useCallback as _useCallback, useEffect, useState, useMemo } from "react";
+import { useAdminForm } from "hooks/useAdminForm";
+import { useEffect, useRef } from "react";
 
 // Section metadata for section configuration
 const SECTION_METADATA: Record<string, { name: string; description: string; required?: boolean }> =
@@ -51,93 +42,130 @@ const SECTION_METADATA: Record<string, { name: string; description: string; requ
     };
 
 export const AdminHomepageSections = () => {
-    const updateSections = useUpdateSectionConfiguration();
-    const { data: landingPageContent, refetch } = useLandingPage();
+    const { data: landingPageContent, refetch: refetchLandingPage } = useLandingPage();
+    const updateSettings = useUpdateLandingPageSettings();
+    const { variantId: queryVariantId } = useABTestQueryParams();
 
-    const [sectionConfig, setSectionConfig] = useState<SectionConfiguration>({
-        order: ["hero", "services", "social-proof", "about", "seasonal", "location"],
-        enabled: {
-            hero: true,
-            services: true,
-            "social-proof": true,
-            about: true,
-            seasonal: true,
-            location: true,
+    // Use variantId from URL query params, or fall back to the loaded data's variant
+    const variantId = queryVariantId || landingPageContent?._meta?.variantId;
+
+    // Track if landingPageContent has loaded
+    const hasLoadedRef = useRef(false);
+
+    // Use the standardized useAdminForm hook
+    const form = useAdminForm<SectionConfiguration>({
+        fetchFn: async () => {
+            // Fetch section configuration from landing page content
+            if (landingPageContent?.layout?.sections) {
+                return landingPageContent.layout.sections;
+            }
+
+            // Return default configuration if none exists
+            return {
+                order: ["hero", "services", "social-proof", "about", "seasonal", "location"],
+                enabled: {
+                    hero: true,
+                    services: true,
+                    "social-proof": true,
+                    about: true,
+                    seasonal: true,
+                    location: true,
+                },
+            };
         },
-    });
-    const [originalSectionConfig, setOriginalSectionConfig] =
-        useState<SectionConfiguration>(sectionConfig);
-    const [snackbar, setSnackbar] = useState<{
-        open: boolean;
-        message: string;
-        severity: "success" | "error";
-    }>({
-        open: false,
-        message: "",
-        severity: "success",
+        saveFn: async (sectionConfig) => {
+            // Use the unified landing page settings endpoint like all other admin pages
+            await updateSettings.mutate({
+                settings: {
+                    layout: {
+                        sections: sectionConfig,
+                    },
+                },
+                queryParams: variantId ? { variantId } : undefined,
+            });
+
+            // Return the updated configuration
+            return sectionConfig;
+        },
+        refetchDependencies: [refetchLandingPage],
+        successMessage: "Section configuration saved successfully!",
+        errorMessagePrefix: "Failed to save",
     });
 
-    // Load section configuration
+    // Refetch form data when landingPageContent loads
     useEffect(() => {
-        if (landingPageContent?.layout?.sections) {
-            const config = landingPageContent.layout.sections;
-            setSectionConfig(config);
-            setOriginalSectionConfig(JSON.parse(JSON.stringify(config)));
+        if (landingPageContent && !hasLoadedRef.current) {
+            hasLoadedRef.current = true;
+            form.refetch();
         }
-    }, [landingPageContent]);
-
-    // Check for unsaved section changes
-    const hasChanges = useMemo(() => {
-        return JSON.stringify(sectionConfig) !== JSON.stringify(originalSectionConfig);
-    }, [sectionConfig, originalSectionConfig]);
-
-    // Block navigation when there are unsaved changes
-    useBlockNavigation(hasChanges);
+    }, [landingPageContent, form.refetch]);
 
     const handleSectionDragEnd = (result: any) => {
-        if (!result.destination) return;
+        if (!result.destination || !form.data) return;
 
-        const newOrder = Array.from(sectionConfig.order);
+        const newOrder = Array.from(form.data.order);
         const [removed] = newOrder.splice(result.source.index, 1);
         newOrder.splice(result.destination.index, 0, removed);
 
-        setSectionConfig({ ...sectionConfig, order: newOrder });
+        form.setData({ ...form.data, order: newOrder });
     };
 
     const handleToggleSection = (sectionId: string) => {
-        if (sectionId === "hero") return; // Hero is always enabled
+        if (sectionId === "hero" || !form.data) return; // Hero is always enabled
 
-        setSectionConfig({
-            ...sectionConfig,
+        form.setData({
+            ...form.data,
             enabled: {
-                ...sectionConfig.enabled,
-                [sectionId]: !sectionConfig.enabled[sectionId],
+                ...form.data.enabled,
+                [sectionId]: !form.data.enabled[sectionId],
             },
         });
     };
 
-    const handleSaveSections = async () => {
-        try {
-            await updateSections.mutate(sectionConfig);
-            setOriginalSectionConfig(JSON.parse(JSON.stringify(sectionConfig)));
-            setSnackbar({
-                open: true,
-                message: "Section configuration saved successfully!",
-                severity: "success",
-            });
-            refetch();
-        } catch (error) {
-            setSnackbar({
-                open: true,
-                message: `Failed to save: ${(error as Error).message}`,
-                severity: "error",
-            });
-        }
-    };
+    if (form.isLoading) {
+        return (
+            <PageContainer sx={{ minHeight: "100vh", paddingBottom: 0 }}>
+                <TopBar
+                    display="page"
+                    title="Section Configuration"
+                    help="Control which sections appear on your homepage and their display order"
+                    startComponent={
+                        <BackButton
+                            to={APP_LINKS.AdminHomepage}
+                            ariaLabel="Back to Homepage Management"
+                        />
+                    }
+                />
+                <Box p={2}>
+                    <Typography>Loading section configuration...</Typography>
+                </Box>
+            </PageContainer>
+        );
+    }
 
-    const handleCancelSectionChanges = () => {
-        setSectionConfig(JSON.parse(JSON.stringify(originalSectionConfig)));
-    };
+    if (!form.data) {
+        return (
+            <PageContainer sx={{ minHeight: "100vh", paddingBottom: 0 }}>
+                <TopBar
+                    display="page"
+                    title="Section Configuration"
+                    help="Control which sections appear on your homepage and their display order"
+                    startComponent={
+                        <BackButton
+                            to={APP_LINKS.AdminHomepage}
+                            ariaLabel="Back to Homepage Management"
+                        />
+                    }
+                />
+                <Box p={2}>
+                    <Alert severity="error">Failed to load section configuration</Alert>
+                </Box>
+            </PageContainer>
+        );
+    }
+
+    // Type guard: At this point we know form.data is not null
+    const sectionData = form.data;
 
     return (
         <PageContainer sx={{ minHeight: "100vh", paddingBottom: 0 }}>
@@ -155,9 +183,16 @@ export const AdminHomepageSections = () => {
 
             <Box p={2}>
                 {/* Unsaved changes warning */}
-                {hasChanges && (
+                {form.isDirty && (
                     <Alert severity="warning" sx={{ mb: 3 }}>
                         You have unsaved changes. Don't forget to save before leaving!
+                    </Alert>
+                )}
+
+                {/* Error alert */}
+                {form.error && (
+                    <Alert severity="error" sx={{ mb: 3 }} onClose={form.clearError}>
+                        {form.error.message}
                     </Alert>
                 )}
 
@@ -197,7 +232,7 @@ export const AdminHomepageSections = () => {
                                 ref={provided.innerRef}
                                 sx={{ mb: 3 }}
                             >
-                                {sectionConfig.order.map((sectionId, index) => {
+                                {sectionData.order.map((sectionId, index) => {
                                     const metadata = SECTION_METADATA[sectionId];
                                     if (!metadata) return null;
 
@@ -273,7 +308,7 @@ export const AdminHomepageSections = () => {
                                                                 )}
                                                                 <Switch
                                                                     checked={
-                                                                        sectionConfig.enabled[
+                                                                        sectionData.enabled[
                                                                             sectionId
                                                                         ]
                                                                     }
@@ -284,9 +319,7 @@ export const AdminHomepageSections = () => {
                                                                     }
                                                                     disabled={metadata.required}
                                                                 />
-                                                                {sectionConfig.enabled[
-                                                                    sectionId
-                                                                ] ? (
+                                                                {sectionData.enabled[sectionId] ? (
                                                                     <Eye size={20} />
                                                                 ) : (
                                                                     <EyeOff size={20} />
@@ -311,37 +344,21 @@ export const AdminHomepageSections = () => {
                         variant="contained"
                         color="primary"
                         startIcon={<Save size={20} />}
-                        onClick={handleSaveSections}
-                        disabled={!hasChanges || updateSections.loading}
+                        onClick={form.save}
+                        disabled={!form.isDirty || form.isSaving}
                     >
-                        {updateSections.loading ? "Saving..." : "Save Changes"}
+                        {form.isSaving ? "Saving..." : "Save Changes"}
                     </Button>
                     <Button
                         variant="outlined"
                         startIcon={<RotateCcw size={20} />}
-                        onClick={handleCancelSectionChanges}
-                        disabled={!hasChanges}
+                        onClick={form.cancel}
+                        disabled={!form.isDirty}
                     >
                         Cancel
                     </Button>
                 </Box>
             </Box>
-
-            {/* Snackbar for feedback */}
-            <Snackbar
-                open={snackbar.open}
-                autoHideDuration={6000}
-                onClose={() => setSnackbar({ ...snackbar, open: false })}
-                anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-            >
-                <Alert
-                    onClose={() => setSnackbar({ ...snackbar, open: false })}
-                    severity={snackbar.severity}
-                    sx={{ width: "100%" }}
-                >
-                    {snackbar.message}
-                </Alert>
-            </Snackbar>
         </PageContainer>
     );
 };

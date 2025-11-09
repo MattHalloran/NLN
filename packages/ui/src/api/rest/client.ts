@@ -1265,16 +1265,6 @@ export const restApi = {
         return fetchApi<DashboardStats>("/dashboard/stats");
     },
 
-    // Section Management
-    async updateSectionConfiguration(
-        sections: SectionConfiguration,
-    ): Promise<{ success: boolean; message: string }> {
-        return fetchApi<{ success: boolean; message: string }>("/landing-page/sections", {
-            method: "PUT",
-            body: JSON.stringify({ sections }),
-        });
-    },
-
     // Landing Page Settings Management
     // UPDATED: Now accepts DeepPartial for type-safe nested updates
     async updateLandingPageSettings(

@@ -12,7 +12,7 @@
 
 import { prisma } from "../db/prisma.js";
 import { logger, LogLevel } from "../logger.js";
-import type { LandingPageContent, HeroBanner } from "../types/landingPage.js";
+import type { HeroBanner, LandingPageContent } from "../types/landingPage.js";
 
 /**
  * Label identifier for hero banner images
@@ -34,7 +34,9 @@ export const SEASONAL_LABEL = "seasonal";
  * @returns Normalized path matching database format
  */
 export function normalizeImagePath(src: string): string {
-    if (!src) return "";
+    if (!src) {
+        return "";
+    }
 
     // Remove leading slash if present
     let normalized = src.startsWith("/") ? src.substring(1) : src;
@@ -143,7 +145,9 @@ async function removeImageLabel(hash: string, label: string): Promise<void> {
                     data: { unlabeled_since: new Date() },
                 });
 
-                logger.info(`Image ${hash} now unlabeled - set unlabeled_since timestamp (30-day retention)`);
+                logger.info(
+                    `Image ${hash} now unlabeled - set unlabeled_since timestamp (30-day retention)`
+                );
             }
         }
     } catch (error) {
@@ -183,12 +187,16 @@ async function getHashesWithLabel(label: string): Promise<string[]> {
  *
  * @param content - Landing page content with hero banners
  */
-export async function syncHeroBannerLabels(content?: LandingPageContent): Promise<{ added: number; removed: number }> {
+export async function syncHeroBannerLabels(
+    content?: LandingPageContent
+): Promise<{ added: number; removed: number }> {
     try {
         // Read content from file if not provided
         let landingPageContent: LandingPageContent;
         if (!content) {
-            const { readLandingPageContent } = await import("../rest/landingPage/landingPageService.js");
+            const { readLandingPageContent } = await import(
+                "../rest/landingPage/landingPageService.js"
+            );
             landingPageContent = readLandingPageContent();
         } else {
             landingPageContent = content;
@@ -203,7 +211,9 @@ export async function syncHeroBannerLabels(content?: LandingPageContent): Promis
 
         for (let i = 0; i < bannerSrcPaths.length; i++) {
             const src = bannerSrcPaths[i];
-            if (!src) continue;
+            if (!src) {
+                continue;
+            }
 
             const normalizedSrc = normalizeImagePath(src);
             const hash = await findImageHashBySrc(normalizedSrc);
@@ -213,7 +223,10 @@ export async function syncHeroBannerLabels(content?: LandingPageContent): Promis
                 // Add label with index matching banner order
                 await addImageLabel(hash, HERO_BANNER_LABEL, i);
             } else {
-                logger.warn(`Hero banner image not found in database: ${src} (normalized: ${normalizedSrc})`);
+                logger.log(
+                    LogLevel.warn,
+                    `Hero banner image not found in database: ${src} (normalized: ${normalizedSrc})`
+                );
             }
         }
 
@@ -232,7 +245,7 @@ export async function syncHeroBannerLabels(content?: LandingPageContent): Promis
         const added = currentHeroHashes.size;
 
         logger.info(
-            `Hero banner label sync complete: ${added} images labeled, ${removed} labels removed`,
+            `Hero banner label sync complete: ${added} images labeled, ${removed} labels removed`
         );
 
         return { added, removed };
@@ -249,12 +262,16 @@ export async function syncHeroBannerLabels(content?: LandingPageContent): Promis
  * @param content - Optional landing page content. If not provided, reads from file
  * @returns Object with counts of added and removed labels
  */
-export async function syncSeasonalContentLabels(content?: LandingPageContent): Promise<{ added: number; removed: number }> {
+export async function syncSeasonalContentLabels(
+    content?: LandingPageContent
+): Promise<{ added: number; removed: number }> {
     try {
         // Read content from file if not provided
         let landingPageContent: LandingPageContent;
         if (!content) {
-            const { readLandingPageContent } = await import("../rest/landingPage/landingPageService.js");
+            const { readLandingPageContent } = await import(
+                "../rest/landingPage/landingPageService.js"
+            );
             landingPageContent = readLandingPageContent();
         } else {
             landingPageContent = content;
@@ -269,7 +286,9 @@ export async function syncSeasonalContentLabels(content?: LandingPageContent): P
             const plant = seasonalPlants[i];
 
             // Skip if no imageHash (plant uses icon only)
-            if (!plant.imageHash) continue;
+            if (!plant.imageHash) {
+                continue;
+            }
 
             currentSeasonalHashes.add(plant.imageHash);
 
@@ -292,7 +311,7 @@ export async function syncSeasonalContentLabels(content?: LandingPageContent): P
         const added = currentSeasonalHashes.size;
 
         logger.info(
-            `Seasonal content label sync complete: ${added} images labeled, ${removed} labels removed`,
+            `Seasonal content label sync complete: ${added} images labeled, ${removed} labels removed`
         );
 
         return { added, removed };
@@ -311,7 +330,7 @@ export async function syncSeasonalContentLabels(content?: LandingPageContent): P
  */
 export async function syncVariantImageLabels(
     content: LandingPageContent,
-    variantId?: string,
+    variantId?: string
 ): Promise<void> {
     try {
         // For now, only hero banners are stored in JSON
