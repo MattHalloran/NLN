@@ -1,5 +1,3 @@
-import { Router, Request, Response } from "express";
-import bcrypt from "bcryptjs";
 import {
     CODE,
     COOKIE,
@@ -8,20 +6,22 @@ import {
     requestPasswordChangeSchema,
     signUpSchema,
 } from "@local/shared";
+import bcrypt from "bcryptjs";
+import { Request, Response, Router } from "express";
 import { generateToken } from "../auth.js";
 import { HASHING_ROUNDS } from "../consts.js";
 import { customerFromEmail, upsertCustomer } from "../db/models/customer.js";
 import { CustomError, validateArgs } from "../error.js";
+import { logger, LogLevel } from "../logger.js";
+import { loginLimiter, passwordResetLimiter, signupLimiter } from "../middleware/rateLimiter.js";
+import { AccountStatus } from "../schema/types.js";
+import { auditAuthEvent, AuditEventType } from "../utils/auditLogger.js";
 import { randomString, secureCompare } from "../utils/index.js";
 import {
     customerNotifyAdmin,
     sendResetPasswordLink,
     sendVerificationLink,
 } from "../worker/email/queue.js";
-import { AccountStatus } from "../schema/types.js";
-import { logger, LogLevel } from "../logger.js";
-import { loginLimiter, passwordResetLimiter, signupLimiter } from "../middleware/rateLimiter.js";
-import { auditAuthEvent, AuditEventType } from "../utils/auditLogger.js";
 
 const router = Router();
 
@@ -33,14 +33,15 @@ const LOGIN_ATTEMPTS_TO_HARD_LOCKOUT = 15;
 
 /**
  * POST /api/rest/v1/auth/login
- * Login with email and password
+ * Login with email and password, or validate existing session
  */
-router.post("/login", loginLimiter, async (req: Request, res: Response) => {
+router.post("/login", async (req: Request, res: Response) => {
     try {
         const { email, password, verificationCode } = req.body;
         const { prisma } = req as any;
 
         // If username and password wasn't passed, then use the session cookie data to validate
+        // Session validation should NOT be rate limited since it happens on every page load
         if (!email || !password) {
             if ((req as any).customerId && (req as any).roles && (req as any).roles.length > 0) {
                 // ARCHIVED: Shopping cart functionality removed
@@ -76,6 +77,17 @@ router.post("/login", loginLimiter, async (req: Request, res: Response) => {
             }
             throw new CustomError(CODE.BadCredentials);
         }
+
+        // Apply rate limiting only to actual login attempts (not session validation)
+        await new Promise<void>((resolve, reject) => {
+            loginLimiter(req, res, (err?: any) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve();
+                }
+            });
+        });
 
         // Validate input format
         await validateArgs(logInSchema, { email, password });
@@ -485,7 +497,10 @@ router.post("/reset-password", async (req: Request, res: Response) => {
 
         return res.json(customerData);
     } catch (error: any) {
-        logger.log(LogLevel.error, "Reset password error:", { error: error.message, stack: error.stack });
+        logger.log(LogLevel.error, "Reset password error:", {
+            error: error.message,
+            stack: error.stack,
+        });
         if (error instanceof CustomError) {
             return res.status(400).json({ error: error.message, code: error.code });
         }
@@ -497,46 +512,53 @@ router.post("/reset-password", async (req: Request, res: Response) => {
  * POST /api/rest/v1/auth/request-password-change
  * Request a password reset link
  */
-router.post("/request-password-change", passwordResetLimiter, async (req: Request, res: Response) => {
-    try {
-        const { email } = req.body;
-        const { prisma } = req as any;
+router.post(
+    "/request-password-change",
+    passwordResetLimiter,
+    async (req: Request, res: Response) => {
+        try {
+            const { email } = req.body;
+            const { prisma } = req as any;
 
-        // Validate input format
-        await validateArgs(requestPasswordChangeSchema, { email });
+            // Validate input format
+            await validateArgs(requestPasswordChangeSchema, { email });
 
-        // Find customer in database
-        const customer = await customerFromEmail(email, prisma);
+            // Find customer in database
+            const customer = await customerFromEmail(email, prisma);
 
-        // Generate request code
-        const requestCode = randomString(32);
+            // Generate request code
+            const requestCode = randomString(32);
 
-        // Store code and request time in customer row
-        await prisma.customer.update({
-            where: { id: customer.id },
-            data: {
-                resetPasswordCode: requestCode,
-                lastResetPasswordReqestAttempt: new Date().toISOString(),
-            },
-        });
+            // Store code and request time in customer row
+            await prisma.customer.update({
+                where: { id: customer.id },
+                data: {
+                    resetPasswordCode: requestCode,
+                    lastResetPasswordReqestAttempt: new Date().toISOString(),
+                },
+            });
 
-        // Send email with correct reset link
-        sendResetPasswordLink(email, customer.id, requestCode);
+            // Send email with correct reset link
+            sendResetPasswordLink(email, customer.id, requestCode);
 
-        // Audit log: password reset requested
-        auditAuthEvent(req, AuditEventType.AUTH_PASSWORD_RESET_REQUEST, "success", {
-            email,
-            userId: customer.id,
-        });
+            // Audit log: password reset requested
+            auditAuthEvent(req, AuditEventType.AUTH_PASSWORD_RESET_REQUEST, "success", {
+                email,
+                userId: customer.id,
+            });
 
-        return res.json({ success: true });
-    } catch (error: any) {
-        logger.log(LogLevel.error, "Request password change error:", { error: error.message, stack: error.stack });
-        if (error instanceof CustomError) {
-            return res.status(400).json({ error: error.message, code: error.code });
+            return res.json({ success: true });
+        } catch (error: any) {
+            logger.log(LogLevel.error, "Request password change error:", {
+                error: error.message,
+                stack: error.stack,
+            });
+            if (error instanceof CustomError) {
+                return res.status(400).json({ error: error.message, code: error.code });
+            }
+            return res.status(500).json({ error: "Request failed" });
         }
-        return res.status(500).json({ error: "Request failed" });
     }
-});
+);
 
 export default router;
