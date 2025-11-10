@@ -32,9 +32,12 @@ export const Slide = ({
                     backgroundSize: "cover",
                     backgroundPosition: "center",
                     backgroundImage: `url(${getServerUrl()}${getImageSrc(image, width)})`,
+                    // Active slide is always at opacity 1, inactive at 0
                     opacity: isActive ? 1 : 0,
-                    transition: `opacity ${transitionDuration}ms ease-in-out`,
-                    zIndex: isActive ? 1 : 0,
+                    // All slides have transition, but active slides use 0ms to appear instantly
+                    transition: `opacity ${isActive ? 0 : transitionDuration}ms ease-out`,
+                    // Inactive slides on top (fading out), active slide underneath (already visible)
+                    zIndex: isActive ? 0 : 1,
                 }}
             />
         );

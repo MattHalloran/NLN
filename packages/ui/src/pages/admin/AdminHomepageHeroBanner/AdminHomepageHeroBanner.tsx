@@ -1,53 +1,53 @@
+import { DragDropContext, Draggable, Droppable, DropResult } from "@hello-pangea/dnd";
 import { APP_LINKS } from "@local/shared";
 import {
-    Box,
-    Button,
-    CardMedia,
-    IconButton,
-    TextField,
-    FormControlLabel,
-    Switch,
-    Typography,
-    Accordion,
-    AccordionSummary,
-    AccordionDetails,
-    Select,
-    MenuItem,
-    FormControl,
-    InputLabel,
-    Alert,
-    Grid,
-    Paper,
-    Chip,
-    Stack,
-} from "@mui/material";
-import {
+    Add as AddIcon,
+    EmojiEvents as BadgeIcon,
+    TouchApp as ButtonIcon,
     Delete as DeleteIcon,
     DragIndicator as DragIcon,
     ExpandMore as ExpandMoreIcon,
-    Add as AddIcon,
-    TextFields as TextFieldsIcon,
-    EmojiEvents as BadgeIcon,
-    TouchApp as ButtonIcon,
-    Settings as SettingsIcon,
     Image as ImageIcon,
+    Settings as SettingsIcon,
+    TextFields as TextFieldsIcon,
 } from "@mui/icons-material";
-import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import {
-    useUpdateLandingPageSettings,
+    Accordion,
+    AccordionDetails,
+    AccordionSummary,
+    Alert,
+    Box,
+    Button,
+    CardMedia,
+    Chip,
+    FormControl,
+    FormControlLabel,
+    Grid,
+    IconButton,
+    InputLabel,
+    MenuItem,
+    Paper,
+    Select,
+    Stack,
+    Switch,
+    TextField,
+    Typography,
+} from "@mui/material";
+import {
     useAddImages,
-    useUpdateLandingPageContent,
     useLandingPageContent,
+    useUpdateLandingPageContent,
+    useUpdateLandingPageSettings,
 } from "api/rest/hooks";
-import { useABTestQueryParams } from "hooks/useABTestQueryParams";
-import { useAdminForm } from "hooks/useAdminForm";
 import { BackButton, Dropzone, PageContainer } from "components";
 import { ABTestEditingBanner } from "components/admin/ABTestEditingBanner/ABTestEditingBanner";
 import { TopBar } from "components/navigation/TopBar/TopBar";
-import { getServerUrl } from "utils/serverUrl";
-import { useCallback, useState, useEffect } from "react";
+import { useABTestQueryParams } from "hooks/useABTestQueryParams";
+import { useAdminForm } from "hooks/useAdminForm";
+import { Award, Heart, Leaf, Package, Shield, Users } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { pagePaddingBottom } from "styles";
-import { Users, Award, Leaf, Package, Shield, Heart } from "lucide-react";
+import { getServerUrl } from "utils/serverUrl";
 
 // Available icons for trust badges
 const TRUST_BADGE_ICONS = {
@@ -204,10 +204,12 @@ const HeroPreview = ({ heroData }: { heroData: HeroData | null }) => {
                                 height: "100%",
                                 objectFit: "cover",
                                 opacity: index === currentSlide ? 1 : 0,
+                                // Active slide appears instantly (0ms), inactive slides fade out
                                 transition: heroData.settings.fadeTransition
-                                    ? `opacity ${heroData.settings.fadeTransitionDuration || 1000}ms ease-in-out`
+                                    ? `opacity ${index === currentSlide ? 0 : heroData.settings.fadeTransitionDuration || 1000}ms ease-out`
                                     : "opacity 0.1s",
-                                zIndex: index === currentSlide ? 1 : 0,
+                                // Inactive slides on top (fading out), active underneath (already visible)
+                                zIndex: index === currentSlide ? 0 : 1,
                             }}
                         />
                     ))}

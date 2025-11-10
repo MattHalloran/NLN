@@ -1,7 +1,7 @@
 {
     "metadata": {
         "version": "2.0",
-        "lastUpdated": "2025-11-10T05:45:15.229Z"
+        "lastUpdated": "2025-11-10T05:55:24.512Z"
     },
     "content": {
         "hero": {
@@ -73,7 +73,7 @@
                 "showDots": true,
                 "showArrows": false,
                 "fadeTransition": true,
-                "fadeTransitionDuration": 3000
+                "fadeTransitionDuration": 3100
             },
             "text": {
                 "title": "Beautiful, healthy plants",
