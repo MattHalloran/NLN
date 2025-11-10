@@ -475,6 +475,9 @@ export const AdminContactPage = () => {
             // Refetch data FIRST to ensure UI is updated
             await refetch();
 
+            // Notify global store so homepage sees the changes
+            PubSub.get().publishLandingPageUpdated();
+
             // THEN show success message
             PubSub.get().publishSnack({
                 message: "Contact information updated successfully!",

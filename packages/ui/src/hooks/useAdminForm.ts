@@ -1,6 +1,7 @@
 import { useSnackbar } from "notistack";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { trackMutationError, trackMutationSuccess } from "../utils/errorMonitoring";
+import { PubSub } from "../utils/pubsub";
 import { useBlockNavigation } from "./useBlockNavigation";
 
 /**
@@ -346,6 +347,16 @@ export function useAdminForm<TData>({
             // Call success callback
             if (onSuccessRef.current) {
                 onSuccessRef.current(lastMutationResponseRef.current || dataToSave);
+            }
+
+            // Notify global store if this is a landing page-related form
+            // This ensures the homepage sees updated content without requiring a full page refresh
+            if (
+                pageName.includes("homepage") ||
+                pageName.includes("landing") ||
+                endpointName.includes("landing-page")
+            ) {
+                PubSub.get().publishLandingPageUpdated();
             }
         } catch (err) {
             const error = err instanceof Error ? err : new Error("Save failed");
