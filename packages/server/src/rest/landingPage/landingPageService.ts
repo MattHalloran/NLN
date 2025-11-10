@@ -12,7 +12,7 @@ import type {
 // In production, data files are in dist folder, in development they're in src
 const dataPath = join(
     process.env.PROJECT_DIR || "",
-    process.env.NODE_ENV === "production" ? "packages/server/dist/data" : "packages/server/src/data",
+    process.env.NODE_ENV === "production" ? "packages/server/dist/data" : "packages/server/src/data"
 );
 
 /**
@@ -29,6 +29,7 @@ const getDefaultContent = (): LandingPageContent => ({
                 showDots: true,
                 showArrows: true,
                 fadeTransition: false,
+                fadeTransitionDuration: 500,
             },
             text: {
                 title: "",
@@ -134,7 +135,7 @@ export const aggregateLandingPageContent = (onlyActive: boolean = true): Landing
 
     // Clone the data so we don't modify the original
     const result: LandingPageContent = JSON.parse(
-        JSON.stringify(landingPageData),
+        JSON.stringify(landingPageData)
     ) as LandingPageContent;
 
     // Filter active content if requested

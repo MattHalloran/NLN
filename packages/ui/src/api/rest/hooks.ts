@@ -161,6 +161,7 @@ export function useUpdateLandingPageContent() {
                     showDots: boolean;
                     showArrows: boolean;
                     fadeTransition: boolean;
+                    fadeTransitionDuration: number;
                 };
                 seasonalPlants?: Array<{
                     id: string;

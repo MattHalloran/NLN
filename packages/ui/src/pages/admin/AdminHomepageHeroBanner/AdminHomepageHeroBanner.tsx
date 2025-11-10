@@ -498,13 +498,17 @@ export const AdminHomepageHeroBanner = () => {
                       subtitle: heroText.subtitle || DEFAULT_HERO_CONTENT.subtitle,
                       description: heroText.description || DEFAULT_HERO_CONTENT.description,
                       businessHours: heroText.businessHours || DEFAULT_HERO_CONTENT.businessHours,
-                      useContactInfoHours: (heroText as any).useContactInfoHours ?? false,
+                      useContactInfoHours:
+                          (heroText as Record<string, unknown>).useContactInfoHours ?? false,
                   }
                 : DEFAULT_HERO_CONTENT;
 
             return {
                 banners: sorted,
-                settings: landingPageContent.content?.hero?.settings || DEFAULT_HERO_SETTINGS,
+                settings: {
+                    ...DEFAULT_HERO_SETTINGS,
+                    ...landingPageContent.content?.hero?.settings,
+                },
                 content,
                 trustBadges: heroText?.trustBadges || DEFAULT_TRUST_BADGES,
                 ctaButtons: heroText?.buttons || DEFAULT_CTA_BUTTONS,
@@ -557,6 +561,7 @@ export const AdminHomepageHeroBanner = () => {
         if (landingPageContent && !landingPageLoading) {
             form.refetch();
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [landingPageContent, landingPageLoading]);
 
     const uploadImages = useCallback(

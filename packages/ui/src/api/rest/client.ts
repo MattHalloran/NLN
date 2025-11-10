@@ -135,6 +135,7 @@ export interface LandingPageContent {
                 showDots: boolean;
                 showArrows: boolean;
                 fadeTransition: boolean;
+                fadeTransitionDuration: number;
             };
             text: {
                 title: string;
@@ -212,6 +213,10 @@ export interface LandingPageContent {
                 tips: {
                     title: string;
                 };
+            };
+            galleryButton?: {
+                text: string;
+                enabled: boolean;
             };
         };
         newsletter: {

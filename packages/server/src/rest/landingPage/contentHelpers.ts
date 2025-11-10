@@ -1,3 +1,4 @@
+import type { Response } from "express";
 import type {
     LandingPageContent,
     HeroBanner,
@@ -44,6 +45,7 @@ export const getDefaultContentStructure = (): LandingPageContent["content"] => (
             showDots: true,
             showArrows: true,
             fadeTransition: false,
+            fadeTransitionDuration: 500,
         },
         text: {
             title: "",
@@ -63,7 +65,9 @@ export const getDefaultContentStructure = (): LandingPageContent["content"] => (
 /**
  * Initialize empty content structure for landing page
  */
-export const initializeEmptyContent = (content?: Partial<LandingPageContent>): LandingPageContent => {
+export const initializeEmptyContent = (
+    content?: Partial<LandingPageContent>
+): LandingPageContent => {
     return {
         content: content?.content || getDefaultContentStructure(),
         theme: content?.theme || {
@@ -107,9 +111,9 @@ export const initializeEmptyContent = (content?: Partial<LandingPageContent>): L
  * Set cache headers for content response
  */
 export const setCacheHeaders = (
-    res: any,
+    res: Response,
     content: LandingPageContent,
-    options: { maxAge?: number; variantId?: string } = {},
+    options: { maxAge?: number; variantId?: string } = {}
 ) => {
     const { maxAge = 300, variantId } = options;
 

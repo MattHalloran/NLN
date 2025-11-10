@@ -1,7 +1,7 @@
 {
     "metadata": {
         "version": "2.0",
-        "lastUpdated": "2025-11-10T05:55:24.512Z"
+        "lastUpdated": "2025-11-10T06:19:14.746Z"
     },
     "content": {
         "hero": {
@@ -277,7 +277,11 @@
                     "displayOrder": 6,
                     "isActive": true
                 }
-            ]
+            ],
+            "galleryButton": {
+                "text": "View Gallery",
+                "enabled": true
+            }
         },
         "newsletter": {
             "title": "Stay in the Grow",
@@ -573,7 +577,7 @@
     },
     "layout": {
         "sections": {
-            "order": ["hero", "services", "social-proof", "about", "seasonal", "location"],
+            "order": ["hero", "services", "seasonal", "social-proof", "about", "location"],
             "enabled": {
                 "hero": true,
                 "services": true,
