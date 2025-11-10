@@ -17,6 +17,9 @@ COPY --chown=node:node packages/shared/dist packages/shared/dist
 # Install local packages
 RUN yarn install --production
 
+# Generate Prisma client
+RUN cd packages/server && yarn prisma generate --schema=dist/db/schema.prisma
+
 # Install modclean and clean node_modules
 RUN yarn global add modclean
 RUN modclean --run

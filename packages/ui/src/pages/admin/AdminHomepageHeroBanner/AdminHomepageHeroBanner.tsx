@@ -498,8 +498,8 @@ export const AdminHomepageHeroBanner = () => {
                       subtitle: heroText.subtitle || DEFAULT_HERO_CONTENT.subtitle,
                       description: heroText.description || DEFAULT_HERO_CONTENT.description,
                       businessHours: heroText.businessHours || DEFAULT_HERO_CONTENT.businessHours,
-                      useContactInfoHours:
-                          (heroText as Record<string, unknown>).useContactInfoHours ?? false,
+                      useContactInfoHours: ((heroText as any).useContactInfoHours ??
+                          false) as boolean,
                   }
                 : DEFAULT_HERO_CONTENT;
 
