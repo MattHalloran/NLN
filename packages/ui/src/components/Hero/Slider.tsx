@@ -38,7 +38,12 @@ export const Slider = ({
     // Play and wait have circular dependencies, so they must be memoized together
     const { wait } = useMemo(() => {
         const play = (index: number) => {
-            if (images.length > 0) timeoutRef.current = setTimeout(wait, slidingDuration, index === images.length - 1 ? 0 : index + 1);
+            if (images.length > 0)
+                timeoutRef.current = setTimeout(
+                    wait,
+                    slidingDuration,
+                    index === images.length - 1 ? 0 : index + 1,
+                );
             setTransition(slidingDuration);
             setTranslate(width * (index + 1));
         };
@@ -65,9 +70,7 @@ export const Slider = ({
     const slides = useMemo(() => {
         if (images?.length > 0) {
             const copy = fadeTransition ? images : [...images, images[0]];
-            return copy.map((s, i) => (
-                <Slide width={width} key={"slide-" + i} image={s} />
-            ));
+            return copy.map((s, i) => <Slide width={width} key={"slide-" + i} image={s} />);
         } else {
             return [];
         }
@@ -79,7 +82,10 @@ export const Slider = ({
         setTransition(slidingDuration);
         setTranslate(width * index);
         if (autoPlay) {
-            timeoutRef.current = setTimeout(() => wait(index === images.length - 1 ? 0 : index + 1), slidingDelay);
+            timeoutRef.current = setTimeout(
+                () => wait(index === images.length - 1 ? 0 : index + 1),
+                slidingDelay,
+            );
         }
     };
 
@@ -113,7 +119,9 @@ export const Slider = ({
                 {slides}
             </SliderContent>
 
-            {showDots && <Dots quantity={images.length} activeIndex={slideIndex} />}
+            {showDots && (
+                <Dots quantity={images.length} activeIndex={slideIndex} onDotClick={goToSlide} />
+            )}
 
             {showArrows && images.length > 1 && (
                 <>
