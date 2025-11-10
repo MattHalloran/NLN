@@ -20,6 +20,7 @@ export interface HeroSettings {
     showDots: boolean;
     showArrows: boolean;
     fadeTransition: boolean;
+    fadeTransitionDuration: number;
 }
 
 export interface TrustBadge {

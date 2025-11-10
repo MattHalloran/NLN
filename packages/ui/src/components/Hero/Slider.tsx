@@ -17,6 +17,7 @@ interface SliderProps {
     showDots?: boolean;
     showArrows?: boolean;
     fadeTransition?: boolean;
+    fadeTransitionDuration?: number;
 }
 
 export const Slider = ({
@@ -27,6 +28,7 @@ export const Slider = ({
     showDots = true,
     showArrows = false,
     fadeTransition = false,
+    fadeTransitionDuration = DEFAULT_DURATION,
 }: SliderProps) => {
     const [width, setWidth] = useState(window.innerWidth);
     const [slideIndex, setSlideIndex] = useState(0);
@@ -87,13 +89,13 @@ export const Slider = ({
                     image={s}
                     fadeTransition={fadeTransition}
                     isActive={fadeTransition ? i === slideIndex : undefined}
-                    transitionDuration={slidingDuration}
+                    transitionDuration={fadeTransition ? fadeTransitionDuration : slidingDuration}
                 />
             ));
         } else {
             return [];
         }
-    }, [width, images, fadeTransition, slideIndex, slidingDuration]);
+    }, [width, images, fadeTransition, slideIndex, slidingDuration, fadeTransitionDuration]);
 
     const goToSlide = (index: number) => {
         if (timeoutRef.current) clearTimeout(timeoutRef.current);

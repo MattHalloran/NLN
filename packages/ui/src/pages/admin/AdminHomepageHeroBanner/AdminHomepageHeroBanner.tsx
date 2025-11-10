@@ -76,6 +76,7 @@ interface HeroSettings {
     showDots: boolean;
     showArrows: boolean;
     fadeTransition: boolean;
+    fadeTransitionDuration: number;
 }
 
 interface HeroContent {
@@ -113,6 +114,7 @@ const DEFAULT_HERO_SETTINGS: HeroSettings = {
     showDots: true,
     showArrows: true,
     fadeTransition: true,
+    fadeTransitionDuration: 1000,
 };
 
 const DEFAULT_HERO_CONTENT: HeroContent = {
@@ -203,7 +205,7 @@ const HeroPreview = ({ heroData }: { heroData: HeroData | null }) => {
                                 objectFit: "cover",
                                 opacity: index === currentSlide ? 1 : 0,
                                 transition: heroData.settings.fadeTransition
-                                    ? "opacity 1s ease-in-out"
+                                    ? `opacity ${heroData.settings.fadeTransitionDuration || 1000}ms ease-in-out`
                                     : "opacity 0.1s",
                                 zIndex: index === currentSlide ? 1 : 0,
                             }}
@@ -1607,7 +1609,7 @@ export const AdminHomepageHeroBanner = () => {
                                                             sx={{ fontWeight: 500 }}
                                                         >
                                                             {form.data?.settings.fadeTransition
-                                                                ? "Fade"
+                                                                ? `Fade (${(form.data?.settings.fadeTransitionDuration || 1000) / 1000}s)`
                                                                 : "Slide"}
                                                         </Typography>
                                                     </Box>
@@ -1822,6 +1824,39 @@ export const AdminHomepageHeroBanner = () => {
                                                         horizontally (dynamic)
                                                     </Typography>
                                                 </Box>
+
+                                                <TextField
+                                                    fullWidth
+                                                    type="number"
+                                                    label="Fade Transition Duration (milliseconds)"
+                                                    value={
+                                                        form.data?.settings.fadeTransitionDuration
+                                                    }
+                                                    onChange={(e) => {
+                                                        if (!form.data) return;
+                                                        form.setData({
+                                                            ...form.data,
+                                                            settings: {
+                                                                ...form.data.settings,
+                                                                fadeTransitionDuration:
+                                                                    parseInt(e.target.value) ||
+                                                                    1000,
+                                                            },
+                                                        });
+                                                    }}
+                                                    disabled={!form.data?.settings.fadeTransition}
+                                                    helperText={`How long the fade transition takes (currently ${(form.data?.settings.fadeTransitionDuration || 1000) / 1000} seconds)`}
+                                                    inputProps={{
+                                                        min: 100,
+                                                        max: 5000,
+                                                        step: 100,
+                                                    }}
+                                                    sx={{
+                                                        "& .MuiOutlinedInput-root": {
+                                                            bgcolor: "background.paper",
+                                                        },
+                                                    }}
+                                                />
                                             </Box>
                                         </Paper>
                                     </Box>

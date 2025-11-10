@@ -78,6 +78,7 @@ export const Hero = ({
                 showDots={heroSettings?.showDots ?? true}
                 showArrows={heroSettings?.showArrows ?? false}
                 fadeTransition={heroSettings?.fadeTransition ?? false}
+                fadeTransitionDuration={heroSettings?.fadeTransitionDuration ?? 1000}
             />
             <Box
                 sx={{
