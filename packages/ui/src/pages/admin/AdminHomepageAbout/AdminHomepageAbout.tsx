@@ -1,52 +1,49 @@
+import { DragDropContext, Draggable, Droppable, DropResult } from "@hello-pangea/dnd";
 import { APP_LINKS, COMPANY_INFO } from "@local/shared";
+import { ExpandMore as ExpandMoreIcon } from "@mui/icons-material";
 import {
+    Accordion,
+    AccordionDetails,
+    AccordionSummary,
+    Alert,
     Box,
     Button,
     Card,
     CardContent,
+    FormControl,
+    Grid,
+    IconButton,
+    InputLabel,
+    MenuItem,
+    Paper,
+    Select,
     TextField,
     Typography,
-    Alert,
-    Select,
-    MenuItem,
-    FormControl,
-    InputLabel,
-    IconButton,
-    Accordion,
-    AccordionSummary,
-    AccordionDetails,
-    Grid,
     useTheme,
-    Paper,
 } from "@mui/material";
-import {
-    Plus,
-    Trash2,
-    GripVertical,
-    Star,
-    Home,
-    Heart,
-    Globe,
-    Award,
-    Leaf,
-    TreePine,
-    BookOpen,
-    FileText as TextFieldsIcon,
-    Target as ValuesIcon,
-    Zap as MissionIcon,
-} from "lucide-react";
-import { ExpandMore as ExpandMoreIcon } from "@mui/icons-material";
+import { useLandingPageContent, useUpdateLandingPageContent } from "api/rest/hooks";
 import { BackButton, PageContainer } from "components";
 import { ABTestEditingBanner } from "components/admin/ABTestEditingBanner";
 import { TopBar } from "components/navigation/TopBar/TopBar";
-import { useLandingPage } from "hooks/useLandingPage";
 import { useABTestQueryParams } from "hooks/useABTestQueryParams";
-import { useUpdateLandingPageContent } from "api/rest/hooks";
-import { useBlockNavigation } from "hooks/useBlockNavigation";
-import { useState, useEffect, useMemo } from "react";
-import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
-import { PubSub } from "utils/pubsub";
-import { SnackSeverity } from "components/dialogs/Snack/Snack";
+import { useAdminForm } from "hooks/useAdminForm";
+import {
+    Award,
+    BookOpen,
+    Globe,
+    GripVertical,
+    Heart,
+    Home,
+    Leaf,
+    Zap as MissionIcon,
+    Plus,
+    Star,
+    FileText as TextFieldsIcon,
+    Trash2,
+    TreePine,
+    Target as ValuesIcon,
+} from "lucide-react";
+import { useEffect } from "react";
 
 // Available icons for value cards
 const VALUE_ICONS = [
@@ -166,10 +163,12 @@ const AboutStoryPreview = ({
     aboutData,
     foundedYear,
 }: {
-    aboutData: AboutData;
+    aboutData: AboutData | null;
     foundedYear: number;
 }) => {
     const { palette } = useTheme();
+
+    if (!aboutData) return null;
 
     const storyData = aboutData.story;
     const valuesData = aboutData.values;
@@ -410,186 +409,162 @@ const AboutStoryPreview = ({
 
 export const AdminHomepageAbout = () => {
     const { palette } = useTheme();
-    const { data: landingPageData, refetch } = useLandingPage();
-    const { mutate: updateContent } = useUpdateLandingPageContent();
+    // Admin needs to see ALL content (including inactive) so they can manage it
     const { variantId } = useABTestQueryParams();
-
-    // State for form data and change tracking
-    const [aboutData, setAboutData] = useState<AboutData>(getDefaultAboutData());
-    const [originalAboutData, setOriginalAboutData] = useState<AboutData>(getDefaultAboutData());
-    const [isLoading, setIsLoading] = useState(false);
+    const {
+        data: landingPageData,
+        loading: landingPageLoading,
+        refetch: refetchLandingPage,
+    } = useLandingPageContent(false, variantId);
+    const { mutate: updateContent } = useUpdateLandingPageContent();
 
     // Get founded year
     const foundedYear = landingPageData?.content?.company?.foundedYear || COMPANY_INFO.FoundedYear;
 
-    // Load initial data
+    // Use the standardized useAdminForm hook
+    const form = useAdminForm<AboutData>({
+        fetchFn: async () => {
+            if (landingPageData?.content?.about) {
+                return landingPageData.content.about;
+            }
+            return getDefaultAboutData();
+        },
+        saveFn: async (data) => {
+            const queryParams = variantId ? { variantId } : undefined;
+            await updateContent({
+                data: { about: data },
+                queryParams,
+            });
+            // Return the updated data
+            return data;
+        },
+        refetchDependencies: [refetchLandingPage],
+        pageName: "about-section",
+        endpointName: "/api/v1/landing-page",
+        successMessage: "About section settings saved successfully!",
+        errorMessagePrefix: "Failed to save",
+    });
+
+    // Trigger refetch when landing page data loads
     useEffect(() => {
-        if (landingPageData?.content?.about) {
-            setAboutData(landingPageData.content.about);
-            setOriginalAboutData(JSON.parse(JSON.stringify(landingPageData.content.about)));
-        } else {
-            const defaultData = getDefaultAboutData();
-            setAboutData(defaultData);
-            setOriginalAboutData(JSON.parse(JSON.stringify(defaultData)));
+        if (landingPageData && !landingPageLoading) {
+            form.refetch();
         }
-    }, [landingPageData]);
-
-    // Check for changes using useMemo
-    const hasChanges = useMemo(() => {
-        return JSON.stringify(aboutData) !== JSON.stringify(originalAboutData);
-    }, [aboutData, originalAboutData]);
-
-    // Block navigation when there are unsaved changes
-    useBlockNavigation(hasChanges);
-
-    const handleApiError = (error: any, defaultMessage: string) => {
-        const message = error?.message || defaultMessage;
-        PubSub.get().publishSnack({ message, severity: SnackSeverity.Error });
-    };
-
-    const handleApiSuccess = (message: string) => {
-        PubSub.get().publishSnack({ message, severity: SnackSeverity.Success });
-    };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [landingPageData, landingPageLoading]);
 
     // Story section handlers
     const updateStoryField = (field: keyof StoryData, value: any) => {
-        setAboutData((prev) => ({
-            ...prev,
-            story: { ...prev.story, [field]: value },
-        }));
+        if (!form.data) return;
+        form.setData({
+            ...form.data,
+            story: { ...form.data.story, [field]: value },
+        });
     };
 
     const updateParagraph = (index: number, value: string) => {
-        setAboutData((prev) => ({
-            ...prev,
+        if (!form.data) return;
+        form.setData({
+            ...form.data,
             story: {
-                ...prev.story,
-                paragraphs: prev.story.paragraphs.map((p, i) => (i === index ? value : p)),
+                ...form.data.story,
+                paragraphs: form.data.story.paragraphs.map((p, i) => (i === index ? value : p)),
             },
-        }));
+        });
     };
 
     const addParagraph = () => {
-        setAboutData((prev) => ({
-            ...prev,
+        if (!form.data) return;
+        form.setData({
+            ...form.data,
             story: {
-                ...prev.story,
-                paragraphs: [...prev.story.paragraphs, ""],
+                ...form.data.story,
+                paragraphs: [...form.data.story.paragraphs, ""],
             },
-        }));
+        });
     };
 
     const removeParagraph = (index: number) => {
-        if (aboutData.story.paragraphs.length <= 1) {
-            handleApiError(
-                new Error("At least one paragraph is required"),
-                "Cannot remove last paragraph",
-            );
+        if (!form.data) return;
+        if (form.data.story.paragraphs.length <= 1) {
             return;
         }
-        setAboutData((prev) => ({
-            ...prev,
+        form.setData({
+            ...form.data,
             story: {
-                ...prev.story,
-                paragraphs: prev.story.paragraphs.filter((_, i) => i !== index),
+                ...form.data.story,
+                paragraphs: form.data.story.paragraphs.filter((_, i) => i !== index),
             },
-        }));
+        });
     };
 
     // Values section handlers
     const updateValuesTitle = (value: string) => {
-        setAboutData((prev) => ({
-            ...prev,
-            values: { ...prev.values, title: value },
-        }));
+        if (!form.data) return;
+        form.setData({
+            ...form.data,
+            values: { ...form.data.values, title: value },
+        });
     };
 
     const updateValueItem = (index: number, field: keyof ValueItem, value: string) => {
-        setAboutData((prev) => ({
-            ...prev,
+        if (!form.data) return;
+        form.setData({
+            ...form.data,
             values: {
-                ...prev.values,
-                items: prev.values.items.map((item, i) =>
+                ...form.data.values,
+                items: form.data.values.items.map((item, i) =>
                     i === index ? { ...item, [field]: value } : item,
                 ),
             },
-        }));
+        });
     };
 
     const addValueItem = () => {
-        setAboutData((prev) => ({
-            ...prev,
+        if (!form.data) return;
+        form.setData({
+            ...form.data,
             values: {
-                ...prev.values,
-                items: [...prev.values.items, { icon: "star", title: "", description: "" }],
+                ...form.data.values,
+                items: [...form.data.values.items, { icon: "star", title: "", description: "" }],
             },
-        }));
+        });
     };
 
     const removeValueItem = (index: number) => {
-        if (aboutData.values.items.length <= 1) {
-            handleApiError(
-                new Error("At least one value item is required"),
-                "Cannot remove last value item",
-            );
+        if (!form.data) return;
+        if (form.data.values.items.length <= 1) {
             return;
         }
-        setAboutData((prev) => ({
-            ...prev,
+        form.setData({
+            ...form.data,
             values: {
-                ...prev.values,
-                items: prev.values.items.filter((_, i) => i !== index),
+                ...form.data.values,
+                items: form.data.values.items.filter((_, i) => i !== index),
             },
-        }));
+        });
     };
 
     const onDragEnd = (result: DropResult) => {
-        if (!result.destination) return;
+        if (!result.destination || !form.data) return;
 
-        const items = Array.from(aboutData.values.items);
+        const items = Array.from(form.data.values.items);
         const [reorderedItem] = items.splice(result.source.index, 1);
         items.splice(result.destination.index, 0, reorderedItem);
 
-        setAboutData((prev) => ({
-            ...prev,
-            values: { ...prev.values, items },
-        }));
+        form.setData({
+            ...form.data,
+            values: { ...form.data.values, items },
+        });
     };
 
     // Mission section handlers
     const updateMissionField = (field: keyof MissionData, value: string) => {
-        setAboutData((prev) => ({
-            ...prev,
-            mission: { ...prev.mission, [field]: value },
-        }));
-    };
-
-    // Save and reset handlers
-    const handleSaveAllChanges = async () => {
-        try {
-            setIsLoading(true);
-
-            const queryParams = variantId ? { variantId } : undefined;
-
-            await updateContent({
-                data: { about: aboutData },
-                queryParams,
-            });
-
-            await refetch();
-            handleApiSuccess("About section settings saved successfully!");
-
-            // Update original values
-            setOriginalAboutData(JSON.parse(JSON.stringify(aboutData)));
-        } catch (error: any) {
-            handleApiError(error, "Failed to save changes");
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const handleCancelChanges = () => {
-        setAboutData(JSON.parse(JSON.stringify(originalAboutData)));
+        if (!form.data) return;
+        form.setData({
+            ...form.data,
+            mission: { ...form.data.mission, [field]: value },
+        });
     };
 
     return (
@@ -610,7 +585,7 @@ export const AdminHomepageAbout = () => {
                 <ABTestEditingBanner />
 
                 {/* Unsaved changes warning */}
-                {hasChanges && (
+                {form.isDirty && (
                     <Alert
                         severity="warning"
                         sx={{
@@ -630,7 +605,7 @@ export const AdminHomepageAbout = () => {
                 )}
 
                 {/* Action Buttons at Top */}
-                {hasChanges && (
+                {form.isDirty && (
                     <Paper
                         elevation={0}
                         sx={{
@@ -647,8 +622,8 @@ export const AdminHomepageAbout = () => {
                         <Button
                             variant="contained"
                             size="large"
-                            onClick={handleSaveAllChanges}
-                            disabled={isLoading}
+                            onClick={form.save}
+                            disabled={form.isSaving}
                             sx={{
                                 px: 4,
                                 fontWeight: 600,
@@ -658,12 +633,12 @@ export const AdminHomepageAbout = () => {
                                 },
                             }}
                         >
-                            {isLoading ? "Saving..." : "Save All Changes"}
+                            {form.isSaving ? "Saving..." : "Save All Changes"}
                         </Button>
                         <Button
                             variant="outlined"
                             size="large"
-                            onClick={handleCancelChanges}
+                            onClick={form.cancel}
                             sx={{
                                 px: 4,
                                 fontWeight: 600,
@@ -731,7 +706,7 @@ export const AdminHomepageAbout = () => {
                                         </Box>
                                     </Box>
                                     <AboutStoryPreview
-                                        aboutData={aboutData}
+                                        aboutData={form.data}
                                         foundedYear={foundedYear}
                                     />
                                     <Alert
@@ -810,7 +785,7 @@ export const AdminHomepageAbout = () => {
                                             <TextField
                                                 fullWidth
                                                 label="Overline Text"
-                                                value={aboutData.story.overline}
+                                                value={form.data?.story.overline || ""}
                                                 onChange={(e) =>
                                                     updateStoryField("overline", e.target.value)
                                                 }
@@ -821,7 +796,7 @@ export const AdminHomepageAbout = () => {
                                             <TextField
                                                 fullWidth
                                                 label="Title"
-                                                value={aboutData.story.title}
+                                                value={form.data?.story.title || ""}
                                                 onChange={(e) =>
                                                     updateStoryField("title", e.target.value)
                                                 }
@@ -832,7 +807,7 @@ export const AdminHomepageAbout = () => {
                                             <TextField
                                                 fullWidth
                                                 label="Subtitle"
-                                                value={aboutData.story.subtitle}
+                                                value={form.data?.story.subtitle || ""}
                                                 onChange={(e) =>
                                                     updateStoryField("subtitle", e.target.value)
                                                 }
@@ -850,7 +825,7 @@ export const AdminHomepageAbout = () => {
                                             >
                                                 Story Paragraphs
                                             </Typography>
-                                            {aboutData.story.paragraphs.map((paragraph, index) => (
+                                            {form.data?.story.paragraphs.map((paragraph, index) => (
                                                 <Box
                                                     key={index}
                                                     sx={{
@@ -874,7 +849,8 @@ export const AdminHomepageAbout = () => {
                                                         color="error"
                                                         onClick={() => removeParagraph(index)}
                                                         disabled={
-                                                            aboutData.story.paragraphs.length <= 1
+                                                            (form.data?.story.paragraphs.length ||
+                                                                0) <= 1
                                                         }
                                                     >
                                                         <Trash2 size={20} />
@@ -896,10 +872,10 @@ export const AdminHomepageAbout = () => {
                                             <TextField
                                                 fullWidth
                                                 label="CTA Button Text"
-                                                value={aboutData.story.cta.text}
+                                                value={form.data?.story.cta.text || ""}
                                                 onChange={(e) =>
                                                     updateStoryField("cta", {
-                                                        ...aboutData.story.cta,
+                                                        ...form.data!.story.cta,
                                                         text: e.target.value,
                                                     })
                                                 }
@@ -909,10 +885,10 @@ export const AdminHomepageAbout = () => {
                                             <TextField
                                                 fullWidth
                                                 label="CTA Button Link"
-                                                value={aboutData.story.cta.link}
+                                                value={form.data?.story.cta.link || ""}
                                                 onChange={(e) =>
                                                     updateStoryField("cta", {
-                                                        ...aboutData.story.cta,
+                                                        ...form.data!.story.cta,
                                                         link: e.target.value,
                                                     })
                                                 }
@@ -983,7 +959,7 @@ export const AdminHomepageAbout = () => {
                                             <TextField
                                                 fullWidth
                                                 label="Values Section Title"
-                                                value={aboutData.values.title}
+                                                value={form.data?.values.title || ""}
                                                 onChange={(e) => updateValuesTitle(e.target.value)}
                                             />
                                         </Grid>
@@ -1002,7 +978,7 @@ export const AdminHomepageAbout = () => {
                                                             {...provided.droppableProps}
                                                             ref={provided.innerRef}
                                                         >
-                                                            {aboutData.values.items.map(
+                                                            {form.data?.values.items.map(
                                                                 (item, index) => (
                                                                     <Draggable
                                                                         key={index}
@@ -1072,10 +1048,12 @@ export const AdminHomepageAbout = () => {
                                                                                                 )
                                                                                             }
                                                                                             disabled={
-                                                                                                aboutData
-                                                                                                    .values
+                                                                                                (form
+                                                                                                    .data
+                                                                                                    ?.values
                                                                                                     .items
-                                                                                                    .length <=
+                                                                                                    .length ||
+                                                                                                    0) <=
                                                                                                 1
                                                                                             }
                                                                                         >
@@ -1298,7 +1276,7 @@ export const AdminHomepageAbout = () => {
                                             <TextField
                                                 fullWidth
                                                 label="Mission Title"
-                                                value={aboutData.mission.title}
+                                                value={form.data?.mission.title || ""}
                                                 onChange={(e) =>
                                                     updateMissionField("title", e.target.value)
                                                 }
@@ -1308,7 +1286,7 @@ export const AdminHomepageAbout = () => {
                                             <TextField
                                                 fullWidth
                                                 label="Mission Quote"
-                                                value={aboutData.mission.quote}
+                                                value={form.data?.mission.quote || ""}
                                                 onChange={(e) =>
                                                     updateMissionField("quote", e.target.value)
                                                 }
@@ -1321,7 +1299,7 @@ export const AdminHomepageAbout = () => {
                                             <TextField
                                                 fullWidth
                                                 label="Attribution"
-                                                value={aboutData.mission.attribution}
+                                                value={form.data?.mission.attribution || ""}
                                                 onChange={(e) =>
                                                     updateMissionField(
                                                         "attribution",
@@ -1336,7 +1314,7 @@ export const AdminHomepageAbout = () => {
                             </Accordion>
 
                             {/* Action Buttons at Bottom */}
-                            {hasChanges && (
+                            {form.isDirty && (
                                 <Paper
                                     elevation={0}
                                     sx={{
@@ -1353,8 +1331,8 @@ export const AdminHomepageAbout = () => {
                                     <Button
                                         variant="contained"
                                         size="large"
-                                        onClick={handleSaveAllChanges}
-                                        disabled={isLoading}
+                                        onClick={form.save}
+                                        disabled={form.isSaving}
                                         sx={{
                                             px: 4,
                                             fontWeight: 600,
@@ -1364,12 +1342,12 @@ export const AdminHomepageAbout = () => {
                                             },
                                         }}
                                     >
-                                        {isLoading ? "Saving..." : "Save All Changes"}
+                                        {form.isSaving ? "Saving..." : "Save All Changes"}
                                     </Button>
                                     <Button
                                         variant="outlined"
                                         size="large"
-                                        onClick={handleCancelChanges}
+                                        onClick={form.cancel}
                                         sx={{
                                             px: 4,
                                             fontWeight: 600,
@@ -1442,7 +1420,7 @@ export const AdminHomepageAbout = () => {
                                     </Box>
                                 </Box>
                                 <AboutStoryPreview
-                                    aboutData={aboutData}
+                                    aboutData={form.data}
                                     foundedYear={foundedYear}
                                 />
                                 <Alert

@@ -1,30 +1,30 @@
+import { COMPANY_INFO } from "@local/shared";
 import {
     Box,
     Card,
     CardContent,
+    Chip,
     Container,
+    Divider,
     Grid,
     Typography,
-    Chip,
     useTheme,
-    Divider,
 } from "@mui/material";
+import { BusinessContext } from "contexts/BusinessContext";
+import { useLandingPage } from "hooks/useLandingPage";
 import {
-    Building2,
-    Users,
-    TreePine,
-    Clock,
     Award,
-    Truck,
+    Building2,
+    Clock,
+    LucideIcon,
     Shield,
     Sprout,
-    LucideIcon,
+    TreePine,
+    Truck,
+    Users,
 } from "lucide-react";
 import { useContext, useMemo } from "react";
-import { BusinessContext } from "contexts/BusinessContext";
 import { getEarliestOpeningTime } from "utils/businessHours";
-import { useLandingPage } from "hooks/useLandingPage";
-import { COMPANY_INFO } from "@local/shared";
 
 // Icon mapping for dynamic icon selection
 const ICON_MAP: Record<string, LucideIcon> = {

@@ -44,11 +44,11 @@ import { ExpandMore as ExpandMoreIcon } from "@mui/icons-material";
 import { BackButton, PageContainer } from "components";
 import { ABTestEditingBanner } from "components/admin/ABTestEditingBanner";
 import { TopBar } from "components/navigation/TopBar/TopBar";
-import { useLandingPage } from "hooks/useLandingPage";
 import { useABTestQueryParams } from "hooks/useABTestQueryParams";
-import { useUpdateLandingPageContent } from "api/rest/hooks";
+import { useUpdateLandingPageContent, useLandingPageContent } from "api/rest/hooks";
 import { useAdminForm } from "hooks/useAdminForm";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
+import { useEffect } from "react";
 
 // Available icons for selection
 const SOCIAL_PROOF_ICONS = [
@@ -499,9 +499,14 @@ const SocialProofPreview = ({
 };
 
 export const AdminHomepageSocialProof = () => {
-    const { data: landingPageData, refetch: refetchLandingPage } = useLandingPage();
-    const { mutate: updateContent } = useUpdateLandingPageContent();
     const { variantId } = useABTestQueryParams();
+    // Admin needs to see ALL content (including inactive) so they can manage it
+    const {
+        data: landingPageData,
+        loading: landingPageLoading,
+        refetch: refetchLandingPage,
+    } = useLandingPageContent(false, variantId);
+    const { mutate: updateContent } = useUpdateLandingPageContent();
 
     const foundedYear = landingPageData?.content?.company?.foundedYear || COMPANY_INFO.FoundedYear;
     const yearsInBusiness = new Date().getFullYear() - foundedYear;
@@ -528,6 +533,14 @@ export const AdminHomepageSocialProof = () => {
         successMessage: "Social proof settings saved successfully!",
         errorMessagePrefix: "Failed to save changes",
     });
+
+    // Trigger refetch when landing page data loads
+    useEffect(() => {
+        if (landingPageData && !landingPageLoading) {
+            form.refetch();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [landingPageData, landingPageLoading]);
 
     const handleApiError = (error: any, defaultMessage: string) => {
         console.error(error?.message || defaultMessage);

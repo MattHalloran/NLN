@@ -1,14 +1,13 @@
+import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 import { APP_LINKS } from "@local/shared";
-import { Box, Button, Card, CardContent, Typography, Switch, Chip, Alert } from "@mui/material";
-import { GripVertical, Eye, EyeOff, Save, RotateCcw } from "lucide-react";
-import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import { Alert, Box, Button, Card, CardContent, Chip, Switch, Typography } from "@mui/material";
 import { SectionConfiguration } from "api/rest/client";
-import { useUpdateLandingPageSettings } from "api/rest/hooks";
-import { useABTestQueryParams } from "hooks/useABTestQueryParams";
+import { useLandingPageContent, useUpdateLandingPageSettings } from "api/rest/hooks";
 import { BackButton, PageContainer } from "components";
 import { TopBar } from "components/navigation/TopBar/TopBar";
-import { useLandingPage } from "hooks/useLandingPage";
+import { useABTestQueryParams } from "hooks/useABTestQueryParams";
 import { useAdminForm } from "hooks/useAdminForm";
+import { Eye, EyeOff, GripVertical, RotateCcw, Save } from "lucide-react";
 import { useEffect, useRef } from "react";
 
 // Section metadata for section configuration
@@ -42,9 +41,14 @@ const SECTION_METADATA: Record<string, { name: string; description: string; requ
     };
 
 export const AdminHomepageSections = () => {
-    const { data: landingPageContent, refetch: refetchLandingPage } = useLandingPage();
-    const updateSettings = useUpdateLandingPageSettings();
     const { variantId: queryVariantId } = useABTestQueryParams();
+    // Admin needs to see ALL content (including inactive) so they can manage it
+    const {
+        data: landingPageContent,
+        loading: _landingPageLoading,
+        refetch: refetchLandingPage,
+    } = useLandingPageContent(false, queryVariantId);
+    const updateSettings = useUpdateLandingPageSettings();
 
     // Use variantId from URL query params, or fall back to the loaded data's variant
     const variantId = queryVariantId || landingPageContent?._meta?.variantId;
@@ -98,6 +102,7 @@ export const AdminHomepageSections = () => {
             hasLoadedRef.current = true;
             form.refetch();
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [landingPageContent, form.refetch]);
 
     const handleSectionDragEnd = (result: any) => {

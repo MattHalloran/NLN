@@ -1,64 +1,61 @@
+import { DragDropContext, Draggable, Droppable, DropResult } from "@hello-pangea/dnd";
 import { APP_LINKS, COMPANY_INFO } from "@local/shared";
 import {
+    AccessTime as AccessTimeIcon,
+    TouchApp as ButtonIcon,
+    ContactPhone as ContactPhoneIcon,
+    ExpandMore as ExpandMoreIcon,
+    TextFields as TextFieldsIcon,
+} from "@mui/icons-material";
+import {
+    Accordion,
+    AccordionDetails,
+    AccordionSummary,
+    Alert,
     Box,
     Button,
     Card,
     CardContent,
-    TextField,
-    Typography,
-    Alert,
-    Select,
-    MenuItem,
-    FormControl,
-    InputLabel,
-    IconButton,
-    Accordion,
-    AccordionSummary,
-    AccordionDetails,
-    Grid,
-    useTheme,
-    FormControlLabel,
-    Switch,
-    Paper,
     Chip,
     Divider,
+    FormControl,
+    FormControlLabel,
+    Grid,
+    IconButton,
+    InputLabel,
+    MenuItem,
+    Paper,
+    Select,
+    Switch,
+    TextField,
+    Typography,
+    useTheme,
 } from "@mui/material";
-import {
-    Plus,
-    Trash2,
-    GripVertical,
-    Eye,
-    Gift,
-    Smartphone,
-    Car,
-    Truck,
-    MapPin as MapPinIcon,
-    Package,
-    Users,
-    Map,
-    Phone,
-    Clock,
-    Info as InfoIcon,
-    Mail,
-} from "lucide-react";
-import {
-    ExpandMore as ExpandMoreIcon,
-    TextFields as TextFieldsIcon,
-    ContactPhone as ContactPhoneIcon,
-    AccessTime as AccessTimeIcon,
-    TouchApp as ButtonIcon,
-} from "@mui/icons-material";
+import { useLandingPageContent, useUpdateLandingPageContent } from "api/rest/hooks";
 import { BackButton, PageContainer } from "components";
 import { ABTestEditingBanner } from "components/admin/ABTestEditingBanner";
 import { TopBar } from "components/navigation/TopBar/TopBar";
-import { useLandingPage } from "hooks/useLandingPage";
 import { useABTestQueryParams } from "hooks/useABTestQueryParams";
-import { useUpdateLandingPageContent } from "api/rest/hooks";
-import { useBlockNavigation } from "hooks/useBlockNavigation";
-import { useState, useEffect, useMemo, useCallback } from "react";
-import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
-import { PubSub } from "utils/pubsub";
-import { SnackSeverity } from "components/dialogs/Snack/Snack";
+import { useAdminForm } from "hooks/useAdminForm";
+import {
+    Car,
+    Clock,
+    Eye,
+    Gift,
+    GripVertical,
+    Info as InfoIcon,
+    Mail,
+    Map,
+    MapPin as MapPinIcon,
+    Package,
+    Phone,
+    Plus,
+    Smartphone,
+    Trash2,
+    Truck,
+    Users,
+} from "lucide-react";
+import { useCallback, useEffect } from "react";
 
 // Available icons for visit info items
 const VISIT_INFO_ICONS = [
@@ -241,10 +238,12 @@ const LocationPreview = ({
     locationData,
     foundedYear,
 }: {
-    locationData: LocationData;
+    locationData: LocationData | null;
     foundedYear: number;
 }) => {
     const { palette } = useTheme();
+
+    if (!locationData) return null;
 
     const activeVisitInfoItems = locationData.visitInfo.items
         .filter((item) => item.isActive)
@@ -726,110 +725,92 @@ const LocationPreview = ({
 
 export const AdminHomepageLocation = () => {
     const { palette } = useTheme();
-    const { data, loading, refetch } = useLandingPage();
     const { variantId } = useABTestQueryParams();
+    // Admin needs to see ALL content (including inactive) so they can manage it
+    const {
+        data: landingPageData,
+        loading: landingPageLoading,
+        refetch: refetchLandingPage,
+    } = useLandingPageContent(false, variantId);
     const updateContentMutation = useUpdateLandingPageContent();
 
-    const foundedYear = data?.content?.company?.foundedYear || COMPANY_INFO.FoundedYear;
+    const foundedYear = landingPageData?.content?.company?.foundedYear || COMPANY_INFO.FoundedYear;
 
-    const [locationData, setLocationData] = useState<LocationData>(getDefaultLocationData());
-    const [originalLocationData, setOriginalLocationData] =
-        useState<LocationData>(getDefaultLocationData());
-    const [isSaving, setIsSaving] = useState(false);
-
-    useEffect(() => {
-        if (data?.content?.location) {
-            setLocationData(data.content.location);
-            setOriginalLocationData(JSON.parse(JSON.stringify(data.content.location)));
-        } else {
-            const defaultData = getDefaultLocationData();
-            setLocationData(defaultData);
-            setOriginalLocationData(JSON.parse(JSON.stringify(defaultData)));
-        }
-    }, [data]);
-
-    // Check for changes using useMemo
-    const hasChanges = useMemo(() => {
-        return JSON.stringify(locationData) !== JSON.stringify(originalLocationData);
-    }, [locationData, originalLocationData]);
-
-    // Block navigation when there are unsaved changes
-    useBlockNavigation(hasChanges);
-
-    const handleApiError = useCallback((error: any, defaultMessage: string) => {
-        const message = error?.message || defaultMessage;
-        PubSub.get().publishSnack({ message, severity: SnackSeverity.Error });
-    }, []);
-
-    const handleApiSuccess = useCallback((message: string) => {
-        PubSub.get().publishSnack({ message, severity: SnackSeverity.Success });
-    }, []);
-
-    const handleSave = useCallback(async () => {
-        try {
-            setIsSaving(true);
-
+    // Use the useAdminForm hook to manage all state
+    const form = useAdminForm<LocationData>({
+        fetchFn: async () => {
+            if (landingPageData?.content?.location) {
+                return landingPageData.content.location;
+            }
+            return getDefaultLocationData();
+        },
+        saveFn: async (data) => {
+            const queryParams = variantId ? { variantId } : undefined;
             await updateContentMutation.mutate({
-                data: { location: locationData },
-                queryParams: variantId ? { variantId } : undefined,
+                data: { location: data },
+                queryParams,
             });
+            return data;
+        },
+        refetchDependencies: [refetchLandingPage],
+        pageName: "location-section",
+        endpointName: "/api/v1/landing-page/location",
+        successMessage: "Location settings saved successfully!",
+        errorMessagePrefix: "Failed to save location settings",
+    });
 
-            await refetch();
-            handleApiSuccess("Location settings saved successfully!");
-            setOriginalLocationData(JSON.parse(JSON.stringify(locationData)));
-        } catch (error: any) {
-            handleApiError(error, "Failed to save location settings");
-        } finally {
-            setIsSaving(false);
+    // Trigger refetch when landing page data loads
+    useEffect(() => {
+        if (landingPageData && !landingPageLoading) {
+            form.refetch();
         }
-    }, [locationData, variantId, refetch, handleApiSuccess, handleApiError, updateContentMutation]);
-
-    const handleReset = useCallback(() => {
-        setLocationData(JSON.parse(JSON.stringify(originalLocationData)));
-    }, [originalLocationData]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [landingPageData, landingPageLoading]);
 
     // Handlers for visit info items
     const handleAddVisitInfoItem = useCallback(() => {
+        if (!form.data) return;
         const newItem: LocationVisitInfoItem = {
             id: window.crypto.randomUUID(),
             title: "New Item",
             icon: "eye",
             description: "Description here",
-            displayOrder: locationData.visitInfo.items.length,
+            displayOrder: form.data.visitInfo.items.length,
             isActive: true,
         };
-        setLocationData({
-            ...locationData,
+        form.setData({
+            ...form.data!,
             visitInfo: {
-                ...locationData.visitInfo,
-                items: [...locationData.visitInfo.items, newItem],
+                ...form.data!.visitInfo,
+                items: [...form.data.visitInfo.items, newItem],
             },
         });
-    }, [locationData]);
+    }, [form]);
 
     const handleDeleteVisitInfoItem = useCallback(
         (id: string) => {
-            const updatedItems = locationData.visitInfo.items.filter((item) => item.id !== id);
+            if (!form.data) return;
+            const updatedItems = form.data.visitInfo.items.filter((item) => item.id !== id);
             const reorderedItems = updatedItems.map((item, index) => ({
                 ...item,
                 displayOrder: index,
             }));
-            setLocationData({
-                ...locationData,
+            form.setData({
+                ...form.data!,
                 visitInfo: {
-                    ...locationData.visitInfo,
+                    ...form.data!.visitInfo,
                     items: reorderedItems,
                 },
             });
         },
-        [locationData],
+        [form],
     );
 
     const handleVisitInfoDragEnd = useCallback(
         (result: DropResult) => {
-            if (!result.destination) return;
+            if (!result.destination || !form.data) return;
 
-            const items = Array.from(locationData.visitInfo.items);
+            const items = Array.from(form.data.visitInfo.items);
             const [removed] = items.splice(result.source.index, 1);
             items.splice(result.destination.index, 0, removed);
 
@@ -838,60 +819,62 @@ export const AdminHomepageLocation = () => {
                 displayOrder: index,
             }));
 
-            setLocationData({
-                ...locationData,
+            form.setData({
+                ...form.data!,
                 visitInfo: {
-                    ...locationData.visitInfo,
+                    ...form.data!.visitInfo,
                     items: reorderedItems,
                 },
             });
         },
-        [locationData],
+        [form],
     );
 
     // Handlers for CTA buttons
     const handleAddButton = useCallback(() => {
+        if (!form.data) return;
         const newButton: LocationButton = {
             id: window.crypto.randomUUID(),
             text: "New Button",
             variant: "contained",
             color: "primary",
             action: "directions",
-            displayOrder: locationData.cta.buttons.length,
+            displayOrder: form.data.cta.buttons.length,
             isActive: true,
         };
-        setLocationData({
-            ...locationData,
+        form.setData({
+            ...form.data!,
             cta: {
-                ...locationData.cta,
-                buttons: [...locationData.cta.buttons, newButton],
+                ...form.data!.cta,
+                buttons: [...form.data.cta.buttons, newButton],
             },
         });
-    }, [locationData]);
+    }, [form]);
 
     const handleDeleteButton = useCallback(
         (id: string) => {
-            const updatedButtons = locationData.cta.buttons.filter((btn) => btn.id !== id);
+            if (!form.data) return;
+            const updatedButtons = form.data.cta.buttons.filter((btn) => btn.id !== id);
             const reorderedButtons = updatedButtons.map((btn, index) => ({
                 ...btn,
                 displayOrder: index,
             }));
-            setLocationData({
-                ...locationData,
+            form.setData({
+                ...form.data!,
                 cta: {
-                    ...locationData.cta,
+                    ...form.data!.cta,
                     buttons: reorderedButtons,
                 },
             });
         },
-        [locationData],
+        [form],
     );
 
     const handleButtonDragEnd = useCallback(
         (result: DropResult) => {
-            if (!result.destination) return;
+            if (!result.destination || !form.data) return;
 
-            const buttons = Array.from(locationData.cta.buttons);
+            const buttons = Array.from(form.data.cta.buttons);
             const [removed] = buttons.splice(result.source.index, 1);
             buttons.splice(result.destination.index, 0, removed);
 
@@ -900,46 +883,44 @@ export const AdminHomepageLocation = () => {
                 displayOrder: index,
             }));
 
-            setLocationData({
-                ...locationData,
+            form.setData({
+                ...form.data!,
                 cta: {
-                    ...locationData.cta,
+                    ...form.data!.cta,
                     buttons: reorderedButtons,
                 },
             });
         },
-        [locationData],
+        [form],
     );
 
     // Handler for contact methods ordering
     const handleContactMethodDragEnd = useCallback(
         (result: DropResult) => {
-            if (!result.destination) return;
+            if (!result.destination || !form.data) return;
 
-            const order = Array.from(locationData.contactMethods.order);
+            const order = Array.from(form.data.contactMethods.order);
             const [removed] = order.splice(result.source.index, 1);
             order.splice(result.destination.index, 0, removed);
 
-            setLocationData({
-                ...locationData,
+            form.setData({
+                ...form.data!,
                 contactMethods: {
-                    ...locationData.contactMethods,
+                    ...form.data!.contactMethods,
                     order: order as ("phone" | "address" | "email")[],
                 },
             });
         },
-        [locationData],
+        [form],
     );
 
-    const sortedVisitInfoItems = useMemo(
-        () => [...locationData.visitInfo.items].sort((a, b) => a.displayOrder - b.displayOrder),
-        [locationData.visitInfo.items],
-    );
+    const sortedVisitInfoItems = form.data
+        ? [...form.data.visitInfo.items].sort((a, b) => a.displayOrder - b.displayOrder)
+        : [];
 
-    const sortedButtons = useMemo(
-        () => [...locationData.cta.buttons].sort((a, b) => a.displayOrder - b.displayOrder),
-        [locationData.cta.buttons],
-    );
+    const sortedButtons = form.data
+        ? [...form.data.cta.buttons].sort((a, b) => a.displayOrder - b.displayOrder)
+        : [];
 
     const contactMethodLabels: Record<string, string> = {
         phone: "Phone",
@@ -947,7 +928,7 @@ export const AdminHomepageLocation = () => {
         email: "Email",
     };
 
-    if (loading) {
+    if (form.isLoading) {
         return (
             <PageContainer variant="wide" sx={{ minHeight: "100vh", paddingBottom: 0 }}>
                 <TopBar
@@ -985,7 +966,7 @@ export const AdminHomepageLocation = () => {
                 <ABTestEditingBanner />
 
                 {/* Unsaved changes warning */}
-                {hasChanges && (
+                {form.isDirty && (
                     <Alert
                         severity="warning"
                         sx={{
@@ -1005,7 +986,7 @@ export const AdminHomepageLocation = () => {
                 )}
 
                 {/* Action Buttons at Top */}
-                {hasChanges && (
+                {form.isDirty && (
                     <Paper
                         elevation={0}
                         sx={{
@@ -1022,8 +1003,8 @@ export const AdminHomepageLocation = () => {
                         <Button
                             variant="contained"
                             size="large"
-                            onClick={handleSave}
-                            disabled={isSaving}
+                            onClick={form.save}
+                            disabled={form.isSaving}
                             sx={{
                                 px: 4,
                                 fontWeight: 600,
@@ -1033,12 +1014,12 @@ export const AdminHomepageLocation = () => {
                                 },
                             }}
                         >
-                            {isSaving ? "Saving..." : "Save All Changes"}
+                            {form.isSaving ? "Saving..." : "Save All Changes"}
                         </Button>
                         <Button
                             variant="outlined"
                             size="large"
-                            onClick={handleReset}
+                            onClick={form.cancel}
                             sx={{
                                 px: 4,
                                 fontWeight: 600,
@@ -1073,1101 +1054,1025 @@ export const AdminHomepageLocation = () => {
                     </Typography>
                 </Alert>
 
-                {/* Two-column layout: Controls on left, Preview on right */}
-                <Grid container spacing={3}>
-                    {/* Left Column - Editing Controls */}
-                    <Grid item xs={12} lg={7}>
-                        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                            {/* Preview on Mobile Only */}
-                            <Box sx={{ display: { xs: "block", lg: "none" } }}>
-                                <Paper
-                                    elevation={0}
-                                    sx={{
-                                        p: 3,
-                                        bgcolor: "background.paper",
-                                        borderRadius: 2,
-                                        border: "2px solid",
-                                        borderColor: "divider",
-                                        boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-                                    }}
-                                >
-                                    <Box
-                                        sx={{
-                                            display: "flex",
-                                            alignItems: "center",
-                                            gap: 1.5,
-                                            mb: 3,
-                                        }}
-                                    >
-                                        <Box
-                                            sx={{
-                                                display: "flex",
-                                                alignItems: "center",
-                                                justifyContent: "center",
-                                                width: 36,
-                                                height: 36,
-                                                borderRadius: 1.5,
-                                                bgcolor: "primary.main",
-                                                color: "white",
-                                            }}
-                                        >
-                                            <MapPinIcon size={20} />
-                                        </Box>
-                                        <Box>
-                                            <Typography
-                                                variant="h6"
-                                                sx={{ fontWeight: 600, lineHeight: 1.2 }}
-                                            >
-                                                Live Preview
-                                            </Typography>
-                                            <Typography variant="caption" color="text.secondary">
-                                                See your changes in real-time
-                                            </Typography>
-                                        </Box>
-                                    </Box>
-                                    <LocationPreview
-                                        locationData={locationData}
-                                        foundedYear={foundedYear}
-                                    />
-                                    <Alert
-                                        severity="info"
-                                        sx={{
-                                            mt: 2,
-                                            bgcolor: "info.lighter",
-                                            border: "1px solid",
-                                            borderColor: "info.light",
-                                        }}
-                                    >
-                                        <Typography variant="caption">
-                                            This preview updates in real-time as you make changes.
-                                        </Typography>
-                                    </Alert>
-                                </Paper>
-                            </Box>
+                {!form.data && (
+                    <Alert severity="info" sx={{ mb: 3 }}>
+                        <Typography variant="body2">Loading location data...</Typography>
+                    </Alert>
+                )}
 
-                            {/* Accordion 1: Header Settings */}
-                            <Accordion
-                                defaultExpanded
-                                sx={{
-                                    border: "1px solid",
-                                    borderColor: "divider",
-                                    borderRadius: "8px !important",
-                                    "&:before": { display: "none" },
-                                    boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-                                    mb: 2,
-                                }}
-                            >
-                                <AccordionSummary
-                                    expandIcon={<ExpandMoreIcon />}
-                                    sx={{
-                                        bgcolor: "grey.50",
-                                        borderRadius: "8px 8px 0 0",
-                                        minHeight: 64,
-                                        "&:hover": {
-                                            bgcolor: "grey.100",
-                                        },
-                                        "& .MuiAccordionSummary-content": {
-                                            my: 2,
-                                        },
-                                    }}
-                                >
-                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                                        <Box
-                                            sx={{
-                                                display: "flex",
-                                                alignItems: "center",
-                                                justifyContent: "center",
-                                                width: 40,
-                                                height: 40,
-                                                borderRadius: 2,
-                                                bgcolor: "primary.main",
-                                                color: "white",
-                                            }}
-                                        >
-                                            <TextFieldsIcon />
-                                        </Box>
-                                        <Box>
-                                            <Typography
-                                                variant="h6"
-                                                sx={{ fontWeight: 600, lineHeight: 1.2 }}
-                                            >
-                                                Header Settings
-                                            </Typography>
-                                            <Typography variant="caption" color="text.secondary">
-                                                Configure section title, subtitle, and badge
-                                            </Typography>
-                                        </Box>
-                                    </Box>
-                                </AccordionSummary>
-                                <AccordionDetails sx={{ p: 3, bgcolor: "background.paper" }}>
-                                    <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                                        <TextField
-                                            fullWidth
-                                            label="Title"
-                                            value={locationData.header.title}
-                                            onChange={(e) => {
-                                                setLocationData({
-                                                    ...locationData,
-                                                    header: {
-                                                        ...locationData.header,
-                                                        title: e.target.value,
-                                                    },
-                                                });
-                                            }}
-                                            variant="outlined"
-                                            sx={{
-                                                "& .MuiOutlinedInput-root": {
-                                                    bgcolor: "background.paper",
-                                                },
-                                            }}
-                                        />
-                                        <TextField
-                                            fullWidth
-                                            label="Subtitle"
-                                            value={locationData.header.subtitle}
-                                            onChange={(e) => {
-                                                setLocationData({
-                                                    ...locationData,
-                                                    header: {
-                                                        ...locationData.header,
-                                                        subtitle: e.target.value,
-                                                    },
-                                                });
-                                            }}
-                                            helperText={`Preview: ${replaceTokens(locationData.header.subtitle, foundedYear)}`}
-                                            variant="outlined"
-                                            sx={{
-                                                "& .MuiOutlinedInput-root": {
-                                                    bgcolor: "background.paper",
-                                                },
-                                            }}
-                                        />
-                                        <TextField
-                                            fullWidth
-                                            label="Chip Text"
-                                            value={locationData.header.chip}
-                                            onChange={(e) => {
-                                                setLocationData({
-                                                    ...locationData,
-                                                    header: {
-                                                        ...locationData.header,
-                                                        chip: e.target.value,
-                                                    },
-                                                });
-                                            }}
-                                            variant="outlined"
-                                            sx={{
-                                                "& .MuiOutlinedInput-root": {
-                                                    bgcolor: "background.paper",
-                                                },
-                                            }}
-                                        />
-                                    </Box>
-                                </AccordionDetails>
-                            </Accordion>
-
-                            {/* Accordion 2: Map Settings */}
-                            <Accordion
-                                defaultExpanded
-                                sx={{
-                                    border: "1px solid",
-                                    borderColor: "divider",
-                                    borderRadius: "8px !important",
-                                    "&:before": { display: "none" },
-                                    boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-                                    mb: 2,
-                                }}
-                            >
-                                <AccordionSummary
-                                    expandIcon={<ExpandMoreIcon />}
-                                    sx={{
-                                        bgcolor: "grey.50",
-                                        borderRadius: "8px 8px 0 0",
-                                        minHeight: 64,
-                                        "&:hover": {
-                                            bgcolor: "grey.100",
-                                        },
-                                        "& .MuiAccordionSummary-content": {
-                                            my: 2,
-                                        },
-                                    }}
-                                >
-                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                                        <Box
-                                            sx={{
-                                                display: "flex",
-                                                alignItems: "center",
-                                                justifyContent: "center",
-                                                width: 40,
-                                                height: 40,
-                                                borderRadius: 2,
-                                                bgcolor: "secondary.main",
-                                                color: "white",
-                                            }}
-                                        >
-                                            <Map size={20} />
-                                        </Box>
-                                        <Box>
-                                            <Typography
-                                                variant="h6"
-                                                sx={{ fontWeight: 600, lineHeight: 1.2 }}
-                                            >
-                                                Map Settings
-                                            </Typography>
-                                            <Typography variant="caption" color="text.secondary">
-                                                Configure map display and directions button
-                                            </Typography>
-                                        </Box>
-                                    </Box>
-                                </AccordionSummary>
-                                <AccordionDetails sx={{ p: 3, bgcolor: "background.paper" }}>
-                                    <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                                        <FormControl fullWidth>
-                                            <InputLabel>Map Style</InputLabel>
-                                            <Select
-                                                value={locationData.map.style}
-                                                label="Map Style"
-                                                onChange={(e) => {
-                                                    setLocationData({
-                                                        ...locationData,
-                                                        map: {
-                                                            ...locationData.map,
-                                                            style: e.target.value as
-                                                                | "gradient"
-                                                                | "embedded",
-                                                        },
-                                                    });
-                                                }}
-                                                sx={{
-                                                    bgcolor: "background.paper",
-                                                }}
-                                            >
-                                                <MenuItem value="gradient">
-                                                    Gradient Placeholder (Simple)
-                                                </MenuItem>
-                                                <MenuItem value="embedded">
-                                                    Google Maps Embed (Interactive)
-                                                </MenuItem>
-                                            </Select>
-                                        </FormControl>
+                {form.data && (
+                    <>
+                        {/* Two-column layout: Controls on left, Preview on right */}
+                        <Grid container spacing={3}>
+                            {/* Left Column - Editing Controls */}
+                            <Grid item xs={12} lg={7}>
+                                <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                                    {/* Preview on Mobile Only */}
+                                    <Box sx={{ display: { xs: "block", lg: "none" } }}>
                                         <Paper
                                             elevation={0}
                                             sx={{
-                                                p: 2,
-                                                bgcolor: "grey.50",
-                                                border: "1px solid",
+                                                p: 3,
+                                                bgcolor: "background.paper",
+                                                borderRadius: 2,
+                                                border: "2px solid",
                                                 borderColor: "divider",
-                                                borderRadius: 1,
+                                                boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
                                             }}
                                         >
-                                            <FormControlLabel
-                                                control={
-                                                    <Switch
-                                                        checked={
-                                                            locationData.map.showGetDirectionsButton
-                                                        }
-                                                        onChange={(e) => {
-                                                            setLocationData({
-                                                                ...locationData,
-                                                                map: {
-                                                                    ...locationData.map,
-                                                                    showGetDirectionsButton:
-                                                                        e.target.checked,
-                                                                },
-                                                            });
-                                                        }}
-                                                    />
-                                                }
-                                                label={
-                                                    <Typography
-                                                        variant="body2"
-                                                        sx={{ fontWeight: 500 }}
-                                                    >
-                                                        Show Get Directions Button
-                                                    </Typography>
-                                                }
-                                            />
-                                        </Paper>
-                                        <TextField
-                                            fullWidth
-                                            label="Button Text"
-                                            value={locationData.map.buttonText}
-                                            onChange={(e) => {
-                                                setLocationData({
-                                                    ...locationData,
-                                                    map: {
-                                                        ...locationData.map,
-                                                        buttonText: e.target.value,
-                                                    },
-                                                });
-                                            }}
-                                            disabled={!locationData.map.showGetDirectionsButton}
-                                            sx={{
-                                                "& .MuiOutlinedInput-root": {
-                                                    bgcolor: "background.paper",
-                                                },
-                                            }}
-                                        />
-                                    </Box>
-                                </AccordionDetails>
-                            </Accordion>
-
-                            {/* Accordion 3: Contact Methods */}
-                            <Accordion
-                                defaultExpanded
-                                sx={{
-                                    border: "1px solid",
-                                    borderColor: "divider",
-                                    borderRadius: "8px !important",
-                                    "&:before": { display: "none" },
-                                    boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-                                    mb: 2,
-                                }}
-                            >
-                                <AccordionSummary
-                                    expandIcon={<ExpandMoreIcon />}
-                                    sx={{
-                                        bgcolor: "grey.50",
-                                        borderRadius: "8px 8px 0 0",
-                                        minHeight: 64,
-                                        "&:hover": {
-                                            bgcolor: "grey.100",
-                                        },
-                                        "& .MuiAccordionSummary-content": {
-                                            my: 2,
-                                        },
-                                    }}
-                                >
-                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                                        <Box
-                                            sx={{
-                                                display: "flex",
-                                                alignItems: "center",
-                                                justifyContent: "center",
-                                                width: 40,
-                                                height: 40,
-                                                borderRadius: 2,
-                                                bgcolor: "success.main",
-                                                color: "white",
-                                            }}
-                                        >
-                                            <ContactPhoneIcon />
-                                        </Box>
-                                        <Box>
-                                            <Typography
-                                                variant="h6"
-                                                sx={{ fontWeight: 600, lineHeight: 1.2 }}
-                                            >
-                                                Contact Methods
-                                            </Typography>
-                                            <Typography variant="caption" color="text.secondary">
-                                                Configure contact information display order
-                                            </Typography>
-                                        </Box>
-                                    </Box>
-                                </AccordionSummary>
-                                <AccordionDetails sx={{ p: 3, bgcolor: "background.paper" }}>
-                                    <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                                        <TextField
-                                            fullWidth
-                                            label="Section Title"
-                                            value={locationData.contactMethods.sectionTitle}
-                                            onChange={(e) => {
-                                                setLocationData({
-                                                    ...locationData,
-                                                    contactMethods: {
-                                                        ...locationData.contactMethods,
-                                                        sectionTitle: e.target.value,
-                                                    },
-                                                });
-                                            }}
-                                            sx={{
-                                                "& .MuiOutlinedInput-root": {
-                                                    bgcolor: "background.paper",
-                                                },
-                                            }}
-                                        />
-                                        <Box>
-                                            <Typography
-                                                variant="subtitle2"
-                                                sx={{ mb: 1.5, fontWeight: 600 }}
-                                            >
-                                                Order (drag to reorder):
-                                            </Typography>
-                                            <DragDropContext onDragEnd={handleContactMethodDragEnd}>
-                                                <Droppable droppableId="contact-methods">
-                                                    {(provided) => (
-                                                        <Box
-                                                            {...provided.droppableProps}
-                                                            ref={provided.innerRef}
-                                                        >
-                                                            {locationData.contactMethods.order.map(
-                                                                (method, index) => (
-                                                                    <Draggable
-                                                                        key={method}
-                                                                        draggableId={method}
-                                                                        index={index}
-                                                                    >
-                                                                        {(provided, snapshot) => (
-                                                                            <Paper
-                                                                                ref={
-                                                                                    provided.innerRef
-                                                                                }
-                                                                                {...provided.draggableProps}
-                                                                                elevation={0}
-                                                                                sx={{
-                                                                                    mb: 1,
-                                                                                    display: "flex",
-                                                                                    alignItems:
-                                                                                        "center",
-                                                                                    gap: 2,
-                                                                                    p: 1.5,
-                                                                                    border: "2px solid",
-                                                                                    borderColor:
-                                                                                        snapshot.isDragging
-                                                                                            ? "primary.main"
-                                                                                            : "divider",
-                                                                                    borderRadius: 2,
-                                                                                    bgcolor:
-                                                                                        "background.paper",
-                                                                                    transition:
-                                                                                        "all 0.2s",
-                                                                                    "&:hover": {
-                                                                                        borderColor:
-                                                                                            "primary.light",
-                                                                                        boxShadow:
-                                                                                            "0 2px 8px rgba(0,0,0,0.08)",
-                                                                                    },
-                                                                                }}
-                                                                            >
-                                                                                <Box
-                                                                                    {...provided.dragHandleProps}
-                                                                                >
-                                                                                    <GripVertical
-                                                                                        size={20}
-                                                                                        color={
-                                                                                            palette
-                                                                                                .text
-                                                                                                .secondary
-                                                                                        }
-                                                                                    />
-                                                                                </Box>
-                                                                                <Typography
-                                                                                    sx={{
-                                                                                        fontWeight: 600,
-                                                                                        minWidth: 80,
-                                                                                    }}
-                                                                                >
-                                                                                    {
-                                                                                        contactMethodLabels[
-                                                                                            method
-                                                                                        ]
-                                                                                    }
-                                                                                </Typography>
-                                                                            </Paper>
-                                                                        )}
-                                                                    </Draggable>
-                                                                ),
-                                                            )}
-                                                            {provided.placeholder}
-                                                        </Box>
-                                                    )}
-                                                </Droppable>
-                                            </DragDropContext>
-                                        </Box>
-                                        <TextField
-                                            fullWidth
-                                            label="Phone Description"
-                                            value={locationData.contactMethods.descriptions.phone}
-                                            onChange={(e) => {
-                                                setLocationData({
-                                                    ...locationData,
-                                                    contactMethods: {
-                                                        ...locationData.contactMethods,
-                                                        descriptions: {
-                                                            ...locationData.contactMethods
-                                                                .descriptions,
-                                                            phone: e.target.value,
-                                                        },
-                                                    },
-                                                });
-                                            }}
-                                            sx={{
-                                                "& .MuiOutlinedInput-root": {
-                                                    bgcolor: "background.paper",
-                                                },
-                                            }}
-                                        />
-                                        <TextField
-                                            fullWidth
-                                            label="Address Description"
-                                            value={locationData.contactMethods.descriptions.address}
-                                            onChange={(e) => {
-                                                setLocationData({
-                                                    ...locationData,
-                                                    contactMethods: {
-                                                        ...locationData.contactMethods,
-                                                        descriptions: {
-                                                            ...locationData.contactMethods
-                                                                .descriptions,
-                                                            address: e.target.value,
-                                                        },
-                                                    },
-                                                });
-                                            }}
-                                            sx={{
-                                                "& .MuiOutlinedInput-root": {
-                                                    bgcolor: "background.paper",
-                                                },
-                                            }}
-                                        />
-                                        <TextField
-                                            fullWidth
-                                            label="Email Description"
-                                            value={locationData.contactMethods.descriptions.email}
-                                            onChange={(e) => {
-                                                setLocationData({
-                                                    ...locationData,
-                                                    contactMethods: {
-                                                        ...locationData.contactMethods,
-                                                        descriptions: {
-                                                            ...locationData.contactMethods
-                                                                .descriptions,
-                                                            email: e.target.value,
-                                                        },
-                                                    },
-                                                });
-                                            }}
-                                            sx={{
-                                                "& .MuiOutlinedInput-root": {
-                                                    bgcolor: "background.paper",
-                                                },
-                                            }}
-                                        />
-                                    </Box>
-                                </AccordionDetails>
-                            </Accordion>
-
-                            {/* Accordion 4: Business Hours Labels */}
-                            <Accordion
-                                defaultExpanded
-                                sx={{
-                                    border: "1px solid",
-                                    borderColor: "divider",
-                                    borderRadius: "8px !important",
-                                    "&:before": { display: "none" },
-                                    boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-                                    mb: 2,
-                                }}
-                            >
-                                <AccordionSummary
-                                    expandIcon={<ExpandMoreIcon />}
-                                    sx={{
-                                        bgcolor: "grey.50",
-                                        borderRadius: "8px 8px 0 0",
-                                        minHeight: 64,
-                                        "&:hover": {
-                                            bgcolor: "grey.100",
-                                        },
-                                        "& .MuiAccordionSummary-content": {
-                                            my: 2,
-                                        },
-                                    }}
-                                >
-                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                                        <Box
-                                            sx={{
-                                                display: "flex",
-                                                alignItems: "center",
-                                                justifyContent: "center",
-                                                width: 40,
-                                                height: 40,
-                                                borderRadius: 2,
-                                                bgcolor: "info.main",
-                                                color: "white",
-                                            }}
-                                        >
-                                            <AccessTimeIcon />
-                                        </Box>
-                                        <Box>
-                                            <Typography
-                                                variant="h6"
-                                                sx={{ fontWeight: 600, lineHeight: 1.2 }}
-                                            >
-                                                Business Hours Labels
-                                            </Typography>
-                                            <Typography variant="caption" color="text.secondary">
-                                                Configure section title and badge (hours managed in
-                                                Branding)
-                                            </Typography>
-                                        </Box>
-                                    </Box>
-                                </AccordionSummary>
-                                <AccordionDetails sx={{ p: 3, bgcolor: "background.paper" }}>
-                                    <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                                        <TextField
-                                            fullWidth
-                                            label="Title"
-                                            value={locationData.businessHours.title}
-                                            onChange={(e) => {
-                                                setLocationData({
-                                                    ...locationData,
-                                                    businessHours: {
-                                                        ...locationData.businessHours,
-                                                        title: e.target.value,
-                                                    },
-                                                });
-                                            }}
-                                            sx={{
-                                                "& .MuiOutlinedInput-root": {
-                                                    bgcolor: "background.paper",
-                                                },
-                                            }}
-                                        />
-                                        <TextField
-                                            fullWidth
-                                            label="Chip Text"
-                                            value={locationData.businessHours.chip}
-                                            onChange={(e) => {
-                                                setLocationData({
-                                                    ...locationData,
-                                                    businessHours: {
-                                                        ...locationData.businessHours,
-                                                        chip: e.target.value,
-                                                    },
-                                                });
-                                            }}
-                                            sx={{
-                                                "& .MuiOutlinedInput-root": {
-                                                    bgcolor: "background.paper",
-                                                },
-                                            }}
-                                        />
-                                    </Box>
-                                </AccordionDetails>
-                            </Accordion>
-
-                            {/* Accordion 5: Visit Information Cards */}
-                            <Accordion
-                                defaultExpanded
-                                sx={{
-                                    border: "1px solid",
-                                    borderColor: "divider",
-                                    borderRadius: "8px !important",
-                                    "&:before": { display: "none" },
-                                    boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-                                    mb: 2,
-                                }}
-                            >
-                                <AccordionSummary
-                                    expandIcon={<ExpandMoreIcon />}
-                                    sx={{
-                                        bgcolor: "grey.50",
-                                        borderRadius: "8px 8px 0 0",
-                                        minHeight: 64,
-                                        "&:hover": {
-                                            bgcolor: "grey.100",
-                                        },
-                                        "& .MuiAccordionSummary-content": {
-                                            my: 2,
-                                        },
-                                    }}
-                                >
-                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                                        <Box
-                                            sx={{
-                                                display: "flex",
-                                                alignItems: "center",
-                                                justifyContent: "center",
-                                                width: 40,
-                                                height: 40,
-                                                borderRadius: 2,
-                                                bgcolor: "warning.main",
-                                                color: "white",
-                                            }}
-                                        >
-                                            <InfoIcon size={20} />
-                                        </Box>
-                                        <Box>
-                                            <Typography
-                                                variant="h6"
-                                                sx={{ fontWeight: 600, lineHeight: 1.2 }}
-                                            >
-                                                Visit Information Cards
-                                            </Typography>
-                                            <Typography variant="caption" color="text.secondary">
-                                                Add info cards about visiting your location (
-                                                {locationData.visitInfo.items.length} items,{" "}
-                                                {
-                                                    locationData.visitInfo.items.filter(
-                                                        (i) => i.isActive,
-                                                    ).length
-                                                }{" "}
-                                                active)
-                                            </Typography>
-                                        </Box>
-                                    </Box>
-                                </AccordionSummary>
-                                <AccordionDetails sx={{ p: 3, bgcolor: "background.paper" }}>
-                                    <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                                        <TextField
-                                            fullWidth
-                                            label="Section Title"
-                                            value={locationData.visitInfo.sectionTitle}
-                                            onChange={(e) => {
-                                                setLocationData({
-                                                    ...locationData,
-                                                    visitInfo: {
-                                                        ...locationData.visitInfo,
-                                                        sectionTitle: e.target.value,
-                                                    },
-                                                });
-                                            }}
-                                            sx={{
-                                                "& .MuiOutlinedInput-root": {
-                                                    bgcolor: "background.paper",
-                                                },
-                                            }}
-                                        />
-                                        <Box>
                                             <Box
                                                 sx={{
                                                     display: "flex",
-                                                    justifyContent: "space-between",
                                                     alignItems: "center",
-                                                    mb: 2,
+                                                    gap: 1.5,
+                                                    mb: 3,
                                                 }}
                                             >
-                                                <Typography
-                                                    variant="subtitle2"
-                                                    sx={{ fontWeight: 600 }}
-                                                >
-                                                    Items (drag to reorder):
-                                                </Typography>
-                                                <Button
-                                                    variant="outlined"
-                                                    size="small"
-                                                    startIcon={<Plus size={16} />}
-                                                    onClick={handleAddVisitInfoItem}
+                                                <Box
                                                     sx={{
-                                                        borderStyle: "dashed",
-                                                        borderWidth: 2,
-                                                        "&:hover": {
-                                                            borderWidth: 2,
-                                                        },
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        justifyContent: "center",
+                                                        width: 36,
+                                                        height: 36,
+                                                        borderRadius: 1.5,
+                                                        bgcolor: "primary.main",
+                                                        color: "white",
                                                     }}
                                                 >
-                                                    Add Item
-                                                </Button>
+                                                    <MapPinIcon size={20} />
+                                                </Box>
+                                                <Box>
+                                                    <Typography
+                                                        variant="h6"
+                                                        sx={{ fontWeight: 600, lineHeight: 1.2 }}
+                                                    >
+                                                        Live Preview
+                                                    </Typography>
+                                                    <Typography
+                                                        variant="caption"
+                                                        color="text.secondary"
+                                                    >
+                                                        See your changes in real-time
+                                                    </Typography>
+                                                </Box>
                                             </Box>
-                                            <DragDropContext onDragEnd={handleVisitInfoDragEnd}>
-                                                <Droppable droppableId="visit-info-items">
-                                                    {(provided) => (
-                                                        <Box
-                                                            {...provided.droppableProps}
-                                                            ref={provided.innerRef}
-                                                        >
-                                                            {sortedVisitInfoItems.map(
-                                                                (item, index) => (
-                                                                    <Draggable
-                                                                        key={item.id}
-                                                                        draggableId={item.id}
-                                                                        index={index}
-                                                                    >
-                                                                        {(provided, snapshot) => (
-                                                                            <Paper
-                                                                                ref={
-                                                                                    provided.innerRef
-                                                                                }
-                                                                                {...provided.draggableProps}
-                                                                                elevation={0}
-                                                                                sx={{
-                                                                                    mb: 2,
-                                                                                    p: 2.5,
-                                                                                    border: "2px solid",
-                                                                                    borderColor:
-                                                                                        snapshot.isDragging
-                                                                                            ? "primary.main"
-                                                                                            : item.isActive
-                                                                                              ? "success.light"
-                                                                                              : "divider",
-                                                                                    borderRadius: 2,
-                                                                                    transition:
-                                                                                        "all 0.2s",
-                                                                                    opacity:
-                                                                                        snapshot.isDragging
-                                                                                            ? 0.7
-                                                                                            : 1,
-                                                                                    boxShadow:
-                                                                                        snapshot.isDragging
-                                                                                            ? "0 8px 16px rgba(0,0,0,0.15)"
-                                                                                            : "0 1px 3px rgba(0,0,0,0.05)",
-                                                                                    "&:hover": {
-                                                                                        borderColor:
-                                                                                            item.isActive
-                                                                                                ? "success.main"
-                                                                                                : "primary.light",
-                                                                                        boxShadow:
-                                                                                            "0 4px 12px rgba(0,0,0,0.1)",
-                                                                                    },
-                                                                                }}
+                                            <LocationPreview
+                                                locationData={form.data}
+                                                foundedYear={foundedYear}
+                                            />
+                                            <Alert
+                                                severity="info"
+                                                sx={{
+                                                    mt: 2,
+                                                    bgcolor: "info.lighter",
+                                                    border: "1px solid",
+                                                    borderColor: "info.light",
+                                                }}
+                                            >
+                                                <Typography variant="caption">
+                                                    This preview updates in real-time as you make
+                                                    changes.
+                                                </Typography>
+                                            </Alert>
+                                        </Paper>
+                                    </Box>
+
+                                    {/* Accordion 1: Header Settings */}
+                                    <Accordion
+                                        defaultExpanded
+                                        sx={{
+                                            border: "1px solid",
+                                            borderColor: "divider",
+                                            borderRadius: "8px !important",
+                                            "&:before": { display: "none" },
+                                            boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+                                            mb: 2,
+                                        }}
+                                    >
+                                        <AccordionSummary
+                                            expandIcon={<ExpandMoreIcon />}
+                                            sx={{
+                                                bgcolor: "grey.50",
+                                                borderRadius: "8px 8px 0 0",
+                                                minHeight: 64,
+                                                "&:hover": {
+                                                    bgcolor: "grey.100",
+                                                },
+                                                "& .MuiAccordionSummary-content": {
+                                                    my: 2,
+                                                },
+                                            }}
+                                        >
+                                            <Box
+                                                sx={{
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    gap: 1.5,
+                                                }}
+                                            >
+                                                <Box
+                                                    sx={{
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        justifyContent: "center",
+                                                        width: 40,
+                                                        height: 40,
+                                                        borderRadius: 2,
+                                                        bgcolor: "primary.main",
+                                                        color: "white",
+                                                    }}
+                                                >
+                                                    <TextFieldsIcon />
+                                                </Box>
+                                                <Box>
+                                                    <Typography
+                                                        variant="h6"
+                                                        sx={{ fontWeight: 600, lineHeight: 1.2 }}
+                                                    >
+                                                        Header Settings
+                                                    </Typography>
+                                                    <Typography
+                                                        variant="caption"
+                                                        color="text.secondary"
+                                                    >
+                                                        Configure section title, subtitle, and badge
+                                                    </Typography>
+                                                </Box>
+                                            </Box>
+                                        </AccordionSummary>
+                                        <AccordionDetails
+                                            sx={{ p: 3, bgcolor: "background.paper" }}
+                                        >
+                                            <Box
+                                                sx={{
+                                                    display: "flex",
+                                                    flexDirection: "column",
+                                                    gap: 3,
+                                                }}
+                                            >
+                                                <TextField
+                                                    fullWidth
+                                                    label="Title"
+                                                    value={form.data.header.title}
+                                                    onChange={(e) => {
+                                                        form.setData({
+                                                            ...form.data!,
+                                                            header: {
+                                                                ...form.data!.header,
+                                                                title: e.target.value,
+                                                            },
+                                                        });
+                                                    }}
+                                                    variant="outlined"
+                                                    sx={{
+                                                        "& .MuiOutlinedInput-root": {
+                                                            bgcolor: "background.paper",
+                                                        },
+                                                    }}
+                                                />
+                                                <TextField
+                                                    fullWidth
+                                                    label="Subtitle"
+                                                    value={form.data.header.subtitle}
+                                                    onChange={(e) => {
+                                                        form.setData({
+                                                            ...form.data!,
+                                                            header: {
+                                                                ...form.data!.header,
+                                                                subtitle: e.target.value,
+                                                            },
+                                                        });
+                                                    }}
+                                                    helperText={`Preview: ${replaceTokens(form.data.header.subtitle, foundedYear)}`}
+                                                    variant="outlined"
+                                                    sx={{
+                                                        "& .MuiOutlinedInput-root": {
+                                                            bgcolor: "background.paper",
+                                                        },
+                                                    }}
+                                                />
+                                                <TextField
+                                                    fullWidth
+                                                    label="Chip Text"
+                                                    value={form.data.header.chip}
+                                                    onChange={(e) => {
+                                                        form.setData({
+                                                            ...form.data!,
+                                                            header: {
+                                                                ...form.data!.header,
+                                                                chip: e.target.value,
+                                                            },
+                                                        });
+                                                    }}
+                                                    variant="outlined"
+                                                    sx={{
+                                                        "& .MuiOutlinedInput-root": {
+                                                            bgcolor: "background.paper",
+                                                        },
+                                                    }}
+                                                />
+                                            </Box>
+                                        </AccordionDetails>
+                                    </Accordion>
+
+                                    {/* Accordion 2: Map Settings */}
+                                    <Accordion
+                                        defaultExpanded
+                                        sx={{
+                                            border: "1px solid",
+                                            borderColor: "divider",
+                                            borderRadius: "8px !important",
+                                            "&:before": { display: "none" },
+                                            boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+                                            mb: 2,
+                                        }}
+                                    >
+                                        <AccordionSummary
+                                            expandIcon={<ExpandMoreIcon />}
+                                            sx={{
+                                                bgcolor: "grey.50",
+                                                borderRadius: "8px 8px 0 0",
+                                                minHeight: 64,
+                                                "&:hover": {
+                                                    bgcolor: "grey.100",
+                                                },
+                                                "& .MuiAccordionSummary-content": {
+                                                    my: 2,
+                                                },
+                                            }}
+                                        >
+                                            <Box
+                                                sx={{
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    gap: 1.5,
+                                                }}
+                                            >
+                                                <Box
+                                                    sx={{
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        justifyContent: "center",
+                                                        width: 40,
+                                                        height: 40,
+                                                        borderRadius: 2,
+                                                        bgcolor: "secondary.main",
+                                                        color: "white",
+                                                    }}
+                                                >
+                                                    <Map size={20} />
+                                                </Box>
+                                                <Box>
+                                                    <Typography
+                                                        variant="h6"
+                                                        sx={{ fontWeight: 600, lineHeight: 1.2 }}
+                                                    >
+                                                        Map Settings
+                                                    </Typography>
+                                                    <Typography
+                                                        variant="caption"
+                                                        color="text.secondary"
+                                                    >
+                                                        Configure map display and directions button
+                                                    </Typography>
+                                                </Box>
+                                            </Box>
+                                        </AccordionSummary>
+                                        <AccordionDetails
+                                            sx={{ p: 3, bgcolor: "background.paper" }}
+                                        >
+                                            <Box
+                                                sx={{
+                                                    display: "flex",
+                                                    flexDirection: "column",
+                                                    gap: 3,
+                                                }}
+                                            >
+                                                <FormControl fullWidth>
+                                                    <InputLabel>Map Style</InputLabel>
+                                                    <Select
+                                                        value={form.data.map.style}
+                                                        label="Map Style"
+                                                        onChange={(e) => {
+                                                            form.setData({
+                                                                ...form.data!,
+                                                                map: {
+                                                                    ...form.data!.map,
+                                                                    style: e.target.value as
+                                                                        | "gradient"
+                                                                        | "embedded",
+                                                                },
+                                                            });
+                                                        }}
+                                                        sx={{
+                                                            bgcolor: "background.paper",
+                                                        }}
+                                                    >
+                                                        <MenuItem value="gradient">
+                                                            Gradient Placeholder (Simple)
+                                                        </MenuItem>
+                                                        <MenuItem value="embedded">
+                                                            Google Maps Embed (Interactive)
+                                                        </MenuItem>
+                                                    </Select>
+                                                </FormControl>
+                                                <Paper
+                                                    elevation={0}
+                                                    sx={{
+                                                        p: 2,
+                                                        bgcolor: "grey.50",
+                                                        border: "1px solid",
+                                                        borderColor: "divider",
+                                                        borderRadius: 1,
+                                                    }}
+                                                >
+                                                    <FormControlLabel
+                                                        control={
+                                                            <Switch
+                                                                checked={
+                                                                    form.data.map
+                                                                        .showGetDirectionsButton
+                                                                }
+                                                                onChange={(e) => {
+                                                                    form.setData({
+                                                                        ...form.data!,
+                                                                        map: {
+                                                                            ...form.data!.map,
+                                                                            showGetDirectionsButton:
+                                                                                e.target.checked,
+                                                                        },
+                                                                    });
+                                                                }}
+                                                            />
+                                                        }
+                                                        label={
+                                                            <Typography
+                                                                variant="body2"
+                                                                sx={{ fontWeight: 500 }}
+                                                            >
+                                                                Show Get Directions Button
+                                                            </Typography>
+                                                        }
+                                                    />
+                                                </Paper>
+                                                <TextField
+                                                    fullWidth
+                                                    label="Button Text"
+                                                    value={form.data.map.buttonText}
+                                                    onChange={(e) => {
+                                                        form.setData({
+                                                            ...form.data!,
+                                                            map: {
+                                                                ...form.data!.map,
+                                                                buttonText: e.target.value,
+                                                            },
+                                                        });
+                                                    }}
+                                                    disabled={
+                                                        !form.data.map.showGetDirectionsButton
+                                                    }
+                                                    sx={{
+                                                        "& .MuiOutlinedInput-root": {
+                                                            bgcolor: "background.paper",
+                                                        },
+                                                    }}
+                                                />
+                                            </Box>
+                                        </AccordionDetails>
+                                    </Accordion>
+
+                                    {/* Accordion 3: Contact Methods */}
+                                    <Accordion
+                                        defaultExpanded
+                                        sx={{
+                                            border: "1px solid",
+                                            borderColor: "divider",
+                                            borderRadius: "8px !important",
+                                            "&:before": { display: "none" },
+                                            boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+                                            mb: 2,
+                                        }}
+                                    >
+                                        <AccordionSummary
+                                            expandIcon={<ExpandMoreIcon />}
+                                            sx={{
+                                                bgcolor: "grey.50",
+                                                borderRadius: "8px 8px 0 0",
+                                                minHeight: 64,
+                                                "&:hover": {
+                                                    bgcolor: "grey.100",
+                                                },
+                                                "& .MuiAccordionSummary-content": {
+                                                    my: 2,
+                                                },
+                                            }}
+                                        >
+                                            <Box
+                                                sx={{
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    gap: 1.5,
+                                                }}
+                                            >
+                                                <Box
+                                                    sx={{
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        justifyContent: "center",
+                                                        width: 40,
+                                                        height: 40,
+                                                        borderRadius: 2,
+                                                        bgcolor: "success.main",
+                                                        color: "white",
+                                                    }}
+                                                >
+                                                    <ContactPhoneIcon />
+                                                </Box>
+                                                <Box>
+                                                    <Typography
+                                                        variant="h6"
+                                                        sx={{ fontWeight: 600, lineHeight: 1.2 }}
+                                                    >
+                                                        Contact Methods
+                                                    </Typography>
+                                                    <Typography
+                                                        variant="caption"
+                                                        color="text.secondary"
+                                                    >
+                                                        Configure contact information display order
+                                                    </Typography>
+                                                </Box>
+                                            </Box>
+                                        </AccordionSummary>
+                                        <AccordionDetails
+                                            sx={{ p: 3, bgcolor: "background.paper" }}
+                                        >
+                                            <Box
+                                                sx={{
+                                                    display: "flex",
+                                                    flexDirection: "column",
+                                                    gap: 3,
+                                                }}
+                                            >
+                                                <TextField
+                                                    fullWidth
+                                                    label="Section Title"
+                                                    value={form.data.contactMethods.sectionTitle}
+                                                    onChange={(e) => {
+                                                        form.setData({
+                                                            ...form.data!,
+                                                            contactMethods: {
+                                                                ...form.data!.contactMethods,
+                                                                sectionTitle: e.target.value,
+                                                            },
+                                                        });
+                                                    }}
+                                                    sx={{
+                                                        "& .MuiOutlinedInput-root": {
+                                                            bgcolor: "background.paper",
+                                                        },
+                                                    }}
+                                                />
+                                                <Box>
+                                                    <Typography
+                                                        variant="subtitle2"
+                                                        sx={{ mb: 1.5, fontWeight: 600 }}
+                                                    >
+                                                        Order (drag to reorder):
+                                                    </Typography>
+                                                    <DragDropContext
+                                                        onDragEnd={handleContactMethodDragEnd}
+                                                    >
+                                                        <Droppable droppableId="contact-methods">
+                                                            {(provided) => (
+                                                                <Box
+                                                                    {...provided.droppableProps}
+                                                                    ref={provided.innerRef}
+                                                                >
+                                                                    {form.data!.contactMethods.order.map(
+                                                                        (method, index) => (
+                                                                            <Draggable
+                                                                                key={method}
+                                                                                draggableId={method}
+                                                                                index={index}
                                                                             >
-                                                                                <Box
-                                                                                    sx={{
-                                                                                        display:
-                                                                                            "flex",
-                                                                                        gap: 2,
-                                                                                    }}
-                                                                                >
-                                                                                    <Box
-                                                                                        {...provided.dragHandleProps}
-                                                                                    >
-                                                                                        <GripVertical
-                                                                                            size={
-                                                                                                20
-                                                                                            }
-                                                                                            color={
-                                                                                                palette
-                                                                                                    .text
-                                                                                                    .secondary
-                                                                                            }
-                                                                                        />
-                                                                                    </Box>
-                                                                                    <Box
+                                                                                {(
+                                                                                    provided,
+                                                                                    snapshot,
+                                                                                ) => (
+                                                                                    <Paper
+                                                                                        ref={
+                                                                                            provided.innerRef
+                                                                                        }
+                                                                                        {...provided.draggableProps}
+                                                                                        elevation={
+                                                                                            0
+                                                                                        }
                                                                                         sx={{
-                                                                                            flex: 1,
+                                                                                            mb: 1,
+                                                                                            display:
+                                                                                                "flex",
+                                                                                            alignItems:
+                                                                                                "center",
+                                                                                            gap: 2,
+                                                                                            p: 1.5,
+                                                                                            border: "2px solid",
+                                                                                            borderColor:
+                                                                                                snapshot.isDragging
+                                                                                                    ? "primary.main"
+                                                                                                    : "divider",
+                                                                                            borderRadius: 2,
+                                                                                            bgcolor:
+                                                                                                "background.paper",
+                                                                                            transition:
+                                                                                                "all 0.2s",
+                                                                                            "&:hover":
+                                                                                                {
+                                                                                                    borderColor:
+                                                                                                        "primary.light",
+                                                                                                    boxShadow:
+                                                                                                        "0 2px 8px rgba(0,0,0,0.08)",
+                                                                                                },
                                                                                         }}
                                                                                     >
-                                                                                        <Grid
-                                                                                            container
-                                                                                            spacing={
-                                                                                                2
-                                                                                            }
+                                                                                        <Box
+                                                                                            {...provided.dragHandleProps}
                                                                                         >
-                                                                                            <Grid
-                                                                                                item
-                                                                                                xs={
-                                                                                                    12
+                                                                                            <GripVertical
+                                                                                                size={
+                                                                                                    20
                                                                                                 }
-                                                                                                sm={
-                                                                                                    6
+                                                                                                color={
+                                                                                                    palette
+                                                                                                        .text
+                                                                                                        .secondary
                                                                                                 }
+                                                                                            />
+                                                                                        </Box>
+                                                                                        <Typography
+                                                                                            sx={{
+                                                                                                fontWeight: 600,
+                                                                                                minWidth: 80,
+                                                                                            }}
+                                                                                        >
+                                                                                            {
+                                                                                                contactMethodLabels[
+                                                                                                    method
+                                                                                                ]
+                                                                                            }
+                                                                                        </Typography>
+                                                                                    </Paper>
+                                                                                )}
+                                                                            </Draggable>
+                                                                        ),
+                                                                    )}
+                                                                    {provided.placeholder}
+                                                                </Box>
+                                                            )}
+                                                        </Droppable>
+                                                    </DragDropContext>
+                                                </Box>
+                                                <TextField
+                                                    fullWidth
+                                                    label="Phone Description"
+                                                    value={
+                                                        form.data.contactMethods.descriptions.phone
+                                                    }
+                                                    onChange={(e) => {
+                                                        form.setData({
+                                                            ...form.data!,
+                                                            contactMethods: {
+                                                                ...form.data!.contactMethods,
+                                                                descriptions: {
+                                                                    ...form.data!.contactMethods
+                                                                        .descriptions,
+                                                                    phone: e.target.value,
+                                                                },
+                                                            },
+                                                        });
+                                                    }}
+                                                    sx={{
+                                                        "& .MuiOutlinedInput-root": {
+                                                            bgcolor: "background.paper",
+                                                        },
+                                                    }}
+                                                />
+                                                <TextField
+                                                    fullWidth
+                                                    label="Address Description"
+                                                    value={
+                                                        form.data.contactMethods.descriptions
+                                                            .address
+                                                    }
+                                                    onChange={(e) => {
+                                                        form.setData({
+                                                            ...form.data!,
+                                                            contactMethods: {
+                                                                ...form.data!.contactMethods,
+                                                                descriptions: {
+                                                                    ...form.data!.contactMethods
+                                                                        .descriptions,
+                                                                    address: e.target.value,
+                                                                },
+                                                            },
+                                                        });
+                                                    }}
+                                                    sx={{
+                                                        "& .MuiOutlinedInput-root": {
+                                                            bgcolor: "background.paper",
+                                                        },
+                                                    }}
+                                                />
+                                                <TextField
+                                                    fullWidth
+                                                    label="Email Description"
+                                                    value={
+                                                        form.data.contactMethods.descriptions.email
+                                                    }
+                                                    onChange={(e) => {
+                                                        form.setData({
+                                                            ...form.data!,
+                                                            contactMethods: {
+                                                                ...form.data!.contactMethods,
+                                                                descriptions: {
+                                                                    ...form.data!.contactMethods
+                                                                        .descriptions,
+                                                                    email: e.target.value,
+                                                                },
+                                                            },
+                                                        });
+                                                    }}
+                                                    sx={{
+                                                        "& .MuiOutlinedInput-root": {
+                                                            bgcolor: "background.paper",
+                                                        },
+                                                    }}
+                                                />
+                                            </Box>
+                                        </AccordionDetails>
+                                    </Accordion>
+
+                                    {/* Accordion 4: Business Hours Labels */}
+                                    <Accordion
+                                        defaultExpanded
+                                        sx={{
+                                            border: "1px solid",
+                                            borderColor: "divider",
+                                            borderRadius: "8px !important",
+                                            "&:before": { display: "none" },
+                                            boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+                                            mb: 2,
+                                        }}
+                                    >
+                                        <AccordionSummary
+                                            expandIcon={<ExpandMoreIcon />}
+                                            sx={{
+                                                bgcolor: "grey.50",
+                                                borderRadius: "8px 8px 0 0",
+                                                minHeight: 64,
+                                                "&:hover": {
+                                                    bgcolor: "grey.100",
+                                                },
+                                                "& .MuiAccordionSummary-content": {
+                                                    my: 2,
+                                                },
+                                            }}
+                                        >
+                                            <Box
+                                                sx={{
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    gap: 1.5,
+                                                }}
+                                            >
+                                                <Box
+                                                    sx={{
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        justifyContent: "center",
+                                                        width: 40,
+                                                        height: 40,
+                                                        borderRadius: 2,
+                                                        bgcolor: "info.main",
+                                                        color: "white",
+                                                    }}
+                                                >
+                                                    <AccessTimeIcon />
+                                                </Box>
+                                                <Box>
+                                                    <Typography
+                                                        variant="h6"
+                                                        sx={{ fontWeight: 600, lineHeight: 1.2 }}
+                                                    >
+                                                        Business Hours Labels
+                                                    </Typography>
+                                                    <Typography
+                                                        variant="caption"
+                                                        color="text.secondary"
+                                                    >
+                                                        Configure section title and badge (hours
+                                                        managed in Branding)
+                                                    </Typography>
+                                                </Box>
+                                            </Box>
+                                        </AccordionSummary>
+                                        <AccordionDetails
+                                            sx={{ p: 3, bgcolor: "background.paper" }}
+                                        >
+                                            <Box
+                                                sx={{
+                                                    display: "flex",
+                                                    flexDirection: "column",
+                                                    gap: 3,
+                                                }}
+                                            >
+                                                <TextField
+                                                    fullWidth
+                                                    label="Title"
+                                                    value={form.data.businessHours.title}
+                                                    onChange={(e) => {
+                                                        form.setData({
+                                                            ...form.data!,
+                                                            businessHours: {
+                                                                ...form.data!.businessHours,
+                                                                title: e.target.value,
+                                                            },
+                                                        });
+                                                    }}
+                                                    sx={{
+                                                        "& .MuiOutlinedInput-root": {
+                                                            bgcolor: "background.paper",
+                                                        },
+                                                    }}
+                                                />
+                                                <TextField
+                                                    fullWidth
+                                                    label="Chip Text"
+                                                    value={form.data.businessHours.chip}
+                                                    onChange={(e) => {
+                                                        form.setData({
+                                                            ...form.data!,
+                                                            businessHours: {
+                                                                ...form.data!.businessHours,
+                                                                chip: e.target.value,
+                                                            },
+                                                        });
+                                                    }}
+                                                    sx={{
+                                                        "& .MuiOutlinedInput-root": {
+                                                            bgcolor: "background.paper",
+                                                        },
+                                                    }}
+                                                />
+                                            </Box>
+                                        </AccordionDetails>
+                                    </Accordion>
+
+                                    {/* Accordion 5: Visit Information Cards */}
+                                    <Accordion
+                                        defaultExpanded
+                                        sx={{
+                                            border: "1px solid",
+                                            borderColor: "divider",
+                                            borderRadius: "8px !important",
+                                            "&:before": { display: "none" },
+                                            boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+                                            mb: 2,
+                                        }}
+                                    >
+                                        <AccordionSummary
+                                            expandIcon={<ExpandMoreIcon />}
+                                            sx={{
+                                                bgcolor: "grey.50",
+                                                borderRadius: "8px 8px 0 0",
+                                                minHeight: 64,
+                                                "&:hover": {
+                                                    bgcolor: "grey.100",
+                                                },
+                                                "& .MuiAccordionSummary-content": {
+                                                    my: 2,
+                                                },
+                                            }}
+                                        >
+                                            <Box
+                                                sx={{
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    gap: 1.5,
+                                                }}
+                                            >
+                                                <Box
+                                                    sx={{
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        justifyContent: "center",
+                                                        width: 40,
+                                                        height: 40,
+                                                        borderRadius: 2,
+                                                        bgcolor: "warning.main",
+                                                        color: "white",
+                                                    }}
+                                                >
+                                                    <InfoIcon size={20} />
+                                                </Box>
+                                                <Box>
+                                                    <Typography
+                                                        variant="h6"
+                                                        sx={{ fontWeight: 600, lineHeight: 1.2 }}
+                                                    >
+                                                        Visit Information Cards
+                                                    </Typography>
+                                                    <Typography
+                                                        variant="caption"
+                                                        color="text.secondary"
+                                                    >
+                                                        Add info cards about visiting your location
+                                                        ({form.data.visitInfo.items.length} items,{" "}
+                                                        {
+                                                            form.data.visitInfo.items.filter(
+                                                                (i) => i.isActive,
+                                                            ).length
+                                                        }{" "}
+                                                        active)
+                                                    </Typography>
+                                                </Box>
+                                            </Box>
+                                        </AccordionSummary>
+                                        <AccordionDetails
+                                            sx={{ p: 3, bgcolor: "background.paper" }}
+                                        >
+                                            <Box
+                                                sx={{
+                                                    display: "flex",
+                                                    flexDirection: "column",
+                                                    gap: 3,
+                                                }}
+                                            >
+                                                <TextField
+                                                    fullWidth
+                                                    label="Section Title"
+                                                    value={form.data.visitInfo.sectionTitle}
+                                                    onChange={(e) => {
+                                                        form.setData({
+                                                            ...form.data!,
+                                                            visitInfo: {
+                                                                ...form.data!.visitInfo,
+                                                                sectionTitle: e.target.value,
+                                                            },
+                                                        });
+                                                    }}
+                                                    sx={{
+                                                        "& .MuiOutlinedInput-root": {
+                                                            bgcolor: "background.paper",
+                                                        },
+                                                    }}
+                                                />
+                                                <Box>
+                                                    <Box
+                                                        sx={{
+                                                            display: "flex",
+                                                            justifyContent: "space-between",
+                                                            alignItems: "center",
+                                                            mb: 2,
+                                                        }}
+                                                    >
+                                                        <Typography
+                                                            variant="subtitle2"
+                                                            sx={{ fontWeight: 600 }}
+                                                        >
+                                                            Items (drag to reorder):
+                                                        </Typography>
+                                                        <Button
+                                                            variant="outlined"
+                                                            size="small"
+                                                            startIcon={<Plus size={16} />}
+                                                            onClick={handleAddVisitInfoItem}
+                                                            sx={{
+                                                                borderStyle: "dashed",
+                                                                borderWidth: 2,
+                                                                "&:hover": {
+                                                                    borderWidth: 2,
+                                                                },
+                                                            }}
+                                                        >
+                                                            Add Item
+                                                        </Button>
+                                                    </Box>
+                                                    <DragDropContext
+                                                        onDragEnd={handleVisitInfoDragEnd}
+                                                    >
+                                                        <Droppable droppableId="visit-info-items">
+                                                            {(provided) => (
+                                                                <Box
+                                                                    {...provided.droppableProps}
+                                                                    ref={provided.innerRef}
+                                                                >
+                                                                    {sortedVisitInfoItems.map(
+                                                                        (item, index) => (
+                                                                            <Draggable
+                                                                                key={item.id}
+                                                                                draggableId={
+                                                                                    item.id
+                                                                                }
+                                                                                index={index}
+                                                                            >
+                                                                                {(
+                                                                                    provided,
+                                                                                    snapshot,
+                                                                                ) => (
+                                                                                    <Paper
+                                                                                        ref={
+                                                                                            provided.innerRef
+                                                                                        }
+                                                                                        {...provided.draggableProps}
+                                                                                        elevation={
+                                                                                            0
+                                                                                        }
+                                                                                        sx={{
+                                                                                            mb: 2,
+                                                                                            p: 2.5,
+                                                                                            border: "2px solid",
+                                                                                            borderColor:
+                                                                                                snapshot.isDragging
+                                                                                                    ? "primary.main"
+                                                                                                    : item.isActive
+                                                                                                      ? "success.light"
+                                                                                                      : "divider",
+                                                                                            borderRadius: 2,
+                                                                                            transition:
+                                                                                                "all 0.2s",
+                                                                                            opacity:
+                                                                                                snapshot.isDragging
+                                                                                                    ? 0.7
+                                                                                                    : 1,
+                                                                                            boxShadow:
+                                                                                                snapshot.isDragging
+                                                                                                    ? "0 8px 16px rgba(0,0,0,0.15)"
+                                                                                                    : "0 1px 3px rgba(0,0,0,0.05)",
+                                                                                            "&:hover":
+                                                                                                {
+                                                                                                    borderColor:
+                                                                                                        item.isActive
+                                                                                                            ? "success.main"
+                                                                                                            : "primary.light",
+                                                                                                    boxShadow:
+                                                                                                        "0 4px 12px rgba(0,0,0,0.1)",
+                                                                                                },
+                                                                                        }}
+                                                                                    >
+                                                                                        <Box
+                                                                                            sx={{
+                                                                                                display:
+                                                                                                    "flex",
+                                                                                                gap: 2,
+                                                                                            }}
+                                                                                        >
+                                                                                            <Box
+                                                                                                {...provided.dragHandleProps}
                                                                                             >
-                                                                                                <TextField
-                                                                                                    fullWidth
-                                                                                                    label="Title"
-                                                                                                    value={
-                                                                                                        item.title
+                                                                                                <GripVertical
+                                                                                                    size={
+                                                                                                        20
                                                                                                     }
-                                                                                                    onChange={(
-                                                                                                        e,
-                                                                                                    ) => {
-                                                                                                        const updated =
-                                                                                                            locationData.visitInfo.items.map(
-                                                                                                                (
-                                                                                                                    i,
-                                                                                                                ) =>
-                                                                                                                    i.id ===
-                                                                                                                    item.id
-                                                                                                                        ? {
-                                                                                                                              ...i,
-                                                                                                                              title: e
-                                                                                                                                  .target
-                                                                                                                                  .value,
-                                                                                                                          }
-                                                                                                                        : i,
-                                                                                                            );
-                                                                                                        setLocationData(
-                                                                                                            {
-                                                                                                                ...locationData,
-                                                                                                                visitInfo:
-                                                                                                                    {
-                                                                                                                        ...locationData.visitInfo,
-                                                                                                                        items: updated,
-                                                                                                                    },
-                                                                                                            },
-                                                                                                        );
-                                                                                                    }}
-                                                                                                    size="small"
-                                                                                                    sx={{
-                                                                                                        "& .MuiOutlinedInput-root":
-                                                                                                            {
-                                                                                                                bgcolor:
-                                                                                                                    "background.paper",
-                                                                                                            },
-                                                                                                    }}
+                                                                                                    color={
+                                                                                                        palette
+                                                                                                            .text
+                                                                                                            .secondary
+                                                                                                    }
                                                                                                 />
-                                                                                            </Grid>
-                                                                                            <Grid
-                                                                                                item
-                                                                                                xs={
-                                                                                                    12
-                                                                                                }
-                                                                                                sm={
-                                                                                                    6
-                                                                                                }
+                                                                                            </Box>
+                                                                                            <Box
+                                                                                                sx={{
+                                                                                                    flex: 1,
+                                                                                                }}
                                                                                             >
-                                                                                                <FormControl
-                                                                                                    fullWidth
-                                                                                                    size="small"
-                                                                                                >
-                                                                                                    <InputLabel>
-                                                                                                        Icon
-                                                                                                    </InputLabel>
-                                                                                                    <Select
-                                                                                                        value={
-                                                                                                            item.icon
-                                                                                                        }
-                                                                                                        label="Icon"
-                                                                                                        onChange={(
-                                                                                                            e,
-                                                                                                        ) => {
-                                                                                                            const updated =
-                                                                                                                locationData.visitInfo.items.map(
-                                                                                                                    (
-                                                                                                                        i,
-                                                                                                                    ) =>
-                                                                                                                        i.id ===
-                                                                                                                        item.id
-                                                                                                                            ? {
-                                                                                                                                  ...i,
-                                                                                                                                  icon: e
-                                                                                                                                      .target
-                                                                                                                                      .value,
-                                                                                                                              }
-                                                                                                                            : i,
-                                                                                                                );
-                                                                                                            setLocationData(
-                                                                                                                {
-                                                                                                                    ...locationData,
-                                                                                                                    visitInfo:
-                                                                                                                        {
-                                                                                                                            ...locationData.visitInfo,
-                                                                                                                            items: updated,
-                                                                                                                        },
-                                                                                                                },
-                                                                                                            );
-                                                                                                        }}
-                                                                                                        sx={{
-                                                                                                            bgcolor:
-                                                                                                                "background.paper",
-                                                                                                        }}
-                                                                                                    >
-                                                                                                        {VISIT_INFO_ICONS.map(
-                                                                                                            (
-                                                                                                                icon,
-                                                                                                            ) => {
-                                                                                                                const IconComp =
-                                                                                                                    icon.icon;
-                                                                                                                return (
-                                                                                                                    <MenuItem
-                                                                                                                        key={
-                                                                                                                            icon.value
-                                                                                                                        }
-                                                                                                                        value={
-                                                                                                                            icon.value
-                                                                                                                        }
-                                                                                                                    >
-                                                                                                                        <Box
-                                                                                                                            sx={{
-                                                                                                                                display:
-                                                                                                                                    "flex",
-                                                                                                                                alignItems:
-                                                                                                                                    "center",
-                                                                                                                                gap: 1,
-                                                                                                                            }}
-                                                                                                                        >
-                                                                                                                            <IconComp
-                                                                                                                                size={
-                                                                                                                                    16
-                                                                                                                                }
-                                                                                                                            />
-                                                                                                                            <Typography>
-                                                                                                                                {
-                                                                                                                                    icon.label
-                                                                                                                                }
-                                                                                                                            </Typography>
-                                                                                                                        </Box>
-                                                                                                                    </MenuItem>
-                                                                                                                );
-                                                                                                            },
-                                                                                                        )}
-                                                                                                    </Select>
-                                                                                                </FormControl>
-                                                                                            </Grid>
-                                                                                            <Grid
-                                                                                                item
-                                                                                                xs={
-                                                                                                    12
-                                                                                                }
-                                                                                            >
-                                                                                                <TextField
-                                                                                                    fullWidth
-                                                                                                    multiline
-                                                                                                    rows={
+                                                                                                <Grid
+                                                                                                    container
+                                                                                                    spacing={
                                                                                                         2
                                                                                                     }
-                                                                                                    label="Description"
-                                                                                                    value={
-                                                                                                        item.description
-                                                                                                    }
-                                                                                                    onChange={(
-                                                                                                        e,
-                                                                                                    ) => {
-                                                                                                        const updated =
-                                                                                                            locationData.visitInfo.items.map(
-                                                                                                                (
-                                                                                                                    i,
-                                                                                                                ) =>
-                                                                                                                    i.id ===
-                                                                                                                    item.id
-                                                                                                                        ? {
-                                                                                                                              ...i,
-                                                                                                                              description:
-                                                                                                                                  e
-                                                                                                                                      .target
-                                                                                                                                      .value,
-                                                                                                                          }
-                                                                                                                        : i,
-                                                                                                            );
-                                                                                                        setLocationData(
-                                                                                                            {
-                                                                                                                ...locationData,
-                                                                                                                visitInfo:
-                                                                                                                    {
-                                                                                                                        ...locationData.visitInfo,
-                                                                                                                        items: updated,
-                                                                                                                    },
-                                                                                                            },
-                                                                                                        );
-                                                                                                    }}
-                                                                                                    size="small"
-                                                                                                    sx={{
-                                                                                                        "& .MuiOutlinedInput-root":
-                                                                                                            {
-                                                                                                                bgcolor:
-                                                                                                                    "background.paper",
-                                                                                                            },
-                                                                                                    }}
-                                                                                                />
-                                                                                            </Grid>
-                                                                                            <Grid
-                                                                                                item
-                                                                                                xs={
-                                                                                                    12
-                                                                                                }
-                                                                                            >
-                                                                                                <FormControlLabel
-                                                                                                    control={
-                                                                                                        <Switch
-                                                                                                            checked={
-                                                                                                                item.isActive
+                                                                                                >
+                                                                                                    <Grid
+                                                                                                        item
+                                                                                                        xs={
+                                                                                                            12
+                                                                                                        }
+                                                                                                        sm={
+                                                                                                            6
+                                                                                                        }
+                                                                                                    >
+                                                                                                        <TextField
+                                                                                                            fullWidth
+                                                                                                            label="Title"
+                                                                                                            value={
+                                                                                                                item.title
                                                                                                             }
                                                                                                             onChange={(
                                                                                                                 e,
                                                                                                             ) => {
                                                                                                                 const updated =
-                                                                                                                    locationData.visitInfo.items.map(
+                                                                                                                    form.data!.visitInfo.items.map(
                                                                                                                         (
                                                                                                                             i,
                                                                                                                         ) =>
@@ -2175,795 +2080,1088 @@ export const AdminHomepageLocation = () => {
                                                                                                                             item.id
                                                                                                                                 ? {
                                                                                                                                       ...i,
-                                                                                                                                      isActive:
-                                                                                                                                          e
-                                                                                                                                              .target
-                                                                                                                                              .checked,
+                                                                                                                                      title: e
+                                                                                                                                          .target
+                                                                                                                                          .value,
                                                                                                                                   }
                                                                                                                                 : i,
                                                                                                                     );
-                                                                                                                setLocationData(
+                                                                                                                form.setData(
                                                                                                                     {
-                                                                                                                        ...locationData,
+                                                                                                                        ...form.data!,
                                                                                                                         visitInfo:
                                                                                                                             {
-                                                                                                                                ...locationData.visitInfo,
+                                                                                                                                ...form
+                                                                                                                                    .data!
+                                                                                                                                    .visitInfo,
                                                                                                                                 items: updated,
                                                                                                                             },
                                                                                                                     },
                                                                                                                 );
                                                                                                             }}
-                                                                                                            color="success"
-                                                                                                        />
-                                                                                                    }
-                                                                                                    label={
-                                                                                                        <Typography
-                                                                                                            variant="body2"
+                                                                                                            size="small"
                                                                                                             sx={{
-                                                                                                                fontWeight: 500,
+                                                                                                                "& .MuiOutlinedInput-root":
+                                                                                                                    {
+                                                                                                                        bgcolor:
+                                                                                                                            "background.paper",
+                                                                                                                    },
                                                                                                             }}
+                                                                                                        />
+                                                                                                    </Grid>
+                                                                                                    <Grid
+                                                                                                        item
+                                                                                                        xs={
+                                                                                                            12
+                                                                                                        }
+                                                                                                        sm={
+                                                                                                            6
+                                                                                                        }
+                                                                                                    >
+                                                                                                        <FormControl
+                                                                                                            fullWidth
+                                                                                                            size="small"
                                                                                                         >
-                                                                                                            Active
-                                                                                                        </Typography>
+                                                                                                            <InputLabel>
+                                                                                                                Icon
+                                                                                                            </InputLabel>
+                                                                                                            <Select
+                                                                                                                value={
+                                                                                                                    item.icon
+                                                                                                                }
+                                                                                                                label="Icon"
+                                                                                                                onChange={(
+                                                                                                                    e,
+                                                                                                                ) => {
+                                                                                                                    const updated =
+                                                                                                                        form.data!.visitInfo.items.map(
+                                                                                                                            (
+                                                                                                                                i,
+                                                                                                                            ) =>
+                                                                                                                                i.id ===
+                                                                                                                                item.id
+                                                                                                                                    ? {
+                                                                                                                                          ...i,
+                                                                                                                                          icon: e
+                                                                                                                                              .target
+                                                                                                                                              .value,
+                                                                                                                                      }
+                                                                                                                                    : i,
+                                                                                                                        );
+                                                                                                                    form.setData(
+                                                                                                                        {
+                                                                                                                            ...form.data!,
+                                                                                                                            visitInfo:
+                                                                                                                                {
+                                                                                                                                    ...form
+                                                                                                                                        .data!
+                                                                                                                                        .visitInfo,
+                                                                                                                                    items: updated,
+                                                                                                                                },
+                                                                                                                        },
+                                                                                                                    );
+                                                                                                                }}
+                                                                                                                sx={{
+                                                                                                                    bgcolor:
+                                                                                                                        "background.paper",
+                                                                                                                }}
+                                                                                                            >
+                                                                                                                {VISIT_INFO_ICONS.map(
+                                                                                                                    (
+                                                                                                                        icon,
+                                                                                                                    ) => {
+                                                                                                                        const IconComp =
+                                                                                                                            icon.icon;
+                                                                                                                        return (
+                                                                                                                            <MenuItem
+                                                                                                                                key={
+                                                                                                                                    icon.value
+                                                                                                                                }
+                                                                                                                                value={
+                                                                                                                                    icon.value
+                                                                                                                                }
+                                                                                                                            >
+                                                                                                                                <Box
+                                                                                                                                    sx={{
+                                                                                                                                        display:
+                                                                                                                                            "flex",
+                                                                                                                                        alignItems:
+                                                                                                                                            "center",
+                                                                                                                                        gap: 1,
+                                                                                                                                    }}
+                                                                                                                                >
+                                                                                                                                    <IconComp
+                                                                                                                                        size={
+                                                                                                                                            16
+                                                                                                                                        }
+                                                                                                                                    />
+                                                                                                                                    <Typography>
+                                                                                                                                        {
+                                                                                                                                            icon.label
+                                                                                                                                        }
+                                                                                                                                    </Typography>
+                                                                                                                                </Box>
+                                                                                                                            </MenuItem>
+                                                                                                                        );
+                                                                                                                    },
+                                                                                                                )}
+                                                                                                            </Select>
+                                                                                                        </FormControl>
+                                                                                                    </Grid>
+                                                                                                    <Grid
+                                                                                                        item
+                                                                                                        xs={
+                                                                                                            12
+                                                                                                        }
+                                                                                                    >
+                                                                                                        <TextField
+                                                                                                            fullWidth
+                                                                                                            multiline
+                                                                                                            rows={
+                                                                                                                2
+                                                                                                            }
+                                                                                                            label="Description"
+                                                                                                            value={
+                                                                                                                item.description
+                                                                                                            }
+                                                                                                            onChange={(
+                                                                                                                e,
+                                                                                                            ) => {
+                                                                                                                const updated =
+                                                                                                                    form.data!.visitInfo.items.map(
+                                                                                                                        (
+                                                                                                                            i,
+                                                                                                                        ) =>
+                                                                                                                            i.id ===
+                                                                                                                            item.id
+                                                                                                                                ? {
+                                                                                                                                      ...i,
+                                                                                                                                      description:
+                                                                                                                                          e
+                                                                                                                                              .target
+                                                                                                                                              .value,
+                                                                                                                                  }
+                                                                                                                                : i,
+                                                                                                                    );
+                                                                                                                form.setData(
+                                                                                                                    {
+                                                                                                                        ...form.data!,
+                                                                                                                        visitInfo:
+                                                                                                                            {
+                                                                                                                                ...form
+                                                                                                                                    .data!
+                                                                                                                                    .visitInfo,
+                                                                                                                                items: updated,
+                                                                                                                            },
+                                                                                                                    },
+                                                                                                                );
+                                                                                                            }}
+                                                                                                            size="small"
+                                                                                                            sx={{
+                                                                                                                "& .MuiOutlinedInput-root":
+                                                                                                                    {
+                                                                                                                        bgcolor:
+                                                                                                                            "background.paper",
+                                                                                                                    },
+                                                                                                            }}
+                                                                                                        />
+                                                                                                    </Grid>
+                                                                                                    <Grid
+                                                                                                        item
+                                                                                                        xs={
+                                                                                                            12
+                                                                                                        }
+                                                                                                    >
+                                                                                                        <FormControlLabel
+                                                                                                            control={
+                                                                                                                <Switch
+                                                                                                                    checked={
+                                                                                                                        item.isActive
+                                                                                                                    }
+                                                                                                                    onChange={(
+                                                                                                                        e,
+                                                                                                                    ) => {
+                                                                                                                        const updated =
+                                                                                                                            form.data!.visitInfo.items.map(
+                                                                                                                                (
+                                                                                                                                    i,
+                                                                                                                                ) =>
+                                                                                                                                    i.id ===
+                                                                                                                                    item.id
+                                                                                                                                        ? {
+                                                                                                                                              ...i,
+                                                                                                                                              isActive:
+                                                                                                                                                  e
+                                                                                                                                                      .target
+                                                                                                                                                      .checked,
+                                                                                                                                          }
+                                                                                                                                        : i,
+                                                                                                                            );
+                                                                                                                        form.setData(
+                                                                                                                            {
+                                                                                                                                ...form.data!,
+                                                                                                                                visitInfo:
+                                                                                                                                    {
+                                                                                                                                        ...form
+                                                                                                                                            .data!
+                                                                                                                                            .visitInfo,
+                                                                                                                                        items: updated,
+                                                                                                                                    },
+                                                                                                                            },
+                                                                                                                        );
+                                                                                                                    }}
+                                                                                                                    color="success"
+                                                                                                                />
+                                                                                                            }
+                                                                                                            label={
+                                                                                                                <Typography
+                                                                                                                    variant="body2"
+                                                                                                                    sx={{
+                                                                                                                        fontWeight: 500,
+                                                                                                                    }}
+                                                                                                                >
+                                                                                                                    Active
+                                                                                                                </Typography>
+                                                                                                            }
+                                                                                                        />
+                                                                                                    </Grid>
+                                                                                                </Grid>
+                                                                                            </Box>
+                                                                                            <IconButton
+                                                                                                size="small"
+                                                                                                color="error"
+                                                                                                onClick={() =>
+                                                                                                    handleDeleteVisitInfoItem(
+                                                                                                        item.id,
+                                                                                                    )
+                                                                                                }
+                                                                                                sx={{
+                                                                                                    "&:hover":
+                                                                                                        {
+                                                                                                            bgcolor:
+                                                                                                                "error.lighter",
+                                                                                                        },
+                                                                                                }}
+                                                                                            >
+                                                                                                <Trash2
+                                                                                                    size={
+                                                                                                        20
                                                                                                     }
                                                                                                 />
-                                                                                            </Grid>
-                                                                                        </Grid>
-                                                                                    </Box>
-                                                                                    <IconButton
-                                                                                        size="small"
-                                                                                        color="error"
-                                                                                        onClick={() =>
-                                                                                            handleDeleteVisitInfoItem(
-                                                                                                item.id,
-                                                                                            )
+                                                                                            </IconButton>
+                                                                                        </Box>
+                                                                                    </Paper>
+                                                                                )}
+                                                                            </Draggable>
+                                                                        ),
+                                                                    )}
+                                                                    {provided.placeholder}
+                                                                </Box>
+                                                            )}
+                                                        </Droppable>
+                                                    </DragDropContext>
+                                                </Box>
+                                            </Box>
+                                        </AccordionDetails>
+                                    </Accordion>
+
+                                    {/* Accordion 6: Call-to-Action Section */}
+                                    <Accordion
+                                        defaultExpanded
+                                        sx={{
+                                            border: "1px solid",
+                                            borderColor: "divider",
+                                            borderRadius: "8px !important",
+                                            "&:before": { display: "none" },
+                                            boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+                                            mb: 2,
+                                        }}
+                                    >
+                                        <AccordionSummary
+                                            expandIcon={<ExpandMoreIcon />}
+                                            sx={{
+                                                bgcolor: "grey.50",
+                                                borderRadius: "8px 8px 0 0",
+                                                minHeight: 64,
+                                                "&:hover": {
+                                                    bgcolor: "grey.100",
+                                                },
+                                                "& .MuiAccordionSummary-content": {
+                                                    my: 2,
+                                                },
+                                            }}
+                                        >
+                                            <Box
+                                                sx={{
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    gap: 1.5,
+                                                }}
+                                            >
+                                                <Box
+                                                    sx={{
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        justifyContent: "center",
+                                                        width: 40,
+                                                        height: 40,
+                                                        borderRadius: 2,
+                                                        bgcolor: "error.main",
+                                                        color: "white",
+                                                    }}
+                                                >
+                                                    <ButtonIcon />
+                                                </Box>
+                                                <Box>
+                                                    <Typography
+                                                        variant="h6"
+                                                        sx={{ fontWeight: 600, lineHeight: 1.2 }}
+                                                    >
+                                                        Call-to-Action Section
+                                                    </Typography>
+                                                    <Typography
+                                                        variant="caption"
+                                                        color="text.secondary"
+                                                    >
+                                                        Add action buttons to drive user engagement
+                                                        ({form.data.cta.buttons.length} buttons,{" "}
+                                                        {
+                                                            form.data.cta.buttons.filter(
+                                                                (b) => b.isActive,
+                                                            ).length
+                                                        }{" "}
+                                                        active)
+                                                    </Typography>
+                                                </Box>
+                                            </Box>
+                                        </AccordionSummary>
+                                        <AccordionDetails
+                                            sx={{ p: 3, bgcolor: "background.paper" }}
+                                        >
+                                            <Box
+                                                sx={{
+                                                    display: "flex",
+                                                    flexDirection: "column",
+                                                    gap: 3,
+                                                }}
+                                            >
+                                                <TextField
+                                                    fullWidth
+                                                    label="CTA Title"
+                                                    value={form.data.cta.title}
+                                                    onChange={(e) => {
+                                                        form.setData({
+                                                            ...form.data!,
+                                                            cta: {
+                                                                ...form.data!.cta,
+                                                                title: e.target.value,
+                                                            },
+                                                        });
+                                                    }}
+                                                    sx={{
+                                                        "& .MuiOutlinedInput-root": {
+                                                            bgcolor: "background.paper",
+                                                        },
+                                                    }}
+                                                />
+                                                <TextField
+                                                    fullWidth
+                                                    multiline
+                                                    rows={2}
+                                                    label="CTA Description"
+                                                    value={form.data.cta.description}
+                                                    onChange={(e) => {
+                                                        form.setData({
+                                                            ...form.data!,
+                                                            cta: {
+                                                                ...form.data!.cta,
+                                                                description: e.target.value,
+                                                            },
+                                                        });
+                                                    }}
+                                                    sx={{
+                                                        "& .MuiOutlinedInput-root": {
+                                                            bgcolor: "background.paper",
+                                                        },
+                                                    }}
+                                                />
+                                                <Box>
+                                                    <Box
+                                                        sx={{
+                                                            display: "flex",
+                                                            justifyContent: "space-between",
+                                                            alignItems: "center",
+                                                            mb: 2,
+                                                        }}
+                                                    >
+                                                        <Typography
+                                                            variant="subtitle2"
+                                                            sx={{ fontWeight: 600 }}
+                                                        >
+                                                            Buttons (drag to reorder):
+                                                        </Typography>
+                                                        <Button
+                                                            variant="outlined"
+                                                            size="small"
+                                                            startIcon={<Plus size={16} />}
+                                                            onClick={handleAddButton}
+                                                            sx={{
+                                                                borderStyle: "dashed",
+                                                                borderWidth: 2,
+                                                                "&:hover": {
+                                                                    borderWidth: 2,
+                                                                },
+                                                            }}
+                                                        >
+                                                            Add Button
+                                                        </Button>
+                                                    </Box>
+                                                    <DragDropContext
+                                                        onDragEnd={handleButtonDragEnd}
+                                                    >
+                                                        <Droppable droppableId="cta-buttons">
+                                                            {(provided) => (
+                                                                <Box
+                                                                    {...provided.droppableProps}
+                                                                    ref={provided.innerRef}
+                                                                >
+                                                                    {sortedButtons.map(
+                                                                        (button, index) => (
+                                                                            <Draggable
+                                                                                key={button.id}
+                                                                                draggableId={
+                                                                                    button.id
+                                                                                }
+                                                                                index={index}
+                                                                            >
+                                                                                {(
+                                                                                    provided,
+                                                                                    snapshot,
+                                                                                ) => (
+                                                                                    <Paper
+                                                                                        ref={
+                                                                                            provided.innerRef
+                                                                                        }
+                                                                                        {...provided.draggableProps}
+                                                                                        elevation={
+                                                                                            0
                                                                                         }
                                                                                         sx={{
+                                                                                            mb: 2,
+                                                                                            p: 2.5,
+                                                                                            border: "2px solid",
+                                                                                            borderColor:
+                                                                                                snapshot.isDragging
+                                                                                                    ? "primary.main"
+                                                                                                    : button.isActive
+                                                                                                      ? "success.light"
+                                                                                                      : "divider",
+                                                                                            borderRadius: 2,
+                                                                                            transition:
+                                                                                                "all 0.2s",
+                                                                                            opacity:
+                                                                                                snapshot.isDragging
+                                                                                                    ? 0.7
+                                                                                                    : 1,
+                                                                                            boxShadow:
+                                                                                                snapshot.isDragging
+                                                                                                    ? "0 8px 16px rgba(0,0,0,0.15)"
+                                                                                                    : "0 1px 3px rgba(0,0,0,0.05)",
                                                                                             "&:hover":
                                                                                                 {
-                                                                                                    bgcolor:
-                                                                                                        "error.lighter",
+                                                                                                    borderColor:
+                                                                                                        button.isActive
+                                                                                                            ? "success.main"
+                                                                                                            : "primary.light",
+                                                                                                    boxShadow:
+                                                                                                        "0 4px 12px rgba(0,0,0,0.1)",
                                                                                                 },
                                                                                         }}
                                                                                     >
-                                                                                        <Trash2
-                                                                                            size={
-                                                                                                20
-                                                                                            }
-                                                                                        />
-                                                                                    </IconButton>
-                                                                                </Box>
-                                                                            </Paper>
-                                                                        )}
-                                                                    </Draggable>
-                                                                ),
+                                                                                        <Box
+                                                                                            sx={{
+                                                                                                display:
+                                                                                                    "flex",
+                                                                                                gap: 2,
+                                                                                            }}
+                                                                                        >
+                                                                                            <Box
+                                                                                                {...provided.dragHandleProps}
+                                                                                            >
+                                                                                                <GripVertical
+                                                                                                    size={
+                                                                                                        20
+                                                                                                    }
+                                                                                                    color={
+                                                                                                        palette
+                                                                                                            .text
+                                                                                                            .secondary
+                                                                                                    }
+                                                                                                />
+                                                                                            </Box>
+                                                                                            <Box
+                                                                                                sx={{
+                                                                                                    flex: 1,
+                                                                                                }}
+                                                                                            >
+                                                                                                <Grid
+                                                                                                    container
+                                                                                                    spacing={
+                                                                                                        2
+                                                                                                    }
+                                                                                                >
+                                                                                                    <Grid
+                                                                                                        item
+                                                                                                        xs={
+                                                                                                            12
+                                                                                                        }
+                                                                                                        sm={
+                                                                                                            6
+                                                                                                        }
+                                                                                                    >
+                                                                                                        <TextField
+                                                                                                            fullWidth
+                                                                                                            label="Button Text"
+                                                                                                            value={
+                                                                                                                button.text
+                                                                                                            }
+                                                                                                            onChange={(
+                                                                                                                e,
+                                                                                                            ) => {
+                                                                                                                const updated =
+                                                                                                                    form.data!.cta.buttons.map(
+                                                                                                                        (
+                                                                                                                            b,
+                                                                                                                        ) =>
+                                                                                                                            b.id ===
+                                                                                                                            button.id
+                                                                                                                                ? {
+                                                                                                                                      ...b,
+                                                                                                                                      text: e
+                                                                                                                                          .target
+                                                                                                                                          .value,
+                                                                                                                                  }
+                                                                                                                                : b,
+                                                                                                                    );
+                                                                                                                form.setData(
+                                                                                                                    {
+                                                                                                                        ...form.data!,
+                                                                                                                        cta: {
+                                                                                                                            ...form
+                                                                                                                                .data!
+                                                                                                                                .cta,
+                                                                                                                            buttons:
+                                                                                                                                updated,
+                                                                                                                        },
+                                                                                                                    },
+                                                                                                                );
+                                                                                                            }}
+                                                                                                            size="small"
+                                                                                                            sx={{
+                                                                                                                "& .MuiOutlinedInput-root":
+                                                                                                                    {
+                                                                                                                        bgcolor:
+                                                                                                                            "background.paper",
+                                                                                                                    },
+                                                                                                            }}
+                                                                                                        />
+                                                                                                    </Grid>
+                                                                                                    <Grid
+                                                                                                        item
+                                                                                                        xs={
+                                                                                                            12
+                                                                                                        }
+                                                                                                        sm={
+                                                                                                            6
+                                                                                                        }
+                                                                                                    >
+                                                                                                        <FormControl
+                                                                                                            fullWidth
+                                                                                                            size="small"
+                                                                                                        >
+                                                                                                            <InputLabel>
+                                                                                                                Variant
+                                                                                                            </InputLabel>
+                                                                                                            <Select
+                                                                                                                value={
+                                                                                                                    button.variant
+                                                                                                                }
+                                                                                                                label="Variant"
+                                                                                                                onChange={(
+                                                                                                                    e,
+                                                                                                                ) => {
+                                                                                                                    const updated =
+                                                                                                                        form.data!.cta.buttons.map(
+                                                                                                                            (
+                                                                                                                                b,
+                                                                                                                            ) =>
+                                                                                                                                b.id ===
+                                                                                                                                button.id
+                                                                                                                                    ? {
+                                                                                                                                          ...b,
+                                                                                                                                          variant:
+                                                                                                                                              e
+                                                                                                                                                  .target
+                                                                                                                                                  .value as LocationButton["variant"],
+                                                                                                                                      }
+                                                                                                                                    : b,
+                                                                                                                        );
+                                                                                                                    form.setData(
+                                                                                                                        {
+                                                                                                                            ...form.data!,
+                                                                                                                            cta: {
+                                                                                                                                ...form
+                                                                                                                                    .data!
+                                                                                                                                    .cta,
+                                                                                                                                buttons:
+                                                                                                                                    updated,
+                                                                                                                            },
+                                                                                                                        },
+                                                                                                                    );
+                                                                                                                }}
+                                                                                                                sx={{
+                                                                                                                    bgcolor:
+                                                                                                                        "background.paper",
+                                                                                                                }}
+                                                                                                            >
+                                                                                                                <MenuItem value="contained">
+                                                                                                                    Contained
+                                                                                                                </MenuItem>
+                                                                                                                <MenuItem value="outlined">
+                                                                                                                    Outlined
+                                                                                                                </MenuItem>
+                                                                                                                <MenuItem value="text">
+                                                                                                                    Text
+                                                                                                                </MenuItem>
+                                                                                                            </Select>
+                                                                                                        </FormControl>
+                                                                                                    </Grid>
+                                                                                                    <Grid
+                                                                                                        item
+                                                                                                        xs={
+                                                                                                            12
+                                                                                                        }
+                                                                                                        sm={
+                                                                                                            6
+                                                                                                        }
+                                                                                                    >
+                                                                                                        <FormControl
+                                                                                                            fullWidth
+                                                                                                            size="small"
+                                                                                                        >
+                                                                                                            <InputLabel>
+                                                                                                                Color
+                                                                                                            </InputLabel>
+                                                                                                            <Select
+                                                                                                                value={
+                                                                                                                    button.color
+                                                                                                                }
+                                                                                                                label="Color"
+                                                                                                                onChange={(
+                                                                                                                    e,
+                                                                                                                ) => {
+                                                                                                                    const updated =
+                                                                                                                        form.data!.cta.buttons.map(
+                                                                                                                            (
+                                                                                                                                b,
+                                                                                                                            ) =>
+                                                                                                                                b.id ===
+                                                                                                                                button.id
+                                                                                                                                    ? {
+                                                                                                                                          ...b,
+                                                                                                                                          color: e
+                                                                                                                                              .target
+                                                                                                                                              .value as LocationButton["color"],
+                                                                                                                                      }
+                                                                                                                                    : b,
+                                                                                                                        );
+                                                                                                                    form.setData(
+                                                                                                                        {
+                                                                                                                            ...form.data!,
+                                                                                                                            cta: {
+                                                                                                                                ...form
+                                                                                                                                    .data!
+                                                                                                                                    .cta,
+                                                                                                                                buttons:
+                                                                                                                                    updated,
+                                                                                                                            },
+                                                                                                                        },
+                                                                                                                    );
+                                                                                                                }}
+                                                                                                                sx={{
+                                                                                                                    bgcolor:
+                                                                                                                        "background.paper",
+                                                                                                                }}
+                                                                                                            >
+                                                                                                                <MenuItem value="primary">
+                                                                                                                    Primary
+                                                                                                                </MenuItem>
+                                                                                                                <MenuItem value="secondary">
+                                                                                                                    Secondary
+                                                                                                                </MenuItem>
+                                                                                                            </Select>
+                                                                                                        </FormControl>
+                                                                                                    </Grid>
+                                                                                                    <Grid
+                                                                                                        item
+                                                                                                        xs={
+                                                                                                            12
+                                                                                                        }
+                                                                                                        sm={
+                                                                                                            6
+                                                                                                        }
+                                                                                                    >
+                                                                                                        <FormControl
+                                                                                                            fullWidth
+                                                                                                            size="small"
+                                                                                                        >
+                                                                                                            <InputLabel>
+                                                                                                                Action
+                                                                                                            </InputLabel>
+                                                                                                            <Select
+                                                                                                                value={
+                                                                                                                    button.action
+                                                                                                                }
+                                                                                                                label="Action"
+                                                                                                                onChange={(
+                                                                                                                    e,
+                                                                                                                ) => {
+                                                                                                                    const updated =
+                                                                                                                        form.data!.cta.buttons.map(
+                                                                                                                            (
+                                                                                                                                b,
+                                                                                                                            ) =>
+                                                                                                                                b.id ===
+                                                                                                                                button.id
+                                                                                                                                    ? {
+                                                                                                                                          ...b,
+                                                                                                                                          action: e
+                                                                                                                                              .target
+                                                                                                                                              .value as LocationButton["action"],
+                                                                                                                                      }
+                                                                                                                                    : b,
+                                                                                                                        );
+                                                                                                                    form.setData(
+                                                                                                                        {
+                                                                                                                            ...form.data!,
+                                                                                                                            cta: {
+                                                                                                                                ...form
+                                                                                                                                    .data!
+                                                                                                                                    .cta,
+                                                                                                                                buttons:
+                                                                                                                                    updated,
+                                                                                                                            },
+                                                                                                                        },
+                                                                                                                    );
+                                                                                                                }}
+                                                                                                                sx={{
+                                                                                                                    bgcolor:
+                                                                                                                        "background.paper",
+                                                                                                                }}
+                                                                                                            >
+                                                                                                                <MenuItem value="directions">
+                                                                                                                    Get
+                                                                                                                    Directions
+                                                                                                                </MenuItem>
+                                                                                                                <MenuItem value="contact">
+                                                                                                                    Contact
+                                                                                                                    Page
+                                                                                                                </MenuItem>
+                                                                                                                <MenuItem value="external">
+                                                                                                                    External
+                                                                                                                    URL
+                                                                                                                </MenuItem>
+                                                                                                            </Select>
+                                                                                                        </FormControl>
+                                                                                                    </Grid>
+                                                                                                    {button.action ===
+                                                                                                        "external" && (
+                                                                                                        <Grid
+                                                                                                            item
+                                                                                                            xs={
+                                                                                                                12
+                                                                                                            }
+                                                                                                        >
+                                                                                                            <TextField
+                                                                                                                fullWidth
+                                                                                                                label="URL"
+                                                                                                                value={
+                                                                                                                    button.url ||
+                                                                                                                    ""
+                                                                                                                }
+                                                                                                                onChange={(
+                                                                                                                    e,
+                                                                                                                ) => {
+                                                                                                                    const updated =
+                                                                                                                        form.data!.cta.buttons.map(
+                                                                                                                            (
+                                                                                                                                b,
+                                                                                                                            ) =>
+                                                                                                                                b.id ===
+                                                                                                                                button.id
+                                                                                                                                    ? {
+                                                                                                                                          ...b,
+                                                                                                                                          url: e
+                                                                                                                                              .target
+                                                                                                                                              .value,
+                                                                                                                                      }
+                                                                                                                                    : b,
+                                                                                                                        );
+                                                                                                                    form.setData(
+                                                                                                                        {
+                                                                                                                            ...form.data!,
+                                                                                                                            cta: {
+                                                                                                                                ...form
+                                                                                                                                    .data!
+                                                                                                                                    .cta,
+                                                                                                                                buttons:
+                                                                                                                                    updated,
+                                                                                                                            },
+                                                                                                                        },
+                                                                                                                    );
+                                                                                                                }}
+                                                                                                                size="small"
+                                                                                                                sx={{
+                                                                                                                    "& .MuiOutlinedInput-root":
+                                                                                                                        {
+                                                                                                                            bgcolor:
+                                                                                                                                "background.paper",
+                                                                                                                        },
+                                                                                                                }}
+                                                                                                            />
+                                                                                                        </Grid>
+                                                                                                    )}
+                                                                                                    <Grid
+                                                                                                        item
+                                                                                                        xs={
+                                                                                                            12
+                                                                                                        }
+                                                                                                    >
+                                                                                                        <FormControlLabel
+                                                                                                            control={
+                                                                                                                <Switch
+                                                                                                                    checked={
+                                                                                                                        button.isActive
+                                                                                                                    }
+                                                                                                                    onChange={(
+                                                                                                                        e,
+                                                                                                                    ) => {
+                                                                                                                        const updated =
+                                                                                                                            form.data!.cta.buttons.map(
+                                                                                                                                (
+                                                                                                                                    b,
+                                                                                                                                ) =>
+                                                                                                                                    b.id ===
+                                                                                                                                    button.id
+                                                                                                                                        ? {
+                                                                                                                                              ...b,
+                                                                                                                                              isActive:
+                                                                                                                                                  e
+                                                                                                                                                      .target
+                                                                                                                                                      .checked,
+                                                                                                                                          }
+                                                                                                                                        : b,
+                                                                                                                            );
+                                                                                                                        form.setData(
+                                                                                                                            {
+                                                                                                                                ...form.data!,
+                                                                                                                                cta: {
+                                                                                                                                    ...form
+                                                                                                                                        .data!
+                                                                                                                                        .cta,
+                                                                                                                                    buttons:
+                                                                                                                                        updated,
+                                                                                                                                },
+                                                                                                                            },
+                                                                                                                        );
+                                                                                                                    }}
+                                                                                                                    color="success"
+                                                                                                                />
+                                                                                                            }
+                                                                                                            label={
+                                                                                                                <Typography
+                                                                                                                    variant="body2"
+                                                                                                                    sx={{
+                                                                                                                        fontWeight: 500,
+                                                                                                                    }}
+                                                                                                                >
+                                                                                                                    Active
+                                                                                                                </Typography>
+                                                                                                            }
+                                                                                                        />
+                                                                                                    </Grid>
+                                                                                                </Grid>
+                                                                                            </Box>
+                                                                                            <IconButton
+                                                                                                size="small"
+                                                                                                color="error"
+                                                                                                onClick={() =>
+                                                                                                    handleDeleteButton(
+                                                                                                        button.id,
+                                                                                                    )
+                                                                                                }
+                                                                                                sx={{
+                                                                                                    "&:hover":
+                                                                                                        {
+                                                                                                            bgcolor:
+                                                                                                                "error.lighter",
+                                                                                                        },
+                                                                                                }}
+                                                                                            >
+                                                                                                <Trash2
+                                                                                                    size={
+                                                                                                        20
+                                                                                                    }
+                                                                                                />
+                                                                                            </IconButton>
+                                                                                        </Box>
+                                                                                    </Paper>
+                                                                                )}
+                                                                            </Draggable>
+                                                                        ),
+                                                                    )}
+                                                                    {provided.placeholder}
+                                                                </Box>
                                                             )}
-                                                            {provided.placeholder}
-                                                        </Box>
-                                                    )}
-                                                </Droppable>
-                                            </DragDropContext>
-                                        </Box>
-                                    </Box>
-                                </AccordionDetails>
-                            </Accordion>
+                                                        </Droppable>
+                                                    </DragDropContext>
+                                                </Box>
+                                            </Box>
+                                        </AccordionDetails>
+                                    </Accordion>
 
-                            {/* Accordion 6: Call-to-Action Section */}
-                            <Accordion
-                                defaultExpanded
-                                sx={{
-                                    border: "1px solid",
-                                    borderColor: "divider",
-                                    borderRadius: "8px !important",
-                                    "&:before": { display: "none" },
-                                    boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-                                    mb: 2,
-                                }}
-                            >
-                                <AccordionSummary
-                                    expandIcon={<ExpandMoreIcon />}
-                                    sx={{
-                                        bgcolor: "grey.50",
-                                        borderRadius: "8px 8px 0 0",
-                                        minHeight: 64,
-                                        "&:hover": {
-                                            bgcolor: "grey.100",
-                                        },
-                                        "& .MuiAccordionSummary-content": {
-                                            my: 2,
-                                        },
-                                    }}
-                                >
-                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                                    {/* Action Buttons at Bottom */}
+                                    {form.isDirty && (
+                                        <Paper
+                                            elevation={0}
+                                            sx={{
+                                                mt: 3,
+                                                p: 2,
+                                                display: "flex",
+                                                gap: 2,
+                                                bgcolor: "grey.50",
+                                                border: "1px solid",
+                                                borderColor: "divider",
+                                                borderRadius: 2,
+                                            }}
+                                        >
+                                            <Button
+                                                variant="contained"
+                                                size="large"
+                                                onClick={form.save}
+                                                disabled={form.isSaving}
+                                                sx={{
+                                                    px: 4,
+                                                    fontWeight: 600,
+                                                    boxShadow: 2,
+                                                    "&:hover": {
+                                                        boxShadow: 4,
+                                                    },
+                                                }}
+                                            >
+                                                {form.isSaving ? "Saving..." : "Save All Changes"}
+                                            </Button>
+                                            <Button
+                                                variant="outlined"
+                                                size="large"
+                                                onClick={form.cancel}
+                                                sx={{
+                                                    px: 4,
+                                                    fontWeight: 600,
+                                                    borderWidth: 2,
+                                                    "&:hover": {
+                                                        borderWidth: 2,
+                                                    },
+                                                }}
+                                            >
+                                                Cancel
+                                            </Button>
+                                        </Paper>
+                                    )}
+                                </Box>
+                            </Grid>
+
+                            {/* Right Column - Live Preview (Desktop only, sticky) */}
+                            <Grid item xs={12} lg={5}>
+                                <Box sx={{ display: { xs: "none", lg: "block" } }}>
+                                    <Paper
+                                        elevation={0}
+                                        sx={{
+                                            position: "sticky",
+                                            top: 16,
+                                            p: 3,
+                                            bgcolor: "background.paper",
+                                            borderRadius: 2,
+                                            border: "2px solid",
+                                            borderColor: "divider",
+                                            boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+                                        }}
+                                    >
                                         <Box
                                             sx={{
                                                 display: "flex",
                                                 alignItems: "center",
-                                                justifyContent: "center",
-                                                width: 40,
-                                                height: 40,
-                                                borderRadius: 2,
-                                                bgcolor: "error.main",
-                                                color: "white",
+                                                gap: 1.5,
+                                                mb: 3,
                                             }}
                                         >
-                                            <ButtonIcon />
-                                        </Box>
-                                        <Box>
-                                            <Typography
-                                                variant="h6"
-                                                sx={{ fontWeight: 600, lineHeight: 1.2 }}
-                                            >
-                                                Call-to-Action Section
-                                            </Typography>
-                                            <Typography variant="caption" color="text.secondary">
-                                                Add action buttons to drive user engagement (
-                                                {locationData.cta.buttons.length} buttons,{" "}
-                                                {
-                                                    locationData.cta.buttons.filter(
-                                                        (b) => b.isActive,
-                                                    ).length
-                                                }{" "}
-                                                active)
-                                            </Typography>
-                                        </Box>
-                                    </Box>
-                                </AccordionSummary>
-                                <AccordionDetails sx={{ p: 3, bgcolor: "background.paper" }}>
-                                    <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                                        <TextField
-                                            fullWidth
-                                            label="CTA Title"
-                                            value={locationData.cta.title}
-                                            onChange={(e) => {
-                                                setLocationData({
-                                                    ...locationData,
-                                                    cta: {
-                                                        ...locationData.cta,
-                                                        title: e.target.value,
-                                                    },
-                                                });
-                                            }}
-                                            sx={{
-                                                "& .MuiOutlinedInput-root": {
-                                                    bgcolor: "background.paper",
-                                                },
-                                            }}
-                                        />
-                                        <TextField
-                                            fullWidth
-                                            multiline
-                                            rows={2}
-                                            label="CTA Description"
-                                            value={locationData.cta.description}
-                                            onChange={(e) => {
-                                                setLocationData({
-                                                    ...locationData,
-                                                    cta: {
-                                                        ...locationData.cta,
-                                                        description: e.target.value,
-                                                    },
-                                                });
-                                            }}
-                                            sx={{
-                                                "& .MuiOutlinedInput-root": {
-                                                    bgcolor: "background.paper",
-                                                },
-                                            }}
-                                        />
-                                        <Box>
                                             <Box
                                                 sx={{
                                                     display: "flex",
-                                                    justifyContent: "space-between",
                                                     alignItems: "center",
-                                                    mb: 2,
+                                                    justifyContent: "center",
+                                                    width: 36,
+                                                    height: 36,
+                                                    borderRadius: 1.5,
+                                                    bgcolor: "primary.main",
+                                                    color: "white",
                                                 }}
                                             >
-                                                <Typography
-                                                    variant="subtitle2"
-                                                    sx={{ fontWeight: 600 }}
-                                                >
-                                                    Buttons (drag to reorder):
-                                                </Typography>
-                                                <Button
-                                                    variant="outlined"
-                                                    size="small"
-                                                    startIcon={<Plus size={16} />}
-                                                    onClick={handleAddButton}
-                                                    sx={{
-                                                        borderStyle: "dashed",
-                                                        borderWidth: 2,
-                                                        "&:hover": {
-                                                            borderWidth: 2,
-                                                        },
-                                                    }}
-                                                >
-                                                    Add Button
-                                                </Button>
+                                                <MapPinIcon size={20} />
                                             </Box>
-                                            <DragDropContext onDragEnd={handleButtonDragEnd}>
-                                                <Droppable droppableId="cta-buttons">
-                                                    {(provided) => (
-                                                        <Box
-                                                            {...provided.droppableProps}
-                                                            ref={provided.innerRef}
-                                                        >
-                                                            {sortedButtons.map((button, index) => (
-                                                                <Draggable
-                                                                    key={button.id}
-                                                                    draggableId={button.id}
-                                                                    index={index}
-                                                                >
-                                                                    {(provided, snapshot) => (
-                                                                        <Paper
-                                                                            ref={provided.innerRef}
-                                                                            {...provided.draggableProps}
-                                                                            elevation={0}
-                                                                            sx={{
-                                                                                mb: 2,
-                                                                                p: 2.5,
-                                                                                border: "2px solid",
-                                                                                borderColor:
-                                                                                    snapshot.isDragging
-                                                                                        ? "primary.main"
-                                                                                        : button.isActive
-                                                                                          ? "success.light"
-                                                                                          : "divider",
-                                                                                borderRadius: 2,
-                                                                                transition:
-                                                                                    "all 0.2s",
-                                                                                opacity:
-                                                                                    snapshot.isDragging
-                                                                                        ? 0.7
-                                                                                        : 1,
-                                                                                boxShadow:
-                                                                                    snapshot.isDragging
-                                                                                        ? "0 8px 16px rgba(0,0,0,0.15)"
-                                                                                        : "0 1px 3px rgba(0,0,0,0.05)",
-                                                                                "&:hover": {
-                                                                                    borderColor:
-                                                                                        button.isActive
-                                                                                            ? "success.main"
-                                                                                            : "primary.light",
-                                                                                    boxShadow:
-                                                                                        "0 4px 12px rgba(0,0,0,0.1)",
-                                                                                },
-                                                                            }}
-                                                                        >
-                                                                            <Box
-                                                                                sx={{
-                                                                                    display: "flex",
-                                                                                    gap: 2,
-                                                                                }}
-                                                                            >
-                                                                                <Box
-                                                                                    {...provided.dragHandleProps}
-                                                                                >
-                                                                                    <GripVertical
-                                                                                        size={20}
-                                                                                        color={
-                                                                                            palette
-                                                                                                .text
-                                                                                                .secondary
-                                                                                        }
-                                                                                    />
-                                                                                </Box>
-                                                                                <Box
-                                                                                    sx={{ flex: 1 }}
-                                                                                >
-                                                                                    <Grid
-                                                                                        container
-                                                                                        spacing={2}
-                                                                                    >
-                                                                                        <Grid
-                                                                                            item
-                                                                                            xs={12}
-                                                                                            sm={6}
-                                                                                        >
-                                                                                            <TextField
-                                                                                                fullWidth
-                                                                                                label="Button Text"
-                                                                                                value={
-                                                                                                    button.text
-                                                                                                }
-                                                                                                onChange={(
-                                                                                                    e,
-                                                                                                ) => {
-                                                                                                    const updated =
-                                                                                                        locationData.cta.buttons.map(
-                                                                                                            (
-                                                                                                                b,
-                                                                                                            ) =>
-                                                                                                                b.id ===
-                                                                                                                button.id
-                                                                                                                    ? {
-                                                                                                                          ...b,
-                                                                                                                          text: e
-                                                                                                                              .target
-                                                                                                                              .value,
-                                                                                                                      }
-                                                                                                                    : b,
-                                                                                                        );
-                                                                                                    setLocationData(
-                                                                                                        {
-                                                                                                            ...locationData,
-                                                                                                            cta: {
-                                                                                                                ...locationData.cta,
-                                                                                                                buttons:
-                                                                                                                    updated,
-                                                                                                            },
-                                                                                                        },
-                                                                                                    );
-                                                                                                }}
-                                                                                                size="small"
-                                                                                                sx={{
-                                                                                                    "& .MuiOutlinedInput-root":
-                                                                                                        {
-                                                                                                            bgcolor:
-                                                                                                                "background.paper",
-                                                                                                        },
-                                                                                                }}
-                                                                                            />
-                                                                                        </Grid>
-                                                                                        <Grid
-                                                                                            item
-                                                                                            xs={12}
-                                                                                            sm={6}
-                                                                                        >
-                                                                                            <FormControl
-                                                                                                fullWidth
-                                                                                                size="small"
-                                                                                            >
-                                                                                                <InputLabel>
-                                                                                                    Variant
-                                                                                                </InputLabel>
-                                                                                                <Select
-                                                                                                    value={
-                                                                                                        button.variant
-                                                                                                    }
-                                                                                                    label="Variant"
-                                                                                                    onChange={(
-                                                                                                        e,
-                                                                                                    ) => {
-                                                                                                        const updated =
-                                                                                                            locationData.cta.buttons.map(
-                                                                                                                (
-                                                                                                                    b,
-                                                                                                                ) =>
-                                                                                                                    b.id ===
-                                                                                                                    button.id
-                                                                                                                        ? {
-                                                                                                                              ...b,
-                                                                                                                              variant:
-                                                                                                                                  e
-                                                                                                                                      .target
-                                                                                                                                      .value as LocationButton["variant"],
-                                                                                                                          }
-                                                                                                                        : b,
-                                                                                                            );
-                                                                                                        setLocationData(
-                                                                                                            {
-                                                                                                                ...locationData,
-                                                                                                                cta: {
-                                                                                                                    ...locationData.cta,
-                                                                                                                    buttons:
-                                                                                                                        updated,
-                                                                                                                },
-                                                                                                            },
-                                                                                                        );
-                                                                                                    }}
-                                                                                                    sx={{
-                                                                                                        bgcolor:
-                                                                                                            "background.paper",
-                                                                                                    }}
-                                                                                                >
-                                                                                                    <MenuItem value="contained">
-                                                                                                        Contained
-                                                                                                    </MenuItem>
-                                                                                                    <MenuItem value="outlined">
-                                                                                                        Outlined
-                                                                                                    </MenuItem>
-                                                                                                    <MenuItem value="text">
-                                                                                                        Text
-                                                                                                    </MenuItem>
-                                                                                                </Select>
-                                                                                            </FormControl>
-                                                                                        </Grid>
-                                                                                        <Grid
-                                                                                            item
-                                                                                            xs={12}
-                                                                                            sm={6}
-                                                                                        >
-                                                                                            <FormControl
-                                                                                                fullWidth
-                                                                                                size="small"
-                                                                                            >
-                                                                                                <InputLabel>
-                                                                                                    Color
-                                                                                                </InputLabel>
-                                                                                                <Select
-                                                                                                    value={
-                                                                                                        button.color
-                                                                                                    }
-                                                                                                    label="Color"
-                                                                                                    onChange={(
-                                                                                                        e,
-                                                                                                    ) => {
-                                                                                                        const updated =
-                                                                                                            locationData.cta.buttons.map(
-                                                                                                                (
-                                                                                                                    b,
-                                                                                                                ) =>
-                                                                                                                    b.id ===
-                                                                                                                    button.id
-                                                                                                                        ? {
-                                                                                                                              ...b,
-                                                                                                                              color: e
-                                                                                                                                  .target
-                                                                                                                                  .value as LocationButton["color"],
-                                                                                                                          }
-                                                                                                                        : b,
-                                                                                                            );
-                                                                                                        setLocationData(
-                                                                                                            {
-                                                                                                                ...locationData,
-                                                                                                                cta: {
-                                                                                                                    ...locationData.cta,
-                                                                                                                    buttons:
-                                                                                                                        updated,
-                                                                                                                },
-                                                                                                            },
-                                                                                                        );
-                                                                                                    }}
-                                                                                                    sx={{
-                                                                                                        bgcolor:
-                                                                                                            "background.paper",
-                                                                                                    }}
-                                                                                                >
-                                                                                                    <MenuItem value="primary">
-                                                                                                        Primary
-                                                                                                    </MenuItem>
-                                                                                                    <MenuItem value="secondary">
-                                                                                                        Secondary
-                                                                                                    </MenuItem>
-                                                                                                </Select>
-                                                                                            </FormControl>
-                                                                                        </Grid>
-                                                                                        <Grid
-                                                                                            item
-                                                                                            xs={12}
-                                                                                            sm={6}
-                                                                                        >
-                                                                                            <FormControl
-                                                                                                fullWidth
-                                                                                                size="small"
-                                                                                            >
-                                                                                                <InputLabel>
-                                                                                                    Action
-                                                                                                </InputLabel>
-                                                                                                <Select
-                                                                                                    value={
-                                                                                                        button.action
-                                                                                                    }
-                                                                                                    label="Action"
-                                                                                                    onChange={(
-                                                                                                        e,
-                                                                                                    ) => {
-                                                                                                        const updated =
-                                                                                                            locationData.cta.buttons.map(
-                                                                                                                (
-                                                                                                                    b,
-                                                                                                                ) =>
-                                                                                                                    b.id ===
-                                                                                                                    button.id
-                                                                                                                        ? {
-                                                                                                                              ...b,
-                                                                                                                              action: e
-                                                                                                                                  .target
-                                                                                                                                  .value as LocationButton["action"],
-                                                                                                                          }
-                                                                                                                        : b,
-                                                                                                            );
-                                                                                                        setLocationData(
-                                                                                                            {
-                                                                                                                ...locationData,
-                                                                                                                cta: {
-                                                                                                                    ...locationData.cta,
-                                                                                                                    buttons:
-                                                                                                                        updated,
-                                                                                                                },
-                                                                                                            },
-                                                                                                        );
-                                                                                                    }}
-                                                                                                    sx={{
-                                                                                                        bgcolor:
-                                                                                                            "background.paper",
-                                                                                                    }}
-                                                                                                >
-                                                                                                    <MenuItem value="directions">
-                                                                                                        Get
-                                                                                                        Directions
-                                                                                                    </MenuItem>
-                                                                                                    <MenuItem value="contact">
-                                                                                                        Contact
-                                                                                                        Page
-                                                                                                    </MenuItem>
-                                                                                                    <MenuItem value="external">
-                                                                                                        External
-                                                                                                        URL
-                                                                                                    </MenuItem>
-                                                                                                </Select>
-                                                                                            </FormControl>
-                                                                                        </Grid>
-                                                                                        {button.action ===
-                                                                                            "external" && (
-                                                                                            <Grid
-                                                                                                item
-                                                                                                xs={
-                                                                                                    12
-                                                                                                }
-                                                                                            >
-                                                                                                <TextField
-                                                                                                    fullWidth
-                                                                                                    label="URL"
-                                                                                                    value={
-                                                                                                        button.url ||
-                                                                                                        ""
-                                                                                                    }
-                                                                                                    onChange={(
-                                                                                                        e,
-                                                                                                    ) => {
-                                                                                                        const updated =
-                                                                                                            locationData.cta.buttons.map(
-                                                                                                                (
-                                                                                                                    b,
-                                                                                                                ) =>
-                                                                                                                    b.id ===
-                                                                                                                    button.id
-                                                                                                                        ? {
-                                                                                                                              ...b,
-                                                                                                                              url: e
-                                                                                                                                  .target
-                                                                                                                                  .value,
-                                                                                                                          }
-                                                                                                                        : b,
-                                                                                                            );
-                                                                                                        setLocationData(
-                                                                                                            {
-                                                                                                                ...locationData,
-                                                                                                                cta: {
-                                                                                                                    ...locationData.cta,
-                                                                                                                    buttons:
-                                                                                                                        updated,
-                                                                                                                },
-                                                                                                            },
-                                                                                                        );
-                                                                                                    }}
-                                                                                                    size="small"
-                                                                                                    sx={{
-                                                                                                        "& .MuiOutlinedInput-root":
-                                                                                                            {
-                                                                                                                bgcolor:
-                                                                                                                    "background.paper",
-                                                                                                            },
-                                                                                                    }}
-                                                                                                />
-                                                                                            </Grid>
-                                                                                        )}
-                                                                                        <Grid
-                                                                                            item
-                                                                                            xs={12}
-                                                                                        >
-                                                                                            <FormControlLabel
-                                                                                                control={
-                                                                                                    <Switch
-                                                                                                        checked={
-                                                                                                            button.isActive
-                                                                                                        }
-                                                                                                        onChange={(
-                                                                                                            e,
-                                                                                                        ) => {
-                                                                                                            const updated =
-                                                                                                                locationData.cta.buttons.map(
-                                                                                                                    (
-                                                                                                                        b,
-                                                                                                                    ) =>
-                                                                                                                        b.id ===
-                                                                                                                        button.id
-                                                                                                                            ? {
-                                                                                                                                  ...b,
-                                                                                                                                  isActive:
-                                                                                                                                      e
-                                                                                                                                          .target
-                                                                                                                                          .checked,
-                                                                                                                              }
-                                                                                                                            : b,
-                                                                                                                );
-                                                                                                            setLocationData(
-                                                                                                                {
-                                                                                                                    ...locationData,
-                                                                                                                    cta: {
-                                                                                                                        ...locationData.cta,
-                                                                                                                        buttons:
-                                                                                                                            updated,
-                                                                                                                    },
-                                                                                                                },
-                                                                                                            );
-                                                                                                        }}
-                                                                                                        color="success"
-                                                                                                    />
-                                                                                                }
-                                                                                                label={
-                                                                                                    <Typography
-                                                                                                        variant="body2"
-                                                                                                        sx={{
-                                                                                                            fontWeight: 500,
-                                                                                                        }}
-                                                                                                    >
-                                                                                                        Active
-                                                                                                    </Typography>
-                                                                                                }
-                                                                                            />
-                                                                                        </Grid>
-                                                                                    </Grid>
-                                                                                </Box>
-                                                                                <IconButton
-                                                                                    size="small"
-                                                                                    color="error"
-                                                                                    onClick={() =>
-                                                                                        handleDeleteButton(
-                                                                                            button.id,
-                                                                                        )
-                                                                                    }
-                                                                                    sx={{
-                                                                                        "&:hover": {
-                                                                                            bgcolor:
-                                                                                                "error.lighter",
-                                                                                        },
-                                                                                    }}
-                                                                                >
-                                                                                    <Trash2
-                                                                                        size={20}
-                                                                                    />
-                                                                                </IconButton>
-                                                                            </Box>
-                                                                        </Paper>
-                                                                    )}
-                                                                </Draggable>
-                                                            ))}
-                                                            {provided.placeholder}
-                                                        </Box>
-                                                    )}
-                                                </Droppable>
-                                            </DragDropContext>
+                                            <Box>
+                                                <Typography
+                                                    variant="h6"
+                                                    sx={{ fontWeight: 600, lineHeight: 1.2 }}
+                                                >
+                                                    Live Preview
+                                                </Typography>
+                                                <Typography
+                                                    variant="caption"
+                                                    color="text.secondary"
+                                                >
+                                                    See your changes in real-time
+                                                </Typography>
+                                            </Box>
                                         </Box>
-                                    </Box>
-                                </AccordionDetails>
-                            </Accordion>
-
-                            {/* Action Buttons at Bottom */}
-                            {hasChanges && (
-                                <Paper
-                                    elevation={0}
-                                    sx={{
-                                        mt: 3,
-                                        p: 2,
-                                        display: "flex",
-                                        gap: 2,
-                                        bgcolor: "grey.50",
-                                        border: "1px solid",
-                                        borderColor: "divider",
-                                        borderRadius: 2,
-                                    }}
-                                >
-                                    <Button
-                                        variant="contained"
-                                        size="large"
-                                        onClick={handleSave}
-                                        disabled={isSaving}
-                                        sx={{
-                                            px: 4,
-                                            fontWeight: 600,
-                                            boxShadow: 2,
-                                            "&:hover": {
-                                                boxShadow: 4,
-                                            },
-                                        }}
-                                    >
-                                        {isSaving ? "Saving..." : "Save All Changes"}
-                                    </Button>
-                                    <Button
-                                        variant="outlined"
-                                        size="large"
-                                        onClick={handleReset}
-                                        sx={{
-                                            px: 4,
-                                            fontWeight: 600,
-                                            borderWidth: 2,
-                                            "&:hover": {
-                                                borderWidth: 2,
-                                            },
-                                        }}
-                                    >
-                                        Cancel
-                                    </Button>
-                                </Paper>
-                            )}
-                        </Box>
-                    </Grid>
-
-                    {/* Right Column - Live Preview (Desktop only, sticky) */}
-                    <Grid item xs={12} lg={5}>
-                        <Box sx={{ display: { xs: "none", lg: "block" } }}>
-                            <Paper
-                                elevation={0}
-                                sx={{
-                                    position: "sticky",
-                                    top: 16,
-                                    p: 3,
-                                    bgcolor: "background.paper",
-                                    borderRadius: 2,
-                                    border: "2px solid",
-                                    borderColor: "divider",
-                                    boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-                                }}
-                            >
-                                <Box
-                                    sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3 }}
-                                >
-                                    <Box
-                                        sx={{
-                                            display: "flex",
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                            width: 36,
-                                            height: 36,
-                                            borderRadius: 1.5,
-                                            bgcolor: "primary.main",
-                                            color: "white",
-                                        }}
-                                    >
-                                        <MapPinIcon size={20} />
-                                    </Box>
-                                    <Box>
-                                        <Typography
-                                            variant="h6"
-                                            sx={{ fontWeight: 600, lineHeight: 1.2 }}
+                                        <LocationPreview
+                                            locationData={form.data}
+                                            foundedYear={foundedYear}
+                                        />
+                                        <Alert
+                                            severity="info"
+                                            sx={{
+                                                mt: 2,
+                                                bgcolor: "info.lighter",
+                                                border: "1px solid",
+                                                borderColor: "info.light",
+                                                "& .MuiAlert-icon": {
+                                                    color: "info.main",
+                                                },
+                                            }}
                                         >
-                                            Live Preview
-                                        </Typography>
-                                        <Typography variant="caption" color="text.secondary">
-                                            See your changes in real-time
-                                        </Typography>
-                                    </Box>
+                                            <Typography variant="caption">
+                                                This preview updates in real-time as you make
+                                                changes. The actual section may look slightly
+                                                different based on screen size.
+                                            </Typography>
+                                        </Alert>
+                                    </Paper>
                                 </Box>
-                                <LocationPreview
-                                    locationData={locationData}
-                                    foundedYear={foundedYear}
-                                />
-                                <Alert
-                                    severity="info"
-                                    sx={{
-                                        mt: 2,
-                                        bgcolor: "info.lighter",
-                                        border: "1px solid",
-                                        borderColor: "info.light",
-                                        "& .MuiAlert-icon": {
-                                            color: "info.main",
-                                        },
-                                    }}
-                                >
-                                    <Typography variant="caption">
-                                        This preview updates in real-time as you make changes. The
-                                        actual section may look slightly different based on screen
-                                        size.
-                                    </Typography>
-                                </Alert>
-                            </Paper>
-                        </Box>
-                    </Grid>
-                </Grid>
+                            </Grid>
+                        </Grid>
+                    </>
+                )}
             </Box>
         </PageContainer>
     );

@@ -25,11 +25,10 @@ import {
     Typography,
     useTheme,
 } from "@mui/material";
-import { useAddImages, useUpdateLandingPageContent } from "api/rest/hooks";
+import { useAddImages, useLandingPageContent, useUpdateLandingPageContent } from "api/rest/hooks";
 import { BackButton, Dropzone, PageContainer, TopBar } from "components";
 import { useABTestQueryParams } from "hooks/useABTestQueryParams";
 import { useAdminForm } from "hooks/useAdminForm";
-import { useLandingPage } from "hooks/useLandingPage";
 import {
     ChevronDown,
     Flower,
@@ -45,7 +44,7 @@ import {
     Star,
     Trash2,
 } from "lucide-react";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { getServerUrl } from "utils";
 
 interface SeasonalPlant {
@@ -493,7 +492,12 @@ const SeasonalPreview = ({
 export const AdminHomepageSeasonal = () => {
     const { palette } = useTheme();
     const { variantId: queryVariantId } = useABTestQueryParams();
-    const { data, refetch: refetchLandingPage } = useLandingPage();
+    // Admin needs to see ALL plants/tips (including inactive) so they can activate/deactivate them
+    const {
+        data,
+        loading: landingPageLoading,
+        refetch: refetchLandingPage,
+    } = useLandingPageContent(false, queryVariantId);
     const updateLandingPageContent = useUpdateLandingPageContent();
     const { mutate: addImages } = useAddImages();
 
@@ -570,6 +574,14 @@ export const AdminHomepageSeasonal = () => {
         successMessage: "Seasonal content saved successfully!",
         errorMessagePrefix: "Failed to save seasonal content",
     });
+
+    // Trigger refetch when landing page data loads
+    useEffect(() => {
+        if (data && !landingPageLoading) {
+            form.refetch();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [data, landingPageLoading]);
 
     const handleAddPlant = () => {
         if (!form.data) return;
@@ -698,6 +710,7 @@ export const AdminHomepageSeasonal = () => {
                 console.error("Failed to upload image:", error);
             }
         },
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         [form.data, editingPlant, addImages],
     );
 
@@ -751,6 +764,7 @@ export const AdminHomepageSeasonal = () => {
             // Clear deleting state after state updates
             setTimeout(() => setDeletingImageId(null), 100);
         },
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         [form.data, editingPlant],
     );
 

@@ -1,49 +1,44 @@
 import { APP_LINKS } from "@local/shared";
 import {
+    Accordion,
+    AccordionDetails,
+    AccordionSummary,
+    Alert,
     Box,
     Button,
     Card,
     CardContent,
-    TextField,
-    Typography,
-    Alert,
-    Snackbar,
-    Divider as _Divider,
+    Grid,
+    IconButton,
     InputAdornment,
+    Paper,
+    TextField,
     ToggleButton,
     ToggleButtonGroup,
-    Grid,
-    Paper,
-    IconButton,
-    Chip as _Chip,
-    Accordion,
-    AccordionSummary,
-    AccordionDetails,
+    Typography,
 } from "@mui/material";
-import {
-    Save,
-    RotateCcw,
-    Palette,
-    Building,
-    Sun,
-    Moon,
-    Menu,
-    ShoppingCart,
-    Heart,
-    User,
-    AlertTriangle,
-    CheckCircle,
-    ChevronDown,
-} from "lucide-react";
+import { useLandingPageContent, useUpdateLandingPageSettings } from "api/rest/hooks";
 import { BackButton, PageContainer } from "components";
 import { ABTestEditingBanner } from "components/admin/ABTestEditingBanner";
 import { TopBar } from "components/navigation/TopBar/TopBar";
-import { useLandingPage } from "hooks/useLandingPage";
 import { useABTestQueryParams } from "hooks/useABTestQueryParams";
-import { useUpdateLandingPageSettings } from "api/rest/hooks";
-import { useBlockNavigation } from "hooks/useBlockNavigation";
-import { useCallback as _useCallback, useEffect, useState, useMemo, useRef } from "react";
-import { PubSub } from "utils";
+import { useAdminForm } from "hooks/useAdminForm";
+import {
+    AlertTriangle,
+    Building,
+    CheckCircle,
+    ChevronDown,
+    Heart,
+    Menu,
+    Moon,
+    Palette,
+    RotateCcw,
+    Save,
+    ShoppingCart,
+    Sun,
+    User,
+} from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { validateThemeContrast, type ContrastIssue } from "utils/colorContrast";
 
 interface ThemeColors {
@@ -336,36 +331,141 @@ const RealisticPreview = ({ colors, mode }: PreviewProps) => {
 export const AdminHomepageBranding = () => {
     const { variantId: queryVariantId } = useABTestQueryParams();
     const updateSettings = useUpdateLandingPageSettings();
-    const { data: landingPageContent, refetch } = useLandingPage();
+    // Admin needs to see ALL content (including inactive) so they can manage it
+    const {
+        data: landingPageContent,
+        loading: landingPageLoading,
+        refetch: refetchLandingPage,
+    } = useLandingPageContent(false, queryVariantId);
 
     // Use variantId from URL query params, or fall back to the loaded data's variant
     const variantId = queryVariantId || landingPageContent?._meta?.variantId;
 
-    const [branding, setBranding] = useState<BrandingSettings>(DEFAULT_BRANDING);
-    const [originalBranding, setOriginalBranding] = useState<BrandingSettings>(DEFAULT_BRANDING);
+    // UI-only state (not form data)
     const [previewMode, setPreviewMode] = useState<"light" | "dark">("light");
     const [editingMode, setEditingMode] = useState<"light" | "dark">("light");
-    const [snackbar, setSnackbar] = useState<{
-        open: boolean;
-        message: string;
-        severity: "success" | "error";
-    }>({
-        open: false,
-        message: "",
-        severity: "success",
+
+    // Use the standardized useAdminForm hook
+    const form = useAdminForm<BrandingSettings>({
+        fetchFn: async () => {
+            if (!landingPageContent?.theme) {
+                return DEFAULT_BRANDING;
+            }
+
+            // Handle both old format (single colors object) and new format (light/dark)
+            const colors = landingPageContent.theme.colors as Record<string, unknown>;
+            let colorSettings = DEFAULT_BRANDING.colors;
+
+            if (colors?.light && colors?.dark) {
+                // New format with light/dark mode
+                colorSettings = colors as { light: ThemeColors; dark: ThemeColors };
+            } else if (colors?.primary) {
+                // Old format - use for light mode, keep defaults for dark
+                colorSettings = {
+                    light: {
+                        primary:
+                            (colors.primary as string) || DEFAULT_BRANDING.colors.light.primary,
+                        secondary:
+                            (colors.secondary as string) || DEFAULT_BRANDING.colors.light.secondary,
+                        accent: (colors.accent as string) || DEFAULT_BRANDING.colors.light.accent,
+                        background: DEFAULT_BRANDING.colors.light.background,
+                        paper: DEFAULT_BRANDING.colors.light.paper,
+                    },
+                    dark: DEFAULT_BRANDING.colors.dark,
+                };
+            }
+
+            return {
+                companyInfo: landingPageContent.content?.company || DEFAULT_BRANDING.companyInfo,
+                colors: colorSettings,
+            };
+        },
+        saveFn: async (brandingData) => {
+            // Validate all colors for both light and dark modes
+            const colorsToValidate = [
+                { value: brandingData.colors.light.primary, name: "Light mode primary" },
+                { value: brandingData.colors.light.secondary, name: "Light mode secondary" },
+                { value: brandingData.colors.light.accent, name: "Light mode accent" },
+                { value: brandingData.colors.light.background, name: "Light mode background" },
+                { value: brandingData.colors.light.paper, name: "Light mode paper" },
+                { value: brandingData.colors.dark.primary, name: "Dark mode primary" },
+                { value: brandingData.colors.dark.secondary, name: "Dark mode secondary" },
+                { value: brandingData.colors.dark.accent, name: "Dark mode accent" },
+                { value: brandingData.colors.dark.background, name: "Dark mode background" },
+                { value: brandingData.colors.dark.paper, name: "Dark mode paper" },
+            ];
+
+            for (const color of colorsToValidate) {
+                if (!isValidHexColor(color.value)) {
+                    throw new Error(
+                        `Invalid ${color.name} color format. Use hex format like #2E7D32`,
+                    );
+                }
+            }
+
+            // Check for accessibility issues in both modes
+            const lightErrors = validateThemeContrast("light", brandingData.colors.light).filter(
+                (issue) => issue.severity === "error",
+            );
+            const darkErrors = validateThemeContrast("dark", brandingData.colors.dark).filter(
+                (issue) => issue.severity === "error",
+            );
+            const totalErrors = lightErrors.length + darkErrors.length;
+
+            if (totalErrors > 0) {
+                const modeMessages: string[] = [];
+                if (lightErrors.length > 0) {
+                    modeMessages.push(`${lightErrors.length} in light mode`);
+                }
+                if (darkErrors.length > 0) {
+                    modeMessages.push(`${darkErrors.length} in dark mode`);
+                }
+
+                throw new Error(
+                    `Cannot save: ${totalErrors} critical accessibility ${totalErrors === 1 ? "error" : "errors"} found (${modeMessages.join(", ")}). Check the accessibility warnings above.`,
+                );
+            }
+
+            // Send nested structure matching LandingPageContent for type safety
+            await updateSettings.mutate({
+                settings: {
+                    theme: {
+                        colors: brandingData.colors,
+                    },
+                    content: {
+                        company: brandingData.companyInfo,
+                    },
+                },
+                queryParams: variantId ? { variantId } : undefined,
+            });
+
+            return brandingData;
+        },
+        refetchDependencies: [refetchLandingPage],
+        pageName: "branding-section",
+        endpointName: "/api/v1/landing-page/branding",
+        successMessage: "Branding settings saved successfully!",
+        errorMessagePrefix: "Failed to save",
     });
 
-    // Track if we just saved to prevent form reset from refetch
-    const justSavedRef = useRef(false);
+    // Trigger refetch when landing page data loads
+    useEffect(() => {
+        if (landingPageContent && !landingPageLoading) {
+            form.refetch();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [landingPageContent, landingPageLoading]);
 
     // Calculate contrast issues for BOTH light and dark modes
     const lightIssues = useMemo(() => {
-        return validateThemeContrast("light", branding.colors.light);
-    }, [branding.colors.light]);
+        if (!form.data) return [];
+        return validateThemeContrast("light", form.data.colors.light);
+    }, [form.data]);
 
     const darkIssues = useMemo(() => {
-        return validateThemeContrast("dark", branding.colors.dark);
-    }, [branding.colors.dark]);
+        if (!form.data) return [];
+        return validateThemeContrast("dark", form.data.colors.dark);
+    }, [form.data]);
 
     // Get issues for the currently editing mode (for inline display under fields)
     const contrastIssues = editingMode === "light" ? lightIssues : darkIssues;
@@ -391,165 +491,18 @@ export const AdminHomepageBranding = () => {
         return lightErrors || darkErrors;
     }, [lightIssues, darkIssues]);
 
-    // Get critical errors from both modes
-    const _allCriticalErrors = useMemo(() => {
-        return [...lightIssues, ...darkIssues].filter((issue) => issue.severity === "error");
-    }, [lightIssues, darkIssues]);
+    // Get current colors for the editing mode
+    const currentColors = form.data?.colors[editingMode];
 
-    // Load branding settings from landing page content
-    // Using useMemo to derive settings from landingPageContent
-    const settingsFromContent = useMemo(() => {
-        if (!landingPageContent?.theme) return null;
-
-        // Handle both old format (single colors object) and new format (light/dark)
-        const colors = landingPageContent.theme.colors as Record<string, unknown>;
-        let colorSettings = DEFAULT_BRANDING.colors;
-
-        if (colors?.light && colors?.dark) {
-            // New format with light/dark mode
-            colorSettings = colors as { light: ThemeColors; dark: ThemeColors };
-        } else if (colors?.primary) {
-            // Old format - use for light mode, keep defaults for dark
-            colorSettings = {
-                light: {
-                    primary: (colors.primary as string) || DEFAULT_BRANDING.colors.light.primary,
-                    secondary:
-                        (colors.secondary as string) || DEFAULT_BRANDING.colors.light.secondary,
-                    accent: (colors.accent as string) || DEFAULT_BRANDING.colors.light.accent,
-                    background: DEFAULT_BRANDING.colors.light.background,
-                    paper: DEFAULT_BRANDING.colors.light.paper,
-                },
-                dark: DEFAULT_BRANDING.colors.dark,
-            };
-        }
-
-        const settings: BrandingSettings = {
-            companyInfo: landingPageContent.content?.company || DEFAULT_BRANDING.companyInfo,
-            colors: colorSettings,
-        };
-
-        return settings;
-    }, [landingPageContent]);
-
-    // Update state when settings from content change
-    useEffect(() => {
-        if (settingsFromContent) {
-            // Don't reset the form if we just saved (wait for refetch to complete first)
-            if (justSavedRef.current) {
-                justSavedRef.current = false;
-                return;
-            }
-            setBranding(settingsFromContent);
-            setOriginalBranding(JSON.parse(JSON.stringify(settingsFromContent)));
-        }
-    }, [settingsFromContent]);
-
-    // Check for unsaved changes using useMemo for derived state
-    const hasChanges = useMemo(
-        () => JSON.stringify(branding) !== JSON.stringify(originalBranding),
-        [branding, originalBranding],
-    );
-
-    // Block navigation when there are unsaved changes
-    useBlockNavigation(hasChanges);
-
-    const handleSave = async () => {
-        // Validate all colors for both light and dark modes
-        const colorsToValidate = [
-            { value: branding.colors.light.primary, name: "Light mode primary" },
-            { value: branding.colors.light.secondary, name: "Light mode secondary" },
-            { value: branding.colors.light.accent, name: "Light mode accent" },
-            { value: branding.colors.light.background, name: "Light mode background" },
-            { value: branding.colors.light.paper, name: "Light mode paper" },
-            { value: branding.colors.dark.primary, name: "Dark mode primary" },
-            { value: branding.colors.dark.secondary, name: "Dark mode secondary" },
-            { value: branding.colors.dark.accent, name: "Dark mode accent" },
-            { value: branding.colors.dark.background, name: "Dark mode background" },
-            { value: branding.colors.dark.paper, name: "Dark mode paper" },
-        ];
-
-        for (const color of colorsToValidate) {
-            if (!isValidHexColor(color.value)) {
-                setSnackbar({
-                    open: true,
-                    message: `Invalid ${color.name} color format. Use hex format like #2E7D32`,
-                    severity: "error",
-                });
-                return;
-            }
-        }
-
-        // Check for accessibility issues in both modes
-        const lightErrors = lightIssues.filter((issue) => issue.severity === "error");
-        const darkErrors = darkIssues.filter((issue) => issue.severity === "error");
-        const totalErrors = lightErrors.length + darkErrors.length;
-
-        if (totalErrors > 0) {
-            // Don't auto-switch modes - let the user see the summary card which shows all issues
-            const modeMessages: string[] = [];
-            if (lightErrors.length > 0) {
-                modeMessages.push(`${lightErrors.length} in light mode`);
-            }
-            if (darkErrors.length > 0) {
-                modeMessages.push(`${darkErrors.length} in dark mode`);
-            }
-
-            setSnackbar({
-                open: true,
-                message: `Cannot save: ${totalErrors} critical accessibility ${totalErrors === 1 ? "error" : "errors"} found (${modeMessages.join(", ")}). Check the accessibility warnings above.`,
-                severity: "error",
-            });
-            return;
-        }
-
-        try {
-            // Send nested structure matching LandingPageContent for type safety
-            await updateSettings.mutate({
-                settings: {
-                    theme: {
-                        colors: branding.colors,
-                    },
-                    content: {
-                        company: branding.companyInfo,
-                    },
-                },
-                queryParams: variantId ? { variantId } : undefined,
-            });
-            // Mark that we just saved to prevent form reset from refetch
-            justSavedRef.current = true;
-            // Update the original branding to reflect what we just saved
-            setOriginalBranding(JSON.parse(JSON.stringify(branding)));
-            setSnackbar({
-                open: true,
-                message: "Branding settings saved successfully!",
-                severity: "success",
-            });
-            // Refetch to update other parts of the app, but the useEffect will skip the reset
-            refetch();
-            // Notify other components that landing page content has been updated
-            PubSub.get().publishLandingPageUpdated();
-        } catch (error) {
-            setSnackbar({
-                open: true,
-                message: `Failed to save: ${(error as Error).message}`,
-                severity: "error",
-            });
-        }
-    };
-
-    const handleCancel = () => {
-        setBranding(JSON.parse(JSON.stringify(originalBranding)));
-    };
-
-    const currentColors = branding.colors[editingMode];
-
+    // Handle color changes with null check and form.setData pattern
     const handleColorChange = (field: keyof ThemeColors, value: string) => {
-        setBranding({
-            ...branding,
+        if (!form.data) return;
+        form.setData({
+            ...form.data,
             colors: {
-                ...branding.colors,
+                ...form.data.colors,
                 [editingMode]: {
-                    ...branding.colors[editingMode],
+                    ...form.data.colors[editingMode],
                     [field]: value,
                 },
             },
@@ -574,7 +527,7 @@ export const AdminHomepageBranding = () => {
                 <ABTestEditingBanner />
 
                 {/* Unsaved changes warning */}
-                {hasChanges && (
+                {form.isDirty && (
                     <Alert
                         severity="warning"
                         sx={{
@@ -594,7 +547,7 @@ export const AdminHomepageBranding = () => {
                 )}
 
                 {/* Action Buttons at Top */}
-                {hasChanges && (
+                {form.isDirty && (
                     <Paper
                         elevation={0}
                         sx={{
@@ -612,8 +565,8 @@ export const AdminHomepageBranding = () => {
                             variant="contained"
                             size="large"
                             startIcon={<Save size={20} />}
-                            onClick={handleSave}
-                            disabled={!hasChanges || updateSettings.loading || hasCriticalErrors}
+                            onClick={form.save}
+                            disabled={!form.isDirty || form.isSaving || hasCriticalErrors}
                             sx={{
                                 px: 4,
                                 fontWeight: 600,
@@ -623,14 +576,14 @@ export const AdminHomepageBranding = () => {
                                 },
                             }}
                         >
-                            {updateSettings.loading ? "Saving..." : "Save Changes"}
+                            {form.isSaving ? "Saving..." : "Save Changes"}
                         </Button>
                         <Button
                             variant="outlined"
                             size="large"
                             startIcon={<RotateCcw size={20} />}
-                            onClick={handleCancel}
-                            disabled={!hasChanges}
+                            onClick={form.cancel}
+                            disabled={!form.isDirty}
                             sx={{
                                 px: 4,
                                 fontWeight: 600,
@@ -691,7 +644,10 @@ export const AdminHomepageBranding = () => {
                                         </ToggleButtonGroup>
                                     </Box>
                                     <RealisticPreview
-                                        colors={branding.colors[previewMode]}
+                                        colors={
+                                            form.data?.colors[previewMode] ||
+                                            DEFAULT_BRANDING.colors[previewMode]
+                                        }
                                         mode={previewMode}
                                     />
                                     <Alert
@@ -739,17 +695,18 @@ export const AdminHomepageBranding = () => {
                                             fullWidth
                                             type="number"
                                             label="Founded Year"
-                                            value={branding.companyInfo.foundedYear}
-                                            onChange={(e) =>
-                                                setBranding({
-                                                    ...branding,
+                                            value={form.data?.companyInfo.foundedYear || 1981}
+                                            onChange={(e) => {
+                                                if (!form.data) return;
+                                                form.setData({
+                                                    ...form.data,
                                                     companyInfo: {
-                                                        ...branding.companyInfo,
+                                                        ...form.data.companyInfo,
                                                         foundedYear:
                                                             parseInt(e.target.value) || 1981,
                                                     },
-                                                })
-                                            }
+                                                });
+                                            }}
                                             helperText="Year the company was founded"
                                             inputProps={{
                                                 min: 1900,
@@ -760,16 +717,17 @@ export const AdminHomepageBranding = () => {
                                         <TextField
                                             fullWidth
                                             label="Company Description"
-                                            value={branding.companyInfo.description}
-                                            onChange={(e) =>
-                                                setBranding({
-                                                    ...branding,
+                                            value={form.data?.companyInfo.description || ""}
+                                            onChange={(e) => {
+                                                if (!form.data) return;
+                                                form.setData({
+                                                    ...form.data,
                                                     companyInfo: {
-                                                        ...branding.companyInfo,
+                                                        ...form.data.companyInfo,
                                                         description: e.target.value,
                                                     },
-                                                })
-                                            }
+                                                });
+                                            }}
                                             helperText="Short description of your company"
                                         />
                                     </Box>
@@ -1159,13 +1117,15 @@ export const AdminHomepageBranding = () => {
                                             <TextField
                                                 fullWidth
                                                 label="Primary Color"
-                                                value={currentColors.primary}
+                                                value={currentColors?.primary ?? ""}
                                                 onChange={(e) =>
                                                     handleColorChange("primary", e.target.value)
                                                 }
                                                 helperText="Main brand color (used for primary buttons, navbar, etc.)"
                                                 error={
-                                                    !isValidHexColor(currentColors.primary) ||
+                                                    !isValidHexColor(
+                                                        currentColors?.primary ?? "",
+                                                    ) ||
                                                     getColorIssues("primary").some(
                                                         (i) => i.severity === "error",
                                                     )
@@ -1177,9 +1137,11 @@ export const AdminHomepageBranding = () => {
                                                                 type="color"
                                                                 value={
                                                                     isValidHexColor(
-                                                                        currentColors.primary,
+                                                                        currentColors?.primary ??
+                                                                            "",
                                                                     )
-                                                                        ? currentColors.primary
+                                                                        ? (currentColors?.primary ??
+                                                                          "")
                                                                         : "#000000"
                                                                 }
                                                                 onChange={(e) =>
@@ -1219,13 +1181,15 @@ export const AdminHomepageBranding = () => {
                                             <TextField
                                                 fullWidth
                                                 label="Secondary Color"
-                                                value={currentColors.secondary}
+                                                value={currentColors?.secondary ?? ""}
                                                 onChange={(e) =>
                                                     handleColorChange("secondary", e.target.value)
                                                 }
                                                 helperText="Secondary brand color (used for gradients and highlights)"
                                                 error={
-                                                    !isValidHexColor(currentColors.secondary) ||
+                                                    !isValidHexColor(
+                                                        currentColors?.secondary ?? "",
+                                                    ) ||
                                                     getColorIssues("secondary").some(
                                                         (i) => i.severity === "error",
                                                     )
@@ -1237,9 +1201,11 @@ export const AdminHomepageBranding = () => {
                                                                 type="color"
                                                                 value={
                                                                     isValidHexColor(
-                                                                        currentColors.secondary,
+                                                                        currentColors?.secondary ??
+                                                                            "",
                                                                     )
-                                                                        ? currentColors.secondary
+                                                                        ? (currentColors?.secondary ??
+                                                                          "")
                                                                         : "#000000"
                                                                 }
                                                                 onChange={(e) =>
@@ -1279,13 +1245,13 @@ export const AdminHomepageBranding = () => {
                                             <TextField
                                                 fullWidth
                                                 label="Accent Color"
-                                                value={currentColors.accent}
+                                                value={currentColors?.accent ?? ""}
                                                 onChange={(e) =>
                                                     handleColorChange("accent", e.target.value)
                                                 }
                                                 helperText="Accent color (used for CTAs and special highlights)"
                                                 error={
-                                                    !isValidHexColor(currentColors.accent) ||
+                                                    !isValidHexColor(currentColors?.accent ?? "") ||
                                                     getColorIssues("accent").some(
                                                         (i) => i.severity === "error",
                                                     )
@@ -1297,9 +1263,10 @@ export const AdminHomepageBranding = () => {
                                                                 type="color"
                                                                 value={
                                                                     isValidHexColor(
-                                                                        currentColors.accent,
+                                                                        currentColors?.accent ?? "",
                                                                     )
-                                                                        ? currentColors.accent
+                                                                        ? (currentColors?.accent ??
+                                                                          "")
                                                                         : "#000000"
                                                                 }
                                                                 onChange={(e) =>
@@ -1339,13 +1306,15 @@ export const AdminHomepageBranding = () => {
                                             <TextField
                                                 fullWidth
                                                 label="Background Color"
-                                                value={currentColors.background}
+                                                value={currentColors?.background ?? ""}
                                                 onChange={(e) =>
                                                     handleColorChange("background", e.target.value)
                                                 }
                                                 helperText="Main background color for pages"
                                                 error={
-                                                    !isValidHexColor(currentColors.background) ||
+                                                    !isValidHexColor(
+                                                        currentColors?.background ?? "",
+                                                    ) ||
                                                     getColorIssues("background").some(
                                                         (i) => i.severity === "error",
                                                     )
@@ -1357,9 +1326,11 @@ export const AdminHomepageBranding = () => {
                                                                 type="color"
                                                                 value={
                                                                     isValidHexColor(
-                                                                        currentColors.background,
+                                                                        currentColors?.background ??
+                                                                            "",
                                                                     )
-                                                                        ? currentColors.background
+                                                                        ? (currentColors?.background ??
+                                                                          "")
                                                                         : "#000000"
                                                                 }
                                                                 onChange={(e) =>
@@ -1399,13 +1370,13 @@ export const AdminHomepageBranding = () => {
                                             <TextField
                                                 fullWidth
                                                 label="Paper/Card Color"
-                                                value={currentColors.paper}
+                                                value={currentColors?.paper ?? ""}
                                                 onChange={(e) =>
                                                     handleColorChange("paper", e.target.value)
                                                 }
                                                 helperText="Background color for cards and elevated surfaces"
                                                 error={
-                                                    !isValidHexColor(currentColors.paper) ||
+                                                    !isValidHexColor(currentColors?.paper ?? "") ||
                                                     getColorIssues("paper").some(
                                                         (i) => i.severity === "error",
                                                     )
@@ -1417,9 +1388,10 @@ export const AdminHomepageBranding = () => {
                                                                 type="color"
                                                                 value={
                                                                     isValidHexColor(
-                                                                        currentColors.paper,
+                                                                        currentColors?.paper ?? "",
                                                                     )
-                                                                        ? currentColors.paper
+                                                                        ? (currentColors?.paper ??
+                                                                          "")
                                                                         : "#ffffff"
                                                                 }
                                                                 onChange={(e) =>
@@ -1458,7 +1430,7 @@ export const AdminHomepageBranding = () => {
                             </Card>
 
                             {/* Action Buttons at Bottom */}
-                            {hasChanges && (
+                            {form.isDirty && (
                                 <Paper
                                     elevation={0}
                                     sx={{
@@ -1486,11 +1458,9 @@ export const AdminHomepageBranding = () => {
                                             variant="contained"
                                             size="large"
                                             startIcon={<Save size={20} />}
-                                            onClick={handleSave}
+                                            onClick={form.save}
                                             disabled={
-                                                !hasChanges ||
-                                                updateSettings.loading ||
-                                                hasCriticalErrors
+                                                !form.isDirty || form.isSaving || hasCriticalErrors
                                             }
                                             sx={{
                                                 px: 4,
@@ -1501,14 +1471,14 @@ export const AdminHomepageBranding = () => {
                                                 },
                                             }}
                                         >
-                                            {updateSettings.loading ? "Saving..." : "Save Changes"}
+                                            {form.isSaving ? "Saving..." : "Save Changes"}
                                         </Button>
                                         <Button
                                             variant="outlined"
                                             size="large"
                                             startIcon={<RotateCcw size={20} />}
-                                            onClick={handleCancel}
-                                            disabled={!hasChanges}
+                                            onClick={form.cancel}
+                                            disabled={!form.isDirty}
                                             sx={{
                                                 px: 4,
                                                 fontWeight: 600,
@@ -1585,7 +1555,10 @@ export const AdminHomepageBranding = () => {
                                     </ToggleButtonGroup>
                                 </Box>
                                 <RealisticPreview
-                                    colors={branding.colors[previewMode]}
+                                    colors={
+                                        form.data?.colors[previewMode] ||
+                                        DEFAULT_BRANDING.colors[previewMode]
+                                    }
                                     mode={previewMode}
                                 />
                                 <Alert
@@ -1611,22 +1584,6 @@ export const AdminHomepageBranding = () => {
                     </Grid>
                 </Grid>
             </Box>
-
-            {/* Snackbar for feedback */}
-            <Snackbar
-                open={snackbar.open}
-                autoHideDuration={6000}
-                onClose={() => setSnackbar({ ...snackbar, open: false })}
-                anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-            >
-                <Alert
-                    onClose={() => setSnackbar({ ...snackbar, open: false })}
-                    severity={snackbar.severity}
-                    sx={{ width: "100%" }}
-                >
-                    {snackbar.message}
-                </Alert>
-            </Snackbar>
         </PageContainer>
     );
 };

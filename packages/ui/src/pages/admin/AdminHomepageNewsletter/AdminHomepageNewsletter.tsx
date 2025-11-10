@@ -1,39 +1,36 @@
 import { APP_LINKS } from "@local/shared";
+import { ExpandMore as ExpandMoreIcon } from "@mui/icons-material";
 import {
+    Accordion,
+    AccordionDetails,
+    AccordionSummary,
+    Alert,
     Box,
     Button,
-    TextField,
-    Switch,
     FormControlLabel,
-    Typography,
-    Alert,
     Grid,
     Paper,
-    Accordion,
-    AccordionSummary,
-    AccordionDetails,
+    Switch,
+    TextField,
+    Typography,
     useTheme,
 } from "@mui/material";
-import {
-    Save as SaveIcon,
-    RotateCcw as ResetIcon,
-    Mail,
-    Sprout,
-    Settings as SettingsIcon,
-    Eye as EyeIcon,
-    Users as UsersIcon,
-} from "lucide-react";
-import { ExpandMore as ExpandMoreIcon } from "@mui/icons-material";
+import { useLandingPageContent, useUpdateLandingPageSettings } from "api/rest/hooks";
 import { BackButton, PageContainer } from "components";
 import { ABTestEditingBanner } from "components/admin/ABTestEditingBanner";
 import { TopBar } from "components/navigation/TopBar/TopBar";
-import { useLandingPage } from "hooks/useLandingPage";
 import { useABTestQueryParams } from "hooks/useABTestQueryParams";
-import { useUpdateLandingPageSettings } from "api/rest/hooks";
-import { useBlockNavigation } from "hooks/useBlockNavigation";
-import { useCallback as _useCallback, useEffect, useState, useMemo } from "react";
-import { PubSub } from "utils/pubsub";
-import { SnackSeverity } from "components/dialogs/Snack/Snack";
+import { useAdminForm } from "hooks/useAdminForm";
+import {
+    Eye as EyeIcon,
+    Mail,
+    RotateCcw as ResetIcon,
+    Save as SaveIcon,
+    Settings as SettingsIcon,
+    Sprout,
+    Users as UsersIcon,
+} from "lucide-react";
+import { useEffect, useState } from "react";
 import { Link as RouterLink } from "route";
 
 interface NewsletterSettings {
@@ -42,6 +39,14 @@ interface NewsletterSettings {
     disclaimer: string;
     isActive: boolean;
 }
+
+const getDefaultNewsletterSettings = (): NewsletterSettings => ({
+    title: "Stay in the Grow",
+    description:
+        "Get seasonal care tips, new arrival notifications, and exclusive offers delivered to your inbox",
+    disclaimer: "No spam, just helpful gardening tips. Unsubscribe anytime.",
+    isActive: true,
+});
 
 // Preview component that shows how the newsletter will look
 const NewsletterPreview = ({ newsletter }: { newsletter: NewsletterSettings }) => {
@@ -178,70 +183,49 @@ const NewsletterPreview = ({ newsletter }: { newsletter: NewsletterSettings }) =
 export const AdminHomepageNewsletter = () => {
     const { variantId: queryVariantId } = useABTestQueryParams();
     const updateSettings = useUpdateLandingPageSettings();
-    const { data: landingPageContent, refetch } = useLandingPage();
+    // Admin needs to see ALL content (including inactive) so they can manage it
+    const {
+        data: landingPageContent,
+        loading: landingPageLoading,
+        refetch: refetchLandingPage,
+    } = useLandingPageContent(false, queryVariantId);
 
     // Use variantId from URL query params, or fall back to the loaded data's variant
     const variantId = queryVariantId || landingPageContent?._meta?.variantId;
 
-    const [newsletter, setNewsletter] = useState<NewsletterSettings>({
-        title: "Stay in the Grow",
-        description:
-            "Get seasonal care tips, new arrival notifications, and exclusive offers delivered to your inbox",
-        disclaimer: "No spam, just helpful gardening tips. Unsubscribe anytime.",
-        isActive: true,
-    });
-    const [originalNewsletter, setOriginalNewsletter] = useState<NewsletterSettings>(newsletter);
-    const [isLoading, setIsLoading] = useState(false);
-
-    // Load newsletter settings from landing page content
-    useEffect(() => {
-        if (landingPageContent?.content?.newsletter) {
-            const settings = landingPageContent.content.newsletter;
-            setNewsletter(settings);
-            setOriginalNewsletter(JSON.parse(JSON.stringify(settings)));
-        }
-    }, [landingPageContent]);
-
-    // Check for unsaved changes using useMemo for derived state
-    const hasChanges = useMemo(
-        () => JSON.stringify(newsletter) !== JSON.stringify(originalNewsletter),
-        [newsletter, originalNewsletter],
-    );
-
-    // Block navigation when there are unsaved changes
-    useBlockNavigation(hasChanges);
-
-    const handleSave = async () => {
-        try {
-            setIsLoading(true);
-            // Send nested structure matching LandingPageContent for type safety
+    const form = useAdminForm<NewsletterSettings>({
+        fetchFn: async () => {
+            if (landingPageContent?.content?.newsletter) {
+                return landingPageContent.content.newsletter;
+            }
+            return getDefaultNewsletterSettings();
+        },
+        saveFn: async (data) => {
+            const queryParams = variantId ? { variantId } : undefined;
             await updateSettings.mutate({
                 settings: {
                     content: {
-                        newsletter,
+                        newsletter: data,
                     },
                 },
-                queryParams: variantId ? { variantId } : undefined,
+                queryParams,
             });
-            setOriginalNewsletter(JSON.parse(JSON.stringify(newsletter)));
-            PubSub.get().publishSnack({
-                message: "Newsletter settings saved successfully!",
-                severity: SnackSeverity.Success,
-            });
-            refetch();
-        } catch (error) {
-            PubSub.get().publishSnack({
-                message: `Failed to save: ${(error as Error).message}`,
-                severity: SnackSeverity.Error,
-            });
-        } finally {
-            setIsLoading(false);
-        }
-    };
+            return data;
+        },
+        refetchDependencies: [refetchLandingPage],
+        pageName: "newsletter-section",
+        endpointName: "/api/v1/landing-page",
+        successMessage: "Newsletter settings saved successfully!",
+        errorMessagePrefix: "Failed to save",
+    });
 
-    const handleCancel = () => {
-        setNewsletter(JSON.parse(JSON.stringify(originalNewsletter)));
-    };
+    // Trigger refetch when landing page data loads
+    useEffect(() => {
+        if (landingPageContent && !landingPageLoading) {
+            form.refetch();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [landingPageContent, landingPageLoading]);
 
     return (
         <PageContainer variant="wide" sx={{ minHeight: "100vh", paddingBottom: 0 }}>
@@ -295,7 +279,7 @@ export const AdminHomepageNewsletter = () => {
                 </Alert>
 
                 {/* Unsaved changes warning */}
-                {hasChanges && (
+                {form.isDirty && (
                     <Alert
                         severity="warning"
                         sx={{
@@ -315,7 +299,7 @@ export const AdminHomepageNewsletter = () => {
                 )}
 
                 {/* Action Buttons at Top */}
-                {hasChanges && (
+                {form.isDirty && (
                     <Paper
                         elevation={0}
                         sx={{
@@ -333,8 +317,8 @@ export const AdminHomepageNewsletter = () => {
                             variant="contained"
                             size="large"
                             startIcon={<SaveIcon size={20} />}
-                            onClick={handleSave}
-                            disabled={isLoading}
+                            onClick={form.save}
+                            disabled={form.isSaving}
                             sx={{
                                 px: 4,
                                 fontWeight: 600,
@@ -344,13 +328,13 @@ export const AdminHomepageNewsletter = () => {
                                 },
                             }}
                         >
-                            {isLoading ? "Saving..." : "Save Changes"}
+                            {form.isSaving ? "Saving..." : "Save Changes"}
                         </Button>
                         <Button
                             variant="outlined"
                             size="large"
                             startIcon={<ResetIcon size={20} />}
-                            onClick={handleCancel}
+                            onClick={form.cancel}
                             sx={{
                                 px: 4,
                                 fontWeight: 600,
@@ -417,7 +401,9 @@ export const AdminHomepageNewsletter = () => {
                                             </Typography>
                                         </Box>
                                     </Box>
-                                    <NewsletterPreview newsletter={newsletter} />
+                                    <NewsletterPreview
+                                        newsletter={form.data || getDefaultNewsletterSettings()}
+                                    />
                                     <Alert
                                         severity="info"
                                         sx={{
@@ -494,13 +480,14 @@ export const AdminHomepageNewsletter = () => {
                                         <TextField
                                             fullWidth
                                             label="Newsletter Title"
-                                            value={newsletter.title}
-                                            onChange={(e) =>
-                                                setNewsletter({
-                                                    ...newsletter,
+                                            value={form.data?.title || ""}
+                                            onChange={(e) => {
+                                                if (!form.data) return;
+                                                form.setData({
+                                                    ...form.data,
                                                     title: e.target.value,
-                                                })
-                                            }
+                                                });
+                                            }}
                                             helperText="Main heading for the newsletter section"
                                             variant="outlined"
                                             sx={{
@@ -516,13 +503,14 @@ export const AdminHomepageNewsletter = () => {
                                             multiline
                                             rows={3}
                                             label="Newsletter Description"
-                                            value={newsletter.description}
-                                            onChange={(e) =>
-                                                setNewsletter({
-                                                    ...newsletter,
+                                            value={form.data?.description || ""}
+                                            onChange={(e) => {
+                                                if (!form.data) return;
+                                                form.setData({
+                                                    ...form.data,
                                                     description: e.target.value,
-                                                })
-                                            }
+                                                });
+                                            }}
                                             helperText="Describe what users will receive in the newsletter"
                                             variant="outlined"
                                             sx={{
@@ -536,13 +524,14 @@ export const AdminHomepageNewsletter = () => {
                                         <TextField
                                             fullWidth
                                             label="Disclaimer Text"
-                                            value={newsletter.disclaimer}
-                                            onChange={(e) =>
-                                                setNewsletter({
-                                                    ...newsletter,
+                                            value={form.data?.disclaimer || ""}
+                                            onChange={(e) => {
+                                                if (!form.data) return;
+                                                form.setData({
+                                                    ...form.data,
                                                     disclaimer: e.target.value,
-                                                })
-                                            }
+                                                });
+                                            }}
                                             helperText="Privacy disclaimer shown below signup form"
                                             variant="outlined"
                                             sx={{
@@ -623,13 +612,14 @@ export const AdminHomepageNewsletter = () => {
                                         <FormControlLabel
                                             control={
                                                 <Switch
-                                                    checked={newsletter.isActive}
-                                                    onChange={(e) =>
-                                                        setNewsletter({
-                                                            ...newsletter,
+                                                    checked={form.data?.isActive || false}
+                                                    onChange={(e) => {
+                                                        if (!form.data) return;
+                                                        form.setData({
+                                                            ...form.data,
                                                             isActive: e.target.checked,
-                                                        })
-                                                    }
+                                                        });
+                                                    }}
                                                     color="success"
                                                 />
                                             }
@@ -655,7 +645,7 @@ export const AdminHomepageNewsletter = () => {
                             </Accordion>
 
                             {/* Action Buttons at Bottom */}
-                            {hasChanges && (
+                            {form.isDirty && (
                                 <Paper
                                     elevation={0}
                                     sx={{
@@ -673,8 +663,8 @@ export const AdminHomepageNewsletter = () => {
                                         variant="contained"
                                         size="large"
                                         startIcon={<SaveIcon size={20} />}
-                                        onClick={handleSave}
-                                        disabled={isLoading}
+                                        onClick={form.save}
+                                        disabled={form.isSaving}
                                         sx={{
                                             px: 4,
                                             fontWeight: 600,
@@ -684,13 +674,13 @@ export const AdminHomepageNewsletter = () => {
                                             },
                                         }}
                                     >
-                                        {isLoading ? "Saving..." : "Save Changes"}
+                                        {form.isSaving ? "Saving..." : "Save Changes"}
                                     </Button>
                                     <Button
                                         variant="outlined"
                                         size="large"
                                         startIcon={<ResetIcon size={20} />}
-                                        onClick={handleCancel}
+                                        onClick={form.cancel}
                                         sx={{
                                             px: 4,
                                             fontWeight: 600,
@@ -752,7 +742,9 @@ export const AdminHomepageNewsletter = () => {
                                         </Typography>
                                     </Box>
                                 </Box>
-                                <NewsletterPreview newsletter={newsletter} />
+                                <NewsletterPreview
+                                    newsletter={form.data || getDefaultNewsletterSettings()}
+                                />
                                 <Alert
                                     severity="info"
                                     sx={{

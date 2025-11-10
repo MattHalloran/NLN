@@ -1,10 +1,13 @@
 import { APP_LINKS } from "@local/shared";
+import { AccessTime, Add, Business, Delete, Schedule } from "@mui/icons-material";
 import {
+    Alert,
     Box,
     Button,
     Card,
     CardContent,
     Checkbox,
+    Divider,
     FormControlLabel,
     Grid,
     IconButton,
@@ -22,21 +25,17 @@ import {
     TextField,
     Typography,
     useTheme,
-    Divider,
-    Alert,
 } from "@mui/material";
-import { AccessTime, Business, Delete, Schedule, Add } from "@mui/icons-material";
-import { useLandingPage } from "hooks/useLandingPage";
-import { useABTestQueryParams } from "hooks/useABTestQueryParams";
-import { handleError } from "utils/errorLogger";
-import { useUpdateContactInfo } from "api/rest/hooks";
+import { useLandingPageContent, useUpdateContactInfo } from "api/rest/hooks";
 import { BackButton, PageContainer } from "components";
 import { ABTestEditingBanner } from "components/admin/ABTestEditingBanner";
+import { SnackSeverity } from "components/dialogs/Snack/Snack";
 import { TopBar } from "components/navigation/TopBar/TopBar";
+import { useABTestQueryParams } from "hooks/useABTestQueryParams";
 import { CancelIcon, SaveIcon } from "icons";
 import { useEffect, useState } from "react";
+import { handleError } from "utils/errorLogger";
 import { PubSub } from "utils/pubsub";
-import { SnackSeverity } from "components/dialogs/Snack/Snack";
 
 const helpText = `This page allows you to edit the contact info and business hours displayed on the site. 
 
@@ -99,7 +98,8 @@ const TIME_OPTIONS = [
 export const AdminContactPage = () => {
     const { palette } = useTheme();
     const { variantId: queryVariantId } = useABTestQueryParams();
-    const { data: landingPageData, refetch } = useLandingPage(); // Get all data, not just active
+    // Admin needs to see ALL content (including inactive) so they can manage it
+    const { data: landingPageData, refetch } = useLandingPageContent(false, queryVariantId);
     const { mutate: updateContactInfo, loading: updateLoading } = useUpdateContactInfo();
 
     // Use variantId from URL query params, or fall back to the loaded data's variant
@@ -133,9 +133,7 @@ export const AdminContactPage = () => {
 
         // Parse markdown table into structured data
         try {
-            const lines = landingPageData.contact.hours
-                .split("\n")
-                .filter((line) => line.trim());
+            const lines = landingPageData.contact.hours.split("\n").filter((line) => line.trim());
             const parsedHours: DayHours[] = [];
             const parsedNotes: BusinessNote[] = [];
 
@@ -494,9 +492,7 @@ export const AdminContactPage = () => {
     const revertHours = () => {
         if (landingPageData?.contact?.hours) {
             // Re-parse from original business hours using the same logic as useEffect
-            const lines = landingPageData.contact.hours
-                .split("\n")
-                .filter((line) => line.trim());
+            const lines = landingPageData.contact.hours.split("\n").filter((line) => line.trim());
             const parsedHours: DayHours[] = [];
             const parsedNotes: BusinessNote[] = [];
 
@@ -670,7 +666,9 @@ export const AdminContactPage = () => {
                 display="page"
                 help={helpText}
                 title="Contact Information"
-                startComponent={<BackButton to={APP_LINKS.Admin} ariaLabel="Back to Admin Dashboard" />}
+                startComponent={
+                    <BackButton to={APP_LINKS.Admin} ariaLabel="Back to Admin Dashboard" />
+                }
             />
 
             <Box sx={{ p: 3 }}>
@@ -821,14 +819,19 @@ export const AdminContactPage = () => {
                                                                                     checked={
                                                                                         hours.isSplitShift
                                                                                     }
-                                                                                    onChange={(e) => {
+                                                                                    onChange={(
+                                                                                        e,
+                                                                                    ) => {
                                                                                         const isChecked =
                                                                                             e.target
                                                                                                 .checked;
-                                                                                        const newHours = [
-                                                                                            ...dayHours,
-                                                                                        ];
-                                                                                        newHours[index] = {
+                                                                                        const newHours =
+                                                                                            [
+                                                                                                ...dayHours,
+                                                                                            ];
+                                                                                        newHours[
+                                                                                            index
+                                                                                        ] = {
                                                                                             ...newHours[
                                                                                                 index
                                                                                             ],
@@ -854,11 +857,7 @@ export const AdminContactPage = () => {
                                                                         />
                                                                     </Grid>
                                                                     {hours.isSplitShift ? (
-                                                                        <Grid
-                                                                            item
-                                                                            xs={12}
-                                                                            sm={7}
-                                                                        >
+                                                                        <Grid item xs={12} sm={7}>
                                                                             <TextField
                                                                                 fullWidth
                                                                                 value={
@@ -910,9 +909,7 @@ export const AdminContactPage = () => {
                                                                                     }
                                                                                 >
                                                                                     {TIME_OPTIONS.map(
-                                                                                        (
-                                                                                            time,
-                                                                                        ) => (
+                                                                                        (time) => (
                                                                                             <MenuItem
                                                                                                 key={
                                                                                                     time
@@ -961,9 +958,7 @@ export const AdminContactPage = () => {
                                                                                     }
                                                                                 >
                                                                                     {TIME_OPTIONS.map(
-                                                                                        (
-                                                                                            time,
-                                                                                        ) => (
+                                                                                        (time) => (
                                                                                             <MenuItem
                                                                                                 key={
                                                                                                     time

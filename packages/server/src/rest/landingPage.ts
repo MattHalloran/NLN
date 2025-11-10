@@ -1,35 +1,35 @@
-import { Router, Request, Response } from "express";
+import { Request, Response, Router } from "express";
 import { merge } from "lodash";
 import { logger, LogLevel } from "../logger.js";
-import { auditAdminAction, AuditEventType } from "../utils/auditLogger.js";
 import type {
-    LandingPageContent,
-    HeroBanner,
-    SeasonalPlant,
-    PlantTip,
-    HeroSettings,
     BusinessContactData,
+    HeroBanner,
+    HeroSettings,
+    LandingPageContent,
     LandingPageVariant,
+    PlantTip,
+    SeasonalPlant,
 } from "../types/landingPage.js";
-import {
-    readLandingPageContent,
-    writeLandingPageContent,
-    aggregateLandingPageContent,
-} from "./landingPage/landingPageService.js";
+import { auditAdminAction, AuditEventType } from "../utils/auditLogger.js";
 import {
     getCachedContent,
-    setCachedContent,
     invalidateCache,
+    setCachedContent,
 } from "./landingPage/landingPageCache.js";
 import {
-    readVariants,
-    writeVariants,
-    readVariantContent,
-    writeVariantContent,
+    aggregateLandingPageContent,
+    readLandingPageContent,
+    writeLandingPageContent,
+} from "./landingPage/landingPageService.js";
+import {
+    assignVariantWeighted,
     deleteVariantContent,
     getEnabledVariants,
-    assignVariantWeighted,
+    readVariantContent,
+    readVariants,
     validateTrafficAllocation,
+    writeVariantContent,
+    writeVariants,
 } from "./landingPage/variantsService.js";
 
 // Extend Express Request to include auth properties
