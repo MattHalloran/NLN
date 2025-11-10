@@ -81,7 +81,7 @@ const PerformanceIndicator: React.FC<{
     baseline: number;
     label: string;
     reversed?: boolean; // true for metrics where lower is better (e.g., bounce rate)
-}> = ({ value, baseline, _label, reversed = false }) => {
+}> = ({ value, baseline, label: _label, reversed = false }) => {
     if (baseline === 0) return null;
 
     const diff = value - baseline;

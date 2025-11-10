@@ -18,7 +18,7 @@
         "pre-build-prisma": "mkdir -p dist/db && [ -f src/db/schema.prisma ] && cp src/db/schema.prisma dist/db/schema.prisma || echo 'schema.prisma not found, skipping copy' && [ -d src/db/migrations ] && rm -rf dist/db/migrations && cp -r src/db/migrations dist/db/migrations || echo 'migrations directory not found, skipping copy' && prisma migrate deploy && yarn prisma-generate",
         "build": "yarn tsc && yarn post-build",
         "post-build": "cp -R src/worker/email/templates dist/worker/email/ && cp -R src/data dist/",
-        "start-development": "bash -c 'set -a; [ -f .env ] && source .env; set +a; yarn pre-build && yarn build && nodemon dist/index.js'",
+        "start-development": "bash -c 'if [ -z \"$DB_URL\" ]; then set -a; [ -f .env ] && source .env; set +a; fi; yarn pre-build && yarn build && nodemon dist/index.js'",
         "start-development-wasm": "yarn pre-build && yarn build && nodemon --max-old-space-size=4096 --wasm-max-initial-code-space-reservation=1048576 dist/index.js",
         "dev": "yarn pre-build && yarn build && node --max-old-space-size=4096 --wasm-max-initial-code-space-reservation=1048576 dist/index.js",
         "start-development-debug": "yarn pre-build && yarn build && nodemon --max-old-space-size=4096 --wasm-max-initial-code-space-reservation=1048576 --inspect=0.0.0.0:9229 dist/index.js",

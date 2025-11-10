@@ -858,6 +858,24 @@ export const restApi = {
                 displayOrder: number;
                 isActive: boolean;
             }>;
+            seasonalHeader?: {
+                title: string;
+                subtitle: string;
+            };
+            seasonalSections?: {
+                plants: {
+                    currentSeasonTitle: string;
+                    otherSeasonTitleTemplate: string;
+                };
+                tips: {
+                    title: string;
+                };
+            };
+            seasonalGalleryButton?: {
+                text: string;
+                enabled: boolean;
+            };
+            newsletterButtonText?: string;
             settings?: {
                 hero: {
                     title: string;

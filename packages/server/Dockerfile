@@ -54,6 +54,7 @@ COPY --from=stage1 /usr/local/share/.config/yarn/global /usr/local/share/.config
 
 # Update and install unix packages including OpenSSL for Prisma compatibility
 RUN apk update && apk add --no-cache \
+    bash \
     openssl \
     openssl-dev \
     libc6-compat \

@@ -59,10 +59,10 @@ function useRestQuery<T>(queryFn: () => Promise<T>, dependencies: unknown[] = []
 }
 
 // Specific hooks for different endpoints
-export function useLandingPageContent(onlyActive = true) {
+export function useLandingPageContent(onlyActive = true, variantId?: string) {
     return useRestQuery<LandingPageContent>(
-        () => restApi.getLandingPageContent({ onlyActive }),
-        [onlyActive],
+        () => restApi.getLandingPageContent({ onlyActive, variantId }),
+        [onlyActive, variantId],
     );
 }
 

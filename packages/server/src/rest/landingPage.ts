@@ -304,6 +304,7 @@ router.put("/", async (req: AuthenticatedRequest, res: Response) => {
             plantTips,
             seasonalHeader,
             seasonalSections,
+            seasonalGalleryButton,
             newsletterButtonText,
             settings,
             contactInfo,
@@ -320,6 +321,7 @@ router.put("/", async (req: AuthenticatedRequest, res: Response) => {
                 plants: { currentSeasonTitle: string; otherSeasonTitleTemplate: string };
                 tips: { title: string };
             };
+            seasonalGalleryButton?: { text: string; enabled: boolean };
             newsletterButtonText?: string;
             settings?: Record<string, unknown>;
             contactInfo?: { business?: BusinessContactData; hours?: string };
@@ -694,6 +696,40 @@ router.put("/", async (req: AuthenticatedRequest, res: Response) => {
             };
             currentContent.content.seasonal.sections = seasonalSections;
             updatedSections.push("seasonalSections");
+        }
+
+        // Update seasonal gallery button if provided
+        if (seasonalGalleryButton !== undefined) {
+            currentContent.content = currentContent.content || {
+                hero: {
+                    banners: [],
+                    settings: {
+                        autoPlay: false,
+                        autoPlayDelay: 5000,
+                        showDots: true,
+                        showArrows: true,
+                        fadeTransition: false,
+                    },
+                    text: {
+                        title: "",
+                        subtitle: "",
+                        description: "",
+                        businessHours: "",
+                        trustBadges: [],
+                        buttons: [],
+                    },
+                },
+                services: { title: "", subtitle: "", items: [] },
+                seasonal: { plants: [], tips: [] },
+                newsletter: { title: "", description: "", disclaimer: "", isActive: false },
+                company: { foundedYear: new Date().getFullYear(), description: "" },
+            };
+            currentContent.content.seasonal = currentContent.content.seasonal || {
+                plants: [],
+                tips: [],
+            };
+            currentContent.content.seasonal.galleryButton = seasonalGalleryButton;
+            updatedSections.push("seasonalGalleryButton");
         }
 
         // Update newsletter button text if provided

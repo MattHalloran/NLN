@@ -33,21 +33,19 @@ import {
     Image as ImageIcon,
 } from "@mui/icons-material";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
-import { useLandingPage } from "hooks/useLandingPage";
 import {
     useUpdateLandingPageSettings,
     useAddImages,
     useUpdateLandingPageContent,
+    useLandingPageContent,
 } from "api/rest/hooks";
 import { useABTestQueryParams } from "hooks/useABTestQueryParams";
-import { useBlockNavigation } from "hooks/useBlockNavigation";
+import { useAdminForm } from "hooks/useAdminForm";
 import { BackButton, Dropzone, PageContainer } from "components";
 import { ABTestEditingBanner } from "components/admin/ABTestEditingBanner/ABTestEditingBanner";
 import { TopBar } from "components/navigation/TopBar/TopBar";
 import { getServerUrl } from "utils/serverUrl";
-import { PubSub } from "utils/pubsub";
-import { SnackSeverity } from "components/dialogs/Snack/Snack";
-import { useCallback, useEffect, useState, useMemo } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { pagePaddingBottom } from "styles";
 import { Users, Award, Leaf, Package, Shield, Heart } from "lucide-react";
 
@@ -68,6 +66,8 @@ interface HeroBanner {
     description: string;
     isActive: boolean;
     displayOrder?: number;
+    width?: number;
+    height?: number;
 }
 
 interface HeroSettings {
@@ -95,6 +95,15 @@ interface CTAButton {
     text: string;
     link: string;
     type: string;
+}
+
+// Consolidated hero data structure for useAdminForm
+interface HeroData {
+    banners: HeroBanner[];
+    settings: HeroSettings;
+    content: HeroContent;
+    trustBadges: TrustBadge[];
+    ctaButtons: CTAButton[];
 }
 
 // Default values
@@ -127,32 +136,27 @@ const DEFAULT_CTA_BUTTONS: CTAButton[] = [
 ];
 
 // Preview component that shows how the hero will look
-const HeroPreview = ({
-    heroBanners,
-    heroSettings,
-    heroContent,
-    trustBadges,
-    ctaButtons,
-}: {
-    heroBanners: HeroBanner[];
-    heroSettings: HeroSettings;
-    heroContent: HeroContent;
-    trustBadges: TrustBadge[];
-    ctaButtons: CTAButton[];
-}) => {
+const HeroPreview = ({ heroData }: { heroData: HeroData | null }) => {
     const [currentSlide, setCurrentSlide] = useState(0);
-    const activeImages = heroBanners.filter((b) => b.isActive);
+    const activeImages = heroData?.banners.filter((b) => b.isActive) || [];
 
     // Auto-play carousel in preview
     useEffect(() => {
-        if (!heroSettings.autoPlay || activeImages.length <= 1) return;
+        if (!heroData || !heroData.settings.autoPlay || activeImages.length <= 1) return;
 
         const interval = setInterval(() => {
             setCurrentSlide((prev) => (prev + 1) % activeImages.length);
-        }, heroSettings.autoPlayDelay);
+        }, heroData.settings.autoPlayDelay);
 
         return () => clearInterval(interval);
-    }, [heroSettings.autoPlay, heroSettings.autoPlayDelay, activeImages.length]);
+    }, [
+        heroData,
+        heroData?.settings.autoPlay,
+        heroData?.settings.autoPlayDelay,
+        activeImages.length,
+    ]);
+
+    if (!heroData) return null;
 
     const textPopStyle = {
         padding: "0",
@@ -198,7 +202,7 @@ const HeroPreview = ({
                                 height: "100%",
                                 objectFit: "cover",
                                 opacity: index === currentSlide ? 1 : 0,
-                                transition: heroSettings.fadeTransition
+                                transition: heroData.settings.fadeTransition
                                     ? "opacity 1s ease-in-out"
                                     : "opacity 0.1s",
                                 zIndex: index === currentSlide ? 1 : 0,
@@ -207,7 +211,7 @@ const HeroPreview = ({
                     ))}
 
                     {/* Navigation dots */}
-                    {heroSettings.showDots && activeImages.length > 1 && (
+                    {heroData.settings.showDots && activeImages.length > 1 && (
                         <Box
                             sx={{
                                 position: "absolute",
@@ -240,7 +244,7 @@ const HeroPreview = ({
                     )}
 
                     {/* Navigation arrows */}
-                    {heroSettings.showArrows && activeImages.length > 1 && (
+                    {heroData.settings.showArrows && activeImages.length > 1 && (
                         <>
                             <IconButton
                                 size="small"
@@ -320,7 +324,7 @@ const HeroPreview = ({
                                 gap: 2,
                             }}
                         >
-                            {trustBadges.map((badge, index) => {
+                            {heroData.trustBadges.map((badge, index) => {
                                 const IconComponent =
                                     TRUST_BADGE_ICONS[
                                         badge.icon as keyof typeof TRUST_BADGE_ICONS
@@ -351,7 +355,7 @@ const HeroPreview = ({
                                 mb: 1,
                             }}
                         >
-                            {heroContent.title}
+                            {heroData.content.title}
                         </Typography>
 
                         {/* Subtitle */}
@@ -364,7 +368,7 @@ const HeroPreview = ({
                                 mb: 1,
                             }}
                         >
-                            {heroContent.subtitle}
+                            {heroData.content.subtitle}
                         </Typography>
 
                         {/* Description */}
@@ -379,12 +383,12 @@ const HeroPreview = ({
                                 opacity: 0.95,
                             }}
                         >
-                            {heroContent.description}
+                            {heroData.content.description}
                         </Typography>
 
                         {/* CTA Buttons */}
                         <Stack direction="row" spacing={2} sx={{ mb: 2, pointerEvents: "auto" }}>
-                            {ctaButtons.map((button, index) => (
+                            {heroData.ctaButtons.map((button, index) => (
                                 <Button
                                     key={index}
                                     variant={button.type === "primary" ? "contained" : "outlined"}
@@ -424,7 +428,7 @@ const HeroPreview = ({
                                     fontSize: "0.7rem",
                                 }}
                             >
-                                {heroContent.businessHours}
+                                {heroData.content.businessHours}
                             </Typography>
                         </Box>
                     </Box>
@@ -451,125 +455,116 @@ const HeroPreview = ({
 
 export const AdminHomepageHeroBanner = () => {
     const { variantId: queryVariantId } = useABTestQueryParams();
-    const [heroBanners, setHeroBanners] = useState<HeroBanner[]>([]);
-    const [originalHeroBanners, setOriginalHeroBanners] = useState<HeroBanner[]>([]);
-    const [heroSettings, setHeroSettings] = useState<HeroSettings>(DEFAULT_HERO_SETTINGS);
-    const [originalHeroSettings, setOriginalHeroSettings] =
-        useState<HeroSettings>(DEFAULT_HERO_SETTINGS);
-    const [heroContent, setHeroContent] = useState<HeroContent>(DEFAULT_HERO_CONTENT);
-    const [originalHeroContent, setOriginalHeroContent] =
-        useState<HeroContent>(DEFAULT_HERO_CONTENT);
-    const [trustBadges, setTrustBadges] = useState<TrustBadge[]>(DEFAULT_TRUST_BADGES);
-    const [originalTrustBadges, setOriginalTrustBadges] =
-        useState<TrustBadge[]>(DEFAULT_TRUST_BADGES);
-    const [ctaButtons, setCtaButtons] = useState<CTAButton[]>(DEFAULT_CTA_BUTTONS);
-    const [originalCtaButtons, setOriginalCtaButtons] = useState<CTAButton[]>(DEFAULT_CTA_BUTTONS);
-    const [isLoading, setIsLoading] = useState(false);
-
-    const { data: landingPageContent, refetch } = useLandingPage();
+    // Admin needs to see ALL images (including inactive) so they can activate/deactivate them
+    const {
+        data: landingPageContent,
+        loading: landingPageLoading,
+        refetch: refetchLandingPage,
+    } = useLandingPageContent(false, queryVariantId);
     const updateSettings = useUpdateLandingPageSettings();
     const { mutate: addImages } = useAddImages();
     const updateLandingPageContent = useUpdateLandingPageContent();
 
-    // Use variantId from URL query params, or fall back to the loaded data's variant
-    const variantId = queryVariantId || landingPageContent?._meta?.variantId;
+    // Consolidated form state using useAdminForm hook
+    const form = useAdminForm<HeroData>({
+        fetchFn: async () => {
+            const defaultData: HeroData = {
+                banners: [],
+                settings: DEFAULT_HERO_SETTINGS,
+                content: DEFAULT_HERO_CONTENT,
+                trustBadges: DEFAULT_TRUST_BADGES,
+                ctaButtons: DEFAULT_CTA_BUTTONS,
+            };
 
-    // Load all hero-related content
-    useEffect(() => {
-        if (landingPageContent) {
-            // Load hero banners - fix unsafe optional chaining
-            if (landingPageContent.content?.hero?.banners) {
-                const banners = landingPageContent.content.hero.banners;
-                const sorted = [...banners].sort(
-                    (a: HeroBanner, b: HeroBanner) => (a.displayOrder || 0) - (b.displayOrder || 0),
-                );
-                setHeroBanners(sorted);
-                setOriginalHeroBanners(JSON.parse(JSON.stringify(sorted)));
+            if (!landingPageContent) {
+                return defaultData;
             }
 
-            // Load hero settings
-            if (landingPageContent.content?.hero?.settings) {
-                setHeroSettings(landingPageContent.content.hero.settings);
-                setOriginalHeroSettings(
-                    JSON.parse(JSON.stringify(landingPageContent.content.hero.settings)),
-                );
-            }
+            // Load hero banners
+            const banners = landingPageContent.content?.hero?.banners || [];
+            const sorted = [...banners].sort(
+                (a: HeroBanner, b: HeroBanner) => (a.displayOrder || 0) - (b.displayOrder || 0),
+            );
 
             // Load hero content
-            if (landingPageContent.content?.hero?.text) {
-                const content = landingPageContent.content.hero.text;
-                const newContent = {
-                    title: content.title || DEFAULT_HERO_CONTENT.title,
-                    subtitle: content.subtitle || DEFAULT_HERO_CONTENT.subtitle,
-                    description: content.description || DEFAULT_HERO_CONTENT.description,
-                    businessHours: content.businessHours || DEFAULT_HERO_CONTENT.businessHours,
-                    useContactInfoHours: (content as any).useContactInfoHours ?? false,
-                };
-                setHeroContent(newContent);
-                setOriginalHeroContent(JSON.parse(JSON.stringify(newContent)));
+            const heroText = landingPageContent.content?.hero?.text;
+            const content = heroText
+                ? {
+                      title: heroText.title || DEFAULT_HERO_CONTENT.title,
+                      subtitle: heroText.subtitle || DEFAULT_HERO_CONTENT.subtitle,
+                      description: heroText.description || DEFAULT_HERO_CONTENT.description,
+                      businessHours: heroText.businessHours || DEFAULT_HERO_CONTENT.businessHours,
+                      useContactInfoHours: (heroText as any).useContactInfoHours ?? false,
+                  }
+                : DEFAULT_HERO_CONTENT;
 
-                // Load trust badges
-                if (content.trustBadges) {
-                    setTrustBadges(content.trustBadges);
-                    setOriginalTrustBadges(JSON.parse(JSON.stringify(content.trustBadges)));
-                }
+            return {
+                banners: sorted,
+                settings: landingPageContent.content?.hero?.settings || DEFAULT_HERO_SETTINGS,
+                content,
+                trustBadges: heroText?.trustBadges || DEFAULT_TRUST_BADGES,
+                ctaButtons: heroText?.buttons || DEFAULT_CTA_BUTTONS,
+            };
+        },
+        saveFn: async (data) => {
+            const queryParams = queryVariantId ? { variantId: queryVariantId } : undefined;
 
-                // Load CTA buttons
-                if (content.buttons) {
-                    setCtaButtons(content.buttons);
-                    setOriginalCtaButtons(JSON.parse(JSON.stringify(content.buttons)));
-                }
-            }
+            // Update hero banners and settings
+            await updateLandingPageContent.mutate({
+                data: {
+                    heroBanners: data.banners.map((b) => ({
+                        ...b,
+                        width: b.width || 0,
+                        height: b.height || 0,
+                        displayOrder: b.displayOrder || 0,
+                    })),
+                    heroSettings: data.settings,
+                },
+                queryParams,
+            });
+
+            // Update hero content, trust badges, and CTA buttons
+            await updateSettings.mutate({
+                settings: {
+                    content: {
+                        hero: {
+                            text: {
+                                ...data.content,
+                                trustBadges: data.trustBadges,
+                                buttons: data.ctaButtons,
+                            },
+                        },
+                    },
+                },
+                queryParams,
+            });
+
+            return data;
+        },
+        refetchDependencies: [refetchLandingPage],
+        pageName: "hero-section",
+        endpointName: "/api/v1/landing-page",
+        successMessage: "All hero settings saved successfully!",
+        errorMessagePrefix: "Failed to save changes",
+    });
+
+    // Trigger refetch when landing page data loads
+    useEffect(() => {
+        if (landingPageContent && !landingPageLoading) {
+            form.refetch();
         }
-    }, [landingPageContent]);
-
-    // Check for changes using useMemo for derived state
-    const hasChanges = useMemo(() => {
-        const bannersChanged = JSON.stringify(heroBanners) !== JSON.stringify(originalHeroBanners);
-        const settingsChanged =
-            JSON.stringify(heroSettings) !== JSON.stringify(originalHeroSettings);
-        const contentChanged = JSON.stringify(heroContent) !== JSON.stringify(originalHeroContent);
-        const badgesChanged = JSON.stringify(trustBadges) !== JSON.stringify(originalTrustBadges);
-        const buttonsChanged = JSON.stringify(ctaButtons) !== JSON.stringify(originalCtaButtons);
-        return (
-            bannersChanged || settingsChanged || contentChanged || badgesChanged || buttonsChanged
-        );
-    }, [
-        heroBanners,
-        originalHeroBanners,
-        heroSettings,
-        originalHeroSettings,
-        heroContent,
-        originalHeroContent,
-        trustBadges,
-        originalTrustBadges,
-        ctaButtons,
-        originalCtaButtons,
-    ]);
-
-    // Block navigation when there are unsaved changes
-    useBlockNavigation(hasChanges);
-
-    const handleApiError = useCallback((error: unknown, defaultMessage: string) => {
-        const message = (error as Error)?.message || defaultMessage;
-        PubSub.get().publishSnack({ message, severity: SnackSeverity.Error });
-    }, []);
-
-    const handleApiSuccess = useCallback((message: string) => {
-        PubSub.get().publishSnack({ message, severity: SnackSeverity.Success });
-    }, []);
+    }, [landingPageContent, landingPageLoading]);
 
     const uploadImages = useCallback(
         async (acceptedFiles: File[]) => {
-            try {
-                setIsLoading(true);
+            if (!form.data) return;
 
+            try {
                 // Upload images using the images API (which creates multiple sizes + WebP)
                 const uploadResults = await addImages({ label: "hero", files: acceptedFiles });
 
                 const newBanners: HeroBanner[] = [];
-                const failedUploads: string[] = [];
-                const currentLength = heroBanners.length;
+                const currentLength = form.data.banners.length;
 
                 for (let i = 0; i < uploadResults.length; i++) {
                     const result = uploadResults[i];
@@ -578,157 +573,82 @@ export const AdminHomepageHeroBanner = () => {
                     if (result.success && result.src) {
                         const newBanner = {
                             id: `hero-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-                            src: `/${result.src}`, // Use the server-generated path (e.g., /images/filename-XXL.jpg)
+                            src: `/${result.src}`,
                             alt: file.name.replace(/\.[^/.]+$/, ""),
                             description: "",
-                            width: 0, // Width/height will be determined by the image rendering
-                            height: 0,
                             displayOrder: currentLength + newBanners.length + 1,
                             isActive: true,
                         };
                         newBanners.push(newBanner);
-                    } else {
-                        failedUploads.push(file.name);
                     }
                 }
 
-                setHeroBanners((prev) => [...prev, ...newBanners]);
-
-                // Show appropriate message based on results
-                if (failedUploads.length === uploadResults.length) {
-                    // All uploads failed
-                    handleApiError(
-                        new Error(`All ${failedUploads.length} upload(s) failed`),
-                        "Failed to upload images",
-                    );
-                } else if (failedUploads.length > 0) {
-                    // Partial failure
-                    handleApiError(
-                        new Error(
-                            `${failedUploads.length} upload(s) failed: ${failedUploads.join(", ")}`,
-                        ),
-                        `Uploaded ${newBanners.length} image(s), but ${failedUploads.length} failed`,
-                    );
-                } else {
-                    // All successful
-                    handleApiSuccess(
-                        `Added ${newBanners.length} image(s). Remember to save changes.`,
-                    );
-                }
+                form.setData({
+                    ...form.data,
+                    banners: [...form.data.banners, ...newBanners],
+                });
             } catch (error) {
-                handleApiError(error, "Failed to add images");
-            } finally {
-                setIsLoading(false);
+                console.error("Failed to upload images:", error);
             }
         },
-        [heroBanners.length, addImages, handleApiSuccess, handleApiError],
+        [form, addImages],
     );
 
-    const handleDragEnd = useCallback((result: DropResult) => {
-        if (!result.destination) return;
+    const handleDragEnd = useCallback(
+        (result: DropResult) => {
+            if (!result.destination || !form.data) return;
 
-        setHeroBanners((prev) => {
-            const items = Array.from(prev);
+            const items = Array.from(form.data.banners);
             const [reorderedItem] = items.splice(result.source.index, 1);
             items.splice(result.destination.index, 0, reorderedItem);
 
-            return items.map((item, index) => ({
+            const reordered = items.map((item, index) => ({
                 ...item,
                 displayOrder: index + 1,
             }));
-        });
-    }, []);
 
-    const handleDeleteBanner = useCallback((id: string) => {
-        setHeroBanners((prev) =>
-            prev
+            form.setData({
+                ...form.data,
+                banners: reordered,
+            });
+        },
+        [form],
+    );
+
+    const handleDeleteBanner = useCallback(
+        (id: string) => {
+            if (!form.data) return;
+
+            const filtered = form.data.banners
                 .filter((b) => b.id !== id)
                 .map((item, index) => ({
                     ...item,
                     displayOrder: index + 1,
-                })),
-        );
-    }, []);
+                }));
 
-    const handleFieldChange = useCallback((id: string, field: string, value: string | boolean) => {
-        setHeroBanners((prev) =>
-            prev.map((banner) => (banner.id === id ? { ...banner, [field]: value } : banner)),
-        );
-    }, []);
-
-    const handleSaveAllChanges = useCallback(async () => {
-        try {
-            setIsLoading(true);
-
-            const queryParams = variantId ? { variantId } : undefined;
-
-            // Update hero banners and settings
-            await updateLandingPageContent.mutate({
-                data: {
-                    heroBanners,
-                    heroSettings,
-                },
-                queryParams,
+            form.setData({
+                ...form.data,
+                banners: filtered,
             });
+        },
+        [form],
+    );
 
-            // Update hero content, trust badges, and CTA buttons
-            // Send nested structure matching LandingPageContent for type safety
-            await updateSettings.mutate({
-                settings: {
-                    content: {
-                        hero: {
-                            text: {
-                                ...heroContent,
-                                trustBadges,
-                                buttons: ctaButtons,
-                            },
-                        },
-                    },
-                },
-                queryParams,
+    const handleFieldChange = useCallback(
+        (id: string, field: string, value: string | boolean) => {
+            if (!form.data) return;
+
+            const updated = form.data.banners.map((banner) =>
+                banner.id === id ? { ...banner, [field]: value } : banner,
+            );
+
+            form.setData({
+                ...form.data,
+                banners: updated,
             });
-
-            await refetch();
-            handleApiSuccess("All hero settings saved successfully!");
-
-            // Update original values
-            setOriginalHeroBanners(JSON.parse(JSON.stringify(heroBanners)));
-            setOriginalHeroSettings(JSON.parse(JSON.stringify(heroSettings)));
-            setOriginalHeroContent(JSON.parse(JSON.stringify(heroContent)));
-            setOriginalTrustBadges(JSON.parse(JSON.stringify(trustBadges)));
-            setOriginalCtaButtons(JSON.parse(JSON.stringify(ctaButtons)));
-        } catch (error: unknown) {
-            handleApiError(error, "Failed to save changes");
-        } finally {
-            setIsLoading(false);
-        }
-    }, [
-        heroBanners,
-        heroSettings,
-        heroContent,
-        trustBadges,
-        ctaButtons,
-        refetch,
-        handleApiSuccess,
-        handleApiError,
-        updateSettings,
-        updateLandingPageContent,
-        variantId,
-    ]);
-
-    const handleCancelChanges = useCallback(() => {
-        setHeroBanners(JSON.parse(JSON.stringify(originalHeroBanners)));
-        setHeroSettings(JSON.parse(JSON.stringify(originalHeroSettings)));
-        setHeroContent(JSON.parse(JSON.stringify(originalHeroContent)));
-        setTrustBadges(JSON.parse(JSON.stringify(originalTrustBadges)));
-        setCtaButtons(JSON.parse(JSON.stringify(originalCtaButtons)));
-    }, [
-        originalHeroBanners,
-        originalHeroSettings,
-        originalHeroContent,
-        originalTrustBadges,
-        originalCtaButtons,
-    ]);
+        },
+        [form],
+    );
 
     const IconComponent = ({ iconName }: { iconName: string }) => {
         const Icon = TRUST_BADGE_ICONS[iconName as keyof typeof TRUST_BADGE_ICONS] || Users;
@@ -753,7 +673,7 @@ export const AdminHomepageHeroBanner = () => {
                 <ABTestEditingBanner />
 
                 {/* Unsaved changes warning */}
-                {hasChanges && (
+                {form.isDirty && (
                     <Alert
                         severity="warning"
                         sx={{
@@ -773,7 +693,7 @@ export const AdminHomepageHeroBanner = () => {
                 )}
 
                 {/* Action Buttons at Top */}
-                {hasChanges && (
+                {form.isDirty && (
                     <Paper
                         elevation={0}
                         sx={{
@@ -790,8 +710,8 @@ export const AdminHomepageHeroBanner = () => {
                         <Button
                             variant="contained"
                             size="large"
-                            onClick={handleSaveAllChanges}
-                            disabled={isLoading}
+                            onClick={form.save}
+                            disabled={form.isSaving}
                             sx={{
                                 px: 4,
                                 fontWeight: 600,
@@ -801,12 +721,12 @@ export const AdminHomepageHeroBanner = () => {
                                 },
                             }}
                         >
-                            {isLoading ? "Saving..." : "Save All Changes"}
+                            {form.isSaving ? "Saving..." : "Save All Changes"}
                         </Button>
                         <Button
                             variant="outlined"
                             size="large"
-                            onClick={handleCancelChanges}
+                            onClick={form.cancel}
                             sx={{
                                 px: 4,
                                 fontWeight: 600,
@@ -873,13 +793,7 @@ export const AdminHomepageHeroBanner = () => {
                                             </Typography>
                                         </Box>
                                     </Box>
-                                    <HeroPreview
-                                        heroBanners={heroBanners}
-                                        heroSettings={heroSettings}
-                                        heroContent={heroContent}
-                                        trustBadges={trustBadges}
-                                        ctaButtons={ctaButtons}
-                                    />
+                                    <HeroPreview heroData={form.data} />
                                     <Alert
                                         severity="info"
                                         sx={{
@@ -955,13 +869,17 @@ export const AdminHomepageHeroBanner = () => {
                                         <TextField
                                             fullWidth
                                             label="Title"
-                                            value={heroContent.title}
-                                            onChange={(e) =>
-                                                setHeroContent({
-                                                    ...heroContent,
-                                                    title: e.target.value,
-                                                })
-                                            }
+                                            value={form.data?.content.title}
+                                            onChange={(e) => {
+                                                if (!form.data) return;
+                                                form.setData({
+                                                    ...form.data,
+                                                    content: {
+                                                        ...form.data.content,
+                                                        title: e.target.value,
+                                                    },
+                                                });
+                                            }}
                                             helperText="Main hero title"
                                             variant="outlined"
                                             sx={{
@@ -973,13 +891,17 @@ export const AdminHomepageHeroBanner = () => {
                                         <TextField
                                             fullWidth
                                             label="Subtitle"
-                                            value={heroContent.subtitle}
-                                            onChange={(e) =>
-                                                setHeroContent({
-                                                    ...heroContent,
-                                                    subtitle: e.target.value,
-                                                })
-                                            }
+                                            value={form.data?.content.subtitle}
+                                            onChange={(e) => {
+                                                if (!form.data) return;
+                                                form.setData({
+                                                    ...form.data,
+                                                    content: {
+                                                        ...form.data.content,
+                                                        subtitle: e.target.value,
+                                                    },
+                                                });
+                                            }}
                                             helperText="Subtitle below the title"
                                             variant="outlined"
                                             sx={{
@@ -993,13 +915,17 @@ export const AdminHomepageHeroBanner = () => {
                                             multiline
                                             rows={3}
                                             label="Description"
-                                            value={heroContent.description}
-                                            onChange={(e) =>
-                                                setHeroContent({
-                                                    ...heroContent,
-                                                    description: e.target.value,
-                                                })
-                                            }
+                                            value={form.data?.content.description}
+                                            onChange={(e) => {
+                                                if (!form.data) return;
+                                                form.setData({
+                                                    ...form.data,
+                                                    content: {
+                                                        ...form.data.content,
+                                                        description: e.target.value,
+                                                    },
+                                                });
+                                            }}
                                             helperText="Longer description text"
                                             variant="outlined"
                                             sx={{
@@ -1011,13 +937,17 @@ export const AdminHomepageHeroBanner = () => {
                                         <TextField
                                             fullWidth
                                             label="Business Hours"
-                                            value={heroContent.businessHours}
-                                            onChange={(e) =>
-                                                setHeroContent({
-                                                    ...heroContent,
-                                                    businessHours: e.target.value,
-                                                })
-                                            }
+                                            value={form.data?.content.businessHours}
+                                            onChange={(e) => {
+                                                if (!form.data) return;
+                                                form.setData({
+                                                    ...form.data,
+                                                    content: {
+                                                        ...form.data.content,
+                                                        businessHours: e.target.value,
+                                                    },
+                                                });
+                                            }}
                                             helperText="Custom business hours text for hero (used when toggle below is OFF)"
                                             variant="outlined"
                                             sx={{
@@ -1039,14 +969,21 @@ export const AdminHomepageHeroBanner = () => {
                                             <FormControlLabel
                                                 control={
                                                     <Switch
-                                                        checked={heroContent.useContactInfoHours}
-                                                        onChange={(e) =>
-                                                            setHeroContent({
-                                                                ...heroContent,
-                                                                useContactInfoHours:
-                                                                    e.target.checked,
-                                                            })
+                                                        checked={
+                                                            form.data?.content
+                                                                .useContactInfoHours ?? false
                                                         }
+                                                        onChange={(e) => {
+                                                            if (!form.data) return;
+                                                            form.setData({
+                                                                ...form.data,
+                                                                content: {
+                                                                    ...form.data.content,
+                                                                    useContactInfoHours:
+                                                                        e.target.checked,
+                                                                },
+                                                            });
+                                                        }}
                                                     />
                                                 }
                                                 label={
@@ -1130,7 +1067,7 @@ export const AdminHomepageHeroBanner = () => {
                                     <Box
                                         sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}
                                     >
-                                        {trustBadges.map((badge, index) => (
+                                        {form.data?.trustBadges.map((badge, index) => (
                                             <Paper
                                                 key={index}
                                                 elevation={0}
@@ -1159,10 +1096,17 @@ export const AdminHomepageHeroBanner = () => {
                                                             value={badge.icon}
                                                             label="Icon"
                                                             onChange={(e) => {
-                                                                const newBadges = [...trustBadges];
+                                                                const newBadges = [
+                                                                    ...(form.data?.trustBadges ||
+                                                                        []),
+                                                                ];
                                                                 newBadges[index].icon =
                                                                     e.target.value;
-                                                                setTrustBadges(newBadges);
+                                                                if (form.data)
+                                                                    form.setData({
+                                                                        ...form.data,
+                                                                        trustBadges: newBadges,
+                                                                    });
                                                             }}
                                                             sx={{
                                                                 bgcolor: "background.paper",
@@ -1204,9 +1148,15 @@ export const AdminHomepageHeroBanner = () => {
                                                         label="Text"
                                                         value={badge.text}
                                                         onChange={(e) => {
-                                                            const newBadges = [...trustBadges];
+                                                            const newBadges = [
+                                                                ...(form.data?.trustBadges || []),
+                                                            ];
                                                             newBadges[index].text = e.target.value;
-                                                            setTrustBadges(newBadges);
+                                                            if (form.data)
+                                                                form.setData({
+                                                                    ...form.data,
+                                                                    trustBadges: newBadges,
+                                                                });
                                                         }}
                                                         sx={{
                                                             "& .MuiOutlinedInput-root": {
@@ -1216,13 +1166,16 @@ export const AdminHomepageHeroBanner = () => {
                                                     />
                                                     <IconButton
                                                         color="error"
-                                                        onClick={() =>
-                                                            setTrustBadges(
-                                                                trustBadges.filter(
-                                                                    (_, i) => i !== index,
-                                                                ),
-                                                            )
-                                                        }
+                                                        onClick={() => {
+                                                            if (!form.data) return;
+                                                            form.setData({
+                                                                ...form.data,
+                                                                trustBadges:
+                                                                    form.data.trustBadges.filter(
+                                                                        (_, i) => i !== index,
+                                                                    ),
+                                                            });
+                                                        }}
                                                         sx={{
                                                             "&:hover": {
                                                                 bgcolor: "error.lighter",
@@ -1237,12 +1190,16 @@ export const AdminHomepageHeroBanner = () => {
                                         <Button
                                             variant="outlined"
                                             startIcon={<AddIcon />}
-                                            onClick={() =>
-                                                setTrustBadges([
-                                                    ...trustBadges,
-                                                    { icon: "users", text: "New Badge" },
-                                                ])
-                                            }
+                                            onClick={() => {
+                                                if (!form.data) return;
+                                                form.setData({
+                                                    ...form.data,
+                                                    trustBadges: [
+                                                        ...(form.data.trustBadges || []),
+                                                        { icon: "users", text: "New Badge" },
+                                                    ],
+                                                });
+                                            }}
                                             sx={{
                                                 mt: 1,
                                                 borderStyle: "dashed",
@@ -1318,7 +1275,7 @@ export const AdminHomepageHeroBanner = () => {
                                     <Box
                                         sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}
                                     >
-                                        {ctaButtons.map((button, index) => (
+                                        {form.data?.ctaButtons.map((button, index) => (
                                             <Paper
                                                 key={index}
                                                 elevation={0}
@@ -1346,9 +1303,15 @@ export const AdminHomepageHeroBanner = () => {
                                                         label="Button Text"
                                                         value={button.text}
                                                         onChange={(e) => {
-                                                            const newButtons = [...ctaButtons];
+                                                            const newButtons = [
+                                                                ...(form.data?.ctaButtons || []),
+                                                            ];
                                                             newButtons[index].text = e.target.value;
-                                                            setCtaButtons(newButtons);
+                                                            if (form.data)
+                                                                form.setData({
+                                                                    ...form.data,
+                                                                    ctaButtons: newButtons,
+                                                                });
                                                         }}
                                                         sx={{
                                                             flex: 1,
@@ -1362,9 +1325,15 @@ export const AdminHomepageHeroBanner = () => {
                                                         label="Link"
                                                         value={button.link}
                                                         onChange={(e) => {
-                                                            const newButtons = [...ctaButtons];
+                                                            const newButtons = [
+                                                                ...(form.data?.ctaButtons || []),
+                                                            ];
                                                             newButtons[index].link = e.target.value;
-                                                            setCtaButtons(newButtons);
+                                                            if (form.data)
+                                                                form.setData({
+                                                                    ...form.data,
+                                                                    ctaButtons: newButtons,
+                                                                });
                                                         }}
                                                         sx={{
                                                             flex: 2,
@@ -1380,10 +1349,17 @@ export const AdminHomepageHeroBanner = () => {
                                                             value={button.type}
                                                             label="Type"
                                                             onChange={(e) => {
-                                                                const newButtons = [...ctaButtons];
+                                                                const newButtons = [
+                                                                    ...(form.data?.ctaButtons ||
+                                                                        []),
+                                                                ];
                                                                 newButtons[index].type =
                                                                     e.target.value;
-                                                                setCtaButtons(newButtons);
+                                                                if (form.data)
+                                                                    form.setData({
+                                                                        ...form.data,
+                                                                        ctaButtons: newButtons,
+                                                                    });
                                                             }}
                                                             sx={{
                                                                 bgcolor: "background.paper",
@@ -1399,13 +1375,16 @@ export const AdminHomepageHeroBanner = () => {
                                                     </FormControl>
                                                     <IconButton
                                                         color="error"
-                                                        onClick={() =>
-                                                            setCtaButtons(
-                                                                ctaButtons.filter(
-                                                                    (_, i) => i !== index,
-                                                                ),
-                                                            )
-                                                        }
+                                                        onClick={() => {
+                                                            if (!form.data) return;
+                                                            form.setData({
+                                                                ...form.data,
+                                                                ctaButtons:
+                                                                    form.data.ctaButtons.filter(
+                                                                        (_, i) => i !== index,
+                                                                    ),
+                                                            });
+                                                        }}
                                                         sx={{
                                                             "&:hover": {
                                                                 bgcolor: "error.lighter",
@@ -1417,20 +1396,24 @@ export const AdminHomepageHeroBanner = () => {
                                                 </Box>
                                             </Paper>
                                         ))}
-                                        {ctaButtons.length < 3 && (
+                                        {(form.data?.ctaButtons.length || 0) < 3 && (
                                             <Button
                                                 variant="outlined"
                                                 startIcon={<AddIcon />}
-                                                onClick={() =>
-                                                    setCtaButtons([
-                                                        ...ctaButtons,
-                                                        {
-                                                            text: "New Button",
-                                                            link: "/",
-                                                            type: "primary",
-                                                        },
-                                                    ])
-                                                }
+                                                onClick={() => {
+                                                    if (!form.data) return;
+                                                    form.setData({
+                                                        ...form.data,
+                                                        ctaButtons: [
+                                                            ...(form.data.ctaButtons || []),
+                                                            {
+                                                                text: "New Button",
+                                                                link: "/",
+                                                                type: "primary",
+                                                            },
+                                                        ],
+                                                    });
+                                                }}
                                                 sx={{
                                                     mt: 1,
                                                     borderStyle: "dashed",
@@ -1445,7 +1428,7 @@ export const AdminHomepageHeroBanner = () => {
                                                 Add CTA Button
                                             </Button>
                                         )}
-                                        {ctaButtons.length >= 3 && (
+                                        {(form.data?.ctaButtons.length || 0) >= 3 && (
                                             <Alert severity="info" sx={{ mt: 1 }}>
                                                 Maximum of 3 CTA buttons reached for optimal user
                                                 experience
@@ -1548,8 +1531,8 @@ export const AdminHomepageHeroBanner = () => {
                                                             variant="body2"
                                                             sx={{ fontWeight: 500 }}
                                                         >
-                                                            {heroSettings.autoPlay
-                                                                ? `Enabled (${heroSettings.autoPlayDelay / 1000}s delay)`
+                                                            {form.data?.settings.autoPlay
+                                                                ? `Enabled (${form.data?.settings.autoPlayDelay / 1000}s delay)`
                                                                 : "Disabled"}
                                                         </Typography>
                                                     </Box>
@@ -1573,7 +1556,7 @@ export const AdminHomepageHeroBanner = () => {
                                                             variant="body2"
                                                             sx={{ fontWeight: 500 }}
                                                         >
-                                                            {heroSettings.showDots
+                                                            {form.data?.settings.showDots
                                                                 ? "Visible"
                                                                 : "Hidden"}
                                                         </Typography>
@@ -1598,7 +1581,7 @@ export const AdminHomepageHeroBanner = () => {
                                                             variant="body2"
                                                             sx={{ fontWeight: 500 }}
                                                         >
-                                                            {heroSettings.showArrows
+                                                            {form.data?.settings.showArrows
                                                                 ? "Visible"
                                                                 : "Hidden"}
                                                         </Typography>
@@ -1623,7 +1606,7 @@ export const AdminHomepageHeroBanner = () => {
                                                             variant="body2"
                                                             sx={{ fontWeight: 500 }}
                                                         >
-                                                            {heroSettings.fadeTransition
+                                                            {form.data?.settings.fadeTransition
                                                                 ? "Fade"
                                                                 : "Slide"}
                                                         </Typography>
@@ -1653,13 +1636,21 @@ export const AdminHomepageHeroBanner = () => {
                                                     <FormControlLabel
                                                         control={
                                                             <Switch
-                                                                checked={heroSettings.autoPlay}
-                                                                onChange={(e) =>
-                                                                    setHeroSettings({
-                                                                        ...heroSettings,
-                                                                        autoPlay: e.target.checked,
-                                                                    })
+                                                                checked={
+                                                                    form.data?.settings.autoPlay ??
+                                                                    false
                                                                 }
+                                                                onChange={(e) => {
+                                                                    if (!form.data) return;
+                                                                    form.setData({
+                                                                        ...form.data,
+                                                                        settings: {
+                                                                            ...form.data.settings,
+                                                                            autoPlay:
+                                                                                e.target.checked,
+                                                                        },
+                                                                    });
+                                                                }}
                                                             />
                                                         }
                                                         label={
@@ -1685,16 +1676,21 @@ export const AdminHomepageHeroBanner = () => {
                                                     fullWidth
                                                     type="number"
                                                     label="Auto-play Delay (milliseconds)"
-                                                    value={heroSettings.autoPlayDelay}
-                                                    onChange={(e) =>
-                                                        setHeroSettings({
-                                                            ...heroSettings,
-                                                            autoPlayDelay:
-                                                                parseInt(e.target.value) || 5000,
-                                                        })
-                                                    }
-                                                    disabled={!heroSettings.autoPlay}
-                                                    helperText={`Time between automatic slide changes (currently ${heroSettings.autoPlayDelay / 1000} seconds)`}
+                                                    value={form.data?.settings.autoPlayDelay}
+                                                    onChange={(e) => {
+                                                        if (!form.data) return;
+                                                        form.setData({
+                                                            ...form.data,
+                                                            settings: {
+                                                                ...form.data.settings,
+                                                                autoPlayDelay:
+                                                                    parseInt(e.target.value) ||
+                                                                    5000,
+                                                            },
+                                                        });
+                                                    }}
+                                                    disabled={!form.data?.settings.autoPlay}
+                                                    helperText={`Time between automatic slide changes (currently ${(form.data?.settings.autoPlayDelay || 5000) / 1000} seconds)`}
                                                     inputProps={{
                                                         min: 1000,
                                                         max: 10000,
@@ -1711,13 +1707,21 @@ export const AdminHomepageHeroBanner = () => {
                                                     <FormControlLabel
                                                         control={
                                                             <Switch
-                                                                checked={heroSettings.showDots}
-                                                                onChange={(e) =>
-                                                                    setHeroSettings({
-                                                                        ...heroSettings,
-                                                                        showDots: e.target.checked,
-                                                                    })
+                                                                checked={
+                                                                    form.data?.settings.showDots ??
+                                                                    false
                                                                 }
+                                                                onChange={(e) => {
+                                                                    if (!form.data) return;
+                                                                    form.setData({
+                                                                        ...form.data,
+                                                                        settings: {
+                                                                            ...form.data.settings,
+                                                                            showDots:
+                                                                                e.target.checked,
+                                                                        },
+                                                                    });
+                                                                }}
                                                             />
                                                         }
                                                         label={
@@ -1743,14 +1747,21 @@ export const AdminHomepageHeroBanner = () => {
                                                     <FormControlLabel
                                                         control={
                                                             <Switch
-                                                                checked={heroSettings.showArrows}
-                                                                onChange={(e) =>
-                                                                    setHeroSettings({
-                                                                        ...heroSettings,
-                                                                        showArrows:
-                                                                            e.target.checked,
-                                                                    })
+                                                                checked={
+                                                                    form.data?.settings
+                                                                        .showArrows ?? false
                                                                 }
+                                                                onChange={(e) => {
+                                                                    if (!form.data) return;
+                                                                    form.setData({
+                                                                        ...form.data,
+                                                                        settings: {
+                                                                            ...form.data.settings,
+                                                                            showArrows:
+                                                                                e.target.checked,
+                                                                        },
+                                                                    });
+                                                                }}
                                                             />
                                                         }
                                                         label={
@@ -1777,15 +1788,20 @@ export const AdminHomepageHeroBanner = () => {
                                                         control={
                                                             <Switch
                                                                 checked={
-                                                                    heroSettings.fadeTransition
+                                                                    form.data?.settings
+                                                                        .fadeTransition ?? false
                                                                 }
-                                                                onChange={(e) =>
-                                                                    setHeroSettings({
-                                                                        ...heroSettings,
-                                                                        fadeTransition:
-                                                                            e.target.checked,
-                                                                    })
-                                                                }
+                                                                onChange={(e) => {
+                                                                    if (!form.data) return;
+                                                                    form.setData({
+                                                                        ...form.data,
+                                                                        settings: {
+                                                                            ...form.data.settings,
+                                                                            fadeTransition:
+                                                                                e.target.checked,
+                                                                        },
+                                                                    });
+                                                                }}
                                                             />
                                                         }
                                                         label={
@@ -1862,8 +1878,9 @@ export const AdminHomepageHeroBanner = () => {
                                             </Typography>
                                             <Typography variant="caption" color="text.secondary">
                                                 Upload and manage carousel images (
-                                                {heroBanners.length} total,{" "}
-                                                {heroBanners.filter((b) => b.isActive).length}{" "}
+                                                {form.data?.banners.length || 0} total,{" "}
+                                                {form.data?.banners.filter((b) => b.isActive)
+                                                    .length || 0}{" "}
                                                 active)
                                             </Typography>
                                         </Box>
@@ -1892,7 +1909,7 @@ export const AdminHomepageHeroBanner = () => {
                                                         ref={provided.innerRef}
                                                         sx={{ pb: pagePaddingBottom }}
                                                     >
-                                                        {heroBanners.map((banner, index) => (
+                                                        {form.data?.banners.map((banner, index) => (
                                                             <Draggable
                                                                 key={banner.id}
                                                                 draggableId={banner.id}
@@ -2196,7 +2213,7 @@ export const AdminHomepageHeroBanner = () => {
                             </Accordion>
 
                             {/* Action Buttons at Bottom */}
-                            {hasChanges && (
+                            {form.isDirty && (
                                 <Paper
                                     elevation={0}
                                     sx={{
@@ -2213,8 +2230,8 @@ export const AdminHomepageHeroBanner = () => {
                                     <Button
                                         variant="contained"
                                         size="large"
-                                        onClick={handleSaveAllChanges}
-                                        disabled={isLoading}
+                                        onClick={form.save}
+                                        disabled={form.isSaving}
                                         sx={{
                                             px: 4,
                                             fontWeight: 600,
@@ -2224,12 +2241,12 @@ export const AdminHomepageHeroBanner = () => {
                                             },
                                         }}
                                     >
-                                        {isLoading ? "Saving..." : "Save All Changes"}
+                                        {form.isSaving ? "Saving..." : "Save All Changes"}
                                     </Button>
                                     <Button
                                         variant="outlined"
                                         size="large"
-                                        onClick={handleCancelChanges}
+                                        onClick={form.cancel}
                                         sx={{
                                             px: 4,
                                             fontWeight: 600,
@@ -2291,13 +2308,7 @@ export const AdminHomepageHeroBanner = () => {
                                         </Typography>
                                     </Box>
                                 </Box>
-                                <HeroPreview
-                                    heroBanners={heroBanners}
-                                    heroSettings={heroSettings}
-                                    heroContent={heroContent}
-                                    trustBadges={trustBadges}
-                                    ctaButtons={ctaButtons}
-                                />
+                                <HeroPreview heroData={form.data} />
                                 <Alert
                                     severity="info"
                                     sx={{
