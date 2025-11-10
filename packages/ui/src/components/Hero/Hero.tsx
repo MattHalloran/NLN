@@ -95,6 +95,7 @@ export const Hero = ({
                     pointerEvents: "none",
                     background:
                         "linear-gradient(to bottom, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.5) 50%, rgba(0, 0, 0, 0.6) 100%)",
+                    zIndex: 10,
                 }}
             >
                 {/* Trust badges with icons */}

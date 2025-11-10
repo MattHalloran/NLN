@@ -36,25 +36,35 @@ export const Slider = ({
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     // Play and wait have circular dependencies, so they must be memoized together
-    const { wait } = useMemo(() => {
+    const { play, wait } = useMemo(() => {
         const play = (index: number) => {
-            if (images.length > 0)
+            if (images.length > 0) {
                 timeoutRef.current = setTimeout(
                     wait,
                     slidingDuration,
                     index === images.length - 1 ? 0 : index + 1,
                 );
-            setTransition(slidingDuration);
-            setTranslate(width * (index + 1));
+            }
+
+            // For fade transition, we just change the index - CSS handles the fade
+            if (fadeTransition) {
+                // slideIndex will be updated in wait()
+            } else {
+                setTransition(slidingDuration);
+                setTranslate(width * (index + 1));
+            }
         };
         const wait = (index: number) => {
             setSlideIndex(index);
             if (images.length > 0) timeoutRef.current = setTimeout(play, slidingDelay, index);
-            setTransition(0);
-            setTranslate(width * index);
+
+            if (!fadeTransition) {
+                setTransition(0);
+                setTranslate(width * index);
+            }
         };
         return { play, wait };
-    }, [timeoutRef, images, slidingDelay, slidingDuration, width]);
+    }, [timeoutRef, images, slidingDelay, slidingDuration, width, fadeTransition]);
 
     useEffect(() => {
         const onResize = () => setWidth(window.innerWidth);
@@ -70,14 +80,76 @@ export const Slider = ({
     const slides = useMemo(() => {
         if (images?.length > 0) {
             const copy = fadeTransition ? images : [...images, images[0]];
-            return copy.map((s, i) => <Slide width={width} key={"slide-" + i} image={s} />);
+            return copy.map((s, i) => (
+                <Slide
+                    width={width}
+                    key={i === images.length ? `slide-${i}-duplicate` : `slide-${i}`}
+                    image={s}
+                    fadeTransition={fadeTransition}
+                    isActive={fadeTransition ? i === slideIndex : undefined}
+                    transitionDuration={slidingDuration}
+                />
+            ));
         } else {
             return [];
         }
-    }, [width, images, fadeTransition]);
+    }, [width, images, fadeTransition, slideIndex, slidingDuration]);
 
     const goToSlide = (index: number) => {
         if (timeoutRef.current) clearTimeout(timeoutRef.current);
+
+        // Guard against invalid indices
+        if (index < 0 || index >= images.length || images.length === 0) return;
+
+        // For fade transition, just change the index - CSS handles the fade
+        if (fadeTransition) {
+            setSlideIndex(index);
+            if (autoPlay) {
+                timeoutRef.current = setTimeout(
+                    () => wait(index === images.length - 1 ? 0 : index + 1),
+                    slidingDelay,
+                );
+            }
+            return;
+        }
+
+        // Slide transition logic (with duplicate slide trick for infinite loop)
+        // Handle looping from last slide to first slide (use duplicate at end)
+        if (slideIndex === images.length - 1 && index === 0) {
+            // Animate to the duplicate slide at the end
+            if (images.length > 0) {
+                timeoutRef.current = setTimeout(wait, slidingDuration, 0);
+            }
+            setTransition(slidingDuration);
+            setTranslate(width * images.length);
+            return;
+        }
+
+        // Handle looping from first slide to last slide
+        if (slideIndex === 0 && index === images.length - 1) {
+            // Instantly jump to the duplicate (position images.length), then animate back to last
+            setTransition(0);
+            setTranslate(width * images.length);
+
+            // Force a reflow, then animate backwards to the last slide
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    setSlideIndex(images.length - 1);
+                    setTransition(slidingDuration);
+                    setTranslate(width * (images.length - 1));
+
+                    if (autoPlay) {
+                        timeoutRef.current = setTimeout(
+                            () => play(images.length - 1),
+                            slidingDelay,
+                        );
+                    }
+                });
+            });
+            return;
+        }
+
+        // Normal slide transition
         setSlideIndex(index);
         setTransition(slidingDuration);
         setTranslate(width * index);
@@ -112,9 +184,10 @@ export const Slider = ({
             }}
         >
             <SliderContent
-                translate={translate}
-                transition={transition}
-                width={width * (slides?.length ?? 0)}
+                translate={fadeTransition ? 0 : translate}
+                transition={fadeTransition ? 0 : transition}
+                width={fadeTransition ? width : width * (slides?.length ?? 0)}
+                fadeTransition={fadeTransition}
             >
                 {slides}
             </SliderContent>

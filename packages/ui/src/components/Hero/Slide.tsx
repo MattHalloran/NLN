@@ -1,23 +1,55 @@
 import { Box } from "@mui/material";
-import { memo } from "react";
 import { Image } from "types";
 import { getImageSrc, getServerUrl } from "utils";
 
 interface SlideProps {
     image: Image;
     width: number;
+    fadeTransition?: boolean;
+    isActive?: boolean;
+    transitionDuration?: number;
 }
 
-export const Slide = memo<SlideProps>(({ image, width }) => {
+export const Slide = ({
+    image,
+    width,
+    fadeTransition,
+    isActive,
+    transitionDuration = 1000,
+}: SlideProps) => {
     if (!image) return null;
+
+    // For fade transitions, use absolute positioning with opacity control
+    if (fadeTransition) {
+        return (
+            <Box
+                sx={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                    backgroundImage: `url(${getServerUrl()}${getImageSrc(image, width)})`,
+                    opacity: isActive ? 1 : 0,
+                    transition: `opacity ${transitionDuration}ms ease-in-out`,
+                    zIndex: isActive ? 1 : 0,
+                }}
+            />
+        );
+    }
+
+    // For slide transitions, use regular inline positioning
     return (
-        // Make sure image fills full height of slider
-        <Box sx={{
-            width: `${width}px`,
-            height: "100%",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            backgroundImage: `url(${getServerUrl()}${getImageSrc(image, width)})`,
-        }} />
+        <Box
+            sx={{
+                width: `${width}px`,
+                height: "100%",
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                backgroundImage: `url(${getServerUrl()}${getImageSrc(image, width)})`,
+            }}
+        />
     );
-});
+};

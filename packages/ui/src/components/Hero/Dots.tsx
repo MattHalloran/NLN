@@ -39,6 +39,7 @@ export const Dots = ({ quantity = 0, activeIndex, onDotClick }: DotsProps) => {
                 alignItems: "center",
                 justifyContent: "center",
                 overflow: "hidden",
+                zIndex: 2,
             }}
         >
             {slides}
