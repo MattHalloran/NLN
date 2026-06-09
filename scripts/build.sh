@@ -200,23 +200,29 @@ for dir in "${DIRECTORIES[@]}"; do
 done
 
 # Build Docker images
-cd ${HERE}/..
+cd "${HERE}/.."
 info "Building (and Pulling) Docker images..."
-docker-compose --env-file ${ENV_FILE} -f docker-compose-prod.yml build
+docker-compose --env-file "${ENV_FILE}" -f docker-compose-prod.yml build
 docker pull postgres:13-alpine
 docker pull redis:7-alpine
 
 # Save and compress Docker images
 info "Saving Docker images..."
-docker save -o production-docker-images.tar nln_ui:prod nln_server:prod postgres:13-alpine redis:7-alpine
-if [ $? -ne 0 ]; then
+if ! docker tag nln_ui:prod "nln_ui:${VERSION}"; then
+    error "Failed to tag UI Docker image with version ${VERSION}"
+    exit 1
+fi
+if ! docker tag nln_server:prod "nln_server:${VERSION}"; then
+    error "Failed to tag server Docker image with version ${VERSION}"
+    exit 1
+fi
+if ! docker save -o production-docker-images.tar nln_ui:prod "nln_ui:${VERSION}" nln_server:prod "nln_server:${VERSION}" postgres:13-alpine redis:7-alpine; then
     error "Failed to save Docker images"
     exit 1
 fi
 trap "rm production-docker-images.tar*" EXIT
 info "Compressing Docker images..."
-gzip -f production-docker-images.tar
-if [ $? -ne 0 ]; then
+if ! gzip -f production-docker-images.tar; then
     error "Failed to compress Docker images"
     exit 1
 fi
@@ -230,12 +236,13 @@ if [ -z "$DEPLOY" ]; then
 fi
 
 if [ "${DEPLOY}" = "y" ] || [ "${DEPLOY}" = "Y" ] || [ "${DEPLOY}" = "yes" ] || [ "${DEPLOY}" = "Yes" ]; then
-    "${HERE}/keylessSsh.sh" -e ${ENV_FILE}
+    "${HERE}/keylessSsh.sh" -e "${ENV_FILE}"
     BUILD_DIR="${SITE_IP}:/var/tmp/${VERSION}/"
-    prompt "Going to copy build and .env-prod to ${BUILD_DIR}. Press any key to continue..."
-    read -n1 -r -s
-    rsync -ri --info=progress2 -e "ssh -i ~/.ssh/id_rsa_${SITE_IP}" "${TAR_FILES[@]}" ${ENV_FILE} root@${BUILD_DIR}
-    if [ $? -ne 0 ]; then
+    if [ -z "${DEPLOY_CONFIRMED:-}" ]; then
+        prompt "Going to copy build and .env-prod to ${BUILD_DIR}. Press any key to continue..."
+        read -n1 -r -s
+    fi
+    if ! rsync -ri --info=progress2 -e "ssh -i ~/.ssh/id_rsa_${SITE_IP}" "${TAR_FILES[@]}" "${ENV_FILE}" "root@${BUILD_DIR}"; then
         error "Failed to copy files to ${BUILD_DIR}"
         exit 1
     fi
@@ -251,8 +258,7 @@ else
         exit 1
     fi
     # If building locally, use .env and rename it to .env-prod
-    cp -p ${ENV_FILE} ${BUILD_DIR}/.env-prod
-    if [ $? -ne 0 ]; then
+    if ! cp -p "${ENV_FILE}" "${BUILD_DIR}/.env-prod"; then
         error "Failed to copy ${ENV_FILE} to ${BUILD_DIR}/.env-prod"
         exit 1
     fi

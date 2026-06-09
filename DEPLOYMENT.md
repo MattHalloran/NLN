@@ -25,7 +25,7 @@ The deployment process is a two-phase manual workflow:
 
 2. **Deploy Phase** (`deploy.sh`) - Run on the production server
    - Validates environment configuration
-   - Backs up current database
+   - Backs up current runtime state
    - Extracts build artifacts
    - Loads new Docker images
    - Restarts containers with health checks
@@ -70,6 +70,11 @@ The deployment process is a two-phase manual workflow:
 - **Migration failures**: Now exits with error and provides restore instructions
 - **Container startup failures**: Now detected and reported
 
+### 7. Mandatory Offsite Backup and VPS Health Gate (`deploy-production.sh`)
+- **What**: The standard deployment wrapper now runs a non-mutating VPS health check and requires a successful offsite backup before build/transfer.
+- **Why**: Prevents routine deployments from proceeding without a fresh offsite recovery point or with critical VPS health problems.
+- **Policy**: Critical health issues block deployment; cleanup/update findings are warnings with recommended operator commands only.
+
 ## Prerequisites
 
 ### On Development Machine
@@ -78,6 +83,37 @@ The deployment process is a two-phase manual workflow:
   - Use `./scripts/keylessSsh.sh -e .env-prod` to set up if needed
   - Use `./scripts/connectToServer.sh` to connect interactively
 - `.env-prod` file configured with production settings
+
+### Production VPS SSH Access
+
+The current production VPS connection details are read from `.env-prod`:
+
+```bash
+SITE_IP=$(grep SITE_IP .env-prod | cut -d= -f2)
+PROJECT_DIR=$(grep PROJECT_DIR .env-prod | cut -d= -f2)
+```
+
+Do not commit concrete production IPs, hostnames, credentials, or copied `.env-prod` values. Keep production connection details in `.env-prod` and reference them through variables such as `${SITE_IP}` and `${PROJECT_DIR}`.
+
+Passwordless SSH is supported through a per-server private key at `~/.ssh/id_rsa_${SITE_IP}`. The usual interactive connection command is:
+
+```bash
+./scripts/connectToServer.sh
+```
+
+The equivalent explicit SSH command is:
+
+```bash
+ssh -i ~/.ssh/id_rsa_${SITE_IP} root@${SITE_IP}
+```
+
+If that key does not exist locally, or if batch-mode SSH fails because the public key is not installed on the VPS, run:
+
+```bash
+./scripts/keylessSsh.sh -e .env-prod
+```
+
+That script creates `~/.ssh/id_rsa_${SITE_IP}` when missing, appends the public key to root's `authorized_keys` on the VPS, and verifies passwordless SSH with `BatchMode=yes`.
 
 ### On Production Server
 - Docker and Docker Compose installed
@@ -127,21 +163,32 @@ The build script will:
 5. ✓ Build UI with production settings
 6. ✓ Generate sitemap
 7. ✓ Build Docker images
-8. ✓ Compress artifacts
-9. ✓ Transfer to VPS at `/var/tmp/{VERSION}/`
+8. ✓ Tag Docker images as both `:prod` and `:<VERSION>`
+9. ✓ Compress artifacts
+10. ✓ Transfer to VPS at `/var/tmp/{VERSION}/`
 
 ### Step 3: Deploy (On Production Server)
 
 #### Simplified Workflow (Recommended)
 
-Complete deployment from your development machine with these tested commands:
+Complete deployment from your development machine with the standard wrapper:
+
+```bash
+./scripts/deploy-production.sh -v <VERSION> -e .env-prod
+```
+
+This wrapper validates the environment, runs tests and typecheck, runs non-mutating VPS health checks, refuses reused deployment versions, creates a mandatory offsite backup, builds and transfers artifacts, deploys remotely, and prints final container status.
+
+Use a fresh version for each deployment. The wrapper refuses to deploy if `/var/tmp/<VERSION>/runtime-state/manifest.txt` already exists on the VPS, because reusing a version would prevent a fresh pre-deployment runtime-state backup from being created.
+
+Manual equivalent:
 
 ```bash
 # Set version
 VERSION="3.0.1"
 
-# Build and transfer
-./scripts/build.sh -v ${VERSION} -e .env-prod -d y
+# Build and transfer without the interactive transfer confirmation
+DEPLOY_CONFIRMED=true ./scripts/build.sh -v ${VERSION} -e .env-prod -d y
 
 # Deploy remotely
 SITE_IP=$(grep SITE_IP .env-prod | cut -d= -f2)
@@ -192,7 +239,7 @@ This one-liner will:
 
 The deploy script will:
 1. ✓ Validate environment configuration
-2. ✓ Backup current database to `/var/tmp/{VERSION}/postgres`
+2. ✓ Backup current runtime state to `/var/tmp/{VERSION}/runtime-state`
 3. ✓ Extract build artifacts
 4. ✓ Pull latest code (scripts, configs)
 5. ✓ Run setup.sh
@@ -201,6 +248,31 @@ The deploy script will:
 8. ✓ Start new containers (automatically uses `.env-prod`)
 9. ✓ **Wait for health checks** (NEW!)
 10. ✓ Verify server is responding
+
+### VPS Health Checks
+
+The standard wrapper runs:
+
+```bash
+./scripts/vps-healthcheck.sh -e .env-prod
+```
+
+This script is non-mutating. It only reads remote state and prints recommendations.
+
+Critical blockers:
+- SSH batch-mode failure
+- Missing project directory or required runtime paths
+- Docker or docker-compose unavailable
+- Expected production containers not running
+- Low disk space on the project, `/var/tmp`, or Docker data filesystem
+
+Warnings only:
+- Many or large `/var/tmp/<VERSION>` deployment backups
+- Large application logs
+- Available system package updates
+- Docker disk usage that should be reviewed
+
+Remediation is intentionally recommendation-only. Do not run cleanup, package update, prune, restart, or deletion commands during deployment unless a human has reviewed the warning and intentionally scheduled that maintenance.
 
 ### Step 4: Post-Deployment Verification
 
@@ -296,7 +368,7 @@ This will:
    ```bash
    ROLLBACK_VERSION="<PREVIOUS_VERSION>"  # e.g., "3.0.0"
    rm -rf data/postgres
-   cp -rp /var/tmp/${ROLLBACK_VERSION}/postgres data/
+   cp -rp /var/tmp/${ROLLBACK_VERSION}/runtime-state/data/postgres data/
    ```
 
 3. **Load old images**:
@@ -426,11 +498,11 @@ This will:
    - **Impact**: Users see errors during deployment
    - **Mitigation**: Deploy during low-traffic periods
 
-2. **No Automated Testing Gate**
-   - Tests don't run automatically before deployment
-   - Must manually run `yarn test` before deploying
-   - **Impact**: Broken code can reach production
-   - **Mitigation**: Always run tests manually before deploying
+2. **Testing Gate Depends on Entry Point**
+   - `./scripts/deploy-production.sh` runs `yarn test` and `yarn typecheck` by default
+   - Manual `build.sh` + remote `deploy.sh` workflows still rely on the operator to run tests first
+   - **Impact**: Bypassing the wrapper can still let broken code reach production
+   - **Mitigation**: Use `deploy-production.sh` for standard deploys, or run tests manually before lower-level workflows
 
 3. **Large Transfer Sizes**
    - `node_modules` are transferred (can be 100s of MB)
@@ -501,9 +573,9 @@ This will:
 ### Medium Priority
 
 4. **Proper Docker Image Tagging**
-   - Tag with version numbers instead of `:prod`
-   - Makes rollback even faster
-   - Better tracking of what's running
+   - Current build saves both version tags and `:prod`
+   - Compose still runs `:prod` for compatibility
+   - Future work could make compose run versioned tags directly
 
 5. **Separate UI and Server Deployments**
    - Deploy independently
@@ -530,10 +602,18 @@ This will:
 
 ### Automatic Backups
 
-**Deployment Backups** (`/var/tmp/{VERSION}/postgres`)
+**Deployment Backups** (`/var/tmp/{VERSION}/runtime-state`)
 - Created at start of each deployment
 - One backup per version
+- Includes `data/postgres`, `data/uploads`, `assets`, `data/redis`, `data/migration-backups`, `.env-prod`, optional `.env`, and optional `jwt_*`
+- Excludes logs by default
 - Manual cleanup (not automatic)
+
+**Docker Image Archives** (`/var/tmp/{VERSION}/production-docker-images.tar.gz`)
+- Created by `build.sh`
+- Includes existing compose tags (`nln_ui:prod`, `nln_server:prod`)
+- Also includes audit tags (`nln_ui:{VERSION}`, `nln_server:{VERSION}`)
+- Compose still runs the `:prod` tags
 
 **Migration Backups** (`data/migration-backups/`)
 - Created before each migration run
@@ -546,20 +626,70 @@ This will:
 
 ### Offsite Backups
 
-Consider setting up the existing `backup.sh` script to run periodically:
+Use `backup.sh` for offsite runtime-state backups. It refuses to provision SSH keys by default, so passwordless SSH must already work before it runs.
+
+The standard `deploy-production.sh` workflow requires a successful offsite backup before building or transferring deployment artifacts. If the offsite backup preflight or archive creation fails, deployment stops.
 
 ```bash
-# Run once
-./scripts/backup.sh
+# Preview included paths and size estimates without creating an archive
+./scripts/backup.sh -e .env-prod --preflight-only
+
+# Run once, excluding logs
+./scripts/backup.sh -e .env-prod
+
+# Include logs when diagnostic history is needed
+./scripts/backup.sh -e .env-prod --include-logs
 
 # Run continuously every 24 hours
-./scripts/backup.sh -i 86400 -l y
+./scripts/backup.sh -e .env-prod -i 86400 -l y
 
-# Keep last 7 backups
-./scripts/backup.sh -c 7
+# Optional: keep only the last 7 backups
+./scripts/backup.sh -e .env-prod -c 7
 ```
 
-This backs up to your development machine for offsite storage.
+This backs up to your development machine for offsite storage and writes a manifest plus SHA-256 checksum next to each archive.
+
+### Full-State Emergency Restore
+
+Rollback remains database-only by default to avoid overwriting uploads or assets unexpectedly. If a critical incident requires restoring all runtime state, use `restore-runtime-state.sh`. Start with the default dry run:
+
+```bash
+cd /root/NLN
+./scripts/restore-runtime-state.sh -v <VERSION>
+```
+
+If the dry run validates the selected backup and the restore is intentional, execute it:
+
+```bash
+./scripts/restore-runtime-state.sh -v <VERSION> --execute
+```
+
+The execute mode creates an emergency runtime-state backup first, then stops containers, restores `data/postgres`, `data/uploads`, `data/redis`, `data/migration-backups`, `assets`, `.env-prod`, optional `.env`, and optional `jwt_*`, then starts containers again.
+
+Manual equivalent if the restore script is unavailable:
+
+```bash
+cd /root/NLN
+docker-compose -f docker-compose-prod.yml down
+cp -rp /var/tmp/<VERSION>/runtime-state/data/postgres data/
+cp -rp /var/tmp/<VERSION>/runtime-state/data/uploads data/
+cp -rp /var/tmp/<VERSION>/runtime-state/data/redis data/
+cp -rp /var/tmp/<VERSION>/runtime-state/data/migration-backups data/
+cp -rp /var/tmp/<VERSION>/runtime-state/assets .
+cp -p /var/tmp/<VERSION>/runtime-state/.env-prod .
+docker-compose --env-file .env-prod -f docker-compose-prod.yml up -d
+```
+
+### On-VPS Backup Inventory
+
+Deployment backups under `/var/tmp/<VERSION>` are not cleaned up automatically. Before manual cleanup, inventory available backups and their sizes:
+
+```bash
+ls -lh /var/tmp
+du -sh /var/tmp/*/runtime-state 2>/dev/null
+```
+
+Keep at least the latest known-good version and any versions needed for recent incident recovery. Do not delete backup directories during an active incident.
 
 ## Support
 

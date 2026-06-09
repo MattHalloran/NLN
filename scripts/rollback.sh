@@ -19,6 +19,7 @@
 
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 . "${HERE}/utils.sh"
+. "${HERE}/runtime-state.sh"
 
 # Parse arguments
 VERSION=""
@@ -74,8 +75,7 @@ if [ ! -f "${BACKUP_DIR}/.env-prod" ]; then
     exit 1
 fi
 
-if [ ! -d "${BACKUP_DIR}/postgres" ]; then
-    error "Database backup not found: ${BACKUP_DIR}/postgres"
+if ! DB_BACKUP_PATH=$(runtime_state_select_db_backup "${BACKUP_DIR}"); then
     exit 1
 fi
 
@@ -119,7 +119,7 @@ fi
 
 # Stop current containers
 info "Stopping current containers..."
-cd ${HERE}/..
+cd "${HERE}/.."
 docker-compose -f docker-compose-prod.yml down
 
 if [ $? -ne 0 ]; then
@@ -129,7 +129,7 @@ fi
 success "Containers stopped"
 
 # Restore database
-info "Restoring database from ${BACKUP_DIR}/postgres"
+info "Restoring database from ${DB_BACKUP_PATH}"
 DB_DIR="${HERE}/../data/postgres"
 
 # Remove current database
@@ -144,7 +144,7 @@ fi
 
 # Restore from backup
 info "Restoring database backup..."
-cp -rp "${BACKUP_DIR}/postgres" "${DB_DIR}"
+cp -rp "${DB_BACKUP_PATH}" "${DB_DIR}"
 if [ $? -ne 0 ]; then
     error "Failed to restore database backup"
     error "Your current database has been removed. Please restore manually from: ${EMERGENCY_BACKUP_DIR}"
@@ -163,7 +163,7 @@ success "Docker images loaded successfully"
 
 # Start containers with old version
 info "Starting containers with version ${VERSION}..."
-docker-compose --env-file ${BACKUP_DIR}/.env-prod -f ${HERE}/../docker-compose-prod.yml up -d
+docker-compose --env-file "${BACKUP_DIR}/.env-prod" -f "${HERE}/../docker-compose-prod.yml" up -d
 
 if [ $? -ne 0 ]; then
     error "Failed to start containers"

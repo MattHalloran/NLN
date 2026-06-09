@@ -74,13 +74,19 @@ get_current_ip() {
 
 validate_ip() {
     local ip="$1"
-    if [[ $ip =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-        return 0 # Valid IPv4
-    elif [[ $ip =~ ^([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}$|^([0-9a-fA-F]{1,4}:){1,7}:|^([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}$|^([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}$|^([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}$|^([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}$|^([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}$|^[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})$|^:((:[0-9a-fA-F]{1,4}){1,7}|:)$ ]]; then
-        return 0 # Valid IPv6
-    else
-        exit_with_error "Invalid IP address format: $ip" $ERROR_INVALID_SITE_IP
+
+    if command -v node >/dev/null 2>&1; then
+        if node -e "process.exit(require('net').isIP(process.argv[1]) ? 0 : 1)" "$ip"; then
+            return 0
+        fi
+    elif [[ $ip =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        IFS='.' read -r a b c d <<<"$ip"
+        if [ "$a" -le 255 ] && [ "$b" -le 255 ] && [ "$c" -le 255 ] && [ "$d" -le 255 ]; then
+            return 0
+        fi
     fi
+
+    exit_with_error "Invalid IP address format: $ip" $ERROR_INVALID_SITE_IP
 }
 
 validate_url() {

@@ -58,13 +58,28 @@ else
                 # Alternative: Use prisma db execute to dump via SQL
                 # This is a fallback and won't be as comprehensive
                 rm -f "${BACKUP_FILE}"
-                warning "Skipping backup - pg_dump not available in container"
+                if [ "${ALLOW_MIGRATION_WITHOUT_BACKUP}" = "true" ]; then
+                    warning "Skipping backup because ALLOW_MIGRATION_WITHOUT_BACKUP=true"
+                else
+                    error "Pre-migration backup failed. Set ALLOW_MIGRATION_WITHOUT_BACKUP=true only for an emergency override."
+                    exit 1
+                fi
             fi
         else
-            warning "Database not yet accessible, skipping pre-migration backup"
+            if [ "${ALLOW_MIGRATION_WITHOUT_BACKUP}" = "true" ]; then
+                warning "Database not yet accessible, skipping pre-migration backup because ALLOW_MIGRATION_WITHOUT_BACKUP=true"
+            else
+                error "Database not accessible for pre-migration backup."
+                exit 1
+            fi
         fi
     else
-        warning "DB_URL not set, skipping pre-migration backup"
+        if [ "${ALLOW_MIGRATION_WITHOUT_BACKUP}" = "true" ]; then
+            warning "DB_URL not set, skipping pre-migration backup because ALLOW_MIGRATION_WITHOUT_BACKUP=true"
+        else
+            error "DB_URL not set; cannot create pre-migration backup."
+            exit 1
+        fi
     fi
 
     # Run migrations

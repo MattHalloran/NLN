@@ -16,6 +16,7 @@
 # -h: Show this help message
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 . "${HERE}/utils.sh"
+. "${HERE}/runtime-state.sh"
 
 # Read arguments
 SETUP_ARGS=()
@@ -105,6 +106,72 @@ fi
 
 TMP_DIR="/var/tmp/${VERSION}"
 
+create_runtime_state_backup() {
+    local backup_dir="${TMP_DIR}/runtime-state"
+    local manifest="${backup_dir}/manifest.txt"
+
+    if [ -f "${manifest}" ]; then
+        info "Runtime-state backup already exists at ${backup_dir}; not overwriting it"
+        return 0
+    fi
+
+    header "Creating runtime-state backup"
+    mkdir -p "${backup_dir}"
+
+    {
+        echo "backup_type=runtime-state"
+        echo "version=${VERSION}"
+        echo "created_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+        echo "project_dir=$(cd "${HERE}/.." && pwd)"
+        echo "include_logs=false"
+        echo "paths:"
+    } >"${manifest}"
+
+    local path
+    while IFS= read -r path; do
+        if [ ! -e "${HERE}/../${path}" ]; then
+            error "Critical runtime path is missing: ${path}"
+            error "Deployment aborted before container changes."
+            exit 1
+        fi
+
+        mkdir -p "${backup_dir}/$(dirname "${path}")"
+        if ! cp -rp "${HERE}/../${path}" "${backup_dir}/${path}"; then
+            error "Could not back up runtime path: ${path}"
+            exit 1
+        fi
+        echo "- ${path}" >>"${manifest}"
+    done <<EOF
+$(runtime_state_critical_paths)
+EOF
+
+    while IFS= read -r path; do
+        if [ -e "${HERE}/../${path}" ]; then
+            mkdir -p "${backup_dir}/$(dirname "${path}")"
+            cp -rp "${HERE}/../${path}" "${backup_dir}/${path}"
+            echo "- ${path}" >>"${manifest}"
+        fi
+    done <<EOF
+$(runtime_state_optional_paths)
+EOF
+
+    shopt -s nullglob
+    for jwt_file in "${HERE}/../jwt_"*; do
+        local name
+        name=$(basename "${jwt_file}")
+        cp -rp "${jwt_file}" "${backup_dir}/${name}"
+        echo "- ${name}" >>"${manifest}"
+    done
+    shopt -u nullglob
+
+    if ! runtime_state_validate_backup "${backup_dir}"; then
+        error "Runtime-state backup validation failed"
+        exit 1
+    fi
+
+    success "Runtime-state backup created at ${backup_dir}"
+}
+
 # Validate environment configuration from the temporary directory
 if [ -f "${TMP_DIR}/.env-prod" ]; then
     header "Validating environment configuration"
@@ -120,23 +187,9 @@ else
     exit 1
 fi
 
-# Copy current database =to a safe location, under a temporary directory.
-cd ${HERE}/..
-DB_TMP="${TMP_DIR}/postgres"
-DB_CURR="${HERE}/../data/postgres"
-# Don't copy database if it already exists in /var/tmp, or it doesn't exist in DB_CURR
-if [ -d "${DB_TMP}" ]; then
-    info "Old database already exists at ${DB_TMP}, so not copying it"
-elif [ ! -d "${DB_CURR}" ]; then
-    warning "Current database does not exist at ${DB_CURR}, so not copying it"
-else
-    info "Copying old database to ${DB_TMP}"
-    cp -rp ${HERE}/../data/postgres "${DB_TMP}"
-    if [ $? -ne 0 ]; then
-        error "Could not copy database to ${DB_TMP}"
-        exit 1
-    fi
-fi
+# Copy current runtime state to a safe location before changing artifacts or containers.
+cd "${HERE}/.."
+create_runtime_state_backup
 
 # Define paths for the additional directories
 DIRECTORIES=("packages/ui/dist"
@@ -214,11 +267,14 @@ fi
 
 # Stop docker containers
 info "Stopping docker containers..."
-docker-compose --env-file ${TMP_DIR}/.env-prod down
+if ! runtime_state_require_backup_before_container_change "${TMP_DIR}/runtime-state"; then
+    exit 1
+fi
+docker-compose --env-file "${TMP_DIR}/.env-prod" -f "${HERE}/../docker-compose-prod.yml" down
 
 # Restart docker containers.
 info "Restarting docker containers..."
-docker-compose --env-file ${TMP_DIR}/.env-prod -f ${HERE}/../docker-compose-prod.yml up -d
+docker-compose --env-file "${TMP_DIR}/.env-prod" -f "${HERE}/../docker-compose-prod.yml" up -d
 
 # Wait for containers to become healthy
 info "Waiting for containers to become healthy..."
