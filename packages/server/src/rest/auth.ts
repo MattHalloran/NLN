@@ -31,6 +31,58 @@ const SOFT_LOCKOUT_DURATION_MS = 5 * 60 * 1000;
 const REQUEST_PASSWORD_RESET_DURATION_MS = 2 * 24 * 3600 * 1000;
 const LOGIN_ATTEMPTS_TO_HARD_LOCKOUT = 15;
 
+async function findCustomerSession(prisma: any, customerId: string): Promise<any | null> {
+    return prisma.customer.findUnique({
+        where: { id: customerId },
+        select: {
+            id: true,
+            emailVerified: true,
+            accountApproved: true,
+            status: true,
+            theme: true,
+            roles: {
+                select: {
+                    role: {
+                        select: {
+                            title: true,
+                            description: true,
+                        },
+                    },
+                },
+            },
+        },
+    });
+}
+
+/**
+ * GET /api/rest/v1/auth/session
+ * Validate existing session cookie without treating signed-out users as login failures
+ */
+router.get("/session", async (req: Request, res: Response) => {
+    try {
+        const { prisma } = req as any;
+        const customerId = (req as any).customerId;
+
+        if (!customerId) {
+            return res.json({ authenticated: false, user: null });
+        }
+
+        const userData = await findCustomerSession(prisma, customerId);
+        if (!userData) {
+            res.clearCookie(COOKIE.Jwt);
+            return res.json({ authenticated: false, user: null });
+        }
+
+        return res.json({ authenticated: true, user: userData });
+    } catch (error: any) {
+        logger.log(LogLevel.error, "Session check error:", {
+            error: error.message,
+            stack: error.stack,
+        });
+        return res.status(500).json({ error: "Session check failed" });
+    }
+});
+
 /**
  * POST /api/rest/v1/auth/login
  * Login with email and password, or validate existing session
@@ -46,26 +98,7 @@ router.post("/login", async (req: Request, res: Response) => {
             if ((req as any).customerId && (req as any).roles && (req as any).roles.length > 0) {
                 // ARCHIVED: Shopping cart functionality removed
                 // const cart = await getCart(prisma, null as any, (req as any).customerId);
-                const userData: any = await prisma.customer.findUnique({
-                    where: { id: (req as any).customerId },
-                    select: {
-                        id: true,
-                        emailVerified: true,
-                        accountApproved: true,
-                        status: true,
-                        theme: true,
-                        roles: {
-                            select: {
-                                role: {
-                                    select: {
-                                        title: true,
-                                        description: true,
-                                    },
-                                },
-                            },
-                        },
-                    },
-                });
+                const userData: any = await findCustomerSession(prisma, (req as any).customerId);
                 if (userData) {
                     // ARCHIVED: Shopping cart functionality removed
                     // if (cart) {
@@ -198,26 +231,7 @@ router.post("/login", async (req: Request, res: Response) => {
             });
 
             // Return customer data
-            const userData: any = await prisma.customer.findUnique({
-                where: { id: customer.id },
-                select: {
-                    id: true,
-                    emailVerified: true,
-                    accountApproved: true,
-                    status: true,
-                    theme: true,
-                    roles: {
-                        select: {
-                            role: {
-                                select: {
-                                    title: true,
-                                    description: true,
-                                },
-                            },
-                        },
-                    },
-                },
-            });
+            const userData: any = await findCustomerSession(prisma, customer.id);
 
             return res.json(userData);
         } else {
@@ -361,26 +375,7 @@ router.post("/signup", signupLimiter, async (req: Request, res: Response) => {
         });
 
         // Return customer data
-        const userData: any = await prisma.customer.findUnique({
-            where: { id: customer.id },
-            select: {
-                id: true,
-                emailVerified: true,
-                accountApproved: true,
-                status: true,
-                theme: true,
-                roles: {
-                    select: {
-                        role: {
-                            select: {
-                                title: true,
-                                description: true,
-                            },
-                        },
-                    },
-                },
-            },
-        });
+        const userData: any = await findCustomerSession(prisma, customer.id);
 
         return res.json(userData);
     } catch (error: any) {

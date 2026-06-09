@@ -9,11 +9,15 @@ import { PrismaClient } from "@prisma/client";
 import express, { Express } from "express";
 import request from "supertest";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import { randomUUID } from "crypto";
 import { exec } from "child_process";
 import { promisify } from "util";
 import cookieParser from "cookie-parser";
+import { COOKIE } from "@local/shared";
 import restRouter from "./index.js";
 import * as auth from "../auth.js";
+import { loginLimiter, passwordResetLimiter, signupLimiter } from "../middleware/rateLimiter.js";
 
 const execAsync = promisify(exec);
 
@@ -98,6 +102,11 @@ describe("REST API Integration Tests", () => {
     });
 
     beforeEach(async () => {
+        for (const limiter of [loginLimiter, passwordResetLimiter, signupLimiter]) {
+            limiter.resetKey("::/56");
+            limiter.resetKey("127.0.0.1");
+        }
+
         // Clean up database between tests using TRUNCATE to handle foreign keys
         // TRUNCATE CASCADE will automatically truncate dependent tables
         const tables = [
@@ -310,6 +319,85 @@ describe("REST API Integration Tests", () => {
                 });
 
                 expect(response.status).toBe(401);
+            });
+        });
+
+        describe("GET /api/rest/v1/auth/session", () => {
+            let customerId: string;
+
+            beforeEach(async () => {
+                const role = await prisma.role.create({
+                    data: {
+                        title: "Customer",
+                        description: "Customer role",
+                    },
+                });
+
+                const customer = await prisma.customer.create({
+                    data: {
+                        firstName: "Session",
+                        lastName: "User",
+                        password: bcrypt.hashSync("TestPassword123!", 10),
+                        accountApproved: true,
+                        emailVerified: true,
+                        status: "Unlocked",
+                        emails: {
+                            create: {
+                                emailAddress: "session@example.com",
+                            },
+                        },
+                        roles: {
+                            create: {
+                                roleId: role.id,
+                            },
+                        },
+                    },
+                });
+                customerId = customer.id;
+            });
+
+            it("should return signed-out state without a cookie", async () => {
+                const response = await request(app).get("/api/rest/v1/auth/session");
+
+                expect(response.status).toBe(200);
+                expect(response.body).toEqual({ authenticated: false, user: null });
+            });
+
+            it("should return session data with a valid cookie", async () => {
+                const agent = request.agent(app);
+                await agent.post("/api/rest/v1/auth/login").send({
+                    email: "session@example.com",
+                    password: "TestPassword123!",
+                });
+
+                const response = await agent.get("/api/rest/v1/auth/session");
+
+                expect(response.status).toBe(200);
+                expect(response.body).toHaveProperty("authenticated", true);
+                expect(response.body.user).toHaveProperty("id", customerId);
+                expect(response.body.user).toHaveProperty("emailVerified", true);
+            });
+
+            it("should clear stale cookies and return signed-out state", async () => {
+                const token = jwt.sign(
+                    {
+                        customerId: randomUUID(),
+                        businessId: "",
+                        roles: ["customer"],
+                        isCustomer: true,
+                        isAdmin: false,
+                        exp: Math.floor(Date.now() / 1000) + 3600,
+                    },
+                    process.env.JWT_SECRET ?? ""
+                );
+
+                const response = await request(app)
+                    .get("/api/rest/v1/auth/session")
+                    .set("Cookie", [`${COOKIE.Jwt}=${token}`]);
+
+                expect(response.status).toBe(200);
+                expect(response.body).toEqual({ authenticated: false, user: null });
+                expect(response.headers["set-cookie"]?.join(";")).toContain(`${COOKIE.Jwt}=`);
             });
         });
 

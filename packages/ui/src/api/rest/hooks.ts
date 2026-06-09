@@ -436,6 +436,12 @@ export function useLogin() {
     >(loginFn);
 }
 
+export function useSession() {
+    return useRestMutation<void, Awaited<ReturnType<typeof restApi.getSession>>>(() =>
+        restApi.getSession(),
+    );
+}
+
 export function useLogout() {
     return useRestMutation<void, { success: boolean }>(() => restApi.logout());
 }

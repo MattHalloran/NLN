@@ -80,6 +80,7 @@ router.get("/", (_req, res) => {
                 health: "/api/rest/v1/health",
                 csrfToken: "/api/rest/v1/csrf-token",
                 auth: {
+                    session: "/api/rest/v1/auth/session",
                     login: "/api/rest/v1/auth/login",
                     logout: "/api/rest/v1/auth/logout",
                     signup: "/api/rest/v1/auth/signup",

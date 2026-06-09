@@ -1,7 +1,15 @@
-import { alpha, Box, CircularProgress, CssBaseline, GlobalStyles, StyledEngineProvider, ThemeProvider } from "@mui/material";
+import {
+    alpha,
+    Box,
+    CircularProgress,
+    CssBaseline,
+    GlobalStyles,
+    StyledEngineProvider,
+    ThemeProvider,
+} from "@mui/material";
 import { Routes } from "Routes";
 // Using REST API for landing page content and authentication
-import { useLogin } from "api/rest/hooks";
+import { useSession } from "api/rest/hooks";
 import { AlertDialog, BottomNav, Footer, PullToRefresh, SnackStack } from "components";
 import { SideMenu, sideMenuDisplayData } from "components/navigation/Navbar/SideMenu";
 import { BusinessContext } from "contexts/BusinessContext";
@@ -17,7 +25,12 @@ import { BusinessData, Session } from "types";
 import { PubSub, SideMenuPub, createDynamicTheme } from "utils";
 import { initializeCsrfToken } from "utils/csrf";
 
-const menusDisplayData: { [key in SideMenuPub["id"]]: { persistentOnDesktop: boolean, sideForRightHanded: "left" | "right" } } = {
+const menusDisplayData: {
+    [key in SideMenuPub["id"]]: {
+        persistentOnDesktop: boolean;
+        sideForRightHanded: "left" | "right";
+    };
+} = {
     "side-menu": sideMenuDisplayData,
 };
 
@@ -28,14 +41,17 @@ export function App() {
     const isLeftHanded = false; // useIsLeftHanded();
     const [loading, setLoading] = useState(false);
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-    const [contentMargins, setContentMargins] = useState<{ paddingLeft?: string, paddingRight?: string }>({}); // Adds margins to content when a persistent drawer is open
+    const [contentMargins, setContentMargins] = useState<{
+        paddingLeft?: string;
+        paddingRight?: string;
+    }>({}); // Adds margins to content when a persistent drawer is open
 
     // Using Zustand store for landing page content (single source of truth)
     const landingPageData = useLandingPageStore((state) => state.data);
     const fetchLandingPage = useLandingPageStore((state) => state.fetchLandingPage);
     const refetchLandingPage = useLandingPageStore((state) => state.refetch);
 
-    const { mutate: login } = useLogin();
+    const { mutate: getSession } = useSession();
     const [,] = useLocation();
 
     // Derive business data from landing page data
@@ -66,46 +82,57 @@ export function App() {
     // Derive theme from session and landing page data
     const theme = useMemo(() => {
         // Determine theme mode
-        const themeMode = session?.theme && (session.theme === "light" || session.theme === "dark")
-            ? session.theme
-            : "light";
+        const themeMode =
+            session?.theme && (session.theme === "light" || session.theme === "dark")
+                ? session.theme
+                : "light";
 
         // Apply custom brand colors from theme if available
         const themeColors = landingPageData?.theme?.colors;
         // Extract colors for the current theme mode (new format supports light/dark separately)
-        const customColors = themeColors?.[themeMode] as {
-            primary?: string;
-            secondary?: string;
-            accent?: string;
-            background?: string;
-            paper?: string;
-        } | undefined;
+        const customColors = themeColors?.[themeMode] as
+            | {
+                  primary?: string;
+                  secondary?: string;
+                  accent?: string;
+                  background?: string;
+                  paper?: string;
+              }
+            | undefined;
 
         return createDynamicTheme(themeMode, customColors);
     }, [session, landingPageData?.theme?.colors]);
 
     const isMobile = useWindowSize(({ width }) => width <= theme.breakpoints.values.md);
 
-    useEffect(() => () => {
-        if (timeoutRef.current) clearTimeout(timeoutRef.current);
-        setLoading(false);
-    }, []);
+    useEffect(
+        () => () => {
+            if (timeoutRef.current) clearTimeout(timeoutRef.current);
+            setLoading(false);
+        },
+        [],
+    );
 
-    const checkLogin = useCallback((session?: Session) => {
-        if (session) {
-            setSession(session);
-            return;
-        }
-        // Always attempt session restore on page load
-        // The httpOnly cookie is invisible to JavaScript but sent automatically with HTTP requests
-        // The server will validate the cookie and return user data if valid, or 401 if invalid
-        login({ email: "", password: "" }).then((response) => {
-            setSession(response as Session);
-        }).catch(() => {
-            // Silent fail - expected 401 when no valid session cookie exists
-            setSession({});
-        });
-    }, [login]);
+    const checkLogin = useCallback(
+        (session?: Session) => {
+            if (session) {
+                setSession(session);
+                return;
+            }
+            // Always attempt session restore on page load
+            // The httpOnly cookie is invisible to JavaScript but sent automatically with HTTP requests
+            // The server will validate the cookie and return an explicit authenticated state
+            getSession(undefined)
+                .then((response) => {
+                    setSession(response.authenticated ? (response.user as Session) : {});
+                })
+                .catch(() => {
+                    // Silent fail - treat unexpected session-check errors as signed out
+                    setSession({});
+                });
+        },
+        [getSession],
+    );
 
     // Initial data fetch - only runs once on mount
     useEffect(() => {
@@ -113,7 +140,7 @@ export function App() {
         initializeCsrfToken();
         checkLogin();
         fetchLandingPage();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // Handle subscriptions and UI updates
@@ -139,7 +166,7 @@ export function App() {
             }
             // Otherwise, combine existing session data with published data
             else {
-                setSession(s => ({ ...s, ...session }));
+                setSession((s) => ({ ...s, ...session }));
             }
         });
         // Handle content margins when drawer(s) open/close
@@ -148,22 +175,26 @@ export function App() {
             // Ignore if dialog is not persistent on desktop
             if (!persistentOnDesktop) return;
             // Flip side when in left-handed mode
-            const side = isLeftHanded ? (sideForRightHanded === "left" ? "right" : "left") : sideForRightHanded;
+            const side = isLeftHanded
+                ? sideForRightHanded === "left"
+                    ? "right"
+                    : "left"
+                : sideForRightHanded;
             const menuElement = document.getElementById(data.id);
             const padding = data.isOpen && !isMobile ? `${menuElement?.clientWidth ?? 0}px` : "0px";
             // Only set on desktop
             if (side === "left") {
-                setContentMargins(existing => ({ ...existing, paddingLeft: padding }));
+                setContentMargins((existing) => ({ ...existing, paddingLeft: padding }));
             } else if (side === "right") {
-                setContentMargins(existing => ({ ...existing, paddingRight: padding }));
+                setContentMargins((existing) => ({ ...existing, paddingRight: padding }));
             }
         });
-        return (() => {
+        return () => {
             PubSub.get().unsubscribe(loadingSub);
             PubSub.get().unsubscribe(landingPageSub);
             PubSub.get().unsubscribe(sessionSub);
             PubSub.get().unsubscribe(sideMenuPub);
-        });
+        };
     }, [isLeftHanded, isMobile, refetchLandingPage]);
 
     return (
@@ -213,27 +244,30 @@ export function App() {
                     <SessionContext.Provider value={session}>
                         <ZIndexProvider>
                             <BusinessContext.Provider value={business}>
-                                <Box id="App" sx={{
-                                    background: theme.palette.background.default,
-                                    color: theme.palette.text.primary,
-                                    // Style visited, active, and hovered links
-                                    "& span, p": {
-                                        "& a": {
-                                            color: theme.palette.primary.dark,
-                                            "&:visited": {
+                                <Box
+                                    id="App"
+                                    sx={{
+                                        background: theme.palette.background.default,
+                                        color: theme.palette.text.primary,
+                                        // Style visited, active, and hovered links
+                                        "& span, p": {
+                                            "& a": {
                                                 color: theme.palette.primary.dark,
+                                                "&:visited": {
+                                                    color: theme.palette.primary.dark,
+                                                },
+                                                "&:active": {
+                                                    color: theme.palette.primary.dark,
+                                                },
+                                                "&:hover": {
+                                                    color: alpha(theme.palette.primary.light, 0.8),
+                                                },
+                                                // Remove underline on links
+                                                textDecoration: "none",
                                             },
-                                            "&:active": {
-                                                color: theme.palette.primary.dark,
-                                            },
-                                            "&:hover": {
-                                                color: alpha(theme.palette.primary.light, 0.8),
-                                            },
-                                            // Remove underline on links
-                                            textDecoration: "none",
                                         },
-                                    },
-                                }}>
+                                    }}
+                                >
                                     <main
                                         id="page-container"
                                         style={{
@@ -243,22 +277,28 @@ export function App() {
                                     >
                                         {/* Pull-to-refresh for PWAs */}
                                         <PullToRefresh />
-                                        <Box id="content-wrap" sx={{
-                                            minHeight: "100vh",
-                                            ...(contentMargins),
-                                            transition: "margin 0.225s cubic-bezier(0, 0, 0.2, 1) 0s",
-                                        }}>
-                                            {
-                                                loading && <Box sx={{
-                                                    position: "absolute",
-                                                    top: "50%",
-                                                    left: "50%",
-                                                    transform: "translate(-50%, -50%)",
-                                                    zIndex: 100000,
-                                                }}>
+                                        <Box
+                                            id="content-wrap"
+                                            sx={{
+                                                minHeight: "100vh",
+                                                ...contentMargins,
+                                                transition:
+                                                    "margin 0.225s cubic-bezier(0, 0, 0.2, 1) 0s",
+                                            }}
+                                        >
+                                            {loading && (
+                                                <Box
+                                                    sx={{
+                                                        position: "absolute",
+                                                        top: "50%",
+                                                        left: "50%",
+                                                        transform: "translate(-50%, -50%)",
+                                                        zIndex: 100000,
+                                                    }}
+                                                >
                                                     <CircularProgress size={100} />
                                                 </Box>
-                                            }
+                                            )}
                                             <AlertDialog />
                                             <SideMenu />
                                             <SnackStack />

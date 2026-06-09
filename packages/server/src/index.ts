@@ -7,7 +7,11 @@ import * as auth from "./auth.js";
 import { genErrorCode, logger, LogLevel } from "./logger.js";
 import { setupDatabase } from "./utils/setupDatabase.js";
 import restRouter from "./rest/index.js";
-import { generalApiLimiter } from "./middleware/rateLimiter.js";
+import {
+    generalMutationApiLimiter,
+    publicReadApiLimiter,
+    requestIdentityDiagnostics,
+} from "./middleware/rateLimiter.js";
 import { csrfProtection, csrfErrorHandler } from "./middleware/csrf.js";
 import { startLandingPageWatcher, stopLandingPageWatcher } from "./utils/landingPageWatcher.js";
 
@@ -42,6 +46,8 @@ const main = async () => {
     await setupDatabase();
 
     const app = express();
+    app.set("trust proxy", 1);
+    logger.log(LogLevel.info, "🔁 Express trust proxy configured: 1 hop");
 
     // ============================================================================
     // SECURITY: HTTP Security Headers with Helmet
@@ -236,9 +242,14 @@ const main = async () => {
     app.use(auth.authenticate);
     logger.log(LogLevel.info, "🔐 Authentication middleware enabled");
 
-    // Apply rate limiting to all API routes
-    app.use("/api/rest", generalApiLimiter);
-    logger.log(LogLevel.info, "🛡️  Rate limiting enabled: 100 requests per 15 minutes per IP");
+    // Apply rate limiting to API routes. Reads and mutations have separate buckets.
+    app.use("/api/rest", requestIdentityDiagnostics);
+    app.use("/api/rest", publicReadApiLimiter);
+    app.use("/api/rest", generalMutationApiLimiter);
+    logger.log(
+        LogLevel.info,
+        "🛡️  Rate limiting enabled: reads 600/15m, mutations 100/15m per client"
+    );
 
     // Apply CSRF protection to all API routes
     // This middleware automatically exempts GET, HEAD, and OPTIONS requests

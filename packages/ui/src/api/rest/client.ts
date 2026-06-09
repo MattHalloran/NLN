@@ -482,6 +482,10 @@ export interface CustomerSession {
     }>;
 }
 
+export type SessionResponse =
+    | { authenticated: true; user: CustomerSession }
+    | { authenticated: false; user: null };
+
 export interface CustomerContact {
     id: string;
     firstName: string;
@@ -1064,6 +1068,10 @@ export const restApi = {
     },
 
     // Authentication
+    async getSession(): Promise<SessionResponse> {
+        return fetchApi<SessionResponse>("/auth/session");
+    },
+
     async login(input: {
         email: string;
         password: string;

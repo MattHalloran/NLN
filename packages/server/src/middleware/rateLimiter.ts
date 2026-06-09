@@ -3,18 +3,115 @@ import type { Request, Response, NextFunction } from "express";
 import { logger, LogLevel } from "../logger.js";
 import { initializeRedis } from "../redisConn.js";
 
-// General API rate limiter - 100 requests per 15 minutes
-export const generalApiLimiter = rateLimit({
+function rateLimitLogMeta(req: Request, limiter: string): Record<string, unknown> {
+    const rateLimitInfo = (
+        req as Request & {
+            rateLimit?: {
+                limit?: number;
+                used?: number;
+                remaining?: number;
+                resetTime?: Date;
+                key?: string;
+            };
+        }
+    ).rateLimit;
+
+    return {
+        limiter,
+        method: req.method,
+        path: req.originalUrl || req.path,
+        ip: req.ip,
+        ips: req.ips,
+        xForwardedFor: req.headers["x-forwarded-for"],
+        xRealIp: req.headers["x-real-ip"],
+        limit: rateLimitInfo?.limit,
+        used: rateLimitInfo?.used,
+        remaining: rateLimitInfo?.remaining,
+        resetTime: rateLimitInfo?.resetTime?.toISOString(),
+        key: rateLimitInfo?.key,
+    };
+}
+
+function sendRateLimitExceeded(req: Request, res: Response, limiter: string, error: string): void {
+    logger.log(
+        LogLevel.warn,
+        `Rate limit exceeded for IP: ${req.ip}`,
+        rateLimitLogMeta(req, limiter)
+    );
+    res.status(429).json({ error });
+}
+
+export function requestIdentityDiagnostics(req: Request, _res: Response, next: NextFunction): void {
+    if (process.env.RATE_LIMIT_DIAGNOSTICS !== "true") {
+        next();
+        return;
+    }
+
+    const shouldLog =
+        req.path === "/v1/auth/session" ||
+        req.path === "/v1/images" ||
+        req.path === "/v1/landing-page";
+
+    if (shouldLog) {
+        logger.log(LogLevel.info, "Request identity diagnostic", {
+            method: req.method,
+            path: req.originalUrl || req.path,
+            ip: req.ip,
+            ips: req.ips,
+            xForwardedFor: req.headers["x-forwarded-for"],
+            xRealIp: req.headers["x-real-ip"],
+        });
+    }
+
+    next();
+}
+
+// Public read API rate limiter - 600 read requests per 15 minutes
+export const publicReadApiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // Limit each IP to 100 requests per windowMs
+    max: 600, // Limit each IP to 600 read requests per windowMs
+    message: "Too many read requests from this IP, please try again later.",
+    standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+    legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+    skip: (req) => req.method !== "GET" && req.method !== "HEAD",
+    handler: (req, res) => {
+        sendRateLimitExceeded(
+            req,
+            res,
+            "public-read",
+            "Too many read requests from this IP, please try again later."
+        );
+    },
+});
+
+// General mutation API rate limiter - 100 state-changing requests per 15 minutes
+export const generalMutationApiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 mutation requests per windowMs
     message: "Too many requests from this IP, please try again later.",
     standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
     legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-    handler: (_req, res) => {
-        logger.log(LogLevel.warn, `Rate limit exceeded for IP: ${_req.ip}`);
-        res.status(429).json({
-            error: "Too many requests from this IP, please try again later.",
-        });
+    skip: (req) => {
+        if (req.method === "GET" || req.method === "HEAD" || req.method === "OPTIONS") {
+            return true;
+        }
+
+        const path = req.path;
+        return (
+            path === "/v1/auth/login" ||
+            path === "/v1/auth/signup" ||
+            path === "/v1/auth/request-password-change" ||
+            (req.method === "POST" && path === "/v1/images") ||
+            path === "/v1/newsletter/subscribe"
+        );
+    },
+    handler: (req, res) => {
+        sendRateLimitExceeded(
+            req,
+            res,
+            "general-mutation",
+            "Too many requests from this IP, please try again later."
+        );
     },
 });
 
@@ -29,7 +126,11 @@ export const loginLimiter = rateLimit({
     legacyHeaders: false,
     skipSuccessfulRequests: false, // Count all requests, even successful ones
     handler: (req, res) => {
-        logger.log(LogLevel.warn, `Login rate limit exceeded for IP: ${req.ip}`);
+        logger.log(
+            LogLevel.warn,
+            `Login rate limit exceeded for IP: ${req.ip}`,
+            rateLimitLogMeta(req, "login")
+        );
         res.status(429).json({
             error: "Too many login attempts from this IP, please try again after 15 minutes.",
             code: "RATE_LIMIT_EXCEEDED",
@@ -45,7 +146,11 @@ export const passwordResetLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     handler: (req, res) => {
-        logger.log(LogLevel.warn, `Password reset rate limit exceeded for IP: ${req.ip}`);
+        logger.log(
+            LogLevel.warn,
+            `Password reset rate limit exceeded for IP: ${req.ip}`,
+            rateLimitLogMeta(req, "password-reset")
+        );
         res.status(429).json({
             error: "Too many password reset requests from this IP, please try again after an hour.",
             code: "RATE_LIMIT_EXCEEDED",
@@ -61,7 +166,11 @@ export const signupLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     handler: (req, res) => {
-        logger.log(LogLevel.warn, `Signup rate limit exceeded for IP: ${req.ip}`);
+        logger.log(
+            LogLevel.warn,
+            `Signup rate limit exceeded for IP: ${req.ip}`,
+            rateLimitLogMeta(req, "signup")
+        );
         res.status(429).json({
             error: "Too many signup attempts from this IP, please try again after an hour.",
             code: "RATE_LIMIT_EXCEEDED",
@@ -82,7 +191,8 @@ export const imageUploadLimiter = rateLimit({
     handler: (req, res) => {
         logger.log(
             LogLevel.warn,
-            `Image upload rate limit exceeded for IP: ${req.ip}, User: ${req.userId || "unknown"}`,
+            `Image upload rate limit exceeded for IP: ${req.ip}, User: ${req.customerId || "unknown"}`,
+            rateLimitLogMeta(req, "image-upload")
         );
         res.status(429).json({
             error: "Too many image upload requests. Please wait before uploading more images.",
@@ -102,7 +212,11 @@ export const newsletterSubscribeLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     handler: (req, res) => {
-        logger.log(LogLevel.warn, `Newsletter subscribe rate limit exceeded for IP: ${req.ip}`);
+        logger.log(
+            LogLevel.warn,
+            `Newsletter subscribe rate limit exceeded for IP: ${req.ip}`,
+            rateLimitLogMeta(req, "newsletter-subscribe")
+        );
         res.status(429).json({
             error: "Too many subscription attempts. Please try again later.",
             code: "RATE_LIMIT_EXCEEDED",
@@ -119,7 +233,11 @@ export const newsletterSubscribeLimiter = rateLimit({
  * This means even if someone makes 25 requests, they can only upload 100 total files
  * (vs 375 files with request-only limiting: 25 requests × 15 files)
  */
-export async function imageFileCountLimiter(req: Request, res: Response, next: NextFunction): Promise<void> {
+export async function imageFileCountLimiter(
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> {
     try {
         const ip = req.ip || "unknown";
         const key = `file-upload-count:${ip}`;
@@ -146,7 +264,7 @@ export async function imageFileCountLimiter(req: Request, res: Response, next: N
         if (currentCount + fileCount > maxFiles) {
             logger.log(
                 LogLevel.warn,
-                `File upload rate limit exceeded for IP: ${ip} (current: ${currentCount}, attempting: ${fileCount}, limit: ${maxFiles})`,
+                `File upload rate limit exceeded for IP: ${ip} (current: ${currentCount}, attempting: ${fileCount}, limit: ${maxFiles})`
             );
             res.status(429).json({
                 error: "Too many files uploaded. Please wait before uploading more images.",
