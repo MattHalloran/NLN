@@ -17,7 +17,7 @@ interface LabelSyncResult {
  * Runs daily to ensure image labels stay in sync with landing page content
  * This is a safety net in case the file watcher misses changes (e.g., server downtime)
  */
-export async function labelSyncProcess(job: Bull.Job): Promise<LabelSyncResult> {
+export async function labelSyncProcess(_job: Bull.Job): Promise<LabelSyncResult> {
     const startTime = Date.now();
     const result: LabelSyncResult = {
         success: false,
@@ -39,7 +39,10 @@ export async function labelSyncProcess(job: Bull.Job): Promise<LabelSyncResult> 
             result.heroBannerRemoved = heroBannerResult.removed;
 
             if (heroBannerResult.added > 0 || heroBannerResult.removed > 0) {
-                logger.log(LogLevel.info, `Hero banner labels synced: +${heroBannerResult.added}, -${heroBannerResult.removed}`);
+                logger.log(
+                    LogLevel.info,
+                    `Hero banner labels synced: +${heroBannerResult.added}, -${heroBannerResult.removed}`
+                );
             } else {
                 logger.log(LogLevel.debug, "Hero banner labels already in sync");
             }
@@ -56,7 +59,10 @@ export async function labelSyncProcess(job: Bull.Job): Promise<LabelSyncResult> 
             result.seasonalRemoved = seasonalResult.removed;
 
             if (seasonalResult.added > 0 || seasonalResult.removed > 0) {
-                logger.log(LogLevel.info, `Seasonal content labels synced: +${seasonalResult.added}, -${seasonalResult.removed}`);
+                logger.log(
+                    LogLevel.info,
+                    `Seasonal content labels synced: +${seasonalResult.added}, -${seasonalResult.removed}`
+                );
             } else {
                 logger.log(LogLevel.debug, "Seasonal content labels already in sync");
             }
@@ -70,12 +76,22 @@ export async function labelSyncProcess(job: Bull.Job): Promise<LabelSyncResult> 
         result.durationMs = Date.now() - startTime;
         result.success = result.errors.length === 0;
 
-        const totalChanges = result.heroBannerAdded + result.heroBannerRemoved + result.seasonalAdded + result.seasonalRemoved;
+        const totalChanges =
+            result.heroBannerAdded +
+            result.heroBannerRemoved +
+            result.seasonalAdded +
+            result.seasonalRemoved;
 
         if (totalChanges > 0) {
-            logger.log(LogLevel.info, `✅ Label sync completed: ${totalChanges} changes in ${result.durationMs}ms`);
+            logger.log(
+                LogLevel.info,
+                `✅ Label sync completed: ${totalChanges} changes in ${result.durationMs}ms`
+            );
         } else {
-            logger.log(LogLevel.info, `✅ Label sync completed: all labels already in sync (${result.durationMs}ms)`);
+            logger.log(
+                LogLevel.info,
+                `✅ Label sync completed: all labels already in sync (${result.durationMs}ms)`
+            );
         }
 
         return result;

@@ -294,8 +294,8 @@ router.put("/", async (req: AuthenticatedRequest, res: Response) => {
             return res.status(403).json({ error: "Admin access required" });
         }
 
-        logger.info(`[DEBUG] Request body keys: ${Object.keys(req.body).join(", ")}`);
-        logger.info(`[DEBUG] Request body location present: ${!!req.body.location}`);
+        logger.debug(`Landing page update request body keys: ${Object.keys(req.body).join(", ")}`);
+        logger.debug(`Landing page update includes location: ${!!req.body.location}`);
 
         const {
             heroBanners,
@@ -558,10 +558,9 @@ router.put("/", async (req: AuthenticatedRequest, res: Response) => {
 
         // Update seasonal plants if provided
         if (seasonalPlants) {
-            logger.info(`Received ${seasonalPlants.length} seasonal plants to save`);
-            // Log first plant to debug image field handling
+            logger.debug(`Received ${seasonalPlants.length} seasonal plants to save`);
             if (seasonalPlants.length > 0) {
-                logger.info(`First plant data: ${JSON.stringify(seasonalPlants[0])}`);
+                logger.debug(`First plant data: ${JSON.stringify(seasonalPlants[0])}`);
             }
 
             currentContent.content = currentContent.content || {

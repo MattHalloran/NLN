@@ -49,7 +49,7 @@ export function secureCompare(a: string | null | undefined, b: string | null | u
 
         // Perform constant-time comparison
         return crypto.timingSafeEqual(bufferA, bufferB);
-    } catch (error) {
+    } catch {
         // If any error occurs during comparison, return false for safety
         return false;
     }

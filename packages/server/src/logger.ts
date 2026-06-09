@@ -20,6 +20,8 @@ if (!process.env.PROJECT_DIR) {
 }
 
 const LOG_DIR = `${PROJECT_DIR}/data/logs`;
+const CONSOLE_LOG_LEVEL =
+    process.env.LOG_LEVEL ?? (process.env.NODE_ENV === "production" ? "info" : "debug");
 
 // Ensure log directory exists before creating transports
 try {
@@ -39,10 +41,10 @@ export enum LogLevel {
 }
 
 export const logger = winston.createLogger({
-    levels: winston.config.syslog.levels,
+    levels: winston.config.npm.levels,
     format: winston.format.combine(
         winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
-        winston.format.json(),
+        winston.format.json()
     ),
     defaultMeta: { service: "express-server" },
     transports: [
@@ -74,8 +76,8 @@ export const logger = winston.createLogger({
 logger.add(
     new winston.transports.Console({
         format: winston.format.simple(),
-        level: process.env.NODE_ENV === "production" ? "info" : "debug",
-    }),
+        level: process.env.NODE_ENV === "test" ? "warn" : CONSOLE_LOG_LEVEL,
+    })
 );
 
 /**

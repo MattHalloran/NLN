@@ -28,12 +28,16 @@ const csrfConfig = doubleCsrf({
     getSecret: () => {
         const secret = process.env.CSRF_SECRET;
         if (!secret) {
-            logger.log(LogLevel.warn,
+            logger.log(
+                LogLevel.warn,
                 "⚠️  CSRF_SECRET not set! Using fallback. Set CSRF_SECRET in .env for production!"
             );
             return "temporary-csrf-secret-CHANGE-IN-PRODUCTION";
         }
-        logger.log(LogLevel.debug, `[CSRF] Secret read: ${secret.substring(0, 20)}... (length: ${secret.length})`);
+        logger.log(
+            LogLevel.debug,
+            `[CSRF] Secret read: ${secret.substring(0, 20)}... (length: ${secret.length})`
+        );
         return secret;
     },
     cookieName: "csrf-token",
@@ -55,17 +59,20 @@ const csrfConfig = doubleCsrf({
     // Session identifier - use IP address or user ID
     getSessionIdentifier: (req) => {
         // Try to use authenticated user ID if available
-        const userId = (req as any).customerId;
+        const userId = req.customerId;
         if (userId) {
             logger.log(LogLevel.debug, `[CSRF] Session ID: userId=${userId}`);
             return userId;
         }
         // Fallback to IP address for unauthenticated requests
         const sessionId = req.ip || req.connection?.remoteAddress || "unknown";
-        logger.log(LogLevel.debug, `[CSRF] Session ID: IP=${sessionId}, headers=${JSON.stringify({
-            'x-forwarded-for': req.headers['x-forwarded-for'],
-            'x-real-ip': req.headers['x-real-ip'],
-        })}`);
+        logger.log(
+            LogLevel.debug,
+            `[CSRF] Session ID: IP=${sessionId}, headers=${JSON.stringify({
+                "x-forwarded-for": req.headers["x-forwarded-for"],
+                "x-real-ip": req.headers["x-real-ip"],
+            })}`
+        );
         return sessionId;
     },
 });
@@ -84,10 +91,7 @@ export const csrfProtection = csrfConfig.doubleCsrfProtection;
  * @param res Express response object
  * @returns The generated CSRF token
  */
-export const generateCsrfToken = (
-    req: Request,
-    res: Response
-): string => {
+export const generateCsrfToken = (req: Request, res: Response): string => {
     return csrfConfig.generateCsrfToken(req, res);
 };
 
@@ -128,7 +132,11 @@ export const csrfErrorHandler = (
     next: NextFunction
 ): void => {
     // Check if this is a CSRF error
-    if (err.code === "EBADCSRFTOKEN" || err.message?.includes("csrf") || err.message?.includes("CSRF")) {
+    if (
+        err.code === "EBADCSRFTOKEN" ||
+        err.message?.includes("csrf") ||
+        err.message?.includes("CSRF")
+    ) {
         logger.log(LogLevel.error, "🚫 CSRF validation failed", {
             ip: req.ip,
             method: req.method,
@@ -138,8 +146,12 @@ export const csrfErrorHandler = (
             errorMessage: err.message,
             hasToken: !!req.headers["x-csrf-token"],
             hasCookie: !!req.cookies["csrf-token"],
-            tokenValue: req.headers["x-csrf-token"] ? String(req.headers["x-csrf-token"]).substring(0, 20) + "..." : "none",
-            cookieValue: req.cookies["csrf-token"] ? String(req.cookies["csrf-token"]).substring(0, 20) + "..." : "none",
+            tokenValue: req.headers["x-csrf-token"]
+                ? `${String(req.headers["x-csrf-token"]).substring(0, 20)}...`
+                : "none",
+            cookieValue: req.cookies["csrf-token"]
+                ? `${String(req.cookies["csrf-token"]).substring(0, 20)}...`
+                : "none",
         });
 
         res.status(403).json({
@@ -174,13 +186,8 @@ export const exemptFromCsrf = (reason: string) => {
  * Validate CSRF token manually (for custom validation logic)
  * Returns true if valid, false otherwise
  */
-export const isValidCsrfToken = (req: Request): boolean => {
-    try {
-        // Note: csrf-csrf doesn't export validateRequest in v4
-        // Token validation happens automatically via middleware
-        // This function is here for future extensibility
-        return true;
-    } catch {
-        return false;
-    }
+export const isValidCsrfToken = (_req: Request): boolean => {
+    // Note: csrf-csrf doesn't export validateRequest in v4.
+    // Token validation happens automatically via middleware.
+    return true;
 };

@@ -88,19 +88,6 @@ describe("Dashboard API Integration Tests", () => {
             },
         });
 
-        // Debug: Check if email was created
-        console.log("Created admin customer:", {
-            id: adminCustomer.id,
-            firstName: adminCustomer.firstName,
-            emails: (adminCustomer as any).emails,
-        });
-
-        // Verify email exists
-        const emailCheck = await prisma.email.findUnique({
-            where: { emailAddress: "admin@test.com" },
-        });
-        console.log("Email check:", emailCheck);
-
         await prisma.customer_roles.create({
             data: {
                 customerId: adminCustomer.id,
@@ -144,7 +131,7 @@ describe("Dashboard API Integration Tests", () => {
         if (adminLoginRes.status !== 200) {
             console.error("Admin login failed:", adminLoginRes.status, adminLoginRes.body);
             throw new Error(
-                `Admin login failed with status ${adminLoginRes.status}: ${JSON.stringify(adminLoginRes.body)}`,
+                `Admin login failed with status ${adminLoginRes.status}: ${JSON.stringify(adminLoginRes.body)}`
             );
         }
 

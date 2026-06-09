@@ -310,9 +310,9 @@ describe("Authentication Integration Tests", () => {
                     roles: ["customer"],
                     isCustomer: true,
                     isAdmin: false,
-                    exp: Date.now() - 1000, // Expired 1 second ago
+                    exp: Math.floor(Date.now() / 1000) - 1, // Expired 1 second ago
                 },
-                process.env.JWT_SECRET!,
+                process.env.JWT_SECRET!
             );
 
             const req = createMockRequest({

@@ -93,7 +93,7 @@ router.get("/", async (req: Request, res: Response) => {
         });
 
         // Remove the image_labels field from response (not needed by client)
-        const imageData = sortedImages.map(({ image_labels, ...rest }) => rest);
+        const imageData = sortedImages.map(({ image_labels: _imageLabels, ...rest }) => rest);
 
         return res.json(imageData);
     } catch (error) {
@@ -135,7 +135,7 @@ router.post("/", imageUploadLimiter, imageFileCountLimiter, async (req: Request,
         if (files.length > MAX_FILES_PER_REQUEST) {
             logger.log(
                 LogLevel.warn,
-                `Upload rejected: ${files.length} files exceeds limit of ${MAX_FILES_PER_REQUEST}`,
+                `Upload rejected: ${files.length} files exceeds limit of ${MAX_FILES_PER_REQUEST}`
             );
             return res.status(400).json({
                 error: `Too many files in single request. Maximum ${MAX_FILES_PER_REQUEST} files per upload.`,
@@ -163,7 +163,7 @@ router.post("/", imageUploadLimiter, imageFileCountLimiter, async (req: Request,
         if (projectedStorageMB > MAX_IMAGE_STORAGE_MB) {
             logger.log(
                 LogLevel.warn,
-                `Upload rejected: Storage quota exceeded (current: ${currentStorageMB}MB, estimated upload: ${estimatedUploadSizeMB}MB, quota: ${MAX_IMAGE_STORAGE_MB}MB)`,
+                `Upload rejected: Storage quota exceeded (current: ${currentStorageMB}MB, estimated upload: ${estimatedUploadSizeMB}MB, quota: ${MAX_IMAGE_STORAGE_MB}MB)`
             );
             return res.status(507).json({
                 error: "Insufficient storage: Upload would exceed storage quota",
@@ -201,16 +201,10 @@ router.post("/", imageUploadLimiter, imageFileCountLimiter, async (req: Request,
         }
 
         // Audit log: image upload
-        auditAdminAction(
-            req,
-            AuditEventType.ADMIN_IMAGE_UPLOAD,
-            "images",
-            undefined,
-            {
-                uploadedCount: results.filter((r) => r.success).length,
-                label,
-            },
-        );
+        auditAdminAction(req, AuditEventType.ADMIN_IMAGE_UPLOAD, "images", undefined, {
+            uploadedCount: results.filter((r) => r.success).length,
+            label,
+        });
 
         return res.json(results);
     } catch (error) {
@@ -263,13 +257,9 @@ router.put("/", async (req: Request, res: Response) => {
         }
 
         // Audit log: image update
-        auditAdminAction(
-            req,
-            AuditEventType.ADMIN_IMAGE_UPDATE,
-            "images",
-            undefined,
-            { updatedCount: images.length },
-        );
+        auditAdminAction(req, AuditEventType.ADMIN_IMAGE_UPDATE, "images", undefined, {
+            updatedCount: images.length,
+        });
 
         return res.json({ success: true });
     } catch (error: any) {
@@ -355,17 +345,11 @@ router.delete("/:hash", async (req: Request, res: Response) => {
         }
 
         // Audit log: image deletion
-        auditAdminAction(
-            req,
-            AuditEventType.ADMIN_IMAGE_DELETE,
-            "images",
-            undefined,
-            {
-                hash,
-                deletedFiles: result.deletedFiles,
-                usage: result.usage,
-            },
-        );
+        auditAdminAction(req, AuditEventType.ADMIN_IMAGE_DELETE, "images", undefined, {
+            hash,
+            deletedFiles: result.deletedFiles,
+            usage: result.usage,
+        });
 
         return res.json({
             success: true,
@@ -483,7 +467,9 @@ router.get("/:hash/variants", async (req: Request, res: Response) => {
 
                 // Extract size code and format from filename
                 const fileName = path.basename(file.src);
-                const sizeMatch = fileName.match(/-(XXS|XS|S|M|ML|L|XL|XXL)\.(webp|jpeg|jpg|png|bmp|gif|ico)/i);
+                const sizeMatch = fileName.match(
+                    /-(XXS|XS|S|M|ML|L|XL|XXL)\.(webp|jpeg|jpg|png|bmp|gif|ico)/i
+                );
                 const sizeCode = sizeMatch?.[1] || "unknown";
                 const format = sizeMatch?.[2]?.toLowerCase() || "unknown";
 
@@ -500,7 +486,9 @@ router.get("/:hash/variants", async (req: Request, res: Response) => {
                     size: sizeCode,
                     format,
                     fileSizeBytes: stats?.size,
-                    fileSizeMB: stats ? Math.round((stats.size / 1024 / 1024) * 100) / 100 : undefined,
+                    fileSizeMB: stats
+                        ? Math.round((stats.size / 1024 / 1024) * 100) / 100
+                        : undefined,
                 };
 
                 variants.push(variant);
@@ -524,7 +512,9 @@ router.get("/:hash/variants", async (req: Request, res: Response) => {
         variants.sort((a, b) => {
             const sizeA = sizeOrder.indexOf(a.size);
             const sizeB = sizeOrder.indexOf(b.size);
-            if (sizeA !== sizeB) return sizeA - sizeB;
+            if (sizeA !== sizeB) {
+                return sizeA - sizeB;
+            }
             // Within same size, show original format first
             return a.format === "webp" ? 1 : -1;
         });

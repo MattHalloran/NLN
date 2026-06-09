@@ -191,7 +191,7 @@ describe("Bull Queue Integration Tests", () => {
                 },
                 {
                     delay: 2000, // 2 second delay
-                },
+                }
             );
 
             expect(job.opts.delay).toBe(2000);
@@ -208,7 +208,7 @@ describe("Bull Queue Integration Tests", () => {
                 },
                 {
                     priority: 1,
-                },
+                }
             );
 
             const lowPriority = await emailQueue.add(
@@ -218,7 +218,7 @@ describe("Bull Queue Integration Tests", () => {
                 },
                 {
                     priority: 10,
-                },
+                }
             );
 
             expect(highPriority.opts.priority).toBe(1);
@@ -247,7 +247,7 @@ describe("Bull Queue Integration Tests", () => {
                         type: "fixed",
                         delay: 100,
                     },
-                },
+                }
             );
 
             const result = await job.finished();
@@ -268,7 +268,7 @@ describe("Bull Queue Integration Tests", () => {
                 },
                 {
                     removeOnComplete: true,
-                },
+                }
             );
 
             await job.finished();
@@ -283,10 +283,10 @@ describe("Bull Queue Integration Tests", () => {
 
     describe("Queue Events", () => {
         it("should emit completed event", async () => {
-            let completedJobId: string | undefined;
-
-            emailQueue.on("completed", (job: Job) => {
-                completedJobId = job.id?.toString();
+            const completedJobId = new Promise<string | undefined>((resolve) => {
+                emailQueue.once("completed", (job: Job) => {
+                    resolve(job.id?.toString());
+                });
             });
 
             emailQueue.process(async (job: Job) => {
@@ -300,16 +300,14 @@ describe("Bull Queue Integration Tests", () => {
 
             await job.finished();
 
-            expect(completedJobId).toBe(job.id?.toString());
+            await expect(completedJobId).resolves.toBe(job.id?.toString());
         });
 
         it("should emit failed event", async () => {
-            let failedJobId: string | undefined;
-            let failedError: Error | undefined;
-
-            emailQueue.on("failed", (job: Job, err: Error) => {
-                failedJobId = job.id?.toString();
-                failedError = err;
+            const failedJob = new Promise<{ id: string | undefined; error: Error }>((resolve) => {
+                emailQueue.once("failed", (job: Job, err: Error) => {
+                    resolve({ id: job.id?.toString(), error: err });
+                });
             });
 
             emailQueue.process(async (job: Job) => {
@@ -327,10 +325,10 @@ describe("Bull Queue Integration Tests", () => {
                 // Expected
             }
 
-            await new Promise((resolve) => setTimeout(resolve, 500));
-
-            expect(failedJobId).toBe(job.id?.toString());
-            expect(failedError?.message).toBe("Test error");
+            await expect(failedJob).resolves.toMatchObject({
+                id: job.id?.toString(),
+                error: expect.objectContaining({ message: "Test error" }),
+            });
         });
     });
 
@@ -379,7 +377,7 @@ describe("Bull Queue Integration Tests", () => {
             const cleaned = await emailQueue.clean(0, "completed");
 
             expect(cleaned.length).toBeGreaterThan(0);
-        });
+        }, 10000);
 
         it("should get all jobs in queue", async () => {
             await emailQueue.add({ to: ["list1@example.com"], subject: "List 1" });
@@ -431,7 +429,7 @@ describe("Bull Queue Integration Tests", () => {
                 to: ["newuser@example.com"],
                 subject: "Verify Account",
                 text: "Click link to verify",
-                html: "<a href=\"#\">Verify Account</a>",
+                html: '<a href="#">Verify Account</a>',
             });
 
             const result = await job.finished();
@@ -449,7 +447,7 @@ describe("Bull Queue Integration Tests", () => {
                 to: ["reset@example.com"],
                 subject: "Password Reset",
                 text: "Reset your password",
-                html: "<a href=\"#\">Reset Password</a>",
+                html: '<a href="#">Reset Password</a>',
             });
 
             const result = await job.finished();
@@ -482,7 +480,7 @@ describe("Bull Queue Integration Tests", () => {
                 },
                 {
                     timeout: 1000, // 1 second timeout
-                },
+                }
             );
 
             try {

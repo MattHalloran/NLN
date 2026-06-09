@@ -17,8 +17,6 @@ const prisma = new PrismaClient();
 // How many times a file name should be checked before giving up
 // ex: if 'billy.png' is taken, tries 'billy-1.png', 'billy-2.png', etc.
 const MAX_FILE_NAME_ATTEMPTS = 100;
-// Max size of a file buffer (how large of a file are you willing to download?)
-const MAX_BUFFER_SIZE = 1000000000;
 // Location of persistent storage directory
 const UPLOAD_DIR = `${process.env.PROJECT_DIR}/assets`;
 // Maximum image dimensions (width or height) in pixels
@@ -92,31 +90,6 @@ export async function findFileName(
     }
     // If no valid name found after max tries, return null
     return {};
-}
-
-/**
- * Convert a file stream into a buffer
- * @param stream File stream
- * @param numBytes Maximum number of bytes to read from stream
- * @returns Buffer of file's contents
- */
-function _streamToBuffer(
-    stream: fs.ReadStream,
-    numBytes: number = MAX_BUFFER_SIZE
-): Promise<Buffer> {
-    return new Promise((resolve, reject) => {
-        const _buf: Buffer[] = [];
-
-        stream.on("data", (chunk: string | Buffer) => {
-            const buffer = typeof chunk === "string" ? Buffer.from(chunk) : chunk;
-            _buf.push(buffer);
-            if (_buf.length >= numBytes) {
-                stream.destroy();
-            }
-        });
-        stream.on("end", () => resolve(Buffer.concat(_buf)));
-        stream.on("error", (err) => reject(err));
-    });
 }
 
 /**

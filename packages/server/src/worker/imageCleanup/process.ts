@@ -31,7 +31,7 @@ function verifyBackup(sourcePath: string, backupPath: string): boolean {
     try {
         // Check backup file exists
         if (!fs.existsSync(backupPath)) {
-            logger.log(LogLevel.error, `Backup verification failed: file does not exist`, {
+            logger.log(LogLevel.error, "Backup verification failed: file does not exist", {
                 code: genErrorCode("0026"),
                 backupPath,
             });
@@ -44,7 +44,7 @@ function verifyBackup(sourcePath: string, backupPath: string): boolean {
 
         // Verify file sizes match
         if (sourceStats.size !== backupStats.size) {
-            logger.log(LogLevel.error, `Backup verification failed: file size mismatch`, {
+            logger.log(LogLevel.error, "Backup verification failed: file size mismatch", {
                 code: genErrorCode("0027"),
                 sourcePath,
                 backupPath,
@@ -56,12 +56,12 @@ function verifyBackup(sourcePath: string, backupPath: string): boolean {
 
         // Verify backup is readable by attempting to read first few bytes
         const testBuffer = Buffer.alloc(Math.min(1024, sourceStats.size));
-        const fd = fs.openSync(backupPath, 'r');
+        const fd = fs.openSync(backupPath, "r");
         const bytesRead = fs.readSync(fd, testBuffer, 0, testBuffer.length, 0);
         fs.closeSync(fd);
 
         if (bytesRead === 0 && sourceStats.size > 0) {
-            logger.log(LogLevel.error, `Backup verification failed: unable to read backup file`, {
+            logger.log(LogLevel.error, "Backup verification failed: unable to read backup file", {
                 code: genErrorCode("0028"),
                 backupPath,
             });
@@ -70,7 +70,7 @@ function verifyBackup(sourcePath: string, backupPath: string): boolean {
 
         return true;
     } catch (error) {
-        logger.log(LogLevel.error, `Backup verification error`, {
+        logger.log(LogLevel.error, "Backup verification error", {
             code: genErrorCode("0029"),
             error,
             sourcePath,
@@ -89,7 +89,10 @@ function verifyBackup(sourcePath: string, backupPath: string): boolean {
  */
 function isImageReferencedInLandingPageJSON(imageFiles: Array<{ src: string }>): boolean {
     try {
-        const contentPath = path.join(process.env.PROJECT_DIR || "", "assets/public/landing-page-content.json");
+        const contentPath = path.join(
+            process.env.PROJECT_DIR || "",
+            "assets/public/landing-page-content.json"
+        );
 
         if (!fs.existsSync(contentPath)) {
             logger.log(LogLevel.warn, "Landing page content JSON not found for cleanup validation");
@@ -107,7 +110,9 @@ function isImageReferencedInLandingPageJSON(imageFiles: Array<{ src: string }>):
             for (const banner of content.content.hero.banners) {
                 if (banner.src) {
                     // Normalize path (remove leading slash, ensure images/ prefix)
-                    let normalized = banner.src.startsWith("/") ? banner.src.substring(1) : banner.src;
+                    let normalized = banner.src.startsWith("/")
+                        ? banner.src.substring(1)
+                        : banner.src;
                     if (!normalized.startsWith("images/")) {
                         normalized = `images/${normalized}`;
                     }
@@ -140,7 +145,7 @@ function isImageReferencedInLandingPageJSON(imageFiles: Array<{ src: string }>):
  * Image cleanup worker process
  * Runs weekly to clean up unlabeled images and orphaned files
  */
-export async function imageCleanupProcess(job: Bull.Job): Promise<CleanupResult> {
+export async function imageCleanupProcess(_job: Bull.Job): Promise<CleanupResult> {
     const startTime = Date.now();
     const result: CleanupResult = {
         success: false,
@@ -188,7 +193,11 @@ export async function imageCleanupProcess(job: Bull.Job): Promise<CleanupResult>
                 orphaned_files: result.orphanedFiles,
                 orphaned_records: result.orphanedRecords,
                 errors: result.errors.length > 0 ? JSON.stringify(result.errors) : null,
-                status: result.success ? "success" : result.errors.length === result.deletedImages ? "failed" : "partial",
+                status: result.success
+                    ? "success"
+                    : result.errors.length === result.deletedImages
+                      ? "failed"
+                      : "partial",
                 duration_ms: result.durationMs,
             },
         });
@@ -243,7 +252,10 @@ async function cleanupUnlabeledImages(result: CleanupResult, backupDir: string):
         // Calculate cutoff date (30 days ago)
         const cutoffDate = new Date(Date.now() - RETENTION_DAYS * 24 * 60 * 60 * 1000);
 
-        logger.log(LogLevel.info, `Finding images unlabeled since before ${cutoffDate.toISOString()}...`);
+        logger.log(
+            LogLevel.info,
+            `Finding images unlabeled since before ${cutoffDate.toISOString()}...`
+        );
 
         // Find unlabeled images older than retention period
         const unlabeledImages = await prisma.image.findMany({
@@ -277,13 +289,17 @@ async function cleanupUnlabeledImages(result: CleanupResult, backupDir: string):
                 // SAFETY CHECK: Verify image is not referenced in landing page JSON
                 // This prevents deletion if label sync failed
                 if (isImageReferencedInLandingPageJSON(image.files)) {
-                    logger.log(LogLevel.warn, `Skipping deletion of image ${image.hash} - still referenced in landing page JSON`, {
-                        code: genErrorCode("0030"),
-                        hash: image.hash,
-                        files: image.files.map((f) => f.src),
-                    });
+                    logger.log(
+                        LogLevel.warn,
+                        `Skipping deletion of image ${image.hash} - still referenced in landing page JSON`,
+                        {
+                            code: genErrorCode("0030"),
+                            hash: image.hash,
+                            files: image.files.map((f) => f.src),
+                        }
+                    );
                     result.errors.push(
-                        `Image ${image.hash} marked for deletion but still referenced in landing page JSON. Label sync may have failed.`,
+                        `Image ${image.hash} marked for deletion but still referenced in landing page JSON. Label sync may have failed.`
                     );
                     continue; // Skip this image
                 }
@@ -307,26 +323,36 @@ async function cleanupUnlabeledImages(result: CleanupResult, backupDir: string):
                             // CRITICAL: Verify backup before deleting original
                             if (!verifyBackup(srcPath, backupPath)) {
                                 result.errors.push(
-                                    `Backup verification failed for ${file.src} - skipping deletion for safety`,
+                                    `Backup verification failed for ${file.src} - skipping deletion for safety`
                                 );
-                                logger.log(LogLevel.error, `Skipping deletion due to backup verification failure`, {
-                                    file: file.src,
-                                    backupPath,
-                                });
+                                logger.log(
+                                    LogLevel.error,
+                                    "Skipping deletion due to backup verification failure",
+                                    {
+                                        file: file.src,
+                                        backupPath,
+                                    }
+                                );
                                 continue; // Skip deletion of this file
                             }
 
                             // Backup verified - safe to delete original
                             if (await deleteFile(file.src)) {
                                 filesDeleted++;
-                                logger.log(LogLevel.debug, `Deleted file ${file.src} (backup verified at ${backupPath})`);
+                                logger.log(
+                                    LogLevel.debug,
+                                    `Deleted file ${file.src} (backup verified at ${backupPath})`
+                                );
                             } else {
                                 result.errors.push(`Failed to delete file: ${file.src}`);
                             }
                         } catch (backupError) {
-                            const errorMsg = backupError instanceof Error ? backupError.message : "Unknown error";
+                            const errorMsg =
+                                backupError instanceof Error
+                                    ? backupError.message
+                                    : "Unknown error";
                             result.errors.push(`Backup failed for ${file.src}: ${errorMsg}`);
-                            logger.log(LogLevel.error, `Backup operation failed`, {
+                            logger.log(LogLevel.error, "Backup operation failed", {
                                 file: file.src,
                                 error: backupError,
                             });
@@ -343,10 +369,13 @@ async function cleanupUnlabeledImages(result: CleanupResult, backupDir: string):
                     result.deletedImages++;
                     result.deletedFiles += filesDeleted;
 
-                    logger.log(LogLevel.debug, `Deleted image ${image.hash} (${filesDeleted} files)`);
+                    logger.log(
+                        LogLevel.debug,
+                        `Deleted image ${image.hash} (${filesDeleted} files)`
+                    );
                 } else {
                     result.errors.push(
-                        `Skipped DB deletion for ${image.hash}: only ${filesDeleted}/${filePaths.length} files deleted`,
+                        `Skipped DB deletion for ${image.hash}: only ${filesDeleted}/${filePaths.length} files deleted`
                     );
                 }
             } catch (error) {
@@ -356,7 +385,10 @@ async function cleanupUnlabeledImages(result: CleanupResult, backupDir: string):
             }
         }
 
-        logger.log(LogLevel.info, `Deleted ${result.deletedImages} unlabeled images (${result.deletedFiles} files)`);
+        logger.log(
+            LogLevel.info,
+            `Deleted ${result.deletedImages} unlabeled images (${result.deletedFiles} files)`
+        );
     } catch (error) {
         const errorMsg = error instanceof Error ? error.message : "Unknown error";
         result.errors.push(`Failed to clean unlabeled images: ${errorMsg}`);
@@ -406,12 +438,16 @@ async function cleanupOrphanedFiles(result: CleanupResult, backupDir: string): P
                 // CRITICAL: Verify backup before deleting original
                 if (!verifyBackup(srcPath, backupPath)) {
                     result.errors.push(
-                        `Backup verification failed for orphaned file ${file} - skipping deletion for safety`,
+                        `Backup verification failed for orphaned file ${file} - skipping deletion for safety`
                     );
-                    logger.log(LogLevel.error, `Skipping orphaned file deletion due to backup verification failure`, {
-                        file,
-                        backupPath,
-                    });
+                    logger.log(
+                        LogLevel.error,
+                        "Skipping orphaned file deletion due to backup verification failure",
+                        {
+                            file,
+                            backupPath,
+                        }
+                    );
                     continue; // Skip deletion of this file
                 }
 
@@ -462,7 +498,10 @@ async function cleanupOrphanedRecords(result: CleanupResult): Promise<void> {
             },
         });
 
-        logger.log(LogLevel.info, `Checking ${allImages.length} image records for missing files...`);
+        logger.log(
+            LogLevel.info,
+            `Checking ${allImages.length} image records for missing files...`
+        );
 
         // Find records where ALL variant files are missing
         const orphanedRecords: string[] = [];
@@ -471,7 +510,10 @@ async function cleanupOrphanedRecords(result: CleanupResult): Promise<void> {
             // If image has no file records at all, it's orphaned
             if (image.files.length === 0) {
                 orphanedRecords.push(image.hash);
-                logger.log(LogLevel.debug, `Found orphaned record with no file variants: ${image.hash}`);
+                logger.log(
+                    LogLevel.debug,
+                    `Found orphaned record with no file variants: ${image.hash}`
+                );
                 continue;
             }
 
@@ -484,7 +526,10 @@ async function cleanupOrphanedRecords(result: CleanupResult): Promise<void> {
             // If none of the files exist, this is an orphaned record
             if (existingFiles.length === 0) {
                 orphanedRecords.push(image.hash);
-                logger.log(LogLevel.debug, `Found orphaned record (all ${image.files.length} files missing): ${image.hash}`);
+                logger.log(
+                    LogLevel.debug,
+                    `Found orphaned record (all ${image.files.length} files missing): ${image.hash}`
+                );
             }
         }
 
@@ -532,9 +577,10 @@ async function cleanupOldBackups(result: CleanupResult): Promise<void> {
         }
 
         // Get all backup directories
-        const backupDirs = fs.readdirSync(backupsDir, { withFileTypes: true })
-            .filter(dirent => dirent.isDirectory())
-            .map(dirent => dirent.name);
+        const backupDirs = fs
+            .readdirSync(backupsDir, { withFileTypes: true })
+            .filter((dirent) => dirent.isDirectory())
+            .map((dirent) => dirent.name);
 
         const cutoffDate = new Date(Date.now() - BACKUP_RETENTION_DAYS * 24 * 60 * 60 * 1000);
         let deletedBackups = 0;
@@ -545,7 +591,10 @@ async function cleanupOldBackups(result: CleanupResult): Promise<void> {
                 const dateMatch = dirName.match(/auto-cleanup-(\d{4}-\d{2}-\d{2})/);
 
                 if (!dateMatch) {
-                    logger.log(LogLevel.debug, `Skipping non-standard backup directory: ${dirName}`);
+                    logger.log(
+                        LogLevel.debug,
+                        `Skipping non-standard backup directory: ${dirName}`
+                    );
                     continue;
                 }
 
@@ -559,7 +608,10 @@ async function cleanupOldBackups(result: CleanupResult): Promise<void> {
                     fs.rmSync(backupPath, { recursive: true, force: true });
                     deletedBackups++;
 
-                    logger.log(LogLevel.info, `Deleted old backup: ${dirName} (age: ${Math.floor((Date.now() - backupDate.getTime()) / (24 * 60 * 60 * 1000))} days)`);
+                    logger.log(
+                        LogLevel.info,
+                        `Deleted old backup: ${dirName} (age: ${Math.floor((Date.now() - backupDate.getTime()) / (24 * 60 * 60 * 1000))} days)`
+                    );
                 }
             } catch (error) {
                 const errorMsg = error instanceof Error ? error.message : "Unknown error";
@@ -568,7 +620,10 @@ async function cleanupOldBackups(result: CleanupResult): Promise<void> {
             }
         }
 
-        logger.log(LogLevel.info, `Deleted ${deletedBackups} old backup directories (retention: ${BACKUP_RETENTION_DAYS} days)`);
+        logger.log(
+            LogLevel.info,
+            `Deleted ${deletedBackups} old backup directories (retention: ${BACKUP_RETENTION_DAYS} days)`
+        );
     } catch (error) {
         const errorMsg = error instanceof Error ? error.message : "Unknown error";
         result.errors.push(`Failed to clean old backups: ${errorMsg}`);

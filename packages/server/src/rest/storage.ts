@@ -2,7 +2,11 @@ import { Router, Request, Response } from "express";
 import { CODE, MAX_IMAGE_STORAGE_MB } from "@local/shared";
 import { CustomError } from "../error.js";
 import { logger, LogLevel } from "../logger.js";
-import { getNextCleanupTime, triggerManualCleanup, getCleanupJobStatus } from "../worker/imageCleanup/queue.js";
+import {
+    getNextCleanupTime,
+    triggerManualCleanup,
+    getCleanupJobStatus,
+} from "../worker/imageCleanup/queue.js";
 import fs from "fs";
 import path from "path";
 import { auditAdminAction, AuditEventType } from "../utils/auditLogger.js";
@@ -11,8 +15,24 @@ const router = Router();
 
 // Storage stats cache
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
-let cachedStats: any = null;
+let cachedStats: unknown = null;
 let cacheTimestamp: number = 0;
+
+type ImagePreview = {
+    hash: string;
+    alt: string | null;
+    unlabeled_since: Date | null;
+    files: Array<{ src: string }>;
+};
+
+type ImageWithLabels = {
+    hash: string;
+    alt: string | null;
+    created_at?: Date;
+    unlabeled_since?: Date | null;
+    files?: Array<{ src: string }>;
+    image_labels: Array<{ label: string }>;
+};
 
 /**
  * Invalidate the storage stats cache
@@ -30,7 +50,7 @@ export function invalidateStorageStatsCache(): void {
  */
 router.get("/stats", async (req: Request, res: Response) => {
     try {
-        const { isAdmin, prisma } = req as any;
+        const { isAdmin, prisma } = req;
 
         // Must be admin
         if (!isAdmin) {
@@ -46,7 +66,10 @@ router.get("/stats", async (req: Request, res: Response) => {
         const cacheAge = now - cacheTimestamp;
 
         if (cachedStats && cacheAge < CACHE_TTL_MS) {
-            logger.log(LogLevel.debug, `Serving cached storage stats (age: ${Math.round(cacheAge / 1000)}s)`);
+            logger.log(
+                LogLevel.debug,
+                `Serving cached storage stats (age: ${Math.round(cacheAge / 1000)}s)`
+            );
             return res.json(cachedStats);
         }
 
@@ -129,7 +152,7 @@ router.get("/stats", async (req: Request, res: Response) => {
                 total: totalImages,
                 labeled: labeledImages,
                 unlabeled: unlabeledImages,
-                unlabeledOverRetention: unlabeledOverRetention,
+                unlabeledOverRetention,
             },
             storage: {
                 totalSizeMB,
@@ -147,7 +170,7 @@ router.get("/stats", async (req: Request, res: Response) => {
                 lastRunDeletedImages: lastCleanup?.deleted_images || 0,
                 lastRunDeletedFiles: lastCleanup?.deleted_files || 0,
                 lastRunOrphanedFiles: lastCleanup?.orphaned_files || 0,
-                lastRunOrphanedRecords: (lastCleanup as any)?.orphaned_records || 0,
+                lastRunOrphanedRecords: lastCleanup?.orphaned_records || 0,
                 lastRunDurationMs: lastCleanup?.duration_ms || null,
                 lastRunErrors: lastCleanup?.errors ? JSON.parse(lastCleanup.errors) : [],
                 nextScheduledRun,
@@ -167,7 +190,7 @@ router.get("/stats", async (req: Request, res: Response) => {
         logger.log(LogLevel.debug, "Storage stats cached for 5 minutes");
 
         return res.json(stats);
-    } catch (error: any) {
+    } catch (error: unknown) {
         logger.log(LogLevel.error, "Get storage stats error:", error);
         if (error instanceof CustomError) {
             return res.status(401).json({ error: error.message, code: error.code });
@@ -202,7 +225,7 @@ router.post("/cleanup", async (req: Request, res: Response) => {
             message: "Cleanup job started",
             jobId: job.id,
         });
-    } catch (error: any) {
+    } catch (error: unknown) {
         logger.log(LogLevel.error, "Trigger cleanup error:", error);
         if (error instanceof CustomError) {
             return res.status(401).json({ error: error.message, code: error.code });
@@ -217,7 +240,7 @@ router.post("/cleanup", async (req: Request, res: Response) => {
  */
 router.get("/cleanup/history", async (req: Request, res: Response) => {
     try {
-        const { isAdmin, prisma } = req as any;
+        const { isAdmin, prisma } = req;
 
         // Must be admin
         if (!isAdmin) {
@@ -232,7 +255,7 @@ router.get("/cleanup/history", async (req: Request, res: Response) => {
         const { status, limit = 20, offset = 0 } = req.query;
 
         // Build where clause
-        const where: any = {};
+        const where: { status?: string } = {};
         if (status && typeof status === "string") {
             where.status = status;
         }
@@ -257,7 +280,7 @@ router.get("/cleanup/history", async (req: Request, res: Response) => {
                 hasMore: total > Number(offset) + Number(limit),
             },
         });
-    } catch (error: any) {
+    } catch (error: unknown) {
         logger.log(LogLevel.error, "Get cleanup history error:", error);
         if (error instanceof CustomError) {
             return res.status(401).json({ error: error.message, code: error.code });
@@ -272,7 +295,7 @@ router.get("/cleanup/history", async (req: Request, res: Response) => {
  */
 router.get("/cleanup/preview", async (req: Request, res: Response) => {
     try {
-        const { isAdmin, prisma } = req as any;
+        const { isAdmin, prisma } = req;
 
         // Must be admin
         if (!isAdmin) {
@@ -330,7 +353,8 @@ router.get("/cleanup/preview", async (req: Request, res: Response) => {
 
         for (const image of unlabeledImages) {
             if (image.unlabeled_since) {
-                const ageInDays = (now - new Date(image.unlabeled_since).getTime()) / (1000 * 60 * 60 * 24);
+                const ageInDays =
+                    (now - new Date(image.unlabeled_since).getTime()) / (1000 * 60 * 60 * 24);
                 if (ageInDays < 60) {
                     ageBreakdown["30-60days"]++;
                 } else if (ageInDays < 90) {
@@ -355,7 +379,7 @@ router.get("/cleanup/preview", async (req: Request, res: Response) => {
                     try {
                         const stats = fs.statSync(path.join(imagesDir, file));
                         orphanedFilesSizeMB += stats.size / (1024 * 1024);
-                    } catch (error) {
+                    } catch {
                         // Skip files that can't be read
                     }
                 }
@@ -391,7 +415,7 @@ router.get("/cleanup/preview", async (req: Request, res: Response) => {
                 count: unlabeledImages.length,
                 estimatedFreedMB: Math.round(estimatedFreedMB * 100) / 100,
                 ageBreakdown,
-                samples: unlabeledImages.slice(0, 10).map((img: any) => ({
+                samples: unlabeledImages.slice(0, 10).map((img: ImagePreview) => ({
                     hash: img.hash,
                     alt: img.alt,
                     unlabeledSince: img.unlabeled_since,
@@ -407,7 +431,7 @@ router.get("/cleanup/preview", async (req: Request, res: Response) => {
             },
             totalEstimatedFreedMB: Math.round((estimatedFreedMB + orphanedFilesSizeMB) * 100) / 100,
         });
-    } catch (error: any) {
+    } catch (error: unknown) {
         logger.log(LogLevel.error, "Get cleanup preview error:", error);
         if (error instanceof CustomError) {
             return res.status(401).json({ error: error.message, code: error.code });
@@ -422,7 +446,7 @@ router.get("/cleanup/preview", async (req: Request, res: Response) => {
  */
 router.get("/orphaned-files", async (req: Request, res: Response) => {
     try {
-        const { isAdmin, prisma } = req as any;
+        const { isAdmin, prisma } = req;
 
         if (!isAdmin) {
             throw new CustomError(CODE.Unauthorized);
@@ -472,9 +496,10 @@ router.get("/orphaned-files", async (req: Request, res: Response) => {
         return res.json({
             orphanedFiles,
             totalCount: orphanedFiles.length,
-            totalSizeMB: Math.round(orphanedFiles.reduce((sum, f) => sum + f.sizeMB, 0) * 100) / 100,
+            totalSizeMB:
+                Math.round(orphanedFiles.reduce((sum, f) => sum + f.sizeMB, 0) * 100) / 100,
         });
-    } catch (error: any) {
+    } catch (error: unknown) {
         logger.log(LogLevel.error, "Get orphaned files error:", error);
         if (error instanceof CustomError) {
             return res.status(401).json({ error: error.message, code: error.code });
@@ -489,7 +514,7 @@ router.get("/orphaned-files", async (req: Request, res: Response) => {
  */
 router.get("/orphaned-records", async (req: Request, res: Response) => {
     try {
-        const { isAdmin, prisma } = req as any;
+        const { isAdmin, prisma } = req;
 
         if (!isAdmin) {
             throw new CustomError(CODE.Unauthorized);
@@ -555,7 +580,7 @@ router.get("/orphaned-records", async (req: Request, res: Response) => {
             orphanedRecords,
             totalCount: orphanedRecords.length,
         });
-    } catch (error: any) {
+    } catch (error: unknown) {
         logger.log(LogLevel.error, "Get orphaned records error:", error);
         if (error instanceof CustomError) {
             return res.status(401).json({ error: error.message, code: error.code });
@@ -570,7 +595,7 @@ router.get("/orphaned-records", async (req: Request, res: Response) => {
  */
 router.delete("/orphaned-files", async (req: Request, res: Response) => {
     try {
-        const { isAdmin, prisma } = req as any;
+        const { isAdmin, prisma } = req;
 
         if (!isAdmin) {
             throw new CustomError(CODE.Unauthorized);
@@ -610,13 +635,10 @@ router.delete("/orphaned-files", async (req: Request, res: Response) => {
         }
 
         // Audit log
-        auditAdminAction(
-            req,
-            AuditEventType.ADMIN_IMAGE_DELETE,
-            "storage",
-            undefined,
-            { deletedOrphanedFiles: deletedCount, freedMB: Math.round(deletedSizeMB * 100) / 100 },
-        );
+        auditAdminAction(req, AuditEventType.ADMIN_IMAGE_DELETE, "storage", undefined, {
+            deletedOrphanedFiles: deletedCount,
+            freedMB: Math.round(deletedSizeMB * 100) / 100,
+        });
 
         // Invalidate cache
         invalidateStorageStatsCache();
@@ -627,7 +649,7 @@ router.delete("/orphaned-files", async (req: Request, res: Response) => {
             freedMB: Math.round(deletedSizeMB * 100) / 100,
             errors: errors.length > 0 ? errors : undefined,
         });
-    } catch (error: any) {
+    } catch (error: unknown) {
         logger.log(LogLevel.error, "Delete orphaned files error:", error);
         if (error instanceof CustomError) {
             return res.status(401).json({ error: error.message, code: error.code });
@@ -642,7 +664,7 @@ router.delete("/orphaned-files", async (req: Request, res: Response) => {
  */
 router.delete("/orphaned-records", async (req: Request, res: Response) => {
     try {
-        const { isAdmin, prisma } = req as any;
+        const { isAdmin, prisma } = req;
 
         if (!isAdmin) {
             throw new CustomError(CODE.Unauthorized);
@@ -652,7 +674,6 @@ router.delete("/orphaned-records", async (req: Request, res: Response) => {
             return res.status(500).json({ error: "Database connection not available" });
         }
 
-        const imagesDir = `${process.env.PROJECT_DIR}/assets/images`;
         let deletedCount = 0;
         const errors: string[] = [];
 
@@ -699,13 +720,9 @@ router.delete("/orphaned-records", async (req: Request, res: Response) => {
         }
 
         // Audit log
-        auditAdminAction(
-            req,
-            AuditEventType.ADMIN_IMAGE_DELETE,
-            "storage",
-            undefined,
-            { deletedOrphanedRecords: deletedCount },
-        );
+        auditAdminAction(req, AuditEventType.ADMIN_IMAGE_DELETE, "storage", undefined, {
+            deletedOrphanedRecords: deletedCount,
+        });
 
         // Invalidate cache
         invalidateStorageStatsCache();
@@ -715,7 +732,7 @@ router.delete("/orphaned-records", async (req: Request, res: Response) => {
             deletedCount,
             errors: errors.length > 0 ? errors : undefined,
         });
-    } catch (error: any) {
+    } catch (error: unknown) {
         logger.log(LogLevel.error, "Delete orphaned records error:", error);
         if (error instanceof CustomError) {
             return res.status(401).json({ error: error.message, code: error.code });
@@ -730,7 +747,7 @@ router.delete("/orphaned-records", async (req: Request, res: Response) => {
  */
 router.get("/recent-activity", async (req: Request, res: Response) => {
     try {
-        const { isAdmin, prisma } = req as any;
+        const { isAdmin, prisma } = req;
 
         if (!isAdmin) {
             throw new CustomError(CODE.Unauthorized);
@@ -778,20 +795,20 @@ router.get("/recent-activity", async (req: Request, res: Response) => {
         });
 
         return res.json({
-            recentUploads: recentImages.map((img: any) => ({
+            recentUploads: recentImages.map((img: ImageWithLabels) => ({
                 hash: img.hash,
                 alt: img.alt,
                 createdAt: img.created_at,
                 labels: img.image_labels.map((l: { label: string }) => l.label),
             })),
-            recentlyUnlabeled: recentlyUnlabeled.map((img: any) => ({
+            recentlyUnlabeled: recentlyUnlabeled.map((img: ImageWithLabels) => ({
                 hash: img.hash,
                 alt: img.alt,
                 unlabeledSince: img.unlabeled_since,
             })),
             recentCleanups,
         });
-    } catch (error: any) {
+    } catch (error: unknown) {
         logger.log(LogLevel.error, "Get recent activity error:", error);
         if (error instanceof CustomError) {
             return res.status(401).json({ error: error.message, code: error.code });
@@ -815,7 +832,7 @@ router.get("/job-status", async (req: Request, res: Response) => {
         const status = await getCleanupJobStatus();
 
         return res.json(status);
-    } catch (error: any) {
+    } catch (error: unknown) {
         logger.log(LogLevel.error, "Get job status error:", error);
         if (error instanceof CustomError) {
             return res.status(401).json({ error: error.message, code: error.code });

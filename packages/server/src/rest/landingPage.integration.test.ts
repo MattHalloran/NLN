@@ -15,7 +15,6 @@ import { promisify } from "util";
 import cookieParser from "cookie-parser";
 import { readFileSync, writeFileSync, existsSync } from "fs";
 import { join } from "path";
-import restRouter from "./index.js";
 import * as auth from "../auth.js";
 import {
     mockHeroBanners,
@@ -84,6 +83,29 @@ describe("Landing Page API Integration Tests", () => {
         await prisma.customer.deleteMany();
         await prisma.role.deleteMany();
 
+        await Promise.all(
+            [
+                { hash: "test-hero-1-hash", src: "images/test-hero-1.jpg" },
+                { hash: "test-hero-2-hash", src: "images/test-hero-2.jpg" },
+                { hash: "test-hero-3-hash", src: "images/test-hero-3.jpg" },
+                { hash: "updated-hero-hash", src: "images/updated.jpg" },
+            ].map((image) =>
+                prisma.image.create({
+                    data: {
+                        hash: image.hash,
+                        alt: image.src,
+                        files: {
+                            create: {
+                                src: image.src,
+                                width: 1920,
+                                height: 1080,
+                            },
+                        },
+                    },
+                })
+            )
+        );
+
         // Create test roles
         const adminRole = await prisma.role.create({
             data: {
@@ -130,6 +152,7 @@ describe("Landing Page API Integration Tests", () => {
         });
 
         // Setup Express app
+        const { default: restRouter } = await import("./index.js");
         app = express();
         app.use(express.json());
         app.use(express.urlencoded({ extended: false }));
@@ -279,7 +302,9 @@ describe("Landing Page API Integration Tests", () => {
         });
 
         it("should return all content when onlyActive=false", async () => {
-            const res = await request(app).get("/api/rest/v1/landing-page?onlyActive=false&abTest=false");
+            const res = await request(app).get(
+                "/api/rest/v1/landing-page?onlyActive=false&abTest=false"
+            );
 
             expect(res.status).toBe(200);
 
@@ -294,7 +319,9 @@ describe("Landing Page API Integration Tests", () => {
         });
 
         it("should sort content by displayOrder", async () => {
-            const res = await request(app).get("/api/rest/v1/landing-page?onlyActive=false&abTest=false");
+            const res = await request(app).get(
+                "/api/rest/v1/landing-page?onlyActive=false&abTest=false"
+            );
 
             expect(res.status).toBe(200);
 
@@ -538,7 +565,7 @@ describe("Landing Page API Integration Tests", () => {
         it("should invalidate cache after content update", async () => {
             // Get initial content (with onlyActive=false to get all items including inactive)
             const res1 = await request(app).get(
-                "/api/rest/v1/landing-page?abTest=false&onlyActive=false",
+                "/api/rest/v1/landing-page?abTest=false&onlyActive=false"
             );
             const content1 = res1.body;
 
@@ -555,7 +582,7 @@ describe("Landing Page API Integration Tests", () => {
 
             // Get content again - should reflect the update (cache was invalidated)
             const res2 = await request(app).get(
-                "/api/rest/v1/landing-page?abTest=false&onlyActive=false",
+                "/api/rest/v1/landing-page?abTest=false&onlyActive=false"
             );
             const content2 = res2.body;
 
