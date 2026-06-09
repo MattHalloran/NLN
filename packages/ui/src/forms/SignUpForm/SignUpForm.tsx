@@ -1,6 +1,21 @@
 import { APP_LINKS, CODE, DEFAULT_PRONOUNS, signUpSchema } from "@local/shared";
 import { Autocomplete } from "@mui/lab";
-import { Box, Button, Checkbox, FormControl, FormControlLabel, FormHelperText, Grid, InputAdornment, Radio, RadioGroup, TextField, Typography, useTheme } from "@mui/material";
+import {
+    Box,
+    Button,
+    Checkbox,
+    FormControl,
+    FormControlLabel,
+    FormHelperText,
+    Grid,
+    InputAdornment,
+    Radio,
+    RadioGroup,
+    TextField,
+    Typography,
+    useTheme,
+} from "@mui/material";
+import { getApiErrorCode, getErrorMessage } from "api/rest/client";
 import { useSignUp } from "api/rest/hooks";
 import { BreadcrumbsBase, SnackSeverity } from "components";
 import { PasswordTextField } from "components/inputs/PasswordTextField/PasswordTextField";
@@ -50,7 +65,10 @@ export const SignUpForm = () => {
         onSubmit: async (values, helpers) => {
             const { confirmPassword, ...rest } = values;
             if (values.password !== confirmPassword) {
-                PubSub.get().publishSnack({ message: "Passwords don't match.", severity: SnackSeverity.Error });
+                PubSub.get().publishSnack({
+                    message: "Passwords don't match.",
+                    severity: SnackSeverity.Error,
+                });
                 helpers.setSubmitting(false);
                 return;
             }
@@ -74,36 +92,45 @@ export const SignUpForm = () => {
                     console.error("Failed to track A/B test conversion:", conversionError);
                 }
 
-                PubSub.get().publishSession({ ...data, theme: (data.theme as "light" | "dark") || "light" });
+                PubSub.get().publishSession({
+                    ...data,
+                    theme: (data.theme as "light" | "dark") || "light",
+                });
                 if (data.accountApproved) {
                     PubSub.get().publishAlertDialog({
                         message: `Welcome to ${business?.BUSINESS_NAME?.Short}. You may now begin shopping. Please verify your email within 48 hours.`,
-                        buttons: [{
-                            text: "OK",
-                            onClick: () => setLocation(APP_LINKS.Home),
-                        }],
+                        buttons: [
+                            {
+                                text: "OK",
+                                onClick: () => setLocation(APP_LINKS.Home),
+                            },
+                        ],
                     });
                 } else {
                     PubSub.get().publishAlertDialog({
                         message: `Welcome to ${business?.BUSINESS_NAME?.Short}. Please verify your email within 48 hours. Since you have never ordered from us before, we must approve your account before you can order.`,
-                        buttons: [{
-                            text: "OK",
-                            onClick: () => setLocation(APP_LINKS.Home),
-                        }],
+                        buttons: [
+                            {
+                                text: "OK",
+                                onClick: () => setLocation(APP_LINKS.Home),
+                            },
+                        ],
                     });
                 }
-            } catch (error: any) {
-                if (error?.data?.code === CODE.EmailInUse.code) {
+            } catch (error) {
+                if (getApiErrorCode(error) === CODE.EmailInUse.code) {
                     PubSub.get().publishAlertDialog({
-                        message: `${error.message}. Press OK if you would like to be redirected to the forgot password form.`,
-                        buttons: [{
-                            text: "OK",
-                            onClick: () => setLocation(APP_LINKS.ForgotPassword),
-                        }],
+                        message: `${getErrorMessage(error, "Email is already in use")}. Press OK if you would like to be redirected to the forgot password form.`,
+                        buttons: [
+                            {
+                                text: "OK",
+                                onClick: () => setLocation(APP_LINKS.ForgotPassword),
+                            },
+                        ],
                     });
                 } else {
                     PubSub.get().publishSnack({
-                        message: error?.message || "Sign up failed. Please try again.",
+                        message: getErrorMessage(error, "Sign up failed. Please try again."),
                         severity: SnackSeverity.Error,
                     });
                 }
@@ -183,7 +210,9 @@ export const SignUpForm = () => {
                                     label="Pronouns (Optional)"
                                     value={formik.values.pronouns}
                                     onChange={formik.handleChange}
-                                    error={formik.touched.pronouns && Boolean(formik.errors.pronouns)}
+                                    error={
+                                        formik.touched.pronouns && Boolean(formik.errors.pronouns)
+                                    }
                                     helperText={formik.touched.pronouns && formik.errors.pronouns}
                                 />
                             )}
@@ -287,8 +316,15 @@ export const SignUpForm = () => {
                             value={formik.values.confirmPassword}
                             onBlur={formik.handleBlur}
                             onChange={formik.handleChange}
-                            error={formik.touched.confirmPassword && Boolean(formik.errors.confirmPassword)}
-                            helperText={formik.touched.confirmPassword ? formik.errors.confirmPassword : null}
+                            error={
+                                formik.touched.confirmPassword &&
+                                Boolean(formik.errors.confirmPassword)
+                            }
+                            helperText={
+                                formik.touched.confirmPassword
+                                    ? formik.errors.confirmPassword
+                                    : null
+                            }
                         />
                     </Grid>
 
@@ -317,10 +353,20 @@ export const SignUpForm = () => {
                                 value={formik.values.accountApproved}
                                 onChange={formik.handleChange}
                             >
-                                <FormControlLabel value="true" control={<Radio />} label="I have ordered from New Life Nursery before" />
-                                <FormControlLabel value="false" control={<Radio />} label="I have never ordered from New Life Nursery" />
+                                <FormControlLabel
+                                    value="true"
+                                    control={<Radio />}
+                                    label="I have ordered from New Life Nursery before"
+                                />
+                                <FormControlLabel
+                                    value="false"
+                                    control={<Radio />}
+                                    label="I have never ordered from New Life Nursery"
+                                />
                             </RadioGroup>
-                            <FormHelperText>{formik.touched.accountApproved && formik.errors.accountApproved}</FormHelperText>
+                            <FormHelperText>
+                                {formik.touched.accountApproved && formik.errors.accountApproved}
+                            </FormHelperText>
                         </FormControl>
                     </Grid>
                     <Grid item xs={12}>
@@ -355,7 +401,14 @@ export const SignUpForm = () => {
                 </Grid>
 
                 {/* Navigation Links */}
-                <Box sx={{ textAlign: "center", mt: 4, pt: 3, borderTop: `1px solid ${palette.divider}` }}>
+                <Box
+                    sx={{
+                        textAlign: "center",
+                        mt: 4,
+                        pt: 3,
+                        borderTop: `1px solid ${palette.divider}`,
+                    }}
+                >
                     <BreadcrumbsBase
                         paths={breadcrumbPaths}
                         separator={"•"}

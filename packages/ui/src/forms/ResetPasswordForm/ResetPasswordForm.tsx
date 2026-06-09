@@ -1,5 +1,6 @@
 import { APP_LINKS, resetPasswordSchema } from "@local/shared";
 import { Box, Button, Grid, Typography, useTheme } from "@mui/material";
+import { getErrorMessage } from "api/rest/client";
 import { useResetPassword } from "api/rest/hooks";
 import { SnackSeverity } from "components";
 import { PasswordTextField } from "components/inputs/PasswordTextField/PasswordTextField";
@@ -30,17 +31,26 @@ export const ResetPasswordForm = () => {
         validationSchema: resetPasswordSchema,
         onSubmit: async (values) => {
             if (!token || token === ":") {
-                PubSub.get().publishSnack({ message: "Could not parse URL", severity: SnackSeverity.Error });
+                PubSub.get().publishSnack({
+                    message: "Could not parse URL",
+                    severity: SnackSeverity.Error,
+                });
                 return;
             }
             try {
                 const data = await resetPassword({ token, password: values.newPassword });
-                PubSub.get().publishSession({ ...data, theme: (data.theme as "light" | "dark") || "light" });
-                PubSub.get().publishSnack({ message: "Password reset.", severity: SnackSeverity.Success });
-                setLocation(APP_LINKS.Home);
-            } catch (error: any) {
+                PubSub.get().publishSession({
+                    ...data,
+                    theme: (data.theme as "light" | "dark") || "light",
+                });
                 PubSub.get().publishSnack({
-                    message: error?.message || "Password reset failed. Please try again.",
+                    message: "Password reset.",
+                    severity: SnackSeverity.Success,
+                });
+                setLocation(APP_LINKS.Home);
+            } catch (error) {
+                PubSub.get().publishSnack({
+                    message: getErrorMessage(error, "Password reset failed. Please try again."),
                     severity: SnackSeverity.Error,
                 });
             }
@@ -56,9 +66,10 @@ export const ResetPasswordForm = () => {
                         <Box
                             sx={{
                                 p: 3,
-                                backgroundColor: palette.mode === "light"
-                                    ? "rgba(0, 0, 0, 0.02)"
-                                    : "rgba(255, 255, 255, 0.02)",
+                                backgroundColor:
+                                    palette.mode === "light"
+                                        ? "rgba(0, 0, 0, 0.02)"
+                                        : "rgba(255, 255, 255, 0.02)",
                                 borderRadius: 1,
                                 border: `1px solid ${palette.divider}`,
                             }}
@@ -82,7 +93,8 @@ export const ResetPasswordForm = () => {
                                     lineHeight: 1.6,
                                 }}
                             >
-                                Choose a strong password that is at least 8 characters long and includes a combination of letters, numbers, and special characters.
+                                Choose a strong password that is at least 8 characters long and
+                                includes a combination of letters, numbers, and special characters.
                             </Typography>
                         </Box>
                     </Grid>
@@ -99,7 +111,9 @@ export const ResetPasswordForm = () => {
                             onBlur={formik.handleBlur}
                             onChange={formik.handleChange}
                             error={formik.touched.newPassword && Boolean(formik.errors.newPassword)}
-                            helperText={formik.touched.newPassword ? formik.errors.newPassword : null}
+                            helperText={
+                                formik.touched.newPassword ? formik.errors.newPassword : null
+                            }
                         />
                     </Grid>
                     <Grid item xs={12}>
@@ -112,8 +126,15 @@ export const ResetPasswordForm = () => {
                             value={formik.values.confirmNewPassword}
                             onBlur={formik.handleBlur}
                             onChange={formik.handleChange}
-                            error={formik.touched.confirmNewPassword && Boolean(formik.errors.confirmNewPassword)}
-                            helperText={formik.touched.confirmNewPassword ? formik.errors.confirmNewPassword : null}
+                            error={
+                                formik.touched.confirmNewPassword &&
+                                Boolean(formik.errors.confirmNewPassword)
+                            }
+                            helperText={
+                                formik.touched.confirmNewPassword
+                                    ? formik.errors.confirmNewPassword
+                                    : null
+                            }
                         />
                     </Grid>
 

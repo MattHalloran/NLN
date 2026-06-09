@@ -11,11 +11,14 @@ const router = Router();
  */
 router.get("/stats", async (req: Request, res: Response) => {
     try {
-        const { prisma, isAdmin } = req as any;
+        const { prisma, isAdmin } = req;
 
         // Must be admin
         if (!isAdmin) {
             throw new CustomError(CODE.Unauthorized);
+        }
+        if (!prisma) {
+            throw new Error("Prisma client unavailable on request");
         }
 
         // Get all customers
@@ -27,7 +30,7 @@ router.get("/stats", async (req: Request, res: Response) => {
         });
 
         const totalCustomers = customers.length;
-        const approvedCustomers = customers.filter((c: any) => c.accountApproved).length;
+        const approvedCustomers = customers.filter((c) => c.accountApproved).length;
 
         // For now, return zeros for orders and products since those are archived
         // In the future, these would query the actual models
@@ -42,7 +45,7 @@ router.get("/stats", async (req: Request, res: Response) => {
             totalProducts,
             totalSkus,
         });
-    } catch (error: any) {
+    } catch (error) {
         logger.log(LogLevel.error, "Get dashboard stats error:", error);
         if (error instanceof CustomError) {
             return res.status(401).json({ error: error.message, code: error.code });

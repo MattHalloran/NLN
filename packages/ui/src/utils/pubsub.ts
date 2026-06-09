@@ -32,18 +32,18 @@ export type SnackPub = {
     buttonText?: string;
     buttonClicked?: (event?: React.MouseEvent) => unknown;
     autoHideDuration?: number;
-}
+};
 
 export type SideMenuPub = {
     id: "side-menu";
     isOpen: boolean;
-}
+};
 
 export class PubSub {
     private static instance: PubSub;
-    private subscribers: { [key: string]: [symbol, (data?: any) => void][] } = {};
-     
-    private constructor() { }
+    private subscribers: { [key: string]: [symbol, (data?: unknown) => void][] } = {};
+
+    private constructor() {}
     static get(): PubSub {
         if (!PubSub.instance) {
             PubSub.instance = new PubSub();
@@ -53,7 +53,7 @@ export class PubSub {
 
     publish(key: PubsKey, data?: unknown) {
         if (this.subscribers[key]) {
-            this.subscribers[key].forEach(subscriber => subscriber[1](data));
+            this.subscribers[key].forEach((subscriber) => subscriber[1](data));
         }
     }
     publishBurgerMenu(to: boolean | "toggle") {
@@ -87,13 +87,13 @@ export class PubSub {
         this.publish(Pubs.LandingPageUpdated);
     }
 
-    subscribe(key: PubsKey, subscriber: (data?: any) => void): symbol {
+    subscribe<T = unknown>(key: PubsKey, subscriber: (data: T) => void): symbol {
         // Create unique token, so we can unsubscribe later
         const token = Symbol(key);
         if (!this.subscribers[key]) {
             this.subscribers[key] = [];
         }
-        this.subscribers[key].push([token, subscriber]);
+        this.subscribers[key].push([token, subscriber as (data?: unknown) => void]);
         return token;
     }
     subscribeBurgerMenu(subscriber: (to: boolean | "toggle") => void) {
@@ -130,7 +130,7 @@ export class PubSub {
     unsubscribe(token: symbol) {
         for (const key in this.subscribers) {
             const subscribers = this.subscribers[key];
-            const index = subscribers.findIndex(subscriber => subscriber[0] === token);
+            const index = subscribers.findIndex((subscriber) => subscriber[0] === token);
             if (index > -1) {
                 subscribers.splice(index, 1);
             }

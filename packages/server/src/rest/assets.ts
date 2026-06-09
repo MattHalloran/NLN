@@ -26,9 +26,12 @@ const PUBLIC_READABLE_FILES = [
  */
 router.post("/read", async (req: Request, res: Response) => {
     try {
-        const { files } = req.body;
+        const { files } = req.body as { files?: unknown };
 
-        if (!files || !Array.isArray(files)) {
+        if (
+            !Array.isArray(files) ||
+            !files.every((file): file is string => typeof file === "string")
+        ) {
             return res.status(400).json({ error: "Files array required" });
         }
 
@@ -44,7 +47,7 @@ router.post("/read", async (req: Request, res: Response) => {
                 {
                     requestedFiles: files,
                     deniedFiles: unauthorizedFiles,
-                    allowedFiles: PUBLIC_READABLE_FILES
+                    allowedFiles: PUBLIC_READABLE_FILES,
                 }
             );
 
@@ -70,7 +73,7 @@ router.post("/read", async (req: Request, res: Response) => {
         });
 
         return res.json(result);
-    } catch (error: any) {
+    } catch (error) {
         logger.log(LogLevel.error, "Read assets error:", error);
         return res.status(500).json({ error: "Failed to read assets" });
     }
@@ -82,14 +85,14 @@ router.post("/read", async (req: Request, res: Response) => {
  */
 router.post("/write", async (req: Request, res: Response) => {
     try {
-        const { isAdmin } = req as any;
+        const { isAdmin } = req;
 
         // Must be admin
         if (!isAdmin) {
             throw new CustomError(CODE.Unauthorized);
         }
 
-        const files: Express.Multer.File[] = (req as any).files || [];
+        const files = Array.isArray(req.files) ? req.files : [];
 
         if (!files || files.length === 0) {
             return res.status(400).json({ error: "No files provided" });
@@ -98,10 +101,10 @@ router.post("/write", async (req: Request, res: Response) => {
         const data = await saveFiles(files);
 
         // Any failed writes will return null
-        const success = !data.some((d: any) => d === null);
+        const success = !data.some((d) => d === null);
 
         return res.json({ success });
-    } catch (error: any) {
+    } catch (error) {
         logger.log(LogLevel.error, "Write assets error:", error);
         if (error instanceof CustomError) {
             return res.status(401).json({ error: error.message, code: error.code });

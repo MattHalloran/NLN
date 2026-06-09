@@ -1,10 +1,14 @@
 import { Router, Request, Response } from "express";
 import { CODE } from "@local/shared";
+import type { Prisma } from "@prisma/client";
 import { CustomError } from "../error.js";
 import { logger, LogLevel } from "../logger.js";
 import { newsletterSubscribeLimiter } from "../middleware/rateLimiter.js";
 
 const router = Router();
+
+const getQueryString = (value: Request["query"][string]): string | undefined =>
+    typeof value === "string" ? value : undefined;
 
 /**
  * POST /api/rest/v1/newsletter/subscribe
@@ -12,12 +16,23 @@ const router = Router();
  */
 router.post("/subscribe", newsletterSubscribeLimiter, async (req: Request, res: Response) => {
     try {
-        const { email, variantId, source = "homepage" } = req.body;
-        const { prisma } = req as any;
+        const {
+            email,
+            variantId,
+            source = "homepage",
+        } = req.body as {
+            email?: unknown;
+            variantId?: string | null;
+            source?: string;
+        };
+        const { prisma } = req;
 
         // Validate email
         if (!email || typeof email !== "string") {
             return res.status(400).json({ error: "Email is required" });
+        }
+        if (!prisma) {
+            return res.status(500).json({ error: "Database connection not available" });
         }
 
         // Basic email format validation
@@ -77,7 +92,7 @@ router.post("/subscribe", newsletterSubscribeLimiter, async (req: Request, res: 
             success: true,
             message: "Thank you for subscribing!",
         });
-    } catch (error: any) {
+    } catch (error) {
         logger.log(LogLevel.error, "Newsletter subscription error:", error);
         return res.status(500).json({ error: "Failed to subscribe" });
     }
@@ -89,7 +104,7 @@ router.post("/subscribe", newsletterSubscribeLimiter, async (req: Request, res: 
  */
 router.get("/subscribers", async (req: Request, res: Response) => {
     try {
-        const { isAdmin, prisma } = req as any;
+        const { isAdmin, prisma } = req;
 
         // Must be admin
         if (!isAdmin) {
@@ -99,14 +114,18 @@ router.get("/subscribers", async (req: Request, res: Response) => {
         if (!prisma) {
             return res.status(500).json({ error: "Database connection not available" });
         }
-        const { page = 1, limit = 50, status, variantId, search } = req.query;
+        const page = getQueryString(req.query.page) ?? "1";
+        const limit = getQueryString(req.query.limit) ?? "50";
+        const status = getQueryString(req.query.status);
+        const variantId = getQueryString(req.query.variantId);
+        const search = getQueryString(req.query.search);
 
-        const pageNum = parseInt(page as string, 10);
-        const limitNum = Math.min(parseInt(limit as string, 10), 100); // Max 100 per page
+        const pageNum = parseInt(page, 10);
+        const limitNum = Math.min(parseInt(limit, 10), 100); // Max 100 per page
         const skip = (pageNum - 1) * limitNum;
 
         // Build filter
-        const where: any = {};
+        const where: Prisma.newsletter_subscriptionWhereInput = {};
         if (status) {
             where.status = status;
         }
@@ -138,11 +157,11 @@ router.get("/subscribers", async (req: Request, res: Response) => {
         });
 
         const statusCounts = stats.reduce(
-            (acc: any, stat: any) => {
+            (acc, stat) => {
                 acc[stat.status] = stat._count;
                 return acc;
             },
-            {} as Record<string, number>,
+            {} as Record<string, number>
         );
 
         return res.json({
@@ -158,8 +177,11 @@ router.get("/subscribers", async (req: Request, res: Response) => {
                 byStatus: statusCounts,
             },
         });
-    } catch (error: any) {
+    } catch (error) {
         logger.log(LogLevel.error, "Get newsletter subscribers error:", error);
+        if (error instanceof CustomError) {
+            return res.status(401).json({ error: error.message, code: error.code });
+        }
         return res.status(500).json({ error: "Failed to fetch subscribers" });
     }
 });
@@ -170,7 +192,7 @@ router.get("/subscribers", async (req: Request, res: Response) => {
  */
 router.get("/subscribers/export", async (req: Request, res: Response) => {
     try {
-        const { isAdmin, prisma } = req as any;
+        const { isAdmin, prisma } = req;
 
         // Must be admin
         if (!isAdmin) {
@@ -180,10 +202,10 @@ router.get("/subscribers/export", async (req: Request, res: Response) => {
         if (!prisma) {
             return res.status(500).json({ error: "Database connection not available" });
         }
-        const { status } = req.query;
+        const status = getQueryString(req.query.status);
 
         // Build filter
-        const where: any = {};
+        const where: Prisma.newsletter_subscriptionWhereInput = {};
         if (status) {
             where.status = status;
         }
@@ -196,7 +218,7 @@ router.get("/subscribers/export", async (req: Request, res: Response) => {
 
         // Build CSV
         const headers = ["Email", "Variant ID", "Source", "Status", "Subscribed At"];
-        const rows = subscribers.map((sub: any) => [
+        const rows = subscribers.map((sub) => [
             sub.email,
             sub.variant_id || "",
             sub.source,
@@ -207,7 +229,7 @@ router.get("/subscribers/export", async (req: Request, res: Response) => {
         const csv = [
             headers.join(","),
             ...rows.map((row: string[]) =>
-                row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(","),
+                row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(",")
             ),
         ].join("\n");
 
@@ -215,12 +237,15 @@ router.get("/subscribers/export", async (req: Request, res: Response) => {
         res.setHeader("Content-Type", "text/csv");
         res.setHeader(
             "Content-Disposition",
-            `attachment; filename="newsletter-subscribers-${new Date().toISOString().split("T")[0]}.csv"`,
+            `attachment; filename="newsletter-subscribers-${new Date().toISOString().split("T")[0]}.csv"`
         );
 
         return res.send(csv);
-    } catch (error: any) {
+    } catch (error) {
         logger.log(LogLevel.error, "Export newsletter subscribers error:", error);
+        if (error instanceof CustomError) {
+            return res.status(401).json({ error: error.message, code: error.code });
+        }
         return res.status(500).json({ error: "Failed to export subscribers" });
     }
 });
@@ -231,7 +256,7 @@ router.get("/subscribers/export", async (req: Request, res: Response) => {
  */
 router.delete("/subscribers/:id", async (req: Request, res: Response) => {
     try {
-        const { isAdmin, prisma } = req as any;
+        const { isAdmin, prisma } = req;
 
         // Must be admin
         if (!isAdmin) {
@@ -242,7 +267,7 @@ router.delete("/subscribers/:id", async (req: Request, res: Response) => {
             return res.status(500).json({ error: "Database connection not available" });
         }
         const { id } = req.params;
-        const { action = "unsubscribe" } = req.body; // "unsubscribe" or "delete"
+        const { action = "unsubscribe" } = req.body as { action?: "unsubscribe" | "delete" };
 
         const subscriberId = parseInt(id, 10);
         if (isNaN(subscriberId)) {
@@ -275,8 +300,11 @@ router.delete("/subscribers/:id", async (req: Request, res: Response) => {
                 message: "Subscriber unsubscribed",
             });
         }
-    } catch (error: any) {
+    } catch (error) {
         logger.log(LogLevel.error, "Delete newsletter subscriber error:", error);
+        if (error instanceof CustomError) {
+            return res.status(401).json({ error: error.message, code: error.code });
+        }
         return res.status(500).json({ error: "Failed to delete subscriber" });
     }
 });
@@ -287,7 +315,7 @@ router.delete("/subscribers/:id", async (req: Request, res: Response) => {
  */
 router.get("/stats", async (req: Request, res: Response) => {
     try {
-        const { isAdmin, prisma } = req as any;
+        const { isAdmin, prisma } = req;
 
         // Must be admin
         if (!isAdmin) {
@@ -337,13 +365,13 @@ router.get("/stats", async (req: Request, res: Response) => {
 
         return res.json({
             byStatus: statusCounts.reduce(
-                (acc: any, stat: any) => {
+                (acc, stat) => {
                     acc[stat.status] = stat._count;
                     return acc;
                 },
-                {} as Record<string, number>,
+                {} as Record<string, number>
             ),
-            byVariant: variantCounts.map((v: any) => ({
+            byVariant: variantCounts.map((v) => ({
                 variantId: v.variant_id,
                 count: v._count,
             })),
@@ -352,8 +380,11 @@ router.get("/stats", async (req: Request, res: Response) => {
                 last30Days: signupsThisMonth,
             },
         });
-    } catch (error: any) {
+    } catch (error) {
         logger.log(LogLevel.error, "Get newsletter stats error:", error);
+        if (error instanceof CustomError) {
+            return res.status(401).json({ error: error.message, code: error.code });
+        }
         return res.status(500).json({ error: "Failed to fetch stats" });
     }
 });

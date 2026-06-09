@@ -1,4 +1,4 @@
-import { Box, CardMedia } from "@mui/material";
+import { Box, CardMedia, type SxProps, type Theme } from "@mui/material";
 import { NoImageIcon } from "icons";
 import { useState, SyntheticEvent } from "react";
 
@@ -7,7 +7,7 @@ interface ImageWithFallbackProps {
     alt: string;
     fallbackSrc?: string;
     showFallbackIcon?: boolean;
-    sx?: any;
+    sx?: SxProps<Theme>;
     style?: React.CSSProperties;
     onLoad?: () => void;
     onError?: () => void;

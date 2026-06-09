@@ -1,5 +1,6 @@
 import { APP_LINKS, CODE, logInSchema } from "@local/shared";
 import { Box, Button, Grid, InputAdornment, TextField, useTheme } from "@mui/material";
+import { getApiErrorCode, getErrorMessage } from "api/rest/client";
 import { useLogin } from "api/rest/hooks";
 import { BreadcrumbsBase, SnackSeverity } from "components";
 import { PasswordTextField } from "components/inputs/PasswordTextField/PasswordTextField";
@@ -36,7 +37,10 @@ export const LogInForm = () => {
     // If there's a verification code, show message to sign in to verify account
     useEffect(() => {
         if (verificationCode) {
-            PubSub.get().publishSnack({ message: "Sign in to verify your account.", severity: SnackSeverity.Info });
+            PubSub.get().publishSnack({
+                message: "Sign in to verify your account.",
+                severity: SnackSeverity.Info,
+            });
         }
     }, [verificationCode]);
 
@@ -51,22 +55,31 @@ export const LogInForm = () => {
                 const data = await login({ ...values, verificationCode });
                 // If code provided, notify of account verification
                 if (verificationCode) {
-                    PubSub.get().publishSnack({ message: "Account verified.", severity: SnackSeverity.Success });
+                    PubSub.get().publishSnack({
+                        message: "Account verified.",
+                        severity: SnackSeverity.Success,
+                    });
                 }
-                PubSub.get().publishSession({ ...data, theme: (data.theme as "light" | "dark") || "light" });
+                PubSub.get().publishSession({
+                    ...data,
+                    theme: (data.theme as "light" | "dark") || "light",
+                });
                 setLocation(APP_LINKS.Home);
-            } catch (error: any) {
-                if (error?.data?.code === CODE.MustResetPassword.code) {
+            } catch (error) {
+                if (getApiErrorCode(error) === CODE.MustResetPassword.code) {
                     PubSub.get().publishAlertDialog({
-                        message: "Before signing in, please follow the link sent to your email to change your password.",
-                        buttons: [{
-                            text: "OK",
-                            onClick: () => setLocation(APP_LINKS.Home),
-                        }],
+                        message:
+                            "Before signing in, please follow the link sent to your email to change your password.",
+                        buttons: [
+                            {
+                                text: "OK",
+                                onClick: () => setLocation(APP_LINKS.Home),
+                            },
+                        ],
                     });
                 } else {
                     PubSub.get().publishSnack({
-                        message: error?.message || "Login failed. Please try again.",
+                        message: getErrorMessage(error, "Login failed. Please try again."),
                         severity: SnackSeverity.Error,
                     });
                 }
@@ -132,7 +145,14 @@ export const LogInForm = () => {
                 </Grid>
 
                 {/* Navigation Links */}
-                <Box sx={{ textAlign: "center", mt: 4, pt: 3, borderTop: `1px solid ${palette.divider}` }}>
+                <Box
+                    sx={{
+                        textAlign: "center",
+                        mt: 4,
+                        pt: 3,
+                        borderTop: `1px solid ${palette.divider}`,
+                    }}
+                >
                     <BreadcrumbsBase
                         paths={breadcrumbPaths}
                         separator={"•"}

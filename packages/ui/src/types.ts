@@ -4,13 +4,13 @@ import { SystemStyleObject } from "@mui/system";
 import { SvgProps } from "icons/types";
 import { Path } from "route";
 
-export type Cart = { items?: Array<any> };
+export type Cart = { items?: unknown[] };
 
 // Image types for image management
 export type ImageFile = {
-    src: string,
-    width: number,
-    height: number,
+    src: string;
+    width: number;
+    height: number;
 };
 
 export type Image = {
@@ -21,8 +21,8 @@ export type Image = {
 };
 
 export type ImageInfo = {
-    index: number,
-    image: Image
+    index: number;
+    image: Image;
 };
 
 // Top-level props that can be passed into any routed component
@@ -34,18 +34,18 @@ export type Session = {
     firstName?: string | null;
     lastName?: string | null;
     pronouns?: string | null;
-}
+};
 
 type BusinessLink = {
     Label: string;
     Link: string;
-}
+};
 export type BusinessData = {
     hours?: string;
     BUSINESS_NAME: {
         Short: string;
         Long: string;
-    },
+    };
     ADDRESS: BusinessLink;
     PHONE: BusinessLink;
     FAX?: BusinessLink;
@@ -53,9 +53,9 @@ export type BusinessData = {
     SOCIAL?: {
         Facebook?: string;
         Instagram?: string;
-    },
+    };
     WEBSITE?: string;
-}
+};
 
 // Miscellaneous types
 export type SetLocation = (to: Path, options?: { replace?: boolean }) => void;

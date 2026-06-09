@@ -120,9 +120,9 @@ function resizeOptions(width: number, height: number): { [key: string]: number }
  * - filename - Name of file that was saved (since naming conflicts might mean that a number was appended)
  */
 export async function saveFile(
-    stream: any,
+    stream: Readable,
     filename: string,
-    mimetype: any,
+    mimetype: string,
     overwrite?: boolean,
     acceptedTypes?: string[]
 ) {

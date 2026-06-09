@@ -27,7 +27,7 @@ export interface EmailResult {
 export class EmailService {
     private static instance: EmailService;
     private emailMode: string;
-    private transporter: any;
+    private transporter: nodemailer.Transporter | null = null;
     private devEmailsDir: string;
 
     private constructor() {
@@ -128,6 +128,13 @@ export class EmailService {
         if (!fs.existsSync(dirPath)) {
             fs.mkdirSync(dirPath, { recursive: true });
         }
+    }
+
+    private async sendMail(mailOptions: nodemailer.SendMailOptions) {
+        if (!this.transporter) {
+            throw new Error("Email transporter not configured");
+        }
+        return this.transporter.sendMail(mailOptions);
     }
 
     private getDevEmailRedirectAddress(): string {
@@ -247,7 +254,7 @@ export class EmailService {
                 const modifiedHtml = `<div style="background: #ffffcc; padding: 10px; border: 2px solid #ffcc00; margin-bottom: 20px;"><strong>🚨 DEVELOPMENT EMAIL REDIRECT</strong><br>Original Recipients: ${emailData.to.join(", ")}</div>${emailData.html}`;
 
                 try {
-                    const info = await this.transporter.sendMail({
+                    const info = await this.sendMail({
                         from: fromAddress,
                         to: redirectEmail,
                         subject: modifiedSubject,
@@ -318,7 +325,7 @@ export class EmailService {
                 }
 
                 try {
-                    const info = await this.transporter.sendMail({
+                    const info = await this.sendMail({
                         from: fromAddress,
                         to: allowedRecipients.join(", "),
                         subject: `[STAGING] ${emailData.subject}`,
@@ -355,7 +362,7 @@ export class EmailService {
             case "production":
             default:
                 try {
-                    const info = await this.transporter.sendMail({
+                    const info = await this.sendMail({
                         from: fromAddress,
                         to: emailData.to.join(", "),
                         subject: emailData.subject,

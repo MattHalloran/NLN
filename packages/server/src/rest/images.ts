@@ -10,6 +10,13 @@ import path from "path";
 
 const router = Router();
 
+type ImageUpdate = {
+    hash: string;
+    label?: string;
+    alt?: string | null;
+    description?: string | null;
+};
+
 /**
  * Calculate current storage usage in MB for the images directory
  * @returns Current storage in MB, or 0 if directory doesn't exist
@@ -222,21 +229,26 @@ router.post("/", imageUploadLimiter, imageFileCountLimiter, async (req: Request,
  */
 router.put("/", async (req: Request, res: Response) => {
     try {
-        const { images } = req.body;
-        const { prisma, isAdmin } = req as any;
+        const { images } = req.body as { images?: unknown };
+        const { prisma, isAdmin } = req;
 
         // Must be admin
         if (!isAdmin) {
             throw new CustomError(CODE.Unauthorized);
         }
+        if (!prisma) {
+            return res.status(500).json({ error: "Database connection not available" });
+        }
 
-        if (!images || !Array.isArray(images)) {
+        if (!Array.isArray(images)) {
             return res.status(400).json({ error: "Images array required" });
         }
 
+        const imageUpdates = images as ImageUpdate[];
+
         // Loop through update data passed in
-        for (let i = 0; i < images.length; i++) {
-            const curr = images[i];
+        for (let i = 0; i < imageUpdates.length; i++) {
+            const curr = imageUpdates[i];
 
             if (curr.label) {
                 // Update position in label
@@ -258,11 +270,11 @@ router.put("/", async (req: Request, res: Response) => {
 
         // Audit log: image update
         auditAdminAction(req, AuditEventType.ADMIN_IMAGE_UPDATE, "images", undefined, {
-            updatedCount: images.length,
+            updatedCount: imageUpdates.length,
         });
 
         return res.json({ success: true });
-    } catch (error: any) {
+    } catch (error) {
         logger.log(LogLevel.error, "Update images error:", error);
         if (error instanceof CustomError) {
             return res.status(401).json({ error: error.message, code: error.code });
@@ -357,7 +369,7 @@ router.delete("/:hash", async (req: Request, res: Response) => {
             usage: result.usage,
             message: `Successfully deleted image and ${result.deletedFiles} file(s)`,
         });
-    } catch (error: any) {
+    } catch (error) {
         logger.log(LogLevel.error, "Delete image error:", error);
         if (error instanceof CustomError) {
             return res.status(401).json({ error: error.message, code: error.code });
@@ -391,7 +403,7 @@ router.get("/:hash/usage", async (req: Request, res: Response) => {
         }
 
         return res.json(usage);
-    } catch (error: any) {
+    } catch (error) {
         logger.log(LogLevel.error, "Check image usage error:", error);
         if (error instanceof CustomError) {
             return res.status(401).json({ error: error.message, code: error.code });
@@ -408,7 +420,7 @@ router.get("/:hash/usage", async (req: Request, res: Response) => {
 router.get("/:hash/variants", async (req: Request, res: Response) => {
     try {
         const { hash } = req.params;
-        const { prisma, isAdmin } = req as any;
+        const { prisma, isAdmin } = req;
 
         // Must be admin
         if (!isAdmin) {
@@ -530,7 +542,7 @@ router.get("/:hash/variants", async (req: Request, res: Response) => {
             totalStorageMB: Math.round((totalSizeBytes / 1024 / 1024) * 100) / 100,
             variants,
         });
-    } catch (error: any) {
+    } catch (error) {
         logger.log(LogLevel.error, "Get image variants error:", error);
         if (error instanceof CustomError) {
             return res.status(401).json({ error: error.message, code: error.code });

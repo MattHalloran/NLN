@@ -1,4 +1,12 @@
-import { Box, ClickAwayListener, Palette, Popper, PopperPlacementType, useTheme } from "@mui/material";
+import {
+    Box,
+    ClickAwayListener,
+    Palette,
+    Popper,
+    PopperPlacementType,
+    useTheme,
+} from "@mui/material";
+import type { State } from "@popperjs/core";
 import { useHotkeys } from "hooks/useHotkeys";
 import { useZIndex } from "hooks/useZIndex";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -38,10 +46,10 @@ const getOffsetModifier = (placement: string) => {
     switch (placement) {
         case "top":
         case "bottom":
-            return { offset: [0, 10] };  // Adjust the Y-offset
+            return { offset: [0, 10] }; // Adjust the Y-offset
         case "left":
         case "right":
-            return { offset: [10, 0] };  // Adjust the X-offset
+            return { offset: [10, 0] }; // Adjust the X-offset
         default:
             return { offset: [0, 0] };
     }
@@ -70,7 +78,7 @@ export const PopoverWithArrow = ({
         }
     }, []);
 
-    // Timeout to prevent pressing the popover when it was just opened. 
+    // Timeout to prevent pressing the popover when it was just opened.
     // This is useful for mobile devices which can trigger multiple events on press.
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
     useEffect(() => {
@@ -86,9 +94,12 @@ export const PopoverWithArrow = ({
                 timeoutRef.current = null;
                 setCanTouch(true);
             }, 250);
+        } else {
+            stopTimeout();
         }
-        else { stopTimeout(); }
-        return () => { stopTimeout(); };
+        return () => {
+            stopTimeout();
+        };
     }, [isOpen]);
 
     const onClose = useCallback(() => {
@@ -100,7 +111,10 @@ export const PopoverWithArrow = ({
 
     useHotkeys([{ keys: ["Escape"], callback: onClose }], isOpen);
 
-    const arrowStyle = useMemo(() => ArrowStyles[actualPlacement](palette), [actualPlacement, palette]);
+    const arrowStyle = useMemo(
+        () => ArrowStyles[actualPlacement](palette),
+        [actualPlacement, palette],
+    );
     const offsetModifier = getOffsetModifier(actualPlacement);
 
     return (
@@ -111,9 +125,28 @@ export const PopoverWithArrow = ({
             placement={placement}
             popperOptions={{
                 modifiers: [
-                    { name: "flip", options: { altBoundary: true, fallbackPlacements: ["top", "right", "bottom", "left"] } },
-                    { name: "preventOverflow", options: { altAxis: true, tether: false, padding: 10, boundary: "viewport" } },
-                    { name: "onUpdate", enabled: true, phase: "write", fn: ({ state }: { state: any }) => handlePopperState(state) },
+                    {
+                        name: "flip",
+                        options: {
+                            altBoundary: true,
+                            fallbackPlacements: ["top", "right", "bottom", "left"],
+                        },
+                    },
+                    {
+                        name: "preventOverflow",
+                        options: {
+                            altAxis: true,
+                            tether: false,
+                            padding: 10,
+                            boundary: "viewport",
+                        },
+                    },
+                    {
+                        name: "onUpdate",
+                        enabled: true,
+                        phase: "write",
+                        fn: ({ state }: { state: State }) => handlePopperState(state),
+                    },
                     { name: "offset", options: offsetModifier },
                     { name: "arrow", options: { element: "[data-popper-arrow]" } },
                 ],
@@ -124,36 +157,46 @@ export const PopoverWithArrow = ({
             }}
         >
             <ClickAwayListener onClickAway={onClose}>
-                <Box sx={{
-                    paddingTop: actualPlacement === "bottom" ? "10px" : undefined,
-                    paddingBottom: actualPlacement === "top" ? "10px" : undefined,
-                    paddingLeft: actualPlacement === "right" ? "10px" : undefined,
-                    paddingRight: actualPlacement === "left" ? "10px" : undefined,
-                    ...(sxs?.paper ?? {}),
-                }}>
-                    <Box sx={{
-                        overflow: "auto",
-                        padding: 1,
-                        minWidth: "50px",
-                        minHeight: "25px",
-                        // Disable touch while timeout is active
-                        pointerEvents: canTouch ? "auto" : "none",
-                        background: palette.background.paper,
-                        boxShadow: 12,
-                        borderRadius: 2,
-                        ...(sxs?.content ?? {}),
-                    }}>
+                <Box
+                    sx={{
+                        paddingTop: actualPlacement === "bottom" ? "10px" : undefined,
+                        paddingBottom: actualPlacement === "top" ? "10px" : undefined,
+                        paddingLeft: actualPlacement === "right" ? "10px" : undefined,
+                        paddingRight: actualPlacement === "left" ? "10px" : undefined,
+                        ...(sxs?.paper ?? {}),
+                    }}
+                >
+                    <Box
+                        sx={{
+                            overflow: "auto",
+                            padding: 1,
+                            minWidth: "50px",
+                            minHeight: "25px",
+                            // Disable touch while timeout is active
+                            pointerEvents: canTouch ? "auto" : "none",
+                            background: palette.background.paper,
+                            boxShadow: 12,
+                            borderRadius: 2,
+                            ...(sxs?.content ?? {}),
+                        }}
+                    >
                         {children}
                     </Box>
                     {/* Triangle placed accordingly to the popper */}
-                    <Box data-popper-arrow sx={{
-                        width: "0",
-                        height: "0",
-                        ...arrowStyle,
-                        position: "absolute",
-                        margin: "10px",
-                        transform: actualPlacement === "top" || actualPlacement === "bottom" ? "translateX(-50%)" : "translateY(-50%)",
-                    }} />
+                    <Box
+                        data-popper-arrow
+                        sx={{
+                            width: "0",
+                            height: "0",
+                            ...arrowStyle,
+                            position: "absolute",
+                            margin: "10px",
+                            transform:
+                                actualPlacement === "top" || actualPlacement === "bottom"
+                                    ? "translateX(-50%)"
+                                    : "translateY(-50%)",
+                        }}
+                    />
                 </Box>
             </ClickAwayListener>
         </Popper>

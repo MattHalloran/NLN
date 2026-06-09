@@ -16,6 +16,16 @@ export class ApiError extends Error {
     }
 }
 
+export const getApiErrorCode = (error: unknown): unknown => {
+    if (!(error instanceof ApiError) || typeof error.data !== "object" || error.data === null) {
+        return undefined;
+    }
+    return "code" in error.data ? error.data.code : undefined;
+};
+
+export const getErrorMessage = (error: unknown, fallback: string): string =>
+    error instanceof Error ? error.message : fallback;
+
 // Generic fetch wrapper with error handling
 async function fetchApi<T>(endpoint: string, options?: RequestInit, retryCount = 0): Promise<T> {
     const url = `${REST_BASE_URL}${endpoint}`;

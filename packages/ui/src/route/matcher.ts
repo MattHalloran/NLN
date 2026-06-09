@@ -5,14 +5,9 @@ export interface DefaultParams {
 }
 export type Params<T extends DefaultParams = DefaultParams> = T;
 
-export type MatchWithParams<T extends DefaultParams = DefaultParams> = [
-    true,
-    Params<T>
-];
+export type MatchWithParams<T extends DefaultParams = DefaultParams> = [true, Params<T>];
 export type NoMatch = [false, null];
-export type Match<T extends DefaultParams = DefaultParams> =
-    | MatchWithParams<T>
-    | NoMatch;
+export type Match<T extends DefaultParams = DefaultParams> = MatchWithParams<T> | NoMatch;
 
 export type MatcherFn = (pattern: Path, path: Path) => Match;
 
@@ -22,7 +17,9 @@ export interface PatternToRegexpResult {
 }
 
 // creates a matcher function
-export default function makeMatcher(makeRegexpFn: (pattern: string) => PatternToRegexpResult = pathToRegexp) {
+export default function makeMatcher(
+    makeRegexpFn: (pattern: string) => PatternToRegexpResult = pathToRegexp,
+) {
     const cache: { [x: string]: PatternToRegexpResult } = {};
 
     // obtains a cached regexp version of the pattern
@@ -36,7 +33,7 @@ export default function makeMatcher(makeRegexpFn: (pattern: string) => PatternTo
         if (!out) return [false, null] as NoMatch;
 
         // formats an object with matched params
-        const params = keys.reduce((params: any, key: any, i: number) => {
+        const params = keys.reduce<DefaultParams>((params, key, i) => {
             params[key.name] = out[i + 1];
             return params;
         }, {});
@@ -51,20 +48,19 @@ const escapeRx = (str: string) => str.replace(/([.+*?=^!:${}()[\]|/\\])/g, "\\$1
 
 // returns a segment representation in RegExp based on flags
 // adapted and simplified version from path-to-regexp sources
-const rxForSegment = (repeat: any, optional: any, prefix: any) => {
+const rxForSegment = (repeat: boolean, optional: boolean, prefix: number) => {
     let capture = repeat ? "((?:[^\\/]+?)(?:\\/(?:[^\\/]+?))*)" : "([^\\/]+?)";
     if (optional && prefix) capture = "(?:\\/" + capture + ")";
     return capture + (optional ? "?" : "");
 };
 
-const pathToRegexp = (pattern: any) => {
+const pathToRegexp = (pattern: string): PatternToRegexpResult => {
     const groupRx = /:([A-Za-z0-9_]+)([?+*]?)/g;
 
     let match: RegExpExecArray | null = null,
         lastIndex = 0,
         result = "";
     const keys: { name: string }[] = [];
-
 
     while ((match = groupRx.exec(pattern)) !== null) {
         const [_, segment, mod] = match;

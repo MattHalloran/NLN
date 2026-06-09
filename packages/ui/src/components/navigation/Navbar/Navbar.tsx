@@ -2,6 +2,7 @@ import { APP_LINKS } from "@local/shared";
 import { alpha as _alpha, AppBar, Box, Stack, Typography, useTheme } from "@mui/material";
 import Logo from "assets/img/nln-logo-colorized.png";
 import { Title } from "components/text";
+import type { TitleProps } from "components/text/types";
 import { NavbarProps } from "components/types";
 import { BusinessContext } from "contexts/BusinessContext";
 import { useDimensions } from "hooks/useDimensions";
@@ -65,29 +66,41 @@ const LogoComponent = ({
                     }}
                 />
                 {/* Business name */}
-                {state === "full" && <Typography
-                    variant="h6"
-                    noWrap
-                    sx={{
-                        position: "relative",
-                        cursor: "pointer",
-                        marginLeft: "8px",
-                        fontSize: { xs: "1.2em", md: "1.5em" },
-                        fontFamily: "'Kite One', sans-serif",
-                        color: palette.primary.contrastText,
-                    }}
-                >{business?.BUSINESS_NAME?.Short ?? "New Life Nursery Inc."}</Typography>}
+                {state === "full" && (
+                    <Typography
+                        variant="h6"
+                        noWrap
+                        sx={{
+                            position: "relative",
+                            cursor: "pointer",
+                            marginLeft: "8px",
+                            fontSize: { xs: "1.2em", md: "1.5em" },
+                            fontFamily: "'Kite One', sans-serif",
+                            color: palette.primary.contrastText,
+                        }}
+                    >
+                        {business?.BUSINESS_NAME?.Short ?? "New Life Nursery Inc."}
+                    </Typography>
+                )}
             </Box>
         </Box>
     );
 };
 
-const TitleDisplay = ({ isMobile, title, titleComponent, help, options, shouldHideTitle, showOnMobile }: {
+const TitleDisplay = ({
+    isMobile,
+    title,
+    titleComponent,
+    help,
+    options,
+    shouldHideTitle,
+    showOnMobile,
+}: {
     isMobile: boolean;
     title?: string;
     titleComponent?: JSX.Element;
     help?: string;
-    options?: any;
+    options?: TitleProps["options"];
     shouldHideTitle?: boolean;
     showOnMobile?: boolean;
 }) => {
@@ -96,25 +109,25 @@ const TitleDisplay = ({ isMobile, title, titleComponent, help, options, shouldHi
     // Desktop title can be hidden
     if (!isMobile && shouldHideTitle) return null;
     // If no custom title component, use Title component
-    if (title && !titleComponent) return <Title
-        help={help}
-        options={options}
-        title={title}
-        variant="header"
-    />;
+    if (title && !titleComponent)
+        return <Title help={help} options={options} title={title} variant="header" />;
     // Otherwise, use custom title component
     if (titleComponent) return titleComponent;
     return null;
 };
 
 const NavListComponent = ({ isLeftHanded }: { isLeftHanded: boolean }) => {
-    return <Box sx={{
-        marginLeft: isLeftHanded ? 0 : "auto",
-        marginRight: isLeftHanded ? "auto" : 0,
-        maxHeight: "100%",
-    }}>
-        <NavList />
-    </Box>;
+    return (
+        <Box
+            sx={{
+                marginLeft: isLeftHanded ? 0 : "auto",
+                marginRight: isLeftHanded ? "auto" : 0,
+                maxHeight: "100%",
+            }}
+        >
+            <NavList />
+        </Box>
+    );
 };
 
 /**
@@ -134,86 +147,130 @@ const NavListComponent = ({ isLeftHanded }: { isLeftHanded: boolean }) => {
  * be passed in. This is useful for displaying a search bar, page tabs, etc. This
  * content is inside the navbar on small screens, and below the navbar on large screens.
  */
-export const Navbar = forwardRef(({
-    below,
-    help,
-    options,
-    shouldHideTitle = false,
-    startComponent,
-    tabTitle,
-    title,
-    titleComponent,
-}: NavbarProps, ref) => {
-    const business = useContext(BusinessContext);
-    const { breakpoints, palette } = useTheme();
-    const [, setLocation] = useLocation();
-    const { dimensions, ref: dimRef } = useDimensions();
+export const Navbar = forwardRef(
+    (
+        {
+            below,
+            help,
+            options,
+            shouldHideTitle = false,
+            startComponent,
+            tabTitle,
+            title,
+            titleComponent,
+        }: NavbarProps,
+        ref,
+    ) => {
+        const business = useContext(BusinessContext);
+        const { breakpoints, palette } = useTheme();
+        const [, setLocation] = useLocation();
+        const { dimensions, ref: dimRef } = useDimensions();
 
-    // Determine display texts and states
-    const isMobile = useWindowSize(({ width }) => width <= breakpoints.values.md);
-    const logoState = useMemo(() => {
-        if (isMobile && startComponent) return "none";
-        if (isMobile && (title || titleComponent)) return "icon";
-        return "full";
-    }, [isMobile, startComponent, title, titleComponent]);
-    const isLeftHanded = false;//useIsLeftHanded();
+        // Determine display texts and states
+        const isMobile = useWindowSize(({ width }) => width <= breakpoints.values.md);
+        const logoState = useMemo(() => {
+            if (isMobile && startComponent) return "none";
+            if (isMobile && (title || titleComponent)) return "icon";
+            return "full";
+        }, [isMobile, startComponent, title, titleComponent]);
+        const isLeftHanded = false; //useIsLeftHanded();
 
+        const toHome = useCallback(() => setLocation(APP_LINKS.Home), [setLocation]);
+        const scrollToTop = useCallback(() => window.scrollTo({ top: 0, behavior: "smooth" }), []);
 
-    const toHome = useCallback(() => setLocation(APP_LINKS.Home), [setLocation]);
-    const scrollToTop = useCallback(() => window.scrollTo({ top: 0, behavior: "smooth" }), []);
+        // Set tab to title
+        useEffect(() => {
+            const businessName = business?.BUSINESS_NAME?.Short ?? "New Life Nursery Inc.";
+            document.title =
+                tabTitle || title ? `${tabTitle ?? title} | ${businessName}` : businessName;
+        }, [business?.BUSINESS_NAME?.Short, tabTitle, title]);
 
-    // Set tab to title
-    useEffect(() => {
-        const businessName = business?.BUSINESS_NAME?.Short ?? "New Life Nursery Inc.";
-        document.title = tabTitle || title ? `${tabTitle ?? title} | ${businessName}` : businessName;
-    }, [business?.BUSINESS_NAME?.Short, tabTitle, title]);
-
-    return (
-        <Box
-            id='navbar'
-            ref={ref}
-            sx={{
-                paddingTop: `${Math.max(dimensions.height, 64)}px`,
-                "@media print": {
-                    display: "none",
-                },
-            }}>
-            <HideOnScroll forceVisible={!isMobile}>
-                <AppBar
-                    onClick={scrollToTop}
-                    ref={dimRef}
-                    sx={{
-                        ...noSelect,
-                        background: palette.primary.dark,
-                        minHeight: "64px!important",
-                        position: "fixed", // Allows items to be displayed below the navbar
-                        justifyContent: "center",
-                        zIndex,
-                    }}>
-                    <Stack direction="row" spacing={0} alignItems="center" sx={{
-                        paddingLeft: 1,
-                        paddingRight: 1,
-                        // Reverse order for left-handed users on mobile
-                        flexDirection: isLeftHanded ? "row-reverse" : "row",
-                    }}>
-                        {startComponent ? <Box sx={isMobile ? {
-                            marginRight: isLeftHanded ? 1 : "auto",
-                            marginLeft: isLeftHanded ? "auto" : 1,
-                        } : {}}>{startComponent}</Box> : null}
-                        {/* Logo */}
-                        <LogoComponent {...{ isLeftHanded, isMobile, state: logoState, onClick: toHome }} />
-                        {/* Title displayed here on mobile */}
-                        <TitleDisplay {...{ isMobile, title, titleComponent, help, options, shouldHideTitle, showOnMobile: true }} />
-                        <NavListComponent {...{ isLeftHanded }} />
-                    </Stack>
-                    {/* "below" displayed inside AppBar on mobile */}
-                    {isMobile && below}
-                </AppBar>
-            </HideOnScroll>
-            {/* Title displayed here on desktop */}
-            <TitleDisplay {...{ isMobile, title, titleComponent, help, options, shouldHideTitle, showOnMobile: false }} />
-            {/* "below" and title displayered here on desktop */}
-            {!isMobile && below}
-        </Box>
-    );
-});
+        return (
+            <Box
+                id="navbar"
+                ref={ref}
+                sx={{
+                    paddingTop: `${Math.max(dimensions.height, 64)}px`,
+                    "@media print": {
+                        display: "none",
+                    },
+                }}
+            >
+                <HideOnScroll forceVisible={!isMobile}>
+                    <AppBar
+                        onClick={scrollToTop}
+                        ref={dimRef}
+                        sx={{
+                            ...noSelect,
+                            background: palette.primary.dark,
+                            minHeight: "64px!important",
+                            position: "fixed", // Allows items to be displayed below the navbar
+                            justifyContent: "center",
+                            zIndex,
+                        }}
+                    >
+                        <Stack
+                            direction="row"
+                            spacing={0}
+                            alignItems="center"
+                            sx={{
+                                paddingLeft: 1,
+                                paddingRight: 1,
+                                // Reverse order for left-handed users on mobile
+                                flexDirection: isLeftHanded ? "row-reverse" : "row",
+                            }}
+                        >
+                            {startComponent ? (
+                                <Box
+                                    sx={
+                                        isMobile
+                                            ? {
+                                                  marginRight: isLeftHanded ? 1 : "auto",
+                                                  marginLeft: isLeftHanded ? "auto" : 1,
+                                              }
+                                            : {}
+                                    }
+                                >
+                                    {startComponent}
+                                </Box>
+                            ) : null}
+                            {/* Logo */}
+                            <LogoComponent
+                                {...{ isLeftHanded, isMobile, state: logoState, onClick: toHome }}
+                            />
+                            {/* Title displayed here on mobile */}
+                            <TitleDisplay
+                                {...{
+                                    isMobile,
+                                    title,
+                                    titleComponent,
+                                    help,
+                                    options,
+                                    shouldHideTitle,
+                                    showOnMobile: true,
+                                }}
+                            />
+                            <NavListComponent {...{ isLeftHanded }} />
+                        </Stack>
+                        {/* "below" displayed inside AppBar on mobile */}
+                        {isMobile && below}
+                    </AppBar>
+                </HideOnScroll>
+                {/* Title displayed here on desktop */}
+                <TitleDisplay
+                    {...{
+                        isMobile,
+                        title,
+                        titleComponent,
+                        help,
+                        options,
+                        shouldHideTitle,
+                        showOnMobile: false,
+                    }}
+                />
+                {/* "below" and title displayered here on desktop */}
+                {!isMobile && below}
+            </Box>
+        );
+    },
+);

@@ -1,11 +1,18 @@
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText, useTheme } from "@mui/material";
+import {
+    Button,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogContentText,
+    useTheme,
+} from "@mui/material";
 import { DialogTitle } from "components";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type MouseEvent } from "react";
 import { PubSub } from "utils";
 
 interface StateButton {
     text: string;
-    onClick?: (() => void);
+    onClick?: () => void;
 }
 
 export interface AlertDialogState {
@@ -28,14 +35,24 @@ export const AlertDialog = () => {
     const open = Boolean(state.title) || Boolean(state.message);
 
     useEffect(() => {
-        const dialogSub = PubSub.get().subscribeAlertDialog((o) => setState({ ...default_state, ...o }));
-        return () => { PubSub.get().unsubscribe(dialogSub); };
+        const dialogSub = PubSub.get().subscribeAlertDialog((o) =>
+            setState({ ...default_state, ...o }),
+        );
+        return () => {
+            PubSub.get().unsubscribe(dialogSub);
+        };
     }, []);
 
-    const handleClick = useCallback((event: any, action: ((e?: any) => void) | null | undefined) => {
-        if (action) action(event);
-        setState(default_state);
-    }, []);
+    const handleClick = useCallback(
+        (
+            event: MouseEvent<HTMLButtonElement>,
+            action: ((e?: MouseEvent<HTMLButtonElement>) => void) | null | undefined,
+        ) => {
+            if (action) action(event);
+            setState(default_state);
+        },
+        [],
+    );
 
     const resetState = useCallback(() => setState(default_state), []);
 
@@ -55,34 +72,33 @@ export const AlertDialog = () => {
                 },
             }}
         >
-            {state.title && <DialogTitle
-                id={titleAria}
-                title={state.title}
-                onClose={resetState}
-            />}
+            {state.title && <DialogTitle id={titleAria} title={state.title} onClose={resetState} />}
             <DialogContent>
-                <DialogContentText id={descriptionAria} sx={{
-                    whiteSpace: "pre-wrap",
-                    wordWrap: "break-word",
-                    paddingTop: 2,
-                }}>
+                <DialogContentText
+                    id={descriptionAria}
+                    sx={{
+                        whiteSpace: "pre-wrap",
+                        wordWrap: "break-word",
+                        paddingTop: 2,
+                    }}
+                >
                     {state.message}
                 </DialogContentText>
             </DialogContent>
             {/* Actions */}
             <DialogActions>
-                {state?.buttons && state.buttons.length > 0 ? (
-                    state.buttons.map((b: StateButton, index) => (
-                        <Button
-                            key={`alert-button-${index}`}
-                            onClick={(e) => handleClick(e, b.onClick)}
-                            variant="text"
-                        >
-                            {b.text}
-                        </Button>
-                    ))
-                ) : null}
+                {state?.buttons && state.buttons.length > 0
+                    ? state.buttons.map((b: StateButton, index) => (
+                          <Button
+                              key={`alert-button-${index}`}
+                              onClick={(e) => handleClick(e, b.onClick)}
+                              variant="text"
+                          >
+                              {b.text}
+                          </Button>
+                      ))
+                    : null}
             </DialogActions>
-        </Dialog >
+        </Dialog>
     );
 };

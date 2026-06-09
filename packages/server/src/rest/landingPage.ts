@@ -1101,7 +1101,7 @@ router.put("/", async (req: AuthenticatedRequest, res: Response) => {
 router.put("/contact-info", async (req: Request, res: Response) => {
     try {
         // Check admin access (using the auth middleware)
-        if (!(req as any).isAdmin) {
+        if (!req.isAdmin) {
             return res.status(403).json({ error: "Admin access required" });
         }
 
@@ -1264,7 +1264,7 @@ router.put("/contact-info", async (req: Request, res: Response) => {
 // UPDATED: Now accepts the same nested structure as GET /landing-page returns
 router.put("/settings", async (req: Request, res: Response) => {
     try {
-        if (!(req as any).isAdmin) {
+        if (!req.isAdmin) {
             return res.status(403).json({ error: "Admin access required" });
         }
 
@@ -1377,7 +1377,7 @@ router.put("/settings", async (req: Request, res: Response) => {
 // GET endpoint to retrieve all variants (admin only)
 router.get("/variants", async (req: Request, res: Response) => {
     try {
-        if (!(req as any).isAdmin) {
+        if (!req.isAdmin) {
             return res.status(403).json({ error: "Admin access required" });
         }
 
@@ -1395,7 +1395,7 @@ router.get("/variants", async (req: Request, res: Response) => {
 // GET endpoint to retrieve a specific variant (admin only)
 router.get("/variants/:id", async (req: Request, res: Response) => {
     try {
-        if (!(req as any).isAdmin) {
+        if (!req.isAdmin) {
             return res.status(403).json({ error: "Admin access required" });
         }
 
@@ -1419,7 +1419,7 @@ router.get("/variants/:id", async (req: Request, res: Response) => {
 // POST endpoint to create a new variant (admin only)
 router.post("/variants", async (req: Request, res: Response) => {
     try {
-        if (!(req as any).isAdmin) {
+        if (!req.isAdmin) {
             return res.status(403).json({ error: "Admin access required" });
         }
 
@@ -1508,7 +1508,7 @@ router.post("/variants", async (req: Request, res: Response) => {
 // PUT endpoint to update a variant (admin only)
 router.put("/variants/:id", async (req: Request, res: Response) => {
     try {
-        if (!(req as any).isAdmin) {
+        if (!req.isAdmin) {
             return res.status(403).json({ error: "Admin access required" });
         }
 
@@ -1568,7 +1568,7 @@ router.put("/variants/:id", async (req: Request, res: Response) => {
 // DELETE endpoint to delete a variant (admin only)
 router.delete("/variants/:id", async (req: Request, res: Response) => {
     try {
-        if (!(req as any).isAdmin) {
+        if (!req.isAdmin) {
             return res.status(403).json({ error: "Admin access required" });
         }
 
@@ -1627,7 +1627,7 @@ router.delete("/variants/:id", async (req: Request, res: Response) => {
 // POST endpoint to promote a variant to official (admin only)
 router.post("/variants/:id/promote", async (req: Request, res: Response) => {
     try {
-        if (!(req as any).isAdmin) {
+        if (!req.isAdmin) {
             return res.status(403).json({ error: "Admin access required" });
         }
 
@@ -1746,7 +1746,7 @@ router.post("/variants/:id/track", async (req: Request, res: Response) => {
 // POST endpoint to toggle variant status (enable/disable) (admin only)
 router.post("/variants/:id/toggle", async (req: Request, res: Response) => {
     try {
-        if (!(req as any).isAdmin) {
+        if (!req.isAdmin) {
             return res.status(403).json({ error: "Admin access required" });
         }
 

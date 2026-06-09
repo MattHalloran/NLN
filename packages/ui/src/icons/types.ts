@@ -1,9 +1,11 @@
+import type { CSSProperties } from "react";
+
 export interface SvgProps {
     fill?: string;
     iconTitle?: string;
     id?: string;
-    style?: any;
-    onClick?: () => any;
+    style?: CSSProperties;
+    onClick?: () => unknown;
     width?: number | string | null;
     height?: number | string | null;
 }

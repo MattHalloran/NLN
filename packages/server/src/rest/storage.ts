@@ -34,6 +34,12 @@ type ImageWithLabels = {
     image_labels: Array<{ label: string }>;
 };
 
+type UnlabeledImageSummary = {
+    hash: string;
+    alt: string | null;
+    unlabeled_since: Date | null;
+};
+
 /**
  * Invalidate the storage stats cache
  * Call this after operations that affect storage (e.g., cleanup)
@@ -801,7 +807,7 @@ router.get("/recent-activity", async (req: Request, res: Response) => {
                 createdAt: img.created_at,
                 labels: img.image_labels.map((l: { label: string }) => l.label),
             })),
-            recentlyUnlabeled: recentlyUnlabeled.map((img: ImageWithLabels) => ({
+            recentlyUnlabeled: recentlyUnlabeled.map((img: UnlabeledImageSummary) => ({
                 hash: img.hash,
                 alt: img.alt,
                 unlabeledSince: img.unlabeled_since,

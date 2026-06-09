@@ -1,5 +1,6 @@
 import { APP_LINKS, requestPasswordChangeSchema } from "@local/shared";
 import { Box, Button, Grid, InputAdornment, TextField, Typography, useTheme } from "@mui/material";
+import { getErrorMessage } from "api/rest/client";
 import { useRequestPasswordChange } from "api/rest/hooks";
 import { BreadcrumbsBase } from "components/breadcrumbs/BreadcrumbsBase/BreadcrumbsBase";
 import { SnackSeverity } from "components";
@@ -21,7 +22,6 @@ const emailStartAdornment = {
     ),
 };
 
-
 export const ForgotPasswordForm = () => {
     const { spacing: _spacing, palette } = useTheme();
     const [, setLocation] = useLocation();
@@ -36,11 +36,14 @@ export const ForgotPasswordForm = () => {
         onSubmit: async (values) => {
             try {
                 await requestPasswordChange({ email: values.email });
-                PubSub.get().publishSnack({ message: "Request sent. Please check email.", severity: SnackSeverity.Success });
-                setLocation(APP_LINKS.Home);
-            } catch (error: any) {
                 PubSub.get().publishSnack({
-                    message: error?.message || "Failed to send reset link. Please try again.",
+                    message: "Request sent. Please check email.",
+                    severity: SnackSeverity.Success,
+                });
+                setLocation(APP_LINKS.Home);
+            } catch (error) {
+                PubSub.get().publishSnack({
+                    message: getErrorMessage(error, "Failed to send reset link. Please try again."),
                     severity: SnackSeverity.Error,
                 });
             }
@@ -67,9 +70,10 @@ export const ForgotPasswordForm = () => {
                         <Box
                             sx={{
                                 p: 3,
-                                backgroundColor: palette.mode === "light"
-                                    ? "rgba(0, 0, 0, 0.02)"
-                                    : "rgba(255, 255, 255, 0.02)",
+                                backgroundColor:
+                                    palette.mode === "light"
+                                        ? "rgba(0, 0, 0, 0.02)"
+                                        : "rgba(255, 255, 255, 0.02)",
                                 borderRadius: 1,
                                 border: `1px solid ${palette.divider}`,
                             }}
@@ -93,7 +97,9 @@ export const ForgotPasswordForm = () => {
                                     lineHeight: 1.6,
                                 }}
                             >
-                                Enter your email address below and we'll send you a secure link to reset your password. The link will expire in 24 hours for security purposes.
+                                Enter your email address below and we'll send you a secure link to
+                                reset your password. The link will expire in 24 hours for security
+                                purposes.
                             </Typography>
                         </Box>
                     </Grid>
@@ -131,7 +137,14 @@ export const ForgotPasswordForm = () => {
                 </Grid>
 
                 {/* Navigation Links */}
-                <Box sx={{ textAlign: "center", mt: 4, pt: 3, borderTop: `1px solid ${palette.divider}` }}>
+                <Box
+                    sx={{
+                        textAlign: "center",
+                        mt: 4,
+                        pt: 3,
+                        borderTop: `1px solid ${palette.divider}`,
+                    }}
+                >
                     <BreadcrumbsBase
                         paths={breadcrumbPaths}
                         separator={"•"}
