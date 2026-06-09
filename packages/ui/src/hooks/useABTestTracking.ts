@@ -10,18 +10,19 @@ import { restApi } from "api/rest/client";
  */
 export function useABTestTracking() {
     const { data } = useLandingPage();
+    const variantId = data?._meta?.variantId;
 
     const trackConversion = useCallback(async () => {
-        if (data?._meta?.variantId) {
+        if (variantId) {
             try {
-                await restApi.trackVariantEvent(data._meta.variantId, {
+                await restApi.trackVariantEvent(variantId, {
                     eventType: "conversion",
                 });
             } catch (error) {
                 console.error("Error tracking conversion:", error);
             }
         }
-    }, [data?._meta?.variantId]); // Only depend on variantId to avoid unnecessary re-renders
+    }, [variantId]);
 
     return { trackConversion };
 }

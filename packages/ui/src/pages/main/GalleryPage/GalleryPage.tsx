@@ -1,4 +1,5 @@
 import { IMAGE_SIZE } from "@local/shared";
+import type { Image } from "api/rest/client";
 import {
     Box,
     Container,
@@ -21,23 +22,26 @@ import {
 } from "@mui/material";
 import { useImagesByLabel } from "api/rest/hooks";
 import { SnackSeverity } from "components";
-import { InformationalTabOption, InformationalTabs } from "components/breadcrumbs/InformationalTabs/InformationalTabs";
+import {
+    InformationalTabOption,
+    InformationalTabs,
+} from "components/breadcrumbs/InformationalTabs/InformationalTabs";
 import { TopBar } from "components/navigation/TopBar/TopBar";
 import { NoImageIcon } from "icons";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { PubSub, getImageSrc, getServerUrl } from "utils";
 
 // Using inline SVG icons since @mui/icons-material may not be installed
 const CloseIcon = () => (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
     </svg>
 );
 
 const ZoomInIcon = () => (
     <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
-        <path d="M12 10h-2v2H9v-2H7V9h2V7h1v2h2v1z"/>
+        <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+        <path d="M12 10h-2v2H9v-2H7V9h2V7h1v2h2v1z" />
     </svg>
 );
 
@@ -50,7 +54,7 @@ type ImageData = {
     title: string;
     description?: string;
     featured?: boolean;
-}
+};
 
 // Real image data is fetched from the REST API
 
@@ -58,12 +62,11 @@ const categories = ["All", "Gallery"];
 
 export const GalleryPage = () => {
     const theme = useTheme();
-    const [images, setImages] = useState<ImageData[]>([]); // Start with empty array, will be populated from API
     const [selectedCategory, setSelectedCategory] = useState<string>("All");
     const [selectedImage, setSelectedImage] = useState<ImageData | null>(null);
     const [lightboxOpen, setLightboxOpen] = useState(false);
     const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
-    
+
     // Query for gallery images from the API
     const { data: imageData, error } = useImagesByLabel("gallery");
 
@@ -77,13 +80,12 @@ export const GalleryPage = () => {
         }
     }, [error]);
 
-    // Process image data from API
-    useEffect(() => {
+    const images = useMemo(() => {
         if (!Array.isArray(imageData)) {
-            setImages([]);
-            return;
+            return [];
         }
-        setImages(imageData.map((data: any, index: number) => ({
+
+        return imageData.map((data: Image, index: number) => ({
             id: data.hash,
             alt: data.alt || `Gallery Image ${index + 1}`,
             src: `${getServerUrl()}/${getImageSrc(data)}`,
@@ -92,12 +94,13 @@ export const GalleryPage = () => {
             title: data.alt || `Gallery Image ${index + 1}`,
             description: data.description || undefined,
             featured: false, // Can be enabled later: index < 3
-        })));
+        }));
     }, [imageData]);
 
-    const filteredImages = selectedCategory === "All" 
-        ? images 
-        : images.filter(img => img.category === selectedCategory);
+    const filteredImages =
+        selectedCategory === "All"
+            ? images
+            : images.filter((img) => img.category === selectedCategory);
 
     const handleImageClick = (image: ImageData) => {
         setSelectedImage(image);
@@ -113,7 +116,7 @@ export const GalleryPage = () => {
     };
 
     const handleImageError = useCallback((imageId: string) => {
-        setImageErrors(prev => new Set(prev).add(imageId));
+        setImageErrors((prev) => new Set(prev).add(imageId));
     }, []);
 
     return (
@@ -124,7 +127,7 @@ export const GalleryPage = () => {
                 title="Gallery"
                 below={<InformationalTabs defaultTab={InformationalTabOption.Gallery} />}
             />
-            
+
             {/* Hero Section */}
             <Box
                 sx={{
@@ -137,10 +140,10 @@ export const GalleryPage = () => {
             >
                 <Container maxWidth="lg">
                     <Box sx={{ textAlign: "center" }}>
-                        <Typography 
-                            variant="h1" 
-                            component="h1" 
-                            sx={{ 
+                        <Typography
+                            variant="h1"
+                            component="h1"
+                            sx={{
                                 color: "white",
                                 fontWeight: 400,
                                 mb: 3,
@@ -151,19 +154,19 @@ export const GalleryPage = () => {
                         >
                             Our Collection
                         </Typography>
-                        <Box 
-                            sx={{ 
-                                width: 80, 
-                                height: 3, 
-                                backgroundColor: theme.palette.primary.main, 
-                                mx: "auto", 
-                                mb: 4, 
-                            }} 
+                        <Box
+                            sx={{
+                                width: 80,
+                                height: 3,
+                                backgroundColor: theme.palette.primary.main,
+                                mx: "auto",
+                                mb: 4,
+                            }}
                         />
-                        <Typography 
-                            variant="h4" 
-                            component="h2" 
-                            sx={{ 
+                        <Typography
+                            variant="h4"
+                            component="h2"
+                            sx={{
                                 color: theme.palette.grey[200],
                                 fontWeight: 300,
                                 fontSize: { xs: "1.3rem", md: "1.6rem" },
@@ -173,7 +176,8 @@ export const GalleryPage = () => {
                                 fontStyle: "italic",
                             }}
                         >
-                            Explore our extensive selection of trees, shrubs, and perennials cultivated with four decades of expertise
+                            Explore our extensive selection of trees, shrubs, and perennials
+                            cultivated with four decades of expertise
                         </Typography>
                     </Box>
                 </Container>
@@ -183,15 +187,15 @@ export const GalleryPage = () => {
             <Container maxWidth="lg" sx={{ pb: 8 }}>
                 {/* Category Filters */}
                 <Box sx={{ mb: 6 }}>
-                    <Paper 
+                    <Paper
                         elevation={0}
-                        sx={{ 
+                        sx={{
                             borderBottom: `1px solid ${theme.palette.grey[300]}`,
                             backgroundColor: "transparent",
                         }}
                     >
-                        <Tabs 
-                            value={selectedCategory} 
+                        <Tabs
+                            value={selectedCategory}
                             onChange={handleCategoryChange}
                             variant="scrollable"
                             scrollButtons="auto"
@@ -215,7 +219,7 @@ export const GalleryPage = () => {
                                 },
                             }}
                         >
-                            {categories.map(category => (
+                            {categories.map((category) => (
                                 <Tab key={category} label={category} value={category} />
                             ))}
                         </Tabs>
@@ -224,9 +228,9 @@ export const GalleryPage = () => {
 
                 {/* Gallery Stats */}
                 <Box sx={{ mb: 5, textAlign: "center" }}>
-                    <Typography 
-                        variant="body1" 
-                        sx={{ 
+                    <Typography
+                        variant="body1"
+                        sx={{
                             color: theme.palette.text.secondary,
                             fontStyle: "italic",
                             letterSpacing: "0.02em",
@@ -241,8 +245,8 @@ export const GalleryPage = () => {
                     {filteredImages.map((image) => (
                         <Grid item xs={12} sm={6} md={4} key={image.id}>
                             <Fade in timeout={500}>
-                                <Card 
-                                    sx={{ 
+                                <Card
+                                    sx={{
                                         cursor: "pointer",
                                         transition: "all 0.3s ease",
                                         border: `1px solid ${theme.palette.grey[200]}`,
@@ -296,13 +300,13 @@ export const GalleryPage = () => {
                                                     backgroundColor: theme.palette.grey[100],
                                                 }}
                                             >
-                                                <NoImageIcon 
-                                                    style={{ 
-                                                        width: "60%", 
+                                                <NoImageIcon
+                                                    style={{
+                                                        width: "60%",
                                                         height: "60%",
                                                         opacity: 0.3,
                                                         fill: theme.palette.grey[400],
-                                                    }} 
+                                                    }}
                                                 />
                                             </Box>
                                         ) : (
@@ -330,7 +334,10 @@ export const GalleryPage = () => {
                                                 left: 0,
                                                 right: 0,
                                                 bottom: 0,
-                                                backgroundColor: alpha(theme.palette.common.black, 0.5),
+                                                backgroundColor: alpha(
+                                                    theme.palette.common.black,
+                                                    0.5,
+                                                ),
                                                 display: "flex",
                                                 alignItems: "center",
                                                 justifyContent: "center",
@@ -342,10 +349,10 @@ export const GalleryPage = () => {
                                         </Box>
                                     </Box>
                                     <CardContent sx={{ p: 3 }}>
-                                        <Typography 
-                                            variant="h6" 
-                                            component="h3" 
-                                            sx={{ 
+                                        <Typography
+                                            variant="h6"
+                                            component="h3"
+                                            sx={{
                                                 fontWeight: 500,
                                                 mb: 1,
                                                 fontFamily: "serif",
@@ -355,9 +362,9 @@ export const GalleryPage = () => {
                                             {image.title}
                                         </Typography>
                                         {image.description && (
-                                            <Typography 
-                                                variant="body2" 
-                                                sx={{ 
+                                            <Typography
+                                                variant="body2"
+                                                sx={{
                                                     color: theme.palette.text.secondary,
                                                     fontStyle: "italic",
                                                     mb: 2,
@@ -431,13 +438,13 @@ export const GalleryPage = () => {
                                             backgroundColor: theme.palette.grey[100],
                                         }}
                                     >
-                                        <NoImageIcon 
-                                            style={{ 
-                                                width: "200px", 
+                                        <NoImageIcon
+                                            style={{
+                                                width: "200px",
                                                 height: "200px",
                                                 opacity: 0.3,
                                                 fill: theme.palette.grey[400],
-                                            }} 
+                                            }}
                                         />
                                     </Box>
                                 ) : (
@@ -459,9 +466,9 @@ export const GalleryPage = () => {
                                         borderTop: `3px solid ${theme.palette.primary.main}`,
                                     }}
                                 >
-                                    <Typography 
-                                        variant="h5" 
-                                        sx={{ 
+                                    <Typography
+                                        variant="h5"
+                                        sx={{
                                             fontWeight: 500,
                                             mb: 1,
                                             fontFamily: "serif",
@@ -470,9 +477,9 @@ export const GalleryPage = () => {
                                         {selectedImage.title}
                                     </Typography>
                                     {selectedImage.description && (
-                                        <Typography 
-                                            variant="body1" 
-                                            sx={{ 
+                                        <Typography
+                                            variant="body1"
+                                            sx={{
                                                 color: theme.palette.text.secondary,
                                                 fontStyle: "italic",
                                             }}

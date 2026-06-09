@@ -39,7 +39,6 @@ function getCsrfTokenFromCookie(): string | null {
  * Clear CSRF token from cookie
  */
 function clearCsrfTokenCookie(): void {
-    console.log("[CSRF] Clearing old CSRF token cookie");
     document.cookie = `${CSRF_COOKIE_NAME}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
 }
 
@@ -50,14 +49,12 @@ function clearCsrfTokenCookie(): void {
 async function fetchCsrfToken(): Promise<string | null> {
     // If a fetch is already in progress, wait for it
     if (fetchPromise) {
-        console.log("[CSRF] Fetch already in progress, waiting...");
         return fetchPromise;
     }
 
     // Create new fetch promise
     fetchPromise = (async () => {
         try {
-            console.log("[CSRF] Fetching CSRF token from server...");
             const response = await fetch(`${getServerUrl()}/rest/v1/csrf-token`, {
                 method: "GET",
                 credentials: "include", // Important: include cookies
@@ -74,8 +71,7 @@ async function fetchCsrfToken(): Promise<string | null> {
             if (token) {
                 // Cache token in memory for 23 hours (cookie is valid for 24 hours)
                 cachedToken = token;
-                tokenExpiry = Date.now() + (23 * 60 * 60 * 1000);
-                console.log("[CSRF] Successfully fetched and cached CSRF token:", token.substring(0, 20) + "...");
+                tokenExpiry = Date.now() + 23 * 60 * 60 * 1000;
             }
 
             return token;
@@ -102,7 +98,6 @@ async function fetchCsrfToken(): Promise<string | null> {
 export async function getCsrfToken(): Promise<string | null> {
     // Check cache first
     if (cachedToken && Date.now() < tokenExpiry) {
-        console.log("[CSRF] Using cached token:", cachedToken.substring(0, 20) + "...");
         return cachedToken;
     }
 
@@ -110,14 +105,12 @@ export async function getCsrfToken(): Promise<string | null> {
     let token = getCsrfTokenFromCookie();
 
     if (token) {
-        console.log("[CSRF] Found token in cookie:", token.substring(0, 20) + "...");
         // Cache it
         cachedToken = token;
-        tokenExpiry = Date.now() + (23 * 60 * 60 * 1000);
+        tokenExpiry = Date.now() + 23 * 60 * 60 * 1000;
         return token;
     }
 
-    console.log("[CSRF] No cached or cookie token, fetching from server...");
     // Fetch from server (this will cache it automatically)
     token = await fetchCsrfToken();
 
@@ -153,21 +146,17 @@ let initPromise: Promise<void> | null = null;
 export async function initializeCsrfToken(): Promise<void> {
     // If already initialized or initializing, return existing promise
     if (isInitializing && initPromise) {
-        console.log("[CSRF] Initialization already in progress, waiting...");
         return initPromise;
     }
 
     if (cachedToken && Date.now() < tokenExpiry) {
-        console.log("[CSRF] Token already cached, skipping initialization");
         return;
     }
 
     isInitializing = true;
     initPromise = (async () => {
         try {
-            console.log("[CSRF] Initializing CSRF token on app load...");
             await getCsrfToken();
-            console.log("[CSRF] CSRF token initialization complete");
         } finally {
             isInitializing = false;
             initPromise = null;
@@ -197,7 +186,6 @@ export function requiresCsrfToken(method: string): boolean {
  * Call this when you get a CSRF validation error
  */
 export async function refreshCsrfToken(): Promise<string | null> {
-    console.log("[CSRF] Refreshing CSRF token...");
     // Clear cache
     cachedToken = null;
     tokenExpiry = 0;
@@ -205,6 +193,5 @@ export async function refreshCsrfToken(): Promise<string | null> {
     clearCsrfTokenCookie();
     // Fetch new token (this will cache it)
     const token = await fetchCsrfToken();
-    console.log("[CSRF] Token refreshed:", token ? token.substring(0, 20) + "..." : "failed");
     return token;
 }

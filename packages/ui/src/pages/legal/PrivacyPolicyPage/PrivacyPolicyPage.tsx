@@ -4,7 +4,7 @@ import { LazyMarkdown, PageContainer } from "components";
 import { PolicyTabOption, PolicyTabs } from "components/breadcrumbs/PolicyTabs/PolicyTabs";
 import { TopBar } from "components/navigation/TopBar/TopBar";
 import { BusinessContext } from "contexts/BusinessContext";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useMemo } from "react";
 import { convertToDot, valueFromDot } from "utils";
 
 const OuterBox = styled(Box)(({ theme }) => ({
@@ -106,16 +106,19 @@ export const PrivacyPolicyPage = () => {
     const { palette } = useTheme();
     const business = useContext(BusinessContext);
 
-    const [privacy, setPrivacy] = useState<string | null>(null);
     const { data: privacyData } = useReadAssets(["privacy.md"]);
 
-    useEffect(() => {
-        if (!privacyData || !privacyData["privacy.md"]) return;
+    const privacy = useMemo(() => {
+        if (!privacyData || !privacyData["privacy.md"]) return null;
+
         let data = privacyData["privacy.md"];
-        // Replace variables
-        const business_fields = Object.keys(convertToDot(business || {} as any));
-        business_fields.forEach(f => data = data.replaceAll(`<${f}>`, valueFromDot(business || {} as any, f) || ""));
-        setPrivacy(data);
+        const businessData = (business ?? {}) as Record<string, unknown>;
+        const businessFields = Object.keys(convertToDot(businessData));
+        businessFields.forEach((field) => {
+            data = data.replaceAll(`<${field}>`, String(valueFromDot(businessData, field) || ""));
+        });
+
+        return data;
     }, [privacyData, business]);
 
     return (
@@ -143,7 +146,8 @@ export const PrivacyPolicyPage = () => {
                         className="last-updated"
                         sx={{ color: palette.text.secondary }}
                     >
-                        This document outlines how we collect, use, and protect your personal information when you use our services.
+                        This document outlines how we collect, use, and protect your personal
+                        information when you use our services.
                     </Typography>
                 </ContentHeader>
                 <LazyMarkdown>{privacy ?? ""}</LazyMarkdown>

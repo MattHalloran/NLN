@@ -4,7 +4,7 @@ import { LazyMarkdown, PageContainer } from "components";
 import { PolicyTabOption, PolicyTabs } from "components/breadcrumbs/PolicyTabs/PolicyTabs";
 import { TopBar } from "components/navigation/TopBar/TopBar";
 import { BusinessContext } from "contexts/BusinessContext";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useMemo } from "react";
 import { convertToDot, valueFromDot } from "utils";
 
 const OuterBox = styled(Box)(({ theme }) => ({
@@ -106,16 +106,19 @@ export const TermsPage = () => {
     const { palette } = useTheme();
     const business = useContext(BusinessContext);
 
-    const [terms, setTerms] = useState<string>("");
     const { data: termsData } = useReadAssets(["terms.md"]);
 
-    useEffect(() => {
-        if (!termsData || !termsData["terms.md"]) return;
+    const terms = useMemo(() => {
+        if (!termsData || !termsData["terms.md"]) return "";
+
         let data = termsData["terms.md"];
-        // Replace variables
-        const business_fields = Object.keys(convertToDot(business || {} as any));
-        business_fields.forEach(f => data = data.replaceAll(`<${f}>`, valueFromDot(business || {} as any, f) || ""));
-        setTerms(data);
+        const businessData = (business ?? {}) as Record<string, unknown>;
+        const businessFields = Object.keys(convertToDot(businessData));
+        businessFields.forEach((field) => {
+            data = data.replaceAll(`<${field}>`, String(valueFromDot(businessData, field) || ""));
+        });
+
+        return data;
     }, [termsData, business]);
 
     return (
@@ -143,7 +146,8 @@ export const TermsPage = () => {
                         className="last-updated"
                         sx={{ color: palette.text.secondary }}
                     >
-                        These terms and conditions govern your use of our website and services. Please read them carefully.
+                        These terms and conditions govern your use of our website and services.
+                        Please read them carefully.
                     </Typography>
                 </ContentHeader>
                 <LazyMarkdown>{terms}</LazyMarkdown>

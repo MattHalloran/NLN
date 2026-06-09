@@ -95,12 +95,11 @@ export const AdminSystemLogs = () => {
 
     // Fetch logs
     const fetchLogs = useCallback(
-        async (resetOffset = false) => {
+        async (currentOffset = 0, append = false) => {
             setLoading(true);
             setError(null);
 
             try {
-                const currentOffset = resetOffset ? 0 : offset;
                 const response = await restApi.getLogs({
                     file: logFile,
                     lines: linesPerPage,
@@ -111,11 +110,11 @@ export const AdminSystemLogs = () => {
                     dateTo: dateTo || undefined,
                 });
 
-                if (resetOffset) {
+                if (append) {
+                    setLogs((prev) => [...prev, ...response.logs]);
+                } else {
                     setLogs(response.logs);
                     setOffset(0);
-                } else {
-                    setLogs((prev) => [...prev, ...response.logs]);
                 }
 
                 setHasMore(response.hasMore);
@@ -125,7 +124,7 @@ export const AdminSystemLogs = () => {
                 setLoading(false);
             }
         },
-        [logFile, level, search, dateFrom, dateTo, offset],
+        [logFile, level, search, dateFrom, dateTo],
     );
 
     // Fetch stats
@@ -140,9 +139,9 @@ export const AdminSystemLogs = () => {
 
     // Initial load
     useEffect(() => {
-        fetchLogs(true);
+        fetchLogs(0, false);
         fetchStats();
-    }, [logFile, level, search, dateFrom, dateTo]);
+    }, [fetchLogs, fetchStats]);
 
     // Load more logs
     const handleLoadMore = () => {
@@ -152,9 +151,9 @@ export const AdminSystemLogs = () => {
     // Watch offset changes
     useEffect(() => {
         if (offset > 0) {
-            fetchLogs(false);
+            fetchLogs(offset, true);
         }
-    }, [offset]);
+    }, [fetchLogs, offset]);
 
     // Export logs to JSON
     const handleExportJSON = () => {
@@ -221,7 +220,7 @@ export const AdminSystemLogs = () => {
                         variant="outlined"
                         startIcon={<RefreshIcon />}
                         onClick={() => {
-                            fetchLogs(true);
+                            fetchLogs(0, false);
                             fetchStats();
                         }}
                     >
