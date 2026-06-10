@@ -29,14 +29,16 @@
     "zxcvbn": "^4.4.2"
   },
   "scripts": {
-    "build": "tsc && vite build && node workbox-build.js",
+    "build": "tsc && vite build && node workbox-build.js && node scripts/verify-pwa.js",
     "build:analyze": "tsc && vite build --config analyze-bundle.js",
     "start-development": "vite",
     "start-production": "bash scripts/start-production.sh",
+    "serve-production": "node scripts/serve-production.js",
     "analyze": "npm run build:analyze && open dist/bundle-stats.html",
     "analyze:legacy": "source-map-explorer --html \"source-tree-$(date '+%Y%m%d%H%M%S').html\" --no-border-checks dist/assets/*",
     "lint": "eslint src",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "verify:pwa": "node scripts/verify-pwa.js"
   },
   "browserslist": [
     ">0.2%",

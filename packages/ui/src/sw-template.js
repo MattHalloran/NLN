@@ -1,8 +1,10 @@
 /* eslint-disable no-undef */
 /* eslint-disable no-restricted-globals */
 /* global importScripts workbox */
-// Import the necessary Workbox scripts using importScripts
-importScripts("https://storage.googleapis.com/workbox-cdn/releases/7.3.0/workbox-sw.js");
+// Import Workbox from the local build output so service worker startup does not
+// depend on a third-party CDN.
+importScripts("./workbox/workbox-sw.js");
+workbox.setConfig({ debug: false, modulePathPrefix: "./workbox" });
 
 // This service worker can be customized!
 // See https://developers.google.com/web/tools/workbox/modules
@@ -12,12 +14,12 @@ importScripts("https://storage.googleapis.com/workbox-cdn/releases/7.3.0/workbox
 // service worker, and the Workbox build step will be skipped.
 const { clientsClaim } = (workbox.core);
 const { ExpirationPlugin } = (workbox.expiration);
-const { createHandlerBoundToURL, precacheAndRoute } = (workbox.precaching);
+const { cleanupOutdatedCaches, createHandlerBoundToURL, precacheAndRoute } = (workbox.precaching);
 const { registerRoute } = (workbox.routing);
-const { CacheFirst } = (workbox.strategies);
+const { CacheFirst, NetworkFirst } = (workbox.strategies);
 
-const CACHE_NAME = "nln-cache";
-const CURRENT_CACHE_VERSION = "2024-09-08-workbox-7.3"; // Change this value to force a cache update
+const CONTENT_IMAGE_CACHE = "nln-content-images";
+const HASHED_ASSET_CACHE = "nln-hashed-assets";
 
 // eslint-disable-next-line no-magic-numbers
 const DAYS_30_SECONDS = 30 * 24 * 60 * 60;
@@ -31,6 +33,7 @@ clientsClaim();
 // even if you decide not to use precaching. See https://cra.link/PWA
 const precache = self.__WB_MANIFEST ?? [];
 precacheAndRoute(precache);
+cleanupOutdatedCaches();
 
 // Set up App Shell-style routing, so that all navigation requests
 // are fulfilled with your index.html shell. Learn more at
@@ -50,38 +53,47 @@ registerRoute(
         return true;
     },
     async ({ url, event }) => {
+        const fallbackHandler = createHandlerBoundToURL(self.location.origin + "/index.html");
+
         try {
-            const handler = createHandlerBoundToURL(self.location.origin + "/index.html");
-            const response = await handler({ event });
-
-            const clonedResponse = response.clone();
-            const newResponse = new Response(clonedResponse.body, {
-                status: clonedResponse.status,
-                statusText: clonedResponse.statusText,
-                headers: clonedResponse.headers,
-            });
-
-            return newResponse;
+            return await fetch(event.request);
         } catch (error) {
-            console.error(`Error in custom routing function: ${error}`);
-            return Response.error();
+            return fallbackHandler({ event });
         }
     },
 );
 
 registerRoute(
-    ({ url }) => {
-        // Exclude /api routes from cache
-        if (url.pathname.startsWith("/api")) {
-            return false;
-        }
-        return true;
-    },
+    ({ request, url }) =>
+        url.origin === self.location.origin &&
+        url.pathname.startsWith("/assets/") &&
+        (request.destination === "script" ||
+            request.destination === "style" ||
+            request.destination === "font" ||
+            request.destination === "image"),
     new CacheFirst({
-        cacheName: CACHE_NAME,
+        cacheName: HASHED_ASSET_CACHE,
         plugins: [
             new ExpirationPlugin({
                 maxEntries: 200,
+                maxAgeSeconds: CACHE_EXPIRATION,
+            }),
+        ],
+    }),
+);
+
+registerRoute(
+    ({ request, url }) =>
+        url.origin === self.location.origin &&
+        request.destination === "image" &&
+        !url.pathname.startsWith("/assets/") &&
+        !url.pathname.startsWith("/api") &&
+        !url.pathname.startsWith("/splash_screens/"),
+    new NetworkFirst({
+        cacheName: CONTENT_IMAGE_CACHE,
+        plugins: [
+            new ExpirationPlugin({
+                maxEntries: 100,
                 maxAgeSeconds: CACHE_EXPIRATION,
             }),
         ],
@@ -95,98 +107,17 @@ self.addEventListener("message", (event) => {
     }
 });
 
-// Listen for the install event
-self.addEventListener("install", (event) => {
-    console.log("Service worker installing...", event);
-    // Instruct the service worker to skip waiting and immediately become active
-    event.waitUntil(self.skipWaiting());
-    // NOTE: You can't send a message to the main application here, because
-    // the OLD service worker is still in control of the page. That means the 
-    // NEW one (i.e. this one) can't communicate with the main application yet.
-});
-
 self.addEventListener("activate", (event) => {
-    console.log("Service worker activating...", event);
     event.waitUntil(
-        // Clear all caches that don't match current version
         caches.keys().then((cacheNames) => {
-            console.log("Found cache names:", cacheNames);
             return Promise.all(
                 cacheNames.map((cacheName) => {
-                    // Delete any cache that doesn't match current version or standard Workbox caches
-                    if (cacheName !== CURRENT_CACHE_VERSION && 
-                        cacheName !== CACHE_NAME && 
-                        !cacheName.startsWith('workbox-precache')) {
-                        console.log(`Deleting old cache: ${cacheName}`);
-                        return caches.delete(cacheName);
-                    }
-                    // Also delete old NLN caches with different versioning schemes
-                    if (cacheName.includes('nln-cache') && cacheName !== CACHE_NAME) {
-                        console.log(`Deleting old NLN cache: ${cacheName}`);
+                    if (cacheName.includes("nln-cache")) {
                         return caches.delete(cacheName);
                     }
                     return null;
                 }),
             );
-        }).then(() => {
-            console.log("Service worker taking control of all clients");
-            return self.clients.claim();
         }),
     );
-});
-
-// Handle push notifications
-self.addEventListener("push", (event) => {
-    const data = event.data.json();
-    const options = {
-        body: data.body,
-        icon: data.icon,
-        badge: data.badge,
-        image: data.image,
-        vibrate: data.vibrate,
-        actions: data.actions,
-        tag: data.tag,
-        renotify: data.renotify,
-        silent: data.silent,
-        requireInteraction: data.requireInteraction,
-        data: data.data,
-    };
-
-    event.waitUntil(self.registration.showNotification(data.title, options));
-});
-self.addEventListener("notificationclick", (event) => {
-    event.notification.close(); // Close the notification when clicked
-
-    // Determine what action to take based on the clicked action or the notification click itself
-    if (event.action) {
-        // Handle specific action clicks
-        // Example: if (event.action === 'some-action') { /* handle 'some-action' */}
-        console.log("Notification action clicked: ", event.action);
-    } else {
-        // Handle the notification click when no specific action is defined
-        event.waitUntil(
-            clients.matchAll({ type: "window" }).then((clientList) => {
-                const urlToOpen = new URL("/", location.origin).href;
-
-                for (let i = 0; i < clientList.length; i++) {
-                    const client = clientList[i];
-                    if (client.url === urlToOpen && "focus" in client) {
-                        return client.focus();
-                    }
-                }
-
-                if (clients.openWindow) {
-                    return clients.openWindow(urlToOpen);
-                }
-            }),
-        );
-    }
-});
-
-self.addEventListener("periodicsync", (event) => {
-    console.log("periodicsync", event);
-});
-
-self.addEventListener("message", (event) => {
-    console.log("message", event);
 });

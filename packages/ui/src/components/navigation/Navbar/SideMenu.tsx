@@ -15,7 +15,8 @@ import {
     useTheme,
 } from "@mui/material";
 import { useLogout } from "api/rest/hooks";
-import { ContactInfo, CopyrightBreadcrumbs } from "components";
+import { ContactInfo } from "components/ContactInfo/ContactInfo";
+import { CopyrightBreadcrumbs } from "components/breadcrumbs/CopyrightBreadcrumbs/CopyrightBreadcrumbs";
 import { BusinessContext } from "contexts/BusinessContext";
 import { SessionContext } from "contexts/SessionContext";
 import { useSideMenu } from "hooks/useSideMenu";

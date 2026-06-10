@@ -17,7 +17,7 @@ export interface DialogTitleProps extends Omit<TitleProps, "sxs"> {
     id: string;
     onClose?: () => unknown;
     startComponent?: JSX.Element;
-    sxs?: TitleProps["sxs"] & { root?: SxType; };
+    sxs?: TitleProps["sxs"] & { root?: SxType };
 }
 
 export interface MenuTitleProps {
@@ -26,7 +26,6 @@ export interface MenuTitleProps {
     onClose: () => void;
     title?: string;
 }
-
 
 export interface PopoverWithArrowProps extends Omit<PopoverProps, "open" | "sx"> {
     anchorEl: HTMLElement | null;
@@ -37,10 +36,11 @@ export interface PopoverWithArrowProps extends Omit<PopoverProps, "open" | "sx">
         root?: Record<string, unknown>;
         content?: SxType;
         paper?: SxType;
-    }
+    };
 }
 
 export interface SnackProps {
+    autoHideDuration?: number | false;
     buttonClicked?: (event?: React.MouseEvent) => void;
     buttonText?: string;
     /**
@@ -58,5 +58,3 @@ export interface CustomerDialogProps {
     open?: boolean;
     onClose: () => void;
 }
-
-

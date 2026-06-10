@@ -1,9 +1,20 @@
 import { APP_LINKS } from "@local/shared";
-import { Box, ButtonBase as _ButtonBase, Container, Grid, IconButton as _IconButton, Link, Stack, Typography, useTheme, Tooltip } from "@mui/material";
+import {
+    Box,
+    ButtonBase as _ButtonBase,
+    Container,
+    Grid,
+    IconButton as _IconButton,
+    Link,
+    Stack,
+    Typography,
+    useTheme,
+    Tooltip,
+} from "@mui/material";
 import AmericanHort from "assets/img/american-hort.png";
 import NJNLA from "assets/img/njnla_logo.jpg";
 import ProvenWinners from "assets/img/proven-winners.png";
-import { CopyrightBreadcrumbs } from "components";
+import { CopyrightBreadcrumbs } from "components/breadcrumbs/CopyrightBreadcrumbs/CopyrightBreadcrumbs";
 import { BusinessContext } from "contexts/BusinessContext";
 import { SessionContext } from "contexts/SessionContext";
 import {
@@ -38,7 +49,8 @@ export const Footer = () => {
     useEffect(() => {
         const script = document.createElement("script");
         script.type = "text/javascript";
-        script.src = "https://www.rapidscansecure.com/siteseal/siteseal.js?code=158,A67D1E952FE47EAFCF2B0E9D0FABF9840AD29386";
+        script.src =
+            "https://www.rapidscansecure.com/siteseal/siteseal.js?code=158,A67D1E952FE47EAFCF2B0E9D0FABF9840AD29386";
         script.async = true;
 
         const sealContainer = document.getElementById("rapidscan-seal");
@@ -195,7 +207,9 @@ export const Footer = () => {
                                 Gallery
                             </Link>
                             {/* Show login only when not logged in */}
-                            {(!isObject(session) || !session || Object.keys(session).length === 0) && (
+                            {(!isObject(session) ||
+                                !session ||
+                                Object.keys(session).length === 0) && (
                                 <Link
                                     component="button"
                                     onClick={() => setLocation(APP_LINKS.LogIn)}
@@ -235,7 +249,7 @@ export const Footer = () => {
                             Contact
                         </Typography>
                         <Grid container spacing={1.5}>
-                            {contactLinks.map((contact, index) => (
+                            {contactLinks.map((contact, index) =>
                                 contact.href && contact.label ? (
                                     <Grid item xs={12} sm={12} md={6} key={index}>
                                         <Tooltip
@@ -249,8 +263,16 @@ export const Footer = () => {
                                         >
                                             <Link
                                                 href={contact.href}
-                                                target={contact.href.startsWith("http") ? "_blank" : undefined}
-                                                rel={contact.href.startsWith("http") ? "noopener noreferrer" : undefined}
+                                                target={
+                                                    contact.href.startsWith("http")
+                                                        ? "_blank"
+                                                        : undefined
+                                                }
+                                                rel={
+                                                    contact.href.startsWith("http")
+                                                        ? "noopener noreferrer"
+                                                        : undefined
+                                                }
                                                 sx={{
                                                     color: "inherit",
                                                     textDecoration: "none",
@@ -268,28 +290,34 @@ export const Footer = () => {
                                                     },
                                                 }}
                                             >
-                                                <Box sx={{ color: "#ffffff", position: "relative" }}>
+                                                <Box
+                                                    sx={{ color: "#ffffff", position: "relative" }}
+                                                >
                                                     {contact.icon}
-                                                    {contact.isPhone && !businessHoursStatus.isOpen && (
-                                                        <Box
-                                                            sx={{
-                                                                position: "absolute",
-                                                                top: -4,
-                                                                right: -4,
-                                                                width: 14,
-                                                                height: 14,
-                                                                borderRadius: "50%",
-                                                                backgroundColor: "#ff9800",
-                                                                display: "flex",
-                                                                alignItems: "center",
-                                                                justifyContent: "center",
-                                                                border: "2px solid",
-                                                                borderColor: palette.mode === "light" ? "#1a4d3a" : "#0f2920",
-                                                            }}
-                                                        >
-                                                            <Clock size={8} />
-                                                        </Box>
-                                                    )}
+                                                    {contact.isPhone &&
+                                                        !businessHoursStatus.isOpen && (
+                                                            <Box
+                                                                sx={{
+                                                                    position: "absolute",
+                                                                    top: -4,
+                                                                    right: -4,
+                                                                    width: 14,
+                                                                    height: 14,
+                                                                    borderRadius: "50%",
+                                                                    backgroundColor: "#ff9800",
+                                                                    display: "flex",
+                                                                    alignItems: "center",
+                                                                    justifyContent: "center",
+                                                                    border: "2px solid",
+                                                                    borderColor:
+                                                                        palette.mode === "light"
+                                                                            ? "#1a4d3a"
+                                                                            : "#0f2920",
+                                                                }}
+                                                            >
+                                                                <Clock size={8} />
+                                                            </Box>
+                                                        )}
                                                 </Box>
                                                 <Typography
                                                     variant="body2"
@@ -304,8 +332,8 @@ export const Footer = () => {
                                             </Link>
                                         </Tooltip>
                                     </Grid>
-                                ) : null
-                            ))}
+                                ) : null,
+                            )}
                         </Grid>
                     </Grid>
 

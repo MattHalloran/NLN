@@ -87,6 +87,7 @@ export const Slider = ({
                     width={width}
                     key={i === images.length ? `slide-${i}-duplicate` : `slide-${i}`}
                     image={s}
+                    isPriority={i === 0}
                     fadeTransition={fadeTransition}
                     isActive={fadeTransition ? i === slideIndex : undefined}
                     transitionDuration={fadeTransition ? fadeTransitionDuration : slidingDuration}

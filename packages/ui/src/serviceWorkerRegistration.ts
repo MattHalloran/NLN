@@ -15,66 +15,12 @@ interface Config {
     onUpdate?: (registration: ServiceWorkerRegistration) => void;
 }
 
-function urlBase64ToUint8Array(base64String: string): Uint8Array {
-    const padding = "=".repeat((4 - base64String.length % 4) % 4);
-    const base64 = (base64String + padding)
-        .replace(/\-/g, "+")
-        .replace(/_/g, "/");
-
-    const rawData = window.atob(base64);
-    const outputArray = new Uint8Array(rawData.length);
-
-    for (let i = 0; i < rawData.length; ++i) {
-        outputArray[i] = rawData.charCodeAt(i);
-    }
-    return outputArray;
-}
-
-export async function requestNotificationPermission(): Promise<NotificationPermission> {
-    const permission = await Notification.requestPermission();
-    if (permission === "granted") {
-        console.info("Notification permission granted!");
-    } else {
-        console.error("Notification permission denied");
-    }
-    return permission;
-}
-
-export async function subscribeUserToPush(): Promise<PushSubscription | null> {
-    if (!("PushManager" in window)) {
-        console.warn("Push notifications are not supported in this browser. This could be because the browser is too old or because it is running in a non-secure context (http instead of https).");
-        return null;
-    }
-    const permission = await requestNotificationPermission();
-    if (permission !== "granted") {
-        console.warn("Push permissions not granted.");
-        return null;
-    }
-    try {
-        const registration = await navigator.serviceWorker.register(
-            `${import.meta.env.BASE_URL}service-worker.js`,
-            { scope: import.meta.env.BASE_URL },
-        );
-        const subscribeOptions: PushSubscriptionOptions = {
-            userVisibleOnly: true,
-            applicationServerKey: urlBase64ToUint8Array(
-                import.meta.env.VITE_VAPID_PUBLIC_KEY,
-            ).buffer as ArrayBuffer,
-        };
-        const pushSubscription = await registration.pushManager.subscribe(subscribeOptions);
-        return pushSubscription;
-    } catch (error) {
-        console.error("Error subscribing to push notifications:", error);
-        return null;
-    }
-}
-
 const isLocalhost = Boolean(
     window.location.hostname === "localhost" ||
-    // [::1] is the IPv6 localhost address.
-    window.location.hostname === "[::1]" ||
-    // 127.0.0.0/8 are considered localhost for IPv4.
-    window.location.hostname.match(/^127(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$/),
+        // [::1] is the IPv6 localhost address.
+        window.location.hostname === "[::1]" ||
+        // 127.0.0.0/8 are considered localhost for IPv4.
+        window.location.hostname.match(/^127(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$/),
 );
 
 export function register(config?: Config): void {
@@ -100,7 +46,7 @@ export function register(config?: Config): void {
                 navigator.serviceWorker.ready.then(() => {
                     console.log(
                         "This web app is being served cache-first by a service " +
-                        "worker. To learn more, visit https://cra.link/PWA",
+                            "worker. To learn more, visit https://cra.link/PWA",
                     );
                 });
             } else {
@@ -121,8 +67,12 @@ export function register(config?: Config): void {
 
 function registerValidSW(swUrl: string, config?: Config): void {
     navigator.serviceWorker
-        .register(swUrl)
+        .register(swUrl, { updateViaCache: "none" })
         .then((registration) => {
+            if (registration.waiting && navigator.serviceWorker.controller) {
+                config?.onUpdate?.(registration);
+            }
+
             registration.onupdatefound = () => {
                 const installingWorker = registration.installing;
                 if (installingWorker == null) {
@@ -136,13 +86,11 @@ function registerValidSW(swUrl: string, config?: Config): void {
                             // content until all client tabs are closed.
                             console.log(
                                 "New content is available and will be used when all " +
-                                "tabs for this page are closed. See https://cra.link/PWA.",
+                                    "tabs for this page are closed. See https://cra.link/PWA.",
                             );
 
                             // Execute callback
-                            if (config && config.onUpdate) {
-                                config.onUpdate(registration);
-                            }
+                            config?.onUpdate?.(registration);
                         } else {
                             // At this point, everything has been precached.
                             // It's the perfect time to display a
@@ -150,13 +98,7 @@ function registerValidSW(swUrl: string, config?: Config): void {
                             console.log("Content is cached for offline use.");
 
                             // Execute callback
-                            if (config && config.onSuccess) {
-                                config.onSuccess(registration);
-                            }
-                        }
-                        // If running in standalone, request notification permission
-                        if (window.matchMedia("(display-mode: standalone)").matches) {
-                            Notification.requestPermission();
+                            config?.onSuccess?.(registration);
                         }
                     }
                 };
@@ -165,6 +107,10 @@ function registerValidSW(swUrl: string, config?: Config): void {
         .catch((error) => {
             console.error("Error during service worker registration:", error);
         });
+}
+
+export function sendSkipWaiting(registration: ServiceWorkerRegistration): void {
+    registration.waiting?.postMessage({ type: "SKIP_WAITING" });
 }
 
 function checkValidServiceWorker(swUrl: string, config?: Config): void {
@@ -207,24 +153,20 @@ export function unregister(): void {
     }
 }
 
-// Force cleanup of old service workers and caches
-export async function forceCleanup(): Promise<boolean> {
-    if (!("serviceWorker" in navigator)) {
+export async function cleanupDevelopmentServiceWorkers(): Promise<boolean> {
+    if (!import.meta.env.DEV || !isLocalhost || !("serviceWorker" in navigator)) {
         return false;
     }
 
     try {
-        // Get all registrations
         const registrations = await navigator.serviceWorker.getRegistrations();
 
-        // Unregister all existing service workers
         await Promise.all(
             registrations.map(async (registration) => {
                 return registration.unregister();
             }),
         );
 
-        // Clear all caches
         const cacheNames = await caches.keys();
         await Promise.all(
             cacheNames.map(async (cacheName) => {
@@ -234,7 +176,7 @@ export async function forceCleanup(): Promise<boolean> {
 
         return true;
     } catch (error) {
-        console.error("Error during service worker cleanup:", error);
+        console.error("Error during development service worker cleanup:", error);
         return false;
     }
 }

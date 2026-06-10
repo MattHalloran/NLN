@@ -1,6 +1,6 @@
 import { Box, Container, Paper, Typography, useTheme, Divider } from "@mui/material";
 import { TopBar } from "components/navigation/TopBar/TopBar";
-import { PageContainer } from "components";
+import { PageContainer } from "components/PageContainer/PageContainer";
 
 interface FormPageProps {
     title: string;
@@ -17,10 +17,7 @@ export const FormPage = ({
 
     return (
         <PageContainer>
-            <TopBar
-                display="page"
-                title={title}
-            />
+            <TopBar display="page" title={title} />
             <Container
                 maxWidth="sm"
                 sx={{
@@ -39,9 +36,10 @@ export const FormPage = ({
                         backgroundColor: palette.background.paper,
                         borderRadius: 2,
                         overflow: "hidden",
-                        boxShadow: palette.mode === "light"
-                            ? "0 8px 32px rgba(0, 0, 0, 0.08)"
-                            : "0 8px 32px rgba(0, 0, 0, 0.24)",
+                        boxShadow:
+                            palette.mode === "light"
+                                ? "0 8px 32px rgba(0, 0, 0, 0.08)"
+                                : "0 8px 32px rgba(0, 0, 0, 0.24)",
                     }}
                 >
                     {/* Header Section */}
@@ -51,9 +49,10 @@ export const FormPage = ({
                             pt: 5,
                             pb: 4,
                             px: 4,
-                            backgroundColor: palette.mode === "light"
-                                ? "rgba(0, 0, 0, 0.02)"
-                                : "rgba(255, 255, 255, 0.02)",
+                            backgroundColor:
+                                palette.mode === "light"
+                                    ? "rgba(0, 0, 0, 0.02)"
+                                    : "rgba(255, 255, 255, 0.02)",
                         }}
                     >
                         {/* Title */}
@@ -83,10 +82,14 @@ export const FormPage = ({
                                 fontWeight: 400,
                             }}
                         >
-                            {title === "Sign Up" && "Create your account to access our plant ordering system"}
-                            {title === "Log In" && "Access your account to manage orders and preferences"}
-                            {title === "Forgot Password" && "Enter your email to receive password reset instructions"}
-                            {title === "Reset Password" && "Enter your new password to secure your account"}
+                            {title === "Sign Up" &&
+                                "Create your account to access our plant ordering system"}
+                            {title === "Log In" &&
+                                "Access your account to manage orders and preferences"}
+                            {title === "Forgot Password" &&
+                                "Enter your email to receive password reset instructions"}
+                            {title === "Reset Password" &&
+                                "Enter your new password to secure your account"}
                         </Typography>
                     </Box>
 
@@ -100,22 +103,25 @@ export const FormPage = ({
                             "& .MuiTextField-root": {
                                 "& .MuiOutlinedInput-root": {
                                     borderRadius: 1,
-                                    backgroundColor: palette.mode === "light"
-                                        ? "rgba(0, 0, 0, 0.01)"
-                                        : "rgba(255, 255, 255, 0.02)",
+                                    backgroundColor:
+                                        palette.mode === "light"
+                                            ? "rgba(0, 0, 0, 0.01)"
+                                            : "rgba(255, 255, 255, 0.02)",
                                     transition: "all 0.2s ease",
                                     "&:hover": {
-                                        backgroundColor: palette.mode === "light"
-                                            ? "rgba(0, 0, 0, 0.02)"
-                                            : "rgba(255, 255, 255, 0.03)",
+                                        backgroundColor:
+                                            palette.mode === "light"
+                                                ? "rgba(0, 0, 0, 0.02)"
+                                                : "rgba(255, 255, 255, 0.03)",
                                         "& .MuiOutlinedInput-notchedOutline": {
                                             borderColor: palette.primary.main,
                                         },
                                     },
                                     "&.Mui-focused": {
-                                        backgroundColor: palette.mode === "light"
-                                            ? "rgba(0, 0, 0, 0.02)"
-                                            : "rgba(255, 255, 255, 0.03)",
+                                        backgroundColor:
+                                            palette.mode === "light"
+                                                ? "rgba(0, 0, 0, 0.02)"
+                                                : "rgba(255, 255, 255, 0.03)",
                                         "& .MuiOutlinedInput-notchedOutline": {
                                             borderWidth: 2,
                                             borderColor: palette.primary.main,

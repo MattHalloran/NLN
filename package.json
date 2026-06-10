@@ -19,6 +19,7 @@
     "test:server": "yarn workspace server test",
     "test:ui": "yarn workspace ui test",
     "test:e2e": "playwright test",
+    "test:pwa": "playwright test --config playwright.pwa.config.ts",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:debug": "playwright test --debug",
     "test:e2e:headed": "playwright test --headed",

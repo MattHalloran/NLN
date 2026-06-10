@@ -31,7 +31,7 @@ export type SnackPub = {
     data?: unknown;
     buttonText?: string;
     buttonClicked?: (event?: React.MouseEvent) => unknown;
-    autoHideDuration?: number;
+    autoHideDuration?: number | false;
 };
 
 export type SideMenuPub = {

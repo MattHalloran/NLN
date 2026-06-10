@@ -10,15 +10,18 @@ import {
 import { Routes } from "Routes";
 // Using REST API for landing page content and authentication
 import { useSession } from "api/rest/hooks";
-import { AlertDialog, BottomNav, Footer, PullToRefresh, SnackStack } from "components";
+import { AlertDialog } from "components/dialogs/AlertDialog/AlertDialog";
+import { SnackSeverity } from "components/dialogs/Snack/Snack";
+import { SnackStack } from "components/dialogs/SnackStack/SnackStack";
+import { PullToRefresh } from "components/PullToRefresh/PullToRefresh";
+import { BottomNav } from "components/navigation/BottomNav/BottomNav";
+import { Footer } from "components/navigation/Footer/Footer";
 import { SideMenu, sideMenuDisplayData } from "components/navigation/Navbar/SideMenu";
 import { BusinessContext } from "contexts/BusinessContext";
 import { SessionContext } from "contexts/SessionContext";
 import { ZIndexProvider } from "contexts/ZIndexContext";
 import { useWindowSize } from "hooks/useWindowSize";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { DndProvider } from "react-dnd";
-import { HTML5Backend } from "react-dnd-html5-backend";
 import { useLocation } from "route";
 import { useLandingPageStore } from "stores/landingPageStore";
 import { BusinessData, Session } from "types";
@@ -189,11 +192,27 @@ export function App() {
                 setContentMargins((existing) => ({ ...existing, paddingRight: padding }));
             }
         });
+        const handleServiceWorkerUpdate = (event: Event) => {
+            const detail = (event as Event & { detail?: { reload?: () => void } }).detail;
+            PubSub.get().publishSnack({
+                message: "A site update is ready.",
+                severity: SnackSeverity.Info,
+                buttonText: "Reload",
+                buttonClicked: () => detail?.reload?.(),
+                autoHideDuration: false,
+            });
+        };
+        window.addEventListener("nln-service-worker-update-ready", handleServiceWorkerUpdate);
+
         return () => {
             PubSub.get().unsubscribe(loadingSub);
             PubSub.get().unsubscribe(landingPageSub);
             PubSub.get().unsubscribe(sessionSub);
             PubSub.get().unsubscribe(sideMenuPub);
+            window.removeEventListener(
+                "nln-service-worker-update-ready",
+                handleServiceWorkerUpdate,
+            );
         };
     }, [isLeftHanded, isMobile, refetchLandingPage]);
 
@@ -240,78 +259,76 @@ export function App() {
                         },
                     })}
                 />
-                <DndProvider backend={HTML5Backend}>
-                    <SessionContext.Provider value={session}>
-                        <ZIndexProvider>
-                            <BusinessContext.Provider value={business}>
-                                <Box
-                                    id="App"
-                                    sx={{
+                <SessionContext.Provider value={session}>
+                    <ZIndexProvider>
+                        <BusinessContext.Provider value={business}>
+                            <Box
+                                id="App"
+                                sx={{
+                                    background: theme.palette.background.default,
+                                    color: theme.palette.text.primary,
+                                    // Style visited, active, and hovered links
+                                    "& span, p": {
+                                        "& a": {
+                                            color: theme.palette.primary.dark,
+                                            "&:visited": {
+                                                color: theme.palette.primary.dark,
+                                            },
+                                            "&:active": {
+                                                color: theme.palette.primary.dark,
+                                            },
+                                            "&:hover": {
+                                                color: alpha(theme.palette.primary.light, 0.8),
+                                            },
+                                            // Remove underline on links
+                                            textDecoration: "none",
+                                        },
+                                    },
+                                }}
+                            >
+                                <main
+                                    id="page-container"
+                                    style={{
                                         background: theme.palette.background.default,
                                         color: theme.palette.text.primary,
-                                        // Style visited, active, and hovered links
-                                        "& span, p": {
-                                            "& a": {
-                                                color: theme.palette.primary.dark,
-                                                "&:visited": {
-                                                    color: theme.palette.primary.dark,
-                                                },
-                                                "&:active": {
-                                                    color: theme.palette.primary.dark,
-                                                },
-                                                "&:hover": {
-                                                    color: alpha(theme.palette.primary.light, 0.8),
-                                                },
-                                                // Remove underline on links
-                                                textDecoration: "none",
-                                            },
-                                        },
                                     }}
                                 >
-                                    <main
-                                        id="page-container"
-                                        style={{
-                                            background: theme.palette.background.default,
-                                            color: theme.palette.text.primary,
+                                    {/* Pull-to-refresh for PWAs */}
+                                    <PullToRefresh />
+                                    <Box
+                                        id="content-wrap"
+                                        sx={{
+                                            minHeight: "100vh",
+                                            ...contentMargins,
+                                            transition:
+                                                "margin 0.225s cubic-bezier(0, 0, 0.2, 1) 0s",
                                         }}
                                     >
-                                        {/* Pull-to-refresh for PWAs */}
-                                        <PullToRefresh />
-                                        <Box
-                                            id="content-wrap"
-                                            sx={{
-                                                minHeight: "100vh",
-                                                ...contentMargins,
-                                                transition:
-                                                    "margin 0.225s cubic-bezier(0, 0, 0.2, 1) 0s",
-                                            }}
-                                        >
-                                            {loading && (
-                                                <Box
-                                                    sx={{
-                                                        position: "absolute",
-                                                        top: "50%",
-                                                        left: "50%",
-                                                        transform: "translate(-50%, -50%)",
-                                                        zIndex: 100000,
-                                                    }}
-                                                >
-                                                    <CircularProgress size={100} />
-                                                </Box>
-                                            )}
-                                            <AlertDialog />
-                                            <SideMenu />
-                                            <SnackStack />
-                                            <Routes />
-                                        </Box>
-                                        <BottomNav />
-                                        <Footer />
-                                    </main>
-                                </Box>
-                            </BusinessContext.Provider>
-                        </ZIndexProvider>
-                    </SessionContext.Provider>
-                </DndProvider>
+                                        {loading && (
+                                            <Box
+                                                sx={{
+                                                    position: "absolute",
+                                                    top: "50%",
+                                                    left: "50%",
+                                                    transform: "translate(-50%, -50%)",
+                                                    zIndex: 100000,
+                                                }}
+                                            >
+                                                <CircularProgress size={100} />
+                                            </Box>
+                                        )}
+                                        <AlertDialog />
+                                        <SideMenu />
+                                        <SnackStack />
+                                        <Routes />
+                                    </Box>
+                                    <BottomNav />
+                                    <Footer />
+                                </main>
+                            </Box>
+                        </BusinessContext.Provider>
+                    </ZIndexProvider>
+                </SessionContext.Provider>
             </ThemeProvider>
         </StyledEngineProvider>
     );

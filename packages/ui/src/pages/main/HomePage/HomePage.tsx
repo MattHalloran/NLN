@@ -1,13 +1,11 @@
 import React, { useMemo, useEffect, useRef } from "react";
 import { Box, CircularProgress } from "@mui/material";
-import {
-    Hero,
-    ServiceShowcase,
-    SocialProof,
-    AboutStory,
-    InteractiveElements,
-    LocationVisit,
-} from "components";
+import { AboutStory } from "components/AboutStory/AboutStory";
+import { Hero } from "components/Hero/Hero";
+import { InteractiveElements } from "components/InteractiveElements/InteractiveElements";
+import { LocationVisit } from "components/LocationVisit/LocationVisit";
+import { ServiceShowcase } from "components/ServiceShowcase/ServiceShowcase";
+import { SocialProof } from "components/SocialProof/SocialProof";
 import { TopBar } from "components/navigation/TopBar/TopBar";
 import { useLandingPage } from "hooks/useLandingPage";
 import { restApi } from "api/rest/client";

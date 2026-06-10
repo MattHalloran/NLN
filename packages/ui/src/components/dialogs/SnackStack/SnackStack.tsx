@@ -11,7 +11,6 @@ import { SnackProps } from "../types";
  * If there are multiple messages, they are displayed in a stack with a maximum number
  */
 export const SnackStack = () => {
-
     // FIFO queue of snackbars
     const [snacks, setSnacks] = useState<SnackProps[]>([]);
 
@@ -26,15 +25,19 @@ export const SnackStack = () => {
             // Add the snack to the queue
             setSnacks((snacks) => {
                 const id = uuid();
-                let newSnacks = [...snacks, {
-                    buttonClicked: o.buttonClicked,
-                    buttonText: o.buttonText,
-                    data: o.data,
-                    handleClose: () => handleClose(id),
-                    id,
-                    message: o.message,
-                    severity: o.severity,
-                }];
+                let newSnacks = [
+                    ...snacks,
+                    {
+                        autoHideDuration: o.autoHideDuration,
+                        buttonClicked: o.buttonClicked,
+                        buttonText: o.buttonText,
+                        data: o.data,
+                        handleClose: () => handleClose(id),
+                        id,
+                        message: o.message,
+                        severity: o.severity,
+                    },
+                ];
                 // Limit the number of snacks
                 if (newSnacks.length > 3) {
                     newSnacks = newSnacks.slice(1);
@@ -42,26 +45,32 @@ export const SnackStack = () => {
                 return newSnacks;
             });
         });
-        return () => { PubSub.get().unsubscribe(snackSub); };
+        return () => {
+            PubSub.get().unsubscribe(snackSub);
+        };
     }, []);
 
     const visible = useMemo(() => snacks.length > 0, [snacks]);
 
     return (
         // Snacks displayed in bottom left corner
-        <Stack direction="column" spacing={1} sx={{
-            display: visible ? "block" : "none",
-            position: "fixed",
-            // Displays above the bottom nav bar, accounting for PWA inset-bottom
-            bottom: { xs: "calc(64px + env(safe-area-inset-bottom))", md: "calc(8px + env(safe-area-inset-bottom))" },
-            left: "calc(8px + env(safe-area-inset-left))",
-            zIndex: 20000,
-        }}>
+        <Stack
+            direction="column"
+            spacing={1}
+            sx={{
+                display: visible ? "block" : "none",
+                position: "fixed",
+                // Displays above the bottom nav bar, accounting for PWA inset-bottom
+                bottom: {
+                    xs: "calc(64px + env(safe-area-inset-bottom))",
+                    md: "calc(8px + env(safe-area-inset-bottom))",
+                },
+                left: "calc(8px + env(safe-area-inset-left))",
+                zIndex: 20000,
+            }}
+        >
             {snacks.map((snack) => (
-                <Snack
-                    key={snack.id}
-                    {...snack}
-                />
+                <Snack key={snack.id} {...snack} />
             ))}
         </Stack>
     );

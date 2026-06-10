@@ -2,6 +2,8 @@ import { Box } from "@mui/material";
 import { EditImageDialog, ImageCard } from "components";
 import update from "immutability-helper";
 import { useCallback, useState } from "react";
+import { DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
 import { ImageInfo, SxType } from "types";
 
 export const ImageList = ({
@@ -61,30 +63,32 @@ export const ImageList = ({
     );
 
     return (
-        <Box
-            sx={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
-                alignItems: "stretch",
-                ...sx,
-            }}
-        >
-            <EditImageDialog
-                open={selected >= 0}
-                data={selected >= 0 ? data[selected] : null}
-                onClose={() => setSelected(-1)}
-                onSave={saveImageData}
-            />
-            {data?.map((item, index) => (
-                <ImageCard
-                    key={index}
-                    index={index}
-                    data={item}
-                    onDelete={() => deleteImage(index)}
-                    onEdit={() => setSelected(index)}
-                    moveCard={moveCard}
+        <DndProvider backend={HTML5Backend}>
+            <Box
+                sx={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+                    alignItems: "stretch",
+                    ...sx,
+                }}
+            >
+                <EditImageDialog
+                    open={selected >= 0}
+                    data={selected >= 0 ? data[selected] : null}
+                    onClose={() => setSelected(-1)}
+                    onSave={saveImageData}
                 />
-            ))}
-        </Box>
+                {data?.map((item, index) => (
+                    <ImageCard
+                        key={index}
+                        index={index}
+                        data={item}
+                        onDelete={() => deleteImage(index)}
+                        onEdit={() => setSelected(index)}
+                        moveCard={moveCard}
+                    />
+                ))}
+            </Box>
+        </DndProvider>
     );
 };

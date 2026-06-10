@@ -21,7 +21,7 @@ import {
     Divider as _Divider,
 } from "@mui/material";
 import { useImagesByLabel } from "api/rest/hooks";
-import { SnackSeverity } from "components";
+import { SnackSeverity } from "components/dialogs/Snack/Snack";
 import {
     InformationalTabOption,
     InformationalTabs,

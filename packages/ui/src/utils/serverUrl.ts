@@ -26,6 +26,7 @@ export function getServerUrl(): string {
         return `http://${window.location.hostname}:${serverPort}/api`;
     }
 
-    // If running on production server
-    return "https://newlifenurseryinc.com/api";
+    // In production, use the same origin so cookies, service workers, and caches
+    // stay scoped to the canonical app host.
+    return `${window.location.origin}/api`;
 }

@@ -38,11 +38,12 @@ const severityStyle = (severity: SnackSeverity | undefined, palette: Palette) =>
 const DURATION = 4000;
 
 /**
- * Individual snack item in the snack stack. 
- * Look changes based on severity. 
+ * Individual snack item in the snack stack.
+ * Look changes based on severity.
  * Supports a button with a callback.
  */
 export const Snack = ({
+    autoHideDuration,
     buttonClicked,
     buttonText,
     data,
@@ -58,6 +59,7 @@ export const Snack = ({
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
     // Timeout starts immediately
     useEffect(() => {
+        if (autoHideDuration === false) return;
         timeoutRef.current = setTimeout(() => {
             // First set to close
             setOpen(false);
@@ -65,13 +67,13 @@ export const Snack = ({
             timeoutRef.current = setTimeout(() => {
                 handleClose();
             }, 400);
-        }, DURATION);
+        }, autoHideDuration ?? DURATION);
         return () => {
             if (timeoutRef.current) {
                 clearTimeout(timeoutRef.current);
             }
         };
-    }, [handleClose]);
+    }, [autoHideDuration, handleClose]);
 
     useEffect(() => {
         // Log snack errors if in development
@@ -98,17 +100,18 @@ export const Snack = ({
         <Box
             role="alert"
             sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            maxWidth: { xs: "100%", sm: "600px" },
-            // Scrolls out of view when closed
-            transform: open ? "translateX(0)" : "translateX(-150%)",
-            transition: "transform 0.4s ease-in-out",
-            padding: "8px 16px",
-            borderRadius: "12px",
-            ...severityStyle(severity, palette),
-        }}>
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                maxWidth: { xs: "100%", sm: "600px" },
+                // Scrolls out of view when closed
+                transform: open ? "translateX(0)" : "translateX(-150%)",
+                transition: "transform 0.4s ease-in-out",
+                padding: "8px 16px",
+                borderRadius: "12px",
+                ...severityStyle(severity, palette),
+            }}
+        >
             {/* Icon */}
             <Icon fill="white" />
             {/* Message */}
@@ -119,7 +122,13 @@ export const Snack = ({
             {buttonText && buttonClicked && (
                 <Button
                     variant="text"
-                    sx={{ color: "black", marginLeft: "16px", padding: "4px", border: "1px solid black", borderRadius: "8px" }}
+                    sx={{
+                        color: "black",
+                        marginLeft: "16px",
+                        padding: "4px",
+                        border: "1px solid black",
+                        borderRadius: "8px",
+                    }}
                     onClick={buttonClicked}
                 >
                     {buttonText}

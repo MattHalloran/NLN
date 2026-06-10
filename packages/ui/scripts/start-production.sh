@@ -41,5 +41,4 @@ echo "✅ Pre-flight checks complete"
 echo ""
 
 # Start UI server
-# Use tcp:// format to bind to all interfaces (0.0.0.0) instead of just localhost
-exec serve --config serve.json --listen tcp://0.0.0.0:$PORT
+HOST=0.0.0.0 exec node scripts/serve-production.js

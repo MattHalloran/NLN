@@ -1,6 +1,6 @@
 import { APP_LINKS } from "@local/shared";
 import { Box, useTheme } from "@mui/material";
-import { PageContainer } from "components";
+import { PageContainer } from "components/PageContainer/PageContainer";
 import { SessionContext } from "contexts/SessionContext";
 import { PageProps } from "pages/types";
 import { useContext } from "react";

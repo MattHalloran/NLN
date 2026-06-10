@@ -1,6 +1,6 @@
 import { APP_LINKS } from "@local/shared";
 import { Box, Button, Container, Stack, Typography, useTheme } from "@mui/material";
-import { PageContainer } from "components";
+import { PageContainer } from "components/PageContainer/PageContainer";
 import { TopBar } from "components/navigation/TopBar/TopBar";
 import { Home, Search, ShoppingBag as _ShoppingBag } from "lucide-react";
 import { Link } from "route";
@@ -11,10 +11,7 @@ export const NotFoundPage = () => {
 
     return (
         <PageContainer>
-            <TopBar
-                display="page"
-                title="Page Not Found"
-            />
+            <TopBar display="page" title="Page Not Found" />
             <Container
                 maxWidth="sm"
                 sx={{
@@ -79,8 +76,8 @@ export const NotFoundPage = () => {
                         fontSize: "1.1rem",
                     }}
                 >
-                    Like a plant that couldn't find the right soil, this page doesn't exist.
-                    Don't worry though – let's help you find what you're looking for!
+                    Like a plant that couldn't find the right soil, this page doesn't exist. Don't
+                    worry though – let's help you find what you're looking for!
                 </Typography>
 
                 {/* Action Buttons */}
@@ -110,7 +107,9 @@ export const NotFoundPage = () => {
                         size="large"
                         startIcon={<Search size={20} />}
                         fullWidth
-                        onClick={() => window.open("https://newlife.online-orders.sbiteam.com/", "_blank")}
+                        onClick={() =>
+                            window.open("https://newlife.online-orders.sbiteam.com/", "_blank")
+                        }
                         sx={{
                             py: 1.5,
                             fontWeight: 500,

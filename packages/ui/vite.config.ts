@@ -1,6 +1,5 @@
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
-import { visualizer } from "rollup-plugin-visualizer";
 import { defineConfig } from "vite";
 import viteCompression from "vite-plugin-compression";
 
@@ -22,13 +21,6 @@ export default defineConfig({
             threshold: 10240,
             algorithm: "brotliCompress",
             ext: ".br",
-        }),
-        // Bundle analyzer - generates stats.html after build
-        visualizer({
-            filename: "./dist/stats.html",
-            open: false,
-            gzipSize: true,
-            brotliSize: true,
         }),
     ],
     assetsInclude: ["**/*.md"],
