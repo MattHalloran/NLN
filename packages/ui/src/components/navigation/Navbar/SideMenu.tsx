@@ -41,7 +41,9 @@ import {
 import { isObject } from "lodash-es";
 import React, { useContext, useState } from "react";
 import { useLocation } from "route";
-import { PubSub, getUserActions, noop, UserActions } from "utils";
+import { noop } from "utils/objectTools";
+import { PubSub } from "utils/pubsub";
+import { getUserActions, type UserActions } from "utils/userActions";
 
 const menuItemStyle = (palette: Palette) => ({
     color: palette.text.primary,

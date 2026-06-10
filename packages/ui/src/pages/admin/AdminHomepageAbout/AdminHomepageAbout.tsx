@@ -1,5 +1,11 @@
 import { DragDropContext, Draggable, Droppable, DropResult } from "@hello-pangea/dnd";
-import { APP_LINKS, COMPANY_INFO } from "@local/shared";
+import {
+    APP_LINKS,
+    COMPANY_INFO,
+    DEFAULT_ABOUT_CONTENT,
+    REST_ROUTES,
+    replaceLandingPageTokens,
+} from "@local/shared";
 import { ExpandMore as ExpandMoreIcon } from "@mui/icons-material";
 import {
     Accordion,
@@ -28,33 +34,20 @@ import { TopBar } from "components/navigation/TopBar/TopBar";
 import { useABTestQueryParams } from "hooks/useABTestQueryParams";
 import { useAdminForm } from "hooks/useAdminForm";
 import {
-    Award,
     BookOpen,
-    Globe,
     GripVertical,
-    Heart,
-    Home,
-    Leaf,
     Zap as MissionIcon,
     Plus,
     Star,
     FileText as TextFieldsIcon,
     Trash2,
-    TreePine,
     Target as ValuesIcon,
 } from "lucide-react";
 import { useEffect } from "react";
+import { landingPageIconOptions, resolveLandingPageIcon } from "utils/landingPageIcons";
 
 // Available icons for value cards
-const VALUE_ICONS = [
-    { value: "star", label: "Star", icon: Star },
-    { value: "home", label: "Home", icon: Home },
-    { value: "heart", label: "Heart", icon: Heart },
-    { value: "globe", label: "Globe", icon: Globe },
-    { value: "award", label: "Award", icon: Award },
-    { value: "leaf", label: "Leaf", icon: Leaf },
-    { value: "tree", label: "Tree", icon: TreePine },
-];
+const VALUE_ICONS = landingPageIconOptions;
 
 interface ValueItem {
     icon: string;
@@ -90,73 +83,7 @@ interface AboutData {
     mission: MissionData;
 }
 
-// Icon mapping
-const VALUE_ICON_MAP: Record<string, React.ComponentType<{ size?: number; color?: string }>> = {
-    star: Star,
-    home: Home,
-    heart: Heart,
-    globe: Globe,
-    award: Award,
-    leaf: Leaf,
-    tree: TreePine,
-};
-
-// Helper function to replace tokens
-const replaceTokens = (text: string, foundedYear: number): string => {
-    return text.replace(/{foundedYear}/g, String(foundedYear));
-};
-
-// Default data
-const getDefaultAboutData = (): AboutData => ({
-    story: {
-        overline: "Our Story",
-        title: "Growing Excellence Since {foundedYear}",
-        subtitle:
-            "What started as a family vision has grown into Southern New Jersey's premier wholesale nursery.",
-        paragraphs: [
-            "Founded by the Gianaris family in {foundedYear}, New Life Nursery Inc. began with a simple mission: to grow top quality material for buyers who are interested in the best. Today, after more than four decades, we continue as a family-owned and operated business, maintaining the traditional values and horticultural expertise that built our reputation.",
-            "With over 70 acres in production in Bridgeton, New Jersey, we specialize in growing beautiful, healthy, and consistent plant material at competitive prices. Our wholesale operation serves landscape professionals and businesses throughout the region with sizes ranging from 3-gallon shrubs to 25-gallon specimen trees.",
-        ],
-        cta: {
-            text: "Visit Our Nursery",
-            link: "/about#contact",
-        },
-    },
-    values: {
-        title: "What Makes Us Different",
-        items: [
-            {
-                icon: "star",
-                title: "Quality First",
-                description:
-                    "We source only the healthiest plants and provide expert care guidance to ensure your success.",
-            },
-            {
-                icon: "home",
-                title: "Local Expertise",
-                description:
-                    "40+ years of experience with Southern New Jersey growing conditions and climate-appropriate plant selection.",
-            },
-            {
-                icon: "heart",
-                title: "Family Heritage",
-                description:
-                    "Family-owned and operated by the Gianaris family, maintaining traditional values and expertise.",
-            },
-            {
-                icon: "globe",
-                title: "Sustainability",
-                description:
-                    "Committed to environmentally responsible practices and promoting native plant species.",
-            },
-        ],
-    },
-    mission: {
-        title: "Our Mission",
-        quote: "Growing top quality material for buyers who are interested in the best.",
-        attribution: "The Gianaris Family",
-    },
-});
+const getDefaultAboutData = (): AboutData => DEFAULT_ABOUT_CONTENT;
 
 // Preview component that shows how the about section will look
 const AboutStoryPreview = ({
@@ -175,9 +102,11 @@ const AboutStoryPreview = ({
     const missionData = aboutData.mission;
 
     // Replace tokens in text fields
-    const title = replaceTokens(storyData.title, foundedYear);
-    const subtitle = replaceTokens(storyData.subtitle, foundedYear);
-    const paragraphs = storyData.paragraphs.map((p: string) => replaceTokens(p, foundedYear));
+    const title = replaceLandingPageTokens(storyData.title, { foundedYear });
+    const subtitle = replaceLandingPageTokens(storyData.subtitle, { foundedYear });
+    const paragraphs = storyData.paragraphs.map((p: string) =>
+        replaceLandingPageTokens(p, { foundedYear }),
+    );
 
     return (
         <Box
@@ -301,7 +230,7 @@ const AboutStoryPreview = ({
 
                     <Grid container spacing={2}>
                         {valuesData.items.slice(0, 4).map((value: any, index: number) => {
-                            const IconComponent = VALUE_ICON_MAP[value.icon] || Star;
+                            const IconComponent = resolveLandingPageIcon(value.icon, Star);
                             return (
                                 <Grid item xs={6} key={index}>
                                     <Card
@@ -440,7 +369,7 @@ export const AdminHomepageAbout = () => {
         },
         refetchDependencies: [refetchLandingPage],
         pageName: "about-section",
-        endpointName: "/api/v1/landing-page",
+        endpointName: REST_ROUTES.landingPage.root,
         successMessage: "About section settings saved successfully!",
         errorMessagePrefix: "Failed to save",
     });
@@ -1103,7 +1032,10 @@ export const AdminHomepageAbout = () => {
                                                                                                             iconOption,
                                                                                                         ) => {
                                                                                                             const IconComponent =
-                                                                                                                iconOption.icon;
+                                                                                                                resolveLandingPageIcon(
+                                                                                                                    iconOption.value,
+                                                                                                                    Star,
+                                                                                                                );
                                                                                                             return (
                                                                                                                 <MenuItem
                                                                                                                     key={

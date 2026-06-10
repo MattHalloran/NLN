@@ -7,7 +7,8 @@
  */
 import React from "react";
 import { COOKIE, ValueOf } from "@local/shared";
-import { AlertDialogState, SnackSeverity } from "components";
+import type { AlertDialogState } from "components/dialogs/AlertDialog/AlertDialog";
+import type { SnackSeverity } from "components/dialogs/Snack/Snack";
 import { Session } from "types";
 
 export const Pubs = {

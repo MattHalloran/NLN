@@ -5,11 +5,9 @@ import { isObject } from "lodash-es";
 import { useContext } from "react";
 import { useLocation } from "route";
 import { pagePaddingBottom } from "styles";
-import { getUserActions } from "utils";
+import { getUserActions } from "utils/userActions";
 
-export const BottomNav = ({
-    ...props
-}) => {
+export const BottomNav = ({ ...props }) => {
     const [, setLocation] = useLocation();
     const { palette } = useTheme();
     const session = useContext(SessionContext);
@@ -47,19 +45,26 @@ export const BottomNav = ({
                     label={label}
                     value={value}
                     href={link}
-                    onClick={(e) => { 
-                        e.preventDefault(); 
+                    onClick={(e) => {
+                        e.preventDefault();
                         // Redirect to external URLs for availability and cart
                         if (value === "availability") {
                             window.location.href = "https://newlife.online-orders.sbiteam.com/";
                         } else if (value === "cart") {
-                            window.location.href = "https://newlife.online-orders.sbiteam.com/orders";
+                            window.location.href =
+                                "https://newlife.online-orders.sbiteam.com/orders";
                         } else {
-                            setLocation(link); 
+                            setLocation(link);
                             if (onClick) onClick();
                         }
                     }}
-                    icon={Icon ? <Badge badgeContent={badgeNum} color="error"><Icon /></Badge> : null}
+                    icon={
+                        Icon ? (
+                            <Badge badgeContent={badgeNum} color="error">
+                                <Icon />
+                            </Badge>
+                        ) : null
+                    }
                     sx={{ color: palette.primary.contrastText }}
                 />
             ))}

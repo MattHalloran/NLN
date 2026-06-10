@@ -12,6 +12,7 @@ import bcrypt from "bcryptjs";
 import { exec } from "child_process";
 import { promisify } from "util";
 import cookieParser from "cookie-parser";
+import { REST_ROUTES } from "@local/shared";
 import restRouter from "./index.js";
 import * as auth from "../auth.js";
 
@@ -121,11 +122,11 @@ describe("Dashboard API Integration Tests", () => {
             next();
         });
         app.use(auth.authenticate);
-        app.use("/api/rest", restRouter);
+        app.use(REST_ROUTES.root, restRouter);
 
         // Login as admin and get cookie
         const adminLoginRes = await request(app)
-            .post("/api/rest/v1/auth/login")
+            .post(REST_ROUTES.auth.login)
             .send({ email: "admin@test.com", password: "admin123" });
 
         if (adminLoginRes.status !== 200) {
@@ -139,7 +140,7 @@ describe("Dashboard API Integration Tests", () => {
 
         // Login as regular user and get cookie
         const userLoginRes = await request(app)
-            .post("/api/rest/v1/auth/login")
+            .post(REST_ROUTES.auth.login)
             .send({ email: "user@test.com", password: "admin123" });
 
         userCookie = userLoginRes.headers["set-cookie"][0];
@@ -169,14 +170,14 @@ describe("Dashboard API Integration Tests", () => {
 
     describe("GET /api/rest/v1/dashboard/stats", () => {
         it("should require authentication", async () => {
-            const res = await request(app).get("/api/rest/v1/dashboard/stats");
+            const res = await request(app).get(REST_ROUTES.dashboard.stats);
 
             expect(res.status).toBe(401);
         });
 
         it("should require admin role", async () => {
             const res = await request(app)
-                .get("/api/rest/v1/dashboard/stats")
+                .get(REST_ROUTES.dashboard.stats)
                 .set("Cookie", userCookie);
 
             expect(res.status).toBe(401);
@@ -184,7 +185,7 @@ describe("Dashboard API Integration Tests", () => {
 
         it("should return stats for admin users", async () => {
             const res = await request(app)
-                .get("/api/rest/v1/dashboard/stats")
+                .get(REST_ROUTES.dashboard.stats)
                 .set("Cookie", adminCookie);
 
             expect(res.status).toBe(200);
@@ -240,7 +241,7 @@ describe("Dashboard API Integration Tests", () => {
             });
 
             const res = await request(app)
-                .get("/api/rest/v1/dashboard/stats")
+                .get(REST_ROUTES.dashboard.stats)
                 .set("Cookie", adminCookie);
 
             expect(res.status).toBe(200);
@@ -254,7 +255,7 @@ describe("Dashboard API Integration Tests", () => {
 
         it("should return zero for archived models", async () => {
             const res = await request(app)
-                .get("/api/rest/v1/dashboard/stats")
+                .get(REST_ROUTES.dashboard.stats)
                 .set("Cookie", adminCookie);
 
             expect(res.status).toBe(200);
@@ -294,7 +295,7 @@ describe("Dashboard API Integration Tests", () => {
             });
 
             const res = await request(app)
-                .get("/api/rest/v1/dashboard/stats")
+                .get(REST_ROUTES.dashboard.stats)
                 .set("Cookie", adminCookie);
 
             expect(res.status).toBe(200);
@@ -319,12 +320,12 @@ describe("Dashboard API Integration Tests", () => {
 
             // First request
             const res1 = await request(app)
-                .get("/api/rest/v1/dashboard/stats")
+                .get(REST_ROUTES.dashboard.stats)
                 .set("Cookie", adminCookie);
 
             // Second request
             const res2 = await request(app)
-                .get("/api/rest/v1/dashboard/stats")
+                .get(REST_ROUTES.dashboard.stats)
                 .set("Cookie", adminCookie);
 
             expect(res1.status).toBe(200);
@@ -338,7 +339,7 @@ describe("Dashboard API Integration Tests", () => {
         it("should update stats when customers are added", async () => {
             // Get initial stats
             const res1 = await request(app)
-                .get("/api/rest/v1/dashboard/stats")
+                .get(REST_ROUTES.dashboard.stats)
                 .set("Cookie", adminCookie);
 
             const initialTotal = res1.body.totalCustomers;
@@ -361,7 +362,7 @@ describe("Dashboard API Integration Tests", () => {
 
             // Get updated stats
             const res2 = await request(app)
-                .get("/api/rest/v1/dashboard/stats")
+                .get(REST_ROUTES.dashboard.stats)
                 .set("Cookie", adminCookie);
 
             expect(res2.body.totalCustomers).toBe(initialTotal + 1);
@@ -400,7 +401,7 @@ describe("Dashboard API Integration Tests", () => {
             });
 
             const res = await request(app)
-                .get("/api/rest/v1/dashboard/stats")
+                .get(REST_ROUTES.dashboard.stats)
                 .set("Cookie", adminCookie);
 
             expect(res.status).toBe(200);

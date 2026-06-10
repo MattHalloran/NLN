@@ -5,7 +5,7 @@ import { Award, Leaf, Users, Package, Shield, Heart } from "lucide-react";
 import { useLocation } from "route";
 import { getShortBusinessHours } from "utils/businessHours";
 import { Slider } from "./Slider";
-import { COMPANY_INFO } from "@local/shared";
+import { DEFAULT_CTA_BUTTONS, DEFAULT_HERO_TEXT, DEFAULT_TRUST_BADGES } from "@local/shared";
 
 // Icon mapping for trust badges (matches AdminHomepageHeroBanner)
 const TRUST_BADGE_ICONS = {
@@ -22,9 +22,6 @@ interface HeroProps {
     subtext?: string;
 }
 
-const DEFAULT_HERO_TEXT = "Beautiful, healthy plants";
-const DEFAULT_HERO_SUBTEXT = "At competitive prices";
-
 const textPopStyle = {
     padding: "0",
     color: "white",
@@ -34,8 +31,8 @@ const textPopStyle = {
 };
 
 export const Hero = ({
-    text = DEFAULT_HERO_TEXT,
-    subtext = DEFAULT_HERO_SUBTEXT,
+    text = DEFAULT_HERO_TEXT.title,
+    subtext = DEFAULT_HERO_TEXT.subtitle,
 }: HeroProps = {}) => {
     const [, setLocation] = useLocation();
     const { palette } = useTheme();
@@ -46,20 +43,20 @@ export const Hero = ({
     const heroBanners = data?.content?.hero?.banners || [];
     const heroSettings = data?.content?.hero?.settings;
     const heroText = data?.content?.hero?.text;
-    const companyInfo = data?.content?.company;
-
     // Convert hero banners to the format expected by Slider
     const images = heroBanners.map((banner) => ({
         hash: banner.id,
         alt: banner.alt,
         description: banner.description,
-        files: [
-            {
-                src: banner.src,
-                width: banner.width,
-                height: banner.height,
-            },
-        ],
+        files: banner.files?.length
+            ? banner.files
+            : [
+                  {
+                      src: banner.src,
+                      width: banner.width,
+                      height: banner.height,
+                  },
+              ],
     }));
 
     return (
@@ -111,16 +108,7 @@ export const Hero = ({
                         gap: 2,
                     }}
                 >
-                    {(
-                        heroText?.trustBadges || [
-                            {
-                                icon: "users",
-                                text: `Family Owned Since ${companyInfo?.foundedYear || COMPANY_INFO.FoundedYear}`,
-                            },
-                            { icon: "award", text: "Licensed & Certified" },
-                            { icon: "leaf", text: "Wide Plant Selection" },
-                        ]
-                    ).map((badge, index) => {
+                    {(heroText?.trustBadges || DEFAULT_TRUST_BADGES).map((badge, index) => {
                         const IconComponent =
                             TRUST_BADGE_ICONS[badge.icon as keyof typeof TRUST_BADGE_ICONS] || Leaf;
                         return (
@@ -185,8 +173,7 @@ export const Hero = ({
                         opacity: 0.95,
                     }}
                 >
-                    {heroText?.description ||
-                        "Serving the community for over 30 years with the finest selection of plants, trees, and expert gardening advice"}
+                    {heroText?.description || DEFAULT_HERO_TEXT.description}
                 </Typography>
 
                 {/* Multiple CTAs */}
@@ -202,16 +189,7 @@ export const Hero = ({
                         alignItems: "center",
                     }}
                 >
-                    {(
-                        heroText?.buttons || [
-                            {
-                                text: "Browse Plants",
-                                link: "https://newlife.online-orders.sbiteam.com/",
-                                type: "primary",
-                            },
-                            { text: "Visit Our Nursery", link: "/about", type: "secondary" },
-                        ]
-                    ).map((button, index) => (
+                    {(heroText?.buttons || DEFAULT_CTA_BUTTONS).map((button, index) => (
                         <Button
                             key={index}
                             color={button.type === "primary" ? "secondary" : undefined}

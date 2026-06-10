@@ -12,86 +12,18 @@ import {
     Alert,
 } from "@mui/material";
 import { useLocation } from "route";
-import {
-    Eye,
-    Gift,
-    Smartphone,
-    Car,
-    Clock,
-    Phone,
-    MapPin,
-    Mail,
-    Map,
-    AlertCircle,
-    Truck,
-    Package,
-    Users,
-} from "lucide-react";
+import { Clock, Phone, MapPin, Mail, Map, AlertCircle, Eye } from "lucide-react";
 import { useLandingPage } from "hooks/useLandingPage";
 import { parseBusinessHours, checkBusinessHoursStatus } from "utils/businessHours";
 import { BusinessContext } from "contexts/BusinessContext";
 import { useContext, useMemo } from "react";
-import { COMPANY_INFO } from "@local/shared";
-
-// Icon mapping for visit info items
-const VISIT_INFO_ICON_MAP: Record<
-    string,
-    React.ComponentType<{ size?: number; color?: string }>
-> = {
-    eye: Eye,
-    gift: Gift,
-    smartphone: Smartphone,
-    car: Car,
-    truck: Truck,
-    "map-pin": MapPin,
-    package: Package,
-    users: Users,
-};
-
-// Helper function to replace tokens
-const replaceTokens = (text: string, foundedYear: number): string => {
-    return text.replace(/{foundedYear}/g, String(foundedYear));
-};
-
-// Default visit info items (fallback)
-const DEFAULT_VISIT_INFO = [
-    {
-        id: "1",
-        title: "What to Expect",
-        icon: "eye",
-        description:
-            "Browse over 70 acres of top-quality trees and shrubs, carefully grown for landscape professionals",
-        displayOrder: 0,
-        isActive: true,
-    },
-    {
-        id: "2",
-        title: "Wholesale Focus",
-        icon: "gift",
-        description:
-            "Specializing in 3 to 25-gallon container plants for landscapers, contractors, and garden centers",
-        displayOrder: 1,
-        isActive: true,
-    },
-    {
-        id: "3",
-        title: "Professional Service",
-        icon: "smartphone",
-        description:
-            "Expert horticultural advice from our experienced team with over 40 years in the industry",
-        displayOrder: 2,
-        isActive: true,
-    },
-    {
-        id: "4",
-        title: "Easy Access",
-        icon: "car",
-        description:
-            "Convenient location in Bridgeton with ample parking and loading facilities for commercial vehicles",
-        displayOrder: 3,
-        isActive: true,
-    },
-];
+import {
+    activeByDisplayOrder,
+    COMPANY_INFO,
+    DEFAULT_LOCATION_CONTENT,
+    replaceLandingPageTokens,
+} from "@local/shared";
+import { resolveLandingPageIcon } from "utils/landingPageIcons";
 
 export const LocationVisit = () => {
     const { palette } = useTheme();
@@ -110,89 +42,37 @@ export const LocationVisit = () => {
     // Get location content from API with fallbacks
     const locationContent = data?.content?.location;
 
-    const headerTitle = locationContent?.header?.title || "Visit Our Nursery";
-    const headerSubtitle = replaceTokens(
-        locationContent?.header?.subtitle ||
-            "Southern New Jersey's premier wholesale nursery since {foundedYear}",
-        foundedYear,
+    const headerTitle = locationContent?.header?.title || DEFAULT_LOCATION_CONTENT.header.title;
+    const headerSubtitle = replaceLandingPageTokens(
+        locationContent?.header?.subtitle || DEFAULT_LOCATION_CONTENT.header.subtitle,
+        { foundedYear },
     );
-    const headerChip = locationContent?.header?.chip || "Wholesale Only - Trade Customers Welcome";
+    const headerChip = locationContent?.header?.chip || DEFAULT_LOCATION_CONTENT.header.chip;
 
-    const mapSettings = locationContent?.map || {
-        style: "gradient" as const,
-        showGetDirectionsButton: true,
-        buttonText: "Get Directions",
-    };
+    const mapSettings = locationContent?.map || DEFAULT_LOCATION_CONTENT.map;
 
-    const contactMethodsConfig = locationContent?.contactMethods || {
-        sectionTitle: "Get in Touch",
-        order: ["phone" as const, "address" as const, "email" as const],
-        descriptions: {
-            phone: "Call for availability and wholesale pricing",
-            address: "Visit our 70+ acre wholesale nursery facility",
-            email: "Email us for quotes and availability lists",
-        },
-    };
+    const contactMethodsConfig =
+        locationContent?.contactMethods || DEFAULT_LOCATION_CONTENT.contactMethods;
 
-    const businessHoursConfig = locationContent?.businessHours || {
-        title: "Business Hours",
-        chip: "Wholesale Hours - Trade Only",
-    };
+    const businessHoursConfig =
+        locationContent?.businessHours || DEFAULT_LOCATION_CONTENT.businessHours;
 
-    const visitInfoSectionTitle = locationContent?.visitInfo?.sectionTitle || "Plan Your Visit";
+    const visitInfoSectionTitle =
+        locationContent?.visitInfo?.sectionTitle || DEFAULT_LOCATION_CONTENT.visitInfo.sectionTitle;
     const visitInfo = useMemo(() => {
-        const items = locationContent?.visitInfo?.items || DEFAULT_VISIT_INFO;
-        return items
-            .filter((item) => item.isActive)
-            .sort((a, b) => a.displayOrder - b.displayOrder)
-            .map((item) => ({
-                title: item.title,
-                icon: VISIT_INFO_ICON_MAP[item.icon] || Eye,
-                description: item.description,
-            }));
+        const items = locationContent?.visitInfo?.items || DEFAULT_LOCATION_CONTENT.visitInfo.items;
+        return activeByDisplayOrder(items).map((item) => ({
+            title: item.title,
+            icon: resolveLandingPageIcon(item.icon, Eye),
+            description: item.description,
+        }));
     }, [locationContent?.visitInfo?.items]);
 
     // CTA section from API with fallbacks
-    const ctaConfig = locationContent?.cta || {
-        title: "Ready to Visit?",
-        description:
-            "Wholesale customers welcome! Visit during business hours or call ahead for availability and pricing.",
-        buttons: [
-            {
-                id: "1",
-                text: "Get Directions",
-                variant: "contained" as const,
-                color: "primary" as const,
-                action: "directions" as const,
-                displayOrder: 0,
-                isActive: true,
-            },
-            {
-                id: "2",
-                text: "Contact Us First",
-                variant: "outlined" as const,
-                color: "primary" as const,
-                action: "contact" as const,
-                displayOrder: 1,
-                isActive: true,
-            },
-            {
-                id: "3",
-                text: "Browse Online First",
-                variant: "text" as const,
-                color: "secondary" as const,
-                action: "external" as const,
-                url: "https://newlife.online-orders.sbiteam.com/",
-                displayOrder: 2,
-                isActive: true,
-            },
-        ],
-    };
+    const ctaConfig = locationContent?.cta || DEFAULT_LOCATION_CONTENT.cta;
 
     const ctaButtons = useMemo(() => {
-        return ctaConfig.buttons
-            .filter((btn) => btn.isActive)
-            .sort((a, b) => a.displayOrder - b.displayOrder);
+        return activeByDisplayOrder(ctaConfig.buttons);
     }, [ctaConfig.buttons]);
 
     // Get real business hours from API or use fallback

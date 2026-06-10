@@ -15,6 +15,7 @@ import { promisify } from "util";
 import cookieParser from "cookie-parser";
 import { readFileSync, writeFileSync, existsSync } from "fs";
 import { join } from "path";
+import { REST_ROUTES } from "@local/shared";
 import * as auth from "../auth.js";
 import {
     mockHeroBanners,
@@ -163,18 +164,18 @@ describe("Landing Page API Integration Tests", () => {
             next();
         });
         app.use(auth.authenticate);
-        app.use("/api/rest", restRouter);
+        app.use(REST_ROUTES.root, restRouter);
 
         // Login as admin and get cookie
         const adminLoginRes = await request(app)
-            .post("/api/rest/v1/auth/login")
+            .post(REST_ROUTES.auth.login)
             .send({ email: "admin@test.com", password: "admin123" });
 
         adminCookie = adminLoginRes.headers["set-cookie"][0];
 
         // Login as regular user and get cookie
         const userLoginRes = await request(app)
-            .post("/api/rest/v1/auth/login")
+            .post(REST_ROUTES.auth.login)
             .send({ email: "user@test.com", password: "admin123" });
 
         userCookie = userLoginRes.headers["set-cookie"][0];
@@ -267,7 +268,7 @@ describe("Landing Page API Integration Tests", () => {
 
     describe("GET /api/rest/v1/landing-page", () => {
         it("should return all landing page content", async () => {
-            const res = await request(app).get("/api/rest/v1/landing-page?abTest=false");
+            const res = await request(app).get(`${REST_ROUTES.landingPage.root}?abTest=false`);
 
             expect(res.status).toBe(200);
             expect(res.body).toHaveProperty("metadata");
@@ -281,7 +282,7 @@ describe("Landing Page API Integration Tests", () => {
         });
 
         it("should return only active content by default", async () => {
-            const res = await request(app).get("/api/rest/v1/landing-page?abTest=false");
+            const res = await request(app).get(`${REST_ROUTES.landingPage.root}?abTest=false`);
 
             expect(res.status).toBe(200);
 
@@ -303,7 +304,7 @@ describe("Landing Page API Integration Tests", () => {
 
         it("should return all content when onlyActive=false", async () => {
             const res = await request(app).get(
-                "/api/rest/v1/landing-page?onlyActive=false&abTest=false"
+                `${REST_ROUTES.landingPage.root}?onlyActive=false&abTest=false`
             );
 
             expect(res.status).toBe(200);
@@ -320,7 +321,7 @@ describe("Landing Page API Integration Tests", () => {
 
         it("should sort content by displayOrder", async () => {
             const res = await request(app).get(
-                "/api/rest/v1/landing-page?onlyActive=false&abTest=false"
+                `${REST_ROUTES.landingPage.root}?onlyActive=false&abTest=false`
             );
 
             expect(res.status).toBe(200);
@@ -339,7 +340,7 @@ describe("Landing Page API Integration Tests", () => {
         });
 
         it("should set proper cache headers", async () => {
-            const res = await request(app).get("/api/rest/v1/landing-page?abTest=false");
+            const res = await request(app).get(`${REST_ROUTES.landingPage.root}?abTest=false`);
 
             expect(res.status).toBe(200);
             expect(res.headers["cache-control"]).toContain("public");
@@ -350,14 +351,14 @@ describe("Landing Page API Integration Tests", () => {
 
     describe("PUT /api/rest/v1/landing-page", () => {
         it("should require admin authentication", async () => {
-            const res = await request(app).put("/api/rest/v1/landing-page").send(mockUpdateData);
+            const res = await request(app).put(REST_ROUTES.landingPage.root).send(mockUpdateData);
 
             expect(res.status).toBe(403);
         });
 
         it("should reject non-admin users", async () => {
             const res = await request(app)
-                .put("/api/rest/v1/landing-page")
+                .put(REST_ROUTES.landingPage.root)
                 .set("Cookie", userCookie)
                 .send(mockUpdateData);
 
@@ -366,7 +367,7 @@ describe("Landing Page API Integration Tests", () => {
 
         it("should update hero banners successfully", async () => {
             const res = await request(app)
-                .put("/api/rest/v1/landing-page")
+                .put(REST_ROUTES.landingPage.root)
                 .set("Cookie", adminCookie)
                 .send(mockUpdateData);
 
@@ -390,7 +391,7 @@ describe("Landing Page API Integration Tests", () => {
             };
 
             const res = await request(app)
-                .put("/api/rest/v1/landing-page")
+                .put(REST_ROUTES.landingPage.root)
                 .set("Cookie", adminCookie)
                 .send({ heroSettings: newSettings });
 
@@ -418,7 +419,7 @@ describe("Landing Page API Integration Tests", () => {
             ];
 
             const res = await request(app)
-                .put("/api/rest/v1/landing-page")
+                .put(REST_ROUTES.landingPage.root)
                 .set("Cookie", adminCookie)
                 .send({ seasonalPlants: newPlants });
 
@@ -444,7 +445,7 @@ describe("Landing Page API Integration Tests", () => {
             ];
 
             const res = await request(app)
-                .put("/api/rest/v1/landing-page")
+                .put(REST_ROUTES.landingPage.root)
                 .set("Cookie", adminCookie)
                 .send({ plantTips: newTips });
 
@@ -465,7 +466,7 @@ describe("Landing Page API Integration Tests", () => {
             };
 
             const res = await request(app)
-                .put("/api/rest/v1/landing-page")
+                .put(REST_ROUTES.landingPage.root)
                 .set("Cookie", adminCookie)
                 .send(multiUpdate);
 
@@ -477,7 +478,7 @@ describe("Landing Page API Integration Tests", () => {
 
         it("should return error when no valid sections provided", async () => {
             const res = await request(app)
-                .put("/api/rest/v1/landing-page")
+                .put(REST_ROUTES.landingPage.root)
                 .set("Cookie", adminCookie)
                 .send({});
 
@@ -489,7 +490,7 @@ describe("Landing Page API Integration Tests", () => {
     describe("PUT /api/rest/v1/landing-page/contact-info", () => {
         it("should require admin authentication", async () => {
             const res = await request(app)
-                .put("/api/rest/v1/landing-page/contact-info")
+                .put(REST_ROUTES.landingPage.contactInfo)
                 .send(mockContactInfoUpdate);
 
             expect(res.status).toBe(403);
@@ -497,7 +498,7 @@ describe("Landing Page API Integration Tests", () => {
 
         it("should update business hours successfully", async () => {
             const res = await request(app)
-                .put("/api/rest/v1/landing-page/contact-info")
+                .put(REST_ROUTES.landingPage.contactInfo)
                 .set("Cookie", adminCookie)
                 .send(mockContactInfoUpdate);
 
@@ -512,7 +513,7 @@ describe("Landing Page API Integration Tests", () => {
 
         it("should return error when neither business nor hours provided", async () => {
             const res = await request(app)
-                .put("/api/rest/v1/landing-page/contact-info")
+                .put(REST_ROUTES.landingPage.contactInfo)
                 .set("Cookie", adminCookie)
                 .send({});
 
@@ -523,14 +524,14 @@ describe("Landing Page API Integration Tests", () => {
 
     describe("POST /api/rest/v1/landing-page/invalidate-cache", () => {
         it("should require admin authentication", async () => {
-            const res = await request(app).post("/api/rest/v1/landing-page/invalidate-cache");
+            const res = await request(app).post(REST_ROUTES.landingPage.invalidateCache);
 
             expect(res.status).toBe(403);
         });
 
         it("should invalidate cache successfully for admin", async () => {
             const res = await request(app)
-                .post("/api/rest/v1/landing-page/invalidate-cache")
+                .post(REST_ROUTES.landingPage.invalidateCache)
                 .set("Cookie", adminCookie);
 
             expect(res.status).toBe(200);
@@ -540,7 +541,7 @@ describe("Landing Page API Integration Tests", () => {
 
         it("should reject non-admin users", async () => {
             const res = await request(app)
-                .post("/api/rest/v1/landing-page/invalidate-cache")
+                .post(REST_ROUTES.landingPage.invalidateCache)
                 .set("Cookie", userCookie);
 
             expect(res.status).toBe(403);
@@ -550,12 +551,12 @@ describe("Landing Page API Integration Tests", () => {
     describe("Cache Behavior", () => {
         it("should serve from cache on subsequent requests", async () => {
             // First request - cache miss
-            const res1 = await request(app).get("/api/rest/v1/landing-page?abTest=false");
+            const res1 = await request(app).get(`${REST_ROUTES.landingPage.root}?abTest=false`);
             expect(res1.status).toBe(200);
             const etag1 = res1.headers["etag"];
 
             // Second request - cache hit (should have same ETag)
-            const res2 = await request(app).get("/api/rest/v1/landing-page?abTest=false");
+            const res2 = await request(app).get(`${REST_ROUTES.landingPage.root}?abTest=false`);
             expect(res2.status).toBe(200);
             const etag2 = res2.headers["etag"];
 
@@ -565,7 +566,7 @@ describe("Landing Page API Integration Tests", () => {
         it("should invalidate cache after content update", async () => {
             // Get initial content (with onlyActive=false to get all items including inactive)
             const res1 = await request(app).get(
-                "/api/rest/v1/landing-page?abTest=false&onlyActive=false"
+                `${REST_ROUTES.landingPage.root}?abTest=false&onlyActive=false`
             );
             const content1 = res1.body;
 
@@ -574,7 +575,7 @@ describe("Landing Page API Integration Tests", () => {
 
             // Update content
             const updateRes = await request(app)
-                .put("/api/rest/v1/landing-page")
+                .put(REST_ROUTES.landingPage.root)
                 .set("Cookie", adminCookie)
                 .send(mockUpdateData);
 
@@ -582,7 +583,7 @@ describe("Landing Page API Integration Tests", () => {
 
             // Get content again - should reflect the update (cache was invalidated)
             const res2 = await request(app).get(
-                "/api/rest/v1/landing-page?abTest=false&onlyActive=false"
+                `${REST_ROUTES.landingPage.root}?abTest=false&onlyActive=false`
             );
             const content2 = res2.body;
 
@@ -598,7 +599,7 @@ describe("Landing Page API Integration Tests", () => {
     describe("Error Handling", () => {
         it("should handle invalid JSON in request body", async () => {
             const res = await request(app)
-                .put("/api/rest/v1/landing-page")
+                .put(REST_ROUTES.landingPage.root)
                 .set("Cookie", adminCookie)
                 .set("Content-Type", "application/json")
                 .send("{ invalid json }");

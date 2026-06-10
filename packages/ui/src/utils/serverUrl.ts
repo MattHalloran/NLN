@@ -1,3 +1,5 @@
+import { API_PREFIX, DEFAULT_PORTS } from "@local/shared";
+
 /**
  * Determines server URL to use, depending on whether we are running
  * locally or not.
@@ -5,7 +7,7 @@
  */
 export function getServerUrl(): string {
     // Get port from environment variable with fallback to 5331
-    const serverPort = import.meta.env.VITE_PORT_SERVER || "5331";
+    const serverPort = import.meta.env.VITE_PORT_SERVER || String(DEFAULT_PORTS.server);
 
     // If running locally through nginx (localhost without port or on standard ports)
     if (
@@ -15,7 +17,7 @@ export function getServerUrl(): string {
             window.location.port === "443")
     ) {
         // Use nginx proxy - same protocol and host, nginx will route /api to backend
-        return `${window.location.protocol}//${window.location.host}/api`;
+        return `${window.location.protocol}//${window.location.host}${API_PREFIX}`;
     }
 
     // If running locally in development mode (with specific port like :3001 or :5173)
@@ -23,10 +25,10 @@ export function getServerUrl(): string {
         window.location.host.includes("localhost:") ||
         window.location.host.includes("192.168.0.")
     ) {
-        return `http://${window.location.hostname}:${serverPort}/api`;
+        return `http://${window.location.hostname}:${serverPort}${API_PREFIX}`;
     }
 
     // In production, use the same origin so cookies, service workers, and caches
     // stay scoped to the canonical app host.
-    return `${window.location.origin}/api`;
+    return `${window.location.origin}${API_PREFIX}`;
 }

@@ -10,23 +10,65 @@ import {
 import { Routes } from "Routes";
 // Using REST API for landing page content and authentication
 import { useSession } from "api/rest/hooks";
-import { AlertDialog } from "components/dialogs/AlertDialog/AlertDialog";
 import { SnackSeverity } from "components/dialogs/Snack/Snack";
-import { SnackStack } from "components/dialogs/SnackStack/SnackStack";
-import { PullToRefresh } from "components/PullToRefresh/PullToRefresh";
 import { BottomNav } from "components/navigation/BottomNav/BottomNav";
-import { Footer } from "components/navigation/Footer/Footer";
 import { SideMenu, sideMenuDisplayData } from "components/navigation/Navbar/SideMenu";
 import { BusinessContext } from "contexts/BusinessContext";
 import { SessionContext } from "contexts/SessionContext";
 import { ZIndexProvider } from "contexts/ZIndexContext";
 import { useWindowSize } from "hooks/useWindowSize";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+    Suspense,
+    lazy,
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+    type ComponentType,
+} from "react";
 import { useLocation } from "route";
 import { useLandingPageStore } from "stores/landingPageStore";
 import { BusinessData, Session } from "types";
-import { PubSub, SideMenuPub, createDynamicTheme } from "utils";
+import { PubSub, type SideMenuPub } from "utils/pubsub";
+import { createDynamicTheme } from "utils/theme";
 import { initializeCsrfToken } from "utils/csrf";
+
+type LazyNamedComponent<TModule, TExport extends keyof TModule> =
+    TModule[TExport] extends ComponentType<infer TProps> ? ComponentType<TProps> : never;
+
+const lazyNamed = <TModule, TExport extends keyof TModule>(
+    importer: () => Promise<TModule>,
+    exportName: TExport,
+) =>
+    lazy(async () => {
+        const module = await importer();
+        return { default: module[exportName] as LazyNamedComponent<TModule, TExport> };
+    });
+
+const AlertDialog = lazyNamed(
+    () => import("components/dialogs/AlertDialog/AlertDialog"),
+    "AlertDialog",
+);
+const SnackStack = lazyNamed(
+    () => import("components/dialogs/SnackStack/SnackStack"),
+    "SnackStack",
+);
+const PullToRefresh = lazyNamed(
+    () => import("components/PullToRefresh/PullToRefresh"),
+    "PullToRefresh",
+);
+const Footer = lazyNamed(() => import("components/navigation/Footer/Footer"), "Footer");
+
+const runWhenIdle = (callback: () => void, timeout = 1500) => {
+    if (typeof window.requestIdleCallback === "function") {
+        const idleId = window.requestIdleCallback(callback, { timeout });
+        return () => window.cancelIdleCallback(idleId);
+    }
+
+    const timeoutId = window.setTimeout(callback, timeout);
+    return () => window.clearTimeout(timeoutId);
+};
 
 const menusDisplayData: {
     [key in SideMenuPub["id"]]: {
@@ -55,7 +97,7 @@ export function App() {
     const refetchLandingPage = useLandingPageStore((state) => state.refetch);
 
     const { mutate: getSession } = useSession();
-    const [,] = useLocation();
+    const [location] = useLocation();
 
     // Derive business data from landing page data
     const business = useMemo<BusinessData | undefined>(() => {
@@ -139,10 +181,26 @@ export function App() {
 
     // Initial data fetch - only runs once on mount
     useEffect(() => {
-        // Initialize CSRF token for all API requests
-        initializeCsrfToken();
-        checkLogin();
         fetchLandingPage();
+        const cancelCsrfWarmup = runWhenIdle(() => {
+            initializeCsrfToken();
+        });
+
+        const isAdminRoute = location.startsWith("/admin");
+        const cancelSessionCheck = isAdminRoute
+            ? undefined
+            : runWhenIdle(() => {
+                  checkLogin();
+              }, 750);
+
+        if (isAdminRoute) {
+            checkLogin();
+        }
+
+        return () => {
+            cancelCsrfWarmup();
+            cancelSessionCheck?.();
+        };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -293,8 +351,9 @@ export function App() {
                                         color: theme.palette.text.primary,
                                     }}
                                 >
-                                    {/* Pull-to-refresh for PWAs */}
-                                    <PullToRefresh />
+                                    <Suspense fallback={null}>
+                                        <PullToRefresh />
+                                    </Suspense>
                                     <Box
                                         id="content-wrap"
                                         sx={{
@@ -317,13 +376,19 @@ export function App() {
                                                 <CircularProgress size={100} />
                                             </Box>
                                         )}
-                                        <AlertDialog />
+                                        <Suspense fallback={null}>
+                                            <AlertDialog />
+                                        </Suspense>
                                         <SideMenu />
-                                        <SnackStack />
+                                        <Suspense fallback={null}>
+                                            <SnackStack />
+                                        </Suspense>
                                         <Routes />
                                     </Box>
                                     <BottomNav />
-                                    <Footer />
+                                    <Suspense fallback={null}>
+                                        <Footer />
+                                    </Suspense>
                                 </main>
                             </Box>
                         </BusinessContext.Provider>

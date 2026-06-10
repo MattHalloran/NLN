@@ -7,10 +7,8 @@
  * - Client reads cookie and sends it in X-CSRF-Token header
  */
 
+import { CSRF, REST_ROUTES, requiresCsrfTokenForMethod, stripApiPrefix } from "@local/shared";
 import { getServerUrl } from "./serverUrl";
-
-const CSRF_COOKIE_NAME = "csrf-token";
-const CSRF_HEADER_NAME = "X-CSRF-Token";
 
 // In-memory token cache (since we can't read cross-origin cookies)
 let cachedToken: string | null = null;
@@ -28,7 +26,7 @@ function getCsrfTokenFromCookie(): string | null {
     const cookies = document.cookie.split("; ");
     for (const cookie of cookies) {
         const [name, value] = cookie.split("=");
-        if (name === CSRF_COOKIE_NAME) {
+        if (name === CSRF.CookieName) {
             return decodeURIComponent(value);
         }
     }
@@ -39,7 +37,7 @@ function getCsrfTokenFromCookie(): string | null {
  * Clear CSRF token from cookie
  */
 function clearCsrfTokenCookie(): void {
-    document.cookie = `${CSRF_COOKIE_NAME}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+    document.cookie = `${CSRF.CookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
 }
 
 /**
@@ -55,10 +53,13 @@ async function fetchCsrfToken(): Promise<string | null> {
     // Create new fetch promise
     fetchPromise = (async () => {
         try {
-            const response = await fetch(`${getServerUrl()}/rest/v1/csrf-token`, {
-                method: "GET",
-                credentials: "include", // Important: include cookies
-            });
+            const response = await fetch(
+                `${getServerUrl()}${stripApiPrefix(REST_ROUTES.csrfToken)}`,
+                {
+                    method: "GET",
+                    credentials: "include", // Important: include cookies
+                },
+            );
 
             if (!response.ok) {
                 console.error("[CSRF] Failed to fetch CSRF token:", response.status);
@@ -66,12 +67,12 @@ async function fetchCsrfToken(): Promise<string | null> {
             }
 
             const data = await response.json();
-            const token = data.csrfToken || null;
+            const token = data[CSRF.ResponseTokenField] || null;
 
             if (token) {
                 // Cache token in memory for 23 hours (cookie is valid for 24 hours)
                 cachedToken = token;
-                tokenExpiry = Date.now() + 23 * 60 * 60 * 1000;
+                tokenExpiry = Date.now() + CSRF.ClientCacheTtlMs;
             }
 
             return token;
@@ -107,7 +108,7 @@ export async function getCsrfToken(): Promise<string | null> {
     if (token) {
         // Cache it
         cachedToken = token;
-        tokenExpiry = Date.now() + 23 * 60 * 60 * 1000;
+        tokenExpiry = Date.now() + CSRF.ClientCacheTtlMs;
         return token;
     }
 
@@ -170,15 +171,14 @@ export async function initializeCsrfToken(): Promise<void> {
  * Get CSRF header name (for reference)
  */
 export function getCsrfHeaderName(): string {
-    return CSRF_HEADER_NAME;
+    return CSRF.HeaderName;
 }
 
 /**
  * Check if a request method requires CSRF protection
  */
 export function requiresCsrfToken(method: string): boolean {
-    const upperMethod = method.toUpperCase();
-    return ["POST", "PUT", "PATCH", "DELETE"].includes(upperMethod);
+    return requiresCsrfTokenForMethod(method);
 }
 
 /**

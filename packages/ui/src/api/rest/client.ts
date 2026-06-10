@@ -1,8 +1,79 @@
+import {
+    CODE,
+    CSRF,
+    REST_ENDPOINTS,
+    REST_ROUTES,
+    stripApiPrefix,
+    stripRestPrefix,
+} from "@local/shared";
+import type {
+    CleanupHistory,
+    CleanupPreview,
+    CustomerSession,
+    DashboardStats,
+    DeepPartial,
+    Image,
+    JobStatus,
+    LandingPageContent,
+    LandingPageVariant,
+    LogsResponse,
+    LogStatsResponse,
+    NewsletterStatsResponse,
+    NewsletterSubscribersResponse,
+    OrphanedFilesResponse,
+    OrphanedRecordsResponse,
+    RecentActivity,
+    SessionResponse,
+    StorageStats,
+    UpdateLandingPageContentRequest,
+} from "@local/shared";
 import { getServerUrl } from "../../utils/serverUrl";
 import { getCsrfToken, requiresCsrfToken, refreshCsrfToken } from "../../utils/csrf";
 
+export type {
+    CleanupHistory,
+    CleanupPreview,
+    CustomerSession,
+    DashboardStats,
+    DeepPartial,
+    Image,
+    JobStatus,
+    LandingPageContent,
+    LandingPageVariant,
+    LogEntry,
+    LogsResponse,
+    LogStatsResponse,
+    NewsletterSubscription,
+    NewsletterStatsResponse,
+    NewsletterSubscribersResponse,
+    OrphanedFile,
+    OrphanedFilesResponse,
+    OrphanedRecord,
+    OrphanedRecordsResponse,
+    RecentActivity,
+    SectionConfiguration,
+    SessionResponse,
+    StorageStats,
+    UpdateLandingPageContentRequest,
+} from "@local/shared";
+
 // Base REST API URL
-const REST_BASE_URL = `${getServerUrl()}/rest/v1`;
+const REST_BASE_URL = `${getServerUrl()}${stripApiPrefix(REST_ROUTES.v1)}`;
+const apiPath = stripRestPrefix;
+const endpointPath = (endpoint: { path: string }): string => apiPath(endpoint.path);
+const withQuery = (
+    path: string,
+    params: Record<string, string | number | boolean | undefined>,
+): string => {
+    const queryParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined) {
+            queryParams.append(key, String(value));
+        }
+    });
+    const queryString = queryParams.toString();
+    return `${path}${queryString ? `?${queryString}` : ""}`;
+};
 
 // Error class for API errors
 export class ApiError extends Error {
@@ -32,28 +103,29 @@ async function fetchApi<T>(endpoint: string, options?: RequestInit, retryCount =
 
     // Get CSRF token for state-changing requests
     const method = options?.method || "GET";
-    let csrfHeaders = {};
+    const headers = new Headers(options?.headers);
 
     if (requiresCsrfToken(method)) {
         const csrfToken = await getCsrfToken();
         if (csrfToken) {
-            csrfHeaders = {
-                "X-CSRF-Token": csrfToken,
-            };
+            headers.set(CSRF.HeaderName, csrfToken);
         } else {
             console.error(`[CSRF] Failed to get CSRF token for ${method} ${endpoint}!`);
-            throw new ApiError(500, "Failed to get CSRF token", { code: "CSRF_TOKEN_UNAVAILABLE" });
+            throw new ApiError(500, CODE.CsrfTokenUnavailable.message, {
+                code: CODE.CsrfTokenUnavailable.code,
+            });
         }
     }
 
+    const isFormData = typeof FormData !== "undefined" && options?.body instanceof FormData;
+    if (!isFormData && !headers.has("Content-Type")) {
+        headers.set("Content-Type", "application/json");
+    }
+
     const defaultOptions: RequestInit = {
-        credentials: "include", // Include cookies for auth
-        headers: {
-            "Content-Type": "application/json",
-            ...csrfHeaders,
-            ...options?.headers,
-        },
         ...options,
+        credentials: "include", // Include cookies for auth
+        headers,
     };
 
     try {
@@ -65,7 +137,7 @@ async function fetchApi<T>(endpoint: string, options?: RequestInit, retryCount =
             // If CSRF error and haven't retried yet, refresh token and retry
             if (
                 response.status === 403 &&
-                errorData?.code === "CSRF_VALIDATION_FAILED" &&
+                errorData?.code === CODE.CsrfValidationFailed.code &&
                 retryCount === 0
             ) {
                 await refreshCsrfToken();
@@ -90,663 +162,7 @@ async function fetchApi<T>(endpoint: string, options?: RequestInit, retryCount =
     }
 }
 
-// Type definitions for API responses
-
-// Deep partial utility type for nested updates
-type DeepPartial<T> = T extends object
-    ? {
-          [P in keyof T]?: DeepPartial<T[P]>;
-      }
-    : T;
-
-// Variant System
-export interface VariantMeta {
-    variantId: string; // e.g., "variant-homepage-official"
-}
-
-// New variant-first structure for A/B testing
-export interface LandingPageVariant {
-    id: string; // e.g., "variant-homepage-official", "variant-bold-cta"
-    name: string; // Display name like "Official Homepage", "Bold CTA Design"
-    description?: string; // What this variant is testing
-    status: "enabled" | "disabled"; // Whether this variant is receiving traffic
-    isOfficial: boolean; // Is this the official/control variant?
-    trafficAllocation: number; // Percentage of traffic (0-100)
-    metrics: {
-        views: number;
-        conversions: number;
-        bounces: number;
-    };
-    createdAt: string;
-    updatedAt?: string;
-    lastModified?: string; // When the content was last edited
-}
-
-export interface LandingPageContent {
-    metadata: {
-        version: string;
-        lastUpdated: string;
-    };
-    content: {
-        hero: {
-            banners: Array<{
-                id: string;
-                src: string;
-                alt: string;
-                description: string;
-                width: number;
-                height: number;
-                displayOrder: number;
-                isActive: boolean;
-            }>;
-            settings: {
-                autoPlay: boolean;
-                autoPlayDelay: number;
-                showDots: boolean;
-                showArrows: boolean;
-                fadeTransition: boolean;
-                fadeTransitionDuration: number;
-            };
-            text: {
-                title: string;
-                subtitle: string;
-                description: string;
-                businessHours: string;
-                useContactInfoHours?: boolean;
-                trustBadges: Array<{
-                    icon: string;
-                    text: string;
-                }>;
-                buttons: Array<{
-                    text: string;
-                    link: string;
-                    type: string;
-                }>;
-            };
-        };
-        services: {
-            title: string;
-            subtitle: string;
-            cta?: {
-                title: string;
-                subtitle: string;
-                primaryButton: {
-                    text: string;
-                    url: string;
-                };
-                secondaryButton: {
-                    text: string;
-                    url: string;
-                };
-            };
-            items: Array<{
-                title: string;
-                description: string;
-                icon: string;
-                action: string;
-                url: string;
-            }>;
-        };
-        seasonal: {
-            plants: Array<{
-                id: string;
-                name: string;
-                description: string;
-                season: string;
-                careLevel: string;
-                icon: string;
-                displayOrder: number;
-                isActive: boolean;
-                // Optional image fields (icon is fallback)
-                image?: string;
-                imageAlt?: string;
-                imageHash?: string;
-            }>;
-            tips: Array<{
-                id: string;
-                title: string;
-                description: string;
-                category: string;
-                season: string;
-                displayOrder: number;
-                isActive: boolean;
-            }>;
-            header?: {
-                title: string;
-                subtitle: string;
-            };
-            sections?: {
-                plants: {
-                    currentSeasonTitle: string;
-                    otherSeasonTitleTemplate: string;
-                };
-                tips: {
-                    title: string;
-                };
-            };
-            galleryButton?: {
-                text: string;
-                enabled: boolean;
-            };
-        };
-        newsletter: {
-            title: string;
-            description: string;
-            disclaimer: string;
-            buttonText?: string;
-            isActive: boolean;
-        };
-        company: {
-            foundedYear: number;
-            description: string;
-        };
-        about?: {
-            story: {
-                overline: string;
-                title: string;
-                subtitle: string;
-                paragraphs: string[];
-                cta: {
-                    text: string;
-                    link: string;
-                };
-            };
-            values: {
-                title: string;
-                items: Array<{
-                    icon: string;
-                    title: string;
-                    description: string;
-                }>;
-            };
-            mission: {
-                title: string;
-                quote: string;
-                attribution: string;
-            };
-        };
-        socialProof?: {
-            header: {
-                title: string;
-                subtitle: string;
-            };
-            stats: Array<{
-                number: string;
-                label: string;
-                subtext: string;
-            }>;
-            mission: {
-                title: string;
-                quote: string;
-                attribution: string;
-            };
-            strengths: {
-                title: string;
-                items: Array<{
-                    icon: string;
-                    title: string;
-                    description: string;
-                    highlight: string;
-                }>;
-            };
-            clientTypes: {
-                title: string;
-                items: Array<{
-                    icon: string;
-                    label: string;
-                }>;
-            };
-            footer: {
-                description: string;
-                chips: string[];
-            };
-        };
-        location?: {
-            header: {
-                title: string;
-                subtitle: string;
-                chip: string;
-            };
-            map: {
-                style: "gradient" | "embedded";
-                showGetDirectionsButton: boolean;
-                buttonText: string;
-            };
-            contactMethods: {
-                sectionTitle: string;
-                order: ("phone" | "address" | "email")[];
-                descriptions: {
-                    phone: string;
-                    address: string;
-                    email: string;
-                };
-            };
-            businessHours: {
-                title: string;
-                chip: string;
-            };
-            visitInfo: {
-                sectionTitle: string;
-                items: Array<{
-                    id: string;
-                    title: string;
-                    icon: string;
-                    description: string;
-                    displayOrder: number;
-                    isActive: boolean;
-                }>;
-            };
-            cta: {
-                title: string;
-                description: string;
-                buttons: Array<{
-                    id: string;
-                    text: string;
-                    variant: "contained" | "outlined" | "text";
-                    color: "primary" | "secondary";
-                    action: "directions" | "contact" | "external";
-                    url?: string;
-                    displayOrder: number;
-                    isActive: boolean;
-                }>;
-            };
-        };
-    };
-    contact: {
-        name: string;
-        address: {
-            street: string;
-            city: string;
-            state: string;
-            zip: string;
-            full: string;
-            googleMapsUrl: string;
-        };
-        phone: {
-            display: string;
-            link: string;
-        };
-        fax?: {
-            display: string;
-            link: string;
-        };
-        email: {
-            display: string;
-            link: string;
-        };
-        social: {
-            facebook?: string;
-            instagram?: string;
-            twitter?: string;
-            linkedin?: string;
-        };
-        website: string;
-        hours: string;
-    };
-    theme: {
-        colors: {
-            light: {
-                primary: string;
-                secondary: string;
-                accent: string;
-                background: string;
-                paper: string;
-            };
-            dark: {
-                primary: string;
-                secondary: string;
-                accent: string;
-                background: string;
-                paper: string;
-            };
-        };
-    };
-    layout: {
-        sections: {
-            order: string[];
-            enabled: Record<string, boolean>;
-        };
-        features: {
-            showSeasonalContent: boolean;
-            showNewsletter: boolean;
-            showSocialProof: boolean;
-            enableAnimations: boolean;
-        };
-    };
-    experiments: {
-        abTesting: {
-            enabled: boolean;
-            activeTestId: string | null;
-        };
-    };
-    _meta?: VariantMeta; // Variant assignment metadata
-}
-
-// Section configuration type
-export interface SectionConfiguration {
-    order: string[];
-    enabled: Record<string, boolean>;
-}
-
-export interface AnalyticsEvent {
-    eventType: "page_view" | "bounce" | "interaction" | "conversion";
-    variantId?: string;
-    testId?: string;
-    sessionId: string;
-    timestamp: number;
-    metadata?: Record<string, unknown>;
-}
-
-export interface Plant {
-    id: string;
-    name: string;
-    latinName?: string;
-    traits?: string[];
-    skus: Array<{
-        id: string;
-        size: string;
-        price: number;
-        availability: number;
-        discounts?: Array<{
-            discount: {
-                id: string;
-                name: string;
-                value: number;
-                isPercentage: boolean;
-            };
-        }>;
-    }>;
-}
-
-// Authentication & Customer types
-export interface Email {
-    id: string;
-    emailAddress: string;
-    receivesDeliveryUpdates: boolean;
-}
-
-export interface Phone {
-    id: string;
-    number: string;
-    receivesDeliveryUpdates: boolean;
-}
-
-export interface Business {
-    id: string;
-    name: string;
-}
-
-export interface Role {
-    title: string;
-    description?: string;
-}
-
-export interface CustomerSession {
-    id: string;
-    emailVerified: boolean;
-    accountApproved: boolean;
-    status: string;
-    theme: string;
-    roles: Array<{
-        role: Role;
-    }>;
-}
-
-export type SessionResponse =
-    | { authenticated: true; user: CustomerSession }
-    | { authenticated: false; user: null };
-
-export interface CustomerContact {
-    id: string;
-    firstName: string;
-    lastName: string;
-    pronouns?: string;
-    emails: Email[];
-    phones: Phone[];
-    business?: Business;
-    status: string;
-    accountApproved: boolean;
-    roles: Array<{
-        role: Role;
-    }>;
-}
-
-// Image types
-export interface ImageFile {
-    src: string;
-    width: number;
-    height: number;
-}
-
-export interface Image {
-    hash: string;
-    alt: string;
-    description: string;
-    files: ImageFile[];
-}
-
-// Dashboard types
-export interface DashboardStats {
-    totalCustomers: number;
-    approvedCustomers: number;
-    pendingOrders: number;
-    totalProducts: number;
-    totalSkus: number;
-}
-
-// Storage Management types
-export interface StorageStats {
-    images: {
-        total: number;
-        labeled: number;
-        unlabeled: number;
-        unlabeledOverRetention: number;
-    };
-    storage: {
-        totalSizeMB: number;
-        totalFiles: number;
-        filesOnDisk: number;
-        orphanedFiles: number;
-        maxStorageMB: number;
-        availableStorageMB: number;
-        usagePercent: number;
-        averageImageSizeMB: number;
-    };
-    cleanup: {
-        lastRun: string | null;
-        lastRunStatus: string | null;
-        lastRunDeletedImages: number;
-        lastRunDeletedFiles: number;
-        lastRunOrphanedFiles: number;
-        lastRunOrphanedRecords: number;
-        lastRunDurationMs: number | null;
-        lastRunErrors: string[];
-        nextScheduledRun: string | null;
-        jobStatus: {
-            waiting: number;
-            active: number;
-            completed: number;
-            failed: number;
-        };
-    };
-    policy: {
-        retentionDays: number;
-        backupRetentionDays: number;
-        frequency: string;
-        schedule: string;
-    };
-}
-
-export interface CleanupLogEntry {
-    id: number;
-    type: string;
-    deleted_images: number;
-    deleted_files: number;
-    orphaned_files: number;
-    orphaned_records: number;
-    errors: string | null;
-    status: string;
-    duration_ms: number | null;
-    created_at: string;
-}
-
-export interface CleanupHistory {
-    history: CleanupLogEntry[];
-    pagination: {
-        total: number;
-        limit: number;
-        offset: number;
-        hasMore: boolean;
-    };
-}
-
-export interface CleanupPreview {
-    unlabeledImages: {
-        count: number;
-        estimatedFreedMB: number;
-        ageBreakdown: {
-            "30-60days": number;
-            "60-90days": number;
-            "90+days": number;
-        };
-        samples: Array<{
-            hash: string;
-            alt: string;
-            unlabeledSince: string;
-            fileCount: number;
-        }>;
-    };
-    orphanedFiles: {
-        count: number;
-        estimatedFreedMB: number;
-    };
-    orphanedRecords: {
-        count: number;
-    };
-    totalEstimatedFreedMB: number;
-}
-
-export interface OrphanedFile {
-    name: string;
-    sizeMB: number;
-    lastModified: string;
-}
-
-export interface OrphanedFilesResponse {
-    orphanedFiles: OrphanedFile[];
-    totalCount: number;
-    totalSizeMB: number;
-}
-
-export interface OrphanedRecord {
-    hash: string;
-    alt: string;
-    labels: string[];
-    fileCount: number;
-    reason: string;
-}
-
-export interface OrphanedRecordsResponse {
-    orphanedRecords: OrphanedRecord[];
-    totalCount: number;
-}
-
-export interface RecentActivity {
-    recentUploads: Array<{
-        hash: string;
-        alt: string;
-        createdAt: string;
-        labels: string[];
-    }>;
-    recentlyUnlabeled: Array<{
-        hash: string;
-        alt: string;
-        unlabeledSince: string;
-    }>;
-    recentCleanups: Array<{
-        created_at: string;
-        status: string;
-        deleted_images: number;
-        deleted_files: number;
-    }>;
-}
-
-export interface JobStatus {
-    waiting: number;
-    active: number;
-    completed: number;
-    failed: number;
-}
-
-export interface LogEntry {
-    level: string;
-    message: string;
-    timestamp: string;
-    service?: string;
-    stack?: string;
-    ip?: string;
-    path?: string;
-    method?: string;
-    userAgent?: string;
-    [key: string]: unknown;
-}
-
-export interface LogsResponse {
-    logs: LogEntry[];
-    total: number;
-    hasMore: boolean;
-    file: string;
-}
-
-export interface LogStatsResponse {
-    combinedSize: string;
-    errorSize: string;
-    errorCount: number;
-    warnCount: number;
-    infoCount: number;
-    recentErrors: LogEntry[];
-    logRotation: {
-        enabled: boolean;
-        maxSize: string;
-        maxFiles: number;
-        note: string;
-    };
-}
-
-export interface NewsletterSubscription {
-    id: number;
-    email: string;
-    variant_id: string | null;
-    source: string;
-    status: string;
-    created_at: string;
-}
-
-export interface NewsletterSubscribersResponse {
-    subscribers: NewsletterSubscription[];
-    pagination: {
-        page: number;
-        limit: number;
-        total: number;
-        totalPages: number;
-    };
-    stats: {
-        total: number;
-        byStatus: Record<string, number>;
-    };
-}
-
-export interface NewsletterStatsResponse {
-    byStatus: Record<string, number>;
-    byVariant: Array<{
-        variantId: string | null;
-        count: number;
-    }>;
-    recentActivity: {
-        last7Days: number;
-        last30Days: number;
-    };
-}
+// Type definitions for API responses are exported from /shared.
 
 // API client with typed methods
 export const restApi = {
@@ -755,56 +171,21 @@ export const restApi = {
         onlyActive?: boolean;
         variantId?: string;
     }): Promise<LandingPageContent> {
-        const queryParams = new URLSearchParams();
-
-        queryParams.append("onlyActive", String(params?.onlyActive ?? true));
-
-        if (params?.variantId) {
-            queryParams.append("variantId", params.variantId);
-        }
-
         return fetchApi<LandingPageContent>(
-            `/landing-page?${queryParams.toString()}`,
-            { cache: "no-store" }, // Bypass browser cache to always get fresh data
+            withQuery(endpointPath(REST_ENDPOINTS.landingPage.get), {
+                onlyActive: params?.onlyActive ?? true,
+                variantId: params?.variantId,
+            }),
         );
     },
 
     async invalidateLandingPageCache(): Promise<{ success: boolean }> {
-        return fetchApi<{ success: boolean }>("/landing-page/invalidate-cache", { method: "POST" });
-    },
-
-    // Plants
-    async getPlants(params?: {
-        inStock?: boolean;
-        category?: string;
-        searchTerm?: string;
-        limit?: number;
-        offset?: number;
-    }): Promise<Plant[]> {
-        const queryParams = new URLSearchParams();
-
-        if (params?.inStock !== undefined) {
-            queryParams.append("inStock", String(params.inStock));
-        }
-        if (params?.category) {
-            queryParams.append("category", params.category);
-        }
-        if (params?.searchTerm) {
-            queryParams.append("searchTerm", params.searchTerm);
-        }
-        if (params?.limit !== undefined) {
-            queryParams.append("limit", String(params.limit));
-        }
-        if (params?.offset !== undefined) {
-            queryParams.append("offset", String(params.offset));
-        }
-
-        const query = queryParams.toString();
-        return fetchApi<Plant[]>(`/plants${query ? `?${query}` : ""}`);
-    },
-
-    async getPlant(id: string): Promise<Plant> {
-        return fetchApi<Plant>(`/plants/${id}`);
+        return fetchApi<{ success: boolean }>(
+            endpointPath(REST_ENDPOINTS.landingPage.invalidateCache),
+            {
+                method: REST_ENDPOINTS.landingPage.invalidateCache.method,
+            },
+        );
     },
 
     // Contact info updates
@@ -821,257 +202,34 @@ export const restApi = {
         message: string;
         updated: { business: boolean; hours: boolean };
     }> {
-        const params = new URLSearchParams();
-        if (queryParams?.variantId) params.append("variantId", queryParams.variantId);
-
-        const queryString = params.toString();
         return fetchApi<{
             success: boolean;
             message: string;
             updated: { business: boolean; hours: boolean };
-        }>(`/landing-page/contact-info${queryString ? `?${queryString}` : ""}`, {
-            method: "PUT",
-            body: JSON.stringify(data),
-        });
+        }>(
+            withQuery(endpointPath(REST_ENDPOINTS.landingPage.updateContactInfo), {
+                variantId: queryParams?.variantId,
+            }),
+            {
+                method: REST_ENDPOINTS.landingPage.updateContactInfo.method,
+                body: JSON.stringify(data),
+            },
+        );
     },
 
     // Unified landing page content updates
     async updateLandingPageContent(
-        data: {
-            heroBanners?: Array<{
-                id: string;
-                src: string;
-                alt: string;
-                description: string;
-                width: number;
-                height: number;
-                displayOrder: number;
-                isActive: boolean;
-            }>;
-            heroSettings?: {
-                autoPlay: boolean;
-                autoPlayDelay: number;
-                showDots: boolean;
-                showArrows: boolean;
-                fadeTransition: boolean;
-            };
-            seasonalPlants?: Array<{
-                id: string;
-                name: string;
-                description: string;
-                season: string;
-                careLevel: string;
-                icon: string;
-                displayOrder: number;
-                isActive: boolean;
-                image?: string;
-                imageAlt?: string;
-                imageHash?: string;
-            }>;
-            plantTips?: Array<{
-                id: string;
-                title: string;
-                description: string;
-                category: string;
-                season: string;
-                displayOrder: number;
-                isActive: boolean;
-            }>;
-            seasonalHeader?: {
-                title: string;
-                subtitle: string;
-            };
-            seasonalSections?: {
-                plants: {
-                    currentSeasonTitle: string;
-                    otherSeasonTitleTemplate: string;
-                };
-                tips: {
-                    title: string;
-                };
-            };
-            seasonalGalleryButton?: {
-                text: string;
-                enabled: boolean;
-            };
-            newsletterButtonText?: string;
-            settings?: {
-                hero: {
-                    title: string;
-                    subtitle: string;
-                    description: string;
-                    businessHours: string;
-                    trustBadges: Array<{
-                        icon: string;
-                        text: string;
-                    }>;
-                    buttons: Array<{
-                        text: string;
-                        link: string;
-                        type: string;
-                    }>;
-                };
-                newsletter: {
-                    title: string;
-                    description: string;
-                    disclaimer: string;
-                    isActive: boolean;
-                };
-                companyInfo: {
-                    foundedYear: number;
-                    description: string;
-                };
-                colors: {
-                    light: {
-                        primary: string;
-                        secondary: string;
-                        accent: string;
-                        background: string;
-                        paper: string;
-                    };
-                    dark: {
-                        primary: string;
-                        secondary: string;
-                        accent: string;
-                        background: string;
-                        paper: string;
-                    };
-                };
-                features: {
-                    showSeasonalContent: boolean;
-                    showNewsletter: boolean;
-                    showSocialProof: boolean;
-                    enableAnimations: boolean;
-                };
-            };
-            contactInfo?: {
-                business?: Record<string, unknown>;
-                hours?: string;
-            };
-            about?: {
-                story: {
-                    overline: string;
-                    title: string;
-                    subtitle: string;
-                    paragraphs: string[];
-                    cta: {
-                        text: string;
-                        link: string;
-                    };
-                };
-                values: {
-                    title: string;
-                    items: Array<{
-                        icon: string;
-                        title: string;
-                        description: string;
-                    }>;
-                };
-                mission: {
-                    title: string;
-                    quote: string;
-                    attribution: string;
-                };
-            };
-            socialProof?: {
-                header: {
-                    title: string;
-                    subtitle: string;
-                };
-                stats: Array<{
-                    number: string;
-                    label: string;
-                    subtext: string;
-                }>;
-                mission: {
-                    title: string;
-                    quote: string;
-                    attribution: string;
-                };
-                strengths: {
-                    title: string;
-                    items: Array<{
-                        icon: string;
-                        title: string;
-                        description: string;
-                        highlight: string;
-                    }>;
-                };
-                clientTypes: {
-                    title: string;
-                    items: Array<{
-                        icon: string;
-                        label: string;
-                    }>;
-                };
-                footer: {
-                    description: string;
-                    chips: string[];
-                };
-            };
-            location?: {
-                header: {
-                    title: string;
-                    subtitle: string;
-                    chip: string;
-                };
-                map: {
-                    style: "gradient" | "embedded";
-                    showGetDirectionsButton: boolean;
-                    buttonText: string;
-                };
-                contactMethods: {
-                    sectionTitle: string;
-                    order: ("phone" | "address" | "email")[];
-                    descriptions: {
-                        phone: string;
-                        address: string;
-                        email: string;
-                    };
-                };
-                businessHours: {
-                    title: string;
-                    chip: string;
-                };
-                visitInfo: {
-                    sectionTitle: string;
-                    items: Array<{
-                        id: string;
-                        title: string;
-                        icon: string;
-                        description: string;
-                        displayOrder: number;
-                        isActive: boolean;
-                    }>;
-                };
-                cta: {
-                    title: string;
-                    description: string;
-                    buttons: Array<{
-                        id: string;
-                        text: string;
-                        variant: "contained" | "outlined" | "text";
-                        color: "primary" | "secondary";
-                        action: "directions" | "contact" | "external";
-                        url?: string;
-                        displayOrder: number;
-                        isActive: boolean;
-                    }>;
-                };
-            };
-        },
+        data: UpdateLandingPageContentRequest,
         queryParams?: {
             variantId?: string;
         },
     ): Promise<{ success: boolean; message: string; updatedSections: string[] }> {
-        const params = new URLSearchParams();
-        if (queryParams?.variantId) params.append("variantId", queryParams.variantId);
-
-        const queryString = params.toString();
         return fetchApi<{ success: boolean; message: string; updatedSections: string[] }>(
-            `/landing-page${queryString ? `?${queryString}` : ""}`,
+            withQuery(endpointPath(REST_ENDPOINTS.landingPage.updateContent), {
+                variantId: queryParams?.variantId,
+            }),
             {
-                method: "PUT",
+                method: REST_ENDPOINTS.landingPage.updateContent.method,
                 body: JSON.stringify(data),
             },
         );
@@ -1079,7 +237,7 @@ export const restApi = {
 
     // Authentication
     async getSession(): Promise<SessionResponse> {
-        return fetchApi<SessionResponse>("/auth/session");
+        return fetchApi<SessionResponse>(endpointPath(REST_ENDPOINTS.auth.session));
     },
 
     async login(input: {
@@ -1087,15 +245,15 @@ export const restApi = {
         password: string;
         verificationCode?: string;
     }): Promise<CustomerSession> {
-        return fetchApi<CustomerSession>("/auth/login", {
-            method: "POST",
+        return fetchApi<CustomerSession>(endpointPath(REST_ENDPOINTS.auth.login), {
+            method: REST_ENDPOINTS.auth.login.method,
             body: JSON.stringify(input),
         });
     },
 
     async logout(): Promise<{ success: boolean }> {
-        return fetchApi<{ success: boolean }>("/auth/logout", {
-            method: "POST",
+        return fetchApi<{ success: boolean }>(endpointPath(REST_ENDPOINTS.auth.logout), {
+            method: REST_ENDPOINTS.auth.logout.method,
         });
     },
 
@@ -1108,88 +266,56 @@ export const restApi = {
         phones?: Array<{ number: string; receivesDeliveryUpdates?: boolean }>;
         password: string;
     }): Promise<CustomerSession> {
-        return fetchApi<CustomerSession>("/auth/signup", {
-            method: "POST",
+        return fetchApi<CustomerSession>(endpointPath(REST_ENDPOINTS.auth.signup), {
+            method: REST_ENDPOINTS.auth.signup.method,
             body: JSON.stringify(input),
         });
     },
 
     async resetPassword(input: { token: string; password: string }): Promise<CustomerSession> {
-        return fetchApi<CustomerSession>("/auth/reset-password", {
-            method: "POST",
+        return fetchApi<CustomerSession>(endpointPath(REST_ENDPOINTS.auth.resetPassword), {
+            method: REST_ENDPOINTS.auth.resetPassword.method,
             body: JSON.stringify(input),
         });
     },
 
     async requestPasswordChange(input: { email: string }): Promise<{ success: boolean }> {
-        return fetchApi<{ success: boolean }>("/auth/request-password-change", {
-            method: "POST",
-            body: JSON.stringify(input),
-        });
+        return fetchApi<{ success: boolean }>(
+            endpointPath(REST_ENDPOINTS.auth.requestPasswordChange),
+            {
+                method: REST_ENDPOINTS.auth.requestPasswordChange.method,
+                body: JSON.stringify(input),
+            },
+        );
     },
 
     // Image/Gallery Management
     async getImagesByLabel(input: { label: string }): Promise<Image[]> {
-        return fetchApi<Image[]>(`/images?label=${encodeURIComponent(input.label)}`);
+        return fetchApi<Image[]>(
+            endpointPath({
+                path: REST_ROUTES.images.byLabel(encodeURIComponent(input.label)),
+            }),
+        );
     },
 
     async addImages(input: {
         label: string;
         files: File[];
-    }): Promise<Array<{ success: boolean; src: string; hash: string }>> {
+    }): Promise<
+        Array<{ success: boolean; src: string; hash: string; width?: number; height?: number }>
+    > {
         const formData = new FormData();
         formData.append("label", input.label);
         input.files.forEach((file) => {
             formData.append("files", file);
         });
 
-        // Internal function to make the request with retry logic
-        const makeRequest = async (
-            retryCount = 0,
-        ): Promise<Array<{ success: boolean; src: string; hash: string }>> => {
-            // Get CSRF token for each attempt
-            const csrfToken = await getCsrfToken();
-            if (!csrfToken) {
-                console.error("[CSRF] Failed to get CSRF token for POST /images!");
-                throw new ApiError(500, "Failed to get CSRF token", {
-                    code: "CSRF_TOKEN_UNAVAILABLE",
-                });
-            }
-
-            const url = `${REST_BASE_URL}/images`;
-            const response = await fetch(url, {
-                method: "POST",
-                credentials: "include",
-                headers: {
-                    "X-CSRF-Token": csrfToken, // Add CSRF token header
-                },
-                body: formData, // Don't set Content-Type, browser will set it with boundary
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => null);
-
-                // If CSRF error and haven't retried yet, refresh token and retry
-                if (
-                    response.status === 403 &&
-                    errorData?.code === "CSRF_VALIDATION_FAILED" &&
-                    retryCount === 0
-                ) {
-                    await refreshCsrfToken();
-                    return makeRequest(retryCount + 1);
-                }
-
-                throw new ApiError(
-                    response.status,
-                    errorData?.error || `HTTP ${response.status}: ${response.statusText}`,
-                    errorData,
-                );
-            }
-
-            return await response.json();
-        };
-
-        return makeRequest();
+        return fetchApi<
+            Array<{ success: boolean; src: string; hash: string; width?: number; height?: number }>
+        >(endpointPath(REST_ENDPOINTS.images.add), {
+            method: REST_ENDPOINTS.images.add.method,
+            body: formData,
+        });
     },
 
     async updateImages(input: {
@@ -1200,8 +326,8 @@ export const restApi = {
             label?: string;
         }>;
     }): Promise<{ success: boolean }> {
-        return fetchApi<{ success: boolean }>("/images", {
-            method: "PUT",
+        return fetchApi<{ success: boolean }>(endpointPath(REST_ENDPOINTS.images.update), {
+            method: REST_ENDPOINTS.images.update.method,
             body: JSON.stringify(input),
         });
     },
@@ -1222,9 +348,11 @@ export const restApi = {
         };
         errors?: string[];
     }> {
-        const url = force ? `/images/${hash}?force=true` : `/images/${hash}`;
+        const url = withQuery(endpointPath(REST_ENDPOINTS.images.delete(hash)), {
+            force: force ? true : undefined,
+        });
         return fetchApi(url, {
-            method: "DELETE",
+            method: REST_ENDPOINTS.images.delete(hash).method,
         });
     },
 
@@ -1235,15 +363,15 @@ export const restApi = {
         canDelete: boolean;
         warnings: string[];
     }> {
-        return fetchApi(`/images/${hash}/usage`, {
-            method: "GET",
+        return fetchApi(endpointPath(REST_ENDPOINTS.images.usage(hash)), {
+            method: REST_ENDPOINTS.images.usage(hash).method,
         });
     },
 
     // Content/Assets Management
     async readAssets(input: { files: string[] }): Promise<Record<string, string>> {
-        return fetchApi<Record<string, string>>("/assets/read", {
-            method: "POST",
+        return fetchApi<Record<string, string>>(endpointPath(REST_ENDPOINTS.assets.read), {
+            method: REST_ENDPOINTS.assets.read.method,
             body: JSON.stringify(input),
         });
     },
@@ -1254,56 +382,15 @@ export const restApi = {
             formData.append("files", file);
         });
 
-        // Internal function to make the request with retry logic
-        const makeRequest = async (retryCount = 0): Promise<{ success: boolean }> => {
-            // Get CSRF token for each attempt
-            const csrfToken = await getCsrfToken();
-            if (!csrfToken) {
-                console.error("[CSRF] Failed to get CSRF token for POST /assets/write!");
-                throw new ApiError(500, "Failed to get CSRF token", {
-                    code: "CSRF_TOKEN_UNAVAILABLE",
-                });
-            }
-
-            const url = `${REST_BASE_URL}/assets/write`;
-            const response = await fetch(url, {
-                method: "POST",
-                credentials: "include",
-                headers: {
-                    "X-CSRF-Token": csrfToken, // Add CSRF token header
-                },
-                body: formData,
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => null);
-
-                // If CSRF error and haven't retried yet, refresh token and retry
-                if (
-                    response.status === 403 &&
-                    errorData?.code === "CSRF_VALIDATION_FAILED" &&
-                    retryCount === 0
-                ) {
-                    await refreshCsrfToken();
-                    return makeRequest(retryCount + 1);
-                }
-
-                throw new ApiError(
-                    response.status,
-                    errorData?.error || `HTTP ${response.status}: ${response.statusText}`,
-                    errorData,
-                );
-            }
-
-            return await response.json();
-        };
-
-        return makeRequest();
+        return fetchApi<{ success: boolean }>(endpointPath(REST_ENDPOINTS.assets.write), {
+            method: REST_ENDPOINTS.assets.write.method,
+            body: formData,
+        });
     },
 
     // Dashboard Stats
     async getDashboardStats(): Promise<DashboardStats> {
-        return fetchApi<DashboardStats>("/dashboard/stats");
+        return fetchApi<DashboardStats>(endpointPath(REST_ENDPOINTS.dashboard.stats));
     },
 
     // Landing Page Settings Management
@@ -1316,14 +403,12 @@ export const restApi = {
             variantId?: string;
         },
     ): Promise<{ success: boolean; message: string; updatedFields: string[] }> {
-        const params = new URLSearchParams();
-        if (queryParams?.variantId) params.append("variantId", queryParams.variantId);
-
-        const queryString = params.toString();
         return fetchApi<{ success: boolean; message: string; updatedFields: string[] }>(
-            `/landing-page/settings${queryString ? `?${queryString}` : ""}`,
+            withQuery(endpointPath(REST_ENDPOINTS.landingPage.updateSettings), {
+                variantId: queryParams?.variantId,
+            }),
             {
-                method: "PUT",
+                method: REST_ENDPOINTS.landingPage.updateSettings.method,
                 body: JSON.stringify(settings),
             },
         );
@@ -1334,11 +419,11 @@ export const restApi = {
     // ============================================================================
 
     async getVariants(): Promise<LandingPageVariant[]> {
-        return fetchApi<LandingPageVariant[]>("/landing-page/variants");
+        return fetchApi<LandingPageVariant[]>(endpointPath(REST_ENDPOINTS.landingPage.variants));
     },
 
     async getVariant(id: string): Promise<LandingPageVariant> {
-        return fetchApi<LandingPageVariant>(`/landing-page/variants/${id}`);
+        return fetchApi<LandingPageVariant>(endpointPath(REST_ENDPOINTS.landingPage.variant(id)));
     },
 
     async createVariant(variant: {
@@ -1347,10 +432,13 @@ export const restApi = {
         trafficAllocation?: number;
         copyFromVariantId?: string;
     }): Promise<LandingPageVariant> {
-        return fetchApi<LandingPageVariant>("/landing-page/variants", {
-            method: "POST",
-            body: JSON.stringify(variant),
-        });
+        return fetchApi<LandingPageVariant>(
+            endpointPath(REST_ENDPOINTS.landingPage.createVariant),
+            {
+                method: REST_ENDPOINTS.landingPage.createVariant.method,
+                body: JSON.stringify(variant),
+            },
+        );
     },
 
     async updateVariant(
@@ -1362,16 +450,22 @@ export const restApi = {
             trafficAllocation: number;
         }>,
     ): Promise<LandingPageVariant> {
-        return fetchApi<LandingPageVariant>(`/landing-page/variants/${id}`, {
-            method: "PUT",
-            body: JSON.stringify(variant),
-        });
+        return fetchApi<LandingPageVariant>(
+            endpointPath(REST_ENDPOINTS.landingPage.updateVariant(id)),
+            {
+                method: REST_ENDPOINTS.landingPage.updateVariant(id).method,
+                body: JSON.stringify(variant),
+            },
+        );
     },
 
     async deleteVariant(id: string): Promise<{ success: boolean; message: string }> {
-        return fetchApi<{ success: boolean; message: string }>(`/landing-page/variants/${id}`, {
-            method: "DELETE",
-        });
+        return fetchApi<{ success: boolean; message: string }>(
+            endpointPath(REST_ENDPOINTS.landingPage.deleteVariant(id)),
+            {
+                method: REST_ENDPOINTS.landingPage.deleteVariant(id).method,
+            },
+        );
     },
 
     async promoteVariant(id: string): Promise<{
@@ -1380,9 +474,9 @@ export const restApi = {
         variant: LandingPageVariant;
     }> {
         return fetchApi<{ success: boolean; message: string; variant: LandingPageVariant }>(
-            `/landing-page/variants/${id}/promote`,
+            endpointPath(REST_ENDPOINTS.landingPage.promoteVariant(id)),
             {
-                method: "POST",
+                method: REST_ENDPOINTS.landingPage.promoteVariant(id).method,
             },
         );
     },
@@ -1399,35 +493,33 @@ export const restApi = {
         return fetchApi<{
             success: boolean;
             metrics?: { views: number; conversions: number; bounces: number };
-        }>(`/landing-page/variants/${variantId}/track`, {
-            method: "POST",
+        }>(endpointPath(REST_ENDPOINTS.landingPage.trackVariant(variantId)), {
+            method: REST_ENDPOINTS.landingPage.trackVariant(variantId).method,
             body: JSON.stringify(event),
         });
     },
 
     async toggleVariant(id: string): Promise<LandingPageVariant> {
-        return fetchApi<LandingPageVariant>(`/landing-page/variants/${id}/toggle`, {
-            method: "POST",
-        });
-    },
-
-    // Analytics (public endpoint)
-    async trackAnalyticsEvent(event: AnalyticsEvent): Promise<{ success: boolean }> {
-        return fetchApi<{ success: boolean }>("/analytics/track", {
-            method: "POST",
-            body: JSON.stringify(event),
-        });
+        return fetchApi<LandingPageVariant>(
+            endpointPath(REST_ENDPOINTS.landingPage.toggleVariant(id)),
+            {
+                method: REST_ENDPOINTS.landingPage.toggleVariant(id).method,
+            },
+        );
     },
 
     // Storage Management (admin only)
     async getStorageStats(): Promise<StorageStats> {
-        return fetchApi<StorageStats>("/storage/stats");
+        return fetchApi<StorageStats>(endpointPath(REST_ENDPOINTS.storage.stats));
     },
 
     async triggerCleanup(): Promise<{ success: boolean; message: string; jobId: string }> {
-        return fetchApi<{ success: boolean; message: string; jobId: string }>("/storage/cleanup", {
-            method: "POST",
-        });
+        return fetchApi<{ success: boolean; message: string; jobId: string }>(
+            endpointPath(REST_ENDPOINTS.storage.cleanup),
+            {
+                method: REST_ENDPOINTS.storage.cleanup.method,
+            },
+        );
     },
 
     async getCleanupHistory(params?: {
@@ -1435,27 +527,27 @@ export const restApi = {
         limit?: number;
         offset?: number;
     }): Promise<CleanupHistory> {
-        const queryParams = new URLSearchParams();
-        if (params?.status) queryParams.append("status", params.status);
-        if (params?.limit) queryParams.append("limit", params.limit.toString());
-        if (params?.offset) queryParams.append("offset", params.offset.toString());
-
-        const queryString = queryParams.toString();
         return fetchApi<CleanupHistory>(
-            `/storage/cleanup/history${queryString ? `?${queryString}` : ""}`,
+            withQuery(endpointPath(REST_ENDPOINTS.storage.cleanupHistory), {
+                status: params?.status,
+                limit: params?.limit,
+                offset: params?.offset,
+            }),
         );
     },
 
     async getCleanupPreview(): Promise<CleanupPreview> {
-        return fetchApi<CleanupPreview>("/storage/cleanup/preview");
+        return fetchApi<CleanupPreview>(endpointPath(REST_ENDPOINTS.storage.cleanupPreview));
     },
 
     async getOrphanedFiles(): Promise<OrphanedFilesResponse> {
-        return fetchApi<OrphanedFilesResponse>("/storage/orphaned-files");
+        return fetchApi<OrphanedFilesResponse>(endpointPath(REST_ENDPOINTS.storage.orphanedFiles));
     },
 
     async getOrphanedRecords(): Promise<OrphanedRecordsResponse> {
-        return fetchApi<OrphanedRecordsResponse>("/storage/orphaned-records");
+        return fetchApi<OrphanedRecordsResponse>(
+            endpointPath(REST_ENDPOINTS.storage.orphanedRecords),
+        );
     },
 
     async cleanOrphanedFiles(): Promise<{
@@ -1469,8 +561,8 @@ export const restApi = {
             deletedCount: number;
             freedMB: number;
             errors?: string[];
-        }>("/storage/orphaned-files", {
-            method: "DELETE",
+        }>(endpointPath(REST_ENDPOINTS.storage.cleanOrphanedFiles), {
+            method: REST_ENDPOINTS.storage.cleanOrphanedFiles.method,
         });
     },
 
@@ -1480,19 +572,19 @@ export const restApi = {
         errors?: string[];
     }> {
         return fetchApi<{ success: boolean; deletedCount: number; errors?: string[] }>(
-            "/storage/orphaned-records",
+            endpointPath(REST_ENDPOINTS.storage.cleanOrphanedRecords),
             {
-                method: "DELETE",
+                method: REST_ENDPOINTS.storage.cleanOrphanedRecords.method,
             },
         );
     },
 
     async getRecentActivity(): Promise<RecentActivity> {
-        return fetchApi<RecentActivity>("/storage/recent-activity");
+        return fetchApi<RecentActivity>(endpointPath(REST_ENDPOINTS.storage.recentActivity));
     },
 
     async getCleanupJobStatus(): Promise<JobStatus> {
-        return fetchApi<JobStatus>("/storage/job-status");
+        return fetchApi<JobStatus>(endpointPath(REST_ENDPOINTS.storage.jobStatus));
     },
 
     // System logs
@@ -1505,21 +597,21 @@ export const restApi = {
         dateFrom?: string;
         dateTo?: string;
     }): Promise<LogsResponse> {
-        const queryParams = new URLSearchParams();
-        if (params.file) queryParams.append("file", params.file);
-        if (params.lines) queryParams.append("lines", params.lines.toString());
-        if (params.offset) queryParams.append("offset", params.offset.toString());
-        if (params.level) queryParams.append("level", params.level);
-        if (params.search) queryParams.append("search", params.search);
-        if (params.dateFrom) queryParams.append("dateFrom", params.dateFrom);
-        if (params.dateTo) queryParams.append("dateTo", params.dateTo);
-
-        const queryString = queryParams.toString();
-        return fetchApi<LogsResponse>(`/logs${queryString ? `?${queryString}` : ""}`);
+        return fetchApi<LogsResponse>(
+            withQuery(endpointPath(REST_ENDPOINTS.logs.list), {
+                file: params.file,
+                lines: params.lines,
+                offset: params.offset,
+                level: params.level,
+                search: params.search,
+                dateFrom: params.dateFrom,
+                dateTo: params.dateTo,
+            }),
+        );
     },
 
     async getLogStats(): Promise<LogStatsResponse> {
-        return fetchApi<LogStatsResponse>("/logs/stats");
+        return fetchApi<LogStatsResponse>(endpointPath(REST_ENDPOINTS.logs.stats));
     },
 
     // Newsletter Management
@@ -1528,10 +620,13 @@ export const restApi = {
         variantId?: string;
         source?: string;
     }): Promise<{ success: boolean; message: string }> {
-        return fetchApi<{ success: boolean; message: string }>("/newsletter/subscribe", {
-            method: "POST",
-            body: JSON.stringify(input),
-        });
+        return fetchApi<{ success: boolean; message: string }>(
+            endpointPath(REST_ENDPOINTS.newsletter.subscribe),
+            {
+                method: REST_ENDPOINTS.newsletter.subscribe.method,
+                body: JSON.stringify(input),
+            },
+        );
     },
 
     async getNewsletterSubscribers(params?: {
@@ -1541,25 +636,22 @@ export const restApi = {
         variantId?: string;
         search?: string;
     }): Promise<NewsletterSubscribersResponse> {
-        const queryParams = new URLSearchParams();
-        if (params?.page) queryParams.append("page", params.page.toString());
-        if (params?.limit) queryParams.append("limit", params.limit.toString());
-        if (params?.status) queryParams.append("status", params.status);
-        if (params?.variantId) queryParams.append("variantId", params.variantId);
-        if (params?.search) queryParams.append("search", params.search);
-
-        const queryString = queryParams.toString();
         return fetchApi<NewsletterSubscribersResponse>(
-            `/newsletter/subscribers${queryString ? `?${queryString}` : ""}`,
+            withQuery(endpointPath(REST_ENDPOINTS.newsletter.subscribers), {
+                page: params?.page,
+                limit: params?.limit,
+                status: params?.status,
+                variantId: params?.variantId,
+                search: params?.search,
+            }),
         );
     },
 
     async exportNewsletterSubscribers(status?: string): Promise<Blob> {
-        const queryParams = new URLSearchParams();
-        if (status) queryParams.append("status", status);
-
-        const queryString = queryParams.toString();
-        const url = `${REST_BASE_URL}/newsletter/subscribers/export${queryString ? `?${queryString}` : ""}`;
+        const url = `${REST_BASE_URL}${withQuery(
+            endpointPath(REST_ENDPOINTS.newsletter.exportSubscribers),
+            { status },
+        )}`;
 
         const response = await fetch(url, {
             method: "GET",
@@ -1580,14 +672,17 @@ export const restApi = {
         id: number,
         action: "unsubscribe" | "delete" = "unsubscribe",
     ): Promise<{ success: boolean; message: string }> {
-        return fetchApi<{ success: boolean; message: string }>(`/newsletter/subscribers/${id}`, {
-            method: "DELETE",
-            body: JSON.stringify({ action }),
-        });
+        return fetchApi<{ success: boolean; message: string }>(
+            endpointPath(REST_ENDPOINTS.newsletter.deleteSubscriber(String(id))),
+            {
+                method: REST_ENDPOINTS.newsletter.deleteSubscriber(String(id)).method,
+                body: JSON.stringify({ action }),
+            },
+        );
     },
 
     async getNewsletterStats(): Promise<NewsletterStatsResponse> {
-        return fetchApi<NewsletterStatsResponse>("/newsletter/stats");
+        return fetchApi<NewsletterStatsResponse>(endpointPath(REST_ENDPOINTS.newsletter.stats));
     },
 };
 

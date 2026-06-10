@@ -1,4 +1,4 @@
-import { APP_LINKS } from "@local/shared";
+import { APP_LINKS, REST_ROUTES } from "@local/shared";
 import { ExpandMore as ExpandMoreIcon } from "@mui/icons-material";
 import {
     Accordion,
@@ -214,7 +214,7 @@ export const AdminHomepageNewsletter = () => {
         },
         refetchDependencies: [refetchLandingPage],
         pageName: "newsletter-section",
-        endpointName: "/api/v1/landing-page",
+        endpointName: REST_ROUTES.landingPage.settings,
         successMessage: "Newsletter settings saved successfully!",
         errorMessagePrefix: "Failed to save",
     });

@@ -1,4 +1,9 @@
 import {
+    DEFAULT_SEASONAL_CONTENT,
+    getCurrentSeason,
+    sortSeasonalPlantsByCurrentSeason,
+} from "@local/shared";
+import {
     Box,
     Container,
     Grid,
@@ -23,21 +28,6 @@ import { Leaf, Lightbulb, Sprout, Flower, Snowflake, LucideIcon, Star, Images } 
 import { getServerUrl } from "utils";
 import { restApi } from "api/rest/client";
 
-// Type for seasonal plants
-interface SeasonalPlant {
-    id: string;
-    name: string;
-    description: string;
-    season: string;
-    careLevel: string;
-    icon: string;
-    displayOrder: number;
-    isActive: boolean;
-    image?: string;
-    imageAlt?: string;
-    imageHash?: string;
-}
-
 // Icon mapping for different plant types
 const getIconComponent = (iconName: string): LucideIcon => {
     switch (iconName) {
@@ -55,27 +45,6 @@ const getIconComponent = (iconName: string): LucideIcon => {
         default:
             return Leaf;
     }
-};
-
-// Get current season based on month (Northern Hemisphere)
-const getCurrentSeason = (): string => {
-    const month = new Date().getMonth(); // 0-11
-    if (month >= 2 && month <= 4) return "Spring"; // Mar, Apr, May
-    if (month >= 5 && month <= 7) return "Summer"; // Jun, Jul, Aug
-    if (month >= 8 && month <= 10) return "Fall"; // Sep, Oct, Nov
-    return "Winter"; // Dec, Jan, Feb
-};
-
-// Sort plants by season, putting current season first
-const sortPlantsBySeason = (plants: SeasonalPlant[]): SeasonalPlant[] => {
-    const currentSeason = getCurrentSeason();
-    return [...plants].sort((a, b) => {
-        // Current season comes first
-        if (a.season === currentSeason && b.season !== currentSeason) return -1;
-        if (b.season === currentSeason && a.season !== currentSeason) return 1;
-        // Otherwise maintain original order
-        return 0;
-    });
 };
 
 export const InteractiveElements = () => {
@@ -97,26 +66,20 @@ export const InteractiveElements = () => {
     const galleryButton = data?.content?.seasonal?.galleryButton;
 
     // Get customizable text fields with fallbacks
-    const seasonalHeader = data?.content?.seasonal?.header || {
-        title: "Seasonal Highlights & Expert Tips",
-        subtitle: "Discover what's blooming now and get expert care advice for every season",
-    };
+    const seasonalHeader = data?.content?.seasonal?.header || DEFAULT_SEASONAL_CONTENT.header!;
 
-    const plantsSectionSettings = data?.content?.seasonal?.sections?.plants || {
-        currentSeasonTitle: "What's Blooming Now",
-        otherSeasonTitleTemplate: "Perfect for {season}",
-    };
+    const plantsSectionSettings =
+        data?.content?.seasonal?.sections?.plants || DEFAULT_SEASONAL_CONTENT.sections!.plants;
 
-    const tipsSectionSettings = data?.content?.seasonal?.sections?.tips || {
-        title: "Expert Plant Care Tips",
-    };
+    const tipsSectionSettings =
+        data?.content?.seasonal?.sections?.tips || DEFAULT_SEASONAL_CONTENT.sections!.tips;
 
     const newsletterButtonText = newsletterSettings?.buttonText || "Subscribe";
 
     // Sort plants by season, putting current season first
     const seasonalPlants = useMemo(() => {
         const rawPlants = data?.content?.seasonal?.plants || [];
-        return sortPlantsBySeason(rawPlants);
+        return sortSeasonalPlantsByCurrentSeason(rawPlants);
     }, [data?.content?.seasonal?.plants]);
     const currentSeason = useMemo(() => getCurrentSeason(), []);
 

@@ -2,13 +2,9 @@ import { Request, Response, Router } from "express";
 import { merge } from "lodash";
 import { logger, LogLevel } from "../logger.js";
 import type {
-    BusinessContactData,
-    HeroBanner,
-    HeroSettings,
     LandingPageContent,
     LandingPageVariant,
-    PlantTip,
-    SeasonalPlant,
+    UpdateLandingPageContentRequest,
 } from "../types/landingPage.js";
 import { auditAdminAction, AuditEventType } from "../utils/auditLogger.js";
 import {
@@ -21,6 +17,7 @@ import {
     readLandingPageContent,
     writeLandingPageContent,
 } from "./landingPage/landingPageService.js";
+import { enrichHeroBannerFiles, filterActiveContent } from "./landingPage/contentHelpers.js";
 import {
     assignVariantWeighted,
     deleteVariantContent,
@@ -51,14 +48,15 @@ router.get("/", async (req: Request, res: Response) => {
         if (abTest === "false") {
             logger.info("Returning official landing page (A/B testing disabled via query param)");
             const content = aggregateLandingPageContent(onlyActive);
+            const responseContent = await enrichHeroBannerFiles(content, req.prisma);
 
             res.set({
                 "Cache-Control": "public, max-age=300",
-                ETag: `"${Buffer.from(JSON.stringify(content)).toString("base64").substring(0, 20)}"`,
-                "Last-Modified": content.metadata.lastUpdated,
+                ETag: `"${Buffer.from(JSON.stringify(responseContent)).toString("base64").substring(0, 20)}"`,
+                "Last-Modified": responseContent.metadata.lastUpdated,
             });
 
-            return res.json(content);
+            return res.json(responseContent);
         }
 
         // NEW VARIANT SYSTEM: If variantId is provided
@@ -80,38 +78,13 @@ router.get("/", async (req: Request, res: Response) => {
                         },
                     };
 
-                    // Filter active content if requested
-                    if (onlyActive) {
-                        if (contentWithMeta.content?.hero?.banners) {
-                            contentWithMeta.content.hero.banners =
-                                contentWithMeta.content.hero.banners
-                                    .filter((b: HeroBanner) => b.isActive)
-                                    .sort(
-                                        (a: HeroBanner, b: HeroBanner) =>
-                                            a.displayOrder - b.displayOrder
-                                    );
-                        }
-
-                        if (contentWithMeta.content?.seasonal?.plants) {
-                            contentWithMeta.content.seasonal.plants =
-                                contentWithMeta.content.seasonal.plants
-                                    .filter((p: SeasonalPlant) => p.isActive)
-                                    .sort(
-                                        (a: SeasonalPlant, b: SeasonalPlant) =>
-                                            a.displayOrder - b.displayOrder
-                                    );
-                        }
-
-                        if (contentWithMeta.content?.seasonal?.tips) {
-                            contentWithMeta.content.seasonal.tips =
-                                contentWithMeta.content.seasonal.tips
-                                    .filter((t: PlantTip) => t.isActive)
-                                    .sort(
-                                        (a: PlantTip, b: PlantTip) =>
-                                            a.displayOrder - b.displayOrder
-                                    );
-                        }
-                    }
+                    const responseContent = onlyActive
+                        ? filterActiveContent(contentWithMeta)
+                        : contentWithMeta;
+                    const enrichedContent = await enrichHeroBannerFiles(
+                        responseContent,
+                        req.prisma
+                    );
 
                     try {
                         res.set({
@@ -119,7 +92,7 @@ router.get("/", async (req: Request, res: Response) => {
                             "X-Variant-ID": variantId,
                         });
 
-                        return res.json(contentWithMeta);
+                        return res.json(enrichedContent);
                     } catch (jsonError) {
                         logger.log(
                             LogLevel.error,
@@ -129,7 +102,7 @@ router.get("/", async (req: Request, res: Response) => {
                         logger.log(
                             LogLevel.error,
                             "Content object keys:",
-                            Object.keys(contentWithMeta)
+                            Object.keys(enrichedContent)
                         );
                         throw jsonError;
                     }
@@ -165,38 +138,13 @@ router.get("/", async (req: Request, res: Response) => {
                         },
                     };
 
-                    // Filter active content if requested
-                    if (onlyActive) {
-                        if (contentWithMeta.content?.hero?.banners) {
-                            contentWithMeta.content.hero.banners =
-                                contentWithMeta.content.hero.banners
-                                    .filter((b: HeroBanner) => b.isActive)
-                                    .sort(
-                                        (a: HeroBanner, b: HeroBanner) =>
-                                            a.displayOrder - b.displayOrder
-                                    );
-                        }
-
-                        if (contentWithMeta.content?.seasonal?.plants) {
-                            contentWithMeta.content.seasonal.plants =
-                                contentWithMeta.content.seasonal.plants
-                                    .filter((p: SeasonalPlant) => p.isActive)
-                                    .sort(
-                                        (a: SeasonalPlant, b: SeasonalPlant) =>
-                                            a.displayOrder - b.displayOrder
-                                    );
-                        }
-
-                        if (contentWithMeta.content?.seasonal?.tips) {
-                            contentWithMeta.content.seasonal.tips =
-                                contentWithMeta.content.seasonal.tips
-                                    .filter((t: PlantTip) => t.isActive)
-                                    .sort(
-                                        (a: PlantTip, b: PlantTip) =>
-                                            a.displayOrder - b.displayOrder
-                                    );
-                        }
-                    }
+                    const responseContent = onlyActive
+                        ? filterActiveContent(contentWithMeta)
+                        : contentWithMeta;
+                    const enrichedContent = await enrichHeroBannerFiles(
+                        responseContent,
+                        req.prisma
+                    );
 
                     try {
                         res.set({
@@ -204,7 +152,7 @@ router.get("/", async (req: Request, res: Response) => {
                             "X-Variant-ID": assignedVariant.id,
                         });
 
-                        return res.json(contentWithMeta);
+                        return res.json(enrichedContent);
                     } catch (jsonError) {
                         logger.log(
                             LogLevel.error,
@@ -214,7 +162,7 @@ router.get("/", async (req: Request, res: Response) => {
                         logger.log(
                             LogLevel.error,
                             "Content object keys:",
-                            Object.keys(contentWithMeta)
+                            Object.keys(enrichedContent)
                         );
                         throw jsonError;
                     }
@@ -234,14 +182,15 @@ router.get("/", async (req: Request, res: Response) => {
         const cached = await getCachedContent();
         if (cached) {
             logger.info("Returning cached official landing page content");
+            const responseContent = await enrichHeroBannerFiles(cached, req.prisma);
 
             res.set({
                 "Cache-Control": "public, max-age=300",
-                ETag: `"${Buffer.from(JSON.stringify(cached)).toString("base64").substring(0, 20)}"`,
-                "Last-Modified": cached.metadata.lastUpdated || new Date().toUTCString(),
+                ETag: `"${Buffer.from(JSON.stringify(responseContent)).toString("base64").substring(0, 20)}"`,
+                "Last-Modified": responseContent.metadata.lastUpdated || new Date().toUTCString(),
             });
 
-            return res.json(cached);
+            return res.json(responseContent);
         }
 
         // Generate fresh content
@@ -249,14 +198,15 @@ router.get("/", async (req: Request, res: Response) => {
 
         // Cache it
         await setCachedContent(content);
+        const responseContent = await enrichHeroBannerFiles(content, req.prisma);
 
         res.set({
             "Cache-Control": "public, max-age=300",
-            ETag: `"${Buffer.from(JSON.stringify(content)).toString("base64").substring(0, 20)}"`,
-            "Last-Modified": content.metadata.lastUpdated,
+            ETag: `"${Buffer.from(JSON.stringify(responseContent)).toString("base64").substring(0, 20)}"`,
+            "Last-Modified": responseContent.metadata.lastUpdated,
         });
 
-        return res.json(content);
+        return res.json(responseContent);
     } catch (error) {
         logger.log(LogLevel.error, "Error fetching landing page content:", error);
         return res.status(500).json({
@@ -311,129 +261,7 @@ router.put("/", async (req: AuthenticatedRequest, res: Response) => {
             about,
             socialProof,
             location,
-        } = req.body as {
-            heroBanners?: HeroBanner[];
-            heroSettings?: HeroSettings;
-            seasonalPlants?: SeasonalPlant[];
-            plantTips?: PlantTip[];
-            seasonalHeader?: { title: string; subtitle: string };
-            seasonalSections?: {
-                plants: { currentSeasonTitle: string; otherSeasonTitleTemplate: string };
-                tips: { title: string };
-            };
-            seasonalGalleryButton?: { text: string; enabled: boolean };
-            newsletterButtonText?: string;
-            settings?: Record<string, unknown>;
-            contactInfo?: { business?: BusinessContactData; hours?: string };
-            about?: {
-                story: {
-                    overline: string;
-                    title: string;
-                    subtitle: string;
-                    paragraphs: string[];
-                    cta: { text: string; link: string };
-                };
-                values: {
-                    title: string;
-                    items: Array<{
-                        icon: string;
-                        title: string;
-                        description: string;
-                    }>;
-                };
-                mission: {
-                    title: string;
-                    quote: string;
-                    attribution: string;
-                };
-            };
-            socialProof?: {
-                header: {
-                    title: string;
-                    subtitle: string;
-                };
-                stats: Array<{
-                    number: string;
-                    label: string;
-                    subtext: string;
-                }>;
-                mission: {
-                    title: string;
-                    quote: string;
-                    attribution: string;
-                };
-                strengths: {
-                    title: string;
-                    items: Array<{
-                        icon: string;
-                        title: string;
-                        description: string;
-                        highlight: string;
-                    }>;
-                };
-                clientTypes: {
-                    title: string;
-                    items: Array<{
-                        icon: string;
-                        label: string;
-                    }>;
-                };
-                footer: {
-                    description: string;
-                    chips: string[];
-                };
-            };
-            location?: {
-                header: {
-                    title: string;
-                    subtitle: string;
-                    chip: string;
-                };
-                map: {
-                    style: "gradient" | "embedded";
-                    showGetDirectionsButton: boolean;
-                    buttonText: string;
-                };
-                contactMethods: {
-                    sectionTitle: string;
-                    order: ("phone" | "address" | "email")[];
-                    descriptions: {
-                        phone: string;
-                        address: string;
-                        email: string;
-                    };
-                };
-                businessHours: {
-                    title: string;
-                    chip: string;
-                };
-                visitInfo: {
-                    sectionTitle: string;
-                    items: Array<{
-                        id: string;
-                        title: string;
-                        icon: string;
-                        description: string;
-                        displayOrder: number;
-                        isActive: boolean;
-                    }>;
-                };
-                cta: {
-                    title: string;
-                    description: string;
-                    buttons: Array<{
-                        id: string;
-                        text: string;
-                        variant: "contained" | "outlined" | "text";
-                        color: "primary" | "secondary";
-                        action: "directions" | "contact" | "external";
-                        url?: string;
-                        displayOrder: number;
-                        isActive: boolean;
-                    }>;
-                };
-            };
-        };
+        } = req.body as UpdateLandingPageContentRequest;
 
         const updatedSections: string[] = [];
 
@@ -856,7 +684,8 @@ router.put("/", async (req: AuthenticatedRequest, res: Response) => {
                     settingsData.sections as typeof currentContent.layout.sections;
             }
             if (settingsData.abTesting) {
-                currentContent.experiments.abTesting = settingsData.abTesting;
+                currentContent.experiments.abTesting =
+                    settingsData.abTesting as typeof currentContent.experiments.abTesting;
             }
             updatedSections.push("settings");
         }

@@ -14,8 +14,7 @@ export type ErrorCode = {
      * Optional short message for snackbar notifications
      */
     snack?: string;
-}
-
+};
 
 export const CODE = {
     SomeImagesAlreadyUploaded: {
@@ -55,9 +54,22 @@ export const CODE = {
         message: "Error: Email or password incorrect",
     },
     RateLimitExceeded: {
-        code: "RateLimitExceeded",
+        code: "RATE_LIMIT_EXCEEDED",
         message: "This resource has been requested too many times. Please try again later.",
         snack: "Rate limit exceeded",
+    },
+    FileRateLimitExceeded: {
+        code: "FILE_RATE_LIMIT_EXCEEDED",
+        message: "Too many files uploaded. Please wait before uploading more images.",
+        snack: "File upload rate limit exceeded",
+    },
+    CsrfTokenUnavailable: {
+        code: "CSRF_TOKEN_UNAVAILABLE",
+        message: "Failed to get CSRF token",
+    },
+    CsrfValidationFailed: {
+        code: "CSRF_VALIDATION_FAILED",
+        message: "Request rejected. Please refresh the page and try again.",
     },
     SoftLockout: {
         code: "SOFT_LOCKOUT",
@@ -77,7 +89,8 @@ export const CODE = {
     },
     CannotDeleteYourself: {
         code: "CANNOT_DELETE_YOURSELF",
-        message: "Error: What are you doing trying to delete your own account? I am disappointed :(",
+        message:
+            "Error: What are you doing trying to delete your own account? I am disappointed :(",
     },
     NotImplemented: {
         code: "NOT_IMPLEMENTED",
@@ -89,6 +102,7 @@ export const CODE = {
     },
     MustResetPassword: {
         code: "MUST_RESET_PASSWORD",
-        message: "Before signing in, please follow the link sent to your email to change your password.",
+        message:
+            "Before signing in, please follow the link sent to your email to change your password.",
     },
 };

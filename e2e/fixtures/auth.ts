@@ -1,5 +1,6 @@
 import { test as base, expect } from "@playwright/test";
 import type { Page } from "@playwright/test";
+import { REST_ROUTES, stripApiPrefix } from "@local/shared";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -60,7 +61,7 @@ export async function setupAuth(page: Page) {
   // Set up promise to wait for auth login response
   let loginResponse: any = null;
   const responseHandler = (response: any) => {
-    if (response.url().includes("/rest/v1/auth/login")) {
+    if (response.url().includes(stripApiPrefix(REST_ROUTES.auth.login))) {
       console.log(`✓ Captured login response: ${response.status()}`);
       loginResponse = response;
     }

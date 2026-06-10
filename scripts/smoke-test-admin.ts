@@ -10,15 +10,16 @@
  *   npm run smoke-test-admin
  *
  * Environment:
- *   API_URL - Backend URL (default: http://localhost:3001)
+ *   API_URL - Backend URL (default: local server origin)
  *   ADMIN_EMAIL - Admin email for login
  *   ADMIN_PASSWORD - Admin password for login
  */
 
+import { DEFAULT_SERVER_URLS, REST_ROUTES } from "@local/shared";
 import fetch from "node-fetch";
 
 // Configuration
-const API_URL = process.env.API_URL || "http://localhost:3001";
+const API_URL = process.env.API_URL || DEFAULT_SERVER_URLS.localOrigin;
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
@@ -64,10 +65,7 @@ function logSkip(message: string) {
     log(`  ${colors.yellow}⊘${colors.reset} ${message}`, colors.yellow);
 }
 
-async function runTest(
-    name: string,
-    testFn: () => Promise<void>,
-): Promise<void> {
+async function runTest(name: string, testFn: () => Promise<void>): Promise<void> {
     const start = Date.now();
     logTest(name);
 
@@ -90,11 +88,7 @@ function skipTest(name: string, reason: string): void {
     logSkip(reason);
 }
 
-async function apiRequest(
-    method: string,
-    path: string,
-    body?: any,
-): Promise<any> {
+async function apiRequest(method: string, path: string, body?: any): Promise<any> {
     const headers: Record<string, string> = {
         "Content-Type": "application/json",
     };
@@ -103,7 +97,7 @@ async function apiRequest(
         headers["Cookie"] = sessionCookie;
     }
 
-    const url = `${API_URL}/api/rest/v1${path}`;
+    const url = `${API_URL}${REST_ROUTES.v1}${path}`;
 
     const response = await fetch(url, {
         method,
@@ -138,7 +132,7 @@ async function testLogin() {
         throw new Error("ADMIN_EMAIL and ADMIN_PASSWORD environment variables required");
     }
 
-    const response = await apiRequest("POST", "/auth/login", {
+    const response = await apiRequest("POST", REST_ROUTES.auth.login.replace(REST_ROUTES.v1, ""), {
         email: ADMIN_EMAIL,
         password: ADMIN_PASSWORD,
     });
@@ -300,7 +294,10 @@ async function testAboutSection() {
         ...originalAbout,
         story: {
             ...originalAbout.story,
-            overline: `${testMarker.substring(0, 20)} ${originalAbout.story.overline}`.substring(0, 100),
+            overline: `${testMarker.substring(0, 20)} ${originalAbout.story.overline}`.substring(
+                0,
+                100,
+            ),
         },
     };
 
@@ -340,7 +337,11 @@ async function testSocialProof() {
         ...originalSocialProof,
         header: {
             ...originalSocialProof.header,
-            subtitle: `${testMarker.substring(0, 20)} ${originalSocialProof.header.subtitle}`.substring(0, 100),
+            subtitle:
+                `${testMarker.substring(0, 20)} ${originalSocialProof.header.subtitle}`.substring(
+                    0,
+                    100,
+                ),
         },
     };
 
@@ -442,9 +443,9 @@ async function main() {
     log("  Test Summary", colors.bright);
     log("=".repeat(70) + "\n", colors.bright);
 
-    const passed = results.filter(r => r.status === "PASS").length;
-    const failed = results.filter(r => r.status === "FAIL").length;
-    const skipped = results.filter(r => r.status === "SKIP").length;
+    const passed = results.filter((r) => r.status === "PASS").length;
+    const failed = results.filter((r) => r.status === "FAIL").length;
+    const skipped = results.filter((r) => r.status === "SKIP").length;
     const total = results.length;
 
     log(`Total:   ${total}`, colors.dim);
@@ -458,8 +459,8 @@ async function main() {
         log("─".repeat(70), colors.red);
 
         results
-            .filter(r => r.status === "FAIL")
-            .forEach(r => {
+            .filter((r) => r.status === "FAIL")
+            .forEach((r) => {
                 log(`\n${r.name}:`, colors.red);
                 log(`  ${r.error}`, colors.dim);
             });
@@ -477,7 +478,7 @@ async function main() {
 }
 
 // Run tests
-main().catch(error => {
+main().catch((error) => {
     log(`\n❌ Fatal error: ${error.message}`, colors.red);
     console.error(error);
     process.exit(1);

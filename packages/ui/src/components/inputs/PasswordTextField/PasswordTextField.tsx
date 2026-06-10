@@ -1,7 +1,16 @@
-import { FormControl, FormHelperText, IconButton, InputAdornment, InputLabel, LinearProgress, OutlinedInput, useTheme } from "@mui/material";
+import {
+    FormControl,
+    FormHelperText,
+    IconButton,
+    InputAdornment,
+    InputLabel,
+    LinearProgress,
+    OutlinedInput,
+    useTheme,
+} from "@mui/material";
 import { InvisibleIcon, LockIcon, VisibleIcon } from "icons";
 import { useCallback, useEffect, useState } from "react";
-import { noop } from "utils";
+import { noop } from "utils/objectTools";
 import { PasswordTextFieldProps } from "../types";
 
 type PasswordStrengthProps = {
@@ -16,6 +25,8 @@ const passwordStartAdornment = (
         <LockIcon />
     </InputAdornment>
 );
+
+const PASSWORD_STRENGTH_DELAY_MS = 300;
 
 export const PasswordTextField = ({
     autoComplete = "current-password",
@@ -38,33 +49,77 @@ export const PasswordTextField = ({
         setShowPassword(!showPassword);
     }, [showPassword]);
 
-    const getPasswordStrengthProps = useCallback(async (password: string) => {
-        const defaultProps = { label: "N/A", primary: palette.info.main, secondary: palette.info.light };
-        if (!password) {
-            return { ...defaultProps, score: 0 };
-        }
-        const zxcvbn = (await import("zxcvbn")).default;
-        const result = zxcvbn(password);
-        const score = result.score;
-        switch (score) {
-            case 0:
-            case 1:
-                return { label: "Weak", primary: palette.error.main, secondary: palette.error.light, score };
-            case 2:
-                return { label: "Moderate", primary: palette.warning.main, secondary: palette.warning.light, score };
-            case 3:
-                return { label: "Strong", primary: palette.success.main, secondary: palette.success.light, score };
-            case 4:
-                return { label: "Very Strong", primary: palette.success.dark, secondary: palette.success.light, score };
-            default:
-                return { ...defaultProps, score };
-        }
-    }, [palette]);
+    const getPasswordStrengthProps = useCallback(
+        async (password: string) => {
+            const defaultProps = {
+                label: "N/A",
+                primary: palette.info.main,
+                secondary: palette.info.light,
+            };
+            if (!password) {
+                return { ...defaultProps, score: 0 };
+            }
+            const zxcvbn = (await import("zxcvbn")).default;
+            const result = zxcvbn(password);
+            const score = result.score;
+            switch (score) {
+                case 0:
+                case 1:
+                    return {
+                        label: "Weak",
+                        primary: palette.error.main,
+                        secondary: palette.error.light,
+                        score,
+                    };
+                case 2:
+                    return {
+                        label: "Moderate",
+                        primary: palette.warning.main,
+                        secondary: palette.warning.light,
+                        score,
+                    };
+                case 3:
+                    return {
+                        label: "Strong",
+                        primary: palette.success.main,
+                        secondary: palette.success.light,
+                        score,
+                    };
+                case 4:
+                    return {
+                        label: "Very Strong",
+                        primary: palette.success.dark,
+                        secondary: palette.success.light,
+                        score,
+                    };
+                default:
+                    return { ...defaultProps, score };
+            }
+        },
+        [palette],
+    );
 
-    const [strengthProps, setStrengthProps] = useState<PasswordStrengthProps>({ label: "N/A", primary: palette.info.main, secondary: palette.info.light, score: 0 });
+    const [strengthProps, setStrengthProps] = useState<PasswordStrengthProps>({
+        label: "N/A",
+        primary: palette.info.main,
+        secondary: palette.info.light,
+        score: 0,
+    });
     useEffect(() => {
-        getPasswordStrengthProps(value).then(setStrengthProps);
-    }, [value, getPasswordStrengthProps]);
+        if (autoComplete !== "new-password") return;
+
+        let isCurrent = true;
+        const timeout = window.setTimeout(() => {
+            getPasswordStrengthProps(value).then((props) => {
+                if (isCurrent) setStrengthProps(props);
+            });
+        }, PASSWORD_STRENGTH_DELAY_MS);
+
+        return () => {
+            isCurrent = false;
+            window.clearTimeout(timeout);
+        };
+    }, [autoComplete, value, getPasswordStrengthProps]);
 
     return (
         <FormControl fullWidth={fullWidth} variant="outlined">
@@ -93,34 +148,35 @@ export const PasswordTextField = ({
                                 borderRadius: "2px",
                             }}
                         >
-                            {
-                                showPassword ?
-                                    <InvisibleIcon fill={palette.text.secondary} /> :
-                                    <VisibleIcon fill={palette.text.secondary} />
-                            }
+                            {showPassword ? (
+                                <InvisibleIcon fill={palette.text.secondary} />
+                            ) : (
+                                <VisibleIcon fill={palette.text.secondary} />
+                            )}
                         </IconButton>
                     </InputAdornment>
                 }
                 label={label ?? "Password"}
             />
-            {
-                autoComplete === "new-password" && (
-                    <LinearProgress
-                        value={strengthProps.score * 25}  // Convert score to percentage
-                        variant="determinate"
-                        sx={{
-                            marginTop: 0,
-                            height: "6px",
-                            borderRadius: "0 0 4px 4px",
-                            backgroundColor: value.length === 0 ? "transparent" : strengthProps.secondary,
-                            "& .MuiLinearProgress-bar": {
-                                backgroundColor: strengthProps.primary,
-                            },
-                        }}
-                    />
-                )
-            }
-            <FormHelperText id="adornment-password-error-text" sx={{ color: palette.error.main }}>{helperText}</FormHelperText>
+            {autoComplete === "new-password" && (
+                <LinearProgress
+                    value={strengthProps.score * 25} // Convert score to percentage
+                    variant="determinate"
+                    sx={{
+                        marginTop: 0,
+                        height: "6px",
+                        borderRadius: "0 0 4px 4px",
+                        backgroundColor:
+                            value.length === 0 ? "transparent" : strengthProps.secondary,
+                        "& .MuiLinearProgress-bar": {
+                            backgroundColor: strengthProps.primary,
+                        },
+                    }}
+                />
+            )}
+            <FormHelperText id="adornment-password-error-text" sx={{ color: palette.error.main }}>
+                {helperText}
+            </FormHelperText>
         </FormControl>
     );
 };

@@ -1,7 +1,7 @@
 import { uuid } from "@local/shared";
 import { Stack } from "@mui/material";
 import { useEffect, useMemo, useState } from "react";
-import { PubSub } from "utils";
+import { PubSub } from "utils/pubsub";
 import { Snack } from "../Snack/Snack";
 import { SnackProps } from "../types";
 

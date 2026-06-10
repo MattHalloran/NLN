@@ -9,60 +9,10 @@ import {
     Button,
 } from "@mui/material";
 import { useLocation } from "route";
-import { Star, Home, Heart, Globe, Award, Leaf, TreePine, LucideIcon } from "lucide-react";
+import { Star } from "lucide-react";
 import { useLandingPage } from "hooks/useLandingPage";
-import { COMPANY_INFO } from "@local/shared";
-
-// Icon mapping for value cards
-const VALUE_ICONS: Record<string, LucideIcon> = {
-    star: Star,
-    home: Home,
-    heart: Heart,
-    globe: Globe,
-    award: Award,
-    leaf: Leaf,
-    tree: TreePine,
-};
-
-// Helper function to replace tokens in text (like {foundedYear})
-const replaceTokens = (text: string, foundedYear: number): string => {
-    return text.replace(/{foundedYear}/g, String(foundedYear));
-};
-
-// Type for value items
-interface ValueItem {
-    title: string;
-    description: string;
-    icon: string;
-}
-
-// Default values (fallback if API data not available)
-const DEFAULT_VALUES = [
-    {
-        title: "Quality First",
-        description:
-            "We source only the healthiest plants and provide expert care guidance to ensure your success.",
-        icon: "star",
-    },
-    {
-        title: "Local Expertise",
-        description:
-            "40+ years of experience with Southern New Jersey growing conditions and climate-appropriate plant selection.",
-        icon: "home",
-    },
-    {
-        title: "Family Heritage",
-        description:
-            "Family-owned and operated by the Gianaris family, maintaining traditional values and expertise.",
-        icon: "heart",
-    },
-    {
-        title: "Sustainability",
-        description:
-            "Committed to environmentally responsible practices and promoting native plant species.",
-        icon: "globe",
-    },
-];
+import { COMPANY_INFO, DEFAULT_ABOUT_CONTENT, replaceLandingPageTokens } from "@local/shared";
+import { resolveLandingPageIcon } from "utils/landingPageIcons";
 
 export const AboutStory = () => {
     const { palette } = useTheme();
@@ -75,36 +25,18 @@ export const AboutStory = () => {
     // Get about section data from API or use defaults
     const aboutData = data?.content?.about;
 
-    const storyData = aboutData?.story || {
-        overline: "Our Story",
-        title: "Growing Excellence Since {foundedYear}",
-        subtitle:
-            "What started as a family vision has grown into Southern New Jersey's premier wholesale nursery.",
-        paragraphs: [
-            "Founded by the Gianaris family in {foundedYear}, New Life Nursery Inc. began with a simple mission: to grow top quality material for buyers who are interested in the best. Today, after more than four decades, we continue as a family-owned and operated business, maintaining the traditional values and horticultural expertise that built our reputation.",
-            "With over 70 acres in production in Bridgeton, New Jersey, we specialize in growing beautiful, healthy, and consistent plant material at competitive prices. Our wholesale operation serves landscape professionals and businesses throughout the region with sizes ranging from 3-gallon shrubs to 25-gallon specimen trees.",
-        ],
-        cta: {
-            text: "Visit Our Nursery",
-            link: "/about#contact",
-        },
-    };
+    const storyData = aboutData?.story || DEFAULT_ABOUT_CONTENT.story;
 
-    const valuesData = aboutData?.values || {
-        title: "What Makes Us Different",
-        items: DEFAULT_VALUES,
-    };
+    const valuesData = aboutData?.values || DEFAULT_ABOUT_CONTENT.values;
 
-    const missionData = aboutData?.mission || {
-        title: "Our Mission",
-        quote: "Growing top quality material for buyers who are interested in the best.",
-        attribution: "The Gianaris Family",
-    };
+    const missionData = aboutData?.mission || DEFAULT_ABOUT_CONTENT.mission;
 
     // Replace tokens in text fields
-    const title = replaceTokens(storyData.title, foundedYear);
-    const subtitle = replaceTokens(storyData.subtitle, foundedYear);
-    const paragraphs = storyData.paragraphs.map((p: string) => replaceTokens(p, foundedYear));
+    const title = replaceLandingPageTokens(storyData.title, { foundedYear });
+    const subtitle = replaceLandingPageTokens(storyData.subtitle, { foundedYear });
+    const paragraphs = storyData.paragraphs.map((p: string) =>
+        replaceLandingPageTokens(p, { foundedYear }),
+    );
 
     return (
         <Box
@@ -226,8 +158,8 @@ export const AboutStory = () => {
                             </Typography>
 
                             <Grid container spacing={3}>
-                                {valuesData.items.map((value: ValueItem, index: number) => {
-                                    const IconComponent = VALUE_ICONS[value.icon] || Star;
+                                {valuesData.items.map((value, index: number) => {
+                                    const IconComponent = resolveLandingPageIcon(value.icon, Star);
                                     return (
                                         <Grid item xs={12} sm={6} key={index}>
                                             <Card

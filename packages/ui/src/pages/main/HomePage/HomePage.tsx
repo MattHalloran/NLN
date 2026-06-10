@@ -1,16 +1,39 @@
-import React, { useMemo, useEffect, useRef } from "react";
-import { Box, CircularProgress } from "@mui/material";
-import { AboutStory } from "components/AboutStory/AboutStory";
+import React, { Suspense, lazy, useMemo, useEffect, useRef, type ComponentType } from "react";
+import { REST_ROUTES, stripApiPrefix } from "@local/shared";
+import { Box } from "@mui/material";
 import { Hero } from "components/Hero/Hero";
-import { InteractiveElements } from "components/InteractiveElements/InteractiveElements";
-import { LocationVisit } from "components/LocationVisit/LocationVisit";
-import { ServiceShowcase } from "components/ServiceShowcase/ServiceShowcase";
-import { SocialProof } from "components/SocialProof/SocialProof";
 import { TopBar } from "components/navigation/TopBar/TopBar";
 import { useLandingPage } from "hooks/useLandingPage";
 import { restApi } from "api/rest/client";
 import { handleError } from "utils/errorLogger";
 import { getServerUrl } from "utils/serverUrl";
+
+type LazyNamedComponent<TModule, TExport extends keyof TModule> =
+    TModule[TExport] extends ComponentType<infer TProps> ? ComponentType<TProps> : never;
+
+const lazyNamed = <TModule, TExport extends keyof TModule>(
+    importer: () => Promise<TModule>,
+    exportName: TExport,
+) =>
+    lazy(async () => {
+        const module = await importer();
+        return { default: module[exportName] as LazyNamedComponent<TModule, TExport> };
+    });
+
+const ServiceShowcase = lazyNamed(
+    () => import("components/ServiceShowcase/ServiceShowcase"),
+    "ServiceShowcase",
+);
+const SocialProof = lazyNamed(() => import("components/SocialProof/SocialProof"), "SocialProof");
+const AboutStory = lazyNamed(() => import("components/AboutStory/AboutStory"), "AboutStory");
+const InteractiveElements = lazyNamed(
+    () => import("components/InteractiveElements/InteractiveElements"),
+    "InteractiveElements",
+);
+const LocationVisit = lazyNamed(
+    () => import("components/LocationVisit/LocationVisit"),
+    "LocationVisit",
+);
 
 // Section component mapping
 const SECTION_COMPONENTS: Record<string, React.ComponentType> = {
@@ -25,7 +48,7 @@ const SECTION_COMPONENTS: Record<string, React.ComponentType> = {
 const BOUNCE_THRESHOLD_MS = 10000; // 10 seconds
 
 export const HomePage = () => {
-    const { data: landingPageData, loading } = useLandingPage();
+    const { data: landingPageData } = useLandingPage();
     const trackedViewVariantId = useRef<string | null>(null);
     const trackedBounceVariantId = useRef<string | null>(null);
     const bounceTracked = useRef(false);
@@ -103,7 +126,7 @@ export const HomePage = () => {
                     const blob = new Blob([JSON.stringify({ eventType: "bounce" })], {
                         type: "application/json",
                     });
-                    const url = `${getServerUrl()}/rest/v1/landing-page/variants/${currentVariantId}/track`;
+                    const url = `${getServerUrl()}${stripApiPrefix(REST_ROUTES.landingPage.trackVariant(currentVariantId))}`;
                     navigator.sendBeacon(url, blob);
                 } else {
                     // Fallback for browsers that don't support sendBeacon
@@ -129,23 +152,19 @@ export const HomePage = () => {
         <>
             <TopBar display="page" />
             <Box>
-                {loading ? (
-                    <Box
-                        sx={{
-                            display: "flex",
-                            justifyContent: "center",
-                            alignItems: "center",
-                            minHeight: "400px",
-                        }}
-                    >
-                        <CircularProgress />
-                    </Box>
-                ) : (
-                    orderedSections.map((sectionId) => {
-                        const SectionComponent = SECTION_COMPONENTS[sectionId];
+                {orderedSections.map((sectionId) => {
+                    const SectionComponent = SECTION_COMPONENTS[sectionId];
+
+                    if (sectionId === "hero") {
                         return <SectionComponent key={sectionId} />;
-                    })
-                )}
+                    }
+
+                    return (
+                        <Suspense key={sectionId} fallback={null}>
+                            <SectionComponent />
+                        </Suspense>
+                    );
+                })}
             </Box>
         </>
     );

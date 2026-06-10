@@ -1,4 +1,10 @@
-import { APP_LINKS, COMPANY_INFO } from "@local/shared";
+import {
+    APP_LINKS,
+    COMPANY_INFO,
+    DEFAULT_SOCIAL_PROOF_CONTENT,
+    REST_ROUTES,
+    replaceLandingPageTokens,
+} from "@local/shared";
 import {
     Box,
     Button,
@@ -27,12 +33,6 @@ import {
     GripVertical,
     Building2,
     Users,
-    TreePine,
-    Clock,
-    Award,
-    Truck,
-    Shield,
-    Sprout,
     BarChart2 as StatsIcon,
     Zap as MissionIcon,
     CheckCircle as StrengthsIcon,
@@ -49,18 +49,10 @@ import { useUpdateLandingPageContent, useLandingPageContent } from "api/rest/hoo
 import { useAdminForm } from "hooks/useAdminForm";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { useEffect } from "react";
+import { landingPageIconOptions, resolveLandingPageIcon } from "utils/landingPageIcons";
 
 // Available icons for selection
-const SOCIAL_PROOF_ICONS = [
-    { value: "users", label: "Users", icon: Users },
-    { value: "award", label: "Award", icon: Award },
-    { value: "leaf", label: "Leaf", icon: TreePine },
-    { value: "clock", label: "Clock", icon: Clock },
-    { value: "truck", label: "Truck", icon: Truck },
-    { value: "shield", label: "Shield", icon: Shield },
-    { value: "building", label: "Building", icon: Building2 },
-    { value: "sprout", label: "Sprout", icon: Sprout },
-];
+const SOCIAL_PROOF_ICONS = landingPageIconOptions;
 
 interface SocialProofStat {
     number: string;
@@ -105,119 +97,16 @@ interface SocialProofData {
     };
 }
 
-// Icon mapping
-const ICON_MAP: Record<string, React.ComponentType<{ size?: number; color?: string }>> = {
-    users: Users,
-    award: Award,
-    leaf: TreePine,
-    clock: Clock,
-    truck: Truck,
-    shield: Shield,
-    building: Building2,
-    sprout: Sprout,
-};
-
-// Helper function to replace tokens
 const replaceTokens = (text: string, _foundedYear: number, yearsInBusiness: number): string => {
-    return text
-        .replace(/{foundedYear}/g, String(_foundedYear))
-        .replace(/{yearsInBusiness}/g, String(yearsInBusiness));
+    return replaceLandingPageTokens(text, {
+        foundedYear: _foundedYear,
+        yearsInBusiness,
+    });
 };
 
 // Default data
-const getDefaultSocialProofData = (_foundedYear: number): SocialProofData => ({
-    header: {
-        title: "Why Choose New Life Nursery",
-        subtitle: "Southern New Jersey's trusted wholesale nursery partner for over four decades",
-    },
-    stats: [
-        {
-            number: "{yearsInBusiness}+",
-            label: "Years of Excellence",
-            subtext: "Since {foundedYear}",
-        },
-        {
-            number: "100+",
-            label: "Plant Varieties",
-            subtext: "Extensive Selection",
-        },
-        {
-            number: "3-25",
-            label: "Gallon Sizes",
-            subtext: "Full Range",
-        },
-        {
-            number: "500+",
-            label: "Trade Partners",
-            subtext: "Wholesale Only",
-        },
-    ],
-    mission: {
-        title: "Our Founding Mission Since {foundedYear}",
-        quote: "Growing top quality material for buyers who are interested in the best.",
-        attribution: "The Gianaris Family",
-    },
-    strengths: {
-        title: "What Sets Us Apart",
-        items: [
-            {
-                icon: "users",
-                title: "Family Heritage",
-                description:
-                    "Owned and operated by the Gianaris family for over four decades, maintaining traditional values and personal service.",
-                highlight: "Family-Owned Since {foundedYear}",
-            },
-            {
-                icon: "leaf",
-                title: "Extensive Inventory",
-                description:
-                    "We maintain one of Southern New Jersey's largest selections of quality nursery stock across a wide range of varieties and sizes.",
-                highlight: "Diverse Selection",
-            },
-            {
-                icon: "award",
-                title: "Quality Commitment",
-                description:
-                    "Our founding motto remains unchanged: Growing top quality material for buyers who are interested in the best.",
-                highlight: "Premium Quality Only",
-            },
-            {
-                icon: "clock",
-                title: "Trade-Friendly Hours",
-                description:
-                    "Opening early, we help contractors get loaded and to job sites early.",
-                highlight: "Early Opening",
-            },
-            {
-                icon: "truck",
-                title: "Wholesale Expertise",
-                description:
-                    "Specializing exclusively in wholesale, we understand the unique needs of landscapers and contractors.",
-                highlight: "Trade Professionals Only",
-            },
-            {
-                icon: "shield",
-                title: "Licensed & Certified",
-                description:
-                    "Fully licensed New Jersey nursery meeting all state requirements for commercial plant production and sales.",
-                highlight: "NJ Licensed Nursery",
-            },
-        ],
-    },
-    clientTypes: {
-        title: "Proudly Serving Trade Professionals",
-        items: [
-            { icon: "building", label: "Landscape Contractors" },
-            { icon: "sprout", label: "Garden Centers" },
-            { icon: "users", label: "Property Developers" },
-            { icon: "leaf", label: "Municipalities" },
-        ],
-    },
-    footer: {
-        description: "References available upon request for qualified wholesale buyers",
-        chips: ["Licensed NJ Nursery", "Wholesale Only", "Est. {foundedYear}"],
-    },
-});
+const getDefaultSocialProofData = (_foundedYear: number): SocialProofData =>
+    DEFAULT_SOCIAL_PROOF_CONTENT;
 
 // Preview component
 const SocialProofPreview = ({
@@ -367,7 +256,7 @@ const SocialProofPreview = ({
             </Typography>
             <Grid container spacing={2} sx={{ mb: 4 }}>
                 {socialProofData.strengths.items.map((strength, index) => {
-                    const IconComponent = ICON_MAP[strength.icon] || Users;
+                    const IconComponent = resolveLandingPageIcon(strength.icon, Users);
                     return (
                         <Grid item xs={12} md={6} key={index}>
                             <Card sx={{ height: "100%", borderRadius: 2 }}>
@@ -446,7 +335,7 @@ const SocialProofPreview = ({
                 </Typography>
                 <Grid container spacing={2} justifyContent="center" sx={{ mb: 2 }}>
                     {socialProofData.clientTypes.items.map((client, index) => {
-                        const IconComponent = ICON_MAP[client.icon] || Building2;
+                        const IconComponent = resolveLandingPageIcon(client.icon, Building2);
                         return (
                             <Grid item xs={6} sm={3} key={index}>
                                 <Box sx={{ p: 1 }}>
@@ -529,7 +418,7 @@ export const AdminHomepageSocialProof = () => {
         },
         refetchDependencies: [refetchLandingPage],
         pageName: "social-proof-section",
-        endpointName: "/api/v1/landing-page",
+        endpointName: REST_ROUTES.landingPage.root,
         successMessage: "Social proof settings saved successfully!",
         errorMessagePrefix: "Failed to save changes",
     });
@@ -1357,7 +1246,10 @@ export const AdminHomepageSocialProof = () => {
                                                                                                     iconOption,
                                                                                                 ) => {
                                                                                                     const IconComponent =
-                                                                                                        iconOption.icon;
+                                                                                                        resolveLandingPageIcon(
+                                                                                                            iconOption.value,
+                                                                                                            Users,
+                                                                                                        );
                                                                                                     return (
                                                                                                         <MenuItem
                                                                                                             key={
@@ -1638,7 +1530,10 @@ export const AdminHomepageSocialProof = () => {
                                                                                                     iconOption,
                                                                                                 ) => {
                                                                                                     const IconComponent =
-                                                                                                        iconOption.icon;
+                                                                                                        resolveLandingPageIcon(
+                                                                                                            iconOption.value,
+                                                                                                            Building2,
+                                                                                                        );
                                                                                                     return (
                                                                                                         <MenuItem
                                                                                                             key={

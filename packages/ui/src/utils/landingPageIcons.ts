@@ -1,0 +1,56 @@
+import { LANDING_PAGE_ICON, LANDING_PAGE_ICON_OPTIONS } from "@local/shared";
+import {
+    Award,
+    Building2,
+    Car,
+    Clock,
+    Eye,
+    Gift,
+    Globe,
+    Headset,
+    Heart,
+    Home,
+    Leaf,
+    LucideIcon,
+    MapPin,
+    Package,
+    Shield,
+    Smartphone,
+    Sprout,
+    Star,
+    TreePine,
+    Truck,
+    Users,
+    Wrench,
+} from "lucide-react";
+
+export const LANDING_PAGE_ICON_COMPONENTS: Record<string, LucideIcon> = {
+    [LANDING_PAGE_ICON.Award]: Award,
+    [LANDING_PAGE_ICON.Building]: Building2,
+    [LANDING_PAGE_ICON.Car]: Car,
+    [LANDING_PAGE_ICON.Clock]: Clock,
+    [LANDING_PAGE_ICON.Eye]: Eye,
+    [LANDING_PAGE_ICON.Gift]: Gift,
+    [LANDING_PAGE_ICON.Globe]: Globe,
+    [LANDING_PAGE_ICON.Headset]: Headset,
+    [LANDING_PAGE_ICON.Heart]: Heart,
+    [LANDING_PAGE_ICON.Home]: Home,
+    [LANDING_PAGE_ICON.Leaf]: Leaf,
+    [LANDING_PAGE_ICON.MapPin]: MapPin,
+    [LANDING_PAGE_ICON.Package]: Package,
+    [LANDING_PAGE_ICON.Shield]: Shield,
+    [LANDING_PAGE_ICON.Smartphone]: Smartphone,
+    [LANDING_PAGE_ICON.Sprout]: Sprout,
+    [LANDING_PAGE_ICON.Star]: Star,
+    [LANDING_PAGE_ICON.Tree]: TreePine,
+    [LANDING_PAGE_ICON.Truck]: Truck,
+    [LANDING_PAGE_ICON.Users]: Users,
+    [LANDING_PAGE_ICON.Wrench]: Wrench,
+};
+
+export const landingPageIconOptions = LANDING_PAGE_ICON_OPTIONS;
+
+export const resolveLandingPageIcon = (
+    iconName: string | undefined,
+    fallback: LucideIcon = Leaf,
+): LucideIcon => (iconName ? LANDING_PAGE_ICON_COMPONENTS[iconName] || fallback : fallback);

@@ -1,4 +1,13 @@
-import { APP_LINKS } from "@local/shared";
+import {
+    APP_LINKS,
+    DEFAULT_SEASONAL_CONTENT,
+    REST_ROUTES,
+    SEASON_OPTIONS,
+    SEASONS,
+    getCurrentSeason,
+    sortSeasonalPlantsByCurrentSeason,
+} from "@local/shared";
+import type { PlantTip, SeasonalPlant } from "@local/shared";
 import {
     Accordion,
     AccordionDetails,
@@ -47,31 +56,6 @@ import {
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getServerUrl } from "utils";
 
-interface SeasonalPlant {
-    id: string;
-    name: string;
-    description: string;
-    season: string;
-    careLevel: string;
-    icon: string;
-    displayOrder: number;
-    isActive: boolean;
-    // Optional image fields (icon is fallback)
-    image?: string;
-    imageAlt?: string;
-    imageHash?: string;
-}
-
-interface PlantTip {
-    id: string;
-    title: string;
-    description: string;
-    category: string;
-    season: string;
-    displayOrder: number;
-    isActive: boolean;
-}
-
 interface SeasonalData {
     plants: SeasonalPlant[];
     tips: PlantTip[];
@@ -111,27 +95,6 @@ const getIconComponent = (iconName: string) => {
     return option ? option.icon : Leaf;
 };
 
-// Get current season based on month (Northern Hemisphere)
-const getCurrentSeason = (): string => {
-    const month = new Date().getMonth(); // 0-11
-    if (month >= 2 && month <= 4) return "Spring"; // Mar, Apr, May
-    if (month >= 5 && month <= 7) return "Summer"; // Jun, Jul, Aug
-    if (month >= 8 && month <= 10) return "Fall"; // Sep, Oct, Nov
-    return "Winter"; // Dec, Jan, Feb
-};
-
-// Sort plants by season, putting current season first
-const sortPlantsBySeason = (plants: SeasonalPlant[]): SeasonalPlant[] => {
-    const currentSeason = getCurrentSeason();
-    return [...plants].sort((a, b) => {
-        // Current season comes first
-        if (a.season === currentSeason && b.season !== currentSeason) return -1;
-        if (b.season === currentSeason && a.season !== currentSeason) return 1;
-        // Otherwise maintain original order
-        return 0;
-    });
-};
-
 // Preview Component - Shows how the seasonal section looks on the homepage
 const SeasonalPreview = ({
     plants,
@@ -156,7 +119,10 @@ const SeasonalPreview = ({
 
     const rawActivePlants = plants.filter((p) => p.isActive);
     // Sort plants by season, putting current season first
-    const activePlants = useMemo(() => sortPlantsBySeason(rawActivePlants), [rawActivePlants]);
+    const activePlants = useMemo(
+        () => sortSeasonalPlantsByCurrentSeason(rawActivePlants),
+        [rawActivePlants],
+    );
     const currentSeason = useMemo(() => getCurrentSeason(), []);
 
     const activeTips = tips.filter((t) => t.isActive);
@@ -205,7 +171,7 @@ const SeasonalPreview = ({
                         mb: 0.5,
                     }}
                 >
-                    {sectionText?.header?.title || "Seasonal Highlights & Expert Tips"}
+                    {sectionText?.header?.title || DEFAULT_SEASONAL_CONTENT.header?.title}
                 </Typography>
                 <Typography
                     variant="caption"
@@ -255,7 +221,8 @@ const SeasonalPreview = ({
                                     {activePlants.length > 0 &&
                                     activePlants[safeCurrentPlant]?.season === currentSeason
                                         ? sectionText?.sections?.plants?.currentSeasonTitle ||
-                                          "What's Blooming Now"
+                                          DEFAULT_SEASONAL_CONTENT.sections?.plants
+                                              .currentSeasonTitle
                                         : activePlants.length > 0
                                           ? (
                                                 sectionText?.sections?.plants
@@ -266,7 +233,8 @@ const SeasonalPreview = ({
                                                 activePlants[safeCurrentPlant]?.season || "",
                                             )
                                           : sectionText?.sections?.plants?.currentSeasonTitle ||
-                                            "What's Blooming Now"}
+                                            DEFAULT_SEASONAL_CONTENT.sections?.plants
+                                                .currentSeasonTitle}
                                 </Typography>
                             </Box>
 
@@ -409,7 +377,8 @@ const SeasonalPreview = ({
                                     variant="subtitle2"
                                     sx={{ fontWeight: 600, color: palette.primary.main }}
                                 >
-                                    {sectionText?.sections?.tips?.title || "Expert Plant Care Tips"}
+                                    {sectionText?.sections?.tips?.title ||
+                                        DEFAULT_SEASONAL_CONTENT.sections?.tips.title}
                                 </Typography>
                             </Box>
 
@@ -517,24 +486,26 @@ export const AdminHomepageSeasonal = () => {
                 tips: [],
                 sectionText: {
                     header: {
-                        title: "Seasonal Highlights & Expert Tips",
-                        subtitle:
-                            "Discover what's blooming now and get expert care advice for every season",
+                        title: DEFAULT_SEASONAL_CONTENT.header?.title || "",
+                        subtitle: DEFAULT_SEASONAL_CONTENT.header?.subtitle || "",
                     },
                     sections: {
                         plants: {
-                            currentSeasonTitle: "What's Blooming Now",
-                            otherSeasonTitleTemplate: "Perfect for {season}",
+                            currentSeasonTitle:
+                                DEFAULT_SEASONAL_CONTENT.sections?.plants.currentSeasonTitle || "",
+                            otherSeasonTitleTemplate:
+                                DEFAULT_SEASONAL_CONTENT.sections?.plants
+                                    .otherSeasonTitleTemplate || "",
                         },
                         tips: {
-                            title: "Expert Plant Care Tips",
+                            title: DEFAULT_SEASONAL_CONTENT.sections?.tips.title || "",
                         },
                     },
                     newsletterButtonText: "Subscribe",
                 },
                 galleryButton: {
-                    text: "View Gallery",
-                    enabled: true,
+                    text: DEFAULT_SEASONAL_CONTENT.galleryButton?.text || "",
+                    enabled: DEFAULT_SEASONAL_CONTENT.galleryButton?.enabled ?? true,
                 },
             };
 
@@ -570,7 +541,7 @@ export const AdminHomepageSeasonal = () => {
         },
         refetchDependencies: [refetchLandingPage],
         pageName: "seasonal-content",
-        endpointName: "/api/v1/landing-page",
+        endpointName: REST_ROUTES.landingPage.root,
         successMessage: "Seasonal content saved successfully!",
         errorMessagePrefix: "Failed to save seasonal content",
     });
@@ -1461,18 +1432,14 @@ export const AdminHomepageSeasonal = () => {
                                                                             )
                                                                         }
                                                                     >
-                                                                        <MenuItem value="Spring">
-                                                                            Spring
-                                                                        </MenuItem>
-                                                                        <MenuItem value="Summer">
-                                                                            Summer
-                                                                        </MenuItem>
-                                                                        <MenuItem value="Fall">
-                                                                            Fall
-                                                                        </MenuItem>
-                                                                        <MenuItem value="Winter">
-                                                                            Winter
-                                                                        </MenuItem>
+                                                                        {SEASONS.map((season) => (
+                                                                            <MenuItem
+                                                                                key={season}
+                                                                                value={season}
+                                                                            >
+                                                                                {season}
+                                                                            </MenuItem>
+                                                                        ))}
                                                                     </Select>
                                                                 </FormControl>
                                                             </Grid>
@@ -1917,21 +1884,16 @@ export const AdminHomepageSeasonal = () => {
                                                                             )
                                                                         }
                                                                     >
-                                                                        <MenuItem value="Spring">
-                                                                            Spring
-                                                                        </MenuItem>
-                                                                        <MenuItem value="Summer">
-                                                                            Summer
-                                                                        </MenuItem>
-                                                                        <MenuItem value="Fall">
-                                                                            Fall
-                                                                        </MenuItem>
-                                                                        <MenuItem value="Winter">
-                                                                            Winter
-                                                                        </MenuItem>
-                                                                        <MenuItem value="Year-round">
-                                                                            Year-round
-                                                                        </MenuItem>
+                                                                        {SEASON_OPTIONS.map(
+                                                                            (season) => (
+                                                                                <MenuItem
+                                                                                    key={season}
+                                                                                    value={season}
+                                                                                >
+                                                                                    {season}
+                                                                                </MenuItem>
+                                                                            ),
+                                                                        )}
                                                                     </Select>
                                                                 </FormControl>
                                                             </Grid>

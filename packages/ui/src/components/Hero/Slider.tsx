@@ -4,7 +4,6 @@ import { Image } from "types";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Dots } from "./Dots";
 import { Slide } from "./Slide";
-import { SliderContent } from "./SliderContent";
 
 const DEFAULT_DELAY = 3000;
 const DEFAULT_DURATION = 1000;
@@ -32,71 +31,83 @@ export const Slider = ({
 }: SliderProps) => {
     const [width, setWidth] = useState(window.innerWidth);
     const [slideIndex, setSlideIndex] = useState(0);
-    const [translate, setTranslate] = useState(0);
-    const [transition, setTransition] = useState(0);
+    const [canPreloadNeighbors, setCanPreloadNeighbors] = useState(false);
     const sliderRef = useRef<HTMLDivElement>(null);
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-    // Play and wait have circular dependencies, so they must be memoized together
-    const { play, wait } = useMemo(() => {
-        const play = (index: number) => {
-            if (images.length > 0) {
-                timeoutRef.current = setTimeout(
-                    wait,
-                    slidingDuration,
-                    index === images.length - 1 ? 0 : index + 1,
-                );
-            }
-
-            // For fade transition, we just change the index - CSS handles the fade
-            if (fadeTransition) {
-                // slideIndex will be updated in wait()
-            } else {
-                setTransition(slidingDuration);
-                setTranslate(width * (index + 1));
-            }
-        };
-        const wait = (index: number) => {
-            setSlideIndex(index);
-            if (images.length > 0) timeoutRef.current = setTimeout(play, slidingDelay, index);
-
-            if (!fadeTransition) {
-                setTransition(0);
-                setTranslate(width * index);
-            }
-        };
-        return { play, wait };
-    }, [timeoutRef, images, slidingDelay, slidingDuration, width, fadeTransition]);
+    const resizeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
-        const onResize = () => setWidth(window.innerWidth);
+        const onResize = () => {
+            if (resizeTimeoutRef.current) clearTimeout(resizeTimeoutRef.current);
+            resizeTimeoutRef.current = setTimeout(() => {
+                setWidth(window.innerWidth);
+            }, 150);
+        };
         window.addEventListener("resize", onResize);
-        if (autoPlay) wait(0);
 
         return () => {
             window.removeEventListener("resize", onResize);
             if (timeoutRef.current) clearTimeout(timeoutRef.current);
+            if (resizeTimeoutRef.current) clearTimeout(resizeTimeoutRef.current);
         };
-    }, [autoPlay, wait]);
+    }, []);
+
+    useEffect(() => {
+        const scheduleIdle =
+            window.requestIdleCallback ?? ((callback) => window.setTimeout(callback, 1500));
+        const cancelIdle = window.cancelIdleCallback ?? window.clearTimeout;
+        const idleId = scheduleIdle(() => setCanPreloadNeighbors(true));
+
+        return () => cancelIdle(idleId);
+    }, []);
+
+    useEffect(() => {
+        if (!autoPlay || images.length <= 1) return;
+
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        timeoutRef.current = setTimeout(() => {
+            setSlideIndex((index) => (index === images.length - 1 ? 0 : index + 1));
+        }, slidingDelay);
+
+        return () => {
+            if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        };
+    }, [autoPlay, images.length, slideIndex, slidingDelay]);
 
     const slides = useMemo(() => {
-        if (images?.length > 0) {
-            const copy = fadeTransition ? images : [...images, images[0]];
-            return copy.map((s, i) => (
+        if (!images?.length) return [];
+
+        const previousIndex = slideIndex === 0 ? images.length - 1 : slideIndex - 1;
+        const nextIndex = slideIndex === images.length - 1 ? 0 : slideIndex + 1;
+        const visibleIndexes = canPreloadNeighbors
+            ? new Set([previousIndex, slideIndex, nextIndex])
+            : new Set([slideIndex]);
+
+        return [...visibleIndexes].map((index) => {
+            const offset = index === slideIndex ? 0 : index === previousIndex ? -100 : 100;
+
+            return (
                 <Slide
                     width={width}
-                    key={i === images.length ? `slide-${i}-duplicate` : `slide-${i}`}
-                    image={s}
-                    isPriority={i === 0}
+                    key={`slide-${index}`}
+                    image={images[index]}
+                    isPriority={index === slideIndex && slideIndex === 0}
                     fadeTransition={fadeTransition}
-                    isActive={fadeTransition ? i === slideIndex : undefined}
+                    isActive={fadeTransition ? index === slideIndex : undefined}
+                    offsetPercent={fadeTransition ? undefined : offset}
                     transitionDuration={fadeTransition ? fadeTransitionDuration : slidingDuration}
                 />
-            ));
-        } else {
-            return [];
-        }
-    }, [width, images, fadeTransition, slideIndex, slidingDuration, fadeTransitionDuration]);
+            );
+        });
+    }, [
+        width,
+        images,
+        canPreloadNeighbors,
+        fadeTransition,
+        slideIndex,
+        slidingDuration,
+        fadeTransitionDuration,
+    ]);
 
     const goToSlide = (index: number) => {
         if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -107,61 +118,11 @@ export const Slider = ({
         // For fade transition, just change the index - CSS handles the fade
         if (fadeTransition) {
             setSlideIndex(index);
-            if (autoPlay) {
-                timeoutRef.current = setTimeout(
-                    () => wait(index === images.length - 1 ? 0 : index + 1),
-                    slidingDelay,
-                );
-            }
-            return;
-        }
-
-        // Slide transition logic (with duplicate slide trick for infinite loop)
-        // Handle looping from last slide to first slide (use duplicate at end)
-        if (slideIndex === images.length - 1 && index === 0) {
-            // Animate to the duplicate slide at the end
-            if (images.length > 0) {
-                timeoutRef.current = setTimeout(wait, slidingDuration, 0);
-            }
-            setTransition(slidingDuration);
-            setTranslate(width * images.length);
-            return;
-        }
-
-        // Handle looping from first slide to last slide
-        if (slideIndex === 0 && index === images.length - 1) {
-            // Instantly jump to the duplicate (position images.length), then animate back to last
-            setTransition(0);
-            setTranslate(width * images.length);
-
-            // Force a reflow, then animate backwards to the last slide
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    setSlideIndex(images.length - 1);
-                    setTransition(slidingDuration);
-                    setTranslate(width * (images.length - 1));
-
-                    if (autoPlay) {
-                        timeoutRef.current = setTimeout(
-                            () => play(images.length - 1),
-                            slidingDelay,
-                        );
-                    }
-                });
-            });
             return;
         }
 
         // Normal slide transition
         setSlideIndex(index);
-        setTransition(slidingDuration);
-        setTranslate(width * index);
-        if (autoPlay) {
-            timeoutRef.current = setTimeout(
-                () => wait(index === images.length - 1 ? 0 : index + 1),
-                slidingDelay,
-            );
-        }
     };
 
     const previousSlide = () => {
@@ -186,14 +147,7 @@ export const Slider = ({
                 whiteSpace: "nowrap",
             }}
         >
-            <SliderContent
-                translate={fadeTransition ? 0 : translate}
-                transition={fadeTransition ? 0 : transition}
-                width={fadeTransition ? width : width * (slides?.length ?? 0)}
-                fadeTransition={fadeTransition}
-            >
-                {slides}
-            </SliderContent>
+            {slides}
 
             {showDots && (
                 <Dots quantity={images.length} activeIndex={slideIndex} onDotClick={goToSlide} />

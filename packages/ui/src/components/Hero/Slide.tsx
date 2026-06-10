@@ -1,6 +1,7 @@
 import { Box } from "@mui/material";
 import { Image } from "types";
-import { getImageFiles, getImageSrc, getServerUrl } from "utils";
+import { getImageFiles, getImageSrc } from "utils/imageTools";
+import { getServerUrl } from "utils/serverUrl";
 
 interface SlideProps {
     image: Image;
@@ -8,6 +9,7 @@ interface SlideProps {
     isPriority?: boolean;
     fadeTransition?: boolean;
     isActive?: boolean;
+    offsetPercent?: number;
     transitionDuration?: number;
 }
 
@@ -17,6 +19,7 @@ export const Slide = ({
     isPriority,
     fadeTransition,
     isActive,
+    offsetPercent,
     transitionDuration = 1000,
 }: SlideProps) => {
     if (!image) return null;
@@ -25,35 +28,52 @@ export const Slide = ({
     const imageSrc = getImageSrc(image, width);
     if (!imageSrc) return null;
 
+    const toImageUrl = (src: string) => `${serverUrl}/${src.replace(/^\/+/, "")}`;
     const files = getImageFiles(image);
-    const srcSet = files
+    const sortedFiles = files
         .filter((file) => file.src && file.width)
-        .sort((a, b) => a.width - b.width)
-        .map((file) => `${serverUrl}${file.src} ${file.width}w`)
+        .sort((a, b) => a.width - b.width);
+    const webpSrcSet = sortedFiles
+        .filter((file) => file.src.toLowerCase().endsWith(".webp"))
+        .map((file) => `${toImageUrl(file.src)} ${file.width}w`)
+        .join(", ");
+    const fallbackSrcSet = sortedFiles
+        .filter((file) => !file.src.toLowerCase().endsWith(".webp"))
+        .map((file) => `${toImageUrl(file.src)} ${file.width}w`)
         .join(", ");
     const fallbackFile = files.find((file) => file.src === imageSrc) ?? files[0];
     const loading = isPriority ? "eager" : "lazy";
     const fetchPriority = isPriority ? "high" : "auto";
     const imageElement = (
         <Box
-            component="img"
-            src={`${serverUrl}${imageSrc}`}
-            srcSet={srcSet || undefined}
-            sizes="100vw"
-            alt={image.alt || ""}
-            loading={loading}
-            fetchPriority={fetchPriority}
-            decoding={isPriority ? "sync" : "async"}
-            width={fallbackFile?.width}
-            height={fallbackFile?.height}
+            component="picture"
             sx={{
                 display: "block",
                 width: "100%",
                 height: "100%",
-                objectFit: "cover",
-                objectPosition: "center",
             }}
-        />
+        >
+            {webpSrcSet && <source srcSet={webpSrcSet} sizes="100vw" type="image/webp" />}
+            <Box
+                component="img"
+                src={toImageUrl(imageSrc)}
+                srcSet={fallbackSrcSet || undefined}
+                sizes="100vw"
+                alt={image.alt || ""}
+                loading={loading}
+                fetchPriority={fetchPriority}
+                decoding={isPriority ? "sync" : "async"}
+                width={fallbackFile?.width || undefined}
+                height={fallbackFile?.height || undefined}
+                sx={{
+                    display: "block",
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    objectPosition: "center",
+                }}
+            />
+        </Box>
     );
 
     // For fade transitions, use absolute positioning with opacity control
@@ -80,6 +100,23 @@ export const Slide = ({
     }
 
     // For slide transitions, use regular inline positioning
+    if (offsetPercent !== undefined) {
+        return (
+            <Box
+                sx={{
+                    position: "absolute",
+                    inset: 0,
+                    width: "100%",
+                    height: "100%",
+                    transform: `translateX(${offsetPercent}%)`,
+                    transition: `transform ${transitionDuration}ms ease-out`,
+                }}
+            >
+                {imageElement}
+            </Box>
+        );
+    }
+
     return (
         <Box
             sx={{

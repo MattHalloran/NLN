@@ -1,3 +1,11 @@
+import {
+    DEFAULT_PORTS,
+    DEFAULT_SERVER_URLS,
+    LOCAL_DEV_ORIGINS,
+    PRODUCTION_ORIGINS,
+    REST_ROUTES,
+    STATIC_API_PATHS,
+} from "@local/shared";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import express from "express";
@@ -17,8 +25,9 @@ import { startLandingPageWatcher, stopLandingPageWatcher } from "./utils/landing
 
 const SERVER_URL =
     process.env.VITE_SERVER_LOCATION === "local"
-        ? "http://localhost:5331/api"
-        : "https://newlifenurseryinc.com/api";
+        ? DEFAULT_SERVER_URLS.localApi
+        : DEFAULT_SERVER_URLS.productionApi;
+const SERVER_PORT = DEFAULT_PORTS.server;
 
 const main = async () => {
     logger.log(LogLevel.info, "Starting server...");
@@ -191,8 +200,7 @@ const main = async () => {
     const allowedOrigins: string[] = [];
 
     // Always allow production domains
-    allowedOrigins.push("https://newlifenurseryinc.com");
-    allowedOrigins.push("https://www.newlifenurseryinc.com");
+    allowedOrigins.push(...PRODUCTION_ORIGINS);
 
     // Add additional domains from VIRTUAL_HOST if set
     if (process.env.VIRTUAL_HOST) {
@@ -206,10 +214,7 @@ const main = async () => {
 
     // In development, also allow localhost
     if (process.env.NODE_ENV === "development" || process.env.SERVER_LOCATION === "local") {
-        allowedOrigins.push("http://localhost:3001");
-        allowedOrigins.push("http://localhost:3000");
-        allowedOrigins.push("http://127.0.0.1:3001");
-        allowedOrigins.push("http://127.0.0.1:3000");
+        allowedOrigins.push(...LOCAL_DEV_ORIGINS);
     }
 
     logger.log(LogLevel.info, `🔒 CORS configured for origins: ${allowedOrigins.join(", ")}`);
@@ -243,9 +248,9 @@ const main = async () => {
     logger.log(LogLevel.info, "🔐 Authentication middleware enabled");
 
     // Apply rate limiting to API routes. Reads and mutations have separate buckets.
-    app.use("/api/rest", requestIdentityDiagnostics);
-    app.use("/api/rest", publicReadApiLimiter);
-    app.use("/api/rest", generalMutationApiLimiter);
+    app.use(REST_ROUTES.root, requestIdentityDiagnostics);
+    app.use(REST_ROUTES.root, publicReadApiLimiter);
+    app.use(REST_ROUTES.root, generalMutationApiLimiter);
     logger.log(
         LogLevel.info,
         "🛡️  Rate limiting enabled: reads 600/15m, mutations 100/15m per client"
@@ -253,13 +258,16 @@ const main = async () => {
 
     // Apply CSRF protection to all API routes
     // This middleware automatically exempts GET, HEAD, and OPTIONS requests
-    app.use("/api/rest", csrfProtection);
+    app.use(REST_ROUTES.root, csrfProtection);
     logger.log(LogLevel.info, "🛡️  CSRF protection enabled for all state-changing requests");
 
     // Set static folders
-    app.use("/api", express.static(`${process.env.PROJECT_DIR}/assets/public`));
     app.use(
-        "/api/private",
+        STATIC_API_PATHS.publicAssets,
+        express.static(`${process.env.PROJECT_DIR}/assets/public`)
+    );
+    app.use(
+        STATIC_API_PATHS.privateAssets,
         auth.requireAdmin,
         express.static(`${process.env.PROJECT_DIR}/assets/private`)
     );
@@ -268,7 +276,7 @@ const main = async () => {
     // Images use UUID-based filenames (immutable) or semantic names that change infrequently
     // Strategy: 30-day cache with ETag validation for balance of performance and freshness
     app.use(
-        "/api/images",
+        STATIC_API_PATHS.images,
         express.static(`${process.env.PROJECT_DIR}/assets/images`, {
             maxAge: "30d", // Browser caches for 30 days
             etag: true, // Enable ETag for conditional requests
@@ -293,13 +301,13 @@ const main = async () => {
     );
 
     // Mount REST API routes
-    app.use("/api/rest", restRouter);
+    app.use(REST_ROUTES.root, restRouter);
 
     // CSRF error handler - must be after routes
     app.use(csrfErrorHandler);
 
     // Start Express server
-    const server = app.listen(5331, async () => {
+    const server = app.listen(SERVER_PORT, async () => {
         logger.log(LogLevel.info, `🚀 Server running at ${SERVER_URL}`);
 
         // Always log to console for visibility
@@ -307,13 +315,13 @@ const main = async () => {
         console.log(`\n${"=".repeat(60)}`);
         console.log("✅ Server ready and accepting connections");
         console.log(`   Server URL: ${SERVER_URL}`);
-        console.log("   Health check: http://localhost:5331/healthcheck");
+        console.log(`   Health check: ${DEFAULT_SERVER_URLS.localHealthcheck}`);
         console.log(`   Environment: ${process.env.NODE_ENV || "development"}`);
         console.log(`${"=".repeat(60)}\n`);
 
         // Self health-check to verify server is responding
         try {
-            const response = await fetch("http://localhost:5331/healthcheck");
+            const response = await fetch(DEFAULT_SERVER_URLS.localHealthcheck);
             if (response.ok) {
                 console.log("✅ Health check passed - server is responding\n");
             } else {
@@ -332,7 +340,7 @@ const main = async () => {
 
     server.on("error", (error: Error & { code?: string }) => {
         if (error.code === "EADDRINUSE") {
-            logger.log(LogLevel.error, "Port 5331 is already in use", {
+            logger.log(LogLevel.error, `Port ${SERVER_PORT} is already in use`, {
                 code: genErrorCode("0015"),
             });
         } else {

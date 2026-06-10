@@ -20,7 +20,9 @@ import { Menu as MenuIcon, ShoppingCart, Store, Info, Camera } from "lucide-reac
 import { isObject } from "lodash-es";
 import { useCallback, useContext } from "react";
 import { useLocation } from "route";
-import { PubSub, UserActions, getUserActions, updateArray as _updateArray } from "utils";
+import { updateArray as _updateArray } from "utils/arrayTools";
+import { PubSub } from "utils/pubsub";
+import { getUserActions, type UserActions } from "utils/userActions";
 
 const navItemStyle = (palette: Palette) => ({
     background: "transparent",

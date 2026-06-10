@@ -10,7 +10,7 @@ import { useWindowSize } from "hooks/useWindowSize";
 import { forwardRef, useCallback, useContext, useEffect, useMemo } from "react";
 import { useLocation } from "route";
 import { noSelect } from "styles";
-import { hexToRGB as _hexToRGB } from "utils";
+import { hexToRGB as _hexToRGB } from "utils/opacityHex";
 import { HideOnScroll } from "../HideOnScroll/HideOnScroll";
 import { NavList } from "./NavList";
 
@@ -75,7 +75,7 @@ const LogoComponent = ({
                             cursor: "pointer",
                             marginLeft: "8px",
                             fontSize: { xs: "1.2em", md: "1.5em" },
-                            fontFamily: "'Kite One', sans-serif",
+                            fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
                             color: palette.primary.contrastText,
                         }}
                     >

@@ -6,9 +6,9 @@ import {
     DialogContentText,
     useTheme,
 } from "@mui/material";
-import { DialogTitle } from "components";
+import { DialogTitle } from "components/dialogs/DialogTitle/DialogTitle";
 import { useCallback, useEffect, useState, type MouseEvent } from "react";
-import { PubSub } from "utils";
+import { PubSub } from "utils/pubsub";
 
 interface StateButton {
     text: string;

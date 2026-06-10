@@ -1,3 +1,4 @@
+import { REST_RESOURCE, REST_ROUTES, REST_VERSION_PREFIX } from "@local/shared";
 import { Router } from "express";
 import multer from "multer";
 import path from "path";
@@ -47,28 +48,28 @@ const upload = multer({
 const v1Router = Router();
 
 // Health check for REST API
-v1Router.get("/health", (_req, res) => {
+v1Router.get(REST_RESOURCE.Health, (_req, res) => {
     res.json({ status: "healthy", timestamp: new Date().toISOString() });
 });
 
 // CSRF token endpoint - clients fetch token before making state-changing requests
-v1Router.get("/csrf-token", csrfTokenEndpoint);
+v1Router.get(REST_RESOURCE.CsrfToken, csrfTokenEndpoint);
 
 // Mount route handlers
-v1Router.use("/landing-page", landingPageRouter);
+v1Router.use(REST_RESOURCE.LandingPage, landingPageRouter);
 // ARCHIVED: v1Router.use("/plants", plantsRouter); // Plants feature removed
-v1Router.use("/auth", authRouter);
+v1Router.use(REST_RESOURCE.Auth, authRouter);
 // ARCHIVED: v1Router.use("/customers", customersRouter); // Customer management moved to external system
-v1Router.use("/images", upload.array("files"), imagesRouter);
-v1Router.use("/assets", upload.array("files"), assetsRouter);
-v1Router.use("/dashboard", dashboardRouter);
-v1Router.use("/storage", storageRouter);
-v1Router.use("/logs", logsRouter);
-v1Router.use("/newsletter", newsletterRouter);
+v1Router.use(REST_RESOURCE.Images, upload.array("files"), imagesRouter);
+v1Router.use(REST_RESOURCE.Assets, upload.array("files"), assetsRouter);
+v1Router.use(REST_RESOURCE.Dashboard, dashboardRouter);
+v1Router.use(REST_RESOURCE.Storage, storageRouter);
+v1Router.use(REST_RESOURCE.Logs, logsRouter);
+v1Router.use(REST_RESOURCE.Newsletter, newsletterRouter);
 // ARCHIVED: v1Router.use("/analytics", analyticsRouter); // Old A/B test analytics moved to variant system
 
 // Mount versioned API
-router.use("/v1", v1Router);
+router.use(REST_VERSION_PREFIX, v1Router);
 
 // Root API info
 router.get("/", (_req, res) => {
@@ -77,15 +78,15 @@ router.get("/", (_req, res) => {
         version: "1.0.0",
         endpoints: {
             v1: {
-                health: "/api/rest/v1/health",
-                csrfToken: "/api/rest/v1/csrf-token",
+                health: REST_ROUTES.health,
+                csrfToken: REST_ROUTES.csrfToken,
                 auth: {
-                    session: "/api/rest/v1/auth/session",
-                    login: "/api/rest/v1/auth/login",
-                    logout: "/api/rest/v1/auth/logout",
-                    signup: "/api/rest/v1/auth/signup",
-                    resetPassword: "/api/rest/v1/auth/reset-password",
-                    requestPasswordChange: "/api/rest/v1/auth/request-password-change",
+                    session: REST_ROUTES.auth.session,
+                    login: REST_ROUTES.auth.login,
+                    logout: REST_ROUTES.auth.logout,
+                    signup: REST_ROUTES.auth.signup,
+                    resetPassword: REST_ROUTES.auth.resetPassword,
+                    requestPasswordChange: REST_ROUTES.auth.requestPasswordChange,
                 },
                 // ARCHIVED: Customer management moved to external system
                 // customers: {
@@ -97,18 +98,18 @@ router.get("/", (_req, res) => {
                 //     changeStatus: "/api/rest/v1/customers/:id/status",
                 // },
                 images: {
-                    getByLabel: "/api/rest/v1/images?label=:label",
-                    add: "/api/rest/v1/images",
-                    update: "/api/rest/v1/images",
+                    getByLabel: REST_ROUTES.images.byLabel(),
+                    add: REST_ROUTES.images.root,
+                    update: REST_ROUTES.images.root,
                 },
                 assets: {
-                    read: "/api/rest/v1/assets/read",
-                    write: "/api/rest/v1/assets/write",
+                    read: REST_ROUTES.assets.read,
+                    write: REST_ROUTES.assets.write,
                 },
                 dashboard: {
-                    stats: "/api/rest/v1/dashboard/stats",
+                    stats: REST_ROUTES.dashboard.stats,
                 },
-                landingPage: "/api/rest/v1/landing-page",
+                landingPage: REST_ROUTES.landingPage.root,
                 // ARCHIVED: plants endpoint removed
             },
         },

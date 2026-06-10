@@ -1,147 +1,41 @@
-/**
- * Landing Page Content Types
- * These types define the structure of the landing page content stored in JSON
- */
+export type {
+    AboutContent,
+    BusinessAddress,
+    BusinessContactData,
+    BusinessEmail,
+    BusinessName,
+    BusinessPhone,
+    Button,
+    CompanyInfo,
+    ContactInfo,
+    HeroBanner,
+    HeroContent,
+    HeroSettings,
+    HeroText,
+    LandingPageContent,
+    LandingPageVariant,
+    LocationButton,
+    LocationContent,
+    LocationVisitInfo,
+    NewsletterContent,
+    PlantTip,
+    SeasonalContent,
+    SeasonalPlant,
+    ServiceItem,
+    ServicesContent,
+    SocialProofContent,
+    ThemeColors,
+    ThemeFeatures,
+    TrustBadge,
+    UpdateContactInfoRequest,
+    UpdateLandingPageContentRequest,
+    UpdateSettingsRequest,
+    VariantAssignment,
+    VariantEvent,
+    VariantMeta,
+} from "@local/shared";
 
-export interface HeroBanner {
-    id: string;
-    src: string;
-    alt: string;
-    description: string;
-    width: number;
-    height: number;
-    displayOrder: number;
-    isActive: boolean;
-}
-
-export interface HeroSettings {
-    autoPlay: boolean;
-    autoPlayDelay: number;
-    showDots: boolean;
-    showArrows: boolean;
-    fadeTransition: boolean;
-    fadeTransitionDuration: number;
-}
-
-export interface TrustBadge {
-    icon: string;
-    text: string;
-}
-
-export interface Button {
-    text: string;
-    link: string;
-    type: string;
-}
-
-export interface HeroText {
-    title: string;
-    subtitle: string;
-    description: string;
-    businessHours: string;
-    useContactInfoHours?: boolean;
-    trustBadges: TrustBadge[];
-    buttons: Button[];
-}
-
-export interface HeroContent {
-    banners: HeroBanner[];
-    settings: HeroSettings;
-    text: HeroText;
-}
-
-export interface ServiceItem {
-    title: string;
-    description: string;
-    icon: string;
-    action: string;
-    url: string;
-}
-
-export interface ServicesContent {
-    title: string;
-    subtitle: string;
-    items: ServiceItem[];
-}
-
-export interface SeasonalPlant {
-    id: string;
-    name: string;
-    description: string;
-    season: string;
-    careLevel: string;
-    icon: string;
-    displayOrder: number;
-    isActive: boolean;
-    // Optional image fields (icon is fallback if no image)
-    image?: string; // Image URL/path
-    imageAlt?: string; // Alt text for accessibility
-    imageHash?: string; // Image hash for cleanup integration
-}
-
-export interface PlantTip {
-    id: string;
-    title: string;
-    description: string;
-    category: string;
-    season: string;
-    displayOrder: number;
-    isActive: boolean;
-}
-
-export interface SeasonalContent {
-    plants: SeasonalPlant[];
-    tips: PlantTip[];
-    header?: {
-        title: string;
-        subtitle: string;
-    };
-    sections?: {
-        plants: {
-            currentSeasonTitle: string;
-            otherSeasonTitleTemplate: string;
-        };
-        tips: {
-            title: string;
-        };
-    };
-    galleryButton?: {
-        text: string;
-        enabled: boolean;
-    };
-}
-
-export interface NewsletterContent {
-    title: string;
-    description: string;
-    disclaimer: string;
-    buttonText?: string;
-    isActive: boolean;
-}
-
-export interface CompanyInfo {
-    foundedYear: number;
-    description: string;
-}
-
-export interface Address {
-    street: string;
-    city: string;
-    state: string;
-    zip: string;
-    full: string;
-    googleMapsUrl: string;
-}
-
-export interface Phone {
-    display: string;
-    link: string;
-}
-
-export interface Email {
-    address: string;
-    link: string;
-}
+import type { ThemeColors, ThemeFeatures } from "@local/shared";
 
 export interface SocialMedia {
     facebook?: string;
@@ -158,38 +52,6 @@ export interface HoursOfOperation {
     saturday: string;
     sunday: string;
     formatted?: string;
-}
-
-export interface ContactInfo {
-    name: string;
-    address: Address;
-    phone: Phone;
-    email: Email;
-    fax?: Phone;
-    socialMedia: SocialMedia;
-    social?: Record<string, string>;
-    website?: string;
-    hours: HoursOfOperation | string;
-}
-
-export interface ColorPalette {
-    primary: string;
-    secondary: string;
-    accent: string;
-    background: string;
-    paper: string;
-}
-
-export interface ThemeColors {
-    light: ColorPalette;
-    dark: ColorPalette;
-}
-
-export interface ThemeFeatures {
-    showSeasonalContent: boolean;
-    showNewsletter: boolean;
-    showSocialProof: boolean;
-    enableAnimations: boolean;
 }
 
 export interface Theme {
@@ -225,253 +87,8 @@ export interface Metadata {
     lastUpdated: string;
 }
 
-export interface VariantMeta {
-    variantId: string;
-}
-
-export interface AboutStory {
-    overline: string;
-    title: string;
-    subtitle: string;
-    paragraphs: string[];
-    cta: {
-        text: string;
-        link: string;
-    };
-}
-
-export interface AboutValue {
-    icon: string;
-    title: string;
-    description: string;
-}
-
-export interface AboutValues {
-    title: string;
-    items: AboutValue[];
-}
-
-export interface AboutMission {
-    title: string;
-    quote: string;
-    attribution: string;
-}
-
-export interface AboutContent {
-    story: AboutStory;
-    values: AboutValues;
-    mission: AboutMission;
-}
-
-export interface SocialProofStat {
-    number: string;
-    label: string;
-    subtext: string;
-}
-
-export interface SocialProofStrength {
-    icon: string;
-    title: string;
-    description: string;
-    highlight: string;
-}
-
-export interface SocialProofClientType {
-    icon: string;
-    label: string;
-}
-
-export interface SocialProofMission {
-    title: string;
-    quote: string;
-    attribution: string;
-}
-
-export interface SocialProofContent {
-    header: {
-        title: string;
-        subtitle: string;
-    };
-    stats: SocialProofStat[];
-    mission: SocialProofMission;
-    strengths: {
-        title: string;
-        items: SocialProofStrength[];
-    };
-    clientTypes: {
-        title: string;
-        items: SocialProofClientType[];
-    };
-    footer: {
-        description: string;
-        chips: string[];
-    };
-}
-
-export interface LocationVisitInfo {
-    id: string;
-    title: string;
-    icon: string;
-    description: string;
-    displayOrder: number;
-    isActive: boolean;
-}
-
-export interface LocationButton {
-    id: string;
-    text: string;
-    variant: "contained" | "outlined" | "text";
-    color: "primary" | "secondary";
-    action: "directions" | "contact" | "external";
-    url?: string;
-    displayOrder: number;
-    isActive: boolean;
-}
-
-export interface LocationContent {
-    header: {
-        title: string;
-        subtitle: string;
-        chip: string;
-    };
-    map: {
-        style: "gradient" | "embedded";
-        showGetDirectionsButton: boolean;
-        buttonText: string;
-    };
-    contactMethods: {
-        sectionTitle: string;
-        order: ("phone" | "address" | "email")[];
-        descriptions: {
-            phone: string;
-            address: string;
-            email: string;
-        };
-    };
-    businessHours: {
-        title: string;
-        chip: string;
-    };
-    visitInfo: {
-        sectionTitle: string;
-        items: LocationVisitInfo[];
-    };
-    cta: {
-        title: string;
-        description: string;
-        buttons: LocationButton[];
-    };
-}
-
-export interface LandingPageContent {
-    metadata: Metadata;
-    content: {
-        hero: HeroContent;
-        services: ServicesContent;
-        seasonal: SeasonalContent;
-        newsletter: NewsletterContent;
-        company: CompanyInfo;
-        about?: AboutContent;
-        socialProof?: SocialProofContent;
-        location?: LocationContent;
-    };
-    contact: ContactInfo;
-    theme: Theme;
-    layout: Layout;
-    experiments: Experiments;
-    _meta?: VariantMeta; // Variant assignment metadata
-}
-
-// Update request types
-export interface UpdateLandingPageContentRequest {
-    heroBanners?: HeroBanner[];
-    heroSettings?: HeroSettings;
-    seasonalPlants?: SeasonalPlant[];
-    plantTips?: PlantTip[];
-    settings?: {
-        hero: HeroText;
-        newsletter: NewsletterContent;
-        companyInfo: CompanyInfo;
-        colors: ThemeColors;
-        features: ThemeFeatures;
-    };
-    contactInfo?: {
-        business?: Partial<ContactInfo>;
-        hours?: string;
-    };
-}
-
-export interface UpdateSettingsRequest {
-    hero?: Partial<HeroText>;
-    newsletter?: Partial<NewsletterContent>;
-    companyInfo?: Partial<CompanyInfo>;
-    colors?: Partial<ThemeColors>;
-    features?: Partial<ThemeFeatures>;
-}
-
-export interface UpdateContactInfoRequest {
-    business?: Partial<ContactInfo>;
-    hours?: string;
-}
-
 export interface SectionConfiguration {
     component: string;
     enabled: boolean;
     order: number;
-}
-
-// API Request types for complex business data structures
-export interface BusinessName {
-    Short?: string;
-    Long?: string;
-}
-
-export interface BusinessAddress {
-    Label: string;
-    Link: string;
-}
-
-export interface BusinessPhone {
-    Label: string;
-    Link: string;
-}
-
-export interface BusinessEmail {
-    Label: string;
-    Link: string;
-}
-
-export interface BusinessContactData {
-    BUSINESS_NAME?: BusinessName;
-    ADDRESS?: BusinessAddress;
-    PHONE?: BusinessPhone;
-    EMAIL?: BusinessEmail;
-    [key: string]: unknown;
-}
-
-// New variant-first structure for A/B testing
-export interface LandingPageVariant {
-    id: string; // e.g., "variant-homepage-official", "variant-bold-cta"
-    name: string; // Display name like "Official Homepage", "Bold CTA Design"
-    description?: string; // What this variant is testing
-    status: "enabled" | "disabled"; // Whether this variant is receiving traffic
-    isOfficial: boolean; // Is this the official/control variant?
-    trafficAllocation: number; // Percentage of traffic (0-100)
-    metrics: {
-        views: number;
-        conversions: number;
-        bounces: number;
-    };
-    createdAt: string;
-    updatedAt?: string;
-    lastModified?: string; // When the content was last edited
-}
-
-export interface VariantEvent {
-    variantId: string;
-    eventType: "view" | "conversion" | "bounce";
-}
-
-export interface VariantAssignment {
-    variantId: string;
 }

@@ -1,10 +1,7 @@
+import { activeByDisplayOrder, createDefaultLandingPageContent } from "@local/shared";
+import type { PrismaClient } from "@prisma/client";
 import type { Response } from "express";
-import type {
-    LandingPageContent,
-    HeroBanner,
-    SeasonalPlant,
-    PlantTip,
-} from "../../types/landingPage.js";
+import type { LandingPageContent } from "../../types/landingPage.js";
 
 /**
  * Filter active content items in landing page content
@@ -13,53 +10,100 @@ export const filterActiveContent = (content: LandingPageContent): LandingPageCon
     const filtered = { ...content };
 
     if (filtered.content?.hero?.banners) {
-        filtered.content.hero.banners = filtered.content.hero.banners
-            .filter((b: HeroBanner) => b.isActive)
-            .sort((a: HeroBanner, b: HeroBanner) => a.displayOrder - b.displayOrder);
+        filtered.content.hero.banners = activeByDisplayOrder(filtered.content.hero.banners);
     }
 
     if (filtered.content?.seasonal?.plants) {
-        filtered.content.seasonal.plants = filtered.content.seasonal.plants
-            .filter((p: SeasonalPlant) => p.isActive)
-            .sort((a: SeasonalPlant, b: SeasonalPlant) => a.displayOrder - b.displayOrder);
+        filtered.content.seasonal.plants = activeByDisplayOrder(filtered.content.seasonal.plants);
     }
 
     if (filtered.content?.seasonal?.tips) {
-        filtered.content.seasonal.tips = filtered.content.seasonal.tips
-            .filter((t: PlantTip) => t.isActive)
-            .sort((a: PlantTip, b: PlantTip) => a.displayOrder - b.displayOrder);
+        filtered.content.seasonal.tips = activeByDisplayOrder(filtered.content.seasonal.tips);
     }
 
     return filtered;
+};
+
+const normalizeImageSrc = (src: string): string => src.replace(/^\/+/, "");
+
+/**
+ * Attach uploaded image variants to hero banners when the banner src maps to an
+ * image_file record. Banners that point at legacy public assets keep src as a
+ * fallback and simply do not receive a files array.
+ */
+export const enrichHeroBannerFiles = async (
+    content: LandingPageContent,
+    prisma?: PrismaClient
+): Promise<LandingPageContent> => {
+    const banners = content.content?.hero?.banners;
+    if (!prisma || !banners?.length) {
+        return content;
+    }
+
+    const bannerSrcs = banners.map((banner) => normalizeImageSrc(banner.src)).filter(Boolean);
+
+    if (bannerSrcs.length === 0) {
+        return content;
+    }
+
+    const matchingFiles = await prisma.image_file.findMany({
+        where: {
+            src: {
+                in: bannerSrcs,
+            },
+        },
+        select: {
+            src: true,
+            image: {
+                select: {
+                    files: {
+                        select: {
+                            src: true,
+                            width: true,
+                            height: true,
+                        },
+                    },
+                },
+            },
+        },
+    });
+
+    if (matchingFiles.length === 0) {
+        return content;
+    }
+
+    const filesBySrc = new Map(
+        matchingFiles.map((file) => [
+            file.src,
+            file.image.files.map((variant) => ({
+                ...variant,
+                src: `/${normalizeImageSrc(variant.src)}`,
+            })),
+        ])
+    );
+
+    return {
+        ...content,
+        content: {
+            ...content.content,
+            hero: {
+                ...content.content.hero,
+                banners: banners.map((banner) => ({
+                    ...banner,
+                    files: banner.files?.length
+                        ? banner.files
+                        : filesBySrc.get(normalizeImageSrc(banner.src)),
+                })),
+            },
+        },
+    };
 };
 
 /**
  * Get default empty content structure
  */
 export const getDefaultContentStructure = (): LandingPageContent["content"] => ({
-    hero: {
-        banners: [],
-        settings: {
-            autoPlay: false,
-            autoPlayDelay: 5000,
-            showDots: true,
-            showArrows: true,
-            fadeTransition: false,
-            fadeTransitionDuration: 500,
-        },
-        text: {
-            title: "",
-            subtitle: "",
-            description: "",
-            businessHours: "",
-            trustBadges: [],
-            buttons: [],
-        },
-    },
-    services: { title: "", subtitle: "", items: [] },
-    seasonal: { plants: [], tips: [] },
-    newsletter: { title: "", description: "", disclaimer: "", isActive: false },
-    company: { foundedYear: new Date().getFullYear(), description: "" },
+    ...createDefaultLandingPageContent().content,
 });
 
 /**
@@ -68,42 +112,16 @@ export const getDefaultContentStructure = (): LandingPageContent["content"] => (
 export const initializeEmptyContent = (
     content?: Partial<LandingPageContent>
 ): LandingPageContent => {
+    const defaults = createDefaultLandingPageContent();
     return {
-        content: content?.content || getDefaultContentStructure(),
-        theme: content?.theme || {
-            colors: {
-                light: { primary: "", secondary: "", accent: "", background: "", paper: "" },
-                dark: { primary: "", secondary: "", accent: "", background: "", paper: "" },
-            },
-            features: {
-                showSeasonalContent: true,
-                showNewsletter: true,
-                showSocialProof: true,
-                enableAnimations: true,
-            },
-        },
-        layout: content?.layout || { sections: [] },
-        experiments: content?.experiments || { tests: [] },
-        contact: content?.contact || {
-            name: "",
-            address: { street: "", city: "", state: "", zip: "", full: "", googleMapsUrl: "" },
-            phone: { display: "", link: "" },
-            email: { address: "", link: "" },
-            socialMedia: {},
-            hours: {
-                monday: "",
-                tuesday: "",
-                wednesday: "",
-                thursday: "",
-                friday: "",
-                saturday: "",
-                sunday: "",
-            },
-        },
-        metadata: content?.metadata || {
-            version: "1.0.0",
-            lastUpdated: new Date().toISOString(),
-        },
+        ...defaults,
+        ...content,
+        content: content?.content || defaults.content,
+        theme: content?.theme || defaults.theme,
+        layout: content?.layout || defaults.layout,
+        experiments: content?.experiments || defaults.experiments,
+        contact: content?.contact || defaults.contact,
+        metadata: content?.metadata || defaults.metadata,
     };
 };
 

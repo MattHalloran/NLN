@@ -32,7 +32,7 @@ import {
 import { isObject } from "lodash-es";
 import { useContext, useEffect, useMemo } from "react";
 import { useLocation } from "route";
-import { getServerUrl } from "utils";
+import { getServerUrl } from "utils/serverUrl";
 import { checkBusinessHoursStatus } from "utils/businessHours";
 
 export const Footer = () => {

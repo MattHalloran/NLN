@@ -14,7 +14,7 @@ import { randomUUID } from "crypto";
 import { exec } from "child_process";
 import { promisify } from "util";
 import cookieParser from "cookie-parser";
-import { COOKIE } from "@local/shared";
+import { COOKIE, REST_ROUTES } from "@local/shared";
 import restRouter from "./index.js";
 import * as auth from "../auth.js";
 import { loginLimiter, passwordResetLimiter, signupLimiter } from "../middleware/rateLimiter.js";
@@ -91,7 +91,7 @@ describe("REST API Integration Tests", () => {
             next();
         });
         app.use(auth.authenticate);
-        app.use("/api/rest", restRouter);
+        app.use(REST_ROUTES.root, restRouter);
     }, 120000);
 
     afterAll(async () => {
@@ -140,7 +140,7 @@ describe("REST API Integration Tests", () => {
 
     describe("Health Check", () => {
         it("should return healthy status", async () => {
-            const response = await request(app).get("/api/rest/v1/health");
+            const response = await request(app).get(REST_ROUTES.health);
 
             expect(response.status).toBe(200);
             expect(response.body).toHaveProperty("status", "healthy");
@@ -150,7 +150,7 @@ describe("REST API Integration Tests", () => {
 
     describe("API Root", () => {
         it("should return API information", async () => {
-            const response = await request(app).get("/api/rest");
+            const response = await request(app).get(REST_ROUTES.root);
 
             expect(response.status).toBe(200);
             expect(response.body).toHaveProperty("name", "New Life Nursery REST API");
@@ -172,7 +172,7 @@ describe("REST API Integration Tests", () => {
             });
 
             it("should register a new customer", async () => {
-                const response = await request(app).post("/api/rest/v1/auth/signup").send({
+                const response = await request(app).post(REST_ROUTES.auth.signup).send({
                     firstName: "John",
                     lastName: "Doe",
                     pronouns: "he/him",
@@ -200,7 +200,7 @@ describe("REST API Integration Tests", () => {
             });
 
             it("should set authentication cookie on signup", async () => {
-                const response = await request(app).post("/api/rest/v1/auth/signup").send({
+                const response = await request(app).post(REST_ROUTES.auth.signup).send({
                     firstName: "Jane",
                     lastName: "Smith",
                     pronouns: "she/her",
@@ -218,7 +218,7 @@ describe("REST API Integration Tests", () => {
             });
 
             it("should reject signup with missing fields", async () => {
-                const response = await request(app).post("/api/rest/v1/auth/signup").send({
+                const response = await request(app).post(REST_ROUTES.auth.signup).send({
                     firstName: "Incomplete",
                     // Missing required fields
                 });
@@ -227,7 +227,7 @@ describe("REST API Integration Tests", () => {
             });
 
             it("should reject duplicate email", async () => {
-                await request(app).post("/api/rest/v1/auth/signup").send({
+                await request(app).post(REST_ROUTES.auth.signup).send({
                     firstName: "First",
                     lastName: "User",
                     pronouns: "they/them",
@@ -240,7 +240,7 @@ describe("REST API Integration Tests", () => {
                     marketingEmails: true,
                 });
 
-                const response = await request(app).post("/api/rest/v1/auth/signup").send({
+                const response = await request(app).post(REST_ROUTES.auth.signup).send({
                     firstName: "Second",
                     lastName: "User",
                     pronouns: "they/them",
@@ -291,7 +291,7 @@ describe("REST API Integration Tests", () => {
             });
 
             it("should login with valid credentials", async () => {
-                const response = await request(app).post("/api/rest/v1/auth/login").send({
+                const response = await request(app).post(REST_ROUTES.auth.login).send({
                     email: "test@example.com",
                     password: "TestPassword123!",
                 });
@@ -304,7 +304,7 @@ describe("REST API Integration Tests", () => {
             });
 
             it("should reject invalid password", async () => {
-                const response = await request(app).post("/api/rest/v1/auth/login").send({
+                const response = await request(app).post(REST_ROUTES.auth.login).send({
                     email: "test@example.com",
                     password: "WrongPassword",
                 });
@@ -313,7 +313,7 @@ describe("REST API Integration Tests", () => {
             });
 
             it("should reject non-existent user", async () => {
-                const response = await request(app).post("/api/rest/v1/auth/login").send({
+                const response = await request(app).post(REST_ROUTES.auth.login).send({
                     email: "nonexistent@example.com",
                     password: "AnyPassword",
                 });
@@ -357,7 +357,7 @@ describe("REST API Integration Tests", () => {
             });
 
             it("should return signed-out state without a cookie", async () => {
-                const response = await request(app).get("/api/rest/v1/auth/session");
+                const response = await request(app).get(REST_ROUTES.auth.session);
 
                 expect(response.status).toBe(200);
                 expect(response.body).toEqual({ authenticated: false, user: null });
@@ -365,12 +365,12 @@ describe("REST API Integration Tests", () => {
 
             it("should return session data with a valid cookie", async () => {
                 const agent = request.agent(app);
-                await agent.post("/api/rest/v1/auth/login").send({
+                await agent.post(REST_ROUTES.auth.login).send({
                     email: "session@example.com",
                     password: "TestPassword123!",
                 });
 
-                const response = await agent.get("/api/rest/v1/auth/session");
+                const response = await agent.get(REST_ROUTES.auth.session);
 
                 expect(response.status).toBe(200);
                 expect(response.body).toHaveProperty("authenticated", true);
@@ -392,7 +392,7 @@ describe("REST API Integration Tests", () => {
                 );
 
                 const response = await request(app)
-                    .get("/api/rest/v1/auth/session")
+                    .get(REST_ROUTES.auth.session)
                     .set("Cookie", [`${COOKIE.Jwt}=${token}`]);
 
                 expect(response.status).toBe(200);
@@ -403,7 +403,7 @@ describe("REST API Integration Tests", () => {
 
         describe("POST /api/rest/v1/auth/logout", () => {
             it("should logout and clear cookie", async () => {
-                const response = await request(app).post("/api/rest/v1/auth/logout");
+                const response = await request(app).post(REST_ROUTES.auth.logout);
 
                 expect(response.status).toBe(200);
                 expect(response.body).toHaveProperty("success", true);
@@ -428,7 +428,7 @@ describe("REST API Integration Tests", () => {
 
             it("should request password change", async () => {
                 const response = await request(app)
-                    .post("/api/rest/v1/auth/request-password-change")
+                    .post(REST_ROUTES.auth.requestPasswordChange)
                     .send({
                         email: "reset@example.com",
                     });
@@ -451,7 +451,7 @@ describe("REST API Integration Tests", () => {
 
             it("should reject invalid email format", async () => {
                 const response = await request(app)
-                    .post("/api/rest/v1/auth/request-password-change")
+                    .post(REST_ROUTES.auth.requestPasswordChange)
                     .send({
                         email: "invalid-email",
                     });
@@ -465,14 +465,14 @@ describe("REST API Integration Tests", () => {
 
     describe("Error Handling", () => {
         it("should return 404 for non-existent endpoint", async () => {
-            const response = await request(app).get("/api/rest/v1/nonexistent");
+            const response = await request(app).get(`${REST_ROUTES.v1}/nonexistent`);
 
             expect(response.status).toBe(404);
         });
 
         it("should handle malformed JSON", async () => {
             const response = await request(app)
-                .post("/api/rest/v1/auth/login")
+                .post(REST_ROUTES.auth.login)
                 .set("Content-Type", "application/json")
                 .send("{ invalid json }");
 
@@ -483,7 +483,7 @@ describe("REST API Integration Tests", () => {
     describe("CORS and Security Headers", () => {
         it("should include CORS headers", async () => {
             const response = await request(app)
-                .options("/api/rest/v1/health")
+                .options(REST_ROUTES.health)
                 .set("Origin", "http://localhost:3000");
 
             // Verify CORS headers are present

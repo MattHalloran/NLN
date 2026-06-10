@@ -1,7 +1,10 @@
+import { CODE, REST_PREFIX, REST_ROUTES } from "@local/shared";
 import rateLimit from "express-rate-limit";
 import type { Request, Response, NextFunction } from "express";
 import { logger, LogLevel } from "../logger.js";
 import { initializeRedis } from "../redisConn.js";
+
+const mountedRestPath = (route: string): string => route.replace(REST_PREFIX, "");
 
 function rateLimitLogMeta(req: Request, limiter: string): Record<string, unknown> {
     const rateLimitInfo = (
@@ -38,7 +41,7 @@ function sendRateLimitExceeded(req: Request, res: Response, limiter: string, err
         `Rate limit exceeded for IP: ${req.ip}`,
         rateLimitLogMeta(req, limiter)
     );
-    res.status(429).json({ error });
+    res.status(429).json({ error, code: CODE.RateLimitExceeded.code });
 }
 
 export function requestIdentityDiagnostics(req: Request, _res: Response, next: NextFunction): void {
@@ -48,9 +51,9 @@ export function requestIdentityDiagnostics(req: Request, _res: Response, next: N
     }
 
     const shouldLog =
-        req.path === "/v1/auth/session" ||
-        req.path === "/v1/images" ||
-        req.path === "/v1/landing-page";
+        req.path === mountedRestPath(REST_ROUTES.auth.session) ||
+        req.path === mountedRestPath(REST_ROUTES.images.root) ||
+        req.path === mountedRestPath(REST_ROUTES.landingPage.root);
 
     if (shouldLog) {
         logger.log(LogLevel.info, "Request identity diagnostic", {
@@ -98,11 +101,11 @@ export const generalMutationApiLimiter = rateLimit({
 
         const path = req.path;
         return (
-            path === "/v1/auth/login" ||
-            path === "/v1/auth/signup" ||
-            path === "/v1/auth/request-password-change" ||
-            (req.method === "POST" && path === "/v1/images") ||
-            path === "/v1/newsletter/subscribe"
+            path === mountedRestPath(REST_ROUTES.auth.login) ||
+            path === mountedRestPath(REST_ROUTES.auth.signup) ||
+            path === mountedRestPath(REST_ROUTES.auth.requestPasswordChange) ||
+            (req.method === "POST" && path === mountedRestPath(REST_ROUTES.images.root)) ||
+            path === mountedRestPath(REST_ROUTES.newsletter.subscribe)
         );
     },
     handler: (req, res) => {
@@ -133,7 +136,7 @@ export const loginLimiter = rateLimit({
         );
         res.status(429).json({
             error: "Too many login attempts from this IP, please try again after 15 minutes.",
-            code: "RATE_LIMIT_EXCEEDED",
+            code: CODE.RateLimitExceeded.code,
         });
     },
 });
@@ -153,7 +156,7 @@ export const passwordResetLimiter = rateLimit({
         );
         res.status(429).json({
             error: "Too many password reset requests from this IP, please try again after an hour.",
-            code: "RATE_LIMIT_EXCEEDED",
+            code: CODE.RateLimitExceeded.code,
         });
     },
 });
@@ -173,7 +176,7 @@ export const signupLimiter = rateLimit({
         );
         res.status(429).json({
             error: "Too many signup attempts from this IP, please try again after an hour.",
-            code: "RATE_LIMIT_EXCEEDED",
+            code: CODE.RateLimitExceeded.code,
         });
     },
 });
@@ -196,7 +199,7 @@ export const imageUploadLimiter = rateLimit({
         );
         res.status(429).json({
             error: "Too many image upload requests. Please wait before uploading more images.",
-            code: "RATE_LIMIT_EXCEEDED",
+            code: CODE.RateLimitExceeded.code,
             retryAfter: "15 minutes",
             tip: "Consider uploading images in smaller batches (up to 15 files per upload).",
         });
@@ -219,7 +222,7 @@ export const newsletterSubscribeLimiter = rateLimit({
         );
         res.status(429).json({
             error: "Too many subscription attempts. Please try again later.",
-            code: "RATE_LIMIT_EXCEEDED",
+            code: CODE.RateLimitExceeded.code,
             retryAfter: "1 hour",
         });
     },
@@ -268,7 +271,7 @@ export async function imageFileCountLimiter(
             );
             res.status(429).json({
                 error: "Too many files uploaded. Please wait before uploading more images.",
-                code: "FILE_RATE_LIMIT_EXCEEDED",
+                code: CODE.FileRateLimitExceeded.code,
                 currentCount,
                 attemptedFiles: fileCount,
                 maxFiles,

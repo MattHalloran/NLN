@@ -1,4 +1,9 @@
-import { COMPANY_INFO } from "@local/shared";
+import {
+    COMPANY_INFO,
+    DEFAULT_SOCIAL_PROOF_CONTENT,
+    LANDING_PAGE_ICON,
+    replaceLandingPageTokens,
+} from "@local/shared";
 import {
     Box,
     Card,
@@ -12,46 +17,10 @@ import {
 } from "@mui/material";
 import { BusinessContext } from "contexts/BusinessContext";
 import { useLandingPage } from "hooks/useLandingPage";
-import {
-    Award,
-    Building2,
-    Clock,
-    LucideIcon,
-    Shield,
-    Sprout,
-    TreePine,
-    Truck,
-    Users,
-} from "lucide-react";
+import { Building2, Users } from "lucide-react";
 import { useContext, useMemo } from "react";
 import { getEarliestOpeningTime } from "utils/businessHours";
-
-// Icon mapping for dynamic icon selection
-const ICON_MAP: Record<string, LucideIcon> = {
-    users: Users,
-    award: Award,
-    leaf: TreePine,
-    clock: Clock,
-    truck: Truck,
-    shield: Shield,
-    building: Building2,
-    sprout: Sprout,
-};
-
-// Helper function to replace tokens in text
-const replaceTokens = (text: string, foundedYear: number, yearsInBusiness: number): string => {
-    return text
-        .replace(/{foundedYear}/g, String(foundedYear))
-        .replace(/{yearsInBusiness}/g, String(yearsInBusiness));
-};
-
-// Default client types (fallback if not in API)
-const DEFAULT_CLIENT_TYPES = [
-    { icon: "building", label: "Landscape Contractors" },
-    { icon: "sprout", label: "Garden Centers" },
-    { icon: "users", label: "Property Developers" },
-    { icon: "leaf", label: "Municipalities" },
-];
+import { resolveLandingPageIcon } from "utils/landingPageIcons";
 
 export const SocialProof = () => {
     const { palette } = useTheme();
@@ -65,39 +34,23 @@ export const SocialProof = () => {
     const socialProofData = data?.content?.socialProof;
 
     // Header
-    const header = socialProofData?.header || {
-        title: "Why Choose New Life Nursery",
-        subtitle: "Southern New Jersey's trusted wholesale nursery partner for over four decades",
-    };
+    const header = socialProofData?.header || DEFAULT_SOCIAL_PROOF_CONTENT.header;
 
     // Stats with token replacement
     const stats = useMemo(() => {
-        const rawStats = socialProofData?.stats || [
-            {
-                number: `${yearsInBusiness}+`,
-                label: "Years of Excellence",
-                subtext: `Since ${foundedYear}`,
-            },
-            { number: "100+", label: "Plant Varieties", subtext: "Extensive Selection" },
-            { number: "3-25", label: "Gallon Sizes", subtext: "Full Range" },
-            { number: "500+", label: "Trade Partners", subtext: "Wholesale Only" },
-        ];
+        const rawStats = socialProofData?.stats || DEFAULT_SOCIAL_PROOF_CONTENT.stats;
         return rawStats.map((stat) => ({
-            number: replaceTokens(stat.number, foundedYear, yearsInBusiness),
+            number: replaceLandingPageTokens(stat.number, { foundedYear, yearsInBusiness }),
             label: stat.label,
-            subtext: replaceTokens(stat.subtext, foundedYear, yearsInBusiness),
+            subtext: replaceLandingPageTokens(stat.subtext, { foundedYear, yearsInBusiness }),
         }));
     }, [socialProofData, foundedYear, yearsInBusiness]);
 
     // Mission statement
     const mission = useMemo(() => {
-        const rawMission = socialProofData?.mission || {
-            title: `Our Founding Mission Since ${foundedYear}`,
-            quote: "Growing top quality material for buyers who are interested in the best.",
-            attribution: "The Gianaris Family",
-        };
+        const rawMission = socialProofData?.mission || DEFAULT_SOCIAL_PROOF_CONTENT.mission;
         return {
-            title: replaceTokens(rawMission.title, foundedYear, yearsInBusiness),
+            title: replaceLandingPageTokens(rawMission.title, { foundedYear, yearsInBusiness }),
             quote: rawMission.quote,
             attribution: rawMission.attribution,
         };
@@ -110,87 +63,41 @@ export const SocialProof = () => {
 
     // Strengths with token replacement
     const strengths = useMemo(() => {
-        const rawStrengths = socialProofData?.strengths || {
-            title: "What Sets Us Apart",
-            items: [
-                {
-                    icon: "users",
-                    title: "Family Heritage",
-                    description:
-                        "Owned and operated by the Gianaris family for over four decades, maintaining traditional values and personal service.",
-                    highlight: `Family-Owned Since ${foundedYear}`,
-                },
-                {
-                    icon: "leaf",
-                    title: "Extensive Inventory",
-                    description:
-                        "We maintain one of Southern New Jersey's largest selections of quality nursery stock across a wide range of varieties and sizes.",
-                    highlight: "Diverse Selection",
-                },
-                {
-                    icon: "award",
-                    title: "Quality Commitment",
-                    description:
-                        "Our founding motto remains unchanged: Growing top quality material for buyers who are interested in the best.",
-                    highlight: "Premium Quality Only",
-                },
-                {
-                    icon: "clock",
-                    title: "Trade-Friendly Hours",
-                    description: earliestOpeningTime
-                        ? `Opening at ${earliestOpeningTime}, we help contractors get loaded and to job sites early.`
-                        : "We help contractors get loaded and to job sites early with convenient morning hours.",
-                    highlight: earliestOpeningTime
-                        ? `Early ${earliestOpeningTime} Opening`
-                        : "Early Opening",
-                },
-                {
-                    icon: "truck",
-                    title: "Wholesale Expertise",
-                    description:
-                        "Specializing exclusively in wholesale, we understand the unique needs of landscapers and contractors.",
-                    highlight: "Trade Professionals Only",
-                },
-                {
-                    icon: "shield",
-                    title: "Licensed & Certified",
-                    description:
-                        "Fully licensed New Jersey nursery meeting all state requirements for commercial plant production and sales.",
-                    highlight: "NJ Licensed Nursery",
-                },
-            ],
-        };
+        const rawStrengths = socialProofData?.strengths || DEFAULT_SOCIAL_PROOF_CONTENT.strengths;
 
         return {
             title: rawStrengths.title,
             items: rawStrengths.items.map((item) => ({
                 icon: item.icon,
                 title: item.title,
-                description: item.description,
-                highlight: replaceTokens(item.highlight, foundedYear, yearsInBusiness),
+                description:
+                    item.icon === LANDING_PAGE_ICON.Clock && earliestOpeningTime
+                        ? `Opening at ${earliestOpeningTime}, we help contractors get loaded and to job sites early.`
+                        : item.description,
+                highlight:
+                    item.icon === LANDING_PAGE_ICON.Clock && earliestOpeningTime
+                        ? `Early ${earliestOpeningTime} Opening`
+                        : replaceLandingPageTokens(item.highlight, {
+                              foundedYear,
+                              yearsInBusiness,
+                          }),
             })),
         };
     }, [socialProofData, earliestOpeningTime, foundedYear, yearsInBusiness]);
 
     // Client types
     const clientTypes = useMemo(() => {
-        return (
-            socialProofData?.clientTypes || {
-                title: "Proudly Serving Trade Professionals",
-                items: DEFAULT_CLIENT_TYPES,
-            }
-        );
+        return socialProofData?.clientTypes || DEFAULT_SOCIAL_PROOF_CONTENT.clientTypes;
     }, [socialProofData]);
 
     // Footer with token replacement
     const footer = useMemo(() => {
-        const rawFooter = socialProofData?.footer || {
-            description: "References available upon request for qualified wholesale buyers",
-            chips: ["Licensed NJ Nursery", "Wholesale Only", `Est. ${foundedYear}`],
-        };
+        const rawFooter = socialProofData?.footer || DEFAULT_SOCIAL_PROOF_CONTENT.footer;
         return {
             description: rawFooter.description,
-            chips: rawFooter.chips.map((chip) => replaceTokens(chip, foundedYear, yearsInBusiness)),
+            chips: rawFooter.chips.map((chip) =>
+                replaceLandingPageTokens(chip, { foundedYear, yearsInBusiness }),
+            ),
         };
     }, [socialProofData, foundedYear, yearsInBusiness]);
 
@@ -360,7 +267,7 @@ export const SocialProof = () => {
 
                 <Grid container spacing={4} sx={{ mb: 8 }}>
                     {strengths.items.map((strength, index) => {
-                        const IconComponent = ICON_MAP[strength.icon] || Users;
+                        const IconComponent = resolveLandingPageIcon(strength.icon, Users);
                         return (
                             <Grid item xs={12} md={6} lg={4} key={index}>
                                 <Card
@@ -456,7 +363,7 @@ export const SocialProof = () => {
 
                     <Grid container spacing={3} justifyContent="center">
                         {clientTypes.items.map((client, index) => {
-                            const IconComponent = ICON_MAP[client.icon] || Building2;
+                            const IconComponent = resolveLandingPageIcon(client.icon, Building2);
                             return (
                                 <Grid item xs={6} sm={3} key={index}>
                                     <Box

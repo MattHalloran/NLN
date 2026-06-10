@@ -15,6 +15,7 @@
  * - Expose GET /csrf-token endpoint for clients to fetch tokens
  */
 
+import { CODE, CSRF } from "@local/shared";
 import { doubleCsrf } from "csrf-csrf";
 import { Request, Response, NextFunction } from "express";
 import { logger, LogLevel } from "../logger.js";
@@ -40,7 +41,7 @@ const csrfConfig = doubleCsrf({
         );
         return secret;
     },
-    cookieName: "csrf-token",
+    cookieName: CSRF.CookieName,
     cookieOptions: {
         // CRITICAL: httpOnly MUST be false so client can read the token
         httpOnly: false,
@@ -49,13 +50,13 @@ const csrfConfig = doubleCsrf({
         // SameSite lax provides additional CSRF protection
         sameSite: "lax",
         // Cookie valid for 24 hours
-        maxAge: 24 * 60 * 60 * 1000,
+        maxAge: CSRF.TokenTtlMs,
         path: "/",
     },
     // Token size in bytes (64 bytes = 512 bits)
-    size: 64,
+    size: CSRF.TokenSizeBytes,
     // Don't check CSRF on safe methods (GET, HEAD, OPTIONS)
-    ignoredMethods: ["GET", "HEAD", "OPTIONS"],
+    ignoredMethods: [...CSRF.SafeMethods],
     // Session identifier - use IP address or user ID
     getSessionIdentifier: (req) => {
         // Try to use authenticated user ID if available
@@ -109,9 +110,9 @@ export const csrfTokenEndpoint = (req: Request, res: Response) => {
         });
 
         return res.json({
-            csrfToken: token,
-            headerName: "X-CSRF-Token",
-            cookieName: "csrf-token",
+            [CSRF.ResponseTokenField]: token,
+            [CSRF.ResponseHeaderNameField]: CSRF.HeaderName,
+            [CSRF.ResponseCookieNameField]: CSRF.CookieName,
         });
     } catch (error) {
         logger.log(LogLevel.error, "Failed to generate CSRF token", { error });
@@ -144,20 +145,20 @@ export const csrfErrorHandler = (
             userAgent: req.headers["user-agent"],
             errorCode: err.code,
             errorMessage: err.message,
-            hasToken: !!req.headers["x-csrf-token"],
-            hasCookie: !!req.cookies["csrf-token"],
-            tokenValue: req.headers["x-csrf-token"]
-                ? `${String(req.headers["x-csrf-token"]).substring(0, 20)}...`
+            hasToken: !!req.headers[CSRF.HeaderName.toLowerCase()],
+            hasCookie: !!req.cookies[CSRF.CookieName],
+            tokenValue: req.headers[CSRF.HeaderName.toLowerCase()]
+                ? `${String(req.headers[CSRF.HeaderName.toLowerCase()]).substring(0, 20)}...`
                 : "none",
-            cookieValue: req.cookies["csrf-token"]
-                ? `${String(req.cookies["csrf-token"]).substring(0, 20)}...`
+            cookieValue: req.cookies[CSRF.CookieName]
+                ? `${String(req.cookies[CSRF.CookieName]).substring(0, 20)}...`
                 : "none",
         });
 
         res.status(403).json({
             error: "Invalid or missing CSRF token",
-            code: "CSRF_VALIDATION_FAILED",
-            message: "Request rejected. Please refresh the page and try again.",
+            code: CODE.CsrfValidationFailed.code,
+            message: CODE.CsrfValidationFailed.message,
         });
         return;
     }

@@ -1,4 +1,4 @@
-import { APP_LINKS } from "@local/shared";
+import { APP_LINKS, REST_ROUTES } from "@local/shared";
 import {
     Accordion,
     AccordionDetails,
@@ -353,7 +353,7 @@ export const AdminHomepageBranding = () => {
             }
 
             // Handle both old format (single colors object) and new format (light/dark)
-            const colors = landingPageContent.theme.colors as Record<string, unknown>;
+            const colors = landingPageContent.theme.colors as unknown as Record<string, unknown>;
             let colorSettings = DEFAULT_BRANDING.colors;
 
             if (colors?.light && colors?.dark) {
@@ -443,7 +443,7 @@ export const AdminHomepageBranding = () => {
         },
         refetchDependencies: [refetchLandingPage],
         pageName: "branding-section",
-        endpointName: "/api/v1/landing-page/branding",
+        endpointName: REST_ROUTES.landingPage.settings,
         successMessage: "Branding settings saved successfully!",
         errorMessagePrefix: "Failed to save",
     });

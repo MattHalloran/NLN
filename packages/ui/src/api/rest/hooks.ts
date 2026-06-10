@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-    AnalyticsEvent,
     CustomerSession,
     DashboardStats,
+    DeepPartial,
     Image,
     LandingPageContent,
     LandingPageVariant,
-    Plant,
+    UpdateLandingPageContentRequest,
     restApi,
 } from "./client";
 
@@ -64,26 +64,6 @@ export function useLandingPageContent(onlyActive = true, variantId?: string) {
         () => restApi.getLandingPageContent({ onlyActive, variantId }),
         [onlyActive, variantId],
     );
-}
-
-export function usePlants(params?: {
-    inStock?: boolean;
-    category?: string;
-    searchTerm?: string;
-    limit?: number;
-    offset?: number;
-}) {
-    return useRestQuery<Plant[]>(
-        () => restApi.getPlants(params),
-        [JSON.stringify(params)], // Stringify to compare object values
-    );
-}
-
-export function usePlant(id: string | null) {
-    return useRestQuery<Plant>(() => {
-        if (!id) throw new Error("Plant ID is required");
-        return restApi.getPlant(id);
-    }, [id]);
 }
 
 // Hook for mutations (POST, PUT, DELETE)
@@ -144,274 +124,7 @@ export function useUpdateContactInfo() {
 export function useUpdateLandingPageContent() {
     return useRestMutation<
         {
-            data: {
-                heroBanners?: Array<{
-                    id: string;
-                    src: string;
-                    alt: string;
-                    description: string;
-                    width: number;
-                    height: number;
-                    displayOrder: number;
-                    isActive: boolean;
-                }>;
-                heroSettings?: {
-                    autoPlay: boolean;
-                    autoPlayDelay: number;
-                    showDots: boolean;
-                    showArrows: boolean;
-                    fadeTransition: boolean;
-                    fadeTransitionDuration: number;
-                };
-                seasonalPlants?: Array<{
-                    id: string;
-                    name: string;
-                    description: string;
-                    season: string;
-                    careLevel: string;
-                    icon: string;
-                    displayOrder: number;
-                    isActive: boolean;
-                    image?: string;
-                    imageAlt?: string;
-                    imageHash?: string;
-                }>;
-                plantTips?: Array<{
-                    id: string;
-                    title: string;
-                    description: string;
-                    category: string;
-                    season: string;
-                    displayOrder: number;
-                    isActive: boolean;
-                }>;
-                seasonalGalleryButton?: {
-                    text: string;
-                    enabled: boolean;
-                };
-                settings?: {
-                    hero: {
-                        title: string;
-                        subtitle: string;
-                        description: string;
-                        businessHours: string;
-                        trustBadges: Array<{
-                            icon: string;
-                            text: string;
-                        }>;
-                        buttons: Array<{
-                            text: string;
-                            link: string;
-                            type: string;
-                        }>;
-                    };
-                    newsletter: {
-                        title: string;
-                        description: string;
-                        disclaimer: string;
-                        isActive: boolean;
-                    };
-                    companyInfo: {
-                        foundedYear: number;
-                        description: string;
-                    };
-                    colors: {
-                        light: {
-                            primary: string;
-                            secondary: string;
-                            accent: string;
-                            background: string;
-                            paper: string;
-                        };
-                        dark: {
-                            primary: string;
-                            secondary: string;
-                            accent: string;
-                            background: string;
-                            paper: string;
-                        };
-                    };
-                    features: {
-                        showSeasonalContent: boolean;
-                        showNewsletter: boolean;
-                        showSocialProof: boolean;
-                        enableAnimations: boolean;
-                    };
-                };
-                contactInfo?: {
-                    business?: Record<string, unknown>;
-                    hours?: string;
-                };
-                about?: {
-                    story: {
-                        overline: string;
-                        title: string;
-                        subtitle: string;
-                        paragraphs: string[];
-                        cta: {
-                            text: string;
-                            link: string;
-                        };
-                    };
-                    values: {
-                        title: string;
-                        items: Array<{
-                            icon: string;
-                            title: string;
-                            description: string;
-                        }>;
-                    };
-                    mission: {
-                        title: string;
-                        quote: string;
-                        attribution: string;
-                    };
-                };
-                socialProof?: {
-                    header: {
-                        title: string;
-                        subtitle: string;
-                    };
-                    stats: Array<{
-                        number: string;
-                        label: string;
-                        subtext: string;
-                    }>;
-                    mission: {
-                        title: string;
-                        quote: string;
-                        attribution: string;
-                    };
-                    strengths: {
-                        title: string;
-                        items: Array<{
-                            icon: string;
-                            title: string;
-                            description: string;
-                            highlight: string;
-                        }>;
-                    };
-                    clientTypes: {
-                        title: string;
-                        items: Array<{
-                            icon: string;
-                            label: string;
-                        }>;
-                    };
-                    footer: {
-                        description: string;
-                        chips: string[];
-                    };
-                };
-                location?: {
-                    header: {
-                        title: string;
-                        subtitle: string;
-                        chip: string;
-                    };
-                    map: {
-                        style: "gradient" | "embedded";
-                        showGetDirectionsButton: boolean;
-                        buttonText: string;
-                    };
-                    contactMethods: {
-                        sectionTitle: string;
-                        order: ("phone" | "address" | "email")[];
-                        descriptions: {
-                            phone: string;
-                            address: string;
-                            email: string;
-                        };
-                    };
-                    businessHours: {
-                        title: string;
-                        chip: string;
-                    };
-                    visitInfo: {
-                        sectionTitle: string;
-                        items: Array<{
-                            id: string;
-                            title: string;
-                            icon: string;
-                            description: string;
-                            displayOrder: number;
-                            isActive: boolean;
-                        }>;
-                    };
-                    cta: {
-                        title: string;
-                        description: string;
-                        buttons: Array<{
-                            id: string;
-                            text: string;
-                            variant: "contained" | "outlined" | "text";
-                            color: "primary" | "secondary";
-                            action: "directions" | "contact" | "external";
-                            url?: string;
-                            displayOrder: number;
-                            isActive: boolean;
-                        }>;
-                    };
-                };
-                seasonal?: {
-                    plants?: Array<{
-                        id: string;
-                        name: string;
-                        description: string;
-                        season: string;
-                        careLevel: string;
-                        icon: string;
-                        displayOrder: number;
-                        isActive: boolean;
-                        image?: string;
-                        imageAlt?: string;
-                        imageHash?: string;
-                    }>;
-                    tips?: Array<{
-                        id: string;
-                        title: string;
-                        description: string;
-                        category: string;
-                        season: string;
-                        displayOrder: number;
-                        isActive: boolean;
-                    }>;
-                    header?: {
-                        title: string;
-                        subtitle: string;
-                    };
-                    sections?: {
-                        plants: {
-                            currentSeasonTitle: string;
-                            otherSeasonTitleTemplate: string;
-                        };
-                        tips: {
-                            title: string;
-                        };
-                    };
-                };
-                newsletter?: {
-                    title?: string;
-                    description?: string;
-                    disclaimer?: string;
-                    buttonText?: string;
-                    isActive?: boolean;
-                };
-                seasonalHeader?: {
-                    title: string;
-                    subtitle: string;
-                };
-                seasonalSections?: {
-                    plants: {
-                        currentSeasonTitle: string;
-                        otherSeasonTitleTemplate: string;
-                    };
-                    tips: {
-                        title: string;
-                    };
-                };
-                newsletterButtonText?: string;
-            };
+            data: UpdateLandingPageContentRequest;
             queryParams?: {
                 variantId?: string;
             };
@@ -484,7 +197,7 @@ export function useImagesByLabel(label: string) {
 export function useAddImages() {
     return useRestMutation<
         { label: string; files: File[] },
-        Array<{ success: boolean; src: string; hash: string }>
+        Array<{ success: boolean; src: string; hash: string; width?: number; height?: number }>
     >((input) => restApi.addImages(input));
 }
 
@@ -554,13 +267,6 @@ export function useDashboardStats() {
     return useRestQuery<DashboardStats>(() => restApi.getDashboardStats(), []);
 }
 
-// Deep partial utility type for nested updates
-type DeepPartial<T> = T extends object
-    ? {
-          [P in keyof T]?: DeepPartial<T[P]>;
-      }
-    : T;
-
 export function useUpdateLandingPageSettings() {
     return useRestMutation<
         {
@@ -573,16 +279,6 @@ export function useUpdateLandingPageSettings() {
         },
         { success: boolean; message: string; updatedFields: string[] }
     >(({ settings, queryParams }) => restApi.updateLandingPageSettings(settings, queryParams));
-}
-
-// ============================================
-// Analytics Hooks
-// ============================================
-
-export function useTrackAnalyticsEvent() {
-    return useRestMutation<AnalyticsEvent, { success: boolean }>((event) =>
-        restApi.trackAnalyticsEvent(event),
-    );
 }
 
 // ============================================
@@ -693,10 +389,4 @@ export function useCleanupJobStatus() {
 }
 
 // Re-export commonly used types from client
-export type {
-    DashboardStats,
-    Image,
-    LandingPageContent,
-    LandingPageVariant,
-    Plant,
-} from "./client";
+export type { DashboardStats, Image, LandingPageContent, LandingPageVariant } from "./client";

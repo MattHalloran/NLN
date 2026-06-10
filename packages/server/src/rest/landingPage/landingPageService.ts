@@ -1,13 +1,9 @@
+import { activeByDisplayOrder, createDefaultLandingPageContent } from "@local/shared";
 import { readFileSync, writeFileSync } from "fs";
 import { join } from "path";
 import { logger, LogLevel } from "../../logger.js";
 import { syncHeroBannerLabels, syncSeasonalContentLabels } from "../../utils/imageLabelSync.js";
-import type {
-    LandingPageContent,
-    HeroBanner,
-    SeasonalPlant,
-    PlantTip,
-} from "../../types/landingPage.js";
+import type { LandingPageContent } from "../../types/landingPage.js";
 
 // In production, data files are in dist folder, in development they're in src
 const dataPath = join(
@@ -18,64 +14,7 @@ const dataPath = join(
 /**
  * Default landing page content structure
  */
-const getDefaultContent = (): LandingPageContent => ({
-    metadata: { version: "2.0", lastUpdated: new Date().toISOString() },
-    content: {
-        hero: {
-            banners: [],
-            settings: {
-                autoPlay: false,
-                autoPlayDelay: 5000,
-                showDots: true,
-                showArrows: true,
-                fadeTransition: false,
-                fadeTransitionDuration: 500,
-            },
-            text: {
-                title: "",
-                subtitle: "",
-                description: "",
-                businessHours: "",
-                trustBadges: [],
-                buttons: [],
-            },
-        },
-        services: { title: "", subtitle: "", items: [] },
-        seasonal: { plants: [], tips: [] },
-        newsletter: { title: "", description: "", disclaimer: "", isActive: false },
-        company: { foundedYear: new Date().getFullYear(), description: "" },
-    },
-    contact: {
-        name: "",
-        address: { street: "", city: "", state: "", zip: "", full: "", googleMapsUrl: "" },
-        phone: { display: "", link: "" },
-        email: { address: "", link: "" },
-        socialMedia: {},
-        hours: {
-            monday: "",
-            tuesday: "",
-            wednesday: "",
-            thursday: "",
-            friday: "",
-            saturday: "",
-            sunday: "",
-        },
-    },
-    theme: {
-        colors: {
-            light: { primary: "", secondary: "", accent: "", background: "", paper: "" },
-            dark: { primary: "", secondary: "", accent: "", background: "", paper: "" },
-        },
-        features: {
-            showSeasonalContent: true,
-            showNewsletter: true,
-            showSocialProof: true,
-            enableAnimations: true,
-        },
-    },
-    layout: { sections: [] },
-    experiments: { tests: [] },
-});
+const getDefaultContent = (): LandingPageContent => createDefaultLandingPageContent();
 
 /**
  * Read the consolidated landing page content from file
@@ -140,21 +79,15 @@ export const aggregateLandingPageContent = (onlyActive: boolean = true): Landing
 
     // Filter active content if requested
     if (onlyActive && result.content?.hero?.banners) {
-        result.content.hero.banners = result.content.hero.banners
-            .filter((b: HeroBanner) => b.isActive)
-            .sort((a: HeroBanner, b: HeroBanner) => a.displayOrder - b.displayOrder);
+        result.content.hero.banners = activeByDisplayOrder(result.content.hero.banners);
     }
 
     if (onlyActive && result.content?.seasonal?.plants) {
-        result.content.seasonal.plants = result.content.seasonal.plants
-            .filter((p: SeasonalPlant) => p.isActive)
-            .sort((a: SeasonalPlant, b: SeasonalPlant) => a.displayOrder - b.displayOrder);
+        result.content.seasonal.plants = activeByDisplayOrder(result.content.seasonal.plants);
     }
 
     if (onlyActive && result.content?.seasonal?.tips) {
-        result.content.seasonal.tips = result.content.seasonal.tips
-            .filter((t: PlantTip) => t.isActive)
-            .sort((a: PlantTip, b: PlantTip) => a.displayOrder - b.displayOrder);
+        result.content.seasonal.tips = activeByDisplayOrder(result.content.seasonal.tips);
     }
 
     return result;

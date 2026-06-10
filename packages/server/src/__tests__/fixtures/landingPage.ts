@@ -2,70 +2,54 @@
  * Test fixtures for landing page content
  * Used in integration tests to provide consistent test data
  */
+import {
+    createTestHeroBanner,
+    createTestHeroSettings,
+    createTestPlantTip,
+    createTestSeasonalPlant,
+} from "@local/shared";
 
 export const mockHeroBanners = [
-    {
+    createTestHeroBanner({
         id: "test-hero-1",
-        src: "/images/test-hero-1.jpg",
         alt: "Test hero banner 1",
         description: "First test banner",
-        width: 1920,
-        height: 1080,
-        displayOrder: 1,
-        isActive: true,
-    },
-    {
+    }),
+    createTestHeroBanner({
         id: "test-hero-2",
         src: "/images/test-hero-2.jpg",
         alt: "Test hero banner 2",
         description: "Second test banner",
-        width: 1920,
-        height: 1080,
         displayOrder: 2,
-        isActive: true,
-    },
-    {
+    }),
+    createTestHeroBanner({
         id: "test-hero-3",
         src: "/images/test-hero-3.jpg",
         alt: "Inactive test banner",
         description: "Third test banner (inactive)",
-        width: 1920,
-        height: 1080,
         displayOrder: 3,
         isActive: false,
-    },
+    }),
 ];
 
-export const mockHeroSettings = {
-    autoPlay: true,
-    autoPlayDelay: 5000,
-    showDots: true,
-    showArrows: true,
-    fadeTransition: true,
-};
+export const mockHeroSettings = createTestHeroSettings();
 
 export const mockSeasonalPlants = [
-    {
+    createTestSeasonalPlant({
         id: "test-plant-1",
         name: "Test Spring Flower",
         description: "A beautiful spring flower for testing",
-        season: "Spring",
-        careLevel: "Easy",
         icon: "flower",
-        displayOrder: 1,
-        isActive: true,
-    },
-    {
+    }),
+    createTestSeasonalPlant({
         id: "test-plant-2",
         name: "Test Summer Plant",
         description: "A summer plant for testing",
         season: "Summer",
         careLevel: "Medium",
-        icon: "leaf",
         displayOrder: 2,
-        isActive: true,
-    },
-    {
+    }),
+    createTestSeasonalPlant({
         id: "test-plant-3",
         name: "Inactive Test Plant",
         description: "An inactive plant for testing filtering",
@@ -74,29 +58,24 @@ export const mockSeasonalPlants = [
         icon: "snowflake",
         displayOrder: 3,
         isActive: false,
-    },
+    }),
 ];
 
 export const mockPlantTips = [
-    {
+    createTestPlantTip({
         id: "test-tip-1",
         title: "Test Watering Tip",
         description: "Water your plants regularly for testing",
-        category: "Watering",
-        season: "Year-round",
-        displayOrder: 1,
-        isActive: true,
-    },
-    {
+    }),
+    createTestPlantTip({
         id: "test-tip-2",
         title: "Test Fertilizing Tip",
         description: "Fertilize in spring for testing",
         category: "Fertilizing",
         season: "Spring",
         displayOrder: 2,
-        isActive: true,
-    },
-    {
+    }),
+    createTestPlantTip({
         id: "test-tip-3",
         title: "Inactive Test Tip",
         description: "An inactive tip for testing filtering",
@@ -104,7 +83,7 @@ export const mockPlantTips = [
         season: "Winter",
         displayOrder: 3,
         isActive: false,
-    },
+    }),
 ];
 
 export const mockLandingPageSettings = {

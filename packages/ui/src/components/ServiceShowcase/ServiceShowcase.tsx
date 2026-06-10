@@ -8,64 +8,12 @@ import {
     Button,
     useTheme,
 } from "@mui/material";
+import { DEFAULT_SERVICES_CONTENT } from "@local/shared";
+import type { ServiceItem } from "@local/shared";
 import { useState } from "react";
 import { useLocation } from "route";
-import { Sprout, Leaf, Home, Truck, Package, Wrench, Headset, LucideIcon } from "lucide-react";
 import { useLandingPage } from "hooks/useLandingPage";
-
-interface Service {
-    title: string;
-    description: string;
-    icon: string;
-    action: string;
-    url?: string;
-}
-
-// Icon mapping for service cards
-const SERVICE_ICONS: Record<string, LucideIcon> = {
-    sprout: Sprout,
-    leaf: Leaf,
-    home: Home,
-    truck: Truck,
-    package: Package,
-    wrench: Wrench,
-    headset: Headset,
-};
-
-// Default services as fallback
-const defaultServices: Service[] = [
-    {
-        title: "Wholesale Plant Catalog",
-        description:
-            "Browse our extensive inventory of plants, trees, and shrubs. Wholesale pricing for landscapers, contractors, and garden centers.",
-        icon: "sprout",
-        action: "View Catalog",
-        url: "https://newlife.online-orders.sbiteam.com/",
-    },
-    {
-        title: "Bulk Ordering & Pricing",
-        description: "Order in quantity with competitive wholesale pricing.",
-        icon: "package",
-        action: "Get Pricing",
-        url: "/about#contact",
-    },
-    {
-        title: "Wholesale Delivery",
-        description:
-            "Professional delivery service for wholesale orders. Flexible scheduling to meet your project timelines.",
-        icon: "truck",
-        action: "Delivery Info",
-        url: "/about#contact",
-    },
-    {
-        title: "Real-Time Availability",
-        description:
-            "Check current stock levels and reserve plants online. Updated inventory ensures you get what you need when you need it.",
-        icon: "leaf",
-        action: "Check Stock",
-        url: "https://newlife.online-orders.sbiteam.com/",
-    },
-];
+import { resolveLandingPageIcon } from "utils/landingPageIcons";
 
 export const ServiceShowcase = () => {
     const { palette } = useTheme();
@@ -75,27 +23,14 @@ export const ServiceShowcase = () => {
 
     // Get services from content or use defaults
     const servicesConfig = landingPageData?.content?.services;
-    const services = servicesConfig?.items || defaultServices;
-    const sectionTitle = servicesConfig?.title || "Our Services";
-    const sectionSubtitle =
-        servicesConfig?.subtitle ||
-        "Everything you need to create and maintain your perfect garden";
+    const services = servicesConfig?.items || DEFAULT_SERVICES_CONTENT.items;
+    const sectionTitle = servicesConfig?.title || DEFAULT_SERVICES_CONTENT.title;
+    const sectionSubtitle = servicesConfig?.subtitle || DEFAULT_SERVICES_CONTENT.subtitle;
 
     // Get CTA section config or use defaults
-    const ctaConfig = servicesConfig?.cta || {
-        title: "Ready to get started?",
-        subtitle: "Browse our online catalog or contact us to discuss your project needs",
-        primaryButton: {
-            text: "Shop Online",
-            url: "https://newlife.online-orders.sbiteam.com/",
-        },
-        secondaryButton: {
-            text: "Contact Us",
-            url: "/about#contact",
-        },
-    };
+    const ctaConfig = servicesConfig?.cta || DEFAULT_SERVICES_CONTENT.cta!;
 
-    const handleAction = (service: Service) => {
+    const handleAction = (service: ServiceItem) => {
         if (service.url?.startsWith("http")) {
             window.open(service.url, "_blank");
         } else {
@@ -138,7 +73,7 @@ export const ServiceShowcase = () => {
                 </Box>
 
                 <Grid container spacing={4}>
-                    {services.map((service: Service, index: number) => (
+                    {services.map((service: ServiceItem, index: number) => (
                         <Grid item xs={12} sm={6} md={3} key={index}>
                             <Card
                                 sx={{
@@ -180,8 +115,9 @@ export const ServiceShowcase = () => {
                                         }}
                                     >
                                         {(() => {
-                                            const IconComponent =
-                                                SERVICE_ICONS[service.icon] || Sprout;
+                                            const IconComponent = resolveLandingPageIcon(
+                                                service.icon,
+                                            );
                                             return <IconComponent size={48} />;
                                         })()}
                                     </Box>

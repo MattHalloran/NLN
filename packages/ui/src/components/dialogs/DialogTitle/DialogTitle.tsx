@@ -4,62 +4,65 @@ import { CloseIcon } from "icons";
 import { forwardRef } from "react";
 import { useLocation } from "route";
 import { noSelect } from "styles";
-import { tryOnClose } from "utils";
+import { tryOnClose } from "utils/urlTools";
 import { DialogTitleProps } from "../types";
 
-export const DialogTitle = forwardRef(({
-    below,
-    id,
-    onClose,
-    startComponent,
-    ...titleData
-}: DialogTitleProps, ref) => {
-    const { palette } = useTheme();
-    const [, setLocation] = useLocation();
-    const isLeftHanded = false;//useIsLeftHanded();
+export const DialogTitle = forwardRef(
+    ({ below, id, onClose, startComponent, ...titleData }: DialogTitleProps, ref) => {
+        const { palette } = useTheme();
+        const [, setLocation] = useLocation();
+        const isLeftHanded = false; //useIsLeftHanded();
 
-    return (
-        <Box ref={ref} sx={{
-            background: palette.primary.dark,
-            color: palette.primary.contrastText,
-            position: "sticky",
-            top: 0,
-            zIndex: 2,
-            ...titleData.sxs?.root,
-        }}>
-            <MuiDialogTitle
-                id={id}
+        return (
+            <Box
+                ref={ref}
                 sx={{
-                    ...noSelect,
-                    display: "flex",
-                    flexDirection: isLeftHanded ? "row-reverse" : "row",
-                    alignItems: "center",
-                    padding: 2,
-                    textAlign: "center",
-                    fontSize: { xs: "1.5rem", sm: "2rem" },
+                    background: palette.primary.dark,
+                    color: palette.primary.contrastText,
+                    position: "sticky",
+                    top: 0,
+                    zIndex: 2,
+                    ...titleData.sxs?.root,
                 }}
             >
-                {startComponent}
-                <Title
-                    variant="subheader"
-                    {...titleData}
-                    sxs={{
-                        stack: {
-                            ...(isLeftHanded ? { marginRight: "auto" } : { marginLeft: "auto" }),
-                            padding: 0,
-                        },
+                <MuiDialogTitle
+                    id={id}
+                    sx={{
+                        ...noSelect,
+                        display: "flex",
+                        flexDirection: isLeftHanded ? "row-reverse" : "row",
+                        alignItems: "center",
+                        padding: 2,
+                        textAlign: "center",
+                        fontSize: { xs: "1.5rem", sm: "2rem" },
                     }}
-                />
-                <IconButton
-                    aria-label="close"
-                    edge="end"
-                    onClick={() => { tryOnClose(onClose, setLocation); }}
-                    sx={isLeftHanded ? { marginRight: "auto" } : { marginLeft: "auto" }}
                 >
-                    <CloseIcon fill={palette.primary.contrastText} />
-                </IconButton>
-            </MuiDialogTitle>
-            {below}
-        </Box>
-    );
-});
+                    {startComponent}
+                    <Title
+                        variant="subheader"
+                        {...titleData}
+                        sxs={{
+                            stack: {
+                                ...(isLeftHanded
+                                    ? { marginRight: "auto" }
+                                    : { marginLeft: "auto" }),
+                                padding: 0,
+                            },
+                        }}
+                    />
+                    <IconButton
+                        aria-label="close"
+                        edge="end"
+                        onClick={() => {
+                            tryOnClose(onClose, setLocation);
+                        }}
+                        sx={isLeftHanded ? { marginRight: "auto" } : { marginLeft: "auto" }}
+                    >
+                        <CloseIcon fill={palette.primary.contrastText} />
+                    </IconButton>
+                </MuiDialogTitle>
+                {below}
+            </Box>
+        );
+    },
+);

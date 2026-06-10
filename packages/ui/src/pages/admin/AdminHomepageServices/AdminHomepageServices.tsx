@@ -1,4 +1,4 @@
-import { APP_LINKS } from "@local/shared";
+import { APP_LINKS, DEFAULT_SERVICES_CONTENT, REST_ROUTES } from "@local/shared";
 import {
     Box,
     Button,
@@ -24,13 +24,7 @@ import {
     Plus,
     Trash2,
     GripVertical,
-    Sprout,
-    Leaf,
-    Home,
-    Truck,
     Package,
-    Wrench,
-    Headset,
     Type as TextFieldsIcon,
     Grid3x3 as GridIcon,
     Eye as EyeIcon,
@@ -44,6 +38,7 @@ import { useUpdateLandingPageSettings, useLandingPageContent } from "api/rest/ho
 import { useAdminForm } from "hooks/useAdminForm";
 import { useState, useEffect } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import { landingPageIconOptions, resolveLandingPageIcon } from "utils/landingPageIcons";
 
 interface Service {
     title: string;
@@ -72,27 +67,8 @@ interface ServicesSettings {
     items: Service[];
 }
 
-// Available icons for service cards (matching ServiceShowcase component)
-const SERVICE_ICONS = [
-    { value: "sprout", label: "Sprout" },
-    { value: "leaf", label: "Leaf" },
-    { value: "home", label: "Home" },
-    { value: "truck", label: "Truck" },
-    { value: "package", label: "Package" },
-    { value: "wrench", label: "Wrench" },
-    { value: "headset", label: "Headset" },
-];
-
-// Icon mapping for preview
-const ICON_COMPONENTS: Record<string, any> = {
-    sprout: Sprout,
-    leaf: Leaf,
-    home: Home,
-    truck: Truck,
-    package: Package,
-    wrench: Wrench,
-    headset: Headset,
-};
+const SERVICE_ICONS = landingPageIconOptions;
+const DEFAULT_SERVICES = DEFAULT_SERVICES_CONTENT as ServicesSettings;
 
 // Preview component that shows how services will look
 const ServicesPreview = ({
@@ -146,7 +122,7 @@ const ServicesPreview = ({
                 {services.items.length > 0 ? (
                     <Grid container spacing={2}>
                         {services.items.map((service: Service, index: number) => {
-                            const IconComponent = ICON_COMPONENTS[service.icon] || Sprout;
+                            const IconComponent = resolveLandingPageIcon(service.icon);
                             return (
                                 <Grid item xs={12} sm={6} key={index}>
                                     <Card
@@ -268,57 +244,6 @@ export const AdminHomepageServices = () => {
     // Use variantId from URL query params, or fall back to the loaded data's variant
     const variantId = queryVariantId || landingPageContent?._meta?.variantId;
 
-    // Default values
-    const DEFAULT_SERVICES: ServicesSettings = {
-        title: "Our Services",
-        subtitle: "Everything you need to create and maintain your perfect garden",
-        cta: {
-            title: "Ready to get started?",
-            subtitle: "Browse our online catalog or contact us to discuss your project needs",
-            primaryButton: {
-                text: "Shop Online",
-                url: "https://newlife.online-orders.sbiteam.com/",
-            },
-            secondaryButton: {
-                text: "Contact Us",
-                url: "/about#contact",
-            },
-        },
-        items: [
-            {
-                title: "Wholesale Plant Catalog",
-                description:
-                    "Browse our extensive inventory of plants, trees, and shrubs. Wholesale pricing for landscapers, contractors, and garden centers.",
-                icon: "sprout",
-                action: "View Catalog",
-                url: "https://newlife.online-orders.sbiteam.com/",
-            },
-            {
-                title: "Bulk Ordering & Pricing",
-                description: "Order in quantity with competitive wholesale pricing.",
-                icon: "package",
-                action: "Get Pricing",
-                url: "/about#contact",
-            },
-            {
-                title: "Wholesale Delivery",
-                description:
-                    "Professional delivery service for wholesale orders. Flexible scheduling to meet your project timelines.",
-                icon: "truck",
-                action: "Delivery Info",
-                url: "/about#contact",
-            },
-            {
-                title: "Real-Time Availability",
-                description:
-                    "Check current stock levels and reserve plants online. Updated inventory ensures you get what you need when you need it.",
-                icon: "leaf",
-                action: "Check Stock",
-                url: "https://newlife.online-orders.sbiteam.com/",
-            },
-        ],
-    };
-
     const form = useAdminForm<ServicesSettings>({
         fetchFn: async () => {
             if (landingPageContent?.content?.services) {
@@ -345,7 +270,7 @@ export const AdminHomepageServices = () => {
         },
         refetchDependencies: [refetchLandingPage],
         pageName: "services-section",
-        endpointName: "/api/v1/landing-page",
+        endpointName: REST_ROUTES.landingPage.settings,
         successMessage: "Services settings saved successfully!",
         errorMessagePrefix: "Failed to save",
     });
@@ -979,17 +904,16 @@ export const AdminHomepageServices = () => {
                                                                                                             >
                                                                                                                 {(() => {
                                                                                                                     const IconComp =
-                                                                                                                        ICON_COMPONENTS[
-                                                                                                                            icon
-                                                                                                                                .value
-                                                                                                                        ];
-                                                                                                                    return IconComp ? (
+                                                                                                                        resolveLandingPageIcon(
+                                                                                                                            icon.value,
+                                                                                                                        );
+                                                                                                                    return (
                                                                                                                         <IconComp
                                                                                                                             size={
                                                                                                                                 16
                                                                                                                             }
                                                                                                                         />
-                                                                                                                    ) : null;
+                                                                                                                    );
                                                                                                                 })()}
                                                                                                                 <Typography>
                                                                                                                     {

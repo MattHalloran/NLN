@@ -1,5 +1,19 @@
 import { DragDropContext, Draggable, Droppable, DropResult } from "@hello-pangea/dnd";
-import { APP_LINKS } from "@local/shared";
+import {
+    APP_LINKS,
+    DEFAULT_CTA_BUTTONS,
+    DEFAULT_HERO_SETTINGS,
+    DEFAULT_HERO_TEXT,
+    DEFAULT_TRUST_BADGES,
+    REST_ROUTES,
+} from "@local/shared";
+import type {
+    Button as CTAButton,
+    HeroBanner,
+    HeroSettings,
+    HeroText,
+    TrustBadge,
+} from "@local/shared";
 import {
     Add as AddIcon,
     EmojiEvents as BadgeIcon,
@@ -59,27 +73,7 @@ const TRUST_BADGE_ICONS = {
     heart: Heart,
 };
 
-interface HeroBanner {
-    id: string;
-    src: string;
-    alt: string;
-    description: string;
-    isActive: boolean;
-    displayOrder?: number;
-    width?: number;
-    height?: number;
-}
-
-interface HeroSettings {
-    autoPlay: boolean;
-    autoPlayDelay: number;
-    showDots: boolean;
-    showArrows: boolean;
-    fadeTransition: boolean;
-    fadeTransitionDuration: number;
-}
-
-interface HeroContent {
+interface HeroFormContent {
     title: string;
     subtitle: string;
     description: string;
@@ -87,55 +81,23 @@ interface HeroContent {
     useContactInfoHours: boolean;
 }
 
-interface TrustBadge {
-    icon: string;
-    text: string;
-}
-
-interface CTAButton {
-    text: string;
-    link: string;
-    type: string;
-}
-
 // Consolidated hero data structure for useAdminForm
 interface HeroData {
     banners: HeroBanner[];
     settings: HeroSettings;
-    content: HeroContent;
+    content: HeroFormContent;
     trustBadges: TrustBadge[];
     ctaButtons: CTAButton[];
 }
 
-// Default values
-const DEFAULT_HERO_SETTINGS: HeroSettings = {
-    autoPlay: true,
-    autoPlayDelay: 5000,
-    showDots: true,
-    showArrows: true,
-    fadeTransition: true,
-    fadeTransitionDuration: 1000,
-};
-
-const DEFAULT_HERO_CONTENT: HeroContent = {
-    title: "Beautiful, healthy plants",
-    subtitle: "At competitive prices",
-    description:
-        "Your trusted wholesale plant source for over 40 years, with the finest selection of plants, trees, and shrubs",
-    businessHours: "OPEN 7 DAYS A WEEK | Mon-Sat 8AM-6PM | Sun 9AM-5PM",
-    useContactInfoHours: false,
-};
-
-const DEFAULT_TRUST_BADGES: TrustBadge[] = [
-    { icon: "users", text: "Family Owned Since 1981" },
-    { icon: "award", text: "Licensed & Certified" },
-    { icon: "leaf", text: "Wide Plant Selection" },
-];
-
-const DEFAULT_CTA_BUTTONS: CTAButton[] = [
-    { text: "Browse Plants", link: "https://newlife.online-orders.sbiteam.com/", type: "primary" },
-    { text: "Visit Our Nursery", link: "/about", type: "secondary" },
-];
+const toHeroFormContent = (heroText: Partial<HeroText> | undefined): HeroFormContent => ({
+    title: heroText?.title || DEFAULT_HERO_TEXT.title,
+    subtitle: heroText?.subtitle || DEFAULT_HERO_TEXT.subtitle,
+    description: heroText?.description || DEFAULT_HERO_TEXT.description,
+    businessHours: heroText?.businessHours || DEFAULT_HERO_TEXT.businessHours,
+    useContactInfoHours:
+        heroText?.useContactInfoHours ?? DEFAULT_HERO_TEXT.useContactInfoHours ?? false,
+});
 
 // Preview component that shows how the hero will look
 const HeroPreview = ({ heroData }: { heroData: HeroData | null }) => {
@@ -475,7 +437,7 @@ export const AdminHomepageHeroBanner = () => {
             const defaultData: HeroData = {
                 banners: [],
                 settings: DEFAULT_HERO_SETTINGS,
-                content: DEFAULT_HERO_CONTENT,
+                content: toHeroFormContent(undefined),
                 trustBadges: DEFAULT_TRUST_BADGES,
                 ctaButtons: DEFAULT_CTA_BUTTONS,
             };
@@ -494,14 +456,9 @@ export const AdminHomepageHeroBanner = () => {
             const heroText = landingPageContent.content?.hero?.text;
             const content = heroText
                 ? {
-                      title: heroText.title || DEFAULT_HERO_CONTENT.title,
-                      subtitle: heroText.subtitle || DEFAULT_HERO_CONTENT.subtitle,
-                      description: heroText.description || DEFAULT_HERO_CONTENT.description,
-                      businessHours: heroText.businessHours || DEFAULT_HERO_CONTENT.businessHours,
-                      useContactInfoHours: ((heroText as any).useContactInfoHours ??
-                          false) as boolean,
+                      ...toHeroFormContent(heroText),
                   }
-                : DEFAULT_HERO_CONTENT;
+                : toHeroFormContent(undefined);
 
             return {
                 banners: sorted,
@@ -551,7 +508,7 @@ export const AdminHomepageHeroBanner = () => {
         },
         refetchDependencies: [refetchLandingPage],
         pageName: "hero-section",
-        endpointName: "/api/v1/landing-page",
+        endpointName: REST_ROUTES.landingPage.root,
         successMessage: "All hero settings saved successfully!",
         errorMessagePrefix: "Failed to save changes",
     });
@@ -585,6 +542,8 @@ export const AdminHomepageHeroBanner = () => {
                             src: `/${result.src}`,
                             alt: file.name.replace(/\.[^/.]+$/, ""),
                             description: "",
+                            width: result.width || 0,
+                            height: result.height || 0,
                             displayOrder: currentLength + newBanners.length + 1,
                             isActive: true,
                         };

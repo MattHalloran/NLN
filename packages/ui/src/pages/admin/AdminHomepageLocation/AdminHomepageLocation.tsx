@@ -1,5 +1,13 @@
 import { DragDropContext, Draggable, Droppable, DropResult } from "@hello-pangea/dnd";
-import { APP_LINKS, COMPANY_INFO } from "@local/shared";
+import {
+    activeByDisplayOrder,
+    APP_LINKS,
+    COMPANY_INFO,
+    DEFAULT_LOCATION_CONTENT,
+    REST_ROUTES,
+    replaceLandingPageTokens,
+    sortByDisplayOrder,
+} from "@local/shared";
 import {
     AccessTime as AccessTimeIcon,
     TouchApp as ButtonIcon,
@@ -38,47 +46,22 @@ import { TopBar } from "components/navigation/TopBar/TopBar";
 import { useABTestQueryParams } from "hooks/useABTestQueryParams";
 import { useAdminForm } from "hooks/useAdminForm";
 import {
-    Car,
     Clock,
     Eye,
-    Gift,
     GripVertical,
     Info as InfoIcon,
     Mail,
     Map,
     MapPin as MapPinIcon,
-    Package,
     Phone,
     Plus,
-    Smartphone,
     Trash2,
-    Truck,
-    Users,
 } from "lucide-react";
 import { useCallback, useEffect } from "react";
+import { landingPageIconOptions, resolveLandingPageIcon } from "utils/landingPageIcons";
 
 // Available icons for visit info items
-const VISIT_INFO_ICONS = [
-    { value: "eye", label: "Eye", icon: Eye },
-    { value: "gift", label: "Gift", icon: Gift },
-    { value: "smartphone", label: "Phone", icon: Smartphone },
-    { value: "car", label: "Car", icon: Car },
-    { value: "truck", label: "Truck", icon: Truck },
-    { value: "map-pin", label: "Map Pin", icon: MapPinIcon },
-    { value: "package", label: "Package", icon: Package },
-    { value: "users", label: "Users", icon: Users },
-];
-
-const ICON_MAP: Record<string, React.ComponentType<{ size?: number; color?: string }>> = {
-    eye: Eye,
-    gift: Gift,
-    smartphone: Smartphone,
-    car: Car,
-    truck: Truck,
-    "map-pin": MapPinIcon,
-    package: Package,
-    users: Users,
-};
+const VISIT_INFO_ICONS = landingPageIconOptions;
 
 interface LocationVisitInfoItem {
     id: string;
@@ -135,103 +118,8 @@ interface LocationData {
     };
 }
 
-// Helper function to replace tokens
-const replaceTokens = (text: string, foundedYear: number): string => {
-    return text.replace(/{foundedYear}/g, String(foundedYear));
-};
-
 // Default data
-const getDefaultLocationData = (): LocationData => ({
-    header: {
-        title: "Visit Our Nursery",
-        subtitle: "Southern New Jersey's premier wholesale nursery since {foundedYear}",
-        chip: "Wholesale Only - Trade Customers Welcome",
-    },
-    map: {
-        style: "gradient",
-        showGetDirectionsButton: true,
-        buttonText: "Get Directions",
-    },
-    contactMethods: {
-        sectionTitle: "Get in Touch",
-        order: ["phone", "address", "email"],
-        descriptions: {
-            phone: "Call for availability and wholesale pricing",
-            address: "Visit our 70+ acre wholesale nursery facility",
-            email: "Email us for quotes and availability lists",
-        },
-    },
-    businessHours: {
-        title: "Business Hours",
-        chip: "Wholesale Hours - Trade Only",
-    },
-    visitInfo: {
-        sectionTitle: "Plan Your Visit",
-        items: [
-            {
-                id: window.crypto.randomUUID(),
-                title: "What to Expect",
-                icon: "eye",
-                description:
-                    "Browse over 70 acres of top-quality trees and shrubs, carefully grown for landscape professionals",
-                displayOrder: 0,
-                isActive: true,
-            },
-            {
-                id: window.crypto.randomUUID(),
-                title: "Wholesale Focus",
-                icon: "gift",
-                description:
-                    "Specializing in 3 to 25-gallon container plants for landscapers, contractors, and garden centers",
-                displayOrder: 1,
-                isActive: true,
-            },
-            {
-                id: window.crypto.randomUUID(),
-                title: "Professional Service",
-                icon: "smartphone",
-                description:
-                    "Expert horticultural advice from our experienced team with over 40 years in the industry",
-                displayOrder: 2,
-                isActive: true,
-            },
-            {
-                id: window.crypto.randomUUID(),
-                title: "Easy Access",
-                icon: "car",
-                description:
-                    "Convenient location in Bridgeton with ample parking and loading facilities for commercial vehicles",
-                displayOrder: 3,
-                isActive: true,
-            },
-        ],
-    },
-    cta: {
-        title: "Ready to Visit?",
-        description:
-            "Wholesale customers welcome! Visit during business hours or call ahead for availability and pricing.",
-        buttons: [
-            {
-                id: window.crypto.randomUUID(),
-                text: "Get Directions",
-                variant: "contained",
-                color: "primary",
-                action: "directions",
-                displayOrder: 0,
-                isActive: true,
-            },
-            {
-                id: window.crypto.randomUUID(),
-                text: "Contact Us First",
-                variant: "outlined",
-                color: "primary",
-                action: "contact",
-                displayOrder: 1,
-                isActive: true,
-            },
-        ],
-    },
-});
+const getDefaultLocationData = (): LocationData => DEFAULT_LOCATION_CONTENT;
 
 // Live Preview Component - Matches the actual homepage styling
 const LocationPreview = ({
@@ -245,13 +133,9 @@ const LocationPreview = ({
 
     if (!locationData) return null;
 
-    const activeVisitInfoItems = locationData.visitInfo.items
-        .filter((item) => item.isActive)
-        .sort((a, b) => a.displayOrder - b.displayOrder);
+    const activeVisitInfoItems = activeByDisplayOrder(locationData.visitInfo.items);
 
-    const activeButtons = locationData.cta.buttons
-        .filter((btn) => btn.isActive)
-        .sort((a, b) => a.displayOrder - b.displayOrder);
+    const activeButtons = activeByDisplayOrder(locationData.cta.buttons);
 
     // Mock business hours for preview (same as homepage fallback)
     const mockHours = [
@@ -299,7 +183,7 @@ const LocationPreview = ({
                         fontSize: "0.95rem",
                     }}
                 >
-                    {replaceTokens(locationData.header.subtitle, foundedYear)}
+                    {replaceLandingPageTokens(locationData.header.subtitle, { foundedYear })}
                 </Typography>
                 <Chip
                     label={locationData.header.chip}
@@ -609,7 +493,7 @@ const LocationPreview = ({
                             </Typography>
                             <Grid container spacing={2}>
                                 {activeVisitInfoItems.map((item) => {
-                                    const IconComponent = ICON_MAP[item.icon] || Eye;
+                                    const IconComponent = resolveLandingPageIcon(item.icon, Eye);
                                     return (
                                         <Grid item xs={12} sm={6} key={item.id}>
                                             <Card
@@ -754,7 +638,7 @@ export const AdminHomepageLocation = () => {
         },
         refetchDependencies: [refetchLandingPage],
         pageName: "location-section",
-        endpointName: "/api/v1/landing-page/location",
+        endpointName: REST_ROUTES.landingPage.root,
         successMessage: "Location settings saved successfully!",
         errorMessagePrefix: "Failed to save location settings",
     });
@@ -914,13 +798,9 @@ export const AdminHomepageLocation = () => {
         [form],
     );
 
-    const sortedVisitInfoItems = form.data
-        ? [...form.data.visitInfo.items].sort((a, b) => a.displayOrder - b.displayOrder)
-        : [];
+    const sortedVisitInfoItems = form.data ? sortByDisplayOrder(form.data.visitInfo.items) : [];
 
-    const sortedButtons = form.data
-        ? [...form.data.cta.buttons].sort((a, b) => a.displayOrder - b.displayOrder)
-        : [];
+    const sortedButtons = form.data ? sortByDisplayOrder(form.data.cta.buttons) : [];
 
     const contactMethodLabels: Record<string, string> = {
         phone: "Phone",
@@ -1244,7 +1124,7 @@ export const AdminHomepageLocation = () => {
                                                             },
                                                         });
                                                     }}
-                                                    helperText={`Preview: ${replaceTokens(form.data.header.subtitle, foundedYear)}`}
+                                                    helperText={`Preview: ${replaceLandingPageTokens(form.data.header.subtitle, { foundedYear })}`}
                                                     variant="outlined"
                                                     sx={{
                                                         "& .MuiOutlinedInput-root": {
@@ -2171,7 +2051,10 @@ export const AdminHomepageLocation = () => {
                                                                                                                         icon,
                                                                                                                     ) => {
                                                                                                                         const IconComp =
-                                                                                                                            icon.icon;
+                                                                                                                            resolveLandingPageIcon(
+                                                                                                                                icon.value,
+                                                                                                                                Eye,
+                                                                                                                            );
                                                                                                                         return (
                                                                                                                             <MenuItem
                                                                                                                                 key={
