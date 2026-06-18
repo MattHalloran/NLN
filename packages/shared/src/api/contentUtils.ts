@@ -25,3 +25,38 @@ export const replaceLandingPageTokens = (text: string, values: LandingPageTokenV
         .replace(/{foundedYear}/g, String(values.foundedYear ?? ""))
         .replace(/{yearsInBusiness}/g, String(values.yearsInBusiness ?? ""))
         .replace(/{season}/g, String(values.currentSeason ?? ""));
+
+export const moveArrayIndex = <T>(array: readonly T[], from: number, to: number): T[] => {
+    const copy = [...array];
+    copy.splice(to, 0, copy.splice(from, 1)[0]);
+    return copy;
+};
+
+export const getValueAtPath = (
+    object: Record<string, unknown> | null | undefined,
+    path: string,
+): unknown => {
+    if (!object || !path) return null;
+    return path.split(".").reduce<unknown>((current, key) => {
+        if (current !== null && typeof current === "object") {
+            return (current as Record<string, unknown>)[key];
+        }
+        return undefined;
+    }, object);
+};
+
+export const flattenObjectToPaths = (
+    object: Record<string, unknown>,
+    parent: string[] = [],
+    result: Record<string, unknown> = {},
+): Record<string, unknown> => {
+    Object.entries(object).forEach(([key, value]) => {
+        const keyPath = [...parent, key];
+        if (value !== null && typeof value === "object" && !Array.isArray(value)) {
+            flattenObjectToPaths(value as Record<string, unknown>, keyPath, result);
+        } else {
+            result[keyPath.join(".")] = value;
+        }
+    });
+    return result;
+};

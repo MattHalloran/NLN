@@ -12,10 +12,7 @@ export const LOCAL_DEV_ORIGINS = [
     "http://127.0.0.1:3000",
 ] as const;
 
-export const PRODUCTION_ORIGINS = [
-    "https://newlifenurseryinc.com",
-    "https://www.newlifenurseryinc.com",
-] as const;
+export const PRODUCTION_ORIGINS: readonly string[] = [];
 
 export const STATIC_API_PATHS = {
     publicAssets: API_PREFIX,
@@ -26,6 +23,6 @@ export const STATIC_API_PATHS = {
 export const DEFAULT_SERVER_URLS = {
     localOrigin: `http://localhost:${DEFAULT_PORTS.server}`,
     localApi: `http://localhost:${DEFAULT_PORTS.server}${API_PREFIX}`,
-    productionApi: `${PRODUCTION_ORIGINS[0]}${API_PREFIX}`,
+    productionApi: API_PREFIX,
     localHealthcheck: `http://localhost:${DEFAULT_PORTS.server}/healthcheck`,
 } as const;

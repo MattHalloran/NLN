@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express";
-import { CODE, MAX_IMAGE_STORAGE_MB } from "@local/shared";
+import { CACHE_LIMITS, CLEANUP_LIMITS, CODE, MAX_IMAGE_STORAGE_MB, TIME_MS } from "@local/shared";
 import { CustomError } from "../error.js";
 import { logger, LogLevel } from "../logger.js";
 import {
@@ -10,11 +10,12 @@ import {
 import fs from "fs";
 import path from "path";
 import { auditAdminAction, AuditEventType } from "../utils/auditLogger.js";
+import { ASSETS_DIR, IMAGE_ASSETS_DIR } from "../config/paths.js";
 
 const router = Router();
 
 // Storage stats cache
-const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const CACHE_TTL_MS = CACHE_LIMITS.storageStatsTtlMs;
 let cachedStats: unknown = null;
 let cacheTimestamp: number = 0;
 
@@ -88,8 +89,8 @@ router.get("/stats", async (req: Request, res: Response) => {
             },
         });
 
-        const retentionDays = 30;
-        const cutoffDate = new Date(Date.now() - retentionDays * 24 * 60 * 60 * 1000);
+        const retentionDays = CLEANUP_LIMITS.unlabeledImageRetentionDays;
+        const cutoffDate = new Date(Date.now() - retentionDays * TIME_MS.Day);
         const unlabeledOverRetention = await prisma.image.count({
             where: {
                 unlabeled_since: {
@@ -107,7 +108,7 @@ router.get("/stats", async (req: Request, res: Response) => {
         const totalFiles = await prisma.image_file.count();
 
         // Calculate storage size
-        const imagesDir = `${process.env.PROJECT_DIR}/assets/images`;
+        const imagesDir = IMAGE_ASSETS_DIR;
         let totalSizeMB = 0;
         let filesOnDisk = 0;
 
@@ -312,8 +313,8 @@ router.get("/cleanup/preview", async (req: Request, res: Response) => {
             return res.status(500).json({ error: "Database connection not available" });
         }
 
-        const retentionDays = 30;
-        const cutoffDate = new Date(Date.now() - retentionDays * 24 * 60 * 60 * 1000);
+        const retentionDays = CLEANUP_LIMITS.unlabeledImageRetentionDays;
+        const cutoffDate = new Date(Date.now() - retentionDays * TIME_MS.Day);
 
         // Find unlabeled images that would be deleted
         const unlabeledImages = await prisma.image.findMany({
@@ -336,7 +337,7 @@ router.get("/cleanup/preview", async (req: Request, res: Response) => {
         });
 
         // Calculate estimated storage to be freed
-        const imagesDir = `${process.env.PROJECT_DIR}/assets/images`;
+        const imagesDir = IMAGE_ASSETS_DIR;
         let estimatedFreedMB = 0;
 
         for (const image of unlabeledImages) {
@@ -359,8 +360,7 @@ router.get("/cleanup/preview", async (req: Request, res: Response) => {
 
         for (const image of unlabeledImages) {
             if (image.unlabeled_since) {
-                const ageInDays =
-                    (now - new Date(image.unlabeled_since).getTime()) / (1000 * 60 * 60 * 24);
+                const ageInDays = (now - new Date(image.unlabeled_since).getTime()) / TIME_MS.Day;
                 if (ageInDays < 60) {
                     ageBreakdown["30-60days"]++;
                 } else if (ageInDays < 90) {
@@ -407,7 +407,7 @@ router.get("/cleanup/preview", async (req: Request, res: Response) => {
             }
 
             const existingFiles = image.files.filter((file: { src: string }) => {
-                const filePath = `${process.env.PROJECT_DIR}/assets/${file.src}`;
+                const filePath = path.join(ASSETS_DIR, file.src);
                 return fs.existsSync(filePath);
             });
 
@@ -462,7 +462,7 @@ router.get("/orphaned-files", async (req: Request, res: Response) => {
             return res.status(500).json({ error: "Database connection not available" });
         }
 
-        const imagesDir = `${process.env.PROJECT_DIR}/assets/images`;
+        const imagesDir = IMAGE_ASSETS_DIR;
 
         if (!fs.existsSync(imagesDir)) {
             return res.json({ orphanedFiles: [] });
@@ -530,7 +530,7 @@ router.get("/orphaned-records", async (req: Request, res: Response) => {
             return res.status(500).json({ error: "Database connection not available" });
         }
 
-        const imagesDir = `${process.env.PROJECT_DIR}/assets/images`;
+        const imagesDir = IMAGE_ASSETS_DIR;
 
         // Get all image records with their file variants
         const allImages = await prisma.image.findMany({
@@ -611,7 +611,7 @@ router.delete("/orphaned-files", async (req: Request, res: Response) => {
             return res.status(500).json({ error: "Database connection not available" });
         }
 
-        const imagesDir = `${process.env.PROJECT_DIR}/assets/images`;
+        const imagesDir = IMAGE_ASSETS_DIR;
         let deletedCount = 0;
         let deletedSizeMB = 0;
         const errors: string[] = [];
@@ -701,7 +701,7 @@ router.delete("/orphaned-records", async (req: Request, res: Response) => {
 
             // Check if ALL files are missing on disk
             const existingFiles = image.files.filter((file: { src: string }) => {
-                const filePath = `${process.env.PROJECT_DIR}/assets/${file.src}`;
+                const filePath = path.join(ASSETS_DIR, file.src);
                 return fs.existsSync(filePath);
             });
 

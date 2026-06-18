@@ -1,4 +1,4 @@
-import { IMAGE_EXTENSION, IMAGE_SIZE } from "@local/shared";
+import { IMAGE_EXTENSION, IMAGE_PROCESSING_LIMITS, IMAGE_SIZE } from "@local/shared";
 import pkg from "@prisma/client";
 import fs from "fs";
 import convert from "heic-convert";
@@ -9,6 +9,7 @@ import sharp from "sharp";
 import { Readable } from "stream";
 import { LogLevel, genErrorCode, logger } from "../logger";
 import { AddImageResponse } from "../schema/types";
+import { ASSETS_DIR, landingPageContentPath } from "../config/paths.js";
 import { withDistributedLock } from "./distributedLock.js";
 
 const { PrismaClient } = pkg;
@@ -16,14 +17,14 @@ const prisma = new PrismaClient();
 
 // How many times a file name should be checked before giving up
 // ex: if 'billy.png' is taken, tries 'billy-1.png', 'billy-2.png', etc.
-const MAX_FILE_NAME_ATTEMPTS = 100;
+const MAX_FILE_NAME_ATTEMPTS = IMAGE_PROCESSING_LIMITS.maxFileNameAttempts;
 // Location of persistent storage directory
-const UPLOAD_DIR = `${process.env.PROJECT_DIR}/assets`;
+const UPLOAD_DIR = ASSETS_DIR;
 // Maximum image dimensions (width or height) in pixels
 // Images larger than this will be rejected to prevent excessive storage usage
 // Note: Each image creates 16 variants (8 sizes × 2 formats), so large images multiply storage
-const MAX_IMAGE_DIMENSION = 8192; // 8K resolution
-const MIN_IMAGE_DIMENSION = 10; // Minimum dimension to ensure valid images
+const MAX_IMAGE_DIMENSION = IMAGE_PROCESSING_LIMITS.maxImageDimension;
+const MIN_IMAGE_DIMENSION = IMAGE_PROCESSING_LIMITS.minImageDimension;
 
 /**
  * Replaces any invalid characters from a file name
@@ -572,17 +573,7 @@ export async function checkImageUsage(hash: string) {
     // ENHANCED: Double-check JSON files for hero banner and seasonal usage
     // This provides safety in case label sync fails or is out of sync
     try {
-        const fs = await import("fs");
-        const path = await import("path");
-
-        const dataPath = path.join(
-            process.env.PROJECT_DIR || "",
-            process.env.NODE_ENV === "production"
-                ? "packages/server/dist/data"
-                : "packages/server/src/data"
-        );
-
-        const contentPath = path.join(dataPath, "landing-page-content.json");
+        const contentPath = landingPageContentPath();
 
         if (fs.existsSync(contentPath)) {
             const contentData = fs.readFileSync(contentPath, "utf8");
@@ -678,7 +669,7 @@ export async function deleteImage(
         hash,
         "delete-image",
         async () => await performImageDeletion(hash, force),
-        30000 // Wait up to 30 seconds for lock (increased for large images with many variants)
+        IMAGE_PROCESSING_LIMITS.lockWaitMs
     );
 
     if (result === null) {
@@ -797,8 +788,8 @@ async function performImageDeletion(
         // All files deleted successfully, now delete from database
         // Database deletion cascades to image_file, image_labels, plant_images
         // Use retry logic since files are already gone
-        const MAX_DB_DELETE_RETRIES = 3;
-        const RETRY_DELAY_MS = 1000; // 1 second base delay
+        const MAX_DB_DELETE_RETRIES = IMAGE_PROCESSING_LIMITS.databaseDeleteRetries;
+        const RETRY_DELAY_MS = IMAGE_PROCESSING_LIMITS.retryDelayMs;
 
         let dbDeletionSuccess = false;
         let lastDbError: unknown = null;

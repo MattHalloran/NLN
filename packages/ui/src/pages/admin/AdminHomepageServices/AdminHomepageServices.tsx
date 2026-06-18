@@ -1,4 +1,5 @@
-import { APP_LINKS, DEFAULT_SERVICES_CONTENT, REST_ROUTES } from "@local/shared";
+import { APP_LINKS, buildServicesPatch, getServicesFormData, REST_ROUTES } from "@local/shared";
+import type { ServiceItem, ServicesContent } from "@local/shared";
 import {
     Box,
     Button,
@@ -40,35 +41,12 @@ import { useState, useEffect } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { landingPageIconOptions, resolveLandingPageIcon } from "utils/landingPageIcons";
 
-interface Service {
-    title: string;
-    description: string;
-    icon: string;
-    action: string;
-    url: string;
-}
-
-interface CTAButton {
-    text: string;
-    url: string;
-}
-
-interface CTASettings {
-    title: string;
-    subtitle: string;
-    primaryButton: CTAButton;
-    secondaryButton: CTAButton;
-}
-
-interface ServicesSettings {
-    title: string;
-    subtitle: string;
-    cta: CTASettings;
-    items: Service[];
-}
+type ServicesSettings = ServicesContent & {
+    cta: NonNullable<ServicesContent["cta"]>;
+    items: ServiceItem[];
+};
 
 const SERVICE_ICONS = landingPageIconOptions;
-const DEFAULT_SERVICES = DEFAULT_SERVICES_CONTENT as ServicesSettings;
 
 // Preview component that shows how services will look
 const ServicesPreview = ({
@@ -121,7 +99,7 @@ const ServicesPreview = ({
                 {/* Service Cards Grid */}
                 {services.items.length > 0 ? (
                     <Grid container spacing={2}>
-                        {services.items.map((service: Service, index: number) => {
+                        {services.items.map((service: ServiceItem, index: number) => {
                             const IconComponent = resolveLandingPageIcon(service.icon);
                             return (
                                 <Grid item xs={12} sm={6} key={index}>
@@ -246,24 +224,11 @@ export const AdminHomepageServices = () => {
 
     const form = useAdminForm<ServicesSettings>({
         fetchFn: async () => {
-            if (landingPageContent?.content?.services) {
-                return {
-                    title: landingPageContent.content.services.title || DEFAULT_SERVICES.title,
-                    subtitle:
-                        landingPageContent.content.services.subtitle || DEFAULT_SERVICES.subtitle,
-                    cta: landingPageContent.content.services.cta || DEFAULT_SERVICES.cta,
-                    items: landingPageContent.content.services.items || DEFAULT_SERVICES.items,
-                };
-            }
-            return DEFAULT_SERVICES;
+            return getServicesFormData(landingPageContent) as ServicesSettings;
         },
         saveFn: async (data) => {
             await updateSettings.mutate({
-                settings: {
-                    content: {
-                        services: data,
-                    },
-                },
+                settings: buildServicesPatch(data),
                 queryParams: variantId ? { variantId } : undefined,
             });
             return data;
@@ -308,7 +273,7 @@ export const AdminHomepageServices = () => {
         });
     };
 
-    const handleUpdateService = (index: number, field: keyof Service, value: string) => {
+    const handleUpdateService = (index: number, field: keyof ServiceItem, value: string) => {
         if (!form.data) return;
         const newItems = [...form.data.items];
         newItems[index] = { ...newItems[index], [field]: value };
@@ -467,7 +432,9 @@ export const AdminHomepageServices = () => {
                                         </Box>
                                     </Box>
                                     <ServicesPreview
-                                        services={form.data || DEFAULT_SERVICES}
+                                        services={
+                                            form.data || (getServicesFormData() as ServicesSettings)
+                                        }
                                         sectionTitle={form.data?.title || ""}
                                         sectionSubtitle={form.data?.subtitle || ""}
                                     />
@@ -1344,7 +1311,9 @@ export const AdminHomepageServices = () => {
                                     </Box>
                                 </Box>
                                 <ServicesPreview
-                                    services={form.data || DEFAULT_SERVICES}
+                                    services={
+                                        form.data || (getServicesFormData() as ServicesSettings)
+                                    }
                                     sectionTitle={form.data?.title || ""}
                                     sectionSubtitle={form.data?.subtitle || ""}
                                 />

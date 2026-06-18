@@ -34,6 +34,7 @@
     "start-development": "vite",
     "start-production": "bash scripts/start-production.sh",
     "serve-production": "node scripts/serve-production.js",
+    "test": "echo \"No UI unit tests configured\"",
     "analyze": "npm run build:analyze && open dist/bundle-stats.html",
     "analyze:legacy": "source-map-explorer --html \"source-tree-$(date '+%Y%m%d%H%M%S').html\" --no-border-checks dist/assets/*",
     "lint": "eslint src",

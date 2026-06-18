@@ -1,8 +1,10 @@
 import Bull from "bull";
 import fs from "fs";
+import path from "path";
 import { HOST, PORT } from "../../redisConn";
 import { emailProcess } from "./process.js";
 import { logger, LogLevel } from "../../logger.js";
+import { ASSETS_DIR } from "../../config/paths.js";
 
 let emailQueue: Bull.Queue | null = null;
 let WEBSITE: string | null = null;
@@ -16,8 +18,8 @@ function getEmailQueue(): Bull.Queue {
     try {
         // Load business config
         const businessConfigStr = fs.readFileSync(
-            `${process.env.PROJECT_DIR}/assets/public/business.json`,
-            "utf8",
+            path.join(ASSETS_DIR, "public", "business.json"),
+            "utf8"
         );
         const businessConfig = JSON.parse(businessConfigStr) as {
             BUSINESS_NAME: { Long: string; Short: string };
@@ -85,7 +87,7 @@ export function orderNotifyAdmin(): void {
 export function sendResetPasswordLink(
     _email: string,
     _userId: string | number,
-    _code: string,
+    _code: string
 ): void {
     // Temporarily disabled for E2E testing
     logger.log(LogLevel.info, "sendResetPasswordLink called (disabled for testing)");
@@ -95,7 +97,7 @@ export function sendResetPasswordLink(
 export function sendVerificationLink(
     _email: string,
     _userId: string | number,
-    _verificationCode: string,
+    _verificationCode: string
 ): void {
     // Temporarily disabled for E2E testing
     logger.log(LogLevel.info, "sendVerificationLink called (disabled for testing)", {

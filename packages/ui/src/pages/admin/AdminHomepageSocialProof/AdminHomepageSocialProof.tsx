@@ -1,7 +1,7 @@
 import {
     APP_LINKS,
     COMPANY_INFO,
-    DEFAULT_SOCIAL_PROOF_CONTENT,
+    getSocialProofFormData,
     REST_ROUTES,
     replaceLandingPageTokens,
 } from "@local/shared";
@@ -103,10 +103,6 @@ const replaceTokens = (text: string, _foundedYear: number, yearsInBusiness: numb
         yearsInBusiness,
     });
 };
-
-// Default data
-const getDefaultSocialProofData = (_foundedYear: number): SocialProofData =>
-    DEFAULT_SOCIAL_PROOF_CONTENT;
 
 // Preview component
 const SocialProofPreview = ({
@@ -403,10 +399,7 @@ export const AdminHomepageSocialProof = () => {
     // Use the admin form hook
     const form = useAdminForm<SocialProofData>({
         fetchFn: async () => {
-            if (landingPageData?.content?.socialProof) {
-                return landingPageData.content.socialProof;
-            }
-            return getDefaultSocialProofData(foundedYear);
+            return getSocialProofFormData(landingPageData);
         },
         saveFn: async (data) => {
             const queryParams = variantId ? { variantId } : undefined;
@@ -747,7 +740,7 @@ export const AdminHomepageSocialProof = () => {
                                     </Typography>
                                     <SocialProofPreview
                                         socialProofData={
-                                            form.data || getDefaultSocialProofData(foundedYear)
+                                            form.data || getSocialProofFormData(landingPageData)
                                         }
                                         foundedYear={foundedYear}
                                         yearsInBusiness={yearsInBusiness}
@@ -1775,7 +1768,7 @@ export const AdminHomepageSocialProof = () => {
                                 </Typography>
                                 <SocialProofPreview
                                     socialProofData={
-                                        form.data || getDefaultSocialProofData(foundedYear)
+                                        form.data || getSocialProofFormData(landingPageData)
                                     }
                                     foundedYear={foundedYear}
                                     yearsInBusiness={yearsInBusiness}

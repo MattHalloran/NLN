@@ -24,8 +24,8 @@ import type {
 } from "./types";
 
 export type HttpMethod = "GET" | "POST" | "PUT" | "DELETE";
-export type ApiFormData = { readonly __apiFormData?: never };
-export type ApiBlob = { readonly __apiBlob?: never };
+export type ApiFormData = FormData;
+export type ApiBlob = Blob;
 
 export interface ApiEndpoint<TRequest = never, TResponse = unknown, TQuery = undefined> {
     method: HttpMethod;

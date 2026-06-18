@@ -1,5 +1,6 @@
 import { Request, Response, Router } from "express";
 import { merge } from "lodash";
+import { normalizeLandingPageContent } from "@local/shared";
 import { logger, LogLevel } from "../logger.js";
 import type {
     LandingPageContent,
@@ -288,98 +289,16 @@ router.put("/", async (req: AuthenticatedRequest, res: Response) => {
             logger.info("Editing official landing page");
         }
 
+        currentContent = normalizeLandingPageContent(currentContent);
+
         // Update hero banners if provided
         if (heroBanners) {
-            currentContent.content = currentContent.content || {
-                hero: {
-                    banners: [],
-                    settings: {
-                        autoPlay: false,
-                        autoPlayDelay: 5000,
-                        showDots: true,
-                        showArrows: true,
-                        fadeTransition: false,
-                    },
-                    text: {
-                        title: "",
-                        subtitle: "",
-                        description: "",
-                        businessHours: "",
-                        trustBadges: [],
-                        buttons: [],
-                    },
-                },
-                services: { title: "", subtitle: "", items: [] },
-                seasonal: { plants: [], tips: [] },
-                newsletter: { title: "", description: "", disclaimer: "", isActive: false },
-                company: { foundedYear: new Date().getFullYear(), description: "" },
-            };
-            currentContent.content.hero = currentContent.content.hero || {
-                banners: [],
-                settings: {
-                    autoPlay: false,
-                    autoPlayDelay: 5000,
-                    showDots: true,
-                    showArrows: true,
-                    fadeTransition: false,
-                },
-                text: {
-                    title: "",
-                    subtitle: "",
-                    description: "",
-                    businessHours: "",
-                    trustBadges: [],
-                    buttons: [],
-                },
-            };
             currentContent.content.hero.banners = heroBanners;
             updatedSections.push("heroBanners");
         }
 
         // Update hero settings if provided
         if (heroSettings) {
-            currentContent.content = currentContent.content || {
-                hero: {
-                    banners: [],
-                    settings: {
-                        autoPlay: false,
-                        autoPlayDelay: 5000,
-                        showDots: true,
-                        showArrows: true,
-                        fadeTransition: false,
-                    },
-                    text: {
-                        title: "",
-                        subtitle: "",
-                        description: "",
-                        businessHours: "",
-                        trustBadges: [],
-                        buttons: [],
-                    },
-                },
-                services: { title: "", subtitle: "", items: [] },
-                seasonal: { plants: [], tips: [] },
-                newsletter: { title: "", description: "", disclaimer: "", isActive: false },
-                company: { foundedYear: new Date().getFullYear(), description: "" },
-            };
-            currentContent.content.hero = currentContent.content.hero || {
-                banners: [],
-                settings: {
-                    autoPlay: false,
-                    autoPlayDelay: 5000,
-                    showDots: true,
-                    showArrows: true,
-                    fadeTransition: false,
-                },
-                text: {
-                    title: "",
-                    subtitle: "",
-                    description: "",
-                    businessHours: "",
-                    trustBadges: [],
-                    buttons: [],
-                },
-            };
             currentContent.content.hero.settings = heroSettings;
             updatedSections.push("heroSettings");
         }
@@ -391,206 +310,36 @@ router.put("/", async (req: AuthenticatedRequest, res: Response) => {
                 logger.debug(`First plant data: ${JSON.stringify(seasonalPlants[0])}`);
             }
 
-            currentContent.content = currentContent.content || {
-                hero: {
-                    banners: [],
-                    settings: {
-                        autoPlay: false,
-                        autoPlayDelay: 5000,
-                        showDots: true,
-                        showArrows: true,
-                        fadeTransition: false,
-                    },
-                    text: {
-                        title: "",
-                        subtitle: "",
-                        description: "",
-                        businessHours: "",
-                        trustBadges: [],
-                        buttons: [],
-                    },
-                },
-                services: { title: "", subtitle: "", items: [] },
-                seasonal: { plants: [], tips: [] },
-                newsletter: { title: "", description: "", disclaimer: "", isActive: false },
-                company: { foundedYear: new Date().getFullYear(), description: "" },
-            };
-            currentContent.content.seasonal = currentContent.content.seasonal || {
-                plants: [],
-                tips: [],
-            };
             currentContent.content.seasonal.plants = seasonalPlants;
             updatedSections.push("seasonalPlants");
         }
 
         // Update plant tips if provided
         if (plantTips) {
-            currentContent.content = currentContent.content || {
-                hero: {
-                    banners: [],
-                    settings: {
-                        autoPlay: false,
-                        autoPlayDelay: 5000,
-                        showDots: true,
-                        showArrows: true,
-                        fadeTransition: false,
-                    },
-                    text: {
-                        title: "",
-                        subtitle: "",
-                        description: "",
-                        businessHours: "",
-                        trustBadges: [],
-                        buttons: [],
-                    },
-                },
-                services: { title: "", subtitle: "", items: [] },
-                seasonal: { plants: [], tips: [] },
-                newsletter: { title: "", description: "", disclaimer: "", isActive: false },
-                company: { foundedYear: new Date().getFullYear(), description: "" },
-            };
-            currentContent.content.seasonal = currentContent.content.seasonal || {
-                plants: [],
-                tips: [],
-            };
             currentContent.content.seasonal.tips = plantTips;
             updatedSections.push("plantTips");
         }
 
         // Update seasonal header text if provided
         if (seasonalHeader) {
-            currentContent.content = currentContent.content || {
-                hero: {
-                    banners: [],
-                    settings: {
-                        autoPlay: false,
-                        autoPlayDelay: 5000,
-                        showDots: true,
-                        showArrows: true,
-                        fadeTransition: false,
-                    },
-                    text: {
-                        title: "",
-                        subtitle: "",
-                        description: "",
-                        businessHours: "",
-                        trustBadges: [],
-                        buttons: [],
-                    },
-                },
-                services: { title: "", subtitle: "", items: [] },
-                seasonal: { plants: [], tips: [] },
-                newsletter: { title: "", description: "", disclaimer: "", isActive: false },
-                company: { foundedYear: new Date().getFullYear(), description: "" },
-            };
-            currentContent.content.seasonal = currentContent.content.seasonal || {
-                plants: [],
-                tips: [],
-            };
             currentContent.content.seasonal.header = seasonalHeader;
             updatedSections.push("seasonalHeader");
         }
 
         // Update seasonal sections text if provided
         if (seasonalSections) {
-            currentContent.content = currentContent.content || {
-                hero: {
-                    banners: [],
-                    settings: {
-                        autoPlay: false,
-                        autoPlayDelay: 5000,
-                        showDots: true,
-                        showArrows: true,
-                        fadeTransition: false,
-                    },
-                    text: {
-                        title: "",
-                        subtitle: "",
-                        description: "",
-                        businessHours: "",
-                        trustBadges: [],
-                        buttons: [],
-                    },
-                },
-                services: { title: "", subtitle: "", items: [] },
-                seasonal: { plants: [], tips: [] },
-                newsletter: { title: "", description: "", disclaimer: "", isActive: false },
-                company: { foundedYear: new Date().getFullYear(), description: "" },
-            };
-            currentContent.content.seasonal = currentContent.content.seasonal || {
-                plants: [],
-                tips: [],
-            };
             currentContent.content.seasonal.sections = seasonalSections;
             updatedSections.push("seasonalSections");
         }
 
         // Update seasonal gallery button if provided
         if (seasonalGalleryButton !== undefined) {
-            currentContent.content = currentContent.content || {
-                hero: {
-                    banners: [],
-                    settings: {
-                        autoPlay: false,
-                        autoPlayDelay: 5000,
-                        showDots: true,
-                        showArrows: true,
-                        fadeTransition: false,
-                    },
-                    text: {
-                        title: "",
-                        subtitle: "",
-                        description: "",
-                        businessHours: "",
-                        trustBadges: [],
-                        buttons: [],
-                    },
-                },
-                services: { title: "", subtitle: "", items: [] },
-                seasonal: { plants: [], tips: [] },
-                newsletter: { title: "", description: "", disclaimer: "", isActive: false },
-                company: { foundedYear: new Date().getFullYear(), description: "" },
-            };
-            currentContent.content.seasonal = currentContent.content.seasonal || {
-                plants: [],
-                tips: [],
-            };
             currentContent.content.seasonal.galleryButton = seasonalGalleryButton;
             updatedSections.push("seasonalGalleryButton");
         }
 
         // Update newsletter button text if provided
         if (newsletterButtonText !== undefined) {
-            currentContent.content = currentContent.content || {
-                hero: {
-                    banners: [],
-                    settings: {
-                        autoPlay: false,
-                        autoPlayDelay: 5000,
-                        showDots: true,
-                        showArrows: true,
-                        fadeTransition: false,
-                    },
-                    text: {
-                        title: "",
-                        subtitle: "",
-                        description: "",
-                        businessHours: "",
-                        trustBadges: [],
-                        buttons: [],
-                    },
-                },
-                services: { title: "", subtitle: "", items: [] },
-                seasonal: { plants: [], tips: [] },
-                newsletter: { title: "", description: "", disclaimer: "", isActive: false },
-                company: { foundedYear: new Date().getFullYear(), description: "" },
-            };
-            currentContent.content.newsletter = currentContent.content.newsletter || {
-                title: "",
-                description: "",
-                disclaimer: "",
-                isActive: false,
-            };
             currentContent.content.newsletter.buttonText = newsletterButtonText;
             updatedSections.push("newsletterButtonText");
         }
@@ -598,64 +347,8 @@ router.put("/", async (req: AuthenticatedRequest, res: Response) => {
         // Update general settings if provided
         if (settings) {
             const settingsData = settings;
-            currentContent.content = currentContent.content || {
-                hero: {
-                    banners: [],
-                    settings: {
-                        autoPlay: false,
-                        autoPlayDelay: 5000,
-                        showDots: true,
-                        showArrows: true,
-                        fadeTransition: false,
-                    },
-                    text: {
-                        title: "",
-                        subtitle: "",
-                        description: "",
-                        businessHours: "",
-                        trustBadges: [],
-                        buttons: [],
-                    },
-                },
-                services: { title: "", subtitle: "", items: [] },
-                seasonal: { plants: [], tips: [] },
-                newsletter: { title: "", description: "", disclaimer: "", isActive: false },
-                company: { foundedYear: new Date().getFullYear(), description: "" },
-            };
-            currentContent.theme = currentContent.theme || {
-                colors: {
-                    light: { primary: "", secondary: "", accent: "", background: "", paper: "" },
-                    dark: { primary: "", secondary: "", accent: "", background: "", paper: "" },
-                },
-                features: {
-                    showSeasonalContent: true,
-                    showNewsletter: true,
-                    showSocialProof: true,
-                    enableAnimations: true,
-                },
-            };
-            currentContent.layout = currentContent.layout || { sections: [] };
-            currentContent.experiments = currentContent.experiments || { tests: [] };
 
             if (settingsData.hero) {
-                currentContent.content.hero = currentContent.content.hero || {
-                    banners: [],
-                    settings: {
-                        autoPlay: false,
-                        autoPlayDelay: 5000,
-                        showDots: true,
-                        showArrows: true,
-                        fadeTransition: false,
-                    },
-                    text: {
-                        title: "",
-                        subtitle: "",
-                        description: "",
-                        businessHours: "",
-                        trustBadges: [],
-                        buttons: [],
-                    },
-                };
                 currentContent.content.hero.text =
                     settingsData.hero as typeof currentContent.content.hero.text;
             }
@@ -692,23 +385,6 @@ router.put("/", async (req: AuthenticatedRequest, res: Response) => {
 
         // Update contact info if provided
         if (contactInfo) {
-            currentContent.contact = currentContent.contact || {
-                name: "",
-                address: { street: "", city: "", state: "", zip: "", full: "", googleMapsUrl: "" },
-                phone: { display: "", link: "" },
-                email: { address: "", link: "" },
-                socialMedia: {},
-                hours: {
-                    monday: "",
-                    tuesday: "",
-                    wednesday: "",
-                    thursday: "",
-                    friday: "",
-                    saturday: "",
-                    sunday: "",
-                },
-            };
-
             if (contactInfo.business) {
                 const business = contactInfo.business;
                 if (business.BUSINESS_NAME) {
@@ -754,30 +430,6 @@ router.put("/", async (req: AuthenticatedRequest, res: Response) => {
 
         // Update about section if provided
         if (about) {
-            currentContent.content = currentContent.content || {
-                hero: {
-                    banners: [],
-                    settings: {
-                        autoPlay: false,
-                        autoPlayDelay: 5000,
-                        showDots: true,
-                        showArrows: true,
-                        fadeTransition: false,
-                    },
-                    text: {
-                        title: "",
-                        subtitle: "",
-                        description: "",
-                        businessHours: "",
-                        trustBadges: [],
-                        buttons: [],
-                    },
-                },
-                services: { title: "", subtitle: "", items: [] },
-                seasonal: { plants: [], tips: [] },
-                newsletter: { title: "", description: "", disclaimer: "", isActive: false },
-                company: { foundedYear: new Date().getFullYear(), description: "" },
-            };
             currentContent.content.about = about;
             updatedSections.push("about");
             logger.info(`Updated about section with ${about.values.items.length} value items`);
@@ -785,30 +437,6 @@ router.put("/", async (req: AuthenticatedRequest, res: Response) => {
 
         // Update social proof section if provided
         if (socialProof) {
-            currentContent.content = currentContent.content || {
-                hero: {
-                    banners: [],
-                    settings: {
-                        autoPlay: false,
-                        autoPlayDelay: 5000,
-                        showDots: true,
-                        showArrows: true,
-                        fadeTransition: false,
-                    },
-                    text: {
-                        title: "",
-                        subtitle: "",
-                        description: "",
-                        businessHours: "",
-                        trustBadges: [],
-                        buttons: [],
-                    },
-                },
-                services: { title: "", subtitle: "", items: [] },
-                seasonal: { plants: [], tips: [] },
-                newsletter: { title: "", description: "", disclaimer: "", isActive: false },
-                company: { foundedYear: new Date().getFullYear(), description: "" },
-            };
             currentContent.content.socialProof = socialProof;
             updatedSections.push("socialProof");
             logger.info(
@@ -818,30 +446,6 @@ router.put("/", async (req: AuthenticatedRequest, res: Response) => {
 
         // Update location section if provided
         if (location) {
-            currentContent.content = currentContent.content || {
-                hero: {
-                    banners: [],
-                    settings: {
-                        autoPlay: false,
-                        autoPlayDelay: 5000,
-                        showDots: true,
-                        showArrows: true,
-                        fadeTransition: false,
-                    },
-                    text: {
-                        title: "",
-                        subtitle: "",
-                        description: "",
-                        businessHours: "",
-                        trustBadges: [],
-                        buttons: [],
-                    },
-                },
-                services: { title: "", subtitle: "", items: [] },
-                seasonal: { plants: [], tips: [] },
-                newsletter: { title: "", description: "", disclaimer: "", isActive: false },
-                company: { foundedYear: new Date().getFullYear(), description: "" },
-            };
             currentContent.content.location = location;
             updatedSections.push("location");
             logger.info(
@@ -963,7 +567,7 @@ router.put("/contact-info", async (req: Request, res: Response) => {
             currentContent = readLandingPageContent();
         }
 
-        currentContent.contact = currentContent.contact || {};
+        currentContent = normalizeLandingPageContent(currentContent);
 
         // Update business info if provided
         if (business) {
@@ -1124,11 +728,7 @@ router.put("/settings", async (req: Request, res: Response) => {
             currentContent = readLandingPageContent();
         }
 
-        // Initialize nested structures if they don't exist
-        currentContent.content = currentContent.content || {};
-        currentContent.theme = currentContent.theme || {};
-        currentContent.layout = currentContent.layout || {};
-        currentContent.experiments = currentContent.experiments || {};
+        currentContent = normalizeLandingPageContent(currentContent);
 
         // NEW: Accept nested structure matching LandingPageContent
         // Deep merge content, theme, layout, and experiments sections

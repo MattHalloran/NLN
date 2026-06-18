@@ -257,6 +257,10 @@ export default [
                 Buffer: "readonly",
                 window: "readonly",
                 document: "readonly",
+                Blob: "readonly",
+                FormData: "readonly",
+                URL: "readonly",
+                URLSearchParams: "readonly",
             },
         },
         rules: {

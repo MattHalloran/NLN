@@ -1,4 +1,4 @@
-import { ACCOUNT_STATUS, DEFAULT_PRONOUNS, ORDER_STATUS, SKU_STATUS } from "@local/shared";
+import { ACCOUNT_STATUS, DEFAULT_PRONOUNS, ORDER_STATUS, SKU_STATUS } from "../consts";
 import * as yup from "yup";
 
 export const MIN_PASSWORD_LENGTH = 8;
@@ -49,12 +49,17 @@ export const feedbackSchema = yup.object().shape({
 });
 
 export const imageSchema = yup.object().shape({
-    files: yup.array().of(yup.object().shape({
-        src: yup.string().required(),
-        alt: yup.string().max(256).optional(),
-        description: yup.string().max(1024).optional(),
-        labels: yup.array().of(yup.string().max(128).required()).required(),
-    })).required(),
+    files: yup
+        .array()
+        .of(
+            yup.object().shape({
+                src: yup.string().required(),
+                alt: yup.string().max(256).optional(),
+                description: yup.string().max(1024).optional(),
+                labels: yup.array().of(yup.string().max(128).required()).required(),
+            }),
+        )
+        .required(),
 });
 
 export const orderItemSchema = yup.object().shape({
@@ -116,7 +121,6 @@ export const customerSchema = yup.object().shape({
     status: yup.mixed().oneOf(Object.values(ACCOUNT_STATUS)).optional(),
 });
 
-
 // Schema for creating a new account
 export const signUpSchema = yup.object().shape({
     firstName: yup.string().max(128).required(),
@@ -151,11 +155,14 @@ export const profileSchema = yup.object().shape({
     theme: yup.string().max(128).required(),
     accountApproved: yup.boolean().required(),
     // Don't apply validation to current password. If you change password requirements, customers would be unable to change their password
-    currentPassword: yup.string().max(128).when("newPassword", {
-        is: (val: any) => (val && val.length > 0),
-        then: yup.string().required(),
-        otherwise: yup.string().notRequired(),
-    }),
+    currentPassword: yup
+        .string()
+        .max(128)
+        .when("newPassword", {
+            is: (val: any) => val && val.length > 0,
+            then: yup.string().required(),
+            otherwise: yup.string().notRequired(),
+        }),
     newPassword: passwordSchema.optional(),
 });
 
@@ -175,7 +182,6 @@ export const resetPasswordSchema = yup.object().shape({
     newPassword: passwordSchema.required(),
     confirmNewPassword: yup.string().oneOf([yup.ref("newPassword"), null], "Passwords must match"),
 });
-
 
 // Schema for adding an employee to a business
 export const employeeSchema = yup.object().shape({

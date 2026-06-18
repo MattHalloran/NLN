@@ -15,6 +15,9 @@ import type {
     ThemeColors,
     ThemeFeatures,
     TrustBadge,
+    LandingPageSectionId,
+    SectionConfiguration,
+    DeepPartial,
 } from "./types";
 
 export const DEFAULT_HERO_SETTINGS: HeroSettings = {
@@ -130,11 +133,12 @@ export type SeasonName = (typeof SEASONS)[number];
 export type SeasonOption = (typeof SEASON_OPTIONS)[number];
 
 export const DEFAULT_NEWSLETTER_CONTENT: NewsletterContent = {
-    title: "",
-    description: "",
-    disclaimer: "",
+    title: "Stay in the Grow",
+    description:
+        "Get seasonal care tips, new arrival notifications, and exclusive offers delivered to your inbox",
+    disclaimer: "No spam, just helpful gardening tips. Unsubscribe anytime.",
     buttonText: "Subscribe",
-    isActive: false,
+    isActive: true,
 };
 
 export const DEFAULT_ABOUT_CONTENT: AboutContent = {
@@ -384,9 +388,24 @@ export const DEFAULT_THEME_FEATURES: ThemeFeatures = {
     enableAnimations: true,
 };
 
-export const DEFAULT_SECTION_CONFIGURATION = {
-    order: [],
-    enabled: {},
+export const LANDING_PAGE_SECTIONS = [
+    "hero",
+    "services",
+    "social-proof",
+    "about",
+    "seasonal",
+    "location",
+] as const satisfies readonly LandingPageSectionId[];
+
+export const DEFAULT_SECTION_CONFIGURATION: SectionConfiguration = {
+    order: [...LANDING_PAGE_SECTIONS],
+    enabled: LANDING_PAGE_SECTIONS.reduce<Record<LandingPageSectionId, boolean>>(
+        (enabled, sectionId) => {
+            enabled[sectionId] = true;
+            return enabled;
+        },
+        {} as Record<LandingPageSectionId, boolean>,
+    ),
 };
 
 export const getCurrentSeason = (date = new Date()): SeasonName => {
@@ -457,3 +476,129 @@ export const createDefaultLandingPageContent = (): LandingPageContent => ({
         tests: [],
     },
 });
+
+export const normalizeSectionConfiguration = (
+    sections?: DeepPartial<SectionConfiguration>,
+): SectionConfiguration => ({
+    order: (sections?.order?.filter((section): section is string => typeof section === "string")
+        .length
+        ? sections.order.filter((section): section is string => typeof section === "string")
+        : DEFAULT_SECTION_CONFIGURATION.order
+    ).slice(),
+    enabled: {
+        ...DEFAULT_SECTION_CONFIGURATION.enabled,
+        ...Object.fromEntries(
+            Object.entries(sections?.enabled ?? {}).filter(
+                (entry): entry is [string, boolean] => typeof entry[1] === "boolean",
+            ),
+        ),
+    },
+});
+
+export const normalizeLandingPageContent = (
+    content?: DeepPartial<LandingPageContent>,
+): LandingPageContent => {
+    const defaults = createDefaultLandingPageContent();
+    const input = content as LandingPageContent | undefined;
+    return {
+        ...defaults,
+        ...input,
+        metadata: {
+            ...defaults.metadata,
+            ...(input?.metadata ?? {}),
+        },
+        content: {
+            ...defaults.content,
+            ...(input?.content ?? {}),
+            hero: {
+                ...defaults.content.hero,
+                ...(input?.content?.hero ?? {}),
+                settings: {
+                    ...defaults.content.hero.settings,
+                    ...(input?.content?.hero?.settings ?? {}),
+                },
+                text: {
+                    ...defaults.content.hero.text,
+                    ...(input?.content?.hero?.text ?? {}),
+                },
+            },
+            seasonal: {
+                ...defaults.content.seasonal,
+                ...(input?.content?.seasonal ?? {}),
+                header: {
+                    ...defaults.content.seasonal.header!,
+                    ...(input?.content?.seasonal?.header ?? {}),
+                },
+                sections: {
+                    ...defaults.content.seasonal.sections!,
+                    ...(input?.content?.seasonal?.sections ?? {}),
+                    plants: {
+                        ...defaults.content.seasonal.sections!.plants,
+                        ...(input?.content?.seasonal?.sections?.plants ?? {}),
+                    },
+                    tips: {
+                        ...defaults.content.seasonal.sections!.tips,
+                        ...(input?.content?.seasonal?.sections?.tips ?? {}),
+                    },
+                },
+                galleryButton: {
+                    ...defaults.content.seasonal.galleryButton!,
+                    ...(input?.content?.seasonal?.galleryButton ?? {}),
+                },
+            },
+            newsletter: {
+                ...defaults.content.newsletter,
+                ...(input?.content?.newsletter ?? {}),
+            },
+        },
+        contact: {
+            ...defaults.contact,
+            ...(input?.contact ?? {}),
+            address: {
+                ...defaults.contact.address,
+                ...(input?.contact?.address ?? {}),
+            },
+            phone: {
+                ...defaults.contact.phone,
+                ...(input?.contact?.phone ?? {}),
+            },
+            email: {
+                ...defaults.contact.email,
+                ...(input?.contact?.email ?? {}),
+            },
+        },
+        theme: {
+            ...defaults.theme,
+            ...(input?.theme ?? {}),
+            colors: {
+                ...defaults.theme.colors,
+                ...(input?.theme?.colors ?? {}),
+                light: {
+                    ...defaults.theme.colors.light,
+                    ...(input?.theme?.colors?.light ?? {}),
+                },
+                dark: {
+                    ...defaults.theme.colors.dark,
+                    ...(input?.theme?.colors?.dark ?? {}),
+                },
+            },
+            features: {
+                ...defaults.theme.features!,
+                ...(input?.theme?.features ?? {}),
+            },
+        },
+        layout: {
+            ...defaults.layout,
+            ...(input?.layout ?? {}),
+            sections: normalizeSectionConfiguration(input?.layout?.sections),
+        },
+        experiments: {
+            ...defaults.experiments,
+            ...(input?.experiments ?? {}),
+            abTesting: {
+                ...defaults.experiments.abTesting!,
+                ...(input?.experiments?.abTesting ?? {}),
+            },
+        },
+    };
+};

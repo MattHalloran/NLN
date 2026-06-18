@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useMemo, useEffect, useRef, type ComponentType } from "react";
-import { REST_ROUTES, stripApiPrefix } from "@local/shared";
+import { DEFAULT_SECTION_CONFIGURATION, REST_ROUTES, stripApiPrefix } from "@local/shared";
 import { Box } from "@mui/material";
 import { Hero } from "components/Hero/Hero";
 import { TopBar } from "components/navigation/TopBar/TopBar";
@@ -59,18 +59,7 @@ export const HomePage = () => {
         if (landingPageData?.layout?.sections) {
             return landingPageData.layout.sections;
         }
-        // Default configuration if not available
-        return {
-            order: ["hero", "services", "social-proof", "about", "seasonal", "location"],
-            enabled: {
-                hero: true,
-                services: true,
-                "social-proof": true,
-                about: true,
-                seasonal: true,
-                location: true,
-            },
-        };
+        return DEFAULT_SECTION_CONFIGURATION;
     }, [landingPageData]);
 
     // Filter and order sections based on configuration

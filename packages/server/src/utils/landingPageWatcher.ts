@@ -1,9 +1,9 @@
 import fs from "fs";
-import path from "path";
 import { logger, LogLevel, genErrorCode } from "../logger.js";
 import { syncHeroBannerLabels, syncSeasonalContentLabels } from "./imageLabelSync.js";
+import { landingPageContentPath } from "../config/paths.js";
 
-const CONTENT_PATH = path.join(process.env.PROJECT_DIR || "/root/NLN", "packages/server/dist/data/landing-page-content.json");
+const CONTENT_PATH = landingPageContentPath();
 const DEBOUNCE_MS = 5000; // Wait 5 seconds after last change before syncing
 
 let watcher: fs.FSWatcher | null = null;
@@ -20,11 +20,17 @@ async function performSync(): Promise<void> {
 
         // Sync hero banner labels
         const heroBannerResult = await syncHeroBannerLabels();
-        logger.log(LogLevel.info, `Hero banner labels synced: added ${heroBannerResult.added}, removed ${heroBannerResult.removed}`);
+        logger.log(
+            LogLevel.info,
+            `Hero banner labels synced: added ${heroBannerResult.added}, removed ${heroBannerResult.removed}`
+        );
 
         // Sync seasonal content labels
         const seasonalResult = await syncSeasonalContentLabels();
-        logger.log(LogLevel.info, `Seasonal content labels synced: added ${seasonalResult.added}, removed ${seasonalResult.removed}`);
+        logger.log(
+            LogLevel.info,
+            `Seasonal content labels synced: added ${seasonalResult.added}, removed ${seasonalResult.removed}`
+        );
 
         logger.log(LogLevel.info, "✅ Image label sync completed successfully");
     } catch (error) {
@@ -80,7 +86,10 @@ export function startLandingPageWatcher(): void {
     try {
         // Check if file exists
         if (!fs.existsSync(CONTENT_PATH)) {
-            logger.log(LogLevel.warn, `Landing page content file not found at ${CONTENT_PATH} - watcher not started`);
+            logger.log(
+                LogLevel.warn,
+                `Landing page content file not found at ${CONTENT_PATH} - watcher not started`
+            );
             return;
         }
 
@@ -96,7 +105,10 @@ export function startLandingPageWatcher(): void {
         });
 
         logger.log(LogLevel.info, `📁 Started watching landing page content file: ${CONTENT_PATH}`);
-        logger.log(LogLevel.info, `Image labels will auto-sync ${DEBOUNCE_MS / 1000}s after file changes`);
+        logger.log(
+            LogLevel.info,
+            `Image labels will auto-sync ${DEBOUNCE_MS / 1000}s after file changes`
+        );
     } catch (error) {
         logger.log(LogLevel.error, "Failed to start landing page file watcher", {
             code: genErrorCode("0032"),

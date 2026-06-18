@@ -1,4 +1,5 @@
-import { APP_LINKS, REST_ROUTES } from "@local/shared";
+import { APP_LINKS, buildNewsletterPatch, getNewsletterFormData, REST_ROUTES } from "@local/shared";
+import type { NewsletterContent } from "@local/shared";
 import { ExpandMore as ExpandMoreIcon } from "@mui/icons-material";
 import {
     Accordion,
@@ -33,20 +34,7 @@ import {
 import { useEffect, useState } from "react";
 import { Link as RouterLink } from "route";
 
-interface NewsletterSettings {
-    title: string;
-    description: string;
-    disclaimer: string;
-    isActive: boolean;
-}
-
-const getDefaultNewsletterSettings = (): NewsletterSettings => ({
-    title: "Stay in the Grow",
-    description:
-        "Get seasonal care tips, new arrival notifications, and exclusive offers delivered to your inbox",
-    disclaimer: "No spam, just helpful gardening tips. Unsubscribe anytime.",
-    isActive: true,
-});
+type NewsletterSettings = NewsletterContent;
 
 // Preview component that shows how the newsletter will look
 const NewsletterPreview = ({ newsletter }: { newsletter: NewsletterSettings }) => {
@@ -195,19 +183,12 @@ export const AdminHomepageNewsletter = () => {
 
     const form = useAdminForm<NewsletterSettings>({
         fetchFn: async () => {
-            if (landingPageContent?.content?.newsletter) {
-                return landingPageContent.content.newsletter;
-            }
-            return getDefaultNewsletterSettings();
+            return getNewsletterFormData(landingPageContent);
         },
         saveFn: async (data) => {
             const queryParams = variantId ? { variantId } : undefined;
             await updateSettings.mutate({
-                settings: {
-                    content: {
-                        newsletter: data,
-                    },
-                },
+                settings: buildNewsletterPatch(data),
                 queryParams,
             });
             return data;
@@ -402,7 +383,7 @@ export const AdminHomepageNewsletter = () => {
                                         </Box>
                                     </Box>
                                     <NewsletterPreview
-                                        newsletter={form.data || getDefaultNewsletterSettings()}
+                                        newsletter={form.data || getNewsletterFormData()}
                                     />
                                     <Alert
                                         severity="info"
@@ -743,7 +724,7 @@ export const AdminHomepageNewsletter = () => {
                                     </Box>
                                 </Box>
                                 <NewsletterPreview
-                                    newsletter={form.data || getDefaultNewsletterSettings()}
+                                    newsletter={form.data || getNewsletterFormData()}
                                 />
                                 <Alert
                                     severity="info"

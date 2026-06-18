@@ -1,10 +1,8 @@
+import { CACHE_LIMITS } from "@local/shared";
 import { logger, LogLevel } from "../../logger.js";
 import { initializeRedis } from "../../redisConn.js";
 import type { LandingPageContent } from "../../types/landingPage.js";
-
-// Cache configuration
-const CACHE_KEY = "landing-page-content:v1";
-const CACHE_TTL = 3600; // 1 hour
+import { LANDING_PAGE_CACHE_KEY } from "../../config/paths.js";
 
 /**
  * Get cached landing page content from Redis
@@ -12,7 +10,7 @@ const CACHE_TTL = 3600; // 1 hour
 export const getCachedContent = async (): Promise<LandingPageContent | null> => {
     try {
         const redis = await initializeRedis();
-        const cached = await redis.get(CACHE_KEY);
+        const cached = await redis.get(LANDING_PAGE_CACHE_KEY);
         return cached ? (JSON.parse(cached) as LandingPageContent) : null;
     } catch (error) {
         logger.log(LogLevel.error, "Error reading from cache:", error);
@@ -26,7 +24,11 @@ export const getCachedContent = async (): Promise<LandingPageContent | null> => 
 export const setCachedContent = async (content: LandingPageContent): Promise<void> => {
     try {
         const redis = await initializeRedis();
-        await redis.setEx(CACHE_KEY, CACHE_TTL, JSON.stringify(content));
+        await redis.setEx(
+            LANDING_PAGE_CACHE_KEY,
+            CACHE_LIMITS.landingPageTtlSeconds,
+            JSON.stringify(content)
+        );
         logger.info("Landing page content cached");
     } catch (error) {
         logger.log(LogLevel.error, "Error caching content:", error);
@@ -39,7 +41,7 @@ export const setCachedContent = async (content: LandingPageContent): Promise<voi
 export const invalidateCache = async (): Promise<void> => {
     try {
         const redis = await initializeRedis();
-        await redis.del(CACHE_KEY);
+        await redis.del(LANDING_PAGE_CACHE_KEY);
         logger.info("Landing page cache invalidated");
     } catch (error) {
         logger.log(LogLevel.error, "Error invalidating cache:", error);

@@ -1,4 +1,4 @@
-import { CODE, COOKIE } from "@local/shared";
+import { AUTH_LIMITS, CODE, COOKIE } from "@local/shared";
 import pkg from "@prisma/client";
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
@@ -9,7 +9,7 @@ const { PrismaClient } = pkg;
 type PrismaClientType = InstanceType<typeof PrismaClient>;
 
 const prisma = new PrismaClient();
-const SESSION_MILLI = 30 * 86400 * 1000;
+const SESSION_MILLI = AUTH_LIMITS.sessionTtlMs;
 
 // Middleware that attaches Prisma client to request
 export function attachPrisma(req: Request, _: Response, next: NextFunction): void {
@@ -20,7 +20,7 @@ export function attachPrisma(req: Request, _: Response, next: NextFunction): voi
 // Return array of customer roles (ex: ['admin', 'customer'])
 async function findCustomerRoles(
     customerId: string,
-    prismaClient?: PrismaClientType,
+    prismaClient?: PrismaClientType
 ): Promise<string[]> {
     const client = prismaClient || prisma;
     // Query customer's roles
@@ -65,7 +65,7 @@ export function authenticate(req: Request, _: Response, next: NextFunction): voi
             req.isCustomer = payload.isCustomer;
             req.isAdmin = payload.isAdmin;
             next();
-        },
+        }
     );
 }
 
@@ -74,7 +74,7 @@ export async function generateToken(
     res: Response,
     customerId: string,
     businessId: string,
-    prismaClient?: PrismaClientType,
+    prismaClient?: PrismaClientType
 ): Promise<void> {
     const customerRoles = await findCustomerRoles(customerId, prismaClient);
     // JWT standard: iat and exp should be in SECONDS since epoch (not milliseconds)

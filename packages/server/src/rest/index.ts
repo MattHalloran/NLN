@@ -1,7 +1,6 @@
-import { REST_RESOURCE, REST_ROUTES, REST_VERSION_PREFIX } from "@local/shared";
+import { REST_RESOURCE, REST_ROUTES, REST_VERSION_PREFIX, UPLOAD_LIMITS } from "@local/shared";
 import { Router } from "express";
 import multer from "multer";
-import path from "path";
 import fs from "fs";
 import landingPageRouter from "./landingPage.js";
 // ARCHIVED: import plantsRouter from "./plants.js"; // Plants feature removed
@@ -15,12 +14,11 @@ import logsRouter from "./logs.js";
 import newsletterRouter from "./newsletter.js";
 // ARCHIVED: import analyticsRouter from "./analytics.js"; // Old A/B test analytics moved to variant system
 import { csrfTokenEndpoint } from "../middleware/csrf.js";
+import { TEMP_UPLOAD_DIR } from "../config/paths.js";
 
 const router = Router();
 
 // Configure temp directory for uploads
-const TEMP_UPLOAD_DIR = path.join(process.env.PROJECT_DIR || "/root/NLN", "temp-uploads");
-
 // Ensure temp directory exists
 if (!fs.existsSync(TEMP_UPLOAD_DIR)) {
     fs.mkdirSync(TEMP_UPLOAD_DIR, { recursive: true });
@@ -40,7 +38,7 @@ const upload = multer({
         },
     }),
     limits: {
-        fileSize: 10 * 1024 * 1024, // 10MB limit
+        fileSize: UPLOAD_LIMITS.maxUploadFileSizeBytes,
     },
 });
 

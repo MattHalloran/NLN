@@ -1,20 +1,15 @@
+import { normalizeLandingPageContent } from "@local/shared";
 import { readFileSync, writeFileSync, unlinkSync } from "fs";
-import { join } from "path";
 import { logger, LogLevel } from "../../logger.js";
 import type { LandingPageContent, LandingPageVariant } from "../../types/landingPage.js";
-
-// In production, data files are in dist folder, in development they're in src
-const dataPath = join(
-    process.env.PROJECT_DIR || "",
-    process.env.NODE_ENV === "production" ? "packages/server/dist/data" : "packages/server/src/data"
-);
+import { variantContentPath, variantsPath } from "../../config/paths.js";
 
 /**
  * Read all variants from the variants.json file
  */
 export const readVariants = (): LandingPageVariant[] => {
     try {
-        const data = readFileSync(join(dataPath, "variants.json"), "utf8");
+        const data = readFileSync(variantsPath(), "utf8");
         const parsed = JSON.parse(data);
         return Object.values(parsed);
     } catch (error) {
@@ -28,13 +23,13 @@ export const readVariants = (): LandingPageVariant[] => {
  */
 export const writeVariants = (variants: LandingPageVariant[]): void => {
     try {
-        const variantsPath = join(dataPath, "variants.json");
+        const path = variantsPath();
         // Store as object with variant IDs as keys
         const variantsObj: Record<string, LandingPageVariant> = {};
         variants.forEach((variant) => {
             variantsObj[variant.id] = variant;
         });
-        writeFileSync(variantsPath, JSON.stringify(variantsObj, null, 2), "utf8");
+        writeFileSync(path, JSON.stringify(variantsObj, null, 2), "utf8");
         logger.info("Variants updated successfully");
     } catch (error) {
         logger.log(LogLevel.error, "Error writing variants:", error);
@@ -47,9 +42,8 @@ export const writeVariants = (variants: LandingPageVariant[]): void => {
  */
 export const readVariantContent = (variantId: string): LandingPageContent | null => {
     try {
-        const fileName = `landing-page-variant-${variantId}.json`;
-        const data = readFileSync(join(dataPath, fileName), "utf8");
-        return JSON.parse(data) as LandingPageContent;
+        const data = readFileSync(variantContentPath(variantId), "utf8");
+        return normalizeLandingPageContent(JSON.parse(data) as LandingPageContent);
     } catch (error) {
         logger.log(LogLevel.error, `Error reading variant content ${variantId}:`, error);
         return null;
@@ -61,10 +55,9 @@ export const readVariantContent = (variantId: string): LandingPageContent | null
  */
 export const writeVariantContent = (variantId: string, content: LandingPageContent): void => {
     try {
-        const fileName = `landing-page-variant-${variantId}.json`;
-        const filePath = join(dataPath, fileName);
+        const filePath = variantContentPath(variantId);
         const dataToWrite: LandingPageContent = {
-            ...content,
+            ...normalizeLandingPageContent(content),
             metadata: {
                 ...content.metadata,
                 lastUpdated: new Date().toISOString(),
@@ -83,7 +76,7 @@ export const writeVariantContent = (variantId: string, content: LandingPageConte
  */
 export const deleteVariantContent = (variantId: string): void => {
     try {
-        const variantFile = join(dataPath, `landing-page-variant-${variantId}.json`);
+        const variantFile = variantContentPath(variantId);
 
         try {
             unlinkSync(variantFile);

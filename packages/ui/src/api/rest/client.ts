@@ -7,6 +7,10 @@ import {
     stripRestPrefix,
 } from "@local/shared";
 import type {
+    ApiEndpoint,
+    ApiEndpointQuery,
+    ApiEndpointRequest,
+    ApiEndpointResponse,
     CleanupHistory,
     CleanupPreview,
     CustomerSession,
@@ -73,6 +77,12 @@ const withQuery = (
     });
     const queryString = queryParams.toString();
     return `${path}${queryString ? `?${queryString}` : ""}`;
+};
+
+type ClientRequestOptions<TEndpoint extends ApiEndpoint<unknown, unknown, unknown>> = {
+    body?: ApiEndpointRequest<TEndpoint>;
+    query?: ApiEndpointQuery<TEndpoint>;
+    init?: Omit<RequestInit, "body" | "method">;
 };
 
 // Error class for API errors
@@ -162,6 +172,30 @@ async function fetchApi<T>(endpoint: string, options?: RequestInit, retryCount =
     }
 }
 
+async function requestEndpoint<TEndpoint extends ApiEndpoint<unknown, unknown, unknown>>(
+    endpoint: TEndpoint,
+    options: ClientRequestOptions<TEndpoint> = {},
+): Promise<ApiEndpointResponse<TEndpoint>> {
+    const path = options.query
+        ? withQuery(
+              endpointPath(endpoint),
+              options.query as Record<string, string | number | boolean | undefined>,
+          )
+        : endpointPath(endpoint);
+    const body =
+        typeof FormData !== "undefined" && options.body instanceof FormData
+            ? options.body
+            : options.body === undefined
+              ? undefined
+              : JSON.stringify(options.body);
+
+    return fetchApi<ApiEndpointResponse<TEndpoint>>(path, {
+        ...options.init,
+        method: endpoint.method,
+        body,
+    });
+}
+
 // Type definitions for API responses are exported from /shared.
 
 // API client with typed methods
@@ -171,21 +205,16 @@ export const restApi = {
         onlyActive?: boolean;
         variantId?: string;
     }): Promise<LandingPageContent> {
-        return fetchApi<LandingPageContent>(
-            withQuery(endpointPath(REST_ENDPOINTS.landingPage.get), {
+        return requestEndpoint(REST_ENDPOINTS.landingPage.get, {
+            query: {
                 onlyActive: params?.onlyActive ?? true,
                 variantId: params?.variantId,
-            }),
-        );
+            },
+        });
     },
 
     async invalidateLandingPageCache(): Promise<{ success: boolean }> {
-        return fetchApi<{ success: boolean }>(
-            endpointPath(REST_ENDPOINTS.landingPage.invalidateCache),
-            {
-                method: REST_ENDPOINTS.landingPage.invalidateCache.method,
-            },
-        );
+        return requestEndpoint(REST_ENDPOINTS.landingPage.invalidateCache);
     },
 
     // Contact info updates
@@ -202,19 +231,12 @@ export const restApi = {
         message: string;
         updated: { business: boolean; hours: boolean };
     }> {
-        return fetchApi<{
-            success: boolean;
-            message: string;
-            updated: { business: boolean; hours: boolean };
-        }>(
-            withQuery(endpointPath(REST_ENDPOINTS.landingPage.updateContactInfo), {
+        return requestEndpoint(REST_ENDPOINTS.landingPage.updateContactInfo, {
+            body: data,
+            query: {
                 variantId: queryParams?.variantId,
-            }),
-            {
-                method: REST_ENDPOINTS.landingPage.updateContactInfo.method,
-                body: JSON.stringify(data),
             },
-        );
+        });
     },
 
     // Unified landing page content updates
@@ -224,20 +246,17 @@ export const restApi = {
             variantId?: string;
         },
     ): Promise<{ success: boolean; message: string; updatedSections: string[] }> {
-        return fetchApi<{ success: boolean; message: string; updatedSections: string[] }>(
-            withQuery(endpointPath(REST_ENDPOINTS.landingPage.updateContent), {
+        return requestEndpoint(REST_ENDPOINTS.landingPage.updateContent, {
+            body: data,
+            query: {
                 variantId: queryParams?.variantId,
-            }),
-            {
-                method: REST_ENDPOINTS.landingPage.updateContent.method,
-                body: JSON.stringify(data),
             },
-        );
+        });
     },
 
     // Authentication
     async getSession(): Promise<SessionResponse> {
-        return fetchApi<SessionResponse>(endpointPath(REST_ENDPOINTS.auth.session));
+        return requestEndpoint(REST_ENDPOINTS.auth.session);
     },
 
     async login(input: {
@@ -245,16 +264,13 @@ export const restApi = {
         password: string;
         verificationCode?: string;
     }): Promise<CustomerSession> {
-        return fetchApi<CustomerSession>(endpointPath(REST_ENDPOINTS.auth.login), {
-            method: REST_ENDPOINTS.auth.login.method,
-            body: JSON.stringify(input),
+        return requestEndpoint(REST_ENDPOINTS.auth.login, {
+            body: input,
         });
     },
 
     async logout(): Promise<{ success: boolean }> {
-        return fetchApi<{ success: boolean }>(endpointPath(REST_ENDPOINTS.auth.logout), {
-            method: REST_ENDPOINTS.auth.logout.method,
-        });
+        return requestEndpoint(REST_ENDPOINTS.auth.logout);
     },
 
     async signUp(input: {
@@ -266,27 +282,21 @@ export const restApi = {
         phones?: Array<{ number: string; receivesDeliveryUpdates?: boolean }>;
         password: string;
     }): Promise<CustomerSession> {
-        return fetchApi<CustomerSession>(endpointPath(REST_ENDPOINTS.auth.signup), {
-            method: REST_ENDPOINTS.auth.signup.method,
-            body: JSON.stringify(input),
+        return requestEndpoint(REST_ENDPOINTS.auth.signup, {
+            body: input,
         });
     },
 
     async resetPassword(input: { token: string; password: string }): Promise<CustomerSession> {
-        return fetchApi<CustomerSession>(endpointPath(REST_ENDPOINTS.auth.resetPassword), {
-            method: REST_ENDPOINTS.auth.resetPassword.method,
-            body: JSON.stringify(input),
+        return requestEndpoint(REST_ENDPOINTS.auth.resetPassword, {
+            body: input,
         });
     },
 
     async requestPasswordChange(input: { email: string }): Promise<{ success: boolean }> {
-        return fetchApi<{ success: boolean }>(
-            endpointPath(REST_ENDPOINTS.auth.requestPasswordChange),
-            {
-                method: REST_ENDPOINTS.auth.requestPasswordChange.method,
-                body: JSON.stringify(input),
-            },
-        );
+        return requestEndpoint(REST_ENDPOINTS.auth.requestPasswordChange, {
+            body: input,
+        });
     },
 
     // Image/Gallery Management
@@ -310,10 +320,7 @@ export const restApi = {
             formData.append("files", file);
         });
 
-        return fetchApi<
-            Array<{ success: boolean; src: string; hash: string; width?: number; height?: number }>
-        >(endpointPath(REST_ENDPOINTS.images.add), {
-            method: REST_ENDPOINTS.images.add.method,
+        return requestEndpoint(REST_ENDPOINTS.images.add, {
             body: formData,
         });
     },
@@ -326,9 +333,8 @@ export const restApi = {
             label?: string;
         }>;
     }): Promise<{ success: boolean }> {
-        return fetchApi<{ success: boolean }>(endpointPath(REST_ENDPOINTS.images.update), {
-            method: REST_ENDPOINTS.images.update.method,
-            body: JSON.stringify(input),
+        return requestEndpoint(REST_ENDPOINTS.images.update, {
+            body: input,
         });
     },
 
@@ -370,9 +376,8 @@ export const restApi = {
 
     // Content/Assets Management
     async readAssets(input: { files: string[] }): Promise<Record<string, string>> {
-        return fetchApi<Record<string, string>>(endpointPath(REST_ENDPOINTS.assets.read), {
-            method: REST_ENDPOINTS.assets.read.method,
-            body: JSON.stringify(input),
+        return requestEndpoint(REST_ENDPOINTS.assets.read, {
+            body: input,
         });
     },
 
@@ -382,15 +387,14 @@ export const restApi = {
             formData.append("files", file);
         });
 
-        return fetchApi<{ success: boolean }>(endpointPath(REST_ENDPOINTS.assets.write), {
-            method: REST_ENDPOINTS.assets.write.method,
+        return requestEndpoint(REST_ENDPOINTS.assets.write, {
             body: formData,
         });
     },
 
     // Dashboard Stats
     async getDashboardStats(): Promise<DashboardStats> {
-        return fetchApi<DashboardStats>(endpointPath(REST_ENDPOINTS.dashboard.stats));
+        return requestEndpoint(REST_ENDPOINTS.dashboard.stats);
     },
 
     // Landing Page Settings Management
@@ -403,15 +407,12 @@ export const restApi = {
             variantId?: string;
         },
     ): Promise<{ success: boolean; message: string; updatedFields: string[] }> {
-        return fetchApi<{ success: boolean; message: string; updatedFields: string[] }>(
-            withQuery(endpointPath(REST_ENDPOINTS.landingPage.updateSettings), {
+        return requestEndpoint(REST_ENDPOINTS.landingPage.updateSettings, {
+            body: settings,
+            query: {
                 variantId: queryParams?.variantId,
-            }),
-            {
-                method: REST_ENDPOINTS.landingPage.updateSettings.method,
-                body: JSON.stringify(settings),
             },
-        );
+        });
     },
 
     // ============================================================================
@@ -419,11 +420,11 @@ export const restApi = {
     // ============================================================================
 
     async getVariants(): Promise<LandingPageVariant[]> {
-        return fetchApi<LandingPageVariant[]>(endpointPath(REST_ENDPOINTS.landingPage.variants));
+        return requestEndpoint(REST_ENDPOINTS.landingPage.variants);
     },
 
     async getVariant(id: string): Promise<LandingPageVariant> {
-        return fetchApi<LandingPageVariant>(endpointPath(REST_ENDPOINTS.landingPage.variant(id)));
+        return requestEndpoint(REST_ENDPOINTS.landingPage.variant(id));
     },
 
     async createVariant(variant: {
@@ -432,13 +433,9 @@ export const restApi = {
         trafficAllocation?: number;
         copyFromVariantId?: string;
     }): Promise<LandingPageVariant> {
-        return fetchApi<LandingPageVariant>(
-            endpointPath(REST_ENDPOINTS.landingPage.createVariant),
-            {
-                method: REST_ENDPOINTS.landingPage.createVariant.method,
-                body: JSON.stringify(variant),
-            },
-        );
+        return requestEndpoint(REST_ENDPOINTS.landingPage.createVariant, {
+            body: variant,
+        });
     },
 
     async updateVariant(
@@ -450,22 +447,13 @@ export const restApi = {
             trafficAllocation: number;
         }>,
     ): Promise<LandingPageVariant> {
-        return fetchApi<LandingPageVariant>(
-            endpointPath(REST_ENDPOINTS.landingPage.updateVariant(id)),
-            {
-                method: REST_ENDPOINTS.landingPage.updateVariant(id).method,
-                body: JSON.stringify(variant),
-            },
-        );
+        return requestEndpoint(REST_ENDPOINTS.landingPage.updateVariant(id), {
+            body: variant,
+        });
     },
 
     async deleteVariant(id: string): Promise<{ success: boolean; message: string }> {
-        return fetchApi<{ success: boolean; message: string }>(
-            endpointPath(REST_ENDPOINTS.landingPage.deleteVariant(id)),
-            {
-                method: REST_ENDPOINTS.landingPage.deleteVariant(id).method,
-            },
-        );
+        return requestEndpoint(REST_ENDPOINTS.landingPage.deleteVariant(id));
     },
 
     async promoteVariant(id: string): Promise<{
@@ -473,12 +461,7 @@ export const restApi = {
         message: string;
         variant: LandingPageVariant;
     }> {
-        return fetchApi<{ success: boolean; message: string; variant: LandingPageVariant }>(
-            endpointPath(REST_ENDPOINTS.landingPage.promoteVariant(id)),
-            {
-                method: REST_ENDPOINTS.landingPage.promoteVariant(id).method,
-            },
-        );
+        return requestEndpoint(REST_ENDPOINTS.landingPage.promoteVariant(id));
     },
 
     async trackVariantEvent(
@@ -490,36 +473,22 @@ export const restApi = {
         success: boolean;
         metrics?: { views: number; conversions: number; bounces: number };
     }> {
-        return fetchApi<{
-            success: boolean;
-            metrics?: { views: number; conversions: number; bounces: number };
-        }>(endpointPath(REST_ENDPOINTS.landingPage.trackVariant(variantId)), {
-            method: REST_ENDPOINTS.landingPage.trackVariant(variantId).method,
-            body: JSON.stringify(event),
+        return requestEndpoint(REST_ENDPOINTS.landingPage.trackVariant(variantId), {
+            body: { ...event, variantId },
         });
     },
 
     async toggleVariant(id: string): Promise<LandingPageVariant> {
-        return fetchApi<LandingPageVariant>(
-            endpointPath(REST_ENDPOINTS.landingPage.toggleVariant(id)),
-            {
-                method: REST_ENDPOINTS.landingPage.toggleVariant(id).method,
-            },
-        );
+        return requestEndpoint(REST_ENDPOINTS.landingPage.toggleVariant(id));
     },
 
     // Storage Management (admin only)
     async getStorageStats(): Promise<StorageStats> {
-        return fetchApi<StorageStats>(endpointPath(REST_ENDPOINTS.storage.stats));
+        return requestEndpoint(REST_ENDPOINTS.storage.stats);
     },
 
     async triggerCleanup(): Promise<{ success: boolean; message: string; jobId: string }> {
-        return fetchApi<{ success: boolean; message: string; jobId: string }>(
-            endpointPath(REST_ENDPOINTS.storage.cleanup),
-            {
-                method: REST_ENDPOINTS.storage.cleanup.method,
-            },
-        );
+        return requestEndpoint(REST_ENDPOINTS.storage.cleanup);
     },
 
     async getCleanupHistory(params?: {
@@ -527,27 +496,25 @@ export const restApi = {
         limit?: number;
         offset?: number;
     }): Promise<CleanupHistory> {
-        return fetchApi<CleanupHistory>(
-            withQuery(endpointPath(REST_ENDPOINTS.storage.cleanupHistory), {
+        return requestEndpoint(REST_ENDPOINTS.storage.cleanupHistory, {
+            query: {
                 status: params?.status,
                 limit: params?.limit,
                 offset: params?.offset,
-            }),
-        );
+            },
+        });
     },
 
     async getCleanupPreview(): Promise<CleanupPreview> {
-        return fetchApi<CleanupPreview>(endpointPath(REST_ENDPOINTS.storage.cleanupPreview));
+        return requestEndpoint(REST_ENDPOINTS.storage.cleanupPreview);
     },
 
     async getOrphanedFiles(): Promise<OrphanedFilesResponse> {
-        return fetchApi<OrphanedFilesResponse>(endpointPath(REST_ENDPOINTS.storage.orphanedFiles));
+        return requestEndpoint(REST_ENDPOINTS.storage.orphanedFiles);
     },
 
     async getOrphanedRecords(): Promise<OrphanedRecordsResponse> {
-        return fetchApi<OrphanedRecordsResponse>(
-            endpointPath(REST_ENDPOINTS.storage.orphanedRecords),
-        );
+        return requestEndpoint(REST_ENDPOINTS.storage.orphanedRecords);
     },
 
     async cleanOrphanedFiles(): Promise<{
@@ -556,14 +523,7 @@ export const restApi = {
         freedMB: number;
         errors?: string[];
     }> {
-        return fetchApi<{
-            success: boolean;
-            deletedCount: number;
-            freedMB: number;
-            errors?: string[];
-        }>(endpointPath(REST_ENDPOINTS.storage.cleanOrphanedFiles), {
-            method: REST_ENDPOINTS.storage.cleanOrphanedFiles.method,
-        });
+        return requestEndpoint(REST_ENDPOINTS.storage.cleanOrphanedFiles);
     },
 
     async cleanOrphanedRecords(): Promise<{
@@ -571,20 +531,15 @@ export const restApi = {
         deletedCount: number;
         errors?: string[];
     }> {
-        return fetchApi<{ success: boolean; deletedCount: number; errors?: string[] }>(
-            endpointPath(REST_ENDPOINTS.storage.cleanOrphanedRecords),
-            {
-                method: REST_ENDPOINTS.storage.cleanOrphanedRecords.method,
-            },
-        );
+        return requestEndpoint(REST_ENDPOINTS.storage.cleanOrphanedRecords);
     },
 
     async getRecentActivity(): Promise<RecentActivity> {
-        return fetchApi<RecentActivity>(endpointPath(REST_ENDPOINTS.storage.recentActivity));
+        return requestEndpoint(REST_ENDPOINTS.storage.recentActivity);
     },
 
     async getCleanupJobStatus(): Promise<JobStatus> {
-        return fetchApi<JobStatus>(endpointPath(REST_ENDPOINTS.storage.jobStatus));
+        return requestEndpoint(REST_ENDPOINTS.storage.jobStatus);
     },
 
     // System logs
@@ -597,8 +552,8 @@ export const restApi = {
         dateFrom?: string;
         dateTo?: string;
     }): Promise<LogsResponse> {
-        return fetchApi<LogsResponse>(
-            withQuery(endpointPath(REST_ENDPOINTS.logs.list), {
+        return requestEndpoint(REST_ENDPOINTS.logs.list, {
+            query: {
                 file: params.file,
                 lines: params.lines,
                 offset: params.offset,
@@ -606,12 +561,12 @@ export const restApi = {
                 search: params.search,
                 dateFrom: params.dateFrom,
                 dateTo: params.dateTo,
-            }),
-        );
+            },
+        });
     },
 
     async getLogStats(): Promise<LogStatsResponse> {
-        return fetchApi<LogStatsResponse>(endpointPath(REST_ENDPOINTS.logs.stats));
+        return requestEndpoint(REST_ENDPOINTS.logs.stats);
     },
 
     // Newsletter Management
@@ -620,13 +575,9 @@ export const restApi = {
         variantId?: string;
         source?: string;
     }): Promise<{ success: boolean; message: string }> {
-        return fetchApi<{ success: boolean; message: string }>(
-            endpointPath(REST_ENDPOINTS.newsletter.subscribe),
-            {
-                method: REST_ENDPOINTS.newsletter.subscribe.method,
-                body: JSON.stringify(input),
-            },
-        );
+        return requestEndpoint(REST_ENDPOINTS.newsletter.subscribe, {
+            body: input,
+        });
     },
 
     async getNewsletterSubscribers(params?: {
@@ -636,15 +587,15 @@ export const restApi = {
         variantId?: string;
         search?: string;
     }): Promise<NewsletterSubscribersResponse> {
-        return fetchApi<NewsletterSubscribersResponse>(
-            withQuery(endpointPath(REST_ENDPOINTS.newsletter.subscribers), {
+        return requestEndpoint(REST_ENDPOINTS.newsletter.subscribers, {
+            query: {
                 page: params?.page,
                 limit: params?.limit,
                 status: params?.status,
                 variantId: params?.variantId,
                 search: params?.search,
-            }),
-        );
+            },
+        });
     },
 
     async exportNewsletterSubscribers(status?: string): Promise<Blob> {
@@ -672,17 +623,13 @@ export const restApi = {
         id: number,
         action: "unsubscribe" | "delete" = "unsubscribe",
     ): Promise<{ success: boolean; message: string }> {
-        return fetchApi<{ success: boolean; message: string }>(
-            endpointPath(REST_ENDPOINTS.newsletter.deleteSubscriber(String(id))),
-            {
-                method: REST_ENDPOINTS.newsletter.deleteSubscriber(String(id)).method,
-                body: JSON.stringify({ action }),
-            },
-        );
+        return requestEndpoint(REST_ENDPOINTS.newsletter.deleteSubscriber(String(id)), {
+            body: { action },
+        });
     },
 
     async getNewsletterStats(): Promise<NewsletterStatsResponse> {
-        return fetchApi<NewsletterStatsResponse>(endpointPath(REST_ENDPOINTS.newsletter.stats));
+        return requestEndpoint(REST_ENDPOINTS.newsletter.stats);
     },
 };
 

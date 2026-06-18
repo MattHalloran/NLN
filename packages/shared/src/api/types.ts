@@ -409,6 +409,14 @@ export interface SectionConfiguration {
     enabled: Record<string, boolean>;
 }
 
+export type LandingPageSectionId =
+    | "hero"
+    | "services"
+    | "social-proof"
+    | "about"
+    | "seasonal"
+    | "location";
+
 export interface AnalyticsEvent {
     eventType: "page_view" | "bounce" | "interaction" | "conversion";
     variantId?: string;

@@ -1,17 +1,13 @@
 /**
  * Functions for manipulating state objects
  */
-import { isObject } from "@local/shared";
+import { flattenObjectToPaths, getValueAtPath, isObject } from "@local/shared";
 
 type UnknownRecord = Record<string, unknown>;
 
 // Grabs data from an object using dot notation (ex: 'parent.child.property')
 export const valueFromDot = (object: UnknownRecord, notation: string): unknown => {
-    function index(current: unknown, i: string): unknown {
-        return isObject(current) ? (current as UnknownRecord)[i] : undefined;
-    }
-    if (!object || !notation) return null;
-    return notation.split(".").reduce(index, object);
+    return getValueAtPath(object, notation);
 };
 
 export const arrayValueFromDot = (
@@ -30,15 +26,7 @@ export function convertToDot(
     parent: string[] = [],
     keyValue: UnknownRecord = {},
 ): UnknownRecord {
-    for (const key in obj) {
-        const keyPath: string[] = [...parent, key];
-        if (obj[key] !== null && typeof obj[key] === "object") {
-            Object.assign(keyValue, convertToDot(obj[key] as UnknownRecord, keyPath, keyValue));
-        } else {
-            keyValue[keyPath.join(".")] = obj[key];
-        }
-    }
-    return keyValue;
+    return flattenObjectToPaths(obj, parent, keyValue);
 }
 
 /**

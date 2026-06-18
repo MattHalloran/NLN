@@ -1,4 +1,8 @@
-import { activeByDisplayOrder, createDefaultLandingPageContent } from "@local/shared";
+import {
+    activeByDisplayOrder,
+    createDefaultLandingPageContent,
+    normalizeLandingPageContent,
+} from "@local/shared";
 import type { PrismaClient } from "@prisma/client";
 import type { Response } from "express";
 import type { LandingPageContent } from "../../types/landingPage.js";
@@ -112,17 +116,7 @@ export const getDefaultContentStructure = (): LandingPageContent["content"] => (
 export const initializeEmptyContent = (
     content?: Partial<LandingPageContent>
 ): LandingPageContent => {
-    const defaults = createDefaultLandingPageContent();
-    return {
-        ...defaults,
-        ...content,
-        content: content?.content || defaults.content,
-        theme: content?.theme || defaults.theme,
-        layout: content?.layout || defaults.layout,
-        experiments: content?.experiments || defaults.experiments,
-        contact: content?.contact || defaults.contact,
-        metadata: content?.metadata || defaults.metadata,
-    };
+    return normalizeLandingPageContent(content);
 };
 
 /**

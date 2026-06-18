@@ -1,3 +1,4 @@
+import { CLEANUP_LIMITS, TIME_MS } from "@local/shared";
 import { genErrorCode, logger, LogLevel } from "../../logger.js";
 import { prisma } from "../../db/prisma.js";
 import { deleteFile } from "../../utils/fileIO.js";
@@ -5,10 +6,11 @@ import type Bull from "bull";
 import fs from "fs";
 import path from "path";
 import type { LandingPageContent } from "../../types/landingPage.js";
+import { ASSETS_DIR, landingPageContentPath } from "../../config/paths.js";
 
-const UPLOAD_DIR = `${process.env.PROJECT_DIR}/assets`;
-const RETENTION_DAYS = 30; // Days before unlabeled images are deleted
-const BACKUP_RETENTION_DAYS = 90; // Days before old backups are deleted
+const UPLOAD_DIR = ASSETS_DIR;
+const RETENTION_DAYS = CLEANUP_LIMITS.unlabeledImageRetentionDays;
+const BACKUP_RETENTION_DAYS = CLEANUP_LIMITS.backupRetentionDays;
 
 interface CleanupResult {
     success: boolean;
@@ -89,10 +91,7 @@ function verifyBackup(sourcePath: string, backupPath: string): boolean {
  */
 function isImageReferencedInLandingPageJSON(imageFiles: Array<{ src: string }>): boolean {
     try {
-        const contentPath = path.join(
-            process.env.PROJECT_DIR || "",
-            "assets/public/landing-page-content.json"
-        );
+        const contentPath = landingPageContentPath();
 
         if (!fs.existsSync(contentPath)) {
             logger.log(LogLevel.warn, "Landing page content JSON not found for cleanup validation");
@@ -250,7 +249,7 @@ export async function imageCleanupProcess(_job: Bull.Job): Promise<CleanupResult
 async function cleanupUnlabeledImages(result: CleanupResult, backupDir: string): Promise<void> {
     try {
         // Calculate cutoff date (30 days ago)
-        const cutoffDate = new Date(Date.now() - RETENTION_DAYS * 24 * 60 * 60 * 1000);
+        const cutoffDate = new Date(Date.now() - RETENTION_DAYS * TIME_MS.Day);
 
         logger.log(
             LogLevel.info,
@@ -582,7 +581,7 @@ async function cleanupOldBackups(result: CleanupResult): Promise<void> {
             .filter((dirent) => dirent.isDirectory())
             .map((dirent) => dirent.name);
 
-        const cutoffDate = new Date(Date.now() - BACKUP_RETENTION_DAYS * 24 * 60 * 60 * 1000);
+        const cutoffDate = new Date(Date.now() - BACKUP_RETENTION_DAYS * TIME_MS.Day);
         let deletedBackups = 0;
 
         for (const dirName of backupDirs) {
@@ -610,7 +609,7 @@ async function cleanupOldBackups(result: CleanupResult): Promise<void> {
 
                     logger.log(
                         LogLevel.info,
-                        `Deleted old backup: ${dirName} (age: ${Math.floor((Date.now() - backupDate.getTime()) / (24 * 60 * 60 * 1000))} days)`
+                        `Deleted old backup: ${dirName} (age: ${Math.floor((Date.now() - backupDate.getTime()) / TIME_MS.Day)} days)`
                     );
                 }
             } catch (error) {

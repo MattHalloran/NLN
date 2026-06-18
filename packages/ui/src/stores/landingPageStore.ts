@@ -1,10 +1,11 @@
 import { create } from "zustand";
+import { UI_TIMING } from "@local/shared";
 import { LandingPageContent, restApi } from "api/rest/client";
 import { handleError } from "utils/errorLogger";
 
 const VARIANT_STORAGE_KEY = "variantAssignment";
 const VARIANT_TIMESTAMP_KEY = "variantAssignmentTimestamp";
-const VARIANT_SESSION_DURATION_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+const VARIANT_SESSION_DURATION_MS = UI_TIMING.variantSessionDurationMs;
 
 // Helper to get stored variant assignment from localStorage with expiration check
 export const getStoredVariantId = (): string | null => {

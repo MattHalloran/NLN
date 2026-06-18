@@ -1,5 +1,6 @@
 // Functions for manipulating arrays, especially state arrays
 
+import { isEqual, moveArrayIndex as sharedMoveArrayIndex } from "@local/shared";
 import { valueFromDot } from "./objectTools";
 
 export const addToArray = <T>(array: T[], value: T): T[] => {
@@ -7,7 +8,7 @@ export const addToArray = <T>(array: T[], value: T): T[] => {
 };
 
 export const updateArray = <T>(array: T[], index: number, value: T): T[] => {
-    if (JSON.stringify(array[index]) === JSON.stringify(value)) return array;
+    if (isEqual(array[index], value)) return array;
     const copy = [...array];
     copy[index] = value;
     return copy;
@@ -37,9 +38,7 @@ export const findWithAttr = <T>(array: T[], attr: keyof T, value: T[keyof T]): n
 };
 
 export const moveArrayIndex = <T>(array: T[], from: number, to: number): T[] => {
-    const copy = [...array];
-    copy.splice(to, 0, copy.splice(from, 1)[0]);
-    return copy;
+    return sharedMoveArrayIndex(array, from, to);
 };
 
 // Shifts everything to the right, and puts the last element in the beginning
@@ -62,7 +61,11 @@ export const rotateArray = <T>(array: T[], to_right = true): T[] => {
 };
 
 // If dot notation key exists in object, perform operation and return the results
-export function mapIfExists<T, R>(object: Record<string, unknown>, notation: string, operation: (value: T) => R): R[] | null {
+export function mapIfExists<T, R>(
+    object: Record<string, unknown>,
+    notation: string,
+    operation: (value: T) => R,
+): R[] | null {
     const value = valueFromDot(object, notation);
     if (!Array.isArray(value)) return null;
     return value.map((v: T) => operation(v));

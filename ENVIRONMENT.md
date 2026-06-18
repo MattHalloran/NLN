@@ -327,6 +327,13 @@ These variables **MUST** be set for the application to function correctly. The s
 - **Example**: `newlifenurseryinc.com,www.newlifenurseryinc.com`
 - **Note**: No spaces between comma-separated values
 
+### CORS_ORIGINS
+- **Required**: No
+- **Type**: Comma-separated list of URL origins
+- **Description**: Additional browser origins allowed to call the API
+- **Example**: `https://newlifenurseryinc.com,https://www.newlifenurseryinc.com`
+- **Note**: Use full origins including protocol. `VIRTUAL_HOST` domains are also allowed automatically.
+
 ### VITE_PORT_SERVER
 - **Required**: No
 - **Type**: Number
@@ -348,6 +355,13 @@ These variables **MUST** be set for the application to function correctly. The s
 - **Type**: URL
 - **Description**: Server URL for Vite/UI in production
 - **Example**: `https://newlifenurseryinc.com/api`
+
+### VITE_GOOGLE_MAPS_EMBED_API_KEY
+- **Required**: No
+- **Type**: String
+- **Description**: Google Maps Embed API key used by the homepage location section when embedded maps are enabled
+- **Example**: `AIza...`
+- **Note**: If omitted, the location section falls back to the non-embedded map placeholder.
 
 ### VITE_SITE_IP
 - **Required**: No

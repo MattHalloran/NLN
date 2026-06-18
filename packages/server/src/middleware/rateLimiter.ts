@@ -1,4 +1,4 @@
-import { CODE, REST_PREFIX, REST_ROUTES } from "@local/shared";
+import { CODE, RATE_LIMITS, REST_PREFIX, REST_ROUTES } from "@local/shared";
 import rateLimit from "express-rate-limit";
 import type { Request, Response, NextFunction } from "express";
 import { logger, LogLevel } from "../logger.js";
@@ -35,14 +35,48 @@ function rateLimitLogMeta(req: Request, limiter: string): Record<string, unknown
     };
 }
 
-function sendRateLimitExceeded(req: Request, res: Response, limiter: string, error: string): void {
+function sendRateLimitExceeded(
+    req: Request,
+    res: Response,
+    limiter: string,
+    error: string,
+    extraBody: Record<string, unknown> = {}
+): void {
     logger.log(
         LogLevel.warn,
         `Rate limit exceeded for IP: ${req.ip}`,
         rateLimitLogMeta(req, limiter)
     );
-    res.status(429).json({ error, code: CODE.RateLimitExceeded.code });
+    res.status(429).json({ error, code: CODE.RateLimitExceeded.code, ...extraBody });
 }
+
+type RateLimitConfig = {
+    id: string;
+    windowMs: number;
+    max: number;
+    message: string;
+};
+
+const createApiRateLimiter = (
+    config: RateLimitConfig,
+    options: {
+        skip?: (req: Request) => boolean;
+        skipSuccessfulRequests?: boolean;
+        extraBody?: Record<string, unknown>;
+    } = {}
+) =>
+    rateLimit({
+        windowMs: config.windowMs,
+        max: config.max,
+        message: config.message,
+        standardHeaders: true,
+        legacyHeaders: false,
+        skip: options.skip,
+        skipSuccessfulRequests: options.skipSuccessfulRequests,
+        handler: (req, res) => {
+            sendRateLimitExceeded(req, res, config.id, config.message, options.extraBody);
+        },
+    });
 
 export function requestIdentityDiagnostics(req: Request, _res: Response, next: NextFunction): void {
     if (process.env.RATE_LIMIT_DIAGNOSTICS !== "true") {
@@ -70,30 +104,12 @@ export function requestIdentityDiagnostics(req: Request, _res: Response, next: N
 }
 
 // Public read API rate limiter - 600 read requests per 15 minutes
-export const publicReadApiLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 600, // Limit each IP to 600 read requests per windowMs
-    message: "Too many read requests from this IP, please try again later.",
-    standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-    legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+export const publicReadApiLimiter = createApiRateLimiter(RATE_LIMITS.publicRead, {
     skip: (req) => req.method !== "GET" && req.method !== "HEAD",
-    handler: (req, res) => {
-        sendRateLimitExceeded(
-            req,
-            res,
-            "public-read",
-            "Too many read requests from this IP, please try again later."
-        );
-    },
 });
 
 // General mutation API rate limiter - 100 state-changing requests per 15 minutes
-export const generalMutationApiLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // Limit each IP to 100 mutation requests per windowMs
-    message: "Too many requests from this IP, please try again later.",
-    standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-    legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+export const generalMutationApiLimiter = createApiRateLimiter(RATE_LIMITS.generalMutation, {
     skip: (req) => {
         if (req.method === "GET" || req.method === "HEAD" || req.method === "OPTIONS") {
             return true;
@@ -108,123 +124,46 @@ export const generalMutationApiLimiter = rateLimit({
             path === mountedRestPath(REST_ROUTES.newsletter.subscribe)
         );
     },
-    handler: (req, res) => {
-        sendRateLimitExceeded(
-            req,
-            res,
-            "general-mutation",
-            "Too many requests from this IP, please try again later."
-        );
-    },
 });
 
 // Strict rate limiter for login attempts
 // In development: 20 requests per 15 minutes (React.StrictMode causes duplicate requests)
 // In production: 5 requests per 15 minutes (stricter security)
-export const loginLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: process.env.NODE_ENV === "development" ? 20 : 5,
-    message: "Too many login attempts from this IP, please try again after 15 minutes.",
-    standardHeaders: true,
-    legacyHeaders: false,
-    skipSuccessfulRequests: false, // Count all requests, even successful ones
-    handler: (req, res) => {
-        logger.log(
-            LogLevel.warn,
-            `Login rate limit exceeded for IP: ${req.ip}`,
-            rateLimitLogMeta(req, "login")
-        );
-        res.status(429).json({
-            error: "Too many login attempts from this IP, please try again after 15 minutes.",
-            code: CODE.RateLimitExceeded.code,
-        });
+export const loginLimiter = createApiRateLimiter(
+    {
+        ...RATE_LIMITS.login,
+        max:
+            process.env.NODE_ENV === "development"
+                ? RATE_LIMITS.login.maxDevelopment
+                : RATE_LIMITS.login.maxProduction,
     },
-});
+    {
+        skipSuccessfulRequests: false,
+    }
+);
 
 // Password reset request limiter - 3 requests per hour
-export const passwordResetLimiter = rateLimit({
-    windowMs: 60 * 60 * 1000, // 1 hour
-    max: 3, // Limit each IP to 3 password reset requests per hour
-    message: "Too many password reset requests from this IP, please try again after an hour.",
-    standardHeaders: true,
-    legacyHeaders: false,
-    handler: (req, res) => {
-        logger.log(
-            LogLevel.warn,
-            `Password reset rate limit exceeded for IP: ${req.ip}`,
-            rateLimitLogMeta(req, "password-reset")
-        );
-        res.status(429).json({
-            error: "Too many password reset requests from this IP, please try again after an hour.",
-            code: CODE.RateLimitExceeded.code,
-        });
-    },
-});
+export const passwordResetLimiter = createApiRateLimiter(RATE_LIMITS.passwordReset);
 
 // Signup rate limiter - 3 signups per hour per IP
-export const signupLimiter = rateLimit({
-    windowMs: 60 * 60 * 1000, // 1 hour
-    max: 3, // Limit each IP to 3 signup requests per hour
-    message: "Too many signup attempts from this IP, please try again after an hour.",
-    standardHeaders: true,
-    legacyHeaders: false,
-    handler: (req, res) => {
-        logger.log(
-            LogLevel.warn,
-            `Signup rate limit exceeded for IP: ${req.ip}`,
-            rateLimitLogMeta(req, "signup")
-        );
-        res.status(429).json({
-            error: "Too many signup attempts from this IP, please try again after an hour.",
-            code: CODE.RateLimitExceeded.code,
-        });
-    },
-});
+export const signupLimiter = createApiRateLimiter(RATE_LIMITS.signup);
 
 // Image upload rate limiter - 25 upload requests per 15 minutes
 // Note: Each request can upload multiple files (max 15 per request enforced in handler)
 // This prevents disk space exhaustion and CPU overload from Sharp image processing
 // Max theoretical: ~375 images per 15 min = ~6000 variants (16 per image)
-export const imageUploadLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 25, // Limit each IP to 25 upload requests per 15 minutes
-    message: "Too many image upload requests. Please wait 15 minutes before uploading more images.",
-    standardHeaders: true,
-    legacyHeaders: false,
-    handler: (req, res) => {
-        logger.log(
-            LogLevel.warn,
-            `Image upload rate limit exceeded for IP: ${req.ip}, User: ${req.customerId || "unknown"}`,
-            rateLimitLogMeta(req, "image-upload")
-        );
-        res.status(429).json({
-            error: "Too many image upload requests. Please wait before uploading more images.",
-            code: CODE.RateLimitExceeded.code,
-            retryAfter: "15 minutes",
-            tip: "Consider uploading images in smaller batches (up to 15 files per upload).",
-        });
+export const imageUploadLimiter = createApiRateLimiter(RATE_LIMITS.imageUpload, {
+    extraBody: {
+        retryAfter: RATE_LIMITS.imageUpload.retryAfter,
+        tip: RATE_LIMITS.imageUpload.tip,
     },
 });
 
 // Newsletter subscription rate limiter - 5 subscriptions per hour
 // Prevents spam and abuse while allowing legitimate users to subscribe
-export const newsletterSubscribeLimiter = rateLimit({
-    windowMs: 60 * 60 * 1000, // 1 hour
-    max: 5, // Limit each IP to 5 newsletter subscriptions per hour
-    message: "Too many newsletter subscription attempts. Please try again later.",
-    standardHeaders: true,
-    legacyHeaders: false,
-    handler: (req, res) => {
-        logger.log(
-            LogLevel.warn,
-            `Newsletter subscribe rate limit exceeded for IP: ${req.ip}`,
-            rateLimitLogMeta(req, "newsletter-subscribe")
-        );
-        res.status(429).json({
-            error: "Too many subscription attempts. Please try again later.",
-            code: CODE.RateLimitExceeded.code,
-            retryAfter: "1 hour",
-        });
+export const newsletterSubscribeLimiter = createApiRateLimiter(RATE_LIMITS.newsletterSubscribe, {
+    extraBody: {
+        retryAfter: RATE_LIMITS.newsletterSubscribe.retryAfter,
     },
 });
 
@@ -244,8 +183,7 @@ export async function imageFileCountLimiter(
     try {
         const ip = req.ip || "unknown";
         const key = `file-upload-count:${ip}`;
-        const windowMs = 15 * 60 * 1000; // 15 minutes
-        const maxFiles = 100; // Maximum files per window
+        const { maxFiles, message, retryAfter, tip, windowMs } = RATE_LIMITS.imageFileCount;
 
         // Get file count from request
         type MulterRequest = Request & { files?: Express.Multer.File[] };
@@ -270,13 +208,13 @@ export async function imageFileCountLimiter(
                 `File upload rate limit exceeded for IP: ${ip} (current: ${currentCount}, attempting: ${fileCount}, limit: ${maxFiles})`
             );
             res.status(429).json({
-                error: "Too many files uploaded. Please wait before uploading more images.",
+                error: message,
                 code: CODE.FileRateLimitExceeded.code,
                 currentCount,
                 attemptedFiles: fileCount,
                 maxFiles,
-                retryAfter: "15 minutes",
-                tip: "You've reached the file upload limit. Wait 15 minutes or upload fewer files per request.",
+                retryAfter,
+                tip,
             });
             return;
         }

@@ -19,7 +19,9 @@ import { BusinessContext } from "contexts/BusinessContext";
 import { useContext, useMemo } from "react";
 import {
     activeByDisplayOrder,
+    buildGoogleMapsEmbedUrl,
     COMPANY_INFO,
+    DEFAULT_BUSINESS_ADDRESS,
     DEFAULT_LOCATION_CONTENT,
     replaceLandingPageTokens,
 } from "@local/shared";
@@ -50,6 +52,11 @@ export const LocationVisit = () => {
     const headerChip = locationContent?.header?.chip || DEFAULT_LOCATION_CONTENT.header.chip;
 
     const mapSettings = locationContent?.map || DEFAULT_LOCATION_CONTENT.map;
+    const mapAddress = business?.ADDRESS?.Label || DEFAULT_BUSINESS_ADDRESS;
+    const googleMapsEmbedUrl = buildGoogleMapsEmbedUrl({
+        apiKey: import.meta.env.VITE_GOOGLE_MAPS_EMBED_API_KEY,
+        address: mapAddress,
+    });
 
     const contactMethodsConfig =
         locationContent?.contactMethods || DEFAULT_LOCATION_CONTENT.contactMethods;
@@ -175,7 +182,7 @@ export const LocationVisit = () => {
                             }}
                         >
                             {/* Map - Embedded or Gradient Placeholder */}
-                            {mapSettings.style === "embedded" ? (
+                            {mapSettings.style === "embedded" && googleMapsEmbedUrl ? (
                                 // Embedded Google Maps iframe
                                 <Box
                                     sx={{
@@ -191,10 +198,7 @@ export const LocationVisit = () => {
                                         style={{ border: 0 }}
                                         loading="lazy"
                                         referrerPolicy="no-referrer-when-downgrade"
-                                        src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${encodeURIComponent(
-                                            business?.ADDRESS?.Label ||
-                                                "106 S Woodruff Rd, Bridgeton, NJ 08302",
-                                        )}&zoom=15`}
+                                        src={googleMapsEmbedUrl}
                                     />
                                     {/* Directions button overlay on embedded map */}
                                     {mapSettings.showGetDirectionsButton && (
@@ -251,8 +255,7 @@ export const LocationVisit = () => {
                                                 "New Life Nursery Inc."}
                                         </Typography>
                                         <Typography variant="body1" sx={{ opacity: 0.9 }}>
-                                            {business?.ADDRESS?.Label ||
-                                                "106 S Woodruff Rd, Bridgeton, NJ"}
+                                            {mapAddress}
                                         </Typography>
                                     </Box>
 

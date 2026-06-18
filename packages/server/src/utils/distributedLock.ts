@@ -1,7 +1,8 @@
+import { IMAGE_PROCESSING_LIMITS } from "@local/shared";
 import { initializeRedis } from "../redisConn.js";
 import { logger, LogLevel, genErrorCode } from "../logger.js";
 
-const LOCK_TTL_MS = 30000; // 30 seconds - locks expire automatically
+const LOCK_TTL_MS = IMAGE_PROCESSING_LIMITS.lockWaitMs;
 
 /**
  * Distributed lock implementation using Redis
@@ -92,7 +93,10 @@ export class DistributedLock {
             if (result === 1) {
                 logger.log(LogLevel.debug, `Lock released: ${this.lockKey}`);
             } else {
-                logger.log(LogLevel.warn, `Lock not released (already expired or held by another process): ${this.lockKey}`);
+                logger.log(
+                    LogLevel.warn,
+                    `Lock not released (already expired or held by another process): ${this.lockKey}`
+                );
             }
 
             this.acquired = false;
@@ -144,7 +148,7 @@ export async function withDistributedLock<T>(
     resource: string,
     operation: string,
     fn: () => Promise<T>,
-    timeoutMs: number = 5000,
+    timeoutMs: number = 5000
 ): Promise<T | null> {
     const lock = new DistributedLock(resource, operation);
     return await lock.withLock(fn, timeoutMs);

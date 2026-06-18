@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express";
-import { CODE, MAX_IMAGE_STORAGE_MB } from "@local/shared";
+import { CODE, MAX_IMAGE_STORAGE_MB, UPLOAD_LIMITS } from "@local/shared";
 import { CustomError } from "../error.js";
 import { saveImage, deleteImage, checkImageUsage } from "../utils/index.js";
 import { logger, LogLevel } from "../logger.js";
@@ -7,6 +7,7 @@ import { auditAdminAction, AuditEventType } from "../utils/auditLogger.js";
 import { imageUploadLimiter, imageFileCountLimiter } from "../middleware/rateLimiter.js";
 import fs from "fs";
 import path from "path";
+import { ASSETS_DIR, IMAGE_ASSETS_DIR } from "../config/paths.js";
 
 const router = Router();
 
@@ -23,7 +24,7 @@ type ImageUpdate = {
  */
 function calculateCurrentStorageMB(): number {
     try {
-        const imagesDir = `${process.env.PROJECT_DIR}/assets/images`;
+        const imagesDir = IMAGE_ASSETS_DIR;
         if (!fs.existsSync(imagesDir)) {
             return 0;
         }
@@ -138,7 +139,7 @@ router.post("/", imageUploadLimiter, imageFileCountLimiter, async (req: Request,
 
         // Limit files per request to prevent resource exhaustion
         // Each image generates 16 variants (8 sizes × 2 formats)
-        const MAX_FILES_PER_REQUEST = 15;
+        const MAX_FILES_PER_REQUEST = UPLOAD_LIMITS.maxImageFilesPerRequest;
         if (files.length > MAX_FILES_PER_REQUEST) {
             logger.log(
                 LogLevel.warn,
@@ -474,7 +475,7 @@ router.get("/:hash/variants", async (req: Request, res: Response) => {
 
         for (const file of image.files) {
             try {
-                const filePath = path.join(process.env.PROJECT_DIR || "", "assets", file.src);
+                const filePath = path.join(ASSETS_DIR, file.src);
                 const stats = fs.existsSync(filePath) ? fs.statSync(filePath) : null;
 
                 // Extract size code and format from filename

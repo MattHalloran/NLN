@@ -2,8 +2,10 @@ import { DragDropContext, Draggable, Droppable, DropResult } from "@hello-pangea
 import {
     activeByDisplayOrder,
     APP_LINKS,
+    buildGoogleMapsEmbedUrl,
     COMPANY_INFO,
-    DEFAULT_LOCATION_CONTENT,
+    DEFAULT_BUSINESS_ADDRESS,
+    getLocationFormData,
     REST_ROUTES,
     replaceLandingPageTokens,
     sortByDisplayOrder,
@@ -119,8 +121,6 @@ interface LocationData {
 }
 
 // Default data
-const getDefaultLocationData = (): LocationData => DEFAULT_LOCATION_CONTENT;
-
 // Live Preview Component - Matches the actual homepage styling
 const LocationPreview = ({
     locationData,
@@ -136,6 +136,10 @@ const LocationPreview = ({
     const activeVisitInfoItems = activeByDisplayOrder(locationData.visitInfo.items);
 
     const activeButtons = activeByDisplayOrder(locationData.cta.buttons);
+    const googleMapsEmbedUrl = buildGoogleMapsEmbedUrl({
+        apiKey: import.meta.env.VITE_GOOGLE_MAPS_EMBED_API_KEY,
+        address: DEFAULT_BUSINESS_ADDRESS,
+    });
 
     // Mock business hours for preview (same as homepage fallback)
     const mockHours = [
@@ -204,7 +208,7 @@ const LocationPreview = ({
                             mb: 3,
                         }}
                     >
-                        {locationData.map.style === "embedded" ? (
+                        {locationData.map.style === "embedded" && googleMapsEmbedUrl ? (
                             // Embedded Google Maps Preview
                             <Box
                                 sx={{
@@ -220,7 +224,7 @@ const LocationPreview = ({
                                     style={{ border: 0 }}
                                     loading="lazy"
                                     referrerPolicy="no-referrer-when-downgrade"
-                                    src="https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=106+S+Woodruff+Rd+Bridgeton+NJ+08302&zoom=15"
+                                    src={googleMapsEmbedUrl}
                                 />
                                 {locationData.map.showGetDirectionsButton && (
                                     <Box
@@ -623,10 +627,7 @@ export const AdminHomepageLocation = () => {
     // Use the useAdminForm hook to manage all state
     const form = useAdminForm<LocationData>({
         fetchFn: async () => {
-            if (landingPageData?.content?.location) {
-                return landingPageData.content.location;
-            }
-            return getDefaultLocationData();
+            return getLocationFormData(landingPageData);
         },
         saveFn: async (data) => {
             const queryParams = variantId ? { variantId } : undefined;

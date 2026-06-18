@@ -571,7 +571,7 @@ describe("Landing Page API Integration Tests", () => {
             const content1 = res1.body;
 
             expect(res1.status).toBe(200);
-            expect(content1.content.hero.banners).toEqual(mockHeroBanners);
+            expect(content1.content.hero.banners).toMatchObject(mockHeroBanners);
 
             // Update content
             const updateRes = await request(app)
@@ -589,7 +589,7 @@ describe("Landing Page API Integration Tests", () => {
 
             expect(res2.status).toBe(200);
             // Content should be different (updated hero banners)
-            expect(content2.content.hero.banners).toEqual(mockUpdateData.heroBanners);
+            expect(content2.content.hero.banners).toMatchObject(mockUpdateData.heroBanners);
             expect(content2.content.hero.banners).not.toEqual(content1.content.hero.banners);
             // Metadata should have a newer lastUpdated timestamp
             expect(content2.metadata.lastUpdated).not.toBe(content1.metadata.lastUpdated);

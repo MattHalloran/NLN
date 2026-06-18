@@ -1,8 +1,8 @@
 import {
     DEFAULT_PORTS,
     DEFAULT_SERVER_URLS,
+    CACHE_LIMITS,
     LOCAL_DEV_ORIGINS,
-    PRODUCTION_ORIGINS,
     REST_ROUTES,
     STATIC_API_PATHS,
 } from "@local/shared";
@@ -22,11 +22,13 @@ import {
 } from "./middleware/rateLimiter.js";
 import { csrfProtection, csrfErrorHandler } from "./middleware/csrf.js";
 import { startLandingPageWatcher, stopLandingPageWatcher } from "./utils/landingPageWatcher.js";
+import { ASSETS_DIR, IMAGE_ASSETS_DIR } from "./config/paths.js";
 
 const SERVER_URL =
-    process.env.VITE_SERVER_LOCATION === "local"
+    process.env.VITE_SERVER_URL ??
+    (process.env.VITE_SERVER_LOCATION === "local"
         ? DEFAULT_SERVER_URLS.localApi
-        : DEFAULT_SERVER_URLS.productionApi;
+        : DEFAULT_SERVER_URLS.productionApi);
 const SERVER_PORT = DEFAULT_PORTS.server;
 
 const main = async () => {
@@ -100,7 +102,7 @@ const main = async () => {
             // Forces browsers to use HTTPS for all future requests
             // Only enable in production when HTTPS is available
             hsts: {
-                maxAge: 31536000, // 1 year in seconds
+                maxAge: CACHE_LIMITS.immutableAssetMaxAgeSeconds,
                 includeSubDomains: true,
                 preload: true,
             },
@@ -199,9 +201,6 @@ const main = async () => {
     // Build allowed origins list based on environment
     const allowedOrigins: string[] = [];
 
-    // Always allow production domains
-    allowedOrigins.push(...PRODUCTION_ORIGINS);
-
     // Add additional domains from VIRTUAL_HOST if set
     if (process.env.VIRTUAL_HOST) {
         const virtualHosts = process.env.VIRTUAL_HOST.split(",").map((h) => h.trim());
@@ -210,6 +209,17 @@ const main = async () => {
                 allowedOrigins.push(`https://${host}`);
             }
         });
+    }
+
+    if (process.env.CORS_ORIGINS) {
+        process.env.CORS_ORIGINS.split(",")
+            .map((origin) => origin.trim())
+            .filter(Boolean)
+            .forEach((origin) => {
+                if (!allowedOrigins.includes(origin)) {
+                    allowedOrigins.push(origin);
+                }
+            });
     }
 
     // In development, also allow localhost
@@ -262,14 +272,11 @@ const main = async () => {
     logger.log(LogLevel.info, "🛡️  CSRF protection enabled for all state-changing requests");
 
     // Set static folders
-    app.use(
-        STATIC_API_PATHS.publicAssets,
-        express.static(`${process.env.PROJECT_DIR}/assets/public`)
-    );
+    app.use(STATIC_API_PATHS.publicAssets, express.static(path.join(ASSETS_DIR, "public")));
     app.use(
         STATIC_API_PATHS.privateAssets,
         auth.requireAdmin,
-        express.static(`${process.env.PROJECT_DIR}/assets/private`)
+        express.static(path.join(ASSETS_DIR, "private"))
     );
 
     // Image serving with optimized caching
@@ -277,7 +284,7 @@ const main = async () => {
     // Strategy: 30-day cache with ETag validation for balance of performance and freshness
     app.use(
         STATIC_API_PATHS.images,
-        express.static(`${process.env.PROJECT_DIR}/assets/images`, {
+        express.static(IMAGE_ASSETS_DIR, {
             maxAge: "30d", // Browser caches for 30 days
             etag: true, // Enable ETag for conditional requests
             lastModified: true, // Include Last-Modified header
@@ -291,7 +298,10 @@ const main = async () => {
 
                 if (isUuidBased) {
                     // UUID-based filenames are effectively immutable (won't be reused)
-                    res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+                    res.setHeader(
+                        "Cache-Control",
+                        `public, max-age=${CACHE_LIMITS.immutableAssetMaxAgeSeconds}, immutable`
+                    );
                 } else {
                     // Semantic filenames might be reused, use moderate caching
                     res.setHeader("Cache-Control", "public, max-age=2592000, must-revalidate");

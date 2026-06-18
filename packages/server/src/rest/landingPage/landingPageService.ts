@@ -1,15 +1,13 @@
-import { activeByDisplayOrder, createDefaultLandingPageContent } from "@local/shared";
+import {
+    activeByDisplayOrder,
+    createDefaultLandingPageContent,
+    normalizeLandingPageContent,
+} from "@local/shared";
 import { readFileSync, writeFileSync } from "fs";
-import { join } from "path";
 import { logger, LogLevel } from "../../logger.js";
 import { syncHeroBannerLabels, syncSeasonalContentLabels } from "../../utils/imageLabelSync.js";
 import type { LandingPageContent } from "../../types/landingPage.js";
-
-// In production, data files are in dist folder, in development they're in src
-const dataPath = join(
-    process.env.PROJECT_DIR || "",
-    process.env.NODE_ENV === "production" ? "packages/server/dist/data" : "packages/server/src/data"
-);
+import { landingPageContentPath } from "../../config/paths.js";
 
 /**
  * Default landing page content structure
@@ -21,8 +19,8 @@ const getDefaultContent = (): LandingPageContent => createDefaultLandingPageCont
  */
 export const readLandingPageContent = (): LandingPageContent => {
     try {
-        const data = readFileSync(join(dataPath, "landing-page-content.json"), "utf8");
-        return JSON.parse(data) as LandingPageContent;
+        const data = readFileSync(landingPageContentPath(), "utf8");
+        return normalizeLandingPageContent(JSON.parse(data) as LandingPageContent);
     } catch (error) {
         logger.log(LogLevel.error, "Error reading landing page content:", error);
         return getDefaultContent();
@@ -38,7 +36,7 @@ export const readLandingPageContent = (): LandingPageContent => {
  */
 export const writeLandingPageContent = async (content: LandingPageContent): Promise<void> => {
     try {
-        const contentPath = join(dataPath, "landing-page-content.json");
+        const contentPath = landingPageContentPath();
         const dataToWrite: LandingPageContent = {
             ...content,
             metadata: {

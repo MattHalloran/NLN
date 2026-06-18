@@ -1,19 +1,11 @@
 import { DragDropContext, Draggable, Droppable, DropResult } from "@hello-pangea/dnd";
 import {
     APP_LINKS,
-    DEFAULT_CTA_BUTTONS,
-    DEFAULT_HERO_SETTINGS,
-    DEFAULT_HERO_TEXT,
-    DEFAULT_TRUST_BADGES,
+    buildHeroContentPatch,
+    getHeroSectionFormData,
     REST_ROUTES,
 } from "@local/shared";
-import type {
-    Button as CTAButton,
-    HeroBanner,
-    HeroSettings,
-    HeroText,
-    TrustBadge,
-} from "@local/shared";
+import type { HeroBanner, HeroSectionFormData } from "@local/shared";
 import {
     Add as AddIcon,
     EmojiEvents as BadgeIcon,
@@ -73,34 +65,8 @@ const TRUST_BADGE_ICONS = {
     heart: Heart,
 };
 
-interface HeroFormContent {
-    title: string;
-    subtitle: string;
-    description: string;
-    businessHours: string;
-    useContactInfoHours: boolean;
-}
-
-// Consolidated hero data structure for useAdminForm
-interface HeroData {
-    banners: HeroBanner[];
-    settings: HeroSettings;
-    content: HeroFormContent;
-    trustBadges: TrustBadge[];
-    ctaButtons: CTAButton[];
-}
-
-const toHeroFormContent = (heroText: Partial<HeroText> | undefined): HeroFormContent => ({
-    title: heroText?.title || DEFAULT_HERO_TEXT.title,
-    subtitle: heroText?.subtitle || DEFAULT_HERO_TEXT.subtitle,
-    description: heroText?.description || DEFAULT_HERO_TEXT.description,
-    businessHours: heroText?.businessHours || DEFAULT_HERO_TEXT.businessHours,
-    useContactInfoHours:
-        heroText?.useContactInfoHours ?? DEFAULT_HERO_TEXT.useContactInfoHours ?? false,
-});
-
 // Preview component that shows how the hero will look
-const HeroPreview = ({ heroData }: { heroData: HeroData | null }) => {
+const HeroPreview = ({ heroData }: { heroData: HeroSectionFormData | null }) => {
     const [currentSlide, setCurrentSlide] = useState(0);
     const activeImages = heroData?.banners.filter((b) => b.isActive) || [];
 
@@ -432,44 +398,9 @@ export const AdminHomepageHeroBanner = () => {
     const updateLandingPageContent = useUpdateLandingPageContent();
 
     // Consolidated form state using useAdminForm hook
-    const form = useAdminForm<HeroData>({
+    const form = useAdminForm<HeroSectionFormData>({
         fetchFn: async () => {
-            const defaultData: HeroData = {
-                banners: [],
-                settings: DEFAULT_HERO_SETTINGS,
-                content: toHeroFormContent(undefined),
-                trustBadges: DEFAULT_TRUST_BADGES,
-                ctaButtons: DEFAULT_CTA_BUTTONS,
-            };
-
-            if (!landingPageContent) {
-                return defaultData;
-            }
-
-            // Load hero banners
-            const banners = landingPageContent.content?.hero?.banners || [];
-            const sorted = [...banners].sort(
-                (a: HeroBanner, b: HeroBanner) => (a.displayOrder || 0) - (b.displayOrder || 0),
-            );
-
-            // Load hero content
-            const heroText = landingPageContent.content?.hero?.text;
-            const content = heroText
-                ? {
-                      ...toHeroFormContent(heroText),
-                  }
-                : toHeroFormContent(undefined);
-
-            return {
-                banners: sorted,
-                settings: {
-                    ...DEFAULT_HERO_SETTINGS,
-                    ...landingPageContent.content?.hero?.settings,
-                },
-                content,
-                trustBadges: heroText?.trustBadges || DEFAULT_TRUST_BADGES,
-                ctaButtons: heroText?.buttons || DEFAULT_CTA_BUTTONS,
-            };
+            return getHeroSectionFormData(landingPageContent);
         },
         saveFn: async (data) => {
             const queryParams = queryVariantId ? { variantId: queryVariantId } : undefined;
@@ -491,15 +422,7 @@ export const AdminHomepageHeroBanner = () => {
             // Update hero content, trust badges, and CTA buttons
             await updateSettings.mutate({
                 settings: {
-                    content: {
-                        hero: {
-                            text: {
-                                ...data.content,
-                                trustBadges: data.trustBadges,
-                                buttons: data.ctaButtons,
-                            },
-                        },
-                    },
+                    ...buildHeroContentPatch(data),
                 },
                 queryParams,
             });

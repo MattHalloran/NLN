@@ -1,4 +1,5 @@
 import {
+    AUTH_LIMITS,
     CODE,
     COOKIE,
     logInSchema,
@@ -27,9 +28,9 @@ const router = Router();
 
 // Constants from customer schema
 const LOGIN_ATTEMPTS_TO_SOFT_LOCKOUT = 5;
-const SOFT_LOCKOUT_DURATION_MS = 5 * 60 * 1000;
-const REQUEST_PASSWORD_RESET_DURATION_MS = 2 * 24 * 3600 * 1000;
-const LOGIN_ATTEMPTS_TO_HARD_LOCKOUT = 15;
+const SOFT_LOCKOUT_DURATION_MS = AUTH_LIMITS.softLockoutDurationMs;
+const REQUEST_PASSWORD_RESET_DURATION_MS = AUTH_LIMITS.passwordResetTokenTtlMs;
+const LOGIN_ATTEMPTS_TO_HARD_LOCKOUT = AUTH_LIMITS.loginAttemptsToHardLockout;
 
 type RequestPrisma = NonNullable<Request["prisma"]>;
 
@@ -373,7 +374,7 @@ router.post("/signup", signupLimiter, async (req: Request, res: Response) => {
 
         // Generate secure email verification code (valid for 7 days)
         const verificationCode = randomString(32);
-        const verificationExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+        const verificationExpiry = new Date(Date.now() + AUTH_LIMITS.verificationTokenTtlMs);
 
         // Store hashed verification code
         await prisma.customer.update({

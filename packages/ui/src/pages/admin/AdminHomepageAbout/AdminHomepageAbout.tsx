@@ -2,7 +2,7 @@ import { DragDropContext, Draggable, Droppable, DropResult } from "@hello-pangea
 import {
     APP_LINKS,
     COMPANY_INFO,
-    DEFAULT_ABOUT_CONTENT,
+    getAboutFormData,
     REST_ROUTES,
     replaceLandingPageTokens,
 } from "@local/shared";
@@ -82,8 +82,6 @@ interface AboutData {
     values: ValuesData;
     mission: MissionData;
 }
-
-const getDefaultAboutData = (): AboutData => DEFAULT_ABOUT_CONTENT;
 
 // Preview component that shows how the about section will look
 const AboutStoryPreview = ({
@@ -353,10 +351,7 @@ export const AdminHomepageAbout = () => {
     // Use the standardized useAdminForm hook
     const form = useAdminForm<AboutData>({
         fetchFn: async () => {
-            if (landingPageData?.content?.about) {
-                return landingPageData.content.about;
-            }
-            return getDefaultAboutData();
+            return getAboutFormData(landingPageData);
         },
         saveFn: async (data) => {
             const queryParams = variantId ? { variantId } : undefined;

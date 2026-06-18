@@ -1,5 +1,9 @@
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
-import { APP_LINKS } from "@local/shared";
+import {
+    APP_LINKS,
+    buildSectionConfigurationPatch,
+    getSectionConfigurationFormData,
+} from "@local/shared";
 import { Alert, Box, Button, Card, CardContent, Chip, Switch, Typography } from "@mui/material";
 import { SectionConfiguration } from "api/rest/client";
 import { useLandingPageContent, useUpdateLandingPageSettings } from "api/rest/hooks";
@@ -59,32 +63,12 @@ export const AdminHomepageSections = () => {
     // Use the standardized useAdminForm hook
     const form = useAdminForm<SectionConfiguration>({
         fetchFn: async () => {
-            // Fetch section configuration from landing page content
-            if (landingPageContent?.layout?.sections) {
-                return landingPageContent.layout.sections;
-            }
-
-            // Return default configuration if none exists
-            return {
-                order: ["hero", "services", "social-proof", "about", "seasonal", "location"],
-                enabled: {
-                    hero: true,
-                    services: true,
-                    "social-proof": true,
-                    about: true,
-                    seasonal: true,
-                    location: true,
-                },
-            };
+            return getSectionConfigurationFormData(landingPageContent);
         },
         saveFn: async (sectionConfig) => {
             // Use the unified landing page settings endpoint like all other admin pages
             await updateSettings.mutate({
-                settings: {
-                    layout: {
-                        sections: sectionConfig,
-                    },
-                },
+                settings: buildSectionConfigurationPatch(sectionConfig),
                 queryParams: variantId ? { variantId } : undefined,
             });
 

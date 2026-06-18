@@ -12,9 +12,8 @@
 import { mkdirSync } from "fs";
 import winston from "winston";
 import { randomString } from "./utils/index.js";
+import { PROJECT_DIR } from "./config/paths.js";
 
-// Graceful handling of missing PROJECT_DIR
-const PROJECT_DIR = process.env.PROJECT_DIR || "/root/NLN";
 if (!process.env.PROJECT_DIR) {
     console.warn(`⚠️  PROJECT_DIR environment variable not set, using default: ${PROJECT_DIR}`);
 }

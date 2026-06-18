@@ -1,4 +1,10 @@
-import { APP_LINKS, REST_ROUTES } from "@local/shared";
+import {
+    APP_LINKS,
+    buildBrandingPatch,
+    DEFAULT_BRANDING_FORM_DATA,
+    getBrandingFormData,
+    REST_ROUTES,
+} from "@local/shared";
 import {
     Accordion,
     AccordionDetails,
@@ -69,30 +75,6 @@ interface PreviewProps {
     colors: ThemeColors;
     mode: "light" | "dark";
 }
-
-// Default branding settings
-const DEFAULT_BRANDING: BrandingSettings = {
-    companyInfo: {
-        foundedYear: 1981,
-        description: "Expert plant care and community service",
-    },
-    colors: {
-        light: {
-            primary: "#1b5e20",
-            secondary: "#1976d2",
-            accent: "#4CAF50",
-            background: "#e9f1e9",
-            paper: "#ffffff",
-        },
-        dark: {
-            primary: "#515774",
-            secondary: "#4372a3",
-            accent: "#5b99da",
-            background: "#181818",
-            paper: "#2e2e2e",
-        },
-    },
-};
 
 const RealisticPreview = ({ colors, mode }: PreviewProps) => {
     const textColor = mode === "light" ? "#000000" : "#ffffff";
@@ -348,37 +330,7 @@ export const AdminHomepageBranding = () => {
     // Use the standardized useAdminForm hook
     const form = useAdminForm<BrandingSettings>({
         fetchFn: async () => {
-            if (!landingPageContent?.theme) {
-                return DEFAULT_BRANDING;
-            }
-
-            // Handle both old format (single colors object) and new format (light/dark)
-            const colors = landingPageContent.theme.colors as unknown as Record<string, unknown>;
-            let colorSettings = DEFAULT_BRANDING.colors;
-
-            if (colors?.light && colors?.dark) {
-                // New format with light/dark mode
-                colorSettings = colors as { light: ThemeColors; dark: ThemeColors };
-            } else if (colors?.primary) {
-                // Old format - use for light mode, keep defaults for dark
-                colorSettings = {
-                    light: {
-                        primary:
-                            (colors.primary as string) || DEFAULT_BRANDING.colors.light.primary,
-                        secondary:
-                            (colors.secondary as string) || DEFAULT_BRANDING.colors.light.secondary,
-                        accent: (colors.accent as string) || DEFAULT_BRANDING.colors.light.accent,
-                        background: DEFAULT_BRANDING.colors.light.background,
-                        paper: DEFAULT_BRANDING.colors.light.paper,
-                    },
-                    dark: DEFAULT_BRANDING.colors.dark,
-                };
-            }
-
-            return {
-                companyInfo: landingPageContent.content?.company || DEFAULT_BRANDING.companyInfo,
-                colors: colorSettings,
-            };
+            return getBrandingFormData(landingPageContent) as BrandingSettings;
         },
         saveFn: async (brandingData) => {
             // Validate all colors for both light and dark modes
@@ -428,14 +380,7 @@ export const AdminHomepageBranding = () => {
 
             // Send nested structure matching LandingPageContent for type safety
             await updateSettings.mutate({
-                settings: {
-                    theme: {
-                        colors: brandingData.colors,
-                    },
-                    content: {
-                        company: brandingData.companyInfo,
-                    },
-                },
+                settings: buildBrandingPatch(brandingData),
                 queryParams: variantId ? { variantId } : undefined,
             });
 
@@ -646,7 +591,7 @@ export const AdminHomepageBranding = () => {
                                     <RealisticPreview
                                         colors={
                                             form.data?.colors[previewMode] ||
-                                            DEFAULT_BRANDING.colors[previewMode]
+                                            DEFAULT_BRANDING_FORM_DATA.colors[previewMode]
                                         }
                                         mode={previewMode}
                                     />
@@ -1557,7 +1502,7 @@ export const AdminHomepageBranding = () => {
                                 <RealisticPreview
                                     colors={
                                         form.data?.colors[previewMode] ||
-                                        DEFAULT_BRANDING.colors[previewMode]
+                                        DEFAULT_BRANDING_FORM_DATA.colors[previewMode]
                                     }
                                     mode={previewMode}
                                 />

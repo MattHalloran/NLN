@@ -1,11 +1,13 @@
+import { TIME_MS } from "./limits";
+
 export const CSRF = {
     CookieName: "csrf-token",
     HeaderName: "X-CSRF-Token",
     ResponseTokenField: "csrfToken",
     ResponseHeaderNameField: "headerName",
     ResponseCookieNameField: "cookieName",
-    TokenTtlMs: 24 * 60 * 60 * 1000,
-    ClientCacheTtlMs: 23 * 60 * 60 * 1000,
+    TokenTtlMs: TIME_MS.Day,
+    ClientCacheTtlMs: 23 * TIME_MS.Hour,
     TokenSizeBytes: 64,
     SafeMethods: ["GET", "HEAD", "OPTIONS"],
 } as const;
