@@ -143,7 +143,7 @@ const main = async () => {
             },
 
             // Cross-Origin-Resource-Policy: Controls resource sharing
-            // In development or local production testing, allow cross-origin to support localhost:3001 -> localhost:5331
+            // In development or local production testing, allow cross-origin to support separate local UI/server ports.
             // In true production (VPS), use same-origin for security
             crossOriginResourcePolicy: {
                 policy:

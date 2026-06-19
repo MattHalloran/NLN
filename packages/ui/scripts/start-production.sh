@@ -7,6 +7,9 @@ echo ""
 # Change to UI directory
 cd "$(dirname "$0")/.."
 
+# shellcheck source=../../../scripts/env-defaults.sh
+. ../../scripts/env-defaults.sh
+
 # Load environment variables from server's .env file
 if [ -f ../server/.env ]; then
     echo "📋 Loading environment variables from ../server/.env"
@@ -17,12 +20,10 @@ else
     echo "⚠️  Warning: .env file not found"
 fi
 
+default_env_apply
+
 # Free up the port if already in use
-if [ -n "$PORT_UI" ]; then
-    PORT=$PORT_UI
-else
-    PORT=3001
-fi
+PORT=$PORT_UI
 
 echo "🔍 Checking if port $PORT is in use..."
 PORT_PID=$(lsof -ti:$PORT 2>/dev/null || true)

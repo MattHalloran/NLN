@@ -1,4 +1,4 @@
-import { hasSession, UI_TIMING } from "@local/shared";
+import { APP_LINKS, hasSession, UI_TIMING } from "@local/shared";
 import {
     alpha,
     Box,
@@ -187,7 +187,7 @@ export function App() {
             initializeCsrfToken();
         });
 
-        const isAdminRoute = location.startsWith("/admin");
+        const isAdminRoute = location.startsWith(APP_LINKS.Admin);
         const cancelSessionCheck = isAdminRoute
             ? undefined
             : runWhenIdle(() => {

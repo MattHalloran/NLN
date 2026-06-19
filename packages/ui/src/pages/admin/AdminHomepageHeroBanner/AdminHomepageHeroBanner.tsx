@@ -1,7 +1,9 @@
 import { DragDropContext, Draggable, Droppable, DropResult } from "@hello-pangea/dnd";
 import {
     APP_LINKS,
+    IMAGE_LABELS,
     buildHeroContentPatch,
+    createHeroBannerFormItem,
     getHeroSectionFormData,
     HERO_SETTINGS_LIMITS,
     REST_ROUTES,
@@ -451,7 +453,10 @@ export const AdminHomepageHeroBanner = () => {
 
             try {
                 // Upload images using the images API (which creates multiple sizes + WebP)
-                const uploadResults = await addImages({ label: "hero", files: acceptedFiles });
+                const uploadResults = await addImages({
+                    label: IMAGE_LABELS.HeroBanner,
+                    files: acceptedFiles,
+                });
 
                 const newBanners: HeroBanner[] = [];
                 const currentLength = form.data.banners.length;
@@ -461,16 +466,13 @@ export const AdminHomepageHeroBanner = () => {
                     const file = acceptedFiles[i];
 
                     if (result.success && result.src) {
-                        const newBanner = {
-                            id: `hero-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                        const newBanner = createHeroBannerFormItem({
                             src: `/${result.src}`,
                             alt: file.name.replace(/\.[^/.]+$/, ""),
-                            description: "",
                             width: result.width || 0,
                             height: result.height || 0,
                             displayOrder: currentLength + newBanners.length + 1,
-                            isActive: true,
-                        };
+                        });
                         newBanners.push(newBanner);
                     }
                 }

@@ -15,6 +15,23 @@ runtime_state_optional_paths() {
     printf '%s\n' ".env"
 }
 
+runtime_state_jwt_globs() {
+    printf '%s\n' "jwt_*"
+}
+
+runtime_state_log_paths() {
+    printf '%s\n' "data/logs"
+}
+
+runtime_state_healthcheck_paths() {
+    runtime_state_critical_paths
+    printf '%s\n' "docker-compose-prod.yml"
+}
+
+runtime_state_shell_words() {
+    "$@" | paste -sd ' ' -
+}
+
 runtime_state_validate_backup() {
     local backup_dir="$1"
 

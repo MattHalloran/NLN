@@ -1,4 +1,4 @@
-import { REST_ROUTES } from "@local/shared";
+import { IMAGE_LABELS, REST_ROUTES } from "@local/shared";
 import express from "express";
 import request from "supertest";
 import { describe, expect, it } from "vitest";
@@ -12,7 +12,7 @@ describe("rate limiter middleware", () => {
         app.use(REST_ROUTES.root, generalMutationApiLimiter);
         app.get(REST_ROUTES.images.root, (_req, res) => res.json({ ok: true }));
 
-        const response = await request(app).get(REST_ROUTES.images.byLabel("gallery"));
+        const response = await request(app).get(REST_ROUTES.images.byLabel(IMAGE_LABELS.Gallery));
 
         expect(response.status).toBe(200);
         expect(response.headers["ratelimit-limit"]).toBe("600");

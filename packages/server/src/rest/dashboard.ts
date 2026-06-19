@@ -1,5 +1,5 @@
+import { CODE, REST_CHILD_PATHS } from "@local/shared";
 import { Router, Request, Response } from "express";
-import { CODE } from "@local/shared";
 import { CustomError } from "../error.js";
 import { logger, LogLevel } from "../logger.js";
 
@@ -9,7 +9,7 @@ const router = Router();
  * GET /api/rest/v1/dashboard/stats
  * Get dashboard statistics (admin only)
  */
-router.get("/stats", async (req: Request, res: Response) => {
+router.get(REST_CHILD_PATHS.dashboard.stats, async (req: Request, res: Response) => {
     try {
         const { prisma, isAdmin } = req;
 

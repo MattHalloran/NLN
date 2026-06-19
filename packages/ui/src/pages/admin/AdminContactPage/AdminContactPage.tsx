@@ -1,4 +1,4 @@
-import { APP_LINKS } from "@local/shared";
+import { APP_LINKS, createLandingPageItemId } from "@local/shared";
 import { AccessTime, Add, Business, Delete, Schedule } from "@mui/icons-material";
 import {
     Alert,
@@ -272,7 +272,7 @@ export const AdminContactPage = () => {
                         } else {
                             // This is likely a note (e.g., "Note", "Special")
                             parsedNotes.push({
-                                id: Date.now().toString() + Math.random(),
+                                id: createLandingPageItemId("business-note"),
                                 text: hours,
                             });
                         }
@@ -449,7 +449,7 @@ export const AdminContactPage = () => {
 
     const addNote = () => {
         const newNote: BusinessNote = {
-            id: Date.now().toString() + Math.random(),
+            id: createLandingPageItemId("business-note"),
             text: "",
         };
         setBusinessNotes([...businessNotes, newNote]);
@@ -634,7 +634,7 @@ export const AdminContactPage = () => {
                         } else {
                             // This is likely a note (e.g., "Note", "Special")
                             parsedNotes.push({
-                                id: Date.now().toString() + Math.random(),
+                                id: createLandingPageItemId("business-note"),
                                 text: hours,
                             });
                         }

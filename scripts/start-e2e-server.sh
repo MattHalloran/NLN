@@ -3,6 +3,8 @@ set -euo pipefail
 
 ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 DEFAULT_E2E_PROJECT_DIR="${ROOT_DIR}/.e2e-runtime"
+# shellcheck source=scripts/env-defaults.sh
+. "${ROOT_DIR}/scripts/env-defaults.sh"
 
 if [ -f "${ROOT_DIR}/.env" ]; then
     set -a
@@ -10,6 +12,8 @@ if [ -f "${ROOT_DIR}/.env" ]; then
     source "${ROOT_DIR}/.env"
     set +a
 fi
+
+default_env_apply_e2e
 
 export NODE_ENV="${NODE_ENV:-development}"
 export PROJECT_DIR="${E2E_PROJECT_DIR:-${DEFAULT_E2E_PROJECT_DIR}}"
@@ -19,9 +23,9 @@ export JWT_SECRET="${JWT_SECRET:-e2e-jwt-secret}"
 export CSRF_SECRET="${CSRF_SECRET:-e2e-csrf-secret}"
 export ADMIN_EMAIL="${ADMIN_EMAIL:-admin@example.test}"
 export ADMIN_PASSWORD="${ADMIN_PASSWORD:-admin-password}"
-export PORT_SERVER="${PORT_SERVER:-5331}"
-export PORT_DB="${PORT_DB:-5433}"
-export PORT_REDIS="${PORT_REDIS:-6379}"
+export PORT_SERVER
+export PORT_DB
+export PORT_REDIS
 export DB_NAME="${DB_NAME:-nln_e2e}"
 export DB_USER="${DB_USER:-nln_e2e}"
 export DB_PASSWORD="${DB_PASSWORD:-nln_e2e}"

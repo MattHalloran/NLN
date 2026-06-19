@@ -1,4 +1,4 @@
-import { UI_TIMING } from "@local/shared";
+import { SITE_URLS, UI_TIMING } from "@local/shared";
 import { ErrorBoundary } from "components/ErrorBoundary/ErrorBoundary";
 import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
@@ -6,7 +6,7 @@ import { Router, locationHook, makeMatcher } from "route";
 import { App } from "./App";
 import * as serviceWorkerRegistration from "./serviceWorkerRegistration";
 
-const canonicalHost = "newlifenurseryinc.com";
+const canonicalHost = SITE_URLS.canonicalHost;
 const isCanonicalRedirectPending =
     import.meta.env.PROD && window.location.hostname === `www.${canonicalHost}`;
 if (isCanonicalRedirectPending) {

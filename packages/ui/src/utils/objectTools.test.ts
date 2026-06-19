@@ -1,4 +1,10 @@
-import { valueFromDot, convertToDot, removeFirstLevel, hasObjectChanged } from "./objectTools";
+import {
+    arrayValueFromDot,
+    valueFromDot,
+    convertToDot,
+    removeFirstLevel,
+    hasObjectChanged,
+} from "./objectTools";
 
 describe("objectTools", () => {
     describe("valueFromDot", () => {
@@ -23,6 +29,21 @@ describe("objectTools", () => {
         it("handles null/undefined object", () => {
             expect(valueFromDot(null as any, "user.name")).toBeNull();
             expect(valueFromDot({} as any, "")).toBeNull();
+        });
+    });
+
+    describe("arrayValueFromDot", () => {
+        it("retrieves in-range array values using dot notation", () => {
+            const obj = { user: { tags: ["first", "second"] } };
+            expect(arrayValueFromDot(obj, "user.tags", 0)).toBe("first");
+            expect(arrayValueFromDot(obj, "user.tags", 1)).toBe("second");
+        });
+
+        it("returns null for non-array or out-of-range values", () => {
+            const obj = { user: { tags: ["first"] } };
+            expect(arrayValueFromDot(obj, "user.name", 0)).toBeNull();
+            expect(arrayValueFromDot(obj, "user.tags", -1)).toBeNull();
+            expect(arrayValueFromDot(obj, "user.tags", 1)).toBeNull();
         });
     });
 

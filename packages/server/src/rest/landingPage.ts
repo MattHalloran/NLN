@@ -1,6 +1,10 @@
 import { Request, Response, Router } from "express";
 import { merge } from "lodash";
-import { normalizeLandingPageContent } from "@local/shared";
+import {
+    REST_CHILD_PATHS,
+    createLandingPageItemId,
+    normalizeLandingPageContent,
+} from "@local/shared";
 import { logger, LogLevel } from "../logger.js";
 import type {
     LandingPageContent,
@@ -218,23 +222,27 @@ router.get("/", async (req: Request, res: Response) => {
 });
 
 // POST endpoint to invalidate cache (admin only)
-router.post("/invalidate-cache", async (req: AuthenticatedRequest, res: Response) => {
-    try {
-        // Check admin access (using the auth middleware)
-        if (!req.isAdmin) {
-            return res.status(403).json({ error: "Admin access required" });
-        }
+router.post(
+    REST_CHILD_PATHS.landingPage.invalidateCache,
+    async (req: AuthenticatedRequest, res: Response) => {
+        try {
+            // Check admin access (using the auth middleware)
+            if (!req.isAdmin) {
+                return res.status(403).json({ error: "Admin access required" });
+            }
 
-        await invalidateCache();
-        return res.json({ success: true, message: "Cache invalidated successfully" });
-    } catch (error) {
-        logger.log(LogLevel.error, "Error invalidating cache:", error);
-        return res.status(500).json({
-            error: "Failed to invalidate cache",
-            message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
-        });
+            await invalidateCache();
+            return res.json({ success: true, message: "Cache invalidated successfully" });
+        } catch (error) {
+            logger.log(LogLevel.error, "Error invalidating cache:", error);
+            return res.status(500).json({
+                error: "Failed to invalidate cache",
+                message:
+                    process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
+            });
+        }
     }
-});
+);
 
 // PUT endpoint to update entire landing page content (admin only)
 // Supports editing variants via query params: ?variantId=xxx
@@ -531,7 +539,7 @@ router.put("/", async (req: AuthenticatedRequest, res: Response) => {
 
 // PUT endpoint to update contact information (admin only)
 // Supports editing variants via query params: ?variantId=xxx
-router.put("/contact-info", async (req: Request, res: Response) => {
+router.put(REST_CHILD_PATHS.landingPage.contactInfo, async (req: Request, res: Response) => {
     try {
         // Check admin access (using the auth middleware)
         if (!req.isAdmin) {
@@ -695,7 +703,7 @@ router.put("/contact-info", async (req: Request, res: Response) => {
 // PUT endpoint to update landing page settings with deep merge (admin only)
 // Supports editing variants via query params: ?variantId=xxx
 // UPDATED: Now accepts the same nested structure as GET /landing-page returns
-router.put("/settings", async (req: Request, res: Response) => {
+router.put(REST_CHILD_PATHS.landingPage.settings, async (req: Request, res: Response) => {
     try {
         if (!req.isAdmin) {
             return res.status(403).json({ error: "Admin access required" });
@@ -804,7 +812,7 @@ router.put("/settings", async (req: Request, res: Response) => {
 // ============================================================================
 
 // GET endpoint to retrieve all variants (admin only)
-router.get("/variants", async (req: Request, res: Response) => {
+router.get(REST_CHILD_PATHS.landingPage.variants, async (req: Request, res: Response) => {
     try {
         if (!req.isAdmin) {
             return res.status(403).json({ error: "Admin access required" });
@@ -822,7 +830,7 @@ router.get("/variants", async (req: Request, res: Response) => {
 });
 
 // GET endpoint to retrieve a specific variant (admin only)
-router.get("/variants/:id", async (req: Request, res: Response) => {
+router.get(REST_CHILD_PATHS.landingPage.variant, async (req: Request, res: Response) => {
     try {
         if (!req.isAdmin) {
             return res.status(403).json({ error: "Admin access required" });
@@ -846,7 +854,7 @@ router.get("/variants/:id", async (req: Request, res: Response) => {
 });
 
 // POST endpoint to create a new variant (admin only)
-router.post("/variants", async (req: Request, res: Response) => {
+router.post(REST_CHILD_PATHS.landingPage.variants, async (req: Request, res: Response) => {
     try {
         if (!req.isAdmin) {
             return res.status(403).json({ error: "Admin access required" });
@@ -866,7 +874,7 @@ router.post("/variants", async (req: Request, res: Response) => {
         const variants = readVariants();
 
         const newVariant: LandingPageVariant = {
-            id: `variant-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+            id: createLandingPageItemId("variant"),
             name,
             description: description || "",
             status: "disabled", // Start disabled by default
@@ -935,7 +943,7 @@ router.post("/variants", async (req: Request, res: Response) => {
 });
 
 // PUT endpoint to update a variant (admin only)
-router.put("/variants/:id", async (req: Request, res: Response) => {
+router.put(REST_CHILD_PATHS.landingPage.variant, async (req: Request, res: Response) => {
     try {
         if (!req.isAdmin) {
             return res.status(403).json({ error: "Admin access required" });
@@ -995,7 +1003,7 @@ router.put("/variants/:id", async (req: Request, res: Response) => {
 });
 
 // DELETE endpoint to delete a variant (admin only)
-router.delete("/variants/:id", async (req: Request, res: Response) => {
+router.delete(REST_CHILD_PATHS.landingPage.variant, async (req: Request, res: Response) => {
     try {
         if (!req.isAdmin) {
             return res.status(403).json({ error: "Admin access required" });
@@ -1054,7 +1062,7 @@ router.delete("/variants/:id", async (req: Request, res: Response) => {
 });
 
 // POST endpoint to promote a variant to official (admin only)
-router.post("/variants/:id/promote", async (req: Request, res: Response) => {
+router.post(REST_CHILD_PATHS.landingPage.promoteVariant, async (req: Request, res: Response) => {
     try {
         if (!req.isAdmin) {
             return res.status(403).json({ error: "Admin access required" });
@@ -1127,7 +1135,7 @@ router.post("/variants/:id/promote", async (req: Request, res: Response) => {
 });
 
 // POST endpoint to track variant analytics events
-router.post("/variants/:id/track", async (req: Request, res: Response) => {
+router.post(REST_CHILD_PATHS.landingPage.trackVariant, async (req: Request, res: Response) => {
     try {
         const { eventType } = req.body as {
             eventType?: "view" | "conversion" | "bounce";
@@ -1173,7 +1181,7 @@ router.post("/variants/:id/track", async (req: Request, res: Response) => {
 });
 
 // POST endpoint to toggle variant status (enable/disable) (admin only)
-router.post("/variants/:id/toggle", async (req: Request, res: Response) => {
+router.post(REST_CHILD_PATHS.landingPage.toggleVariant, async (req: Request, res: Response) => {
     try {
         if (!req.isAdmin) {
             return res.status(403).json({ error: "Admin access required" });

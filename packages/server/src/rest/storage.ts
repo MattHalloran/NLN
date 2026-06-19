@@ -1,5 +1,12 @@
 import { Router, Request, Response } from "express";
-import { CACHE_LIMITS, CLEANUP_LIMITS, CODE, MAX_IMAGE_STORAGE_MB, TIME_MS } from "@local/shared";
+import {
+    CACHE_LIMITS,
+    CLEANUP_LIMITS,
+    CODE,
+    MAX_IMAGE_STORAGE_MB,
+    REST_CHILD_PATHS,
+    TIME_MS,
+} from "@local/shared";
 import { CustomError } from "../error.js";
 import { logger, LogLevel } from "../logger.js";
 import {
@@ -55,7 +62,7 @@ export function invalidateStorageStatsCache(): void {
  * GET /api/rest/v1/storage/stats
  * Get storage statistics (admin only)
  */
-router.get("/stats", async (req: Request, res: Response) => {
+router.get(REST_CHILD_PATHS.storage.stats, async (req: Request, res: Response) => {
     try {
         const { isAdmin, prisma } = req;
 
@@ -210,7 +217,7 @@ router.get("/stats", async (req: Request, res: Response) => {
  * POST /api/rest/v1/storage/cleanup
  * Trigger manual cleanup (admin only)
  */
-router.post("/cleanup", async (req: Request, res: Response) => {
+router.post(REST_CHILD_PATHS.storage.cleanup, async (req: Request, res: Response) => {
     try {
         const { isAdmin } = req;
 
@@ -245,7 +252,7 @@ router.post("/cleanup", async (req: Request, res: Response) => {
  * GET /api/rest/v1/storage/cleanup/history
  * Get cleanup history (admin only)
  */
-router.get("/cleanup/history", async (req: Request, res: Response) => {
+router.get(REST_CHILD_PATHS.storage.cleanupHistory, async (req: Request, res: Response) => {
     try {
         const { isAdmin, prisma } = req;
 
@@ -300,7 +307,7 @@ router.get("/cleanup/history", async (req: Request, res: Response) => {
  * GET /api/rest/v1/storage/cleanup/preview
  * Preview what would be deleted in cleanup (dry-run mode) (admin only)
  */
-router.get("/cleanup/preview", async (req: Request, res: Response) => {
+router.get(REST_CHILD_PATHS.storage.cleanupPreview, async (req: Request, res: Response) => {
     try {
         const { isAdmin, prisma } = req;
 
@@ -450,7 +457,7 @@ router.get("/cleanup/preview", async (req: Request, res: Response) => {
  * GET /api/rest/v1/storage/orphaned-files
  * Get detailed list of orphaned files (admin only)
  */
-router.get("/orphaned-files", async (req: Request, res: Response) => {
+router.get(REST_CHILD_PATHS.storage.orphanedFiles, async (req: Request, res: Response) => {
     try {
         const { isAdmin, prisma } = req;
 
@@ -518,7 +525,7 @@ router.get("/orphaned-files", async (req: Request, res: Response) => {
  * GET /api/rest/v1/storage/orphaned-records
  * Get detailed list of orphaned database records (admin only)
  */
-router.get("/orphaned-records", async (req: Request, res: Response) => {
+router.get(REST_CHILD_PATHS.storage.orphanedRecords, async (req: Request, res: Response) => {
     try {
         const { isAdmin, prisma } = req;
 
@@ -599,7 +606,7 @@ router.get("/orphaned-records", async (req: Request, res: Response) => {
  * DELETE /api/rest/v1/storage/orphaned-files
  * Clean up orphaned files only (admin only)
  */
-router.delete("/orphaned-files", async (req: Request, res: Response) => {
+router.delete(REST_CHILD_PATHS.storage.orphanedFiles, async (req: Request, res: Response) => {
     try {
         const { isAdmin, prisma } = req;
 
@@ -668,7 +675,7 @@ router.delete("/orphaned-files", async (req: Request, res: Response) => {
  * DELETE /api/rest/v1/storage/orphaned-records
  * Clean up orphaned database records only (admin only)
  */
-router.delete("/orphaned-records", async (req: Request, res: Response) => {
+router.delete(REST_CHILD_PATHS.storage.orphanedRecords, async (req: Request, res: Response) => {
     try {
         const { isAdmin, prisma } = req;
 
@@ -751,7 +758,7 @@ router.delete("/orphaned-records", async (req: Request, res: Response) => {
  * GET /api/rest/v1/storage/recent-activity
  * Get recent storage-related activity (admin only)
  */
-router.get("/recent-activity", async (req: Request, res: Response) => {
+router.get(REST_CHILD_PATHS.storage.recentActivity, async (req: Request, res: Response) => {
     try {
         const { isAdmin, prisma } = req;
 
@@ -827,7 +834,7 @@ router.get("/recent-activity", async (req: Request, res: Response) => {
  * GET /api/rest/v1/storage/job-status
  * Get current cleanup job status (admin only)
  */
-router.get("/job-status", async (req: Request, res: Response) => {
+router.get(REST_CHILD_PATHS.storage.jobStatus, async (req: Request, res: Response) => {
     try {
         const { isAdmin } = req;
 

@@ -4,6 +4,8 @@
 
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 . "${HERE}/utils.sh"
+. "${HERE}/env-defaults.sh"
+default_env_apply
 
 # Show help message
 show_help() {
@@ -396,8 +398,8 @@ fi
 if [ "$YARN_SERVER_RUNNING" = true ] || [ "$YARN_UI_RUNNING" = true ]; then
     echo ""
     info "Development servers were automatically restarted in the background"
-    info "  • Server: http://localhost:5331"
-    info "  • UI: http://localhost:3001"
+    info "  • Server: http://localhost:${PORT_SERVER}"
+    info "  • UI: http://localhost:${PORT_UI}"
 fi
 
 echo ""

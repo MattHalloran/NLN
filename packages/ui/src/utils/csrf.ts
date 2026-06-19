@@ -19,8 +19,8 @@ let fetchPromise: Promise<string | null> | null = null;
 
 /**
  * Get CSRF token from cookie
- * NOTE: This only works for same-origin cookies. For cross-origin (localhost:3001 -> localhost:5331),
- * the browser cannot read the cookie via document.cookie due to Same-Origin Policy.
+ * NOTE: This only works for same-origin cookies. For cross-origin local UI/server
+ * ports, the browser cannot read the cookie via document.cookie due to Same-Origin Policy.
  */
 function getCsrfTokenFromCookie(): string | null {
     const cookies = document.cookie.split("; ");

@@ -1,4 +1,4 @@
-import { IMAGE_PROCESSING_LIMITS } from "@local/shared";
+import { createTimestampedId, IMAGE_PROCESSING_LIMITS } from "@local/shared";
 import { initializeRedis } from "../redisConn.js";
 import { logger, LogLevel, genErrorCode } from "../logger.js";
 
@@ -15,7 +15,7 @@ export class DistributedLock {
 
     constructor(resource: string, operation: string) {
         this.lockKey = `lock:${operation}:${resource}`;
-        this.lockValue = `${Date.now()}-${Math.random()}`; // Unique value to identify this lock instance
+        this.lockValue = createTimestampedId("lock");
     }
 
     /**

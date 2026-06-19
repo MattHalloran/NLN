@@ -17,6 +17,8 @@
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 . "${HERE}/utils.sh"
 . "${HERE}/runtime-state.sh"
+. "${HERE}/env-defaults.sh"
+default_env_apply
 
 # Read arguments
 SETUP_ARGS=()
@@ -350,7 +352,7 @@ fi
 info "Verifying server is responding..."
 SERVER_HEALTHY=false
 for i in {1..10}; do
-    if docker exec nln_server wget -q --spider http://localhost:${PORT_SERVER:-5331}/healthcheck 2>/dev/null; then
+    if docker exec nln_server wget -q --spider "http://localhost:${PORT_SERVER}/healthcheck" 2>/dev/null; then
         SERVER_HEALTHY=true
         break
     fi

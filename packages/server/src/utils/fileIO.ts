@@ -1,4 +1,4 @@
-import { IMAGE_EXTENSION, IMAGE_PROCESSING_LIMITS, IMAGE_SIZE } from "@local/shared";
+import { IMAGE_EXTENSION, IMAGE_LABELS, IMAGE_PROCESSING_LIMITS, IMAGE_SIZE } from "@local/shared";
 import pkg from "@prisma/client";
 import fs from "fs";
 import convert from "heic-convert";
@@ -548,20 +548,20 @@ export async function checkImageUsage(hash: string) {
         usage.usedInLabels = image.image_labels.map((il: { label: string }) => il.label);
 
         // Check for hero banner label
-        if (usage.usedInLabels.includes("hero-banner")) {
+        if (usage.usedInLabels.includes(IMAGE_LABELS.HeroBanner)) {
             usage.usedInHeroBanners = true;
             usage.warnings.push("Image is used in hero banner carousel");
         }
 
         // Check for seasonal label
-        if (usage.usedInLabels.includes("seasonal")) {
+        if (usage.usedInLabels.includes(IMAGE_LABELS.Seasonal)) {
             usage.usedInSeasonalContent = true;
             usage.warnings.push("Image is used in seasonal content");
         }
 
         // Add general label warning if there are other labels
         const otherLabels = usage.usedInLabels.filter(
-            (l) => l !== "hero-banner" && l !== "seasonal"
+            (l) => l !== IMAGE_LABELS.HeroBanner && l !== IMAGE_LABELS.Seasonal
         );
         if (otherLabels.length > 0) {
             usage.warnings.push(

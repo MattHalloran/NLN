@@ -171,7 +171,7 @@ export const NavList = () => {
                 <Button
                     variant="text"
                     size="large"
-                    onClick={() => setLocation("/about#contact")}
+                    onClick={() => setLocation(`${APP_LINKS.About}#contact`)}
                     sx={navItemStyle(palette)}
                 >
                     Contact

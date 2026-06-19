@@ -4,6 +4,7 @@ import {
     deleteArrayIndex,
     deleteArrayObject,
     findWithAttr,
+    mapIfExists,
     moveArrayIndex,
     rotateArray,
 } from "./arrayTools";
@@ -114,6 +115,19 @@ describe("arrayTools", () => {
             const arr = [1, 2, 3];
             const result = moveArrayIndex(arr, 0, 2);
             expect(result).toEqual([2, 3, 1]);
+        });
+    });
+
+    describe("mapIfExists", () => {
+        it("maps an existing value", () => {
+            expect(
+                mapIfExists<number, number>({ values: [1, 2, 3] }, "values", (value) => value * 2),
+            ).toEqual([2, 4, 6]);
+        });
+
+        it("returns null when the path is missing or not an array", () => {
+            expect(mapIfExists({ values: "not-an-array" }, "values", (value) => value)).toBeNull();
+            expect(mapIfExists({ values: [1] }, "missing", (value) => value)).toBeNull();
         });
     });
 

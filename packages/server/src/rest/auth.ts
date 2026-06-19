@@ -2,6 +2,7 @@ import {
     AUTH_LIMITS,
     CODE,
     COOKIE,
+    REST_CHILD_PATHS,
     logInSchema,
     passwordSchema,
     requestPasswordChangeSchema,
@@ -78,7 +79,7 @@ async function findCustomerSession(
  * GET /api/rest/v1/auth/session
  * Validate existing session cookie without treating signed-out users as login failures
  */
-router.get("/session", async (req: Request, res: Response) => {
+router.get(REST_CHILD_PATHS.auth.session, async (req: Request, res: Response) => {
     try {
         const prisma = getPrisma(req);
         const { customerId } = req;
@@ -104,7 +105,7 @@ router.get("/session", async (req: Request, res: Response) => {
  * POST /api/rest/v1/auth/login
  * Login with email and password, or validate existing session
  */
-router.post("/login", async (req: Request, res: Response) => {
+router.post(REST_CHILD_PATHS.auth.login, async (req: Request, res: Response) => {
     try {
         const { email, password, verificationCode } = req.body;
         const prisma = getPrisma(req);
@@ -309,7 +310,7 @@ router.post("/login", async (req: Request, res: Response) => {
  * POST /api/rest/v1/auth/logout
  * Logout and clear session
  */
-router.post("/logout", async (req: Request, res: Response) => {
+router.post(REST_CHILD_PATHS.auth.logout, async (req: Request, res: Response) => {
     try {
         // Audit log: logout
         auditAuthEvent(req, AuditEventType.AUTH_LOGOUT, "success", {
@@ -328,7 +329,7 @@ router.post("/logout", async (req: Request, res: Response) => {
  * POST /api/rest/v1/auth/signup
  * Register a new customer
  */
-router.post("/signup", signupLimiter, async (req: Request, res: Response) => {
+router.post(REST_CHILD_PATHS.auth.signup, signupLimiter, async (req: Request, res: Response) => {
     try {
         const {
             firstName,
@@ -416,7 +417,7 @@ router.post("/signup", signupLimiter, async (req: Request, res: Response) => {
  * POST /api/rest/v1/auth/reset-password
  * Reset password using token
  */
-router.post("/reset-password", async (req: Request, res: Response) => {
+router.post(REST_CHILD_PATHS.auth.resetPassword, async (req: Request, res: Response) => {
     try {
         const { token, password: newPassword } = req.body;
         const prisma = getPrisma(req);
@@ -530,7 +531,7 @@ router.post("/reset-password", async (req: Request, res: Response) => {
  * Request a password reset link
  */
 router.post(
-    "/request-password-change",
+    REST_CHILD_PATHS.auth.requestPasswordChange,
     passwordResetLimiter,
     async (req: Request, res: Response) => {
         try {

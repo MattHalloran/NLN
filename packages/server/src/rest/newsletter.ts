@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express";
-import { CODE } from "@local/shared";
+import { CODE, REST_CHILD_PATHS } from "@local/shared";
 import type { Prisma } from "@prisma/client";
 import { CustomError } from "../error.js";
 import { logger, LogLevel } from "../logger.js";
@@ -14,95 +14,99 @@ const getQueryString = (value: Request["query"][string]): string | undefined =>
  * POST /api/rest/v1/newsletter/subscribe
  * Subscribe to newsletter (public endpoint)
  */
-router.post("/subscribe", newsletterSubscribeLimiter, async (req: Request, res: Response) => {
-    try {
-        const {
-            email,
-            variantId,
-            source = "homepage",
-        } = req.body as {
-            email?: unknown;
-            variantId?: string | null;
-            source?: string;
-        };
-        const { prisma } = req;
+router.post(
+    REST_CHILD_PATHS.newsletter.subscribe,
+    newsletterSubscribeLimiter,
+    async (req: Request, res: Response) => {
+        try {
+            const {
+                email,
+                variantId,
+                source = "homepage",
+            } = req.body as {
+                email?: unknown;
+                variantId?: string | null;
+                source?: string;
+            };
+            const { prisma } = req;
 
-        // Validate email
-        if (!email || typeof email !== "string") {
-            return res.status(400).json({ error: "Email is required" });
-        }
-        if (!prisma) {
-            return res.status(500).json({ error: "Database connection not available" });
-        }
+            // Validate email
+            if (!email || typeof email !== "string") {
+                return res.status(400).json({ error: "Email is required" });
+            }
+            if (!prisma) {
+                return res.status(500).json({ error: "Database connection not available" });
+            }
 
-        // Basic email format validation
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            return res.status(400).json({ error: "Invalid email format" });
-        }
+            // Basic email format validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                return res.status(400).json({ error: "Invalid email format" });
+            }
 
-        // Normalize email (lowercase, trim)
-        const normalizedEmail = email.toLowerCase().trim();
+            // Normalize email (lowercase, trim)
+            const normalizedEmail = email.toLowerCase().trim();
 
-        // Check if already subscribed
-        const existing = await prisma.newsletter_subscription.findUnique({
-            where: { email: normalizedEmail },
-        });
+            // Check if already subscribed
+            const existing = await prisma.newsletter_subscription.findUnique({
+                where: { email: normalizedEmail },
+            });
 
-        if (existing) {
-            // If they previously unsubscribed, reactivate
-            if (existing.status === "unsubscribed") {
-                await prisma.newsletter_subscription.update({
-                    where: { email: normalizedEmail },
-                    data: {
-                        status: "active",
-                        variant_id: variantId || existing.variant_id,
-                    },
-                });
+            if (existing) {
+                // If they previously unsubscribed, reactivate
+                if (existing.status === "unsubscribed") {
+                    await prisma.newsletter_subscription.update({
+                        where: { email: normalizedEmail },
+                        data: {
+                            status: "active",
+                            variant_id: variantId || existing.variant_id,
+                        },
+                    });
+                    return res.json({
+                        success: true,
+                        message: "Welcome back! You've been resubscribed.",
+                    });
+                }
+
+                // Already subscribed
                 return res.json({
                     success: true,
-                    message: "Welcome back! You've been resubscribed.",
+                    message: "You're already subscribed!",
                 });
             }
 
-            // Already subscribed
+            // Create new subscription
+            await prisma.newsletter_subscription.create({
+                data: {
+                    email: normalizedEmail,
+                    variant_id: variantId || null,
+                    source,
+                    status: "active",
+                },
+            });
+
+            logger.log(LogLevel.info, "Newsletter subscription created", {
+                email: normalizedEmail,
+                variantId,
+                source,
+            });
+
             return res.json({
                 success: true,
-                message: "You're already subscribed!",
+                message: "Thank you for subscribing!",
             });
+        } catch (error) {
+            logger.log(LogLevel.error, "Newsletter subscription error:", error);
+            return res.status(500).json({ error: "Failed to subscribe" });
         }
-
-        // Create new subscription
-        await prisma.newsletter_subscription.create({
-            data: {
-                email: normalizedEmail,
-                variant_id: variantId || null,
-                source,
-                status: "active",
-            },
-        });
-
-        logger.log(LogLevel.info, "Newsletter subscription created", {
-            email: normalizedEmail,
-            variantId,
-            source,
-        });
-
-        return res.json({
-            success: true,
-            message: "Thank you for subscribing!",
-        });
-    } catch (error) {
-        logger.log(LogLevel.error, "Newsletter subscription error:", error);
-        return res.status(500).json({ error: "Failed to subscribe" });
     }
-});
+);
 
 /**
  * GET /api/rest/v1/newsletter/subscribers
  * Get list of newsletter subscribers (admin only)
  */
-router.get("/subscribers", async (req: Request, res: Response) => {
+router.get(REST_CHILD_PATHS.newsletter.subscribers, async (req: Request, res: Response) => {
     try {
         const { isAdmin, prisma } = req;
 
@@ -190,7 +194,7 @@ router.get("/subscribers", async (req: Request, res: Response) => {
  * GET /api/rest/v1/newsletter/subscribers/export
  * Export newsletter subscribers as CSV (admin only)
  */
-router.get("/subscribers/export", async (req: Request, res: Response) => {
+router.get(REST_CHILD_PATHS.newsletter.subscribersExport, async (req: Request, res: Response) => {
     try {
         const { isAdmin, prisma } = req;
 
@@ -254,7 +258,7 @@ router.get("/subscribers/export", async (req: Request, res: Response) => {
  * DELETE /api/rest/v1/newsletter/subscribers/:id
  * Delete or unsubscribe a newsletter subscriber (admin only)
  */
-router.delete("/subscribers/:id", async (req: Request, res: Response) => {
+router.delete(REST_CHILD_PATHS.newsletter.subscriber, async (req: Request, res: Response) => {
     try {
         const { isAdmin, prisma } = req;
 
@@ -313,7 +317,7 @@ router.delete("/subscribers/:id", async (req: Request, res: Response) => {
  * GET /api/rest/v1/newsletter/stats
  * Get newsletter subscription statistics (admin only)
  */
-router.get("/stats", async (req: Request, res: Response) => {
+router.get(REST_CHILD_PATHS.newsletter.stats, async (req: Request, res: Response) => {
     try {
         const { isAdmin, prisma } = req;
 

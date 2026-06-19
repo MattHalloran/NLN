@@ -1,13 +1,19 @@
 import {
     APP_LINKS,
+    IMAGE_LABELS,
     DEFAULT_SEASONAL_CONTENT,
     REST_ROUTES,
     SEASON_OPTIONS,
+    SEASONAL_ICON_OPTIONS,
     SEASONS,
+    buildSeasonalPatch,
+    createPlantTipFormItem,
+    createSeasonalPlantFormItem,
     getCurrentSeason,
+    getSeasonalFormData,
     sortSeasonalPlantsByCurrentSeason,
 } from "@local/shared";
-import type { PlantTip, SeasonalPlant } from "@local/shared";
+import type { PlantTip, SeasonalFormData, SeasonalPlant } from "@local/shared";
 import {
     Accordion,
     AccordionDetails,
@@ -40,7 +46,6 @@ import { useABTestQueryParams } from "hooks/useABTestQueryParams";
 import { useAdminForm } from "hooks/useAdminForm";
 import {
     ChevronDown,
-    Flower,
     Images,
     Leaf,
     Leaf as LeafIcon,
@@ -48,51 +53,16 @@ import {
     Plus,
     RotateCcw,
     Save,
-    Snowflake,
-    Sprout,
-    Star,
     Trash2,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getServerUrl } from "utils";
+import { resolveLandingPageIcon } from "utils/landingPageIcons";
 
-interface SeasonalData {
-    plants: SeasonalPlant[];
-    tips: PlantTip[];
-    sectionText: {
-        header: {
-            title: string;
-            subtitle: string;
-        };
-        sections: {
-            plants: {
-                currentSeasonTitle: string;
-                otherSeasonTitleTemplate: string;
-            };
-            tips: {
-                title: string;
-            };
-        };
-        newsletterButtonText: string;
-    };
-    galleryButton: {
-        text: string;
-        enabled: boolean;
-    };
-}
-
-const iconOptions = [
-    { value: "leaf", icon: Leaf, label: "Leaf" },
-    { value: "flower", icon: Flower, label: "Flower" },
-    { value: "flower2", icon: Flower, label: "Flower 2" },
-    { value: "snowflake", icon: Snowflake, label: "Snowflake" },
-    { value: "sprout", icon: Sprout, label: "Sprout" },
-    { value: "star", icon: Star, label: "Star" },
-];
+const iconOptions = SEASONAL_ICON_OPTIONS;
 
 const getIconComponent = (iconName: string) => {
-    const option = iconOptions.find((opt) => opt.value === iconName);
-    return option ? option.icon : Leaf;
+    return resolveLandingPageIcon(iconName, Leaf);
 };
 
 // Preview Component - Shows how the seasonal section looks on the homepage
@@ -479,62 +449,14 @@ export const AdminHomepageSeasonal = () => {
     const [deletingImageId, setDeletingImageId] = useState<string | null>(null);
 
     // Use the standardized useAdminForm hook
-    const form = useAdminForm<SeasonalData>({
+    const form = useAdminForm<SeasonalFormData>({
         fetchFn: async () => {
-            const defaultData: SeasonalData = {
-                plants: [],
-                tips: [],
-                sectionText: {
-                    header: {
-                        title: DEFAULT_SEASONAL_CONTENT.header?.title || "",
-                        subtitle: DEFAULT_SEASONAL_CONTENT.header?.subtitle || "",
-                    },
-                    sections: {
-                        plants: {
-                            currentSeasonTitle:
-                                DEFAULT_SEASONAL_CONTENT.sections?.plants.currentSeasonTitle || "",
-                            otherSeasonTitleTemplate:
-                                DEFAULT_SEASONAL_CONTENT.sections?.plants
-                                    .otherSeasonTitleTemplate || "",
-                        },
-                        tips: {
-                            title: DEFAULT_SEASONAL_CONTENT.sections?.tips.title || "",
-                        },
-                    },
-                    newsletterButtonText: "Subscribe",
-                },
-                galleryButton: {
-                    text: DEFAULT_SEASONAL_CONTENT.galleryButton?.text || "",
-                    enabled: DEFAULT_SEASONAL_CONTENT.galleryButton?.enabled ?? true,
-                },
-            };
-
-            if (!data?.content?.seasonal) {
-                return defaultData;
-            }
-
-            return {
-                plants: data.content.seasonal.plants || [],
-                tips: data.content.seasonal.tips || [],
-                sectionText: {
-                    header: data.content.seasonal.header || defaultData.sectionText.header,
-                    sections: data.content.seasonal.sections || defaultData.sectionText.sections,
-                    newsletterButtonText: data.content.newsletter?.buttonText || "Subscribe",
-                },
-                galleryButton: data.content.seasonal.galleryButton || defaultData.galleryButton,
-            };
+            return getSeasonalFormData(data);
         },
         saveFn: async (seasonalData) => {
             const queryParams = variantId ? { variantId } : undefined;
             await updateLandingPageContent.mutate({
-                data: {
-                    seasonalPlants: seasonalData.plants,
-                    plantTips: seasonalData.tips,
-                    seasonalHeader: seasonalData.sectionText.header,
-                    seasonalSections: seasonalData.sectionText.sections,
-                    newsletterButtonText: seasonalData.sectionText.newsletterButtonText,
-                    seasonalGalleryButton: seasonalData.galleryButton,
-                },
+                data: buildSeasonalPatch(seasonalData),
                 queryParams,
             });
             return seasonalData;
@@ -556,16 +478,7 @@ export const AdminHomepageSeasonal = () => {
 
     const handleAddPlant = () => {
         if (!form.data) return;
-        const newPlant: SeasonalPlant = {
-            id: `plant-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            name: "",
-            description: "",
-            season: "Spring",
-            careLevel: "Easy",
-            icon: "leaf",
-            displayOrder: form.data.plants.length + 1,
-            isActive: true,
-        };
+        const newPlant = createSeasonalPlantFormItem(form.data.plants.length + 1);
         form.setData({
             ...form.data,
             plants: [...form.data.plants, newPlant],
@@ -575,15 +488,7 @@ export const AdminHomepageSeasonal = () => {
 
     const handleAddTip = () => {
         if (!form.data) return;
-        const newTip: PlantTip = {
-            id: `tip-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            title: "",
-            description: "",
-            category: "General",
-            season: "Year-round",
-            displayOrder: form.data.tips.length + 1,
-            isActive: true,
-        };
+        const newTip = createPlantTipFormItem(form.data.tips.length + 1);
         form.setData({
             ...form.data,
             tips: [...form.data.tips, newTip],
@@ -641,8 +546,10 @@ export const AdminHomepageSeasonal = () => {
             try {
                 const file = acceptedFiles[0]; // Only use first file
 
-                // Upload image with "seasonal" label
-                const uploadResults = await addImages({ label: "seasonal", files: [file] });
+                const uploadResults = await addImages({
+                    label: IMAGE_LABELS.Seasonal,
+                    files: [file],
+                });
 
                 if (uploadResults.length > 0 && uploadResults[0].success) {
                     const result = uploadResults[0];
@@ -1608,7 +1515,9 @@ export const AdminHomepageSeasonal = () => {
                                                                 >
                                                                     {iconOptions.map((option) => {
                                                                         const IconComp =
-                                                                            option.icon;
+                                                                            getIconComponent(
+                                                                                option.value,
+                                                                            );
                                                                         return (
                                                                             <ToggleButton
                                                                                 key={option.value}

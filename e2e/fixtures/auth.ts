@@ -1,6 +1,6 @@
 import { test as base, expect } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { REST_ROUTES, stripApiPrefix } from "@local/shared";
+import { APP_LINKS, E2E_TIMEOUTS, REST_ROUTES, stripApiPrefix } from "@local/shared";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -21,103 +21,107 @@ const authFile = path.join(__dirname, "../.auth/admin.json");
  * This reduces test execution time significantly
  */
 export async function setupAuth(page: Page) {
-  // Track responses
-  const responses: Array<{url: string, status: number}> = [];
+    // Track responses
+    const responses: Array<{ url: string; status: number }> = [];
 
-  page.on("response", response => {
-    const url = response.url();
-    responses.push({url, status: response.status()});
-    if (url.includes("auth") || url.includes("login")) {
-      console.log(`→ Response: ${url} [${response.status()}]`);
+    page.on("response", (response) => {
+        const url = response.url();
+        responses.push({ url, status: response.status() });
+        if (url.includes("auth") || url.includes("login")) {
+            console.log(`→ Response: ${url} [${response.status()}]`);
+        }
+    });
+
+    // Log console messages and errors
+    page.on("console", (msg) => console.log(`Browser console: ${msg.type()}: ${msg.text()}`));
+    page.on("pageerror", (error) => console.error(`Browser error: ${error.message}`));
+
+    // Navigate to login page
+    await page.goto(APP_LINKS.LogIn);
+
+    // Wait for the page to load
+    await page.waitForLoadState("networkidle");
+
+    console.log("✓ Login page loaded");
+
+    // Get admin credentials from environment variables
+    const adminEmail = process.env.ADMIN_EMAIL;
+    const adminPassword = process.env.ADMIN_PASSWORD;
+
+    if (!adminEmail || !adminPassword) {
+        throw new Error("ADMIN_EMAIL and ADMIN_PASSWORD must be set in environment variables");
     }
-  });
 
-  // Log console messages and errors
-  page.on("console", msg => console.log(`Browser console: ${msg.type()}: ${msg.text()}`));
-  page.on("pageerror", error => console.error(`Browser error: ${error.message}`));
+    // Fill in admin credentials
+    await page.fill('input[name="email"]', adminEmail);
+    await page.fill('input[name="password"]', adminPassword);
 
-  // Navigate to login page
-  await page.goto("/login");
+    console.log("✓ Credentials filled");
 
-  // Wait for the page to load
-  await page.waitForLoadState("networkidle");
+    // Click login button
+    console.log("Clicking submit button...");
+    const loginResponsePromise = page.waitForResponse(
+        (response) => response.url().includes(stripApiPrefix(REST_ROUTES.auth.login)),
+        { timeout: E2E_TIMEOUTS.longMs },
+    );
+    await page.click('button[type="submit"]');
+    console.log("✓ Submit button clicked");
 
-  console.log("✓ Login page loaded");
+    let loginResponse;
+    try {
+        loginResponse = await loginResponsePromise;
+        console.log(`✓ Captured login response: ${loginResponse.status()}`);
+    } catch (error) {
+        console.error("Recent responses:", responses.slice(-10));
+        throw new Error(
+            `Login response not captured after ${E2E_TIMEOUTS.longMs / 1000} seconds: ${String(error)}`,
+        );
+    }
 
-  // Get admin credentials from environment variables
-  const adminEmail = process.env.ADMIN_EMAIL;
-  const adminPassword = process.env.ADMIN_PASSWORD;
+    // Check response status
+    const status = loginResponse.status();
+    console.log(`Login API status: ${status}`);
 
-  if (!adminEmail || !adminPassword) {
-    throw new Error("ADMIN_EMAIL and ADMIN_PASSWORD must be set in environment variables");
-  }
+    if (status !== 200) {
+        const responseBody = await loginResponse.text();
+        await page.screenshot({ path: "test-results/login-error.png" });
+        throw new Error(`Login API returned ${status}: ${responseBody}`);
+    }
 
-  // Fill in admin credentials
-  await page.fill("input[name=\"email\"]", adminEmail);
-  await page.fill("input[name=\"password\"]", adminPassword);
+    // Wait for navigation away from login page
+    await page.waitForURL((url) => !url.pathname.includes(APP_LINKS.LogIn), {
+        timeout: E2E_TIMEOUTS.longMs,
+    });
 
-  console.log("✓ Credentials filled");
+    // Verify we're logged in
+    const currentUrl = page.url();
+    if (currentUrl.includes(APP_LINKS.LogIn)) {
+        await page.screenshot({ path: "test-results/still-on-login.png" });
+        throw new Error(`Still on login page after authentication. Current URL: ${currentUrl}`);
+    }
 
-  // Click login button
-  console.log("Clicking submit button...");
-  const loginResponsePromise = page.waitForResponse(
-    (response) => response.url().includes(stripApiPrefix(REST_ROUTES.auth.login)),
-    { timeout: 15000 },
-  );
-  await page.click("button[type=\"submit\"]");
-  console.log("✓ Submit button clicked");
+    // Save storage state to file
+    await page.context().storageState({ path: authFile });
 
-  let loginResponse;
-  try {
-    loginResponse = await loginResponsePromise;
-    console.log(`✓ Captured login response: ${loginResponse.status()}`);
-  } catch (error) {
-    console.error("Recent responses:", responses.slice(-10));
-    throw new Error(`Login response not captured after 15 seconds: ${String(error)}`);
-  }
-
-  // Check response status
-  const status = loginResponse.status();
-  console.log(`Login API status: ${status}`);
-
-  if (status !== 200) {
-    const responseBody = await loginResponse.text();
-    await page.screenshot({ path: "test-results/login-error.png" });
-    throw new Error(`Login API returned ${status}: ${responseBody}`);
-  }
-
-  // Wait for navigation away from login page
-  await page.waitForURL((url) => !url.pathname.includes("/login"), { timeout: 15000 });
-
-  // Verify we're logged in
-  const currentUrl = page.url();
-  if (currentUrl.includes("/login")) {
-    await page.screenshot({ path: "test-results/still-on-login.png" });
-    throw new Error(`Still on login page after authentication. Current URL: ${currentUrl}`);
-  }
-
-  // Save storage state to file
-  await page.context().storageState({ path: authFile });
-
-  console.log("✓ Authentication successful, state saved");
+    console.log("✓ Authentication successful, state saved");
 }
 
 /**
  * Extended test fixture with authenticated page
  */
 export const test = base.extend<{ authenticatedPage: Page }>({
-  authenticatedPage: async ({ browser }, use) => {
-    // Create a new context with saved auth state
-    const context = await browser.newContext({
-      storageState: authFile,
-    });
+    authenticatedPage: async ({ browser }, use) => {
+        // Create a new context with saved auth state
+        const context = await browser.newContext({
+            storageState: authFile,
+        });
 
-    const page = await context.newPage();
+        const page = await context.newPage();
 
-    await use(page);
+        await use(page);
 
-    await context.close();
-  },
+        await context.close();
+    },
 });
 
 export { expect };

@@ -17,6 +17,65 @@ export const REST_RESOURCE = {
     Storage: "/storage",
 } as const;
 
+export const REST_CHILD_PATHS = {
+    auth: {
+        session: "/session",
+        login: "/login",
+        logout: "/logout",
+        signup: "/signup",
+        resetPassword: "/reset-password",
+        requestPasswordChange: "/request-password-change",
+    },
+    images: {
+        hash: "/:hash",
+        usage: "/:hash/usage",
+        variants: "/:hash/variants",
+    },
+    assets: {
+        read: "/read",
+        write: "/write",
+    },
+    dashboard: {
+        stats: "/stats",
+    },
+    landingPage: {
+        contactInfo: "/contact-info",
+        invalidateCache: "/invalidate-cache",
+        settings: "/settings",
+        variants: "/variants",
+        variant: "/variants/:id",
+        promoteVariant: "/variants/:id/promote",
+        toggleVariant: "/variants/:id/toggle",
+        trackVariant: "/variants/:id/track",
+    },
+    storage: {
+        stats: "/stats",
+        cleanup: "/cleanup",
+        cleanupHistory: "/cleanup/history",
+        cleanupPreview: "/cleanup/preview",
+        orphanedFiles: "/orphaned-files",
+        orphanedRecords: "/orphaned-records",
+        recentActivity: "/recent-activity",
+        jobStatus: "/job-status",
+    },
+    logs: {
+        stats: "/stats",
+    },
+    newsletter: {
+        subscribe: "/subscribe",
+        subscribers: "/subscribers",
+        subscribersExport: "/subscribers/export",
+        subscriber: "/subscribers/:id",
+        stats: "/stats",
+    },
+    variants: {
+        item: "/:id",
+        promote: "/:id/promote",
+        toggle: "/:id/toggle",
+        track: "/:id/track",
+    },
+} as const;
+
 export const REST_ROUTES = {
     root: REST_PREFIX,
     v1: REST_API_PREFIX,
@@ -24,12 +83,12 @@ export const REST_ROUTES = {
     csrfToken: `${REST_API_PREFIX}${REST_RESOURCE.CsrfToken}`,
     auth: {
         root: `${REST_API_PREFIX}${REST_RESOURCE.Auth}`,
-        session: `${REST_API_PREFIX}${REST_RESOURCE.Auth}/session`,
-        login: `${REST_API_PREFIX}${REST_RESOURCE.Auth}/login`,
-        logout: `${REST_API_PREFIX}${REST_RESOURCE.Auth}/logout`,
-        signup: `${REST_API_PREFIX}${REST_RESOURCE.Auth}/signup`,
-        resetPassword: `${REST_API_PREFIX}${REST_RESOURCE.Auth}/reset-password`,
-        requestPasswordChange: `${REST_API_PREFIX}${REST_RESOURCE.Auth}/request-password-change`,
+        session: `${REST_API_PREFIX}${REST_RESOURCE.Auth}${REST_CHILD_PATHS.auth.session}`,
+        login: `${REST_API_PREFIX}${REST_RESOURCE.Auth}${REST_CHILD_PATHS.auth.login}`,
+        logout: `${REST_API_PREFIX}${REST_RESOURCE.Auth}${REST_CHILD_PATHS.auth.logout}`,
+        signup: `${REST_API_PREFIX}${REST_RESOURCE.Auth}${REST_CHILD_PATHS.auth.signup}`,
+        resetPassword: `${REST_API_PREFIX}${REST_RESOURCE.Auth}${REST_CHILD_PATHS.auth.resetPassword}`,
+        requestPasswordChange: `${REST_API_PREFIX}${REST_RESOURCE.Auth}${REST_CHILD_PATHS.auth.requestPasswordChange}`,
     },
     images: {
         root: `${REST_API_PREFIX}${REST_RESOURCE.Images}`,
@@ -39,19 +98,19 @@ export const REST_ROUTES = {
     },
     assets: {
         root: `${REST_API_PREFIX}${REST_RESOURCE.Assets}`,
-        read: `${REST_API_PREFIX}${REST_RESOURCE.Assets}/read`,
-        write: `${REST_API_PREFIX}${REST_RESOURCE.Assets}/write`,
+        read: `${REST_API_PREFIX}${REST_RESOURCE.Assets}${REST_CHILD_PATHS.assets.read}`,
+        write: `${REST_API_PREFIX}${REST_RESOURCE.Assets}${REST_CHILD_PATHS.assets.write}`,
     },
     dashboard: {
         root: `${REST_API_PREFIX}${REST_RESOURCE.Dashboard}`,
-        stats: `${REST_API_PREFIX}${REST_RESOURCE.Dashboard}/stats`,
+        stats: `${REST_API_PREFIX}${REST_RESOURCE.Dashboard}${REST_CHILD_PATHS.dashboard.stats}`,
     },
     landingPage: {
         root: `${REST_API_PREFIX}${REST_RESOURCE.LandingPage}`,
-        contactInfo: `${REST_API_PREFIX}${REST_RESOURCE.LandingPage}/contact-info`,
-        invalidateCache: `${REST_API_PREFIX}${REST_RESOURCE.LandingPage}/invalidate-cache`,
-        settings: `${REST_API_PREFIX}${REST_RESOURCE.LandingPage}/settings`,
-        variants: `${REST_API_PREFIX}${REST_RESOURCE.LandingPage}/variants`,
+        contactInfo: `${REST_API_PREFIX}${REST_RESOURCE.LandingPage}${REST_CHILD_PATHS.landingPage.contactInfo}`,
+        invalidateCache: `${REST_API_PREFIX}${REST_RESOURCE.LandingPage}${REST_CHILD_PATHS.landingPage.invalidateCache}`,
+        settings: `${REST_API_PREFIX}${REST_RESOURCE.LandingPage}${REST_CHILD_PATHS.landingPage.settings}`,
+        variants: `${REST_API_PREFIX}${REST_RESOURCE.LandingPage}${REST_CHILD_PATHS.landingPage.variants}`,
         variant: (id = ":id") => `${REST_API_PREFIX}${REST_RESOURCE.LandingPage}/variants/${id}`,
         promoteVariant: (id = ":id") =>
             `${REST_API_PREFIX}${REST_RESOURCE.LandingPage}/variants/${id}/promote`,
@@ -62,27 +121,27 @@ export const REST_ROUTES = {
     },
     storage: {
         root: `${REST_API_PREFIX}${REST_RESOURCE.Storage}`,
-        stats: `${REST_API_PREFIX}${REST_RESOURCE.Storage}/stats`,
-        cleanup: `${REST_API_PREFIX}${REST_RESOURCE.Storage}/cleanup`,
-        cleanupHistory: `${REST_API_PREFIX}${REST_RESOURCE.Storage}/cleanup/history`,
-        cleanupPreview: `${REST_API_PREFIX}${REST_RESOURCE.Storage}/cleanup/preview`,
-        orphanedFiles: `${REST_API_PREFIX}${REST_RESOURCE.Storage}/orphaned-files`,
-        orphanedRecords: `${REST_API_PREFIX}${REST_RESOURCE.Storage}/orphaned-records`,
-        recentActivity: `${REST_API_PREFIX}${REST_RESOURCE.Storage}/recent-activity`,
-        jobStatus: `${REST_API_PREFIX}${REST_RESOURCE.Storage}/job-status`,
+        stats: `${REST_API_PREFIX}${REST_RESOURCE.Storage}${REST_CHILD_PATHS.storage.stats}`,
+        cleanup: `${REST_API_PREFIX}${REST_RESOURCE.Storage}${REST_CHILD_PATHS.storage.cleanup}`,
+        cleanupHistory: `${REST_API_PREFIX}${REST_RESOURCE.Storage}${REST_CHILD_PATHS.storage.cleanupHistory}`,
+        cleanupPreview: `${REST_API_PREFIX}${REST_RESOURCE.Storage}${REST_CHILD_PATHS.storage.cleanupPreview}`,
+        orphanedFiles: `${REST_API_PREFIX}${REST_RESOURCE.Storage}${REST_CHILD_PATHS.storage.orphanedFiles}`,
+        orphanedRecords: `${REST_API_PREFIX}${REST_RESOURCE.Storage}${REST_CHILD_PATHS.storage.orphanedRecords}`,
+        recentActivity: `${REST_API_PREFIX}${REST_RESOURCE.Storage}${REST_CHILD_PATHS.storage.recentActivity}`,
+        jobStatus: `${REST_API_PREFIX}${REST_RESOURCE.Storage}${REST_CHILD_PATHS.storage.jobStatus}`,
     },
     logs: {
         root: `${REST_API_PREFIX}${REST_RESOURCE.Logs}`,
-        stats: `${REST_API_PREFIX}${REST_RESOURCE.Logs}/stats`,
+        stats: `${REST_API_PREFIX}${REST_RESOURCE.Logs}${REST_CHILD_PATHS.logs.stats}`,
     },
     newsletter: {
         root: `${REST_API_PREFIX}${REST_RESOURCE.Newsletter}`,
-        subscribe: `${REST_API_PREFIX}${REST_RESOURCE.Newsletter}/subscribe`,
-        subscribers: `${REST_API_PREFIX}${REST_RESOURCE.Newsletter}/subscribers`,
-        subscribersExport: `${REST_API_PREFIX}${REST_RESOURCE.Newsletter}/subscribers/export`,
+        subscribe: `${REST_API_PREFIX}${REST_RESOURCE.Newsletter}${REST_CHILD_PATHS.newsletter.subscribe}`,
+        subscribers: `${REST_API_PREFIX}${REST_RESOURCE.Newsletter}${REST_CHILD_PATHS.newsletter.subscribers}`,
+        subscribersExport: `${REST_API_PREFIX}${REST_RESOURCE.Newsletter}${REST_CHILD_PATHS.newsletter.subscribersExport}`,
         subscriber: (id = ":id") =>
             `${REST_API_PREFIX}${REST_RESOURCE.Newsletter}/subscribers/${id}`,
-        stats: `${REST_API_PREFIX}${REST_RESOURCE.Newsletter}/stats`,
+        stats: `${REST_API_PREFIX}${REST_RESOURCE.Newsletter}${REST_CHILD_PATHS.newsletter.stats}`,
     },
 } as const;
 

@@ -1,6 +1,7 @@
 import { test, expect } from "../../fixtures/auth";
 import { gotoAdminPage } from "../../fixtures/admin";
 import type { Page } from "@playwright/test";
+import { APP_LINKS } from "@local/shared";
 
 /**
  * Simplified E2E Tests for Admin Contact Info Management
@@ -9,7 +10,7 @@ import type { Page } from "@playwright/test";
  */
 
 const openContactInfo = (page: Page) =>
-  gotoAdminPage(page, "/admin/contact-info", /contact information/i);
+  gotoAdminPage(page, APP_LINKS.AdminContactInfo, /contact information/i);
 
 test.describe("Contact Info - Basic Display", () => {
   test("should load admin contact page successfully", async ({ authenticatedPage }) => {
@@ -81,7 +82,7 @@ test.describe("Contact Info - Advanced Features", () => {
 
 test.describe("Contact Info - Navigation", () => {
   test("should navigate from home to contact page", async ({ authenticatedPage }) => {
-    await authenticatedPage.goto("/admin");
+    await authenticatedPage.goto(APP_LINKS.Admin);
     await expect(authenticatedPage.getByRole("heading", { name: "Contact Info" })).toBeVisible();
 
     await authenticatedPage.getByRole("heading", { name: "Contact Info" }).click();

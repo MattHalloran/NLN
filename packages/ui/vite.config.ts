@@ -1,4 +1,5 @@
 import react from "@vitejs/plugin-react-swc";
+import { DEFAULT_PORTS } from "@local/shared";
 import path from "path";
 import { defineConfig } from "vite";
 import viteCompression from "vite-plugin-compression";
@@ -26,8 +27,8 @@ export default defineConfig({
     assetsInclude: ["**/*.md"],
     server: {
         host: true,
-        port: 3001,
-        strictPort: true, // Exit if port 3001 is in use instead of trying another port
+        port: DEFAULT_PORTS.ui,
+        strictPort: true,
     },
     optimizeDeps: {
         // Pre-bundle these dependencies to avoid issues with dynamic imports

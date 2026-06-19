@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express";
-import { CODE, MAX_IMAGE_STORAGE_MB, UPLOAD_LIMITS } from "@local/shared";
+import { CODE, MAX_IMAGE_STORAGE_MB, REST_CHILD_PATHS, UPLOAD_LIMITS } from "@local/shared";
 import { CustomError } from "../error.js";
 import { saveImage, deleteImage, checkImageUsage } from "../utils/index.js";
 import { logger, LogLevel } from "../logger.js";
@@ -291,7 +291,7 @@ router.put("/", async (req: Request, res: Response) => {
  * Query params:
  * - force: Set to "true" to delete even if image is in use (default: false)
  */
-router.delete("/:hash", async (req: Request, res: Response) => {
+router.delete(REST_CHILD_PATHS.images.hash, async (req: Request, res: Response) => {
     try {
         const { hash } = req.params;
         const { force } = req.query;
@@ -383,7 +383,7 @@ router.delete("/:hash", async (req: Request, res: Response) => {
  * GET /api/rest/v1/images/:hash/usage
  * Check where an image is being used (admin only)
  */
-router.get("/:hash/usage", async (req: Request, res: Response) => {
+router.get(REST_CHILD_PATHS.images.usage, async (req: Request, res: Response) => {
     try {
         const { hash } = req.params;
         const { isAdmin } = req;
@@ -418,7 +418,7 @@ router.get("/:hash/usage", async (req: Request, res: Response) => {
  * Get all variants for an image with detailed stats (admin only)
  * Useful for debugging and verifying which variants exist
  */
-router.get("/:hash/variants", async (req: Request, res: Response) => {
+router.get(REST_CHILD_PATHS.images.variants, async (req: Request, res: Response) => {
     try {
         const { hash } = req.params;
         const { prisma, isAdmin } = req;

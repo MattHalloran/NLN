@@ -13,16 +13,17 @@
 import { prisma } from "../db/prisma.js";
 import { logger, LogLevel } from "../logger.js";
 import type { HeroBanner, LandingPageContent } from "../types/landingPage.js";
+import { IMAGE_LABELS } from "@local/shared";
 
 /**
  * Label identifier for hero banner images
  */
-export const HERO_BANNER_LABEL = "hero-banner";
+export const HERO_BANNER_LABEL = IMAGE_LABELS.HeroBanner;
 
 /**
  * Label identifier for seasonal content images
  */
-export const SEASONAL_LABEL = "seasonal";
+export const SEASONAL_LABEL = IMAGE_LABELS.Seasonal;
 
 /**
  * Normalize an image src path from JSON to database format

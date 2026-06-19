@@ -89,6 +89,29 @@ export const SKU_SORT_OPTIONS = {
     Newest: "Newest",
     Oldest: "Oldest",
 };
+
+export const ORDER_FILTERS = [
+    { label: "All", value: "All" },
+    { label: "Canceled by Admin", value: ORDER_STATUS.CanceledByAdmin },
+    { label: "Canceled by Customer", value: ORDER_STATUS.CanceledByCustomer },
+    { label: "Pending Cancel", value: ORDER_STATUS.PendingCancel },
+    { label: "Rejected", value: ORDER_STATUS.Rejected },
+    { label: "Pending", value: ORDER_STATUS.Pending },
+    { label: "Approved", value: ORDER_STATUS.Approved },
+    { label: "Scheduled", value: ORDER_STATUS.Scheduled },
+    { label: "In Transit", value: ORDER_STATUS.InTransit },
+    { label: "Delivered", value: ORDER_STATUS.Delivered },
+] as const;
+
+export const SORT_OPTIONS = [
+    { label: "A-Z", value: SKU_SORT_OPTIONS.AZ },
+    { label: "Z-A", value: SKU_SORT_OPTIONS.ZA },
+    { label: "Price: Low to High", value: SKU_SORT_OPTIONS.PriceLowHigh },
+    { label: "Price: High to Low", value: SKU_SORT_OPTIONS.PriceHighLow },
+    { label: "Featured", value: SKU_SORT_OPTIONS.Featured },
+    { label: "Newest", value: SKU_SORT_OPTIONS.Newest },
+    { label: "Oldest", value: SKU_SORT_OPTIONS.Oldest },
+] as const;
 export const SKU_STATUS = {
     Deleted: "Deleted",
     Inactive: "Inactive",

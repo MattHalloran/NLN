@@ -1,4 +1,4 @@
-import { BUSINESS_CONTACT_DEFAULTS } from "@local/shared";
+import { BUSINESS_CONTACT_DEFAULTS, createTimestampedId } from "@local/shared";
 import {
     Avatar,
     Box,
@@ -113,7 +113,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     }
 
     static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
-        const errorId = `ERR_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        const errorId = createTimestampedId("ERR");
 
         return {
             hasError: true,

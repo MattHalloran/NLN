@@ -259,7 +259,7 @@ export const AdminHomepageServices = () => {
                     description: "Service description",
                     icon: "sprout",
                     action: "Learn More",
-                    url: "/about",
+                    url: APP_LINKS.About,
                 },
             ],
         });

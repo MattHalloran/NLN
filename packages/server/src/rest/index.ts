@@ -1,4 +1,10 @@
-import { REST_RESOURCE, REST_ROUTES, REST_VERSION_PREFIX, UPLOAD_LIMITS } from "@local/shared";
+import {
+    createTimestampedId,
+    REST_RESOURCE,
+    REST_ROUTES,
+    REST_VERSION_PREFIX,
+    UPLOAD_LIMITS,
+} from "@local/shared";
 import { Router } from "express";
 import multer from "multer";
 import fs from "fs";
@@ -33,7 +39,7 @@ const upload = multer({
         },
         filename: (req, file, cb) => {
             // Use unique filename to prevent collisions
-            const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+            const uniqueSuffix = createTimestampedId("upload");
             cb(null, `${file.fieldname}-${uniqueSuffix}-${file.originalname}`);
         },
     }),

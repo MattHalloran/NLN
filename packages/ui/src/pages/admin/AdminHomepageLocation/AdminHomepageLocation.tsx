@@ -5,6 +5,7 @@ import {
     BUSINESS_CONTACT_DEFAULTS,
     buildGoogleMapsEmbedUrl,
     COMPANY_INFO,
+    createLandingPageItemId,
     DEFAULT_BUSINESS_ADDRESS,
     getLocationFormData,
     REST_ROUTES,
@@ -657,7 +658,7 @@ export const AdminHomepageLocation = () => {
     const handleAddVisitInfoItem = useCallback(() => {
         if (!form.data) return;
         const newItem: LocationVisitInfoItem = {
-            id: window.crypto.randomUUID(),
+            id: createLandingPageItemId("location-item"),
             title: "New Item",
             icon: "eye",
             description: "Description here",
@@ -720,7 +721,7 @@ export const AdminHomepageLocation = () => {
     const handleAddButton = useCallback(() => {
         if (!form.data) return;
         const newButton: LocationButton = {
-            id: window.crypto.randomUUID(),
+            id: createLandingPageItemId("location-item"),
             text: "New Button",
             variant: "contained",
             color: "primary",

@@ -75,7 +75,7 @@ const LogoComponent = ({
                             cursor: "pointer",
                             marginLeft: "8px",
                             fontSize: { xs: "1.2em", md: "1.5em" },
-                            fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
+                            fontFamily: "'Kite One', sans-serif",
                             color: palette.primary.contrastText,
                         }}
                     >

@@ -3,6 +3,9 @@ import { API_PREFIX } from "./routes";
 export const DEFAULT_PORTS = {
     ui: 3001,
     server: 5331,
+    db: 5433,
+    redis: 6380,
+    e2eRedis: 6379,
 } as const;
 
 export const LOCAL_DEV_ORIGINS = [
@@ -20,9 +23,17 @@ export const STATIC_API_PATHS = {
     images: `${API_PREFIX}/images`,
 } as const;
 
+export const DEFAULT_UI_URLS = {
+    localOrigin: `http://localhost:${DEFAULT_PORTS.ui}`,
+} as const;
+
 export const DEFAULT_SERVER_URLS = {
     localOrigin: `http://localhost:${DEFAULT_PORTS.server}`,
     localApi: `http://localhost:${DEFAULT_PORTS.server}${API_PREFIX}`,
     productionApi: API_PREFIX,
     localHealthcheck: `http://localhost:${DEFAULT_PORTS.server}/healthcheck`,
+} as const;
+
+export const SITE_URLS = {
+    canonicalHost: "newlifenurseryinc.com",
 } as const;

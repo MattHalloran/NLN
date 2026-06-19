@@ -1,6 +1,7 @@
 import { test, expect } from "../../fixtures/auth";
 import { gotoAdminPage } from "../../fixtures/admin";
 import type { Page } from "@playwright/test";
+import { APP_LINKS } from "@local/shared";
 
 /**
  * Simplified E2E Tests for Admin Seasonal Content Management
@@ -9,10 +10,10 @@ import type { Page } from "@playwright/test";
  */
 
 const openSeasonalContent = (page: Page) =>
-  gotoAdminPage(page, "/admin/homepage/seasonal", /seasonal content management/i);
+  gotoAdminPage(page, APP_LINKS.AdminHomepageSeasonal, /seasonal content management/i);
 
 const openHomepageHub = async (page: Page) => {
-  await page.goto("/admin/homepage");
+  await page.goto(APP_LINKS.AdminHomepage);
   await expect(page.getByRole("heading", { name: "Hero Banner" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Seasonal Content" })).toBeVisible();
 };

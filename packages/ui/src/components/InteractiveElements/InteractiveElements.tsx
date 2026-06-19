@@ -1,4 +1,5 @@
 import {
+    APP_LINKS,
     DEFAULT_SEASONAL_CONTENT,
     getCurrentSeason,
     sortSeasonalPlantsByCurrentSeason,
@@ -24,28 +25,12 @@ import { useABTestTracking } from "hooks";
 import { useLocation } from "route";
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
-import { Leaf, Lightbulb, Sprout, Flower, Snowflake, LucideIcon, Star, Images } from "lucide-react";
+import { Leaf, Lightbulb, Images, Sprout } from "lucide-react";
 import { getServerUrl } from "utils";
 import { restApi } from "api/rest/client";
+import { resolveLandingPageIcon } from "utils/landingPageIcons";
 
-// Icon mapping for different plant types
-const getIconComponent = (iconName: string): LucideIcon => {
-    switch (iconName) {
-        case "leaf":
-            return Leaf;
-        case "flower":
-        case "flower2":
-            return Flower;
-        case "snowflake":
-            return Snowflake;
-        case "sprout":
-            return Sprout;
-        case "star":
-            return Star;
-        default:
-            return Leaf;
-    }
-};
+const getIconComponent = (iconName: string) => resolveLandingPageIcon(iconName, Leaf);
 
 export const InteractiveElements = () => {
     const { palette } = useTheme();
@@ -215,7 +200,7 @@ export const InteractiveElements = () => {
                             color="primary"
                             size="large"
                             startIcon={<Images size={20} />}
-                            onClick={() => setLocation("/gallery")}
+                            onClick={() => setLocation(APP_LINKS.Gallery)}
                             sx={{
                                 px: 4,
                                 py: 1.5,

@@ -19,6 +19,7 @@ import { BusinessContext } from "contexts/BusinessContext";
 import { useContext, useMemo } from "react";
 import {
     activeByDisplayOrder,
+    APP_LINKS,
     BUSINESS_CONTACT_DEFAULTS,
     buildGoogleMapsEmbedUrl,
     COMPANY_INFO,
@@ -127,10 +128,7 @@ export const LocationVisit = () => {
     }, [contactMethodsConfig.order, contactMethodsConfig.descriptions, business]);
 
     const getDirections = () => {
-        // Use the dynamic link from business context, or fallback to hardcoded address
-        const mapLink =
-            business?.ADDRESS?.Link ||
-            "https://maps.google.com/?q=106+S+Woodruff+Rd+Bridgeton+NJ+08302";
+        const mapLink = business?.ADDRESS?.Link || BUSINESS_CONTACT_DEFAULTS.address.mapsUrl;
         window.open(mapLink, "_blank");
     };
 
@@ -554,7 +552,7 @@ export const LocationVisit = () => {
                                         getDirections();
                                         break;
                                     case "contact":
-                                        setLocation("/about#contact");
+                                        setLocation(`${APP_LINKS.About}#contact`);
                                         break;
                                     case "external":
                                         if (button.url) {

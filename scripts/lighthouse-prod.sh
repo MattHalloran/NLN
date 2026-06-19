@@ -8,6 +8,11 @@
 
 set -euo pipefail
 
+HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+# shellcheck source=scripts/env-defaults.sh
+. "${HERE}/env-defaults.sh"
+default_env_apply
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -23,9 +28,9 @@ if [ ! -d "packages/ui/dist" ]; then
     yarn workspace ui build
 fi
 
-# Check if server is already running on port 3001
-if lsof -Pi :3001 -sTCP:LISTEN -t >/dev/null 2>&1 ; then
-    echo -e "${YELLOW}Port 3001 is already in use${NC}"
+# Check if server is already running on the UI port
+if lsof -Pi :"${PORT_UI}" -sTCP:LISTEN -t >/dev/null 2>&1 ; then
+    echo -e "${YELLOW}Port ${PORT_UI} is already in use${NC}"
     echo -e "Please stop the development server and run this script again"
     echo -e "\nTo stop the dev server:"
     echo -e "  ps aux | grep 'vite\\|yarn.*start-development' | grep -v grep"
@@ -34,16 +39,16 @@ if lsof -Pi :3001 -sTCP:LISTEN -t >/dev/null 2>&1 ; then
 fi
 
 # Start production preview server
-echo -e "${GREEN}Starting production server on port 3001...${NC}"
+echo -e "${GREEN}Starting production server on port ${PORT_UI}...${NC}"
 cd packages/ui
-npx serve -s dist -l 3001 &
+npx serve -s dist -l "${PORT_UI}" &
 SERVER_PID=$!
 cd ../..
 
 # Wait for server to be ready
 echo -e "${BLUE}Waiting for server to start...${NC}"
 for i in {1..30}; do
-    if curl -s http://localhost:3001 > /dev/null 2>&1; then
+    if curl -s "http://localhost:${PORT_UI}" > /dev/null 2>&1; then
         echo -e "${GREEN}Server is ready!${NC}\n"
         break
     fi

@@ -5,11 +5,14 @@ import {
     DEFAULT_SECTION_CONFIGURATION,
     DEFAULT_SERVICES_CONTENT,
     DEFAULT_NEWSLETTER_CONTENT,
+    DEFAULT_SEASONAL_CONTENT,
     DEFAULT_ABOUT_CONTENT,
     DEFAULT_LOCATION_CONTENT,
     DEFAULT_SOCIAL_PROOF_CONTENT,
 } from "./landingPageDefaults";
 import { sortByDisplayOrder } from "./contentUtils";
+import { createLandingPageItemId } from "./ids";
+import { LANDING_PAGE_ICON } from "./icons";
 import type {
     AboutContent,
     Button,
@@ -20,11 +23,15 @@ import type {
     LandingPageContent,
     LocationContent,
     NewsletterContent,
+    PlantTip,
     SectionConfiguration,
+    SeasonalContent,
+    SeasonalPlant,
     ServicesContent,
     SocialProofContent,
     ThemeColors,
     TrustBadge,
+    UpdateLandingPageContentRequest,
 } from "./types";
 
 export interface HeroFormContent {
@@ -46,6 +53,17 @@ export interface HeroSectionFormData {
 export interface BrandingFormData {
     companyInfo: LandingPageContent["content"]["company"];
     colors: ThemeColors;
+}
+
+export interface SeasonalFormData {
+    plants: SeasonalPlant[];
+    tips: PlantTip[];
+    sectionText: {
+        header: NonNullable<SeasonalContent["header"]>;
+        sections: NonNullable<SeasonalContent["sections"]>;
+        newsletterButtonText: string;
+    };
+    galleryButton: NonNullable<SeasonalContent["galleryButton"]>;
 }
 
 export const DEFAULT_BRANDING_FORM_DATA: BrandingFormData = {
@@ -98,6 +116,17 @@ export const getHeroSectionFormData = (
     };
 };
 
+export const createHeroBannerFormItem = (
+    input: Pick<HeroBanner, "src" | "alt" | "width" | "height"> &
+        Partial<Omit<HeroBanner, "src" | "alt" | "width" | "height">>,
+): HeroBanner => ({
+    id: createLandingPageItemId("hero"),
+    description: "",
+    displayOrder: 1,
+    isActive: true,
+    ...input,
+});
+
 export const buildHeroContentPatch = (
     data: HeroSectionFormData,
 ): DeepPartial<Pick<LandingPageContent, "content">> => ({
@@ -134,6 +163,64 @@ export const buildNewsletterPatch = (
     newsletter: NewsletterContent,
 ): DeepPartial<Pick<LandingPageContent, "content">> => ({
     content: { newsletter },
+});
+
+export const getSeasonalFormData = (content?: LandingPageContent | null): SeasonalFormData => {
+    const seasonal = content?.content?.seasonal;
+
+    return {
+        plants: seasonal?.plants || [],
+        tips: seasonal?.tips || [],
+        sectionText: {
+            header: seasonal?.header || DEFAULT_SEASONAL_CONTENT.header!,
+            sections: seasonal?.sections || DEFAULT_SEASONAL_CONTENT.sections!,
+            newsletterButtonText:
+                content?.content?.newsletter?.buttonText ||
+                DEFAULT_NEWSLETTER_CONTENT.buttonText ||
+                "",
+        },
+        galleryButton: seasonal?.galleryButton || DEFAULT_SEASONAL_CONTENT.galleryButton!,
+    };
+};
+
+export const buildSeasonalPatch = (
+    seasonal: SeasonalFormData,
+): UpdateLandingPageContentRequest => ({
+    seasonalPlants: seasonal.plants,
+    plantTips: seasonal.tips,
+    seasonalHeader: seasonal.sectionText.header,
+    seasonalSections: seasonal.sectionText.sections,
+    newsletterButtonText: seasonal.sectionText.newsletterButtonText,
+    seasonalGalleryButton: seasonal.galleryButton,
+});
+
+export const createSeasonalPlantFormItem = (
+    displayOrder: number,
+    overrides: Partial<SeasonalPlant> = {},
+): SeasonalPlant => ({
+    id: createLandingPageItemId("plant"),
+    name: "",
+    description: "",
+    season: "Spring",
+    careLevel: "Easy",
+    icon: LANDING_PAGE_ICON.Leaf,
+    displayOrder,
+    isActive: true,
+    ...overrides,
+});
+
+export const createPlantTipFormItem = (
+    displayOrder: number,
+    overrides: Partial<PlantTip> = {},
+): PlantTip => ({
+    id: createLandingPageItemId("tip"),
+    title: "",
+    description: "",
+    category: "General",
+    season: "Year-round",
+    displayOrder,
+    isActive: true,
+    ...overrides,
 });
 
 export const getSectionConfigurationFormData = (

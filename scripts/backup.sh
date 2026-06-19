@@ -14,6 +14,8 @@ umask 077
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 # shellcheck disable=SC1091
 . "${HERE}/utils.sh"
+# shellcheck source=scripts/runtime-state.sh
+. "${HERE}/runtime-state.sh"
 
 ENV_FILE="${HERE}/../.env-prod"
 MODE="runtime-state"
@@ -135,11 +137,16 @@ ensure_ssh_access() {
 
 remote_runtime_paths_script() {
     local include_logs="$1"
+    local critical_paths optional_paths jwt_globs log_paths
+    critical_paths=$(runtime_state_shell_words runtime_state_critical_paths)
+    optional_paths=$(runtime_state_shell_words runtime_state_optional_paths)
+    jwt_globs=$(runtime_state_shell_words runtime_state_jwt_globs)
+    log_paths=$(runtime_state_shell_words runtime_state_log_paths)
     cat <<EOF
 cd "${PROJECT_DIR}"
-critical="data/postgres data/uploads assets data/redis data/migration-backups .env-prod"
-optional=".env jwt_*"
-[ "${include_logs}" = "true" ] && optional="\${optional} data/logs"
+critical="${critical_paths}"
+optional="${optional_paths} ${jwt_globs}"
+[ "${include_logs}" = "true" ] && optional="\${optional} ${log_paths}"
 missing=""
 for p in \${critical}; do
   if ! ls -d \${p} >/dev/null 2>&1; then

@@ -1,3 +1,4 @@
+import { APP_LINKS } from "@local/shared";
 import {
     Box,
     Button,
@@ -1240,7 +1241,7 @@ export const AdminStoragePage = () => {
                 </DialogActions>
             </Dialog>
 
-            <BackButton to="/admin" />
+            <BackButton to={APP_LINKS.Admin} />
         </PageContainer>
     );
 };

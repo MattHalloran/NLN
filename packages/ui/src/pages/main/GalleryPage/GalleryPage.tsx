@@ -1,4 +1,4 @@
-import { IMAGE_SIZE } from "@local/shared";
+import { IMAGE_LABELS, IMAGE_SIZE } from "@local/shared";
 import type { Image } from "api/rest/client";
 import {
     Box,
@@ -68,7 +68,7 @@ export const GalleryPage = () => {
     const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
 
     // Query for gallery images from the API
-    const { data: imageData, error } = useImagesByLabel("gallery");
+    const { data: imageData, error } = useImagesByLabel(IMAGE_LABELS.Gallery);
 
     useEffect(() => {
         if (error) {

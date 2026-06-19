@@ -9,6 +9,8 @@ set -euo pipefail
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 # shellcheck disable=SC1091
 . "${HERE}/utils.sh"
+# shellcheck source=scripts/runtime-state.sh
+. "${HERE}/runtime-state.sh"
 
 ENV_FILE="${HERE}/../.env-prod"
 DISK_MIN_PERCENT="${VPS_HEALTH_DISK_MIN_PERCENT:-15}"
@@ -61,6 +63,7 @@ KEY_PATH="${HOME}/.ssh/id_rsa_${SITE_IP}"
 MIN_KB=$((DISK_MIN_GB * 1024 * 1024))
 BACKUP_WARN_KB=$((BACKUP_WARN_GB * 1024 * 1024))
 LOG_WARN_KB=$((LOG_WARN_GB * 1024 * 1024))
+RUNTIME_HEALTHCHECK_PATHS=$(runtime_state_shell_words runtime_state_healthcheck_paths)
 
 if [ ! -f "${KEY_PATH}" ]; then
     error "SSH key not found: ${KEY_PATH}"
@@ -109,7 +112,7 @@ cd "\${project_dir}" || {
   exit 0
 }
 
-for path in data/postgres data/uploads assets data/redis data/migration-backups .env-prod docker-compose-prod.yml; do
+for path in ${RUNTIME_HEALTHCHECK_PATHS}; do
   if [ ! -e "\${path}" ]; then
     critical "Required runtime path is missing: \${path}"
   else

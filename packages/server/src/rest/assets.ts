@@ -1,5 +1,5 @@
+import { CODE, REST_CHILD_PATHS } from "@local/shared";
 import { Router, Request, Response } from "express";
-import { CODE } from "@local/shared";
 import { CustomError } from "../error.js";
 import { readFiles, saveFiles } from "../utils/index.js";
 import { logger, LogLevel } from "../logger.js";
@@ -24,7 +24,7 @@ const PUBLIC_READABLE_FILES = [
  * Security: Only whitelisted public files can be read without authentication.
  * This prevents unauthorized access to sensitive configuration or data files.
  */
-router.post("/read", async (req: Request, res: Response) => {
+router.post(REST_CHILD_PATHS.assets.read, async (req: Request, res: Response) => {
     try {
         const { files } = req.body as { files?: unknown };
 
@@ -83,7 +83,7 @@ router.post("/read", async (req: Request, res: Response) => {
  * POST /api/rest/v1/assets/write
  * Write asset files (admin only, multipart/form-data)
  */
-router.post("/write", async (req: Request, res: Response) => {
+router.post(REST_CHILD_PATHS.assets.write, async (req: Request, res: Response) => {
     try {
         const { isAdmin } = req;
 

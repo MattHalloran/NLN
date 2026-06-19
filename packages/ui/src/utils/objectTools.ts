@@ -16,7 +16,7 @@ export const arrayValueFromDot = (
     index: number,
 ): unknown => {
     const value = valueFromDot(object, notation);
-    if (!value || !Array.isArray(value) || index <= 0 || value.length >= index) return null;
+    if (!Array.isArray(value) || index < 0 || index >= value.length) return null;
     return value[index];
 };
 

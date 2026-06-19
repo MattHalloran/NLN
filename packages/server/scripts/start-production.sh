@@ -7,6 +7,9 @@ echo ""
 # Change to server directory
 cd "$(dirname "$0")/.."
 
+# shellcheck source=../../../scripts/env-defaults.sh
+. ../../scripts/env-defaults.sh
+
 # Load environment variables from .env file
 if [ -f .env ]; then
     echo "📋 Loading environment variables from .env"
@@ -17,6 +20,8 @@ else
     echo "⚠️  Warning: .env file not found in $(pwd)"
     echo "   The server may fail to start if required variables are not set"
 fi
+
+default_env_apply
 
 # Ensure PROJECT_DIR is set (fallback to parent directory)
 if [ -z "$PROJECT_DIR" ]; then
@@ -36,11 +41,7 @@ echo "✅ Pre-flight checks complete"
 echo ""
 
 # Free up the port if already in use
-if [ -n "$PORT_SERVER" ]; then
-    PORT=$PORT_SERVER
-else
-    PORT=5331
-fi
+PORT=$PORT_SERVER
 
 echo "🔍 Checking if port $PORT is in use..."
 PORT_PID=$(lsof -ti:$PORT 2>/dev/null || true)

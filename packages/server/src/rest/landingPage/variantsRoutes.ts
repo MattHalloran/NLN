@@ -1,3 +1,4 @@
+import { REST_CHILD_PATHS, createLandingPageItemId } from "@local/shared";
 import { Router, Response } from "express";
 import { logger, LogLevel } from "../../logger.js";
 import type { LandingPageVariant, LandingPageContent } from "../../types/landingPage.js";
@@ -30,24 +31,29 @@ router.get("/", requireAdmin, async (req: AuthenticatedRequest, res: Response) =
 });
 
 // GET endpoint to retrieve a specific variant (admin only)
-router.get("/:id", requireAdmin, async (req: AuthenticatedRequest, res: Response) => {
-    try {
-        const variants = readVariants();
-        const variant = variants.find((v) => v.id === req.params.id);
+router.get(
+    REST_CHILD_PATHS.variants.item,
+    requireAdmin,
+    async (req: AuthenticatedRequest, res: Response) => {
+        try {
+            const variants = readVariants();
+            const variant = variants.find((v) => v.id === req.params.id);
 
-        if (!variant) {
-            return res.status(404).json({ error: "Variant not found" });
+            if (!variant) {
+                return res.status(404).json({ error: "Variant not found" });
+            }
+
+            return res.json(variant);
+        } catch (error) {
+            logger.log(LogLevel.error, "Error fetching variant:", error);
+            return res.status(500).json({
+                error: "Failed to fetch variant",
+                message:
+                    process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
+            });
         }
-
-        return res.json(variant);
-    } catch (error) {
-        logger.log(LogLevel.error, "Error fetching variant:", error);
-        return res.status(500).json({
-            error: "Failed to fetch variant",
-            message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
-        });
     }
-});
+);
 
 // POST endpoint to create a new variant (admin only)
 router.post("/", requireAdmin, async (req: AuthenticatedRequest, res: Response) => {
@@ -66,7 +72,7 @@ router.post("/", requireAdmin, async (req: AuthenticatedRequest, res: Response) 
         const variants = readVariants();
 
         const newVariant: LandingPageVariant = {
-            id: `variant-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+            id: createLandingPageItemId("variant"),
             name,
             description: description || "",
             status: "disabled",
@@ -121,145 +127,160 @@ router.post("/", requireAdmin, async (req: AuthenticatedRequest, res: Response) 
 });
 
 // PUT endpoint to update a variant (admin only)
-router.put("/:id", requireAdmin, async (req: AuthenticatedRequest, res: Response) => {
-    try {
-        const variants = readVariants();
-        const variantIndex = variants.findIndex((v) => v.id === req.params.id);
+router.put(
+    REST_CHILD_PATHS.variants.item,
+    requireAdmin,
+    async (req: AuthenticatedRequest, res: Response) => {
+        try {
+            const variants = readVariants();
+            const variantIndex = variants.findIndex((v) => v.id === req.params.id);
 
-        if (variantIndex === -1) {
-            return res.status(404).json({ error: "Variant not found" });
-        }
-
-        const { name, description, status, trafficAllocation } = req.body;
-
-        // Update the variant
-        variants[variantIndex] = {
-            ...variants[variantIndex],
-            ...(name && { name }),
-            ...(description !== undefined && { description }),
-            ...(status && { status }),
-            ...(trafficAllocation !== undefined && { trafficAllocation }),
-            updatedAt: new Date().toISOString(),
-        };
-
-        // Validate traffic allocation if status is being changed to enabled
-        if (status === "enabled") {
-            const tempVariants = [...variants];
-            if (!validateTrafficAllocation(tempVariants)) {
-                return res.status(400).json({
-                    error: "Traffic allocation must sum to 100% for all enabled variants",
-                });
+            if (variantIndex === -1) {
+                return res.status(404).json({ error: "Variant not found" });
             }
+
+            const { name, description, status, trafficAllocation } = req.body;
+
+            // Update the variant
+            variants[variantIndex] = {
+                ...variants[variantIndex],
+                ...(name && { name }),
+                ...(description !== undefined && { description }),
+                ...(status && { status }),
+                ...(trafficAllocation !== undefined && { trafficAllocation }),
+                updatedAt: new Date().toISOString(),
+            };
+
+            // Validate traffic allocation if status is being changed to enabled
+            if (status === "enabled") {
+                const tempVariants = [...variants];
+                if (!validateTrafficAllocation(tempVariants)) {
+                    return res.status(400).json({
+                        error: "Traffic allocation must sum to 100% for all enabled variants",
+                    });
+                }
+            }
+
+            writeVariants(variants);
+            await invalidateCache();
+
+            return res.json(variants[variantIndex]);
+        } catch (error) {
+            logger.log(LogLevel.error, "Error updating variant:", error);
+            return res.status(500).json({
+                error: "Failed to update variant",
+                message:
+                    process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
+            });
         }
-
-        writeVariants(variants);
-        await invalidateCache();
-
-        return res.json(variants[variantIndex]);
-    } catch (error) {
-        logger.log(LogLevel.error, "Error updating variant:", error);
-        return res.status(500).json({
-            error: "Failed to update variant",
-            message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
-        });
     }
-});
+);
 
 // DELETE endpoint to delete a variant (admin only)
-router.delete("/:id", requireAdmin, async (req: AuthenticatedRequest, res: Response) => {
-    try {
-        const variants = readVariants();
-        const variantIndex = variants.findIndex((v) => v.id === req.params.id);
+router.delete(
+    REST_CHILD_PATHS.variants.item,
+    requireAdmin,
+    async (req: AuthenticatedRequest, res: Response) => {
+        try {
+            const variants = readVariants();
+            const variantIndex = variants.findIndex((v) => v.id === req.params.id);
 
-        if (variantIndex === -1) {
-            return res.status(404).json({ error: "Variant not found" });
+            if (variantIndex === -1) {
+                return res.status(404).json({ error: "Variant not found" });
+            }
+
+            const variant = variants[variantIndex];
+
+            if (variant.isOfficial) {
+                return res.status(400).json({ error: "Cannot delete the official variant" });
+            }
+
+            if (variant.status === "enabled") {
+                return res
+                    .status(400)
+                    .json({ error: "Cannot delete an enabled variant. Disable it first." });
+            }
+
+            deleteVariantContent(req.params.id);
+            variants.splice(variantIndex, 1);
+            writeVariants(variants);
+
+            return res.json({
+                success: true,
+                message: "Variant and content file deleted successfully",
+            });
+        } catch (error) {
+            logger.log(LogLevel.error, "Error deleting variant:", error);
+            return res.status(500).json({
+                error: "Failed to delete variant",
+                message:
+                    process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
+            });
         }
-
-        const variant = variants[variantIndex];
-
-        if (variant.isOfficial) {
-            return res.status(400).json({ error: "Cannot delete the official variant" });
-        }
-
-        if (variant.status === "enabled") {
-            return res
-                .status(400)
-                .json({ error: "Cannot delete an enabled variant. Disable it first." });
-        }
-
-        deleteVariantContent(req.params.id);
-        variants.splice(variantIndex, 1);
-        writeVariants(variants);
-
-        return res.json({
-            success: true,
-            message: "Variant and content file deleted successfully",
-        });
-    } catch (error) {
-        logger.log(LogLevel.error, "Error deleting variant:", error);
-        return res.status(500).json({
-            error: "Failed to delete variant",
-            message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
-        });
     }
-});
+);
 
 // POST endpoint to promote a variant to official (admin only)
-router.post("/:id/promote", requireAdmin, async (req: AuthenticatedRequest, res: Response) => {
-    try {
-        const variants = readVariants();
-        const variantIndex = variants.findIndex((v) => v.id === req.params.id);
+router.post(
+    REST_CHILD_PATHS.variants.promote,
+    requireAdmin,
+    async (req: AuthenticatedRequest, res: Response) => {
+        try {
+            const variants = readVariants();
+            const variantIndex = variants.findIndex((v) => v.id === req.params.id);
 
-        if (variantIndex === -1) {
-            return res.status(404).json({ error: "Variant not found" });
-        }
+            if (variantIndex === -1) {
+                return res.status(404).json({ error: "Variant not found" });
+            }
 
-        const variant = variants[variantIndex];
-        const variantContent = readVariantContent(variant.id);
+            const variant = variants[variantIndex];
+            const variantContent = readVariantContent(variant.id);
 
-        if (!variantContent) {
-            return res.status(404).json({ error: "Variant content not found" });
-        }
+            if (!variantContent) {
+                return res.status(404).json({ error: "Variant content not found" });
+            }
 
-        // Find and demote the current official variant
-        const currentOfficialIndex = variants.findIndex((v) => v.isOfficial);
-        if (currentOfficialIndex !== -1) {
-            variants[currentOfficialIndex].isOfficial = false;
-            variants[currentOfficialIndex].updatedAt = new Date().toISOString();
+            // Find and demote the current official variant
+            const currentOfficialIndex = variants.findIndex((v) => v.isOfficial);
+            if (currentOfficialIndex !== -1) {
+                variants[currentOfficialIndex].isOfficial = false;
+                variants[currentOfficialIndex].updatedAt = new Date().toISOString();
+                logger.info(
+                    `Demoted variant ${variants[currentOfficialIndex].id} from official status`
+                );
+            }
+
+            // Promote the new variant
+            variants[variantIndex].isOfficial = true;
+            variants[variantIndex].updatedAt = new Date().toISOString();
+
+            // Copy variant content to the official landing page
+            await writeLandingPageContent(variantContent);
             logger.info(
-                `Demoted variant ${variants[currentOfficialIndex].id} from official status`
+                `Promoted variant ${variant.id} to official. Content copied to landing-page-content.json`
             );
+
+            writeVariants(variants);
+            await invalidateCache();
+
+            return res.json({
+                success: true,
+                message: "Variant promoted to official successfully",
+                variant: variants[variantIndex],
+            });
+        } catch (error) {
+            logger.log(LogLevel.error, "Error promoting variant:", error);
+            return res.status(500).json({
+                error: "Failed to promote variant",
+                message:
+                    process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
+            });
         }
-
-        // Promote the new variant
-        variants[variantIndex].isOfficial = true;
-        variants[variantIndex].updatedAt = new Date().toISOString();
-
-        // Copy variant content to the official landing page
-        await writeLandingPageContent(variantContent);
-        logger.info(
-            `Promoted variant ${variant.id} to official. Content copied to landing-page-content.json`
-        );
-
-        writeVariants(variants);
-        await invalidateCache();
-
-        return res.json({
-            success: true,
-            message: "Variant promoted to official successfully",
-            variant: variants[variantIndex],
-        });
-    } catch (error) {
-        logger.log(LogLevel.error, "Error promoting variant:", error);
-        return res.status(500).json({
-            error: "Failed to promote variant",
-            message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
-        });
     }
-});
+);
 
 // POST endpoint to track variant analytics events
-router.post("/:id/track", async (req: AuthenticatedRequest, res: Response) => {
+router.post(REST_CHILD_PATHS.variants.track, async (req: AuthenticatedRequest, res: Response) => {
     try {
         const { eventType } = req.body as {
             eventType?: "view" | "conversion" | "bounce";
@@ -297,38 +318,43 @@ router.post("/:id/track", async (req: AuthenticatedRequest, res: Response) => {
 });
 
 // POST endpoint to toggle variant status (enable/disable) (admin only)
-router.post("/:id/toggle", requireAdmin, async (req: AuthenticatedRequest, res: Response) => {
-    try {
-        const variants = readVariants();
-        const variantIndex = variants.findIndex((v) => v.id === req.params.id);
+router.post(
+    REST_CHILD_PATHS.variants.toggle,
+    requireAdmin,
+    async (req: AuthenticatedRequest, res: Response) => {
+        try {
+            const variants = readVariants();
+            const variantIndex = variants.findIndex((v) => v.id === req.params.id);
 
-        if (variantIndex === -1) {
-            return res.status(404).json({ error: "Variant not found" });
-        }
+            if (variantIndex === -1) {
+                return res.status(404).json({ error: "Variant not found" });
+            }
 
-        // Toggle status
-        const newStatus = variants[variantIndex].status === "enabled" ? "disabled" : "enabled";
-        variants[variantIndex].status = newStatus;
-        variants[variantIndex].updatedAt = new Date().toISOString();
+            // Toggle status
+            const newStatus = variants[variantIndex].status === "enabled" ? "disabled" : "enabled";
+            variants[variantIndex].status = newStatus;
+            variants[variantIndex].updatedAt = new Date().toISOString();
 
-        // Validate traffic allocation if enabling
-        if (newStatus === "enabled" && !validateTrafficAllocation(variants)) {
-            return res.status(400).json({
-                error: "Traffic allocation must sum to 100% for all enabled variants",
+            // Validate traffic allocation if enabling
+            if (newStatus === "enabled" && !validateTrafficAllocation(variants)) {
+                return res.status(400).json({
+                    error: "Traffic allocation must sum to 100% for all enabled variants",
+                });
+            }
+
+            writeVariants(variants);
+            await invalidateCache();
+
+            return res.json(variants[variantIndex]);
+        } catch (error) {
+            logger.log(LogLevel.error, "Error toggling variant status:", error);
+            return res.status(500).json({
+                error: "Failed to toggle variant status",
+                message:
+                    process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
             });
         }
-
-        writeVariants(variants);
-        await invalidateCache();
-
-        return res.json(variants[variantIndex]);
-    } catch (error) {
-        logger.log(LogLevel.error, "Error toggling variant status:", error);
-        return res.status(500).json({
-            error: "Failed to toggle variant status",
-            message: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
-        });
     }
-});
+);
 
 export default router;

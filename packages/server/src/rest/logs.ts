@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express";
-import { CODE } from "@local/shared";
+import { CODE, REST_CHILD_PATHS } from "@local/shared";
 import { CustomError } from "../error.js";
 import { logger, LogLevel } from "../logger.js";
 import fs from "fs";
@@ -203,7 +203,7 @@ router.get("/", async (req: Request, res: Response) => {
  * GET /api/rest/v1/logs/stats
  * Get log file statistics (admin only)
  */
-router.get("/stats", async (req: Request, res: Response) => {
+router.get(REST_CHILD_PATHS.logs.stats, async (req: Request, res: Response) => {
     try {
         const { isAdmin } = req;
 
