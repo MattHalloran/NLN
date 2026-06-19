@@ -58,32 +58,22 @@ export async function setupAuth(page: Page) {
 
   console.log("✓ Credentials filled");
 
-  // Set up promise to wait for auth login response
-  let loginResponse: any = null;
-  const responseHandler = (response: any) => {
-    if (response.url().includes(stripApiPrefix(REST_ROUTES.auth.login))) {
-      console.log(`✓ Captured login response: ${response.status()}`);
-      loginResponse = response;
-    }
-  };
-  page.on("response", responseHandler);
-
   // Click login button
   console.log("Clicking submit button...");
+  const loginResponsePromise = page.waitForResponse(
+    (response) => response.url().includes(stripApiPrefix(REST_ROUTES.auth.login)),
+    { timeout: 15000 },
+  );
   await page.click("button[type=\"submit\"]");
   console.log("✓ Submit button clicked");
 
-  // Wait for the login response with polling
-  for (let i = 0; i < 30; i++) {
-    if (loginResponse) break;
-    await page.waitForTimeout(500);
-  }
-
-  page.off("response", responseHandler);
-
-  if (!loginResponse) {
+  let loginResponse;
+  try {
+    loginResponse = await loginResponsePromise;
+    console.log(`✓ Captured login response: ${loginResponse.status()}`);
+  } catch (error) {
     console.error("Recent responses:", responses.slice(-10));
-    throw new Error("Login response not captured after 15 seconds");
+    throw new Error(`Login response not captured after 15 seconds: ${String(error)}`);
   }
 
   // Check response status

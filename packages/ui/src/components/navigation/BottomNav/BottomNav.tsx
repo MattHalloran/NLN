@@ -1,7 +1,7 @@
+import { EXTERNAL_LINKS, hasSession } from "@local/shared";
 import { Badge, BottomNavigation, BottomNavigationAction, useTheme } from "@mui/material";
 import { SessionContext } from "contexts/SessionContext";
 import { useKeyboardOpen } from "hooks/useKeyboardOpen";
-import { isObject } from "lodash-es";
 import { useContext } from "react";
 import { useLocation } from "route";
 import { pagePaddingBottom } from "styles";
@@ -19,7 +19,7 @@ export const BottomNav = ({ ...props }) => {
     const invisible = useKeyboardOpen();
 
     // Hide the nav when not logged in (only admin needs access now)
-    const isLoggedIn = isObject(session) && session && Object.keys(session).length > 0;
+    const isLoggedIn = hasSession(session);
 
     if (invisible || !isLoggedIn) return null;
     return (
@@ -49,10 +49,9 @@ export const BottomNav = ({ ...props }) => {
                         e.preventDefault();
                         // Redirect to external URLs for availability and cart
                         if (value === "availability") {
-                            window.location.href = "https://newlife.online-orders.sbiteam.com/";
+                            window.location.href = EXTERNAL_LINKS.availability;
                         } else if (value === "cart") {
-                            window.location.href =
-                                "https://newlife.online-orders.sbiteam.com/orders";
+                            window.location.href = EXTERNAL_LINKS.orders;
                         } else {
                             setLocation(link);
                             if (onClick) onClick();

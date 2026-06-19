@@ -37,6 +37,7 @@ lib-cov
 
 # Coverage directory used by tools like istanbul
 coverage
+coverage-integration/
 *.lcov
 
 # nyc test coverage
@@ -210,3 +211,4 @@ test-results/
 playwright-report/
 e2e/.auth/
 .e2e-backup/
+.e2e-runtime/

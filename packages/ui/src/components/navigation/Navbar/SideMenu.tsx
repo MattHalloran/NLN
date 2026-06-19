@@ -1,4 +1,4 @@
-import { APP_LINKS } from "@local/shared";
+import { APP_LINKS, EXTERNAL_LINKS, hasSession } from "@local/shared";
 import {
     Badge,
     Box,
@@ -38,7 +38,6 @@ import {
     User,
     Store,
 } from "lucide-react";
-import { isObject } from "lodash-es";
 import React, { useContext, useState } from "react";
 import { useLocation } from "route";
 import { noop } from "utils/objectTools";
@@ -110,7 +109,7 @@ export const SideMenu = () => {
             "Availability",
             "availability",
             "",
-            () => window.open("https://newlife.online-orders.sbiteam.com/", "_blank"),
+            () => window.open(EXTERNAL_LINKS.availability, "_blank"),
             null,
             0,
         ],
@@ -120,7 +119,7 @@ export const SideMenu = () => {
 
     // Filter out the availability option from customer actions since we moved it to nav_options
     const customer_actions = getUserActions(session).filter(([label]) => label !== "Availability");
-    if (isObject(session) && Object.entries(session).length > 0) {
+    if (hasSession(session)) {
         customer_actions.push(["Log Out", "logout", APP_LINKS.Home, logoutCustomer, null, 0]);
     }
 
@@ -365,15 +364,12 @@ export const SideMenu = () => {
                                                 // Redirect to external URLs for availability and cart
                                                 if (value === "availability") {
                                                     window.open(
-                                                        "https://newlife.online-orders.sbiteam.com/",
+                                                        EXTERNAL_LINKS.availability,
                                                         "_blank",
                                                     );
                                                     close();
                                                 } else if (value === "cart") {
-                                                    window.open(
-                                                        "https://newlife.online-orders.sbiteam.com/orders",
-                                                        "_blank",
-                                                    );
+                                                    window.open(EXTERNAL_LINKS.orders, "_blank");
                                                     close();
                                                 } else {
                                                     if (onClick) onClick();

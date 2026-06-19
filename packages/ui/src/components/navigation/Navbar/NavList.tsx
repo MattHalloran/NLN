@@ -1,4 +1,4 @@
-import { APP_LINKS } from "@local/shared";
+import { APP_LINKS, EXTERNAL_LINKS, hasSession } from "@local/shared";
 import {
     Badge,
     Box,
@@ -17,7 +17,6 @@ import { SessionContext } from "contexts/SessionContext";
 import { useSideMenu } from "hooks/useSideMenu";
 import { useWindowSize } from "hooks/useWindowSize";
 import { Menu as MenuIcon, ShoppingCart, Store, Info, Camera } from "lucide-react";
-import { isObject } from "lodash-es";
 import { useCallback, useContext } from "react";
 import { useLocation } from "route";
 import { updateArray as _updateArray } from "utils/arrayTools";
@@ -55,7 +54,7 @@ export const NavList = () => {
             "Availability",
             "availability",
             "",
-            () => window.open("https://newlife.online-orders.sbiteam.com/", "_blank"),
+            () => window.open(EXTERNAL_LINKS.availability, "_blank"),
             null,
             0,
         ],
@@ -63,7 +62,7 @@ export const NavList = () => {
 
     let cart_button;
     // If someone is logged in, show additional options and cart
-    if (isObject(session) && Object.keys(session).length > 0) {
+    if (hasSession(session)) {
         const userActions = getUserActions(session);
         // Filter out Login (shouldn't be there for logged-in users anyway) and Availability (we handle it above)
         const filteredActions = userActions.filter(
@@ -81,9 +80,7 @@ export const NavList = () => {
                 edge="start"
                 color="inherit"
                 aria-label="cart"
-                onClick={() =>
-                    window.open("https://newlife.online-orders.sbiteam.com/orders", "_blank")
-                }
+                onClick={() => window.open(EXTERNAL_LINKS.orders, "_blank")}
                 sx={{ margin: 0 }}
             >
                 <Badge badgeContent={cartData} color="error">

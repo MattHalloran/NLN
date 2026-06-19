@@ -1,4 +1,4 @@
-import { APP_LINKS } from "@local/shared";
+import { APP_LINKS, hasSession } from "@local/shared";
 import {
     Box,
     ButtonBase as _ButtonBase,
@@ -29,7 +29,6 @@ import {
     LogIn,
     Clock,
 } from "lucide-react";
-import { isObject } from "lodash-es";
 import { useContext, useEffect, useMemo } from "react";
 import { useLocation } from "route";
 import { getServerUrl } from "utils/serverUrl";
@@ -207,9 +206,7 @@ export const Footer = () => {
                                 Gallery
                             </Link>
                             {/* Show login only when not logged in */}
-                            {(!isObject(session) ||
-                                !session ||
-                                Object.keys(session).length === 0) && (
+                            {!hasSession(session) && (
                                 <Link
                                     component="button"
                                     onClick={() => setLocation(APP_LINKS.LogIn)}

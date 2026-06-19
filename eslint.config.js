@@ -204,6 +204,8 @@ export default [
             "@typescript-eslint": tseslint,
         },
         rules: {
+            "quotes": "off",
+            "comma-dangle": "off",
             "@typescript-eslint/no-explicit-any": "error",
             "@typescript-eslint/no-misused-promises": [
                 "error",

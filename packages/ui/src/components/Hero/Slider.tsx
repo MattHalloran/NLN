@@ -1,3 +1,4 @@
+import { HERO_SETTINGS_LIMITS, UI_TIMING } from "@local/shared";
 import { Box, IconButton } from "@mui/material";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Image } from "types";
@@ -5,8 +6,8 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Dots } from "./Dots";
 import { Slide } from "./Slide";
 
-const DEFAULT_DELAY = 3000;
-const DEFAULT_DURATION = 1000;
+const DEFAULT_DELAY = HERO_SETTINGS_LIMITS.autoPlayDelay.defaultMs;
+const DEFAULT_DURATION = HERO_SETTINGS_LIMITS.fadeTransitionDuration.defaultMs;
 
 interface SliderProps {
     images?: Image[];
@@ -41,7 +42,7 @@ export const Slider = ({
             if (resizeTimeoutRef.current) clearTimeout(resizeTimeoutRef.current);
             resizeTimeoutRef.current = setTimeout(() => {
                 setWidth(window.innerWidth);
-            }, 150);
+            }, HERO_SETTINGS_LIMITS.resizeDebounceMs);
         };
         window.addEventListener("resize", onResize);
 
@@ -54,7 +55,8 @@ export const Slider = ({
 
     useEffect(() => {
         const scheduleIdle =
-            window.requestIdleCallback ?? ((callback) => window.setTimeout(callback, 1500));
+            window.requestIdleCallback ??
+            ((callback) => window.setTimeout(callback, UI_TIMING.idleCallbackTimeoutMs));
         const cancelIdle = window.cancelIdleCallback ?? window.clearTimeout;
         const idleId = scheduleIdle(() => setCanPreloadNeighbors(true));
 

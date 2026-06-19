@@ -5,15 +5,13 @@
  * These tests verify admin functionality for managing hero banners, seasonal content, and contact info
  */
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
-import { PostgreSqlContainer, StartedPostgreSqlContainer } from "@testcontainers/postgresql";
+import { StartedPostgreSqlContainer } from "@testcontainers/postgresql";
 import { PrismaClient } from "@prisma/client";
 import express, { Express } from "express";
 import request from "supertest";
 import bcrypt from "bcryptjs";
-import { exec } from "child_process";
-import { promisify } from "util";
 import cookieParser from "cookie-parser";
-import { readFileSync, writeFileSync, existsSync } from "fs";
+import { readFileSync, writeFileSync } from "fs";
 import { join } from "path";
 import { REST_ROUTES } from "@local/shared";
 import * as auth from "../auth.js";
@@ -25,8 +23,12 @@ import {
     mockUpdateData,
     mockContactInfoUpdate,
 } from "../__tests__/fixtures/landingPage.js";
-
-const execAsync = promisify(exec);
+import {
+    createTestProjectDir,
+    startPostgresTestDatabase,
+    stopPostgresTestDatabase,
+} from "../__tests__/integrationUtils.js";
+import { invalidateCache } from "./landingPage/landingPageCache.js";
 
 describe("Landing Page API Integration Tests", () => {
     let container: StartedPostgreSqlContainer;
@@ -35,47 +37,20 @@ describe("Landing Page API Integration Tests", () => {
     let connectionString: string;
     let adminCookie: string;
     let userCookie: string;
-
-    // File paths - using consolidated structure
-    const DATA_PATH = join(__dirname, "../data");
-    const ASSETS_PATH = join(process.cwd(), "../../assets/public");
-    const LANDING_PAGE_FILE = join(DATA_PATH, "landing-page-content.json");
-    const BUSINESS_FILE = join(ASSETS_PATH, "business.json");
-
-    // Backup original files
-    let originalLandingPageContent: string;
-    let originalBusinessInfo: string;
+    let testProject: ReturnType<typeof createTestProjectDir>;
+    let landingPageFile: string;
 
     beforeAll(async () => {
-        // Start PostgreSQL container
-        container = await new PostgreSqlContainer("postgres:16-alpine")
-            .withDatabase("test_landing_page_db")
-            .withUsername("test_user")
-            .withPassword("test_password")
-            .withReuse(false)
-            .start();
+        testProject = createTestProjectDir("nln-landing-page-integration");
+        landingPageFile = join(testProject.dataDir, "landing-page-content.json");
 
-        connectionString = container.getConnectionUri();
-        process.env.DB_URL = connectionString;
+        const database = await startPostgresTestDatabase("test_landing_page_db");
+        container = database.container;
+        prisma = database.prisma;
+        connectionString = database.connectionString;
         process.env.JWT_SECRET = "test-jwt-secret-key";
         process.env.SITE_NAME = "test.example.com";
-        process.env.PROJECT_DIR = join(process.cwd(), "../../");
-
-        // Initialize Prisma client
-        prisma = new PrismaClient({
-            datasources: {
-                db: {
-                    url: connectionString,
-                },
-            },
-        });
-
-        // Run migrations
-        await execAsync(`DATABASE_URL="${connectionString}" npx prisma migrate deploy`, {
-            cwd: "/root/NLN/packages/server",
-        });
-
-        await prisma.$connect();
+        process.env.PROJECT_DIR = testProject.projectDir;
 
         // Clean up seed data
         await prisma.customer_roles.deleteMany();
@@ -179,32 +154,16 @@ describe("Landing Page API Integration Tests", () => {
             .send({ email: "user@test.com", password: "admin123" });
 
         userCookie = userLoginRes.headers["set-cookie"][0];
-
-        // Backup original data files (if they exist)
-        if (existsSync(LANDING_PAGE_FILE)) {
-            originalLandingPageContent = readFileSync(LANDING_PAGE_FILE, "utf8");
-        }
-        if (existsSync(BUSINESS_FILE)) {
-            originalBusinessInfo = readFileSync(BUSINESS_FILE, "utf8");
-        }
     }, 120000);
 
     afterAll(async () => {
-        // Restore original files
-        if (originalLandingPageContent) {
-            writeFileSync(LANDING_PAGE_FILE, originalLandingPageContent, "utf8");
-        }
-        if (originalBusinessInfo) {
-            writeFileSync(BUSINESS_FILE, originalBusinessInfo, "utf8");
-        }
-
-        await prisma.$disconnect();
-        if (container) {
-            await container.stop();
-        }
+        await stopPostgresTestDatabase(prisma, container);
+        testProject?.cleanup();
     });
 
     beforeEach(async () => {
+        await invalidateCache();
+
         // Reset landing page content to initial test state with new consolidated structure
         const testContent = {
             metadata: {
@@ -263,7 +222,8 @@ describe("Landing Page API Integration Tests", () => {
             layout: { sections: [] },
             experiments: { tests: [] },
         };
-        writeFileSync(LANDING_PAGE_FILE, JSON.stringify(testContent, null, 2), "utf8");
+        writeFileSync(landingPageFile, JSON.stringify(testContent, null, 2), "utf8");
+        await invalidateCache();
     });
 
     describe("GET /api/rest/v1/landing-page", () => {
@@ -376,7 +336,7 @@ describe("Landing Page API Integration Tests", () => {
             expect(res.body.updatedSections).toContain("heroBanners");
 
             // Verify file was updated in consolidated structure
-            const fileContent = JSON.parse(readFileSync(LANDING_PAGE_FILE, "utf8"));
+            const fileContent = JSON.parse(readFileSync(landingPageFile, "utf8"));
             expect(fileContent.content.hero.banners).toEqual(mockUpdateData.heroBanners);
             expect(fileContent.content.hero.settings).toEqual(mockUpdateData.heroSettings);
         });
@@ -399,7 +359,7 @@ describe("Landing Page API Integration Tests", () => {
             expect(res.body.updatedSections).toContain("heroSettings");
 
             // Verify settings were updated but banners remained the same
-            const fileContent = JSON.parse(readFileSync(LANDING_PAGE_FILE, "utf8"));
+            const fileContent = JSON.parse(readFileSync(landingPageFile, "utf8"));
             expect(fileContent.content.hero.settings).toEqual(newSettings);
             expect(fileContent.content.hero.banners).toEqual(mockHeroBanners); // Should be unchanged
         });
@@ -427,7 +387,7 @@ describe("Landing Page API Integration Tests", () => {
             expect(res.body.updatedSections).toContain("seasonalPlants");
 
             // Verify file was updated in consolidated structure
-            const fileContent = JSON.parse(readFileSync(LANDING_PAGE_FILE, "utf8"));
+            const fileContent = JSON.parse(readFileSync(landingPageFile, "utf8"));
             expect(fileContent.content.seasonal.plants).toEqual(newPlants);
         });
 
@@ -453,7 +413,7 @@ describe("Landing Page API Integration Tests", () => {
             expect(res.body.updatedSections).toContain("plantTips");
 
             // Verify file was updated in consolidated structure
-            const fileContent = JSON.parse(readFileSync(LANDING_PAGE_FILE, "utf8"));
+            const fileContent = JSON.parse(readFileSync(landingPageFile, "utf8"));
             expect(fileContent.content.seasonal.tips).toEqual(newTips);
         });
 
@@ -507,7 +467,7 @@ describe("Landing Page API Integration Tests", () => {
             expect(res.body.updated.hours).toBe(true);
 
             // Verify hours were updated in the consolidated landing-page-content.json
-            const fileContent = JSON.parse(readFileSync(LANDING_PAGE_FILE, "utf8"));
+            const fileContent = JSON.parse(readFileSync(landingPageFile, "utf8"));
             expect(fileContent.contact.hours).toBe(mockContactInfoUpdate.hours);
         });
 

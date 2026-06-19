@@ -1,4 +1,4 @@
-import { test, expect } from "../fixtures/auth";
+import { test, expect } from "../../fixtures/auth";
 
 /**
  * Enhanced E2E Tests for Hero Banner using data-testid attributes

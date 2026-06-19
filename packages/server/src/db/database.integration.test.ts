@@ -4,12 +4,13 @@
  * Tests Prisma client operations against a real PostgreSQL database
  */
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
-import { PostgreSqlContainer, StartedPostgreSqlContainer } from "@testcontainers/postgresql";
 import { PrismaClient } from "@prisma/client";
-import { exec } from "child_process";
-import { promisify } from "util";
-
-const execAsync = promisify(exec);
+import { StartedPostgreSqlContainer } from "@testcontainers/postgresql";
+import {
+    startPostgresTestDatabase,
+    stopPostgresTestDatabase,
+    truncatePublicTables,
+} from "../__tests__/integrationUtils.js";
 
 describe("Database Integration Tests", () => {
     let container: StartedPostgreSqlContainer;
@@ -17,67 +18,20 @@ describe("Database Integration Tests", () => {
     let connectionString: string;
 
     beforeAll(async () => {
-        // Start PostgreSQL container
-        container = await new PostgreSqlContainer("postgres:16-alpine")
-            .withDatabase("test_db")
-            .withUsername("test_user")
-            .withPassword("test_password")
-            .start();
-
-        connectionString = container.getConnectionUri();
+        const database = await startPostgresTestDatabase("test_db");
+        container = database.container;
+        prisma = database.prisma;
+        connectionString = database.connectionString;
         console.log("Test database started:", connectionString);
-
-        // Set environment variable for Prisma
-        process.env.DB_URL = connectionString;
-
-        // Initialize Prisma client
-        prisma = new PrismaClient({
-            datasources: {
-                db: {
-                    url: connectionString,
-                },
-            },
-        });
-
-        // Run migrations
-        try {
-            await execAsync(`DATABASE_URL="${connectionString}" npx prisma migrate deploy`, {
-                cwd: "/root/NLN/packages/server",
-            });
-            console.log("Database migrations applied");
-        } catch (error: any) {
-            console.error("Migration error:", error.message);
-            throw error;
-        }
-
-        await prisma.$connect();
     }, 120000); // 2 minute timeout for container startup and migrations
 
     afterAll(async () => {
-        await prisma.$disconnect();
-        if (container) {
-            await container.stop();
-            console.log("Test database stopped");
-        }
+        await stopPostgresTestDatabase(prisma, container);
+        console.log("Test database stopped");
     });
 
     beforeEach(async () => {
-        // Clean up database between tests
-        const tablenames = await prisma.$queryRaw<Array<{ tablename: string }>>`
-            SELECT tablename FROM pg_tables WHERE schemaname='public'
-        `;
-
-        for (const { tablename } of tablenames) {
-            if (tablename !== "_prisma_migrations") {
-                try {
-                    await prisma.$executeRawUnsafe(
-                        `TRUNCATE TABLE "public"."${tablename}" CASCADE;`,
-                    );
-                } catch (_error) {
-                    console.log(`Could not truncate ${tablename}, but continuing...`);
-                }
-            }
-        }
+        await truncatePublicTables(prisma);
     });
 
     describe("Connection Tests", () => {
@@ -147,7 +101,7 @@ describe("Database Integration Tests", () => {
                         title: "TestRole",
                         description: "Duplicate role",
                     },
-                }),
+                })
             ).rejects.toThrow();
         });
     });
@@ -296,7 +250,7 @@ describe("Database Integration Tests", () => {
                             },
                         },
                     },
-                }),
+                })
             ).rejects.toThrow();
         });
     });
@@ -387,7 +341,7 @@ describe("Database Integration Tests", () => {
                         plantId: plant2.id,
                         price: 15.0,
                     },
-                }),
+                })
             ).rejects.toThrow();
         });
     });

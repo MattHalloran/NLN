@@ -127,8 +127,8 @@ That script creates `~/.ssh/id_rsa_${SITE_IP}` when missing, appends the public 
 Before starting deployment, verify:
 
 ```bash
-# Run tests
-yarn test
+# Run local validation
+yarn validate
 
 # Type check
 yarn typecheck
@@ -499,7 +499,7 @@ This will:
    - **Mitigation**: Deploy during low-traffic periods
 
 2. **Testing Gate Depends on Entry Point**
-   - `./scripts/deploy-production.sh` runs `yarn test` and `yarn typecheck` by default
+   - `./scripts/deploy-production.sh` runs its configured test/typecheck gate before deploying
    - Manual `build.sh` + remote `deploy.sh` workflows still rely on the operator to run tests first
    - **Impact**: Bypassing the wrapper can still let broken code reach production
    - **Mitigation**: Use `deploy-production.sh` for standard deploys, or run tests manually before lower-level workflows

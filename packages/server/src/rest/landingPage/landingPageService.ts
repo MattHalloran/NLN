@@ -1,6 +1,6 @@
 import {
-    activeByDisplayOrder,
     createDefaultLandingPageContent,
+    filterActiveLandingPageContent,
     normalizeLandingPageContent,
 } from "@local/shared";
 import { readFileSync, writeFileSync } from "fs";
@@ -70,23 +70,5 @@ export const writeLandingPageContent = async (content: LandingPageContent): Prom
 export const aggregateLandingPageContent = (onlyActive: boolean = true): LandingPageContent => {
     const landingPageData = readLandingPageContent();
 
-    // Clone the data so we don't modify the original
-    const result: LandingPageContent = JSON.parse(
-        JSON.stringify(landingPageData)
-    ) as LandingPageContent;
-
-    // Filter active content if requested
-    if (onlyActive && result.content?.hero?.banners) {
-        result.content.hero.banners = activeByDisplayOrder(result.content.hero.banners);
-    }
-
-    if (onlyActive && result.content?.seasonal?.plants) {
-        result.content.seasonal.plants = activeByDisplayOrder(result.content.seasonal.plants);
-    }
-
-    if (onlyActive && result.content?.seasonal?.tips) {
-        result.content.seasonal.tips = activeByDisplayOrder(result.content.seasonal.tips);
-    }
-
-    return result;
+    return onlyActive ? filterActiveLandingPageContent(landingPageData) : landingPageData;
 };

@@ -1,4 +1,4 @@
-import { expect, test } from "../fixtures/auth";
+import { expect, test } from "../../fixtures/auth";
 
 /**
  * Critical E2E Tests for Admin Form Persistence

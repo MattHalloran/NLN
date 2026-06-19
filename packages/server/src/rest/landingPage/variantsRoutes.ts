@@ -87,7 +87,9 @@ router.post("/", requireAdmin, async (req: AuthenticatedRequest, res: Response) 
         if (copyFromVariantId) {
             sourceContent = readVariantContent(copyFromVariantId);
             if (!sourceContent) {
-                return res.status(404).json({ error: `Source variant ${copyFromVariantId} not found` });
+                return res
+                    .status(404)
+                    .json({ error: `Source variant ${copyFromVariantId} not found` });
             }
         } else {
             sourceContent = readLandingPageContent();
@@ -224,7 +226,9 @@ router.post("/:id/promote", requireAdmin, async (req: AuthenticatedRequest, res:
         if (currentOfficialIndex !== -1) {
             variants[currentOfficialIndex].isOfficial = false;
             variants[currentOfficialIndex].updatedAt = new Date().toISOString();
-            logger.info(`Demoted variant ${variants[currentOfficialIndex].id} from official status`);
+            logger.info(
+                `Demoted variant ${variants[currentOfficialIndex].id} from official status`
+            );
         }
 
         // Promote the new variant
@@ -232,9 +236,9 @@ router.post("/:id/promote", requireAdmin, async (req: AuthenticatedRequest, res:
         variants[variantIndex].updatedAt = new Date().toISOString();
 
         // Copy variant content to the official landing page
-        writeLandingPageContent(variantContent);
+        await writeLandingPageContent(variantContent);
         logger.info(
-            `Promoted variant ${variant.id} to official. Content copied to landing-page-content.json`,
+            `Promoted variant ${variant.id} to official. Content copied to landing-page-content.json`
         );
 
         writeVariants(variants);

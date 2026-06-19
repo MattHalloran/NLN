@@ -1,3 +1,4 @@
+import { BUSINESS_CONTACT_DEFAULTS } from "@local/shared";
 import {
     Avatar,
     Box,
@@ -31,7 +32,6 @@ import {
 import { ErrorBoundaryProps } from "components/types";
 import { Component, ErrorInfo } from "react";
 import { stringifySearchParams } from "route";
-import { } from "utils";
 
 interface ErrorContext {
     timestamp: string;
@@ -67,7 +67,7 @@ interface ErrorCategory {
 /**
  * Enhanced Error Boundary with professional UI, detailed error tracking,
  * smart recovery mechanisms, and comprehensive reporting capabilities.
- * 
+ *
  * Features:
  * - Professional Material-UI themed design
  * - Detailed error context and stack traces
@@ -76,7 +76,7 @@ interface ErrorCategory {
  * - Accessibility support
  * - User feedback collection
  * - Error categorization and analytics
- * 
+ *
  * NOTE: Must be a class component for error boundary lifecycle methods.
  * See https://legacy.reactjs.org/docs/error-boundaries.html
  */
@@ -86,10 +86,10 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
     constructor(props: ErrorBoundaryProps) {
         super(props);
-        
+
         // Use prop to determine reporting, default to true in production
         this.errorReportingEnabled = props.enableReporting ?? import.meta.env.PROD;
-        
+
         const context: ErrorContext = {
             timestamp: new Date().toISOString(),
             userAgent: navigator.userAgent,
@@ -114,7 +114,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
     static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
         const errorId = `ERR_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        
+
         return {
             hasError: true,
             error,
@@ -139,12 +139,12 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
         // Log error details
         this.logError(error, errorInfo);
-        
+
         // Report to external services if enabled
         if (this.errorReportingEnabled) {
             this.reportError(error, errorInfo);
         }
-        
+
         // Track error occurrence
         this.trackErrorOccurrence();
     }
@@ -158,27 +158,32 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     private categorizeError(error: Error): ErrorCategory {
         const message = error.message.toLowerCase();
         const name = error.name.toLowerCase();
-        
+
         // Chunk loading / Dynamic import errors (check BEFORE network errors)
-        if (message.includes("dynamically imported module") || 
+        if (
+            message.includes("dynamically imported module") ||
             message.includes("failed to fetch dynamically") ||
-            message.includes("chunk") || 
+            message.includes("chunk") ||
             message.includes("loading css chunk") ||
             message.includes("loading chunk") ||
-            name.includes("chunkloaderror")) {
+            name.includes("chunkloaderror")
+        ) {
             return {
                 type: "chunk",
                 severity: "medium",
                 recoverable: true,
                 userMessage: "Failed to load application resources. Please refresh the page.",
-                technicalMessage: "Dynamic module import failed. This often happens after deployments.",
+                technicalMessage:
+                    "Dynamic module import failed. This often happens after deployments.",
             };
         }
-        
+
         // Network-related errors (but NOT dynamic imports)
-        if ((message.includes("network") || message.includes("fetch")) && 
-            !message.includes("dynamically") && 
-            !message.includes("module")) {
+        if (
+            (message.includes("network") || message.includes("fetch")) &&
+            !message.includes("dynamically") &&
+            !message.includes("module")
+        ) {
             return {
                 type: "network",
                 severity: "medium",
@@ -187,9 +192,13 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                 technicalMessage: "Network request failed or timed out.",
             };
         }
-        
+
         // Permission errors
-        if (message.includes("permission") || message.includes("denied") || message.includes("unauthorized")) {
+        if (
+            message.includes("permission") ||
+            message.includes("denied") ||
+            message.includes("unauthorized")
+        ) {
             return {
                 type: "permission",
                 severity: "high",
@@ -198,7 +207,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                 technicalMessage: "Access denied or insufficient permissions.",
             };
         }
-        
+
         // Critical runtime errors
         if (name.includes("typeerror") || name.includes("referenceerror")) {
             return {
@@ -209,7 +218,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                 technicalMessage: "Runtime error in component or business logic.",
             };
         }
-        
+
         // Unknown errors
         return {
             type: "unknown",
@@ -222,20 +231,20 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
     private logError(error: Error, errorInfo: ErrorInfo) {
         const category = this.categorizeError(error);
-        
+
         // Only log errors in development mode
         if (import.meta.env.DEV) {
             // eslint-disable-next-line no-console
             console.group(`🚨 Error Boundary: ${category.type.toUpperCase()} ERROR`);
-             
+
             console.error("Error ID:", this.state.errorId);
-             
+
             console.error("Error:", error);
-             
+
             console.error("Error Info:", errorInfo);
-             
+
             console.error("Context:", this.state.context);
-             
+
             console.error("Category:", category);
             // eslint-disable-next-line no-console
             console.groupEnd();
@@ -253,11 +262,12 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                 category: this.categorizeError(error),
                 retryCount: this.state.retryCount,
             };
-            
+
             // In a real app, send to error reporting service (Sentry, LogRocket, etc.)
-            // eslint-disable-next-line no-console
-            if (import.meta.env.DEV) console.log("📊 Error report prepared for external service:", errorReport);
-            
+            if (import.meta.env.DEV)
+                // eslint-disable-next-line no-console
+                console.log("📊 Error report prepared for external service:", errorReport);
+
             // Example: await sendToErrorService(errorReport);
         } catch (reportingError) {
             console.error("Failed to report error:", reportingError);
@@ -284,7 +294,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
     private handleRetry = () => {
         this.setState({ isRetrying: true });
-        
+
         this.retryTimer = setTimeout(() => {
             this.setState({
                 hasError: false,
@@ -312,7 +322,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             stack: this.state.error?.stack,
             url: this.state.context.url,
         };
-        
+
         try {
             await navigator.clipboard.writeText(JSON.stringify(errorReport, null, 2));
             // Could show a snack notification here
@@ -325,17 +335,21 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
         const category = this.categorizeError(this.state.error!);
         const subject = `Error Report: ${category.type} - ${this.state.errorId}`;
         const body = `Error Details:
-${JSON.stringify({
-            errorId: this.state.errorId,
-            message: this.state.error?.message,
-            timestamp: this.state.context.timestamp,
-            url: this.state.context.url,
-            userFeedback: this.state.feedbackText,
-        }, null, 2)}`;
-        
-        const mailToUrl = `mailto:info@newlifenurseryinc.com${stringifySearchParams({ subject, body })}`;
+${JSON.stringify(
+    {
+        errorId: this.state.errorId,
+        message: this.state.error?.message,
+        timestamp: this.state.context.timestamp,
+        url: this.state.context.url,
+        userFeedback: this.state.feedbackText,
+    },
+    null,
+    2,
+)}`;
+
+        const mailToUrl = `${BUSINESS_CONTACT_DEFAULTS.email.link}${stringifySearchParams({ subject, body })}`;
         window.open(mailToUrl, "_blank");
-        
+
         this.setState({ showFeedback: false, feedbackText: "" });
     };
 
@@ -424,11 +438,16 @@ const ErrorBoundaryUI = ({
         // Use consistent neutral icon color
         const iconColor = theme.palette.text.secondary;
         switch (category.severity) {
-            case "critical": return <BugReportIcon sx={{ fontSize: 48, color: iconColor }} />;
-            case "high": return <WarningIcon sx={{ fontSize: 48, color: iconColor }} />;
-            case "medium": return <WarningIcon sx={{ fontSize: 48, color: iconColor }} />;
-            case "low": return <WarningIcon sx={{ fontSize: 48, color: iconColor }} />;
-            default: return <BugReportIcon sx={{ fontSize: 48, color: iconColor }} />;
+            case "critical":
+                return <BugReportIcon sx={{ fontSize: 48, color: iconColor }} />;
+            case "high":
+                return <WarningIcon sx={{ fontSize: 48, color: iconColor }} />;
+            case "medium":
+                return <WarningIcon sx={{ fontSize: 48, color: iconColor }} />;
+            case "low":
+                return <WarningIcon sx={{ fontSize: 48, color: iconColor }} />;
+            default:
+                return <BugReportIcon sx={{ fontSize: 48, color: iconColor }} />;
         }
     };
 
@@ -477,7 +496,13 @@ const ErrorBoundaryUI = ({
                             >
                                 {getSeverityIcon()}
                             </Avatar>
-                            <Typography variant="h4" component="h1" fontWeight="600" gutterBottom color="text.primary">
+                            <Typography
+                                variant="h4"
+                                component="h1"
+                                fontWeight="600"
+                                gutterBottom
+                                color="text.primary"
+                            >
                                 {category.userMessage}
                             </Typography>
                             <Chip
@@ -503,14 +528,22 @@ const ErrorBoundaryUI = ({
                                     borderColor: theme.palette.divider,
                                 }}
                             >
-                                <Typography variant="subtitle2" fontWeight="600" color="text.primary" gutterBottom>
+                                <Typography
+                                    variant="subtitle2"
+                                    fontWeight="600"
+                                    color="text.primary"
+                                    gutterBottom
+                                >
                                     Error ID: {state.errorId}
                                 </Typography>
                                 <Typography variant="body2" color="text.secondary">
                                     {category.technicalMessage}
                                 </Typography>
                                 {state.retryCount > 0 && (
-                                    <Typography variant="body2" sx={{ mt: 1, color: "text.secondary" }}>
+                                    <Typography
+                                        variant="body2"
+                                        sx={{ mt: 1, color: "text.secondary" }}
+                                    >
                                         Previous retry attempts: {state.retryCount}
                                     </Typography>
                                 )}
@@ -530,7 +563,7 @@ const ErrorBoundaryUI = ({
                                         onClick={onRetry}
                                         disabled={state.isRetrying}
                                         size="large"
-                                        sx={{ 
+                                        sx={{
                                             minWidth: 140,
                                             bgcolor: theme.palette.text.primary,
                                             color: theme.palette.background.paper,
@@ -547,7 +580,7 @@ const ErrorBoundaryUI = ({
                                     startIcon={<RefreshIcon />}
                                     onClick={onRefresh}
                                     size="large"
-                                    sx={{ 
+                                    sx={{
                                         minWidth: 140,
                                         borderColor: theme.palette.divider,
                                         color: theme.palette.text.primary,
@@ -564,7 +597,7 @@ const ErrorBoundaryUI = ({
                                     startIcon={<HomeIcon />}
                                     onClick={onGoHome}
                                     size="large"
-                                    sx={{ 
+                                    sx={{
                                         minWidth: 140,
                                         borderColor: theme.palette.divider,
                                         color: theme.palette.text.primary,
@@ -607,7 +640,9 @@ const ErrorBoundaryUI = ({
                                 {isDevelopment && (
                                     <Button
                                         variant="text"
-                                        startIcon={state.showDetails ? <ExpandLess /> : <ExpandMore />}
+                                        startIcon={
+                                            state.showDetails ? <ExpandLess /> : <ExpandMore />
+                                        }
                                         onClick={onToggleDetails}
                                         size="small"
                                         sx={{ color: theme.palette.text.secondary }}
@@ -629,7 +664,11 @@ const ErrorBoundaryUI = ({
                                     }}
                                 >
                                     <Stack spacing={2}>
-                                        <Box display="flex" alignItems="center" justifyContent="space-between">
+                                        <Box
+                                            display="flex"
+                                            alignItems="center"
+                                            justifyContent="space-between"
+                                        >
                                             <Typography variant="h6" component="h3">
                                                 Help us improve
                                             </Typography>
@@ -657,7 +696,7 @@ const ErrorBoundaryUI = ({
                                             variant="contained"
                                             onClick={onSendFeedback}
                                             disabled={!state.feedbackText.trim()}
-                                            sx={{ 
+                                            sx={{
                                                 alignSelf: "flex-start",
                                                 bgcolor: theme.palette.text.primary,
                                                 color: theme.palette.background.paper,
@@ -687,7 +726,7 @@ const ErrorBoundaryUI = ({
                                         <Typography variant="h6" gutterBottom color="error">
                                             🔧 Development Details
                                         </Typography>
-                                        
+
                                         <Stack spacing={2}>
                                             <Box>
                                                 <Typography variant="subtitle2" fontWeight="bold">
@@ -709,10 +748,13 @@ const ErrorBoundaryUI = ({
                                                     {state.error?.toString()}
                                                 </Typography>
                                             </Box>
-                                            
+
                                             {state.error?.stack && (
                                                 <Box>
-                                                    <Typography variant="subtitle2" fontWeight="bold">
+                                                    <Typography
+                                                        variant="subtitle2"
+                                                        fontWeight="bold"
+                                                    >
                                                         Stack Trace:
                                                     </Typography>
                                                     <Typography
@@ -731,10 +773,13 @@ const ErrorBoundaryUI = ({
                                                     </Typography>
                                                 </Box>
                                             )}
-                                            
+
                                             {state.errorInfo?.componentStack && (
                                                 <Box>
-                                                    <Typography variant="subtitle2" fontWeight="bold">
+                                                    <Typography
+                                                        variant="subtitle2"
+                                                        fontWeight="bold"
+                                                    >
                                                         Component Stack:
                                                     </Typography>
                                                     <Typography
@@ -753,7 +798,7 @@ const ErrorBoundaryUI = ({
                                                     </Typography>
                                                 </Box>
                                             )}
-                                            
+
                                             <Box>
                                                 <Typography variant="subtitle2" fontWeight="bold">
                                                     Context:

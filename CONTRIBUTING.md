@@ -82,7 +82,7 @@ Ensure you have the following installed:
    # Check containers are running
    docker-compose ps
 
-   # Run tests
+   # Run fast local tests
    yarn test
 
    # Access the application
@@ -124,11 +124,11 @@ Use descriptive branch names:
 2. **Run Tests Frequently**
 
    ```bash
-   # Run unit tests
+   # Run fast unit tests
    yarn test
 
-   # Run E2E tests
-   yarn test:e2e
+   # Run the stable admin browser suite when changing admin flows
+   yarn test:e2e:admin
 
    # Type check
    yarn typecheck
@@ -320,17 +320,20 @@ components/
 ### Running Tests
 
 ```bash
-# Run all tests
+# Run fast unit tests
 yarn test
 
-# Run unit tests only (fast)
-yarn test --exclude "**/*.integration.test.ts"
+# Run the local quality gate
+yarn validate
+
+# Run the full local validation gate
+yarn validate:full
 
 # Run integration tests (requires Docker)
-yarn test --run "**/*.integration.test.ts"
+yarn test:integration
 
-# Run E2E tests
-yarn test:e2e
+# Run stable admin E2E tests
+yarn test:e2e:admin
 
 # Run E2E tests with UI
 yarn test:e2e:ui
@@ -408,8 +411,8 @@ test('admin can add a plant', async ({ page }) => {
   - API endpoints: 80%
 
 ```bash
-# Generate coverage report
-yarn test --coverage
+# Generate unit coverage reports
+yarn test:unit
 ```
 
 ## Submitting Changes
@@ -419,9 +422,8 @@ yarn test --coverage
 1. **Run All Tests**
 
    ```bash
-   yarn test
-   yarn test:e2e
-   yarn typecheck
+   yarn validate
+   yarn test:e2e:admin
    ```
 
 2. **Update Documentation**
@@ -577,7 +579,7 @@ Environment:
 - Docker: 24.0.5
 
 Steps to reproduce:
-1. Run `yarn test --run "**/*.integration.test.ts"`
+1. Run `yarn test:integration`
 2. Error occurs when connecting to database
 
 I've checked that Docker is running (`docker ps` shows containers).

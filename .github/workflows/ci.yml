@@ -1,0 +1,170 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate:
+    name: Validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Typecheck
+        run: yarn typecheck
+
+      - name: Lint
+        run: yarn lint
+
+      - name: Unit tests
+        run: yarn test:unit
+
+      - name: Upload unit coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-coverage
+          path: |
+            packages/server/coverage
+            packages/ui/coverage
+          if-no-files-found: ignore
+
+      - name: Script tests
+        run: yarn test:scripts
+
+      - name: Build UI
+        run: yarn workspace ui build
+
+      - name: PWA browser tests
+        run: |
+          yarn playwright install --with-deps chromium
+          yarn test:pwa
+
+      - name: Upload PWA Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-pwa
+          path: playwright-report/pwa
+          if-no-files-found: ignore
+
+  integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    env:
+      NODE_ENV: test
+      JWT_SECRET: integration-jwt-secret
+      CSRF_SECRET: integration-csrf-secret
+      TESTCONTAINERS_RYUK_DISABLED: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Integration tests
+        run: yarn test:integration
+
+      - name: Upload integration coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-coverage
+          path: packages/server/coverage-integration
+          if-no-files-found: ignore
+
+  e2e:
+    name: E2E
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:13-alpine
+        env:
+          POSTGRES_DB: nln_e2e
+          POSTGRES_USER: nln_e2e
+          POSTGRES_PASSWORD: nln_e2e
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U nln_e2e -d nln_e2e"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      NODE_ENV: development
+      PROJECT_DIR: ${{ github.workspace }}
+      JWT_SECRET: e2e-jwt-secret
+      CSRF_SECRET: e2e-csrf-secret
+      ADMIN_EMAIL: admin@example.test
+      ADMIN_PASSWORD: admin-password
+      DB_NAME: nln_e2e
+      DB_USER: nln_e2e
+      DB_PASSWORD: nln_e2e
+      PORT_DB: 5433
+      PORT_REDIS: 6379
+      PORT_SERVER: 5331
+      DB_URL: postgresql://nln_e2e:nln_e2e@localhost:5433/nln_e2e
+      DATABASE_URL: postgresql://nln_e2e:nln_e2e@localhost:5433/nln_e2e
+      REDIS_CONN: localhost:6379
+      SERVER_LOCATION: local
+      VITE_SERVER_LOCATION: local
+      VITE_PORT_SERVER: 5331
+      CREATE_MOCK_DATA: true
+      DB_PULL: false
+      EMAIL_MODE: console
+      ALLOW_MIGRATION_WITHOUT_BACKUP: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Install Chromium
+        run: yarn playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        run: yarn test:e2e:admin
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-admin
+          path: |
+            playwright-report/admin
+            test-results/admin.json
+          if-no-files-found: ignore

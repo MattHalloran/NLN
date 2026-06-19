@@ -4,19 +4,19 @@
  * Tests dashboard stats endpoint with real database
  */
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
-import { PostgreSqlContainer, StartedPostgreSqlContainer } from "@testcontainers/postgresql";
+import { StartedPostgreSqlContainer } from "@testcontainers/postgresql";
 import { PrismaClient } from "@prisma/client";
 import express, { Express } from "express";
 import request from "supertest";
 import bcrypt from "bcryptjs";
-import { exec } from "child_process";
-import { promisify } from "util";
 import cookieParser from "cookie-parser";
 import { REST_ROUTES } from "@local/shared";
 import restRouter from "./index.js";
 import * as auth from "../auth.js";
-
-const execAsync = promisify(exec);
+import {
+    startPostgresTestDatabase,
+    stopPostgresTestDatabase,
+} from "../__tests__/integrationUtils.js";
 
 describe("Dashboard API Integration Tests", () => {
     let container: StartedPostgreSqlContainer;
@@ -27,34 +27,12 @@ describe("Dashboard API Integration Tests", () => {
     let userCookie: string;
 
     beforeAll(async () => {
-        // Start PostgreSQL container
-        container = await new PostgreSqlContainer("postgres:16-alpine")
-            .withDatabase("test_dashboard_db")
-            .withUsername("test_user")
-            .withPassword("test_password")
-            .withReuse(false)
-            .start();
-
-        connectionString = container.getConnectionUri();
-        process.env.DB_URL = connectionString;
+        const database = await startPostgresTestDatabase("test_dashboard_db");
+        container = database.container;
+        prisma = database.prisma;
+        connectionString = database.connectionString;
         process.env.JWT_SECRET = "test-jwt-secret-key";
         process.env.SITE_NAME = "test.example.com";
-
-        // Initialize Prisma client
-        prisma = new PrismaClient({
-            datasources: {
-                db: {
-                    url: connectionString,
-                },
-            },
-        });
-
-        // Run migrations
-        await execAsync(`DATABASE_URL="${connectionString}" npx prisma migrate deploy`, {
-            cwd: "/root/NLN/packages/server",
-        });
-
-        await prisma.$connect();
 
         // Clean up seed data
         await prisma.customer_roles.deleteMany();
@@ -147,10 +125,7 @@ describe("Dashboard API Integration Tests", () => {
     }, 120000);
 
     afterAll(async () => {
-        await prisma.$disconnect();
-        if (container) {
-            await container.stop();
-        }
+        await stopPostgresTestDatabase(prisma, container);
     });
 
     beforeEach(async () => {

@@ -1,4 +1,4 @@
-import { APP_LINKS } from "@local/shared";
+import { APP_LINKS, UI_TIMING } from "@local/shared";
 import {
     Box,
     Button,
@@ -79,7 +79,7 @@ export const AdminNewsletterSubscribers = () => {
             PubSub.get().publish("snack", {
                 message: "Failed to load subscribers",
                 severity: SnackSeverity.Error,
-                autoHideDuration: 5000,
+                autoHideDuration: UI_TIMING.snackbarErrorMs,
             });
         } finally {
             setLoading(false);
@@ -120,14 +120,14 @@ export const AdminNewsletterSubscribers = () => {
             PubSub.get().publish("snack", {
                 message: "Subscribers exported successfully",
                 severity: SnackSeverity.Success,
-                autoHideDuration: 3000,
+                autoHideDuration: UI_TIMING.snackbarSuccessMs,
             });
         } catch (err: any) {
             console.error("Export failed:", err);
             PubSub.get().publish("snack", {
                 message: "Failed to export subscribers",
                 severity: SnackSeverity.Error,
-                autoHideDuration: 5000,
+                autoHideDuration: UI_TIMING.snackbarErrorMs,
             });
         }
     };
@@ -146,7 +146,7 @@ export const AdminNewsletterSubscribers = () => {
             PubSub.get().publish("snack", {
                 message: `Subscriber ${action === "delete" ? "deleted" : "unsubscribed"} successfully`,
                 severity: SnackSeverity.Success,
-                autoHideDuration: 3000,
+                autoHideDuration: UI_TIMING.snackbarSuccessMs,
             });
             fetchSubscribers();
             fetchStats();
@@ -155,7 +155,7 @@ export const AdminNewsletterSubscribers = () => {
             PubSub.get().publish("snack", {
                 message: `Failed to ${action} subscriber`,
                 severity: SnackSeverity.Error,
-                autoHideDuration: 5000,
+                autoHideDuration: UI_TIMING.snackbarErrorMs,
             });
         }
     };
@@ -266,11 +266,7 @@ export const AdminNewsletterSubscribers = () => {
                             onKeyPress={handleSearchKeyPress}
                             sx={{ flexGrow: 1, minWidth: 200 }}
                         />
-                        <Button
-                            variant="outlined"
-                            onClick={handleSearch}
-                            size="small"
-                        >
+                        <Button variant="outlined" onClick={handleSearch} size="small">
                             Search
                         </Button>
                         <FormControl size="small" sx={{ minWidth: 150 }}>
@@ -372,18 +368,29 @@ export const AdminNewsletterSubscribers = () => {
                                             </TableCell>
                                             <TableCell>
                                                 <Typography variant="body2" color="text.secondary">
-                                                    {new Date(subscriber.created_at).toLocaleDateString()}
+                                                    {new Date(
+                                                        subscriber.created_at,
+                                                    ).toLocaleDateString()}
                                                 </Typography>
                                             </TableCell>
                                             <TableCell align="right">
-                                                <Box sx={{ display: "flex", gap: 1, justifyContent: "flex-end" }}>
+                                                <Box
+                                                    sx={{
+                                                        display: "flex",
+                                                        gap: 1,
+                                                        justifyContent: "flex-end",
+                                                    }}
+                                                >
                                                     {subscriber.status === "active" && (
                                                         <Tooltip title="Unsubscribe">
                                                             <IconButton
                                                                 size="small"
                                                                 color="warning"
                                                                 onClick={() =>
-                                                                    handleDelete(subscriber.id, "unsubscribe")
+                                                                    handleDelete(
+                                                                        subscriber.id,
+                                                                        "unsubscribe",
+                                                                    )
                                                                 }
                                                             >
                                                                 <UnsubscribeIcon size={18} />
@@ -394,7 +401,12 @@ export const AdminNewsletterSubscribers = () => {
                                                         <IconButton
                                                             size="small"
                                                             color="error"
-                                                            onClick={() => handleDelete(subscriber.id, "delete")}
+                                                            onClick={() =>
+                                                                handleDelete(
+                                                                    subscriber.id,
+                                                                    "delete",
+                                                                )
+                                                            }
                                                         >
                                                             <DeleteIcon size={18} />
                                                         </IconButton>

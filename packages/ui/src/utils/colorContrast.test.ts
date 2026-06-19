@@ -128,7 +128,7 @@ describe("colorContrast", () => {
                 secondary: "#1976d2", // Blue
                 accent: "#2e7d32", // Green
                 background: "#ffffff", // White
-                paper: "#f5f5f5", // Light gray
+                paper: "#e0e0e0", // Distinct light gray
             });
             expect(issues.length).toBe(0);
         });

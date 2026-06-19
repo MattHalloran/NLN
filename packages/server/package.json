@@ -12,6 +12,8 @@
     },
     "scripts": {
         "test": "vitest run --coverage",
+        "test:unit": "vitest run --coverage --exclude \"**/*.integration.test.ts\"",
+        "test:integration": "vitest run --config vitest.integration.config.mts",
         "test:watch": "vitest",
         "test:ui": "vitest --ui",
         "pre-build": "yarn pre-build-prisma",
@@ -24,8 +26,8 @@
         "start-development-debug": "yarn pre-build && yarn build && nodemon --max-old-space-size=4096 --wasm-max-initial-code-space-reservation=1048576 --inspect=0.0.0.0:9229 dist/index.js",
         "start-production": "bash scripts/start-production.sh",
         "prisma-generate": "prisma generate",
-        "lint": "ESLINT_USE_FLAT_CONFIG=false eslint \"src/**/*.ts\"",
-        "lint:fix": "ESLINT_USE_FLAT_CONFIG=false eslint \"src/**/*.ts\" --fix",
+        "lint": "eslint \"src/**/*.ts\"",
+        "lint:fix": "eslint \"src/**/*.ts\" --fix",
         "format": "prettier --write \"src/**/*.{ts,tsx,json}\"",
         "format:check": "prettier --check \"src/**/*.{ts,tsx,json}\"",
         "typecheck": "tsc --noEmit"

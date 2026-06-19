@@ -4,18 +4,18 @@
  * Tests authentication middleware and JWT token generation with real database
  */
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
-import { PostgreSqlContainer, StartedPostgreSqlContainer } from "@testcontainers/postgresql";
+import { StartedPostgreSqlContainer } from "@testcontainers/postgresql";
 import { PrismaClient } from "@prisma/client";
 import { Response } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { exec } from "child_process";
-import { promisify } from "util";
 import { generateToken, authenticate } from "./auth.js";
 import { COOKIE } from "@local/shared";
 import { createMockRequest, createMockResponse, createMockNext } from "./__mocks__/express.js";
-
-const execAsync = promisify(exec);
+import {
+    startPostgresTestDatabase,
+    stopPostgresTestDatabase,
+} from "./__tests__/integrationUtils.js";
 
 describe("Authentication Integration Tests", () => {
     let container: StartedPostgreSqlContainer;
@@ -23,40 +23,16 @@ describe("Authentication Integration Tests", () => {
     let connectionString: string;
 
     beforeAll(async () => {
-        // Start PostgreSQL container
-        container = await new PostgreSqlContainer("postgres:16-alpine")
-            .withDatabase("test_auth_db")
-            .withUsername("test_user")
-            .withPassword("test_password")
-            .start();
-
-        connectionString = container.getConnectionUri();
-        process.env.DB_URL = connectionString;
+        const database = await startPostgresTestDatabase("test_auth_db");
+        container = database.container;
+        prisma = database.prisma;
+        connectionString = database.connectionString;
         process.env.JWT_SECRET = "test-jwt-secret-key";
         process.env.SITE_NAME = "test.example.com";
-
-        // Initialize Prisma client
-        prisma = new PrismaClient({
-            datasources: {
-                db: {
-                    url: connectionString,
-                },
-            },
-        });
-
-        // Run migrations
-        await execAsync(`DATABASE_URL="${connectionString}" npx prisma migrate deploy`, {
-            cwd: "/root/NLN/packages/server",
-        });
-
-        await prisma.$connect();
     }, 120000);
 
     afterAll(async () => {
-        await prisma.$disconnect();
-        if (container) {
-            await container.stop();
-        }
+        await stopPostgresTestDatabase(prisma, container);
     });
 
     beforeEach(async () => {

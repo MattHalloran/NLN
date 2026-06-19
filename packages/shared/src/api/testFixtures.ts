@@ -1,3 +1,4 @@
+import { HERO_SETTINGS_LIMITS } from "./limits";
 import type {
     HeroBanner,
     HeroSettings,
@@ -20,11 +21,11 @@ export const createTestHeroBanner = (overrides: Partial<HeroBanner> = {}): HeroB
 
 export const createTestHeroSettings = (overrides: Partial<HeroSettings> = {}): HeroSettings => ({
     autoPlay: true,
-    autoPlayDelay: 5000,
+    autoPlayDelay: HERO_SETTINGS_LIMITS.autoPlayDelay.defaultMs,
     showDots: true,
     showArrows: true,
     fadeTransition: true,
-    fadeTransitionDuration: 1000,
+    fadeTransitionDuration: HERO_SETTINGS_LIMITS.fadeTransitionDuration.defaultMs,
     ...overrides,
 });
 

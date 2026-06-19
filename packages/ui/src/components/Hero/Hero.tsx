@@ -5,7 +5,12 @@ import { Award, Leaf, Users, Package, Shield, Heart } from "lucide-react";
 import { useLocation } from "route";
 import { getShortBusinessHours } from "utils/businessHours";
 import { Slider } from "./Slider";
-import { DEFAULT_CTA_BUTTONS, DEFAULT_HERO_TEXT, DEFAULT_TRUST_BADGES } from "@local/shared";
+import {
+    DEFAULT_CTA_BUTTONS,
+    DEFAULT_HERO_SETTINGS,
+    DEFAULT_HERO_TEXT,
+    DEFAULT_TRUST_BADGES,
+} from "@local/shared";
 
 // Icon mapping for trust badges (matches AdminHomepageHeroBanner)
 const TRUST_BADGE_ICONS = {
@@ -70,12 +75,17 @@ export const Hero = ({
         >
             <Slider
                 images={images}
-                autoPlay={heroSettings?.autoPlay ?? true}
-                slidingDelay={heroSettings?.autoPlayDelay ?? 3000}
-                showDots={heroSettings?.showDots ?? true}
-                showArrows={heroSettings?.showArrows ?? false}
-                fadeTransition={heroSettings?.fadeTransition ?? false}
-                fadeTransitionDuration={heroSettings?.fadeTransitionDuration ?? 1000}
+                autoPlay={heroSettings?.autoPlay ?? DEFAULT_HERO_SETTINGS.autoPlay}
+                slidingDelay={heroSettings?.autoPlayDelay ?? DEFAULT_HERO_SETTINGS.autoPlayDelay}
+                showDots={heroSettings?.showDots ?? DEFAULT_HERO_SETTINGS.showDots}
+                showArrows={heroSettings?.showArrows ?? DEFAULT_HERO_SETTINGS.showArrows}
+                fadeTransition={
+                    heroSettings?.fadeTransition ?? DEFAULT_HERO_SETTINGS.fadeTransition
+                }
+                fadeTransitionDuration={
+                    heroSettings?.fadeTransitionDuration ??
+                    DEFAULT_HERO_SETTINGS.fadeTransitionDuration
+                }
             />
             <Box
                 sx={{

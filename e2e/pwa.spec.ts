@@ -133,7 +133,6 @@ test("registers the service worker and serves the cached app shell offline", asy
     return Boolean(registration.active);
   });
   expect(hasActiveServiceWorker).toBe(true);
-  await page.waitForTimeout(500);
   await expect.poll(() => page.evaluate(() => {
     return (window as typeof window & { __pwaUpdateEvents?: number }).__pwaUpdateEvents;
   })).toBe(0);
@@ -153,6 +152,7 @@ test("registers the service worker and serves the cached app shell offline", asy
 
 test("shows a reload action when a service worker update is ready", async ({ page }) => {
   await page.goto("/", { waitUntil: "load" });
+  await expect(page.getByRole("button", { name: "Browse Plants" })).toBeVisible();
 
   await page.evaluate(() => {
     window.dispatchEvent(

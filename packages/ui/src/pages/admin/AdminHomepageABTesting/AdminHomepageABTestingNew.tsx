@@ -1,3 +1,4 @@
+import { UI_TIMING } from "@local/shared";
 import React, { useState, useCallback } from "react";
 import {
     Box,
@@ -284,7 +285,7 @@ export const AdminHomepageABTestingNew = () => {
         PubSub.get().publishSnack({
             message,
             severity: SnackSeverity.Success,
-            autoHideDuration: 3000,
+            autoHideDuration: UI_TIMING.snackbarSuccessMs,
         });
     }, []);
 
@@ -293,7 +294,7 @@ export const AdminHomepageABTestingNew = () => {
         PubSub.get().publishSnack({
             message,
             severity: SnackSeverity.Error,
-            autoHideDuration: 5000,
+            autoHideDuration: UI_TIMING.snackbarErrorMs,
         });
     }, []);
 

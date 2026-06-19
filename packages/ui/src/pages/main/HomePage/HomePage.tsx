@@ -1,5 +1,10 @@
 import React, { Suspense, lazy, useMemo, useEffect, useRef, type ComponentType } from "react";
-import { DEFAULT_SECTION_CONFIGURATION, REST_ROUTES, stripApiPrefix } from "@local/shared";
+import {
+    DEFAULT_SECTION_CONFIGURATION,
+    REST_ROUTES,
+    stripApiPrefix,
+    UI_TIMING,
+} from "@local/shared";
 import { Box } from "@mui/material";
 import { Hero } from "components/Hero/Hero";
 import { TopBar } from "components/navigation/TopBar/TopBar";
@@ -45,7 +50,7 @@ const SECTION_COMPONENTS: Record<string, React.ComponentType> = {
     location: LocationVisit,
 };
 
-const BOUNCE_THRESHOLD_MS = 10000; // 10 seconds
+const BOUNCE_THRESHOLD_MS = UI_TIMING.bounceThresholdMs;
 
 export const HomePage = () => {
     const { data: landingPageData } = useLandingPage();

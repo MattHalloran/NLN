@@ -1,16 +1,22 @@
 #!/bin/bash
-# Runs all *.bats files in the current directory and provides a summary
+# Runs project-owned top-level *.bats files and provides a summary.
+# Vendored helper test suites under scripts/tests/helpers are intentionally not run.
 
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 source "${HERE}/../utils.sh"
 
 total_tests=0
 total_failures=0
+test_files=("${HERE}"/*.bats)
 
 header "Running bats tests..."
 
-# Run all tests
-for test_file in "${HERE}"/*.bats; do
+if [ ! -e "${test_files[0]}" ]; then
+    info "No top-level bats tests found in ${HERE}"
+    exit 0
+fi
+
+for test_file in "${test_files[@]}"; do
     # Run bats with TAP output and capture it
     output=$(bats --tap "${test_file}")
     exit_code=$?

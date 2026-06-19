@@ -18,7 +18,7 @@ import {
 } from "./cookies";
 
 // Mock @local/shared
-jest.mock("@local/shared", () => ({
+vi.mock("@local/shared", () => ({
     COOKIE: {
         Session: "session",
     },
@@ -26,11 +26,11 @@ jest.mock("@local/shared", () => ({
 }));
 
 describe("cookies", () => {
-    let consoleWarnSpy: jest.SpyInstance;
+    let consoleWarnSpy: vi.SpyInstance;
 
     beforeEach(() => {
         localStorage.clear();
-        consoleWarnSpy = jest.spyOn(console, "warn").mockImplementation();
+        consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation();
     });
 
     afterEach(() => {

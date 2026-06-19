@@ -3,6 +3,7 @@ import {
     APP_LINKS,
     buildHeroContentPatch,
     getHeroSectionFormData,
+    HERO_SETTINGS_LIMITS,
     REST_ROUTES,
 } from "@local/shared";
 import type { HeroBanner, HeroSectionFormData } from "@local/shared";
@@ -134,7 +135,7 @@ const HeroPreview = ({ heroData }: { heroData: HeroSectionFormData | null }) => 
                                 opacity: index === currentSlide ? 1 : 0,
                                 // Active slide appears instantly (0ms), inactive slides fade out
                                 transition: heroData.settings.fadeTransition
-                                    ? `opacity ${index === currentSlide ? 0 : heroData.settings.fadeTransitionDuration || 1000}ms ease-out`
+                                    ? `opacity ${index === currentSlide ? 0 : heroData.settings.fadeTransitionDuration || HERO_SETTINGS_LIMITS.fadeTransitionDuration.defaultMs}ms ease-out`
                                     : "opacity 0.1s",
                                 // Inactive slides on top (fading out), active underneath (already visible)
                                 zIndex: index === currentSlide ? 0 : 1,
@@ -1498,7 +1499,7 @@ export const AdminHomepageHeroBanner = () => {
                                                             sx={{ fontWeight: 500 }}
                                                         >
                                                             {form.data?.settings.fadeTransition
-                                                                ? `Fade (${(form.data?.settings.fadeTransitionDuration || 1000) / 1000}s)`
+                                                                ? `Fade (${(form.data?.settings.fadeTransitionDuration || HERO_SETTINGS_LIMITS.fadeTransitionDuration.defaultMs) / 1000}s)`
                                                                 : "Slide"}
                                                         </Typography>
                                                     </Box>
@@ -1576,16 +1577,20 @@ export const AdminHomepageHeroBanner = () => {
                                                                 ...form.data.settings,
                                                                 autoPlayDelay:
                                                                     parseInt(e.target.value) ||
-                                                                    5000,
+                                                                    HERO_SETTINGS_LIMITS
+                                                                        .autoPlayDelay.defaultMs,
                                                             },
                                                         });
                                                     }}
                                                     disabled={!form.data?.settings.autoPlay}
-                                                    helperText={`Time between automatic slide changes (currently ${(form.data?.settings.autoPlayDelay || 5000) / 1000} seconds)`}
+                                                    helperText={`Time between automatic slide changes (currently ${(form.data?.settings.autoPlayDelay || HERO_SETTINGS_LIMITS.autoPlayDelay.defaultMs) / 1000} seconds)`}
                                                     inputProps={{
-                                                        min: 1000,
-                                                        max: 10000,
-                                                        step: 500,
+                                                        min: HERO_SETTINGS_LIMITS.autoPlayDelay
+                                                            .minMs,
+                                                        max: HERO_SETTINGS_LIMITS.autoPlayDelay
+                                                            .maxMs,
+                                                        step: HERO_SETTINGS_LIMITS.autoPlayDelay
+                                                            .stepMs,
                                                     }}
                                                     sx={{
                                                         "& .MuiOutlinedInput-root": {
@@ -1729,16 +1734,21 @@ export const AdminHomepageHeroBanner = () => {
                                                                 ...form.data.settings,
                                                                 fadeTransitionDuration:
                                                                     parseInt(e.target.value) ||
-                                                                    1000,
+                                                                    HERO_SETTINGS_LIMITS
+                                                                        .fadeTransitionDuration
+                                                                        .defaultMs,
                                                             },
                                                         });
                                                     }}
                                                     disabled={!form.data?.settings.fadeTransition}
-                                                    helperText={`How long the fade transition takes (currently ${(form.data?.settings.fadeTransitionDuration || 1000) / 1000} seconds)`}
+                                                    helperText={`How long the fade transition takes (currently ${(form.data?.settings.fadeTransitionDuration || HERO_SETTINGS_LIMITS.fadeTransitionDuration.defaultMs) / 1000} seconds)`}
                                                     inputProps={{
-                                                        min: 100,
-                                                        max: 5000,
-                                                        step: 100,
+                                                        min: HERO_SETTINGS_LIMITS
+                                                            .fadeTransitionDuration.minMs,
+                                                        max: HERO_SETTINGS_LIMITS
+                                                            .fadeTransitionDuration.maxMs,
+                                                        step: HERO_SETTINGS_LIMITS
+                                                            .fadeTransitionDuration.stepMs,
                                                     }}
                                                     sx={{
                                                         "& .MuiOutlinedInput-root": {

@@ -2,12 +2,12 @@ import { openLink } from "./openLink";
 import { SetLocation } from "types";
 
 describe("openLink", () => {
-    let mockSetLocation: jest.Mock<SetLocation>;
-    let windowOpenSpy: jest.SpyInstance;
+    let mockSetLocation: vi.Mock<SetLocation>;
+    let windowOpenSpy: vi.SpyInstance;
 
     beforeEach(() => {
-        mockSetLocation = jest.fn() as jest.Mock<SetLocation>;
-        windowOpenSpy = jest.spyOn(window, "open").mockImplementation();
+        mockSetLocation = vi.fn() as vi.Mock<SetLocation>;
+        windowOpenSpy = vi.spyOn(window, "open").mockImplementation();
     });
 
     afterEach(() => {

@@ -110,7 +110,7 @@ This line has no pipes`;
             expect(getShortBusinessHours(allClosed)).toBe("Contact us for hours");
         });
 
-        it("handles case-insensitive \"closed\"", () => {
+        it('handles case-insensitive "closed"', () => {
             const mixedCase = `| Day | Hours |
 | --- | --- |
 | Monday | 9:00 AM - 5:00 PM |
@@ -125,7 +125,7 @@ This line has no pipes`;
 
         it("catches errors and returns default message", () => {
             // Force an error by passing an object that will cause split to fail
-            const consoleSpy = jest.spyOn(console, "error").mockImplementation();
+            const consoleSpy = vi.spyOn(console, "error").mockImplementation();
             const result = getShortBusinessHours({ invalid: "object" } as any);
 
             expect(result).toBe("Contact us for hours");

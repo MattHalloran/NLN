@@ -1,18 +1,26 @@
 import "@testing-library/jest-dom";
+import { vi } from "vitest";
+
+globalThis.vi = vi;
 
 // Mock window.matchMedia
 Object.defineProperty(window, "matchMedia", {
     writable: true,
-    value: jest.fn().mockImplementation((query) => ({
+    value: vi.fn().mockImplementation((query) => ({
         matches: false,
         media: query,
         onchange: null,
-        addListener: jest.fn(),
-        removeListener: jest.fn(),
-        addEventListener: jest.fn(),
-        removeEventListener: jest.fn(),
-        dispatchEvent: jest.fn(),
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
     })),
+});
+
+Object.defineProperty(window, "open", {
+    writable: true,
+    value: vi.fn(),
 });
 
 // Mock IntersectionObserver

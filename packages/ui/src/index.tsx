@@ -1,3 +1,4 @@
+import { UI_TIMING } from "@local/shared";
 import { ErrorBoundary } from "components/ErrorBoundary/ErrorBoundary";
 import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
@@ -27,9 +28,9 @@ const AppWrapper = (
 // Enable StrictMode for better error detection and future compatibility
 root.render(<StrictMode>{AppWrapper}</StrictMode>);
 
-const HOURS_1_MS = 60 * 60 * 1000;
-const USER_IDLE_MS = 60 * 1000;
-const UPDATE_IDLE_RECHECK_MS = 30 * 1000;
+const HOURS_1_MS = UI_TIMING.serviceWorkerUpdateIntervalMs;
+const USER_IDLE_MS = UI_TIMING.serviceWorkerUserIdleMs;
+const UPDATE_IDLE_RECHECK_MS = UI_TIMING.serviceWorkerIdleRecheckMs;
 const UPDATE_RELOAD_KEY = "nln_sw_update_reload";
 const CHUNK_RELOAD_KEY = "nln_chunk_reload_done";
 let lastUserActivityAt = Date.now();

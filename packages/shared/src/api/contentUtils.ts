@@ -1,3 +1,5 @@
+import type { LandingPageContent } from "./types";
+
 export interface ActiveOrderedItem {
     displayOrder: number;
     isActive: boolean;
@@ -13,6 +15,24 @@ export const filterActive = <T extends Pick<ActiveOrderedItem, "isActive">>(
 
 export const activeByDisplayOrder = <T extends ActiveOrderedItem>(items: readonly T[]): T[] =>
     sortByDisplayOrder(filterActive(items));
+
+export const filterActiveLandingPageContent = (
+    content: LandingPageContent,
+): LandingPageContent => ({
+    ...content,
+    content: {
+        ...content.content,
+        hero: {
+            ...content.content.hero,
+            banners: activeByDisplayOrder(content.content.hero.banners),
+        },
+        seasonal: {
+            ...content.content.seasonal,
+            plants: activeByDisplayOrder(content.content.seasonal.plants),
+            tips: activeByDisplayOrder(content.content.seasonal.tips),
+        },
+    },
+});
 
 export interface LandingPageTokenValues {
     foundedYear?: number;

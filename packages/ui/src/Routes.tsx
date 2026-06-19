@@ -1,9 +1,10 @@
-import { APP_LINKS, ROLES } from "@local/shared";
+import { APP_LINKS } from "@local/shared";
 import { Box, CircularProgress } from "@mui/material";
 import { ScrollToTop } from "components/ScrollToTop/ScrollToTop";
 import { lazy, Suspense, type ComponentType } from "react";
 import { Route, Switch } from "route";
 import { Page } from "./pages/Page/Page";
+import { ADMIN_ROUTES, ADMIN_ROUTE_IDS, type AdminRouteId } from "./pages/admin/adminRoutes";
 
 type LazyNamedComponent<TModule, TExport extends keyof TModule> =
     TModule[TExport] extends ComponentType<infer TProps> ? ComponentType<TProps> : never;
@@ -110,6 +111,26 @@ const PrivacyPolicyPage = lazyNamed(
 );
 const TermsPage = lazyNamed(() => import("./pages/legal/TermsPage/TermsPage"), "TermsPage");
 
+const ADMIN_ROUTE_COMPONENTS: Record<AdminRouteId, ComponentType> = {
+    [ADMIN_ROUTE_IDS.dashboard]: AdminMainPage,
+    [ADMIN_ROUTE_IDS.contactInfo]: AdminContactPage,
+    [ADMIN_ROUTE_IDS.gallery]: AdminGalleryPage,
+    [ADMIN_ROUTE_IDS.homepage]: AdminHomepageHub,
+    [ADMIN_ROUTE_IDS.homepageSections]: AdminHomepageSections,
+    [ADMIN_ROUTE_IDS.homepageABTesting]: AdminHomepageABTesting,
+    [ADMIN_ROUTE_IDS.homepageAbout]: AdminHomepageAbout,
+    [ADMIN_ROUTE_IDS.homepageHeroBanner]: AdminHomepageHeroBanner,
+    [ADMIN_ROUTE_IDS.homepageSeasonal]: AdminHomepageSeasonal,
+    [ADMIN_ROUTE_IDS.homepageNewsletter]: AdminHomepageNewsletter,
+    [ADMIN_ROUTE_IDS.homepageServices]: AdminHomepageServices,
+    [ADMIN_ROUTE_IDS.homepageSocialProof]: AdminHomepageSocialProof,
+    [ADMIN_ROUTE_IDS.homepageLocation]: AdminHomepageLocation,
+    [ADMIN_ROUTE_IDS.homepageBranding]: AdminHomepageBranding,
+    [ADMIN_ROUTE_IDS.storage]: AdminStoragePage,
+    [ADMIN_ROUTE_IDS.newsletterSubscribers]: AdminNewsletterSubscribers,
+    [ADMIN_ROUTE_IDS.logs]: AdminSystemLogs,
+};
+
 const Fallback = (
     <Box
         sx={{
@@ -203,125 +224,23 @@ export const Routes = () => {
                 </Route>
                 {/* END PUBLIC PAGES */}
                 {/* START ADMIN PAGES */}
-                <Route path={APP_LINKS.Admin}>
-                    <Suspense fallback={Fallback}>
-                        <Page excludePageContainer restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
-                            <AdminMainPage />
-                        </Page>
-                    </Suspense>
-                </Route>
-                <Route path={APP_LINKS.AdminContactInfo}>
-                    <Suspense fallback={Fallback}>
-                        <Page excludePageContainer restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
-                            <AdminContactPage />
-                        </Page>
-                    </Suspense>
-                </Route>
-                <Route path={APP_LINKS.AdminGallery}>
-                    <Suspense fallback={Fallback}>
-                        <Page excludePageContainer restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
-                            <AdminGalleryPage />
-                        </Page>
-                    </Suspense>
-                </Route>
-                <Route path={APP_LINKS.AdminHomepage}>
-                    <Suspense fallback={Fallback}>
-                        <Page excludePageContainer restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
-                            <AdminHomepageHub />
-                        </Page>
-                    </Suspense>
-                </Route>
-                <Route path={APP_LINKS.AdminHomepageSections}>
-                    <Suspense fallback={Fallback}>
-                        <Page excludePageContainer restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
-                            <AdminHomepageSections />
-                        </Page>
-                    </Suspense>
-                </Route>
-                <Route path={APP_LINKS.AdminHomepageABTesting}>
-                    <Suspense fallback={Fallback}>
-                        <Page excludePageContainer restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
-                            <AdminHomepageABTesting />
-                        </Page>
-                    </Suspense>
-                </Route>
-                <Route path={APP_LINKS.AdminHomepageAbout}>
-                    <Suspense fallback={Fallback}>
-                        <Page excludePageContainer restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
-                            <AdminHomepageAbout />
-                        </Page>
-                    </Suspense>
-                </Route>
-                <Route path={APP_LINKS.AdminHomepageHeroBanner}>
-                    <Suspense fallback={Fallback}>
-                        <Page excludePageContainer restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
-                            <AdminHomepageHeroBanner />
-                        </Page>
-                    </Suspense>
-                </Route>
-                <Route path={APP_LINKS.AdminHomepageSeasonal}>
-                    <Suspense fallback={Fallback}>
-                        <Page excludePageContainer restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
-                            <AdminHomepageSeasonal />
-                        </Page>
-                    </Suspense>
-                </Route>
-                <Route path={APP_LINKS.AdminHomepageNewsletter}>
-                    <Suspense fallback={Fallback}>
-                        <Page excludePageContainer restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
-                            <AdminHomepageNewsletter />
-                        </Page>
-                    </Suspense>
-                </Route>
-                <Route path={APP_LINKS.AdminHomepageServices}>
-                    <Suspense fallback={Fallback}>
-                        <Page excludePageContainer restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
-                            <AdminHomepageServices />
-                        </Page>
-                    </Suspense>
-                </Route>
-                <Route path={APP_LINKS.AdminHomepageSocialProof}>
-                    <Suspense fallback={Fallback}>
-                        <Page excludePageContainer restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
-                            <AdminHomepageSocialProof />
-                        </Page>
-                    </Suspense>
-                </Route>
-                <Route path={APP_LINKS.AdminHomepageLocation}>
-                    <Suspense fallback={Fallback}>
-                        <Page excludePageContainer restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
-                            <AdminHomepageLocation />
-                        </Page>
-                    </Suspense>
-                </Route>
-                <Route path={APP_LINKS.AdminHomepageBranding}>
-                    <Suspense fallback={Fallback}>
-                        <Page excludePageContainer restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
-                            <AdminHomepageBranding />
-                        </Page>
-                    </Suspense>
-                </Route>
-                <Route path={APP_LINKS.AdminStorage}>
-                    <Suspense fallback={Fallback}>
-                        <Page excludePageContainer restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
-                            <AdminStoragePage />
-                        </Page>
-                    </Suspense>
-                </Route>
-                <Route path={APP_LINKS.AdminNewsletterSubscribers}>
-                    <Suspense fallback={Fallback}>
-                        <Page excludePageContainer restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
-                            <AdminNewsletterSubscribers />
-                        </Page>
-                    </Suspense>
-                </Route>
-                <Route path={APP_LINKS.AdminLogs}>
-                    <Suspense fallback={Fallback}>
-                        <Page excludePageContainer restrictedToRoles={[ROLES.Owner, ROLES.Admin]}>
-                            <AdminSystemLogs />
-                        </Page>
-                    </Suspense>
-                </Route>
+                <>
+                    {ADMIN_ROUTES.map((adminRoute) => {
+                        const AdminComponent = ADMIN_ROUTE_COMPONENTS[adminRoute.id];
+                        return (
+                            <Route key={adminRoute.id} path={adminRoute.path}>
+                                <Suspense fallback={Fallback}>
+                                    <Page
+                                        excludePageContainer
+                                        restrictedToRoles={adminRoute.requiredRoles}
+                                    >
+                                        <AdminComponent />
+                                    </Page>
+                                </Suspense>
+                            </Route>
+                        );
+                    })}
+                </>
                 {/* END ADMIN PAGES */}
                 {/* 404 page */}
                 <Route>

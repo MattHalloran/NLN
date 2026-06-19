@@ -89,7 +89,7 @@ docker-compose ps
 # Run health check
 curl http://localhost:5331/healthcheck
 
-# Run tests
+# Run the fast local test suite
 yarn test
 ```
 
@@ -120,7 +120,8 @@ Comprehensive documentation is available in the [`/docs`](docs) directory:
 - [⚙️ Environment Variables](ENVIRONMENT.md) - Complete env var reference (532 lines)
 
 ### Development
-- [💻 Testing Guide](packages/server/TESTING.md) - Unit and integration tests
+- [💻 Testing Guide](TESTING.md) - Validation tiers and test commands
+- [🧪 Server Testing](packages/server/TESTING.md) - Server unit and integration tests
 - [🎭 E2E Testing](E2E_TESTING.md) - Playwright E2E test suite
 - [🐛 Debugging Guide](docs/development/debugging.md) - Debug techniques
 
@@ -141,14 +142,17 @@ Comprehensive documentation is available in the [`/docs`](docs) directory:
 ## Development Commands
 
 ```bash
-# Run all tests (unit + integration)
+# Fast local tests
 yarn test
 
-# Run only unit tests (fast)
-yarn test --exclude "**/*.integration.test.ts"
+# Local quality gate
+yarn validate
 
-# Run E2E tests
-yarn test:e2e
+# Full local validation gate
+yarn validate:full
+
+# Stable admin E2E suite
+yarn test:e2e:admin
 
 # Type checking
 yarn typecheck
@@ -173,8 +177,11 @@ The project includes comprehensive test coverage:
 - **E2E Tests**: 29 tests with Playwright (admin panel workflows)
 
 ```bash
-# Run all tests with coverage
+# Run fast unit tests
 yarn test
+
+# Run full local validation
+yarn validate:full
 
 # Run E2E tests with UI
 yarn test:e2e:ui
@@ -183,7 +190,7 @@ yarn test:e2e:ui
 yarn test:e2e:report
 ```
 
-See [Testing Guide](packages/server/TESTING.md) for details.
+See [Testing Guide](TESTING.md) for details.
 
 ## Deployment
 

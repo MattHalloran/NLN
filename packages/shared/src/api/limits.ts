@@ -56,3 +56,19 @@ export const UI_TIMING = {
     serviceWorkerUserIdleMs: TIME_MS.Minute,
     serviceWorkerIdleRecheckMs: 30 * TIME_MS.Second,
 } as const;
+
+export const HERO_SETTINGS_LIMITS = {
+    autoPlayDelay: {
+        defaultMs: UI_TIMING.defaultHeroAutoPlayDelayMs,
+        minMs: TIME_MS.Second,
+        maxMs: 10 * TIME_MS.Second,
+        stepMs: 500,
+    },
+    fadeTransitionDuration: {
+        defaultMs: UI_TIMING.defaultHeroTransitionMs,
+        minMs: 100,
+        maxMs: 5 * TIME_MS.Second,
+        stepMs: 100,
+    },
+    resizeDebounceMs: 150,
+} as const;

@@ -1,7 +1,7 @@
 import { DEFAULT_SERVER_URLS, REST_ROUTES } from "@local/shared";
-import { test, expect } from "../fixtures/auth";
-import { AdminHomePage } from "../pages/admin-home.page";
-import { testHeroBanners, testHeroSettings } from "../fixtures/test-data";
+import { test, expect } from "../../fixtures/auth";
+import { AdminHomePage } from "../../pages/admin-home.page";
+import { testHeroBanners, testHeroSettings } from "../../fixtures/test-data";
 
 /**
  * E2E Tests for Admin Hero Banner Management

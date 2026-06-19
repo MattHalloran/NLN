@@ -2,6 +2,7 @@ import { DragDropContext, Draggable, Droppable, DropResult } from "@hello-pangea
 import {
     activeByDisplayOrder,
     APP_LINKS,
+    BUSINESS_CONTACT_DEFAULTS,
     buildGoogleMapsEmbedUrl,
     COMPANY_INFO,
     DEFAULT_BUSINESS_ADDRESS,
@@ -286,7 +287,7 @@ const LocationPreview = ({
                                         variant="body2"
                                         sx={{ opacity: 0.9, fontSize: "0.85rem" }}
                                     >
-                                        106 S Woodruff Rd, Bridgeton, NJ
+                                        {BUSINESS_CONTACT_DEFAULTS.address.shortLabel}
                                     </Typography>
                                 </Box>
 
@@ -335,9 +336,9 @@ const LocationPreview = ({
                             const icons = { phone: Phone, address: MapPinIcon, email: Mail };
                             const IconComponent = icons[method];
                             const values = {
-                                phone: "(856) 455-3601",
-                                address: "106 S Woodruff Rd, Bridgeton, NJ 08302",
-                                email: "info@newlifenurseryinc.com",
+                                phone: BUSINESS_CONTACT_DEFAULTS.phone.label,
+                                address: BUSINESS_CONTACT_DEFAULTS.address.label,
+                                email: BUSINESS_CONTACT_DEFAULTS.email.label,
                             };
                             return (
                                 <Card

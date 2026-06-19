@@ -1,4 +1,4 @@
-import { APP_LINKS } from "@local/shared";
+import { APP_LINKS, EXTERNAL_LINKS } from "@local/shared";
 import { Box, Button, Container, Stack, Typography, useTheme } from "@mui/material";
 import { PageContainer } from "components/PageContainer/PageContainer";
 import { TopBar } from "components/navigation/TopBar/TopBar";
@@ -107,9 +107,7 @@ export const NotFoundPage = () => {
                         size="large"
                         startIcon={<Search size={20} />}
                         fullWidth
-                        onClick={() =>
-                            window.open("https://newlife.online-orders.sbiteam.com/", "_blank")
-                        }
+                        onClick={() => window.open(EXTERNAL_LINKS.availability, "_blank")}
                         sx={{
                             py: 1.5,
                             fontWeight: 500,

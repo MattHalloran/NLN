@@ -19,6 +19,7 @@ import { BusinessContext } from "contexts/BusinessContext";
 import { useContext, useMemo } from "react";
 import {
     activeByDisplayOrder,
+    BUSINESS_CONTACT_DEFAULTS,
     buildGoogleMapsEmbedUrl,
     COMPANY_INFO,
     DEFAULT_BUSINESS_ADDRESS,
@@ -102,24 +103,22 @@ export const LocationVisit = () => {
         const contactMethodsMap = {
             phone: {
                 method: "Phone",
-                value: business?.PHONE?.Label || "(856) 455-3601",
-                href: business?.PHONE?.Link || "tel:+18564553601",
+                value: business?.PHONE?.Label || BUSINESS_CONTACT_DEFAULTS.phone.label,
+                href: business?.PHONE?.Link || BUSINESS_CONTACT_DEFAULTS.phone.link,
                 description: contactMethodsConfig.descriptions.phone,
                 icon: Phone,
             },
             address: {
                 method: "Address",
-                value: business?.ADDRESS?.Label || "106 S Woodruff Rd, Bridgeton, NJ 08302",
-                href:
-                    business?.ADDRESS?.Link ||
-                    "https://maps.google.com/?q=106+S+Woodruff+Rd+Bridgeton+NJ+08302",
+                value: business?.ADDRESS?.Label || BUSINESS_CONTACT_DEFAULTS.address.label,
+                href: business?.ADDRESS?.Link || BUSINESS_CONTACT_DEFAULTS.address.mapsUrl,
                 description: contactMethodsConfig.descriptions.address,
                 icon: MapPin,
             },
             email: {
                 method: "Email",
-                value: business?.EMAIL?.Label || "info@newlifenurseryinc.com",
-                href: business?.EMAIL?.Link || "mailto:info@newlifenurseryinc.com",
+                value: business?.EMAIL?.Label || BUSINESS_CONTACT_DEFAULTS.email.label,
+                href: business?.EMAIL?.Link || BUSINESS_CONTACT_DEFAULTS.email.link,
                 description: contactMethodsConfig.descriptions.email,
                 icon: Mail,
             },

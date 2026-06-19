@@ -1,3 +1,4 @@
+import { hasSession, UI_TIMING } from "@local/shared";
 import {
     alpha,
     Box,
@@ -60,7 +61,7 @@ const PullToRefresh = lazyNamed(
 );
 const Footer = lazyNamed(() => import("components/navigation/Footer/Footer"), "Footer");
 
-const runWhenIdle = (callback: () => void, timeout = 1500) => {
+const runWhenIdle = (callback: () => void, timeout: number = UI_TIMING.idleCallbackTimeoutMs) => {
     if (typeof window.requestIdleCallback === "function") {
         const idleId = window.requestIdleCallback(callback, { timeout });
         return () => window.cancelIdleCallback(idleId);
@@ -222,7 +223,7 @@ export function App() {
         // Handle session updates
         const sessionSub = PubSub.get().subscribeSession((session) => {
             // If undefined or empty, set session to published data
-            if (session === undefined || Object.keys(session).length === 0) {
+            if (!hasSession(session)) {
                 setSession(session);
             }
             // Otherwise, combine existing session data with published data

@@ -1,10 +1,12 @@
+import { BUSINESS_CONTACT_DEFAULTS } from "./business";
+
 export interface GoogleMapsEmbedConfig {
     apiKey?: string;
     address?: string;
     zoom?: number;
 }
 
-export const DEFAULT_BUSINESS_ADDRESS = "106 S Woodruff Rd, Bridgeton, NJ 08302";
+export const DEFAULT_BUSINESS_ADDRESS = BUSINESS_CONTACT_DEFAULTS.address.label;
 export const DEFAULT_GOOGLE_MAPS_ZOOM = 15;
 
 export const buildGoogleMapsEmbedUrl = ({

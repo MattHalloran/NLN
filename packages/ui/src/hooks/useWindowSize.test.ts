@@ -94,7 +94,7 @@ describe("useWindowSize", () => {
     });
 
     it("removes event listener on unmount", () => {
-        const removeEventListenerSpy = jest.spyOn(window, "removeEventListener");
+        const removeEventListenerSpy = vi.spyOn(window, "removeEventListener");
         const condition = ({ width }: { width: number; height: number }) => width > 768;
 
         const { unmount } = renderHook(() => useWindowSize(condition));

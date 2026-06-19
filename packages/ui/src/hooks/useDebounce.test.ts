@@ -3,15 +3,15 @@ import { useDebounce } from "./useDebounce";
 
 describe("useDebounce", () => {
     beforeEach(() => {
-        jest.useFakeTimers();
+        vi.useFakeTimers();
     });
 
     afterEach(() => {
-        jest.useRealTimers();
+        vi.useRealTimers();
     });
 
     it("debounces function calls", () => {
-        const callback = jest.fn();
+        const callback = vi.fn();
         const { result } = renderHook(() => useDebounce(callback, 500));
 
         act(() => {
@@ -25,7 +25,7 @@ describe("useDebounce", () => {
 
         // Fast forward time
         act(() => {
-            jest.advanceTimersByTime(500);
+            vi.advanceTimersByTime(500);
         });
 
         // Callback should be called only once with the last value
@@ -34,7 +34,7 @@ describe("useDebounce", () => {
     });
 
     it("resets timer on each call", () => {
-        const callback = jest.fn();
+        const callback = vi.fn();
         const { result } = renderHook(() => useDebounce(callback, 500));
 
         act(() => {
@@ -42,7 +42,7 @@ describe("useDebounce", () => {
         });
 
         act(() => {
-            jest.advanceTimersByTime(300);
+            vi.advanceTimersByTime(300);
         });
 
         act(() => {
@@ -50,14 +50,14 @@ describe("useDebounce", () => {
         });
 
         act(() => {
-            jest.advanceTimersByTime(300);
+            vi.advanceTimersByTime(300);
         });
 
         // Still should not have been called
         expect(callback).not.toHaveBeenCalled();
 
         act(() => {
-            jest.advanceTimersByTime(200);
+            vi.advanceTimersByTime(200);
         });
 
         // Now should be called with last value
@@ -66,8 +66,8 @@ describe("useDebounce", () => {
     });
 
     it("updates callback reference", () => {
-        const callback1 = jest.fn();
-        const callback2 = jest.fn();
+        const callback1 = vi.fn();
+        const callback2 = vi.fn();
 
         const { result, rerender } = renderHook(({ cb, delay }) => useDebounce(cb, delay), {
             initialProps: { cb: callback1, delay: 500 },
@@ -81,7 +81,7 @@ describe("useDebounce", () => {
         rerender({ cb: callback2, delay: 500 });
 
         act(() => {
-            jest.advanceTimersByTime(500);
+            vi.advanceTimersByTime(500);
         });
 
         // New callback should be called
@@ -90,7 +90,7 @@ describe("useDebounce", () => {
     });
 
     it("cleans up timeout on unmount", () => {
-        const callback = jest.fn();
+        const callback = vi.fn();
         const { result, unmount } = renderHook(() => useDebounce(callback, 500));
 
         act(() => {
@@ -100,7 +100,7 @@ describe("useDebounce", () => {
         unmount();
 
         act(() => {
-            jest.advanceTimersByTime(500);
+            vi.advanceTimersByTime(500);
         });
 
         // Callback should not be called after unmount

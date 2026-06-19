@@ -83,9 +83,9 @@ describe("useDimensions", () => {
         const OriginalResizeObserver = global.ResizeObserver;
         (global as any).ResizeObserver = undefined;
 
-        const addEventListenerSpy = jest.spyOn(window, "addEventListener");
-        const removeEventListenerSpy = jest.spyOn(window, "removeEventListener");
-        const consoleWarnSpy = jest.spyOn(console, "warn").mockImplementation();
+        const addEventListenerSpy = vi.spyOn(window, "addEventListener");
+        const removeEventListenerSpy = vi.spyOn(window, "removeEventListener");
+        const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation();
 
         const { unmount } = renderHook(() => useDimensions<HTMLDivElement>());
 

@@ -1,5 +1,7 @@
 import { APP_LINKS, COMPANY_INFO } from "../consts";
+import { EXTERNAL_LINKS } from "./business";
 import { LANDING_PAGE_ICON } from "./icons";
+import { HERO_SETTINGS_LIMITS } from "./limits";
 import type {
     AboutContent,
     Button,
@@ -22,11 +24,11 @@ import type {
 
 export const DEFAULT_HERO_SETTINGS: HeroSettings = {
     autoPlay: true,
-    autoPlayDelay: 5000,
+    autoPlayDelay: HERO_SETTINGS_LIMITS.autoPlayDelay.defaultMs,
     showDots: true,
     showArrows: true,
     fadeTransition: true,
-    fadeTransitionDuration: 1000,
+    fadeTransitionDuration: HERO_SETTINGS_LIMITS.fadeTransitionDuration.defaultMs,
 };
 
 export const DEFAULT_HERO_TEXT: HeroText = {
@@ -44,7 +46,7 @@ export const DEFAULT_HERO_TEXT: HeroText = {
     buttons: [
         {
             text: "Browse Plants",
-            link: "https://newlife.online-orders.sbiteam.com/",
+            link: EXTERNAL_LINKS.availability,
             type: "primary",
         },
         { text: "Visit Our Nursery", link: APP_LINKS.About, type: "secondary" },
@@ -63,7 +65,7 @@ export const DEFAULT_SERVICES_CONTENT: ServicesContent = {
         subtitle: "Browse our online catalog or contact us to discuss your project needs",
         primaryButton: {
             text: "Shop Online",
-            url: "https://newlife.online-orders.sbiteam.com/",
+            url: EXTERNAL_LINKS.availability,
         },
         secondaryButton: {
             text: "Contact Us",
@@ -77,7 +79,7 @@ export const DEFAULT_SERVICES_CONTENT: ServicesContent = {
                 "Browse our extensive inventory of plants, trees, and shrubs. Wholesale pricing for landscapers, contractors, and garden centers.",
             icon: LANDING_PAGE_ICON.Sprout,
             action: "View Catalog",
-            url: "https://newlife.online-orders.sbiteam.com/",
+            url: EXTERNAL_LINKS.availability,
         },
         {
             title: "Bulk Ordering & Pricing",
@@ -100,7 +102,7 @@ export const DEFAULT_SERVICES_CONTENT: ServicesContent = {
                 "Check current stock levels and reserve plants online. Updated inventory ensures you get what you need when you need it.",
             icon: LANDING_PAGE_ICON.Leaf,
             action: "Check Stock",
-            url: "https://newlife.online-orders.sbiteam.com/",
+            url: EXTERNAL_LINKS.availability,
         },
     ],
 };
@@ -368,7 +370,7 @@ export const DEFAULT_LOCATION_CONTENT: LocationContent = {
                 variant: "text",
                 color: "secondary",
                 action: "external",
-                url: "https://newlife.online-orders.sbiteam.com/",
+                url: EXTERNAL_LINKS.availability,
                 displayOrder: 2,
                 isActive: true,
             },
@@ -435,11 +437,11 @@ export const createDefaultLandingPageContent = (): LandingPageContent => ({
             banners: [],
             settings: {
                 autoPlay: false,
-                autoPlayDelay: 5000,
+                autoPlayDelay: HERO_SETTINGS_LIMITS.autoPlayDelay.defaultMs,
                 showDots: true,
                 showArrows: true,
                 fadeTransition: false,
-                fadeTransitionDuration: 500,
+                fadeTransitionDuration: HERO_SETTINGS_LIMITS.fadeTransitionDuration.defaultMs,
             },
             text: {
                 title: "",

@@ -9,10 +9,13 @@ import { join } from "path";
  * that were backed up in the setup phase.
  */
 
-const DATA_PATH = join(process.cwd(), "packages/server/src/data");
-const BACKUP_PATH = join(process.cwd(), ".e2e-backup");
+const DATA_PATH = process.env.E2E_DATA_DIR ?? join(process.cwd(), "packages/server/src/data");
+const BACKUP_PATH = process.env.E2E_DATA_BACKUP_DIR ?? join(process.cwd(), ".e2e-backup");
 
 const FILES_TO_RESTORE = [
+  "landing-page-content.json",
+  "landing-page-variant-variant-homepage-official.json",
+  "variants.json",
   "hero-banners.json",
   "seasonal-plants.json",
   "plant-tips.json",

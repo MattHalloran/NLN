@@ -1,6 +1,6 @@
 import {
-    activeByDisplayOrder,
     createDefaultLandingPageContent,
+    filterActiveLandingPageContent,
     normalizeLandingPageContent,
 } from "@local/shared";
 import type { PrismaClient } from "@prisma/client";
@@ -11,21 +11,7 @@ import type { LandingPageContent } from "../../types/landingPage.js";
  * Filter active content items in landing page content
  */
 export const filterActiveContent = (content: LandingPageContent): LandingPageContent => {
-    const filtered = { ...content };
-
-    if (filtered.content?.hero?.banners) {
-        filtered.content.hero.banners = activeByDisplayOrder(filtered.content.hero.banners);
-    }
-
-    if (filtered.content?.seasonal?.plants) {
-        filtered.content.seasonal.plants = activeByDisplayOrder(filtered.content.seasonal.plants);
-    }
-
-    if (filtered.content?.seasonal?.tips) {
-        filtered.content.seasonal.tips = activeByDisplayOrder(filtered.content.seasonal.tips);
-    }
-
-    return filtered;
+    return filterActiveLandingPageContent(content);
 };
 
 const normalizeImageSrc = (src: string): string => src.replace(/^\/+/, "");

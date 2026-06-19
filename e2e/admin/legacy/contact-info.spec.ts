@@ -1,5 +1,5 @@
-import { test, expect } from "../fixtures/auth";
-import { AdminContactPage } from "../pages/admin-contact.page";
+import { test, expect } from "../../fixtures/auth";
+import { AdminContactPage } from "../../pages/admin-contact.page";
 
 /**
  * E2E Tests for Admin Contact Info Management

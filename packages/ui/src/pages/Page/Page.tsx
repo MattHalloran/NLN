@@ -1,4 +1,4 @@
-import { APP_LINKS } from "@local/shared";
+import { APP_LINKS, hasRole } from "@local/shared";
 import { Box, useTheme } from "@mui/material";
 import { PageContainer } from "components/PageContainer/PageContainer";
 import { SessionContext } from "contexts/SessionContext";
@@ -20,12 +20,10 @@ export const Page = ({
 
     // If this page has restricted access
     if (restrictedToRoles.length > 0) {
-        if (session?.roles && Array.isArray(session.roles) && session.roles.length > 0) {
-            const needArray = Array.isArray(restrictedToRoles)
-                ? restrictedToRoles
-                : [restrictedToRoles];
-            if (session.roles.some((r) => needArray.includes(r.role.title))) return children;
-        }
+        const needArray = Array.isArray(restrictedToRoles)
+            ? restrictedToRoles
+            : [restrictedToRoles];
+        if (hasRole(session, needArray)) return children;
         if (session !== null && session !== undefined && location !== redirect)
             return <Redirect to={redirect} />;
     }

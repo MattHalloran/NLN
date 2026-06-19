@@ -5,14 +5,20 @@ This project uses [Vitest](https://vitest.dev/) as the test framework.
 ## Running Tests
 
 ```bash
-# Run all tests (unit + integration) with coverage
+# From the repository root, run server unit tests only
+yarn workspace server test:unit
+
+# From the repository root, run server integration tests only
+yarn workspace server test:integration
+
+# From packages/server, run all server tests with coverage
 yarn test
 
-# Run only unit tests (fast, no Docker required)
-yarn test --run --exclude "**/*.integration.test.ts"
+# From packages/server, run only unit tests
+yarn test:unit
 
-# Run only integration tests (requires Docker)
-yarn test --run "**/*.integration.test.ts"
+# From packages/server, run only integration tests
+yarn test:integration
 
 # Run tests in watch mode (auto-rerun on changes)
 yarn test:watch
@@ -24,12 +30,14 @@ yarn test:ui
 ## Test Types
 
 ### Unit Tests
+
 - **Pattern**: `*.test.ts` (not `*.integration.test.ts`)
 - **Speed**: Fast (milliseconds)
 - **Requirements**: None
 - **Purpose**: Test individual functions and modules in isolation using mocks
 
 ### Integration Tests
+
 - **Pattern**: `*.integration.test.ts`
 - **Speed**: Slower (seconds to minutes)
 - **Requirements**: Docker must be running
@@ -38,6 +46,7 @@ yarn test:ui
 ## Test Structure
 
 Tests are located alongside the source files with the `.test.ts` extension:
+
 - Unit tests: Test individual functions and modules in isolation
 - Integration tests: Test interactions between components (see example below)
 
@@ -46,10 +55,10 @@ Tests are located alongside the source files with the `.test.ts` extension:
 ### Basic Unit Test
 
 ```typescript
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from "vitest";
 
-describe('MyModule', () => {
-    it('should do something', () => {
+describe("MyModule", () => {
+    it("should do something", () => {
         expect(1 + 1).toBe(2);
     });
 });
@@ -58,57 +67,44 @@ describe('MyModule', () => {
 ### Using Mocks
 
 ```typescript
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // Mock a module
-vi.mock('./myModule', () => ({
+vi.mock("./myModule", () => ({
     myFunction: vi.fn(),
 }));
 
-describe('MyTest', () => {
+describe("MyTest", () => {
     beforeEach(() => {
         vi.clearAllMocks();
     });
 
-    it('should call mocked function', () => {
+    it("should call mocked function", () => {
         const mockFn = vi.fn();
-        mockFn('test');
-        expect(mockFn).toHaveBeenCalledWith('test');
+        mockFn("test");
+        expect(mockFn).toHaveBeenCalledWith("test");
     });
 });
 ```
 
-## Integration Tests with Testcontainers
+## Integration Tests
 
-The project includes support for integration tests using [Testcontainers](https://testcontainers.com/).
-
-See `src/db/integration.test.example.ts` for a working example of how to:
-1. Start a PostgreSQL container for testing
-2. Run tests against the real database
-3. Clean up containers after tests
-
-To enable the example integration test:
-```bash
-mv src/db/integration.test.example.ts src/db/integration.test.ts
-yarn test
-```
-
-**Note:** Integration tests require Docker to be running and will take longer to execute.
+Integration tests are named `*.integration.test.ts`. They use Testcontainers-managed PostgreSQL and Redis dependencies, so Docker must be available locally and in CI. Tests that need file-backed runtime state create temporary project directories instead of writing to source data files.
 
 ### Integration Test Template
 
 ```typescript
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers/postgresql';
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { PostgreSqlContainer, StartedPostgreSqlContainer } from "@testcontainers/postgresql";
 
-describe('Database Integration Tests', () => {
+describe("Database Integration Tests", () => {
     let container: StartedPostgreSqlContainer;
 
     beforeAll(async () => {
-        container = await new PostgreSqlContainer('postgres:16-alpine')
-            .withDatabase('test_db')
-            .withUsername('test_user')
-            .withPassword('test_password')
+        container = await new PostgreSqlContainer("postgres:16-alpine")
+            .withDatabase("test_db")
+            .withUsername("test_user")
+            .withPassword("test_password")
             .start();
     }, 60000); // 60 second timeout
 
@@ -118,9 +114,9 @@ describe('Database Integration Tests', () => {
         }
     });
 
-    it('should connect to database', () => {
+    it("should connect to database", () => {
         const uri = container.getConnectionUri();
-        expect(uri).toContain('postgresql://');
+        expect(uri).toContain("postgresql://");
     });
 });
 ```
@@ -128,6 +124,7 @@ describe('Database Integration Tests', () => {
 ## Configuration
 
 Test configuration is in `vitest.config.mts`:
+
 - Test environment: Node.js
 - Coverage provider: v8
 - Test pattern: `src/**/*.test.ts`
@@ -135,6 +132,7 @@ Test configuration is in `vitest.config.mts`:
 ## Migration from Jest
 
 This project was migrated from Jest to Vitest. Key changes:
+
 - `jest.mock()` → `vi.mock()`
 - `jest.fn()` → `vi.fn()`
 - `jest.clearAllMocks()` → `vi.clearAllMocks()`
@@ -155,33 +153,34 @@ The project includes comprehensive integration tests using [Testcontainers](http
 ### Available Integration Tests
 
 1. **Database Integration Tests** (`src/db/database.integration.test.ts`)
-   - Tests Prisma operations against real PostgreSQL
-   - Covers CRUD operations, transactions, relationships, cascades
-   - 60+ test cases across all models
+    - Tests Prisma operations against real PostgreSQL
+    - Covers CRUD operations, transactions, relationships, cascades
+    - 60+ test cases across all models
 
 2. **Redis Integration Tests** (`src/redisConn.integration.test.ts`)
-   - Tests Redis operations with real Redis instance
-   - Covers strings, hashes, lists, sets, sorted sets
-   - Includes session storage, caching, and rate limiting patterns
+    - Tests Redis operations with real Redis instance
+    - Covers strings, hashes, lists, sets, sorted sets
+    - Includes session storage, caching, and rate limiting patterns
 
 3. **Authentication Integration Tests** (`src/auth.integration.test.ts`)
-   - Tests JWT token generation and validation
-   - Tests authentication middleware
-   - Covers role-based access control
+    - Tests JWT token generation and validation
+    - Tests authentication middleware
+    - Covers role-based access control
 
 4. **API Integration Tests** (`src/rest/api.integration.test.ts`)
-   - Tests REST API endpoints end-to-end
-   - Uses supertest with real Express server
-   - Covers signup, login, logout, password reset
+    - Tests REST API endpoints end-to-end
+    - Uses supertest with real Express server
+    - Covers signup, login, logout, password reset
 
 5. **Bull Queue Integration Tests** (`src/worker/email/queue.integration.test.ts`)
-   - Tests job queue operations with real Redis + Bull
-   - Covers job lifecycle, priorities, retries, events
-   - Tests email queue specific workflows
+    - Tests job queue operations with real Redis + Bull
+    - Covers job lifecycle, priorities, retries, events
+    - Tests email queue specific workflows
 
 ### Prerequisites for Integration Tests
 
 **Docker must be running:**
+
 ```bash
 # Check Docker status
 docker ps
@@ -194,41 +193,47 @@ sudo systemctl start docker  # Linux
 ### Running Integration Tests
 
 ```bash
-# Run all integration tests
-yarn test --run "**/*.integration.test.ts"
+# Run all integration tests from the repo root
+yarn test:integration
 
-# Run specific integration test suite
-yarn test --run src/db/database.integration.test.ts
-yarn test --run src/redisConn.integration.test.ts
-yarn test --run src/auth.integration.test.ts
-yarn test --run src/rest/api.integration.test.ts
-yarn test --run src/worker/email/queue.integration.test.ts
+# Run a specific integration test suite from packages/server
+yarn vitest run src/db/database.integration.test.ts
+yarn vitest run src/redisConn.integration.test.ts
+yarn vitest run src/auth.integration.test.ts
+yarn vitest run src/rest/api.integration.test.ts
+yarn vitest run src/worker/email/queue.integration.test.ts
 
 # Run with verbose output
-yarn test --run "**/*.integration.test.ts" --reporter=verbose
+yarn vitest run "**/*.integration.test.ts" --reporter=verbose
 ```
 
 ## Troubleshooting
 
 ### ES6 Module Issues
+
 If you encounter ES6 module errors, ensure:
+
 - Config file uses `.mts` extension (`vitest.config.mts`)
 - Test files import Vitest functions explicitly
 
 ### Testcontainers Issues
+
 - **Docker not running**: Ensure Docker daemon is active (`docker ps` should work)
 - **Permission errors**: Add your user to docker group: `sudo usermod -aG docker $USER`
 - **Port conflicts**: Stop existing containers if ports are in use
 - **Timeout errors**: Increase timeout in test: `beforeAll(async () => {...}, 120000)`
 - **File is not defined error**: This is fixed by using `pool: 'forks'` in vitest.config.mts
+- **Migration failures from unexpected paths**: Integration tests should call shared helpers in `src/__tests__/integrationUtils.ts` instead of hard-coding checkout paths.
 
 ### Slow Tests
+
 - Run specific tests: `vitest src/path/to/test.ts`
 - Skip integration tests: `vitest --run --exclude "**/*.integration.test.ts"`
 - Integration tests take 1-3 minutes due to container startup
 - Use `--pool-options.forks.singleFork=true` for faster sequential execution
 
 ### Network Issues with Testcontainers
+
 - Ensure Docker has internet access for pulling images
 - Pre-pull images: `docker pull postgres:16-alpine redis:7-alpine`
 - Check Docker network: `docker network ls`
