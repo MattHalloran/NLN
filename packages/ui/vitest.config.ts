@@ -16,10 +16,34 @@ export default defineConfig({
             reporter: ["text", "json", "html"],
             include: ["src/**/*.{ts,tsx}"],
             thresholds: {
-                statements: 6.5,
-                branches: 64,
-                functions: 33,
-                lines: 6.5,
+                statements: 8.4,
+                branches: 68.5,
+                functions: 33.8,
+                lines: 8.4,
+                "src/api/rest/**/*.{ts,tsx}": {
+                    statements: 50,
+                    branches: 77,
+                    functions: 15,
+                    lines: 50,
+                },
+                "src/route/**/*.{ts,tsx}": {
+                    statements: 39,
+                    branches: 85,
+                    functions: 32,
+                    lines: 39,
+                },
+                "src/stores/**/*.{ts,tsx}": {
+                    statements: 89,
+                    branches: 76,
+                    functions: 83,
+                    lines: 89,
+                },
+                "src/utils/**/*.{ts,tsx}": {
+                    statements: 40,
+                    branches: 92,
+                    functions: 74,
+                    lines: 40,
+                },
             },
             exclude: [
                 "node_modules",

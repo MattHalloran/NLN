@@ -29,6 +29,12 @@ export default defineConfig({
         'src/db/migrations/**',
         'vitest.setup.ts',
       ],
+      thresholds: {
+        statements: 19.6,
+        branches: 59.7,
+        functions: 31,
+        lines: 19.6,
+      },
     },
     pool: 'forks',
     poolOptions: {

@@ -111,7 +111,7 @@ export const GalleryPage = () => {
         setLightboxOpen(false);
     };
 
-    const handleCategoryChange = (event: React.SyntheticEvent, newValue: string) => {
+    const handleCategoryChange = (_event: React.SyntheticEvent, newValue: string) => {
         setSelectedCategory(newValue);
     };
 

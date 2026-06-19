@@ -227,7 +227,7 @@ const AboutStoryPreview = ({
                     </Typography>
 
                     <Grid container spacing={2}>
-                        {valuesData.items.slice(0, 4).map((value: any, index: number) => {
+                        {valuesData.items.slice(0, 4).map((value, index) => {
                             const IconComponent = resolveLandingPageIcon(value.icon, Star);
                             return (
                                 <Grid item xs={6} key={index}>
@@ -372,13 +372,16 @@ export const AdminHomepageAbout = () => {
     // Trigger refetch when landing page data loads
     useEffect(() => {
         if (landingPageData && !landingPageLoading) {
-            form.refetch();
+            void form.refetch();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [landingPageData, landingPageLoading]);
 
     // Story section handlers
-    const updateStoryField = (field: keyof StoryData, value: any) => {
+    const updateStoryField = <TField extends keyof StoryData>(
+        field: TField,
+        value: StoryData[TField],
+    ) => {
         if (!form.data) return;
         form.setData({
             ...form.data,

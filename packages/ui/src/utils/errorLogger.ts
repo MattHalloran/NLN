@@ -54,7 +54,7 @@ class ErrorLogger {
      */
     logInfo(message: string, context?: ErrorContext): void {
         if (!import.meta.env.PROD) {
-            console.log("Info:", message, context);
+            console.warn("Info:", message, context);
         }
     }
 }

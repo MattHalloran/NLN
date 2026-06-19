@@ -48,7 +48,7 @@ export const ABTestEditingBanner: React.FC = () => {
             }
         };
 
-        fetchVariant();
+        void fetchVariant();
 
         return () => {
             isSubscribed = false;

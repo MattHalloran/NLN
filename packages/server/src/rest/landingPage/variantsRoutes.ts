@@ -17,7 +17,7 @@ import { AuthenticatedRequest, requireAdmin } from "./middlewares.js";
 const router = Router();
 
 // GET endpoint to retrieve all variants (admin only)
-router.get("/", requireAdmin, async (req: AuthenticatedRequest, res: Response) => {
+router.get("/", requireAdmin, async (_req: AuthenticatedRequest, res: Response) => {
     try {
         const variants = readVariants();
         return res.json(variants);

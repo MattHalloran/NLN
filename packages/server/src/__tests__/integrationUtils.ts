@@ -23,7 +23,6 @@ export async function startPostgresTestDatabase(
         .withDatabase(databaseName)
         .withUsername("test_user")
         .withPassword("test_password")
-        .withReuse(false)
         .start();
 
     const connectionString = container.getConnectionUri();

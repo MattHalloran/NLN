@@ -165,7 +165,7 @@ test.describe("Admin Form Persistence - About Section", () => {
             .first();
 
         if ((await overlineInput.count()) === 0) {
-            test.skip();
+            test.skip(true, "Legacy data-dependent skip: expected form input was not rendered for this legacy admin route");
             return;
         }
 
@@ -214,7 +214,7 @@ test.describe("Admin Form Persistence - Social Proof", () => {
             .first();
 
         if ((await headerInput.count()) === 0) {
-            test.skip();
+            test.skip(true, "Legacy data-dependent skip: expected form input was not rendered for this legacy admin route");
             return;
         }
 
@@ -263,7 +263,7 @@ test.describe("Admin Form Persistence - Location Section", () => {
             .first();
 
         if ((await chipInput.count()) === 0) {
-            test.skip();
+            test.skip(true, "Legacy data-dependent skip: expected form input was not rendered for this legacy admin route");
             return;
         }
 
@@ -312,7 +312,7 @@ test.describe("Admin Form Persistence - Seasonal Content", () => {
             .first();
 
         if ((await plantNameInput.count()) === 0) {
-            test.skip();
+            test.skip(true, "Legacy data-dependent skip: expected form input was not rendered for this legacy admin route");
             return;
         }
 

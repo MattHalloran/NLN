@@ -1,30 +1,49 @@
-import { AnchorHTMLAttributes, cloneElement, createContext, createElement, Fragment, FunctionComponent, isValidElement, ReactNode, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useRef } from "react";
+import {
+    AnchorHTMLAttributes,
+    cloneElement,
+    createContext,
+    createElement,
+    Fragment,
+    FunctionComponent,
+    isValidElement,
+    MouseEvent,
+    ReactElement,
+    ReactNode,
+    Suspense,
+    useCallback,
+    useContext,
+    useEffect,
+    useLayoutEffect,
+    useMemo,
+} from "react";
 import makeMatcher, { DefaultParams, Match, MatcherFn } from "./matcher";
 import { parseSearchParams } from "./searchParams";
-import locationHook, { HookNavigationOptions, LocationHook, Path, SetLocation } from "./useLocation";
+import locationHook, {
+    HookNavigationOptions,
+    LocationHook,
+    Path,
+    SetLocation,
+} from "./useLocation";
 
-export type ExtractRouteOptionalParam<PathType extends Path> =
-    PathType extends `${infer Param}?`
+export type ExtractRouteOptionalParam<PathType extends Path> = PathType extends `${infer Param}?`
     ? { [k in Param]: string | undefined }
     : PathType extends `${infer Param}*`
-    ? { [k in Param]: string | undefined }
-    : PathType extends `${infer Param}+`
-    ? { [k in Param]: string }
-    : { [k in PathType]: string };
+      ? { [k in Param]: string | undefined }
+      : PathType extends `${infer Param}+`
+        ? { [k in Param]: string }
+        : { [k in PathType]: string };
 
-export type ExtractRouteParams<PathType extends string> =
-    string extends PathType
+export type ExtractRouteParams<PathType extends string> = string extends PathType
     ? { [k in string]: string }
     : PathType extends `${infer _Start}:${infer ParamWithOptionalRegExp}/${infer Rest}`
-    ? ParamWithOptionalRegExp extends `${infer Param}(${infer _RegExp})`
-    ? ExtractRouteOptionalParam<Param> & ExtractRouteParams<Rest>
-    : ExtractRouteOptionalParam<ParamWithOptionalRegExp> &
-    ExtractRouteParams<Rest>
-    : PathType extends `${infer _Start}:${infer ParamWithOptionalRegExp}`
-    ? ParamWithOptionalRegExp extends `${infer Param}(${infer _RegExp})`
-    ? ExtractRouteOptionalParam<Param>
-    : ExtractRouteOptionalParam<ParamWithOptionalRegExp>
-    : Record<string, never>;
+      ? ParamWithOptionalRegExp extends `${infer Param}(${infer _RegExp})`
+          ? ExtractRouteOptionalParam<Param> & ExtractRouteParams<Rest>
+          : ExtractRouteOptionalParam<ParamWithOptionalRegExp> & ExtractRouteParams<Rest>
+      : PathType extends `${infer _Start}:${infer ParamWithOptionalRegExp}`
+        ? ParamWithOptionalRegExp extends `${infer Param}(${infer _RegExp})`
+            ? ExtractRouteOptionalParam<Param>
+            : ExtractRouteOptionalParam<ParamWithOptionalRegExp>
+        : Record<string, never>;
 
 export interface RouterProps {
     hook: LocationHook;
@@ -32,17 +51,10 @@ export interface RouterProps {
     matcher: MatcherFn;
 }
 
-export type NavigationalProps = (
-    | { to: Path; href?: never }
-    | { href: Path; to?: never }
-) &
+export type NavigationalProps = ({ to: Path; href?: never } | { href: Path; to?: never }) &
     HookNavigationOptions;
 
-export type LinkProps = Omit<
-    AnchorHTMLAttributes<HTMLAnchorElement>,
-    "href"
-> &
-    NavigationalProps;
+export type LinkProps = Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "href"> & NavigationalProps;
 
 /*
  * Part 1, Hooks API: useRouter, useRoute and useLocation
@@ -52,20 +64,17 @@ export type LinkProps = Omit<
 // when no value is provided — default object is used.
 // allows us to use the router context as a global ref to store
 // the implicitly created router (see `useRouter` below)
-const RouterCtx = createContext<{ v?: RouterProps }>({});
-
 const buildRouter = ({
     hook = locationHook,
     base = "",
     matcher = makeMatcher(),
 } = {}): RouterProps => ({ hook, base, matcher });
 
-export const useRouter = () => {
-    const globalRef = useContext(RouterCtx);
+const defaultRouter = buildRouter();
+const RouterCtx = createContext<{ v: RouterProps }>({ v: defaultRouter });
 
-    // either obtain the router from the outer context (provided by the
-    // `<Router /> component) or create an implicit one on demand.
-    return globalRef.v || (globalRef.v = buildRouter());
+export const useRouter = () => {
+    return useContext(RouterCtx).v;
 };
 
 export const useLocation = (): [Path, SetLocation] => {
@@ -75,25 +84,25 @@ export const useLocation = (): [Path, SetLocation] => {
 
 export const useRoute = <
     T extends DefaultParams | undefined = undefined,
-    RoutePath extends Path = Path>(
-        pattern: RoutePath,
-    ):
-    Match<T extends DefaultParams ? T : ExtractRouteParams<RoutePath>> => {
+    RoutePath extends Path = Path,
+>(
+    pattern: RoutePath,
+): Match<T extends DefaultParams ? T : ExtractRouteParams<RoutePath>> => {
     const [path] = useLocation();
-    return useRouter().matcher(pattern, path) as Match<T extends DefaultParams ? T : ExtractRouteParams<RoutePath>>;
+    return useRouter().matcher(pattern, path) as Match<
+        T extends DefaultParams ? T : ExtractRouteParams<RoutePath>
+    >;
 };
 
 // internal hook used by Link and Redirect in order to perform navigation
 const useNavigate = (options: NavigationalProps) => {
-    const navRef = useRef<(() => void) | null>(null);
     const [, navigate] = useLocation();
 
-    navRef.current = () => {
-        const to = (options as any).to || (options as any).href;
-        const navOptions = { replace: (options as any).replace };
+    return useCallback(() => {
+        const to = "to" in options && options.to !== undefined ? options.to : options.href;
+        const navOptions = { replace: options.replace };
         navigate(to, navOptions);
-    };
-    return navRef;
+    }, [navigate, options]);
 };
 
 /*
@@ -101,27 +110,26 @@ const useNavigate = (options: NavigationalProps) => {
  */
 
 export const Router: FunctionComponent<RouterProps & { children: ReactNode }> = (props) => {
-    const ref = useRef<any>(null);
-
-    // this little trick allows to avoid having unnecessary
-    // calls to potentially expensive `buildRouter` method.
-    // https://reactjs.org/docs/hooks-faq.html#how-to-create-expensive-objects-lazily
-    const value = ref.current || (ref.current = { v: buildRouter(props) });
+    const { base, children, hook, matcher } = props;
+    const value = useMemo(
+        () => ({ v: buildRouter({ base, hook, matcher }) }),
+        [base, hook, matcher],
+    );
 
     return createElement(RouterCtx.Provider, {
         value,
-        children: props.children,
+        children,
     });
 };
 
 export type RouteProps = {
     /**
-     * If sitemapIndex is true, this specifies the change frequency of the page 
+     * If sitemapIndex is true, this specifies the change frequency of the page
      */
     changeFreq?: "always" | "hourly" | "daily" | "weekly" | "monthly" | "yearly" | "never";
     children: ReactNode;
-    component?: any;
-    match?: any;
+    component?: FunctionComponent<{ params: DefaultParams }>;
+    match?: Match;
     path?: string;
     /**
      * If sitemapIndex is true, this specifies the priority of the page.
@@ -131,10 +139,10 @@ export type RouteProps = {
      * Specifies if this route should be included in the sitemap
      */
     sitemapIndex?: boolean;
-}
+};
 
-export const Route = ({ path, match, component, children }: RouteProps) => {
-    const useRouteMatch = useRoute(path as any);
+export const Route = ({ path, match, component, children }: RouteProps): JSX.Element | null => {
+    const useRouteMatch = useRoute(path ?? "");
 
     // Store last and current url data in session storage, if not already stored
     useEffect(() => {
@@ -143,7 +151,8 @@ export const Route = ({ path, match, component, children }: RouteProps) => {
         const lastCurrentSearchParams = sessionStorage.getItem("currentSearchParams");
         // Store current data in sessionStorage if last data didn't exist
         if (!lastCurrentPath) sessionStorage.setItem("currentPath", window.location.pathname);
-        if (!lastCurrentSearchParams) sessionStorage.setItem("currentSearchParams", JSON.stringify(parseSearchParams()));
+        if (!lastCurrentSearchParams)
+            sessionStorage.setItem("currentSearchParams", JSON.stringify(parseSearchParams()));
     }, [path]);
 
     // `props.match` is present - Route is controlled by the Switch
@@ -155,17 +164,22 @@ export const Route = ({ path, match, component, children }: RouteProps) => {
     if (component) return createElement(component, { params });
 
     // support render prop or plain children
-    return typeof children === "function" ? (children as any)(params) : children;
+    const renderedChildren =
+        typeof children === "function"
+            ? (children as (params: DefaultParams) => ReactNode)(params)
+            : children;
+
+    return createElement(Fragment, null, renderedChildren);
 };
 
 export const Link = (props: LinkProps) => {
-    const navRef = useNavigate(props);
+    const navigate = useNavigate(props);
     const { base } = useRouter();
 
     const { to, href = to, children, onClick } = props;
 
     const handleClick = useCallback(
-        (event: any) => {
+        (event: MouseEvent<HTMLAnchorElement>) => {
             // ignores the navigation when clicked using right mouse button or
             // by holding a special modifier key: ctrl, command, win, alt, shift
             if (
@@ -182,11 +196,10 @@ export const Link = (props: LinkProps) => {
             }
             if (!event.defaultPrevented) {
                 event.preventDefault();
-                navRef.current?.();
+                navigate();
             }
         },
-        // navRef is a ref so it never changes
-        [onClick],
+        [navigate, onClick],
     );
 
     // wraps children in `a` if needed
@@ -196,7 +209,9 @@ export const Link = (props: LinkProps) => {
         onClick: handleClick,
         to: null,
     };
-    const jsx = isValidElement(children) ? children : createElement("a", props as any);
+    const jsx = isValidElement(children)
+        ? children
+        : createElement("a", props as AnchorHTMLAttributes<HTMLAnchorElement>);
 
     return cloneElement(jsx, extraProps);
 };
@@ -204,29 +219,29 @@ export const Link = (props: LinkProps) => {
 /**
  * Recursively flattens an array
  * @param children
- * @returns 
+ * @returns
  */
-const flattenChildren = (children: Array<any> | any): any => {
-    return Array.isArray(children)
-        ? [].concat(
-            ...children.map((c) =>
-                c && c.type === Fragment
-                    ? flattenChildren(c.props.children)
-                    : flattenChildren(c),
-            ),
-        )
-        : [children];
+const flattenChildren = (children: ReactNode | ReactNode[]): ReactNode[] => {
+    if (!Array.isArray(children)) {
+        return [children];
+    }
+
+    return children.flatMap((c) =>
+        isValidElement<{ children?: ReactNode }>(c) && c.type === Fragment
+            ? flattenChildren(c.props.children)
+            : flattenChildren(c),
+    );
 };
 
 type SwitchProps = {
     children: JSX.Element | JSX.Element[];
     location?: string;
     /**
-     * Suspense fallback to use when a route is being resolved, so we don't 
+     * Suspense fallback to use when a route is being resolved, so we don't
      * have to specify it on every Route
      */
     fallback?: JSX.Element;
-}
+};
 
 export const Switch = ({ children, location, fallback }: SwitchProps) => {
     const { matcher } = useRouter();
@@ -241,29 +256,36 @@ export const Switch = ({ children, location, fallback }: SwitchProps) => {
             // but we do require it to contain a truthy `path` prop.
             // this allows to use different components that wrap Route
             // inside of a switch, for example <AnimatedRoute />.
-            (match = (element as any).props.path
-                ? matcher((element as any).props.path, location || originalLocation)
-                : [true, {}] as Match) && match[0]
+            (match = (element as ReactElement<RouteProps>).props.path
+                ? matcher(
+                      (element as ReactElement<RouteProps>).props.path ?? "",
+                      location || originalLocation,
+                  )
+                : ([true, {}] as Match)) &&
+            match[0]
         ) {
             // If there is a fallback, wrap the route in it
             if (fallback) {
-                return createElement(Suspense, { fallback }, cloneElement(element, { match } as any));
+                return createElement(
+                    Suspense,
+                    { fallback },
+                    cloneElement(element as ReactElement<RouteProps>, { match }),
+                );
             }
             // Otherwise, just return the route
-            return cloneElement(element, { match } as any);
+            return cloneElement(element as ReactElement<RouteProps>, { match });
         }
     }
 
     return null;
 };
 
-export const Redirect = (props: any): JSX.Element | null => {
-    const navRef = useNavigate(props);
+export const Redirect = (props: NavigationalProps): JSX.Element | null => {
+    const navigate = useNavigate(props);
 
-    // empty array means running the effect once, navRef is a ref so it never changes
     useLayoutEffect(() => {
-        navRef.current?.();
-    }, []); 
+        navigate();
+    }, [navigate]);
 
     return null;
 };

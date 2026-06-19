@@ -20,7 +20,9 @@ describe("Redis Integration Tests", () => {
         const port = container.getMappedPort(6379);
         connectionUrl = `redis://${host}:${port}`;
 
-        console.log("Test Redis started:", connectionUrl);
+        if (process.env.ENABLE_TEST_LOGS === "true") {
+            console.log("Test Redis started:", connectionUrl);
+        }
 
         // Create Redis client
         redisClient = createClient({ url: connectionUrl });
@@ -33,7 +35,9 @@ describe("Redis Integration Tests", () => {
         }
         if (container) {
             await container.stop();
-            console.log("Test Redis stopped");
+            if (process.env.ENABLE_TEST_LOGS === "true") {
+                console.log("Test Redis stopped");
+            }
         }
     });
 

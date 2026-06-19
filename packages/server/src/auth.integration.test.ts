@@ -20,13 +20,11 @@ import {
 describe("Authentication Integration Tests", () => {
     let container: StartedPostgreSqlContainer;
     let prisma: PrismaClient;
-    let connectionString: string;
 
     beforeAll(async () => {
         const database = await startPostgresTestDatabase("test_auth_db");
         container = database.container;
         prisma = database.prisma;
-        connectionString = database.connectionString;
         process.env.JWT_SECRET = "test-jwt-secret-key";
         process.env.SITE_NAME = "test.example.com";
     }, 120000);
@@ -219,7 +217,7 @@ describe("Authentication Integration Tests", () => {
             const next = createMockNext();
 
             // Authenticate
-            await authenticate(req as any, {} as Response, next);
+            authenticate(req as any, {} as Response, next);
 
             // Wait for async jwt.verify to complete
             await new Promise((resolve) => setTimeout(resolve, 100));
@@ -238,7 +236,7 @@ describe("Authentication Integration Tests", () => {
 
             const next = createMockNext();
 
-            await authenticate(req as any, {} as Response, next);
+            authenticate(req as any, {} as Response, next);
 
             expect(next).toHaveBeenCalled();
             expect((req as any).validToken).toBeUndefined();
@@ -253,7 +251,7 @@ describe("Authentication Integration Tests", () => {
 
             const next = createMockNext();
 
-            await authenticate(req as any, {} as Response, next);
+            authenticate(req as any, {} as Response, next);
 
             // Wait for async jwt.verify to complete
             await new Promise((resolve) => setTimeout(resolve, 100));
@@ -299,7 +297,7 @@ describe("Authentication Integration Tests", () => {
 
             const next = createMockNext();
 
-            await authenticate(req as any, {} as Response, next);
+            authenticate(req as any, {} as Response, next);
 
             // Wait for async jwt.verify to complete
             await new Promise((resolve) => setTimeout(resolve, 100));
@@ -449,7 +447,7 @@ describe("Authentication Integration Tests", () => {
 
             const next = createMockNext();
 
-            await authenticate(req as any, {} as Response, next);
+            authenticate(req as any, {} as Response, next);
 
             // Wait for async jwt.verify to complete
             await new Promise((resolve) => setTimeout(resolve, 100));

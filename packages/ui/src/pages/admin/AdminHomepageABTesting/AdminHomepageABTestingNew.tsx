@@ -25,6 +25,7 @@ import {
     InputLabel,
     Paper,
 } from "@mui/material";
+import type { ChipProps, SvgIconProps } from "@mui/material";
 import {
     Add as AddIcon,
     Delete as DeleteIcon,
@@ -88,7 +89,6 @@ const PerformanceIndicator: React.FC<{
     const diff = value - baseline;
     const percentDiff = (diff / baseline) * 100;
     const isBetter = reversed ? diff < 0 : diff > 0;
-    const _isWorse = reversed ? diff > 0 : diff < 0;
 
     if (Math.abs(percentDiff) < 0.5) return null; // Not significant enough
 
@@ -238,7 +238,7 @@ const TrafficAllocationBar: React.FC<{
  * Enhanced metric card with visual indicators
  */
 const MetricCard: React.FC<{
-    icon: React.ReactElement;
+    icon: React.ReactElement<SvgIconProps>;
     label: string;
     value: string | number;
     subValue?: string;
@@ -247,7 +247,9 @@ const MetricCard: React.FC<{
 }> = ({ icon, label, value, subValue, color = "text.primary", trend }) => (
     <Box>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
-            {React.cloneElement(icon, { sx: { fontSize: 20, color: "text.secondary" } } as any)}
+            {React.cloneElement<SvgIconProps>(icon, {
+                sx: { fontSize: 20, color: "text.secondary" },
+            })}
             <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
                 {label}
             </Typography>
@@ -289,8 +291,8 @@ export const AdminHomepageABTestingNew = () => {
         });
     }, []);
 
-    const handleApiError = useCallback((error: any, fallbackMessage: string) => {
-        const message = error?.message || fallbackMessage;
+    const handleApiError = useCallback((error: unknown, fallbackMessage: string) => {
+        const message = error instanceof Error ? error.message : fallbackMessage;
         PubSub.get().publishSnack({
             message,
             severity: SnackSeverity.Error,
@@ -318,7 +320,7 @@ export const AdminHomepageABTestingNew = () => {
             setNewVariantTraffic(0);
             setCopyFromVariantId("");
             await refetch();
-        } catch (error: any) {
+        } catch (error: unknown) {
             handleApiError(error, "Failed to create variant");
         }
     }, [
@@ -349,7 +351,7 @@ export const AdminHomepageABTestingNew = () => {
                 handleApiSuccess("Variant deleted successfully!");
                 setDeleteConfirmVariant(null);
                 await refetch();
-            } catch (error: any) {
+            } catch (error: unknown) {
                 handleApiError(error, "Failed to delete variant");
             }
         },
@@ -362,7 +364,7 @@ export const AdminHomepageABTestingNew = () => {
                 await promoteVariant.mutate(variantId);
                 handleApiSuccess("Variant promoted to official successfully!");
                 await refetch();
-            } catch (error: any) {
+            } catch (error: unknown) {
                 handleApiError(error, "Failed to promote variant");
             }
         },
@@ -375,7 +377,7 @@ export const AdminHomepageABTestingNew = () => {
                 await toggleVariant.mutate(variantId);
                 handleApiSuccess("Variant status toggled successfully!");
                 await refetch();
-            } catch (error: any) {
+            } catch (error: unknown) {
                 handleApiError(error, "Failed to toggle variant");
             }
         },
@@ -400,7 +402,7 @@ export const AdminHomepageABTestingNew = () => {
         window.open(APP_LINKS.Home, "_blank");
     }, []);
 
-    const getStatusColor = (status: string) => {
+    const getStatusColor = (status: string): ChipProps["color"] => {
         switch (status) {
             case "enabled":
                 return "success";
@@ -852,11 +854,7 @@ export const AdminHomepageABTestingNew = () => {
                                                         </Typography>
                                                         <Chip
                                                             label={variant.status.toUpperCase()}
-                                                            color={
-                                                                getStatusColor(
-                                                                    variant.status,
-                                                                ) as any
-                                                            }
+                                                            color={getStatusColor(variant.status)}
                                                             size="small"
                                                             sx={{ fontWeight: 600 }}
                                                         />

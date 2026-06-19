@@ -471,7 +471,7 @@ export const AdminHomepageSeasonal = () => {
     // Trigger refetch when landing page data loads
     useEffect(() => {
         if (data && !landingPageLoading) {
-            form.refetch();
+            void form.refetch();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [data, landingPageLoading]);
@@ -518,7 +518,10 @@ export const AdminHomepageSeasonal = () => {
         }
     };
 
-    const handlePlantFieldChange = (field: keyof SeasonalPlant, value: any) => {
+    const handlePlantFieldChange = <TField extends keyof SeasonalPlant>(
+        field: TField,
+        value: SeasonalPlant[TField],
+    ) => {
         if (!editingPlant || !form.data) return;
         const updatedPlant = { ...editingPlant, [field]: value };
         setEditingPlant(updatedPlant);
@@ -528,7 +531,10 @@ export const AdminHomepageSeasonal = () => {
         });
     };
 
-    const handleTipFieldChange = (field: keyof PlantTip, value: any) => {
+    const handleTipFieldChange = <TField extends keyof PlantTip>(
+        field: TField,
+        value: PlantTip[TField],
+    ) => {
         if (!editingTip || !form.data) return;
         const updatedTip = { ...editingTip, [field]: value };
         setEditingTip(updatedTip);

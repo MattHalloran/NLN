@@ -15,8 +15,9 @@
     "prepare": "command -v husky >/dev/null 2>&1 && husky || true",
     "lint": "yarn workspaces run lint",
     "typecheck": "yarn workspaces run typecheck",
+    "typecheck:test": "yarn workspaces run typecheck:test",
     "test": "yarn test:unit",
-    "validate": "yarn typecheck && yarn lint && yarn test:unit && yarn test:scripts && yarn check:drift",
+    "validate": "yarn typecheck && yarn typecheck:test && yarn lint && yarn test:unit && yarn test:scripts && yarn check:drift",
     "validate:full": "yarn validate && yarn test:integration && yarn workspace ui build && yarn test:pwa && yarn test:e2e:admin",
     "validate:ci": "yarn validate:full",
     "test:unit": "yarn workspace @local/shared test && yarn workspace ui test && yarn workspace server test:unit",
@@ -55,5 +56,6 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
     "eslint-plugin-react-hooks": "^7.0.0"
-  }
+  },
+  "dependencies": {}
 }

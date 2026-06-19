@@ -110,7 +110,7 @@ export const PasswordTextField = ({
 
         let isCurrent = true;
         const timeout = window.setTimeout(() => {
-            getPasswordStrengthProps(value).then((props) => {
+            void getPasswordStrengthProps(value).then((props) => {
                 if (isCurrent) setStrengthProps(props);
             });
         }, PASSWORD_STRENGTH_DELAY_MS);

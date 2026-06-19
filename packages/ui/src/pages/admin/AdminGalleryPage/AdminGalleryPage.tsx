@@ -48,7 +48,7 @@ export const AdminGalleryPage = () => {
                     message: `Successfully uploaded ${acceptedFiles.length} image(s).`,
                     severity: SnackSeverity.Success,
                 });
-                refetchImages();
+                void refetchImages();
             } catch (error) {
                 const errorMessage =
                     error instanceof Error ? error.message : "Failed to upload images";
@@ -112,7 +112,7 @@ export const AdminGalleryPage = () => {
                     message: result.message || "Successfully deleted image",
                     severity: SnackSeverity.Success,
                 });
-                refetchImages();
+                void refetchImages();
             } else {
                 PubSub.get().publishSnack({
                     message: result.errors?.join(", ") || "Failed to delete image",

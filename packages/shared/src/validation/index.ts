@@ -159,7 +159,7 @@ export const profileSchema = yup.object().shape({
         .string()
         .max(128)
         .when("newPassword", {
-            is: (val: any) => val && val.length > 0,
+            is: (val: unknown) => typeof val === "string" && val.length > 0,
             then: yup.string().required(),
             otherwise: yup.string().notRequired(),
         }),

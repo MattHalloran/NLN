@@ -27,10 +27,10 @@ export interface MutationErrorEvent {
     stack?: string;
 
     /** User context (admin email, etc.) */
-    userContext?: Record<string, any>;
+    userContext?: Record<string, unknown>;
 
     /** Additional metadata */
-    metadata?: Record<string, any>;
+    metadata?: Record<string, unknown>;
 
     /** Timestamp */
     timestamp: string;
@@ -56,6 +56,35 @@ export interface MutationSuccessMetrics {
     timestamp: string;
 }
 
+type SentryClient = {
+    captureException: (
+        error: Error,
+        options: {
+            tags: Record<string, string>;
+            extra: Record<string, unknown>;
+        },
+    ) => void;
+};
+
+type GtagClient = (
+    command: "event",
+    eventName: string,
+    parameters: Record<string, unknown>,
+) => void;
+
+type MonitoringWindow = {
+    Sentry?: SentryClient;
+    gtag?: GtagClient;
+};
+
+const getMonitoringWindow = (): MonitoringWindow | null => {
+    if (typeof globalThis === "undefined" || !("window" in globalThis)) {
+        return null;
+    }
+
+    return globalThis.window as MonitoringWindow;
+};
+
 /**
  * Track mutation errors to monitoring service
  */
@@ -66,8 +95,10 @@ export function trackMutationError(event: MutationErrorEvent): void {
     }
 
     // Send to Sentry (if configured)
-    if (typeof window !== "undefined" && (window as any).Sentry) {
-        const Sentry = (window as any).Sentry;
+    const monitoringWindow = getMonitoringWindow();
+
+    if (monitoringWindow?.Sentry) {
+        const { Sentry } = monitoringWindow;
         Sentry.captureException(new Error(event.error), {
             tags: {
                 mutationType: event.mutationType,
@@ -115,8 +146,10 @@ export function trackMutationSuccess(metrics: MutationSuccessMetrics): void {
     // }
 
     // Send to analytics
-    if (typeof window !== "undefined" && (window as any).gtag) {
-        const gtag = (window as any).gtag;
+    const monitoringWindow = getMonitoringWindow();
+
+    if (monitoringWindow?.gtag) {
+        const { gtag } = monitoringWindow;
         gtag("event", "mutation_success", {
             event_category: "admin",
             event_label: `${metrics.page}:${metrics.endpoint}`,

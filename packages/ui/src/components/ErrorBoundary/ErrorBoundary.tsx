@@ -142,7 +142,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
         // Report to external services if enabled
         if (this.errorReportingEnabled) {
-            this.reportError(error, errorInfo);
+            void this.reportError(error, errorInfo);
         }
 
         // Track error occurrence
@@ -233,7 +233,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
         const category = this.categorizeError(error);
 
         // Only log errors in development mode
-        if (import.meta.env.DEV) {
+        if (import.meta.env.DEV && import.meta.env.MODE !== "test") {
             // eslint-disable-next-line no-console
             console.group(`🚨 Error Boundary: ${category.type.toUpperCase()} ERROR`);
 
@@ -265,8 +265,9 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
             // In a real app, send to error reporting service (Sentry, LogRocket, etc.)
             if (import.meta.env.DEV)
-                // eslint-disable-next-line no-console
-                console.log("📊 Error report prepared for external service:", errorReport);
+                if (import.meta.env.MODE !== "test") {
+                    console.warn("📊 Error report prepared for external service:", errorReport);
+                }
 
             // Example: await sendToErrorService(errorReport);
         } catch (reportingError) {

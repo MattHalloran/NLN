@@ -315,7 +315,11 @@ export const AdminContactPage = () => {
         }
     }, [landingPageData?.contact?.hours]);
 
-    const updateDayHours = (index: number, field: keyof DayHours, value: any) => {
+    const updateDayHours = <TField extends keyof DayHours>(
+        index: number,
+        field: TField,
+        value: DayHours[TField],
+    ) => {
         const newHours = [...dayHours];
         newHours[index] = { ...newHours[index], [field]: value };
         setDayHours(newHours);

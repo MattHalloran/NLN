@@ -20,3 +20,5 @@ describe("Utility Functions", () => {
         expect(Object.keys(obj)).toEqual(["name", "value"]);
     });
 });
+
+export {};

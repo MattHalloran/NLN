@@ -16,6 +16,7 @@ import {
     getCookieLastTab,
     setCookieLastTab,
 } from "./cookies";
+import { type MockInstance } from "vitest";
 
 // Mock @local/shared
 vi.mock("@local/shared", () => ({
@@ -26,11 +27,11 @@ vi.mock("@local/shared", () => ({
 }));
 
 describe("cookies", () => {
-    let consoleWarnSpy: vi.SpyInstance;
+    let consoleWarnSpy: MockInstance;
 
     beforeEach(() => {
         localStorage.clear();
-        consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation();
+        consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
     });
 
     afterEach(() => {

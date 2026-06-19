@@ -25,13 +25,11 @@ describe("REST API Integration Tests", () => {
     let container: StartedPostgreSqlContainer;
     let prisma: PrismaClient;
     let app: Express;
-    let connectionString: string;
 
     beforeAll(async () => {
         const database = await startPostgresTestDatabase("test_api_db");
         container = database.container;
         prisma = database.prisma;
-        connectionString = database.connectionString;
         process.env.JWT_SECRET = "test-jwt-secret-key";
         process.env.SITE_NAME = "test.example.com";
 
@@ -372,7 +370,12 @@ describe("REST API Integration Tests", () => {
 
                 expect(response.status).toBe(200);
                 expect(response.body).toEqual({ authenticated: false, user: null });
-                expect(response.headers["set-cookie"]?.join(";")).toContain(`${COOKIE.Jwt}=`);
+                const setCookie = response.headers["set-cookie"];
+                const serializedCookies = Array.isArray(setCookie)
+                    ? setCookie.join(";")
+                    : setCookie;
+
+                expect(serializedCookies).toContain(`${COOKIE.Jwt}=`);
             });
         });
 

@@ -1,24 +1,26 @@
 /**
  * Mock Bull queue for testing
  */
+import { vi, type Mock } from "vitest";
+
 export interface MockQueue {
-    add: jest.Mock;
-    process: jest.Mock;
-    on: jest.Mock;
-    close: jest.Mock;
-    getJob: jest.Mock;
-    getJobs: jest.Mock;
+    add: Mock;
+    process: Mock;
+    on: Mock;
+    close: Mock;
+    getJob: Mock;
+    getJobs: Mock;
 }
 
 export const createMockQueue = (): MockQueue => ({
-    add: jest.fn().mockResolvedValue({ id: "test-job-id" }),
-    process: jest.fn(),
-    on: jest.fn(),
-    close: jest.fn().mockResolvedValue(undefined),
-    getJob: jest.fn().mockResolvedValue(null),
-    getJobs: jest.fn().mockResolvedValue([]),
+    add: vi.fn().mockResolvedValue({ id: "test-job-id" }),
+    process: vi.fn(),
+    on: vi.fn(),
+    close: vi.fn().mockResolvedValue(undefined),
+    getJob: vi.fn().mockResolvedValue(null),
+    getJobs: vi.fn().mockResolvedValue([]),
 });
 
-const Bull = jest.fn((_name: string, _options: unknown) => createMockQueue());
+const Bull = vi.fn((_name: string, _options: unknown) => createMockQueue());
 
 export default Bull;

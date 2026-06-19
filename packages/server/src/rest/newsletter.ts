@@ -10,6 +10,97 @@ const router = Router();
 const getQueryString = (value: Request["query"][string]): string | undefined =>
     typeof value === "string" ? value : undefined;
 
+type NewsletterStatusCount = {
+    status: string;
+    _count: number;
+};
+
+type NewsletterVariantCount = {
+    variant_id: string | null;
+    _count: number;
+};
+
+type NewsletterSubscriberCsvRow = {
+    email: string;
+    variant_id: string | null;
+    source: string;
+    status: string;
+    created_at: Date | string;
+};
+
+export function normalizeNewsletterEmail(email: string): string {
+    return email.toLowerCase().trim();
+}
+
+export function isValidNewsletterEmail(email: string): boolean {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+export function buildNewsletterStatusCounts(
+    stats: NewsletterStatusCount[]
+): Record<string, number> {
+    return stats.reduce<Record<string, number>>((acc, stat) => {
+        acc[stat.status] = stat._count;
+        return acc;
+    }, {});
+}
+
+export function buildNewsletterWhereFilter(params: {
+    status?: string;
+    variantId?: string;
+    search?: string;
+}): Prisma.newsletter_subscriptionWhereInput {
+    const where: Prisma.newsletter_subscriptionWhereInput = {};
+    if (params.status) {
+        where.status = params.status;
+    }
+    if (params.variantId) {
+        where.variant_id = params.variantId;
+    }
+    if (params.search) {
+        where.email = {
+            contains: params.search,
+            mode: "insensitive",
+        };
+    }
+    return where;
+}
+
+export function buildNewsletterStatsResponse(params: {
+    statusCounts: NewsletterStatusCount[];
+    variantCounts: NewsletterVariantCount[];
+    recentSignups: number;
+    signupsThisMonth: number;
+}) {
+    return {
+        byStatus: buildNewsletterStatusCounts(params.statusCounts),
+        byVariant: params.variantCounts.map((variant) => ({
+            variantId: variant.variant_id,
+            count: variant._count,
+        })),
+        recentActivity: {
+            last7Days: params.recentSignups,
+            last30Days: params.signupsThisMonth,
+        },
+    };
+}
+
+export function buildNewsletterSubscribersCsv(subscribers: NewsletterSubscriberCsvRow[]): string {
+    const headers = ["Email", "Variant ID", "Source", "Status", "Subscribed At"];
+    const rows = subscribers.map((subscriber) => [
+        subscriber.email,
+        subscriber.variant_id || "",
+        subscriber.source,
+        subscriber.status,
+        new Date(subscriber.created_at).toISOString(),
+    ]);
+
+    return [
+        headers.join(","),
+        ...rows.map((row) => row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(",")),
+    ].join("\n");
+}
+
 /**
  * POST /api/rest/v1/newsletter/subscribe
  * Subscribe to newsletter (public endpoint)
@@ -39,13 +130,12 @@ router.post(
             }
 
             // Basic email format validation
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(email)) {
+            if (!isValidNewsletterEmail(email)) {
                 return res.status(400).json({ error: "Invalid email format" });
             }
 
             // Normalize email (lowercase, trim)
-            const normalizedEmail = email.toLowerCase().trim();
+            const normalizedEmail = normalizeNewsletterEmail(email);
 
             // Check if already subscribed
             const existing = await prisma.newsletter_subscription.findUnique({
@@ -128,20 +218,7 @@ router.get(REST_CHILD_PATHS.newsletter.subscribers, async (req: Request, res: Re
         const limitNum = Math.min(parseInt(limit, 10), 100); // Max 100 per page
         const skip = (pageNum - 1) * limitNum;
 
-        // Build filter
-        const where: Prisma.newsletter_subscriptionWhereInput = {};
-        if (status) {
-            where.status = status;
-        }
-        if (variantId) {
-            where.variant_id = variantId;
-        }
-        if (search) {
-            where.email = {
-                contains: search as string,
-                mode: "insensitive",
-            };
-        }
+        const where = buildNewsletterWhereFilter({ status, variantId, search });
 
         // Get subscribers with pagination
         const [subscribers, total] = await Promise.all([
@@ -160,13 +237,7 @@ router.get(REST_CHILD_PATHS.newsletter.subscribers, async (req: Request, res: Re
             _count: true,
         });
 
-        const statusCounts = stats.reduce(
-            (acc, stat) => {
-                acc[stat.status] = stat._count;
-                return acc;
-            },
-            {} as Record<string, number>
-        );
+        const statusCounts = buildNewsletterStatusCounts(stats);
 
         return res.json({
             subscribers,
@@ -208,11 +279,7 @@ router.get(REST_CHILD_PATHS.newsletter.subscribersExport, async (req: Request, r
         }
         const status = getQueryString(req.query.status);
 
-        // Build filter
-        const where: Prisma.newsletter_subscriptionWhereInput = {};
-        if (status) {
-            where.status = status;
-        }
+        const where = buildNewsletterWhereFilter({ status });
 
         // Get all subscribers
         const subscribers = await prisma.newsletter_subscription.findMany({
@@ -220,22 +287,7 @@ router.get(REST_CHILD_PATHS.newsletter.subscribersExport, async (req: Request, r
             orderBy: { created_at: "desc" },
         });
 
-        // Build CSV
-        const headers = ["Email", "Variant ID", "Source", "Status", "Subscribed At"];
-        const rows = subscribers.map((sub) => [
-            sub.email,
-            sub.variant_id || "",
-            sub.source,
-            sub.status,
-            new Date(sub.created_at).toISOString(),
-        ]);
-
-        const csv = [
-            headers.join(","),
-            ...rows.map((row: string[]) =>
-                row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(",")
-            ),
-        ].join("\n");
+        const csv = buildNewsletterSubscribersCsv(subscribers);
 
         // Set headers for CSV download
         res.setHeader("Content-Type", "text/csv");
@@ -367,23 +419,14 @@ router.get(REST_CHILD_PATHS.newsletter.stats, async (req: Request, res: Response
             },
         });
 
-        return res.json({
-            byStatus: statusCounts.reduce(
-                (acc, stat) => {
-                    acc[stat.status] = stat._count;
-                    return acc;
-                },
-                {} as Record<string, number>
-            ),
-            byVariant: variantCounts.map((v) => ({
-                variantId: v.variant_id,
-                count: v._count,
-            })),
-            recentActivity: {
-                last7Days: recentSignups,
-                last30Days: signupsThisMonth,
-            },
-        });
+        return res.json(
+            buildNewsletterStatsResponse({
+                statusCounts,
+                variantCounts,
+                recentSignups,
+                signupsThisMonth,
+            })
+        );
     } catch (error) {
         logger.log(LogLevel.error, "Get newsletter stats error:", error);
         if (error instanceof CustomError) {

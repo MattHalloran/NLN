@@ -11,7 +11,10 @@ import {
 } from "./client";
 
 // Generic hook for REST API calls
-function useRestQuery<T>(queryFn: () => Promise<T>, dependencies: unknown[] = []) {
+export function useRestQuery<T>(
+    queryFn: (signal: AbortSignal) => Promise<T>,
+    dependencies: unknown[] = [],
+) {
     const [data, setData] = useState<T | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
@@ -28,7 +31,7 @@ function useRestQuery<T>(queryFn: () => Promise<T>, dependencies: unknown[] = []
         setError(null);
 
         try {
-            const result = await queryFn();
+            const result = await queryFn(abortControllerRef.current.signal);
             setData(result);
             setError(null);
         } catch (err) {
@@ -44,7 +47,7 @@ function useRestQuery<T>(queryFn: () => Promise<T>, dependencies: unknown[] = []
     }, [queryFn]);
 
     useEffect(() => {
-        refetch();
+        void refetch();
 
         // Cleanup function to abort request on unmount
         return () => {

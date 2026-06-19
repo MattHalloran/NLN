@@ -649,7 +649,7 @@ export const AdminHomepageLocation = () => {
     // Trigger refetch when landing page data loads
     useEffect(() => {
         if (landingPageData && !landingPageLoading) {
-            form.refetch();
+            void form.refetch();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [landingPageData, landingPageLoading]);

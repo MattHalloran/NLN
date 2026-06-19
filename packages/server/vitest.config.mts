@@ -13,10 +13,28 @@ export default defineConfig({
       reporter: ['text', 'json', 'html'],
       include: ['src/**/*.ts'],
       thresholds: {
-        statements: 4.1,
-        branches: 55,
-        functions: 21,
-        lines: 4.1,
+        statements: 6.8,
+        branches: 64.9,
+        functions: 37.9,
+        lines: 6.8,
+        'src/rest/*.ts': {
+          statements: 3.6,
+          branches: 76,
+          functions: 52,
+          lines: 3.6,
+        },
+        'src/worker/email/**/*.ts': {
+          statements: 48,
+          branches: 47,
+          functions: 66,
+          lines: 48,
+        },
+        'src/utils/**/*.ts': {
+          statements: 8.3,
+          branches: 88,
+          functions: 24,
+          lines: 8.3,
+        },
       },
       exclude: [
         'node_modules',

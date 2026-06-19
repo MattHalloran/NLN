@@ -140,8 +140,8 @@ export const AdminSystemLogs = () => {
 
     // Initial load
     useEffect(() => {
-        fetchLogs(0, false);
-        fetchStats();
+        void fetchLogs(0, false);
+        void fetchStats();
     }, [fetchLogs, fetchStats]);
 
     // Load more logs
@@ -152,7 +152,7 @@ export const AdminSystemLogs = () => {
     // Watch offset changes
     useEffect(() => {
         if (offset > 0) {
-            fetchLogs(offset, true);
+            void fetchLogs(offset, true);
         }
     }, [fetchLogs, offset]);
 
@@ -205,7 +205,7 @@ export const AdminSystemLogs = () => {
 
     // Copy log entry as JSON
     const handleCopyLog = (log: LogEntry) => {
-        copyToClipboard(JSON.stringify(log, null, 2));
+        void copyToClipboard(JSON.stringify(log, null, 2));
     };
 
     return (
@@ -221,8 +221,8 @@ export const AdminSystemLogs = () => {
                         variant="outlined"
                         startIcon={<RefreshIcon />}
                         onClick={() => {
-                            fetchLogs(0, false);
-                            fetchStats();
+                            void fetchLogs(0, false);
+                            void fetchStats();
                         }}
                     >
                         Refresh
@@ -741,7 +741,9 @@ export const AdminSystemLogs = () => {
                                                         <IconButton
                                                             size="small"
                                                             onClick={() =>
-                                                                copyToClipboard(log.stack || "")
+                                                                void copyToClipboard(
+                                                                    log.stack || "",
+                                                                )
                                                             }
                                                         >
                                                             <CopyIcon fontSize="small" />

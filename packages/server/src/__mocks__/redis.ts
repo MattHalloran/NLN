@@ -1,28 +1,30 @@
 /**
  * Mock Redis client for testing
  */
+import { vi, type Mock } from "vitest";
+
 export interface MockRedisClient {
-    connect: jest.Mock;
-    disconnect: jest.Mock;
-    get: jest.Mock;
-    set: jest.Mock;
-    del: jest.Mock;
-    exists: jest.Mock;
-    expire: jest.Mock;
-    ttl: jest.Mock;
-    on: jest.Mock;
+    connect: Mock;
+    disconnect: Mock;
+    get: Mock;
+    set: Mock;
+    del: Mock;
+    exists: Mock;
+    expire: Mock;
+    ttl: Mock;
+    on: Mock;
 }
 
 export const createMockRedisClient = (): MockRedisClient => ({
-    connect: jest.fn().mockResolvedValue(undefined),
-    disconnect: jest.fn().mockResolvedValue(undefined),
-    get: jest.fn().mockResolvedValue(null),
-    set: jest.fn().mockResolvedValue("OK"),
-    del: jest.fn().mockResolvedValue(1),
-    exists: jest.fn().mockResolvedValue(0),
-    expire: jest.fn().mockResolvedValue(1),
-    ttl: jest.fn().mockResolvedValue(-1),
-    on: jest.fn(),
+    connect: vi.fn().mockResolvedValue(undefined),
+    disconnect: vi.fn().mockResolvedValue(undefined),
+    get: vi.fn().mockResolvedValue(null),
+    set: vi.fn().mockResolvedValue("OK"),
+    del: vi.fn().mockResolvedValue(1),
+    exists: vi.fn().mockResolvedValue(0),
+    expire: vi.fn().mockResolvedValue(1),
+    ttl: vi.fn().mockResolvedValue(-1),
+    on: vi.fn(),
 });
 
-export const createClient = jest.fn(() => createMockRedisClient());
+export const createClient = vi.fn(() => createMockRedisClient());

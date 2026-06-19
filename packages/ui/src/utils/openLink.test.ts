@@ -1,13 +1,14 @@
 import { openLink } from "./openLink";
 import { SetLocation } from "types";
+import { type Mock, type MockInstance } from "vitest";
 
 describe("openLink", () => {
-    let mockSetLocation: vi.Mock<SetLocation>;
-    let windowOpenSpy: vi.SpyInstance;
+    let mockSetLocation: Mock<SetLocation>;
+    let windowOpenSpy: MockInstance;
 
     beforeEach(() => {
-        mockSetLocation = vi.fn() as vi.Mock<SetLocation>;
-        windowOpenSpy = vi.spyOn(window, "open").mockImplementation();
+        mockSetLocation = vi.fn() as Mock<SetLocation>;
+        windowOpenSpy = vi.spyOn(window, "open").mockImplementation(() => null);
     });
 
     afterEach(() => {

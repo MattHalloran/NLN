@@ -112,6 +112,13 @@ export default [
     {
         files: ["packages/ui/**/*.{ts,tsx}"],
         languageOptions: {
+            parser: tsparser,
+            parserOptions: {
+                ecmaVersion: 2022,
+                sourceType: "module",
+                project: "packages/ui/tsconfig.eslint.json",
+                tsconfigRootDir: import.meta.dirname,
+            },
             globals: {
                 window: "readonly",
                 document: "readonly",
@@ -164,12 +171,20 @@ export default [
         },
         rules: {
             ...reactHooks.configs.recommended.rules,
-            "react-hooks/exhaustive-deps": "warn",
+            "react-hooks/exhaustive-deps": "error",
             "react-hooks/rules-of-hooks": "error",
-            "react-hooks/set-state-in-effect": "warn",
-            "react-hooks/refs": "warn",
-            "react-hooks/purity": "warn",
-            "react-hooks/immutability": "warn",
+            "react-hooks/set-state-in-effect": "error",
+            "react-hooks/refs": "error",
+            "react-hooks/purity": "error",
+            "react-hooks/immutability": "error",
+            "@typescript-eslint/no-misused-promises": [
+                "error",
+                {
+                    checksVoidReturn: false,
+                },
+            ],
+            "@typescript-eslint/no-floating-promises": "error",
+            "@typescript-eslint/await-thenable": "error",
             "no-unsafe-optional-chaining": "warn",
             "no-useless-escape": "warn",
         },
@@ -252,6 +267,13 @@ export default [
     {
         files: ["packages/shared/**/*.ts"],
         languageOptions: {
+            parser: tsparser,
+            parserOptions: {
+                ecmaVersion: 2022,
+                sourceType: "module",
+                project: "packages/shared/tsconfig.eslint.json",
+                tsconfigRootDir: import.meta.dirname,
+            },
             globals: {
                 // Both Node and browser globals
                 console: "readonly",
@@ -267,6 +289,14 @@ export default [
         },
         rules: {
             "@typescript-eslint/no-redeclare": "off",
+            "@typescript-eslint/no-misused-promises": [
+                "error",
+                {
+                    checksVoidReturn: false,
+                },
+            ],
+            "@typescript-eslint/no-floating-promises": "error",
+            "@typescript-eslint/await-thenable": "error",
         },
     },
 
@@ -296,9 +326,15 @@ export default [
             "@typescript-eslint/no-unsafe-argument": "off",
             "@typescript-eslint/no-unsafe-return": "off",
             "@typescript-eslint/unbound-method": "off",
-            "@typescript-eslint/await-thenable": "off",
-            "@typescript-eslint/no-floating-promises": "off",
-            "@typescript-eslint/no-unused-vars": "off",
+            "no-restricted-properties": [
+                "error",
+                { "object": "describe", "property": "only", "message": "Focused tests must not be committed." },
+                { "object": "it", "property": "only", "message": "Focused tests must not be committed." },
+                { "object": "test", "property": "only", "message": "Focused tests must not be committed." },
+                { "object": "describe", "property": "skip", "message": "Skipped tests must be fixed or deleted." },
+                { "object": "it", "property": "skip", "message": "Skipped tests must be fixed or deleted." },
+                { "object": "test", "property": "skip", "message": "Skipped tests must be fixed or deleted." }
+            ],
             "no-console": "off",
         },
     },
@@ -320,9 +356,6 @@ export default [
             "@typescript-eslint/no-unsafe-argument": "off",
             "@typescript-eslint/no-unsafe-return": "off",
             "@typescript-eslint/unbound-method": "off",
-            "@typescript-eslint/await-thenable": "off",
-            "@typescript-eslint/no-floating-promises": "off",
-            "@typescript-eslint/no-unused-vars": "off",
             "no-console": "off",
         },
     },

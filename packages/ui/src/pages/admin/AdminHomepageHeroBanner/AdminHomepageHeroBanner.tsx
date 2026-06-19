@@ -3,7 +3,6 @@ import {
     APP_LINKS,
     IMAGE_LABELS,
     buildHeroContentPatch,
-    createHeroBannerFormItem,
     getHeroSectionFormData,
     HERO_SETTINGS_LIMITS,
     REST_ROUTES,
@@ -57,6 +56,12 @@ import { Award, Heart, Leaf, Package, Shield, Users } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { pagePaddingBottom } from "styles";
 import { getServerUrl } from "utils/serverUrl";
+import {
+    buildUploadedHeroBanners,
+    deleteHeroBanner,
+    reorderHeroBanners,
+    updateHeroBannerField,
+} from "./heroBannerFormState";
 
 // Available icons for trust badges
 const TRUST_BADGE_ICONS = {
@@ -98,8 +103,6 @@ const HeroPreview = ({ heroData }: { heroData: HeroSectionFormData | null }) => 
         fontWeight: "600",
         textShadow: "2px 2px 4px rgba(0,0,0,0.8), 0px 0px 20px rgba(0,0,0,0.5)",
     };
-
-    const _currentImage = activeImages[currentSlide];
 
     return (
         <Box
@@ -442,7 +445,7 @@ export const AdminHomepageHeroBanner = () => {
     // Trigger refetch when landing page data loads
     useEffect(() => {
         if (landingPageContent && !landingPageLoading) {
-            form.refetch();
+            void form.refetch();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [landingPageContent, landingPageLoading]);
@@ -458,24 +461,11 @@ export const AdminHomepageHeroBanner = () => {
                     files: acceptedFiles,
                 });
 
-                const newBanners: HeroBanner[] = [];
-                const currentLength = form.data.banners.length;
-
-                for (let i = 0; i < uploadResults.length; i++) {
-                    const result = uploadResults[i];
-                    const file = acceptedFiles[i];
-
-                    if (result.success && result.src) {
-                        const newBanner = createHeroBannerFormItem({
-                            src: `/${result.src}`,
-                            alt: file.name.replace(/\.[^/.]+$/, ""),
-                            width: result.width || 0,
-                            height: result.height || 0,
-                            displayOrder: currentLength + newBanners.length + 1,
-                        });
-                        newBanners.push(newBanner);
-                    }
-                }
+                const newBanners = buildUploadedHeroBanners(
+                    uploadResults,
+                    acceptedFiles,
+                    form.data.banners.length,
+                );
 
                 form.setData({
                     ...form.data,
@@ -492,18 +482,13 @@ export const AdminHomepageHeroBanner = () => {
         (result: DropResult) => {
             if (!result.destination || !form.data) return;
 
-            const items = Array.from(form.data.banners);
-            const [reorderedItem] = items.splice(result.source.index, 1);
-            items.splice(result.destination.index, 0, reorderedItem);
-
-            const reordered = items.map((item, index) => ({
-                ...item,
-                displayOrder: index + 1,
-            }));
-
             form.setData({
                 ...form.data,
-                banners: reordered,
+                banners: reorderHeroBanners(
+                    form.data.banners,
+                    result.source.index,
+                    result.destination.index,
+                ),
             });
         },
         [form],
@@ -513,32 +498,21 @@ export const AdminHomepageHeroBanner = () => {
         (id: string) => {
             if (!form.data) return;
 
-            const filtered = form.data.banners
-                .filter((b) => b.id !== id)
-                .map((item, index) => ({
-                    ...item,
-                    displayOrder: index + 1,
-                }));
-
             form.setData({
                 ...form.data,
-                banners: filtered,
+                banners: deleteHeroBanner(form.data.banners, id),
             });
         },
         [form],
     );
 
     const handleFieldChange = useCallback(
-        (id: string, field: string, value: string | boolean) => {
+        <TKey extends keyof HeroBanner>(id: string, field: TKey, value: HeroBanner[TKey]) => {
             if (!form.data) return;
-
-            const updated = form.data.banners.map((banner) =>
-                banner.id === id ? { ...banner, [field]: value } : banner,
-            );
 
             form.setData({
                 ...form.data,
-                banners: updated,
+                banners: updateHeroBannerField(form.data.banners, id, field, value),
             });
         },
         [form],

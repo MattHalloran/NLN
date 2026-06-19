@@ -18,6 +18,26 @@ type ImageUpdate = {
     description?: string | null;
 };
 
+type ImageWithFilteredLabels<TImage> = TImage & {
+    image_labels: Array<{ index: number | null }>;
+};
+
+export function estimateImageUploadSizeMB(files: Array<{ size: number }>): number {
+    return files.reduce((total, file) => total + (file.size / (1024 * 1024)) * 3.5, 0);
+}
+
+export function sortImagesByLabelIndex<TImage>(
+    images: Array<ImageWithFilteredLabels<TImage>>
+): TImage[] {
+    return [...images]
+        .sort((a, b) => {
+            const aIndex = a.image_labels[0]?.index ?? 0;
+            const bIndex = b.image_labels[0]?.index ?? 0;
+            return aIndex - bIndex;
+        })
+        .map(({ image_labels: _imageLabels, ...rest }) => rest as TImage);
+}
+
 /**
  * Calculate current storage usage in MB for the images directory
  * @returns Current storage in MB, or 0 if directory doesn't exist
@@ -94,14 +114,7 @@ router.get("/", async (req: Request, res: Response) => {
 
         // Sort by the label's index (extracted from the filtered image_labels)
         // Each image should have exactly one matching label after filtering
-        const sortedImages = images.sort((a, b) => {
-            const aIndex = a.image_labels[0]?.index ?? 0;
-            const bIndex = b.image_labels[0]?.index ?? 0;
-            return aIndex - bIndex;
-        });
-
-        // Remove the image_labels field from response (not needed by client)
-        const imageData = sortedImages.map(({ image_labels: _imageLabels, ...rest }) => rest);
+        const imageData = sortImagesByLabelIndex(images);
 
         return res.json(imageData);
     } catch (error) {
@@ -160,11 +173,7 @@ router.post("/", imageUploadLimiter, imageFileCountLimiter, async (req: Request,
         // Each image generates up to 16 variants (8 sizes × 2 formats: original + WebP)
         // Typical multiplier: 2.5-3x original size for all variants
         // We use 3.5x to remain conservative while being more realistic than 100MB flat rate
-        const estimatedUploadSizeMB = files.reduce((total, file) => {
-            const fileSizeMB = file.size / (1024 * 1024);
-            // Apply 3.5x multiplier for all variants (conservative but realistic)
-            return total + fileSizeMB * 3.5;
-        }, 0);
+        const estimatedUploadSizeMB = estimateImageUploadSizeMB(files);
 
         const projectedStorageMB = currentStorageMB + estimatedUploadSizeMB;
 

@@ -22,12 +22,16 @@ describe("Database Integration Tests", () => {
         container = database.container;
         prisma = database.prisma;
         connectionString = database.connectionString;
-        console.log("Test database started:", connectionString);
+        if (process.env.ENABLE_TEST_LOGS === "true") {
+            console.log("Test database started:", connectionString);
+        }
     }, 120000); // 2 minute timeout for container startup and migrations
 
     afterAll(async () => {
         await stopPostgresTestDatabase(prisma, container);
-        console.log("Test database stopped");
+        if (process.env.ENABLE_TEST_LOGS === "true") {
+            console.log("Test database stopped");
+        }
     });
 
     beforeEach(async () => {
@@ -608,7 +612,7 @@ describe("Database Integration Tests", () => {
 
     describe("Transaction Tests", () => {
         it("should rollback transaction on error", async () => {
-            const _role = await prisma.role.create({
+            await prisma.role.create({
                 data: { title: "TransactionRole" },
             });
 

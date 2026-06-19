@@ -34,7 +34,6 @@ describe("Landing Page API Integration Tests", () => {
     let container: StartedPostgreSqlContainer;
     let prisma: PrismaClient;
     let app: Express;
-    let connectionString: string;
     let adminCookie: string;
     let userCookie: string;
     let testProject: ReturnType<typeof createTestProjectDir>;
@@ -47,7 +46,6 @@ describe("Landing Page API Integration Tests", () => {
         const database = await startPostgresTestDatabase("test_landing_page_db");
         container = database.container;
         prisma = database.prisma;
-        connectionString = database.connectionString;
         process.env.JWT_SECRET = "test-jwt-secret-key";
         process.env.SITE_NAME = "test.example.com";
         process.env.PROJECT_DIR = testProject.projectDir;

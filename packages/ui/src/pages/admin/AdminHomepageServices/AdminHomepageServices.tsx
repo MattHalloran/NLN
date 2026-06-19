@@ -39,6 +39,7 @@ import { useUpdateLandingPageSettings, useLandingPageContent } from "api/rest/ho
 import { useAdminForm } from "hooks/useAdminForm";
 import { useState, useEffect } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import type { DropResult } from "@hello-pangea/dnd";
 import { landingPageIconOptions, resolveLandingPageIcon } from "utils/landingPageIcons";
 
 type ServicesSettings = ServicesContent & {
@@ -243,7 +244,7 @@ export const AdminHomepageServices = () => {
     // Trigger refetch when landing page data loads
     useEffect(() => {
         if (landingPageContent && !landingPageLoading) {
-            form.refetch();
+            void form.refetch();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [landingPageContent, landingPageLoading]);
@@ -280,7 +281,7 @@ export const AdminHomepageServices = () => {
         form.setData({ ...form.data, items: newItems });
     };
 
-    const handleDragEnd = (result: any) => {
+    const handleDragEnd = (result: DropResult) => {
         if (!result.destination || !form.data) return;
 
         const items = Array.from(form.data.items);

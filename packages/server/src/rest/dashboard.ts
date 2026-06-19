@@ -5,6 +5,23 @@ import { logger, LogLevel } from "../logger.js";
 
 const router = Router();
 
+type DashboardCustomer = {
+    accountApproved: boolean;
+};
+
+export function buildDashboardStats(customers: DashboardCustomer[]) {
+    const totalCustomers = customers.length;
+    const approvedCustomers = customers.filter((customer) => customer.accountApproved).length;
+
+    return {
+        totalCustomers,
+        approvedCustomers,
+        pendingOrders: 0,
+        totalProducts: 0,
+        totalSkus: 0,
+    };
+}
+
 /**
  * GET /api/rest/v1/dashboard/stats
  * Get dashboard statistics (admin only)
@@ -29,22 +46,7 @@ router.get(REST_CHILD_PATHS.dashboard.stats, async (req: Request, res: Response)
             },
         });
 
-        const totalCustomers = customers.length;
-        const approvedCustomers = customers.filter((c) => c.accountApproved).length;
-
-        // For now, return zeros for orders and products since those are archived
-        // In the future, these would query the actual models
-        const pendingOrders = 0;
-        const totalProducts = 0;
-        const totalSkus = 0;
-
-        return res.json({
-            totalCustomers,
-            approvedCustomers,
-            pendingOrders,
-            totalProducts,
-            totalSkus,
-        });
+        return res.json(buildDashboardStats(customers));
     } catch (error) {
         logger.log(LogLevel.error, "Get dashboard stats error:", error);
         if (error instanceof CustomError) {

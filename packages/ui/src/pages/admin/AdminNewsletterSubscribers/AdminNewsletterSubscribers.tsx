@@ -40,6 +40,12 @@ import type { NewsletterSubscription, NewsletterStatsResponse } from "api/rest/c
 import { PubSub } from "utils/pubsub";
 import { SnackSeverity } from "components/dialogs/Snack/Snack";
 
+type NewsletterSubscriberParams = Parameters<typeof restApi.getNewsletterSubscribers>[0];
+
+const getErrorMessage = (err: unknown, fallback: string): string => {
+    return err instanceof Error ? err.message : fallback;
+};
+
 export const AdminNewsletterSubscribers = () => {
     const [subscribers, setSubscribers] = useState<NewsletterSubscription[]>([]);
     const [stats, setStats] = useState<NewsletterStatsResponse | null>(null);
@@ -57,7 +63,7 @@ export const AdminNewsletterSubscribers = () => {
             setLoading(true);
             setError(null);
 
-            const params: any = {
+            const params: NewsletterSubscriberParams = {
                 page: page + 1, // API uses 1-based pagination
                 limit: rowsPerPage,
             };
@@ -73,9 +79,9 @@ export const AdminNewsletterSubscribers = () => {
             const response = await restApi.getNewsletterSubscribers(params);
             setSubscribers(response.subscribers);
             setTotalCount(response.pagination.total);
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error("Failed to fetch newsletter subscribers:", err);
-            setError(err.message || "Failed to load subscribers");
+            setError(getErrorMessage(err, "Failed to load subscribers"));
             PubSub.get().publish("snack", {
                 message: "Failed to load subscribers",
                 severity: SnackSeverity.Error,
@@ -90,17 +96,17 @@ export const AdminNewsletterSubscribers = () => {
         try {
             const response = await restApi.getNewsletterStats();
             setStats(response);
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error("Failed to fetch newsletter stats:", err);
         }
     }, []);
 
     useEffect(() => {
-        fetchSubscribers();
+        void fetchSubscribers();
     }, [fetchSubscribers]);
 
     useEffect(() => {
-        fetchStats();
+        void fetchStats();
     }, [fetchStats]);
 
     const handleExport = async () => {
@@ -122,7 +128,7 @@ export const AdminNewsletterSubscribers = () => {
                 severity: SnackSeverity.Success,
                 autoHideDuration: UI_TIMING.snackbarSuccessMs,
             });
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error("Export failed:", err);
             PubSub.get().publish("snack", {
                 message: "Failed to export subscribers",
@@ -148,9 +154,9 @@ export const AdminNewsletterSubscribers = () => {
                 severity: SnackSeverity.Success,
                 autoHideDuration: UI_TIMING.snackbarSuccessMs,
             });
-            fetchSubscribers();
-            fetchStats();
-        } catch (err: any) {
+            void fetchSubscribers();
+            void fetchStats();
+        } catch (err: unknown) {
             console.error(`Failed to ${action} subscriber:`, err);
             PubSub.get().publish("snack", {
                 message: `Failed to ${action} subscriber`,
@@ -288,8 +294,8 @@ export const AdminNewsletterSubscribers = () => {
                             variant="outlined"
                             startIcon={<RefreshIcon size={16} />}
                             onClick={() => {
-                                fetchSubscribers();
-                                fetchStats();
+                                void fetchSubscribers();
+                                void fetchStats();
                             }}
                             size="small"
                         >

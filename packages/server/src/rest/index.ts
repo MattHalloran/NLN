@@ -34,10 +34,10 @@ if (!fs.existsSync(TEMP_UPLOAD_DIR)) {
 // This prevents memory exhaustion from large concurrent uploads
 const upload = multer({
     storage: multer.diskStorage({
-        destination: (req, file, cb) => {
+        destination: (_req, _file, cb) => {
             cb(null, TEMP_UPLOAD_DIR);
         },
-        filename: (req, file, cb) => {
+        filename: (_req, file, cb) => {
             // Use unique filename to prevent collisions
             const uniqueSuffix = createTimestampedId("upload");
             cb(null, `${file.fieldname}-${uniqueSuffix}-${file.originalname}`);

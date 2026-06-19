@@ -1,14 +1,14 @@
-import { createTheme, lighten, darken, alpha, PaletteColor, PaletteColorOptions } from "@mui/material";
+import { alpha, createTheme, darken, lighten } from "@mui/material";
 
 // Define custom theme properties
 declare module "@mui/material/styles/createPalette" {
     interface Palette {
         admin: PaletteAdmin;
-        accent: PaletteColor;
+        accent: import("@mui/material/styles").PaletteColor;
     }
     interface PaletteOptions {
         admin: PaletteAdmin;
-        accent?: PaletteColorOptions;
+        accent?: import("@mui/material/styles").PaletteColorOptions;
     }
 }
 
@@ -30,12 +30,12 @@ interface PaletteAdmin {
 // Design tokens for consistent spacing and elevation
 export const designTokens = {
     spacing: {
-        xs: 0.5,  // 4px
-        sm: 1,    // 8px
-        md: 2,    // 16px
-        lg: 3,    // 24px
-        xl: 4,    // 32px
-        xxl: 6,   // 48px
+        xs: 0.5, // 4px
+        sm: 1, // 8px
+        md: 2, // 16px
+        lg: 3, // 24px
+        xl: 4, // 32px
+        xxl: 6, // 48px
     },
     elevation: {
         card: 1,
@@ -44,10 +44,10 @@ export const designTokens = {
         tooltip: 24,
     },
     borderRadius: {
-        sm: 1,    // 8px
-        md: 1.5,  // 12px
-        lg: 2,    // 16px
-        xl: 2.5,  // 20px
+        sm: 1, // 8px
+        md: 1.5, // 12px
+        lg: 2, // 16px
+        xl: 2.5, // 20px
     },
 } as const;
 
@@ -71,7 +71,7 @@ const commonTheme = createTheme({
 const lightPalette = {
     mode: "light",
     primary: {
-        light: "#3d7a3b",  // WCAG AA compliant: 4.51:1 contrast on #e9f1e9 (was #4c8c4a with 3.53:1)
+        light: "#3d7a3b", // WCAG AA compliant: 4.51:1 contrast on #e9f1e9 (was #4c8c4a with 3.53:1)
         main: "#1b5e20",
         dark: "#003300",
         contrastText: "#ffffff",
@@ -97,7 +97,7 @@ const lightPalette = {
     },
     warning: {
         light: "#ff9800",
-        main: "#bf360c",  // WCAG AA: 5.60:1 contrast ratio on white
+        main: "#bf360c", // WCAG AA: 5.60:1 contrast ratio on white
         dark: "#e65100",
         contrastText: "#ffffff",
     },
@@ -119,14 +119,14 @@ const lightPalette = {
     },
     text: {
         primary: "#000000",
-        secondary: "#4a4a4a",  // WCAG AA compliant: 7.65:1 contrast on #f8f6f3 (was #525252, MUI was ignoring it)
+        secondary: "#4a4a4a", // WCAG AA compliant: 7.65:1 contrast on #f8f6f3 (was #525252, MUI was ignoring it)
     },
     admin: {
         surface: "#f8f9fa",
         surfaceVariant: "#f1f3f4",
         outline: "#dadce0",
         success: "#137333",
-        warning: "#bf360c",  // Match main palette warning
+        warning: "#bf360c", // Match main palette warning
         error: "#d93025",
         info: "#1a73e8",
         cardHover: alpha("#1b5e20", 0.04),
@@ -225,7 +225,7 @@ const darkPalette = {
     },
     text: {
         primary: "#ffffff",
-        secondary: "#c3c3c3",  // WCAG AA compliant for dark mode
+        secondary: "#c3c3c3", // WCAG AA compliant for dark mode
     },
     admin: {
         surface: "#2a2a2a",
@@ -281,18 +281,21 @@ const darkTheme = createTheme({
 });
 
 export const themes = {
-    "light": lightTheme,
-    "dark": darkTheme,
+    light: lightTheme,
+    dark: darkTheme,
 };
 
 // Create a dynamic theme with custom colors from settings
-export const createDynamicTheme = (mode: "light" | "dark", customColors?: {
-    primary?: string;
-    secondary?: string;
-    accent?: string;
-    background?: string;
-    paper?: string;
-}) => {
+export const createDynamicTheme = (
+    mode: "light" | "dark",
+    customColors?: {
+        primary?: string;
+        secondary?: string;
+        accent?: string;
+        background?: string;
+        paper?: string;
+    },
+) => {
     const baseTheme = mode === "light" ? lightPalette : darkPalette;
 
     if (!customColors) {
@@ -301,24 +304,30 @@ export const createDynamicTheme = (mode: "light" | "dark", customColors?: {
 
     const dynamicPalette = {
         ...baseTheme,
-        primary: customColors.primary ? {
-            light: lighten(customColors.primary, 0.3),
-            main: customColors.primary,
-            dark: darken(customColors.primary, 0.3),
-            contrastText: "#ffffff",
-        } : baseTheme.primary,
-        secondary: customColors.secondary ? {
-            light: lighten(customColors.secondary, 0.3),
-            main: customColors.secondary,
-            dark: darken(customColors.secondary, 0.3),
-            contrastText: "#ffffff",
-        } : baseTheme.secondary,
-        accent: customColors.accent ? {
-            light: lighten(customColors.accent, 0.3),
-            main: customColors.accent,
-            dark: darken(customColors.accent, 0.3),
-            contrastText: "#ffffff",
-        } : baseTheme.accent,
+        primary: customColors.primary
+            ? {
+                  light: lighten(customColors.primary, 0.3),
+                  main: customColors.primary,
+                  dark: darken(customColors.primary, 0.3),
+                  contrastText: "#ffffff",
+              }
+            : baseTheme.primary,
+        secondary: customColors.secondary
+            ? {
+                  light: lighten(customColors.secondary, 0.3),
+                  main: customColors.secondary,
+                  dark: darken(customColors.secondary, 0.3),
+                  contrastText: "#ffffff",
+              }
+            : baseTheme.secondary,
+        accent: customColors.accent
+            ? {
+                  light: lighten(customColors.accent, 0.3),
+                  main: customColors.accent,
+                  dark: darken(customColors.accent, 0.3),
+                  contrastText: "#ffffff",
+              }
+            : baseTheme.accent,
         background: {
             ...baseTheme.background,
             default: customColors.background || baseTheme.background.default,
@@ -334,8 +343,12 @@ export const createDynamicTheme = (mode: "light" | "dark", customColors?: {
                 ? `linear-gradient(135deg, ${lighten(customColors.secondary, 0.3)} 0%, ${customColors.secondary} 100%)`
                 : baseTheme.admin.gradientSecondary,
             // Update admin colors based on primary
-            cardHover: customColors.primary ? alpha(customColors.primary, 0.04) : baseTheme.admin.cardHover,
-            iconBackground: customColors.primary ? alpha(customColors.primary, mode === "light" ? 0.1 : 0.15) : baseTheme.admin.iconBackground,
+            cardHover: customColors.primary
+                ? alpha(customColors.primary, 0.04)
+                : baseTheme.admin.cardHover,
+            iconBackground: customColors.primary
+                ? alpha(customColors.primary, mode === "light" ? 0.1 : 0.15)
+                : baseTheme.admin.iconBackground,
         },
     };
 

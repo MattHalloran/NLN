@@ -140,32 +140,34 @@ const initializePWA = async (): Promise<void> => {
             serviceWorkerRegistration.register({
                 onUpdate: (registration: ServiceWorkerRegistration) => {
                     isServiceWorkerUpdateActivationExpected = true;
-                    serviceWorkerRegistration.sendSkipWaiting(registration);
+                    void serviceWorkerRegistration.sendSkipWaiting(registration);
                 },
             });
 
             // Set up periodic update checks (every hour)
             if ("serviceWorker" in navigator) {
-                navigator.serviceWorker.ready.then((registration: ServiceWorkerRegistration) => {
-                    registration.update();
-                    setInterval(() => {
-                        registration.update();
-                    }, HOURS_1_MS);
-                });
+                void navigator.serviceWorker.ready.then(
+                    (registration: ServiceWorkerRegistration) => {
+                        void registration.update();
+                        setInterval(() => {
+                            void registration.update();
+                        }, HOURS_1_MS);
+                    },
+                );
             }
         } catch (error) {
             console.error("PWA initialization failed:", error);
             // Fallback: disable service workers if initialization fails
-            serviceWorkerRegistration.unregister();
+            void serviceWorkerRegistration.unregister();
         }
     } else {
         // In development, clean up any existing service workers to avoid conflicts
-        serviceWorkerRegistration.cleanupDevelopmentServiceWorkers();
+        void serviceWorkerRegistration.cleanupDevelopmentServiceWorkers();
     }
 };
 
 // Initialize PWA after app loads
-initializePWA();
+void initializePWA();
 
 window.addEventListener("load", () => {
     sessionStorage.removeItem(UPDATE_RELOAD_KEY);

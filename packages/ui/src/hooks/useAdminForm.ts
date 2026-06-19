@@ -251,7 +251,7 @@ export function useAdminForm<TData>({
 
     // Initial fetch on mount
     useEffect(() => {
-        refetch();
+        void refetch();
 
         // Cleanup
         return () => {
@@ -299,7 +299,7 @@ export function useAdminForm<TData>({
             // This ensures fetchFn gets fresh data instead of stale cached data
             if (refetchDependencies.length > 0) {
                 try {
-                    await Promise.all(refetchDependencies.map((fn) => fn()));
+                    refetchDependencies.forEach((fn) => fn());
                 } catch (depError) {
                     console.warn("Failed to refetch dependencies:", depError);
                     // Continue anyway - internal refetch might still work
@@ -444,23 +444,25 @@ export function useAdminForm<TData>({
  * Helper hook for admin forms that use deep nested objects
  * Provides a safer update function that preserves nested structure
  */
-export function useDeepUpdate<TData extends Record<string, any>>(
+export function useDeepUpdate<TData extends Record<string, unknown>>(
     setData: React.Dispatch<React.SetStateAction<TData | null>>,
 ) {
     return useCallback(
-        (path: string, value: any) => {
+        (path: string, value: unknown) => {
             setData((prev) => {
                 if (!prev) return prev;
 
                 const keys = path.split(".");
                 const updated = { ...prev };
-                let current: any = updated;
+                let current: Record<string, unknown> = updated;
 
                 // Navigate to the parent of the target property
                 for (let i = 0; i < keys.length - 1; i++) {
                     const key = keys[i];
-                    current[key] = { ...current[key] };
-                    current = current[key];
+                    const next = current[key];
+                    current[key] =
+                        next && typeof next === "object" && !Array.isArray(next) ? { ...next } : {};
+                    current = current[key] as Record<string, unknown>;
                 }
 
                 // Set the value

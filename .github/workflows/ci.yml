@@ -24,6 +24,9 @@ jobs:
       - name: Typecheck
         run: yarn typecheck
 
+      - name: Test typecheck
+        run: yarn typecheck:test
+
       - name: Lint
         run: yarn lint
 
@@ -36,6 +39,7 @@ jobs:
         with:
           name: unit-coverage
           path: |
+            packages/shared/coverage
             packages/server/coverage
             packages/ui/coverage
           if-no-files-found: ignore

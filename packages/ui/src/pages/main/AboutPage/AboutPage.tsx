@@ -9,6 +9,9 @@ import {
     Typography,
     useTheme,
 } from "@mui/material";
+import type { SvgIconComponent } from "@mui/icons-material";
+import type { Theme } from "@mui/material";
+import type { SvgComponent } from "icons/types";
 import GianarisSignature from "assets/img/gianaris-signature.png";
 import {
     InformationalTabOption,
@@ -28,9 +31,9 @@ const SocialLink = ({
     theme,
 }: {
     platform: string;
-    Icon: any;
+    Icon: SvgIconComponent | SvgComponent;
     url: string;
-    theme: any;
+    theme: Theme;
 }) => (
     <Tooltip title={`Follow us on ${platform}`} placement="top">
         <IconButton
@@ -330,7 +333,7 @@ export const AboutPage = () => {
                                             position: "relative",
                                             px: { xs: 3, sm: 0 },
                                             "&::before": {
-                                                content: "\"\"",
+                                                content: '""',
                                                 position: "absolute",
                                                 left: { xs: "-20px", sm: "-40px" },
                                                 top: { xs: "-10px", sm: "-20px" },
@@ -339,7 +342,7 @@ export const AboutPage = () => {
                                                 fontFamily: "serif",
                                             },
                                             "&::after": {
-                                                content: "\"\"",
+                                                content: '""',
                                                 position: "absolute",
                                                 right: { xs: "-20px", sm: "-40px" },
                                                 bottom: { xs: "-10px", sm: "-20px" },

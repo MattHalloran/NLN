@@ -25,7 +25,8 @@ report_matches "Raw REST version strings found outside shared route definitions:
         ':!packages/shared/src/api/contracts.ts' \
         ':!packages/server/src/rest/*.ts' \
         ':!packages/server/src/rest/*.test.ts' \
-        ':!packages/server/src/rest/*.integration.test.ts'
+        ':!packages/server/src/rest/*.integration.test.ts' \
+        ':!scripts/check-source-drift.sh'
 
 report_matches "Raw app route literals found in app/stable e2e code; use APP_LINKS instead:" \
     git grep -nE '"(/admin|/login|/gallery|/about)([^"]*)"' -- \

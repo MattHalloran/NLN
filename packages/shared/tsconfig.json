@@ -1,24 +1,15 @@
 {
-    "extends": "../../tsconfig.base.json",
-    "compilerOptions": {
-        "module": "CommonJS",
-        "baseUrl": "./src",
-        "rootDir": "./src",
-        "outDir": "./dist",
-        "lib": [
-            "DOM",
-            "DOM.Iterable",
-            "ES2022"
-        ],
-        "typeRoots": [
-            "./node_modules/@types",
-            "./src/types"
-        ],
-        "jsx": "react-jsx",
-        "noUnusedLocals": false,
-        "noUnusedParameters": false
-    },
-    "include": [
-        "src"
-    ]
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "CommonJS",
+    "baseUrl": "./src",
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "typeRoots": ["./node_modules/@types", "./src/types"],
+    "jsx": "react-jsx",
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
+  },
+  "include": ["src"]
 }

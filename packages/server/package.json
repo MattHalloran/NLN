@@ -30,7 +30,8 @@
         "lint:fix": "eslint \"src/**/*.ts\" --fix",
         "format": "prettier --write \"src/**/*.{ts,tsx,json}\"",
         "format:check": "prettier --check \"src/**/*.{ts,tsx,json}\"",
-        "typecheck": "tsc --noEmit"
+        "typecheck": "tsc --noEmit",
+        "typecheck:test": "tsc -p tsconfig.test.json --noEmit"
     },
     "author": "",
     "license": "MIT",

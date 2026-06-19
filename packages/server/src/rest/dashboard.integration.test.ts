@@ -22,7 +22,6 @@ describe("Dashboard API Integration Tests", () => {
     let container: StartedPostgreSqlContainer;
     let prisma: PrismaClient;
     let app: Express;
-    let connectionString: string;
     let adminCookie: string;
     let userCookie: string;
 
@@ -30,7 +29,6 @@ describe("Dashboard API Integration Tests", () => {
         const database = await startPostgresTestDatabase("test_dashboard_db");
         container = database.container;
         prisma = database.prisma;
-        connectionString = database.connectionString;
         process.env.JWT_SECRET = "test-jwt-secret-key";
         process.env.SITE_NAME = "test.example.com";
 
@@ -390,12 +388,26 @@ describe("Dashboard API Integration Tests", () => {
     });
 
     describe("Error Handling", () => {
-        it.skip("should handle database errors gracefully", async () => {
-            // Note: This test is skipped because testcontainers doesn't support
-            // restarting containers. In a real scenario, database errors are
-            // properly handled by the try-catch in dashboard.ts:45-51
-            // The test would require mocking Prisma to throw errors, which is complex
-            // and not worth the effort for this edge case.
+        it("should handle database errors gracefully", async () => {
+            const errorApp = express();
+            errorApp.use(express.json());
+            errorApp.use((req: any, _res, next) => {
+                req.isAdmin = true;
+                req.prisma = {
+                    customer: {
+                        findMany: async () => {
+                            throw new Error("database unavailable");
+                        },
+                    },
+                };
+                next();
+            });
+            errorApp.use(REST_ROUTES.root, restRouter);
+
+            const res = await request(errorApp).get(REST_ROUTES.dashboard.stats);
+
+            expect(res.status).toBe(500);
+            expect(res.body).toEqual({ error: "Failed to get dashboard stats" });
         });
     });
 });

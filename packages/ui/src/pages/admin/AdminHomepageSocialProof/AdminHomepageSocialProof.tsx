@@ -419,13 +419,13 @@ export const AdminHomepageSocialProof = () => {
     // Trigger refetch when landing page data loads
     useEffect(() => {
         if (landingPageData && !landingPageLoading) {
-            form.refetch();
+            void form.refetch();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [landingPageData, landingPageLoading]);
 
-    const handleApiError = (error: any, defaultMessage: string) => {
-        console.error(error?.message || defaultMessage);
+    const handleApiError = (error: unknown, defaultMessage: string) => {
+        console.error(error instanceof Error ? error.message : defaultMessage);
     };
 
     // Header handlers

@@ -79,7 +79,9 @@ describe("useHistoryState", () => {
     });
 
     it("handles object values", () => {
-        const { result } = renderHook(() => useHistoryState("objKey", { count: 0 }));
+        const { result } = renderHook(() =>
+            useHistoryState<{ count: number; name?: string }>("objKey", { count: 0 }),
+        );
 
         act(() => {
             result.current[1]({ count: 5, name: "test" });
@@ -90,7 +92,7 @@ describe("useHistoryState", () => {
     });
 
     it("handles array values", () => {
-        const { result } = renderHook(() => useHistoryState("arrayKey", []));
+        const { result } = renderHook(() => useHistoryState<number[]>("arrayKey", []));
 
         act(() => {
             result.current[1]([1, 2, 3]);
@@ -101,7 +103,7 @@ describe("useHistoryState", () => {
     });
 
     it("handles null values", () => {
-        const { result } = renderHook(() => useHistoryState("nullKey", null));
+        const { result } = renderHook(() => useHistoryState<string | null>("nullKey", null));
 
         act(() => {
             result.current[1]("notNull");

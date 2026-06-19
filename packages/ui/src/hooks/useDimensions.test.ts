@@ -85,7 +85,7 @@ describe("useDimensions", () => {
 
         const addEventListenerSpy = vi.spyOn(window, "addEventListener");
         const removeEventListenerSpy = vi.spyOn(window, "removeEventListener");
-        const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation();
+        const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 
         const { unmount } = renderHook(() => useDimensions<HTMLDivElement>());
 

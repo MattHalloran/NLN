@@ -20,7 +20,9 @@ describe("Bull Queue Integration Tests", () => {
         redisHost = container.getHost();
         redisPort = container.getMappedPort(6379);
 
-        console.log(`Test Redis for Bull started: ${redisHost}:${redisPort}`);
+        if (process.env.ENABLE_TEST_LOGS === "true") {
+            console.log(`Test Redis for Bull started: ${redisHost}:${redisPort}`);
+        }
 
         // Create email queue
         emailQueue = new Bull("test-email-queue", {
@@ -40,7 +42,9 @@ describe("Bull Queue Integration Tests", () => {
         }
         if (container) {
             await container.stop();
-            console.log("Test Redis stopped");
+            if (process.env.ENABLE_TEST_LOGS === "true") {
+                console.log("Test Redis stopped");
+            }
         }
     });
 
@@ -102,7 +106,7 @@ describe("Bull Queue Integration Tests", () => {
         it("should process jobs in order (FIFO)", async () => {
             const processed: string[] = [];
 
-            emailQueue.process(async (job: Job) => {
+            void emailQueue.process(async (job: Job) => {
                 processed.push(job.data.order);
                 return { success: true };
             });
@@ -120,7 +124,7 @@ describe("Bull Queue Integration Tests", () => {
 
     describe("Job Status and Lifecycle", () => {
         it("should track job progress", async () => {
-            emailQueue.process(async (job: Job) => {
+            void emailQueue.process(async (job: Job) => {
                 await job.progress(50);
                 await new Promise((resolve) => setTimeout(resolve, 100));
                 await job.progress(100);
@@ -140,7 +144,7 @@ describe("Bull Queue Integration Tests", () => {
         });
 
         it("should mark job as completed", async () => {
-            emailQueue.process(async (job: Job) => {
+            void emailQueue.process(async (_job: Job) => {
                 return { sent: true, messageId: "test-message-id" };
             });
 
@@ -159,7 +163,7 @@ describe("Bull Queue Integration Tests", () => {
         });
 
         it("should mark job as failed on error", async () => {
-            emailQueue.process(async (job: Job) => {
+            void emailQueue.process(async (_job: Job) => {
                 throw new Error("Email sending failed");
             });
 
@@ -170,7 +174,7 @@ describe("Bull Queue Integration Tests", () => {
 
             try {
                 await job.finished();
-            } catch (error) {
+            } catch (_error) {
                 // Expected to fail
             }
 
@@ -228,7 +232,7 @@ describe("Bull Queue Integration Tests", () => {
         it("should retry failed jobs", async () => {
             let attempts = 0;
 
-            emailQueue.process(async (job: Job) => {
+            void emailQueue.process(async (_job: Job) => {
                 attempts++;
                 if (attempts < 3) {
                     throw new Error("Simulated failure");
@@ -257,7 +261,7 @@ describe("Bull Queue Integration Tests", () => {
         });
 
         it("should remove job on completion", async () => {
-            emailQueue.process(async (job: Job) => {
+            void emailQueue.process(async (_job: Job) => {
                 return { success: true };
             });
 
@@ -289,7 +293,7 @@ describe("Bull Queue Integration Tests", () => {
                 });
             });
 
-            emailQueue.process(async (job: Job) => {
+            void emailQueue.process(async (_job: Job) => {
                 return { success: true };
             });
 
@@ -310,7 +314,7 @@ describe("Bull Queue Integration Tests", () => {
                 });
             });
 
-            emailQueue.process(async (job: Job) => {
+            void emailQueue.process(async (_job: Job) => {
                 throw new Error("Test error");
             });
 
@@ -321,7 +325,7 @@ describe("Bull Queue Integration Tests", () => {
 
             try {
                 await job.finished();
-            } catch (error) {
+            } catch (_error) {
                 // Expected
             }
 
@@ -334,7 +338,7 @@ describe("Bull Queue Integration Tests", () => {
 
     describe("Queue Management", () => {
         it("should get job counts by status", async () => {
-            emailQueue.process(async (job: Job) => {
+            void emailQueue.process(async (_job: Job) => {
                 await new Promise((resolve) => setTimeout(resolve, 500));
                 return { success: true };
             });
@@ -352,17 +356,32 @@ describe("Bull Queue Integration Tests", () => {
             expect(counts).toHaveProperty("failed");
         });
 
-        it.skip("should pause and resume queue", async () => {
-            // Note: This test is skipped due to Bull queue timing complexities.
-            // The pause/resume functionality works correctly in production, but
-            // testing it reliably with fresh queues created in beforeEach is difficult
-            // due to race conditions between pause state, processor registration,
-            // and job processing. The isPaused() and resume() methods work correctly
-            // and are verified manually.
+        it("should pause and resume queue", async () => {
+            const processed: string[] = [];
+
+            void emailQueue.process(async (job: Job) => {
+                processed.push(job.data.subject);
+                return { success: true };
+            });
+
+            await emailQueue.pause(false);
+            expect(await emailQueue.isPaused()).toBe(true);
+
+            const job = await emailQueue.add({ to: ["paused@example.com"], subject: "Paused" });
+            await new Promise((resolve) => setTimeout(resolve, 250));
+
+            expect(processed).toEqual([]);
+            expect(await job.getState()).toBe("paused");
+
+            await emailQueue.resume(false);
+            expect(await emailQueue.isPaused()).toBe(false);
+
+            await job.finished();
+            expect(processed).toEqual(["Paused"]);
         });
 
         it("should clean old jobs", async () => {
-            emailQueue.process(async (job: Job) => {
+            void emailQueue.process(async (_job: Job) => {
                 return { success: true };
             });
 
@@ -419,8 +438,8 @@ describe("Bull Queue Integration Tests", () => {
         });
 
         it("should process verification email", async () => {
-            emailQueue.process(async (job: Job) => {
-                const { to, subject } = job.data;
+            void emailQueue.process(async (job: Job) => {
+                const { subject } = job.data;
                 expect(subject).toContain("Verify");
                 return { sent: true };
             });
@@ -437,8 +456,8 @@ describe("Bull Queue Integration Tests", () => {
         });
 
         it("should process password reset email", async () => {
-            emailQueue.process(async (job: Job) => {
-                const { to, subject } = job.data;
+            void emailQueue.process(async (job: Job) => {
+                const { subject } = job.data;
                 expect(subject).toContain("Password Reset");
                 return { sent: true };
             });
@@ -467,7 +486,7 @@ describe("Bull Queue Integration Tests", () => {
         });
 
         it("should handle job timeout", async () => {
-            emailQueue.process(async (job: Job) => {
+            void emailQueue.process(async (_job: Job) => {
                 // Simulate long-running task
                 await new Promise((resolve) => setTimeout(resolve, 5000));
                 return { success: true };
@@ -494,7 +513,7 @@ describe("Bull Queue Integration Tests", () => {
         it("should handle concurrent job processing", async () => {
             const processed: string[] = [];
 
-            emailQueue.process(3, async (job: Job) => {
+            void emailQueue.process(3, async (job: Job) => {
                 processed.push(job.data.id);
                 await new Promise((resolve) => setTimeout(resolve, 200));
                 return { success: true };

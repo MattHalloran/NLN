@@ -7,6 +7,15 @@ const VARIANT_STORAGE_KEY = "variantAssignment";
 const VARIANT_TIMESTAMP_KEY = "variantAssignmentTimestamp";
 const VARIANT_SESSION_DURATION_MS = UI_TIMING.variantSessionDurationMs;
 
+const getHttpStatus = (error: unknown): number | undefined => {
+    if (typeof error !== "object" || error === null || !("status" in error)) {
+        return undefined;
+    }
+
+    const { status } = error as { status?: unknown };
+    return typeof status === "number" ? status : undefined;
+};
+
 // Helper to get stored variant assignment from localStorage with expiration check
 export const getStoredVariantId = (): string | null => {
     try {
@@ -90,12 +99,10 @@ export const useLandingPageStore = create<LandingPageState>((set, get) => {
                             onlyActive: true, // Only fetch active content for display
                             variantId: storedVariantId || undefined,
                         });
-                    } catch (firstAttemptError: any) {
+                    } catch (firstAttemptError: unknown) {
+                        const status = getHttpStatus(firstAttemptError);
                         // If the stored variant doesn't exist or is disabled (404/400), clear it and retry
-                        if (
-                            storedVariantId &&
-                            (firstAttemptError?.status === 404 || firstAttemptError?.status === 400)
-                        ) {
+                        if (storedVariantId && (status === 404 || status === 400)) {
                             handleError(
                                 new Error(
                                     `Stored variant ${storedVariantId} is no longer valid. Requesting new assignment.`,

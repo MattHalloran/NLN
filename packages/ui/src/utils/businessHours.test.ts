@@ -125,7 +125,7 @@ This line has no pipes`;
 
         it("catches errors and returns default message", () => {
             // Force an error by passing an object that will cause split to fail
-            const consoleSpy = vi.spyOn(console, "error").mockImplementation();
+            const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
             const result = getShortBusinessHours({ invalid: "object" } as any);
 
             expect(result).toBe("Contact us for hours");

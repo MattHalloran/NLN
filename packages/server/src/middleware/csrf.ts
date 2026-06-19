@@ -174,7 +174,7 @@ export const csrfErrorHandler = (
  * @param reason Why this route is exempt (for documentation)
  */
 export const exemptFromCsrf = (reason: string) => {
-    return (req: Request, res: Response, next: NextFunction) => {
+    return (req: Request, _res: Response, next: NextFunction) => {
         logger.log(LogLevel.debug, `CSRF exemption: ${reason}`, {
             path: req.path,
             method: req.method,

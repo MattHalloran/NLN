@@ -396,7 +396,7 @@ export const AdminHomepageBranding = () => {
     // Trigger refetch when landing page data loads
     useEffect(() => {
         if (landingPageContent && !landingPageLoading) {
-            form.refetch();
+            void form.refetch();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [landingPageContent, landingPageLoading]);
@@ -575,7 +575,9 @@ export const AdminHomepageBranding = () => {
                                         <ToggleButtonGroup
                                             value={previewMode}
                                             exclusive
-                                            onChange={(e, value) => value && setPreviewMode(value)}
+                                            onChange={(_event, value) =>
+                                                value && setPreviewMode(value)
+                                            }
                                             size="small"
                                         >
                                             <ToggleButton value="light">
@@ -1042,7 +1044,9 @@ export const AdminHomepageBranding = () => {
                                         <ToggleButtonGroup
                                             value={editingMode}
                                             exclusive
-                                            onChange={(e, value) => value && setEditingMode(value)}
+                                            onChange={(_event, value) =>
+                                                value && setEditingMode(value)
+                                            }
                                             fullWidth
                                         >
                                             <ToggleButton value="light">
@@ -1488,7 +1492,7 @@ export const AdminHomepageBranding = () => {
                                     <ToggleButtonGroup
                                         value={previewMode}
                                         exclusive
-                                        onChange={(e, value) => value && setPreviewMode(value)}
+                                        onChange={(_event, value) => value && setPreviewMode(value)}
                                         size="small"
                                     >
                                         <ToggleButton value="light">

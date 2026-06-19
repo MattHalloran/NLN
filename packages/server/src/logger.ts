@@ -76,6 +76,7 @@ logger.add(
     new winston.transports.Console({
         format: winston.format.simple(),
         level: process.env.NODE_ENV === "test" ? "warn" : CONSOLE_LOG_LEVEL,
+        silent: process.env.NODE_ENV === "test" && process.env.ENABLE_TEST_LOGS !== "true",
     })
 );
 

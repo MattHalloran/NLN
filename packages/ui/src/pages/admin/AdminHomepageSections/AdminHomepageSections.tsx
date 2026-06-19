@@ -1,4 +1,5 @@
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
+import type { DropResult } from "@hello-pangea/dnd";
 import {
     APP_LINKS,
     buildSectionConfigurationPatch,
@@ -84,12 +85,12 @@ export const AdminHomepageSections = () => {
     useEffect(() => {
         if (landingPageContent && !hasLoadedRef.current) {
             hasLoadedRef.current = true;
-            form.refetch();
+            void form.refetch();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [landingPageContent, form.refetch]);
 
-    const handleSectionDragEnd = (result: any) => {
+    const handleSectionDragEnd = (result: DropResult) => {
         if (!result.destination || !form.data) return;
 
         const newOrder = Array.from(form.data.order);

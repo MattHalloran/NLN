@@ -182,9 +182,9 @@ export function App() {
 
     // Initial data fetch - only runs once on mount
     useEffect(() => {
-        fetchLandingPage();
+        void fetchLandingPage();
         const cancelCsrfWarmup = runWhenIdle(() => {
-            initializeCsrfToken();
+            void initializeCsrfToken();
         });
 
         const isAdminRoute = location.startsWith(APP_LINKS.Admin);
@@ -195,7 +195,7 @@ export function App() {
               }, 750);
 
         if (isAdminRoute) {
-            checkLogin();
+            void checkLogin();
         }
 
         return () => {
@@ -218,7 +218,7 @@ export function App() {
         });
         // Handle landing page content updates (e.g., when branding settings change)
         const landingPageSub = PubSub.get().subscribeLandingPageUpdated(() => {
-            refetchLandingPage();
+            void refetchLandingPage();
         });
         // Handle session updates
         const sessionSub = PubSub.get().subscribeSession((session) => {

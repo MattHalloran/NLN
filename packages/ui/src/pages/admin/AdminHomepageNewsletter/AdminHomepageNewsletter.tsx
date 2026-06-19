@@ -203,7 +203,7 @@ export const AdminHomepageNewsletter = () => {
     // Trigger refetch when landing page data loads
     useEffect(() => {
         if (landingPageContent && !landingPageLoading) {
-            form.refetch();
+            void form.refetch();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [landingPageContent, landingPageLoading]);

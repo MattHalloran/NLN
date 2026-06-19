@@ -43,7 +43,7 @@ test.describe("Admin Hero Banner Management", () => {
     }) => {
         // Check if banners exist
         const bannerCount = await adminPage.getHeroBannerCount();
-        test.skip(bannerCount === 0, "No hero banners in database to test");
+        test.skip(bannerCount === 0, "Legacy data-dependent skip: no hero banners were available after setup");
 
         // Verify banners are loaded
         expect(bannerCount).toBeGreaterThan(0);
@@ -54,7 +54,7 @@ test.describe("Admin Hero Banner Management", () => {
 
     test("should edit hero banner alt text and save", async ({ authenticatedPage }) => {
         const bannerCount = await adminPage.getHeroBannerCount();
-        test.skip(bannerCount === 0, "No hero banners in database to test");
+        test.skip(bannerCount === 0, "Legacy data-dependent skip: no hero banners were available after setup");
 
         const testAltText = `Test Alt Text ${Date.now()}`;
 
@@ -77,7 +77,7 @@ test.describe("Admin Hero Banner Management", () => {
 
     test("should edit banner description", async ({ authenticatedPage }) => {
         const bannerCount = await adminPage.getHeroBannerCount();
-        test.skip(bannerCount === 0, "No hero banners in database to test");
+        test.skip(bannerCount === 0, "Legacy data-dependent skip: no hero banners were available after setup");
 
         const testDescription = `Test Description ${Date.now()}`;
 
@@ -100,7 +100,7 @@ test.describe("Admin Hero Banner Management", () => {
 
     test("should toggle banner active status", async ({ authenticatedPage }) => {
         const bannerCount = await adminPage.getHeroBannerCount();
-        test.skip(bannerCount === 0, "No hero banners in database to test");
+        test.skip(bannerCount === 0, "Legacy data-dependent skip: no hero banners were available after setup");
 
         // Get initial state using data-testid (select the actual checkbox input)
         await authenticatedPage.waitForTimeout(1000); // Wait for banners to render
@@ -141,7 +141,7 @@ test.describe("Admin Hero Banner Management", () => {
     test("should delete a banner", async ({ authenticatedPage }) => {
         // Get initial count
         const initialCount = await adminPage.getHeroBannerCount();
-        test.skip(initialCount === 0, "No hero banners in database to test");
+        test.skip(initialCount === 0, "Legacy data-dependent skip: no hero banners were available after setup");
 
         // Delete the last banner
         await adminPage.deleteBanner(initialCount - 1);
@@ -161,7 +161,7 @@ test.describe("Admin Hero Banner Management", () => {
 
     test("should cancel changes without saving", async ({ authenticatedPage }) => {
         const bannerCount = await adminPage.getHeroBannerCount();
-        test.skip(bannerCount === 0, "No hero banners in database to test");
+        test.skip(bannerCount === 0, "Legacy data-dependent skip: no hero banners were available after setup");
 
         // Get original value using data-testid (select the actual input inside the wrapper)
         const altInput = authenticatedPage
@@ -192,7 +192,7 @@ test.describe("Admin Hero Banner Management", () => {
         authenticatedPage,
     }) => {
         const bannerCount = await adminPage.getHeroBannerCount();
-        test.skip(bannerCount === 0, "No hero banners in database to test");
+        test.skip(bannerCount === 0, "Legacy data-dependent skip: no hero banners were available after setup");
 
         // Initially, save button should not be visible (hidden by hasChanges state)
         await expect(adminPage.saveButton).not.toBeVisible();
@@ -211,7 +211,7 @@ test.describe("Admin Hero Banner Management", () => {
 
     test("should handle validation errors gracefully", async ({ authenticatedPage }) => {
         const bannerCount = await adminPage.getHeroBannerCount();
-        test.skip(bannerCount === 0, "No hero banners in database to test");
+        test.skip(bannerCount === 0, "Legacy data-dependent skip: no hero banners were available after setup");
 
         // Try to set empty alt text (if validation exists)
         const altInput = authenticatedPage
@@ -258,7 +258,7 @@ test.describe("Hero Banner - Advanced Features", () => {
     test("should reorder banners via drag and drop", async ({ authenticatedPage }) => {
         // Skip this test if less than 2 banners
         const bannerCount = await adminPage.getHeroBannerCount();
-        test.skip(bannerCount < 2, "Need at least 2 banners to test reordering");
+        test.skip(bannerCount < 2, "Legacy data-dependent skip: at least 2 hero banners are required to test reordering");
 
         // Get the alt text of first two banners using data-testid to track them
         const _firstBannerAlt = await authenticatedPage
@@ -296,7 +296,7 @@ test.describe("Hero Banner - Advanced Features", () => {
 
     test("should display banner images correctly", async ({ authenticatedPage }) => {
         const bannerCount = await adminPage.getHeroBannerCount();
-        test.skip(bannerCount === 0, "No hero banners in database to test");
+        test.skip(bannerCount === 0, "Legacy data-dependent skip: no hero banners were available after setup");
 
         // Verify that images are loading
         const images = authenticatedPage.locator("img[alt]");
@@ -314,7 +314,7 @@ test.describe("Hero Banner - Advanced Features", () => {
 
     test("should maintain display order numbers", async ({ authenticatedPage }) => {
         const bannerCount = await adminPage.getHeroBannerCount();
-        test.skip(bannerCount === 0, "No hero banners in database to test");
+        test.skip(bannerCount === 0, "Legacy data-dependent skip: no hero banners were available after setup");
 
         // Wait for banners to load
         await authenticatedPage.waitForTimeout(1000);

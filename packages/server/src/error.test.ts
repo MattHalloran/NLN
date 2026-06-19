@@ -34,13 +34,13 @@ describe("error", () => {
         it("should override error message when message is provided", () => {
             const error = new CustomError(
                 { code: "TEST_ERROR", message: "Default message" },
-                "Custom message",
+                "Custom message"
             );
             expect(error.message).toBe("Custom message");
         });
 
         it("should set name to CustomError when no code provided", () => {
-            const error = new CustomError({ message: "Test" });
+            const error = new CustomError({ code: "CustomError", message: "Test" });
             expect(error.name).toBe("CustomError");
         });
 
@@ -109,12 +109,12 @@ describe("error", () => {
 
             try {
                 await validateArgs(mockSchema, { name: "" });
-                fail("Should have thrown");
+                throw new Error("Should have thrown");
             } catch (error: any) {
                 expect(error).toBeInstanceOf(CustomError);
                 expect(error.code).toBe("ARGS_VALIDATION_FAILED");
                 expect(Array.isArray(error.message) ? error.message : [error.message]).toContain(
-                    validationErrors[0],
+                    validationErrors[0]
                 );
             }
         });
@@ -140,7 +140,7 @@ describe("error", () => {
 
             expect(mockSchema.validate).toHaveBeenCalledWith(
                 expect.anything(),
-                expect.objectContaining({ abortEarly: false }),
+                expect.objectContaining({ abortEarly: false })
             );
         });
 
@@ -158,7 +158,7 @@ describe("error", () => {
                     password: "short",
                     confirmPassword: "different",
                 });
-                fail("Should have thrown");
+                throw new Error("Should have thrown");
             } catch (error: any) {
                 expect(error.code).toBe("ARGS_VALIDATION_FAILED");
                 // Message should contain the errors in some form

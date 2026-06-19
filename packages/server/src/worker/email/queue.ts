@@ -9,6 +9,38 @@ import { ASSETS_DIR } from "../../config/paths.js";
 let emailQueue: Bull.Queue | null = null;
 let WEBSITE: string | null = null;
 
+export type QueuedEmail = {
+    to: string[];
+    subject: string;
+    text?: string;
+    html?: string;
+};
+
+type BusinessConfig = {
+    BUSINESS_NAME: { Long: string; Short: string };
+    WEBSITE: string;
+};
+
+export function loadBusinessConfig(): BusinessConfig {
+    const businessConfigStr = fs.readFileSync(
+        path.join(ASSETS_DIR, "public", "business.json"),
+        "utf8"
+    );
+    return JSON.parse(businessConfigStr) as BusinessConfig;
+}
+
+export function createEmailQueue(): Bull.Queue {
+    return new Bull("email", { redis: { port: PORT, host: HOST } });
+}
+
+export function registerEmailProcessor(queue: Bull.Queue): void {
+    void queue.process(emailProcess);
+}
+
+export function enqueueEmail(queue: Bull.Queue, email: QueuedEmail): void {
+    void queue.add(email);
+}
+
 // Lazy initialization to prevent crashes at module import time
 function getEmailQueue(): Bull.Queue {
     if (emailQueue) {
@@ -16,20 +48,11 @@ function getEmailQueue(): Bull.Queue {
     }
 
     try {
-        // Load business config
-        const businessConfigStr = fs.readFileSync(
-            path.join(ASSETS_DIR, "public", "business.json"),
-            "utf8"
-        );
-        const businessConfig = JSON.parse(businessConfigStr) as {
-            BUSINESS_NAME: { Long: string; Short: string };
-            WEBSITE: string;
-        };
+        const businessConfig = loadBusinessConfig();
         WEBSITE = businessConfig.WEBSITE;
 
-        // Initialize Bull queue
-        emailQueue = new Bull("email", { redis: { port: PORT, host: HOST } });
-        void emailQueue.process(emailProcess);
+        emailQueue = createEmailQueue();
+        registerEmailProcessor(emailQueue);
 
         logger.log(LogLevel.info, "Email queue initialized successfully");
         return emailQueue;
@@ -43,7 +66,7 @@ function getEmailQueue(): Bull.Queue {
 export function sendMail(to: string[] = [], subject = "", text = "", html = ""): void {
     try {
         const queue = getEmailQueue();
-        void queue.add({
+        enqueueEmail(queue, {
             to,
             subject,
             text,
@@ -72,7 +95,7 @@ export function orderNotifyAdmin(): void {
         if (!emailUsername) {
             throw new Error("SITE_EMAIL_USERNAME not configured");
         }
-        void queue.add({
+        enqueueEmail(queue, {
             to: [emailUsername],
             subject: "New Order Received!",
             text: `A new order has been submitted. It can be viewed at ${website}/admin/orders`,
@@ -127,7 +150,7 @@ export function feedbackNotifyAdmin(text: string, from?: string): void {
         if (!emailUsername) {
             throw new Error("SITE_EMAIL_USERNAME not configured");
         }
-        void queue.add({
+        enqueueEmail(queue, {
             to: [emailUsername],
             subject: "You've received feedback!",
             text: `Feedback from ${from ?? "anonymous"}: ${text}`,
