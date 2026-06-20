@@ -268,6 +268,27 @@ run_deploy_production() {
     grep -q 'curl -fsS "${server_health_url}"' "$BATS_TEST_DIRNAME/../deploy.sh"
 }
 
+@test "deploy snapshots previous images before loading new images" {
+    grep -q 'PREVIOUS_IMAGES_ARCHIVE="${TMP_DIR}/previous-docker-images.tar"' "$BATS_TEST_DIRNAME/../deploy.sh"
+    grep -q 'backup_current_images' "$BATS_TEST_DIRNAME/../deploy.sh"
+    grep -q 'docker save -o "${PREVIOUS_IMAGES_ARCHIVE}"' "$BATS_TEST_DIRNAME/../deploy.sh"
+    grep -q 'backup_current_images' "$BATS_TEST_DIRNAME/../deploy.sh"
+}
+
+@test "deploy attempts non-database recovery on failed startup or verification" {
+    grep -q 'attempt_failed_deploy_recovery "docker-compose up failed"' "$BATS_TEST_DIRNAME/../deploy.sh"
+    grep -q 'attempt_failed_deploy_recovery "container health timeout"' "$BATS_TEST_DIRNAME/../deploy.sh"
+    grep -q 'attempt_failed_deploy_recovery "public endpoint verification failed"' "$BATS_TEST_DIRNAME/../deploy.sh"
+    grep -q 'restore_previous_artifacts' "$BATS_TEST_DIRNAME/../deploy.sh"
+    grep -q 'restore_previous_images' "$BATS_TEST_DIRNAME/../deploy.sh"
+    grep -q -- '--force-recreate' "$BATS_TEST_DIRNAME/../deploy.sh"
+}
+
+@test "deploy recovery prints explicit runtime restore and older rollback guidance" {
+    grep -q 'restore-runtime-state.sh -v '\''${VERSION}'\''' "$BATS_TEST_DIRNAME/../deploy.sh"
+    grep -q "rollback.sh -v '<PREVIOUS_VERSION>'" "$BATS_TEST_DIRNAME/../deploy.sh"
+}
+
 @test "server migration backup uses explicit database env vars for pg_dump credentials" {
     grep -q 'DB_DUMP_USER="${DB_USER:-}"' "$BATS_TEST_DIRNAME/../server.sh"
     grep -q 'DB_DUMP_PASSWORD="${DB_PASSWORD:-}"' "$BATS_TEST_DIRNAME/../server.sh"

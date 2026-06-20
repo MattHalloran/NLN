@@ -111,3 +111,10 @@ teardown() {
     grep -q 'DB_URL=postgresql://${DB_USER}:${DB_PASSWORD}@db:${PORT_DB}/${DB_NAME}' "$SCRIPT_PATH"
     grep -q 'yarn prisma migrate deploy --schema=src/db/schema.prisma' "$SCRIPT_PATH"
 }
+
+@test "deploy rehearsal executes disposable rollback probe" {
+    grep -q 'ROLLBACK_PROBE_VERSION="${VERSION}-rollback-probe"' "$SCRIPT_PATH"
+    grep -q 'run_rollback_probe' "$SCRIPT_PATH"
+    grep -q 'ROLLBACK_CONFIRMED=true ./scripts/rollback.sh -v "${ROLLBACK_PROBE_VERSION}"' "$SCRIPT_PATH"
+    grep -q 'rm -rf "/var/tmp/${ROLLBACK_PROBE_VERSION}"' "$SCRIPT_PATH"
+}

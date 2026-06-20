@@ -157,19 +157,23 @@ if ! gzip -t "${DOCKER_IMAGES_ARCHIVE}"; then
     exit 1
 fi
 
-# Confirm rollback with user
-warning "WARNING: This will:"
-warning "  1. Stop all running containers"
-warning "  2. Replace the current database with the ${VERSION} database backup"
-warning "  3. Load Docker images from ${VERSION}"
-warning "  4. Start containers with the old version"
-echo ""
-prompt "Are you absolutely sure you want to roll back to version ${VERSION}? (yes/no)"
-read -r CONFIRM
+if [ "${ROLLBACK_CONFIRMED:-false}" != "true" ]; then
+    # Confirm rollback with user
+    warning "WARNING: This will:"
+    warning "  1. Stop all running containers"
+    warning "  2. Replace the current database with the ${VERSION} database backup"
+    warning "  3. Load Docker images from ${VERSION}"
+    warning "  4. Start containers with the old version"
+    echo ""
+    prompt "Are you absolutely sure you want to roll back to version ${VERSION}? (yes/no)"
+    read -r CONFIRM
 
-if [[ ! "$CONFIRM" =~ ^(yes|YES)$ ]]; then
-    info "Rollback cancelled."
-    exit 0
+    if [[ ! "$CONFIRM" =~ ^(yes|YES)$ ]]; then
+        info "Rollback cancelled."
+        exit 0
+    fi
+else
+    warning "ROLLBACK_CONFIRMED=true set; skipping interactive rollback confirmation."
 fi
 
 set -a

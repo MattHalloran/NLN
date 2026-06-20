@@ -21,6 +21,7 @@
     "coverage:summary": "node scripts/coverage-summary.mjs",
     "validate:full": "yarn validate && yarn test:integration && yarn workspace ui build && yarn test:pwa && yarn test:e2e:admin",
     "validate:ci": "yarn validate:full",
+    "deploy:readiness": "./scripts/deploy-readiness.sh",
     "test:unit": "yarn workspace @local/shared test && yarn workspace ui test && yarn workspace server test:unit",
     "test:integration": "yarn workspace server test:integration",
     "test:scripts": "scripts/tests/__runTests.sh",

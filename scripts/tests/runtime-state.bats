@@ -112,3 +112,8 @@ teardown() {
     grep -q 'curl -fsS "${server_health_url}"' "$BATS_TEST_DIRNAME/../rollback.sh"
     grep -q 'print_rollback_diagnostics' "$BATS_TEST_DIRNAME/../rollback.sh"
 }
+
+@test "rollback confirmation bypass is explicit for rehearsal automation" {
+    grep -q 'ROLLBACK_CONFIRMED' "$BATS_TEST_DIRNAME/../rollback.sh"
+    grep -q 'skipping interactive rollback confirmation' "$BATS_TEST_DIRNAME/../rollback.sh"
+}

@@ -119,6 +119,7 @@ fi
 TMP_DIR="/var/tmp/${VERSION}"
 STAGING_DIR="${TMP_DIR}/staged-artifacts"
 PREVIOUS_ARTIFACTS_DIR="${TMP_DIR}/previous-artifacts"
+PREVIOUS_IMAGES_ARCHIVE="${TMP_DIR}/previous-docker-images.tar"
 COMMIT_FILE="${TMP_DIR}/deploy-commit.txt"
 DEPLOY_MANIFEST="${TMP_DIR}/deploy-manifest.sha256"
 
@@ -308,6 +309,13 @@ print_deploy_diagnostics() {
     done
 }
 
+print_manual_recovery_guidance() {
+    warning "Manual recovery options:"
+    warning "  Full pre-deploy runtime-state restore dry-run: cd '${HERE}/..' && ./scripts/restore-runtime-state.sh -v '${VERSION}'"
+    warning "  Full pre-deploy runtime-state restore execute: cd '${HERE}/..' && ./scripts/restore-runtime-state.sh -v '${VERSION}' --execute"
+    warning "  Older known-good app/database rollback: cd '${HERE}/..' && ./scripts/rollback.sh -v '<PREVIOUS_VERSION>'"
+}
+
 verify_public_endpoints() {
     header "Verifying public endpoints"
 
@@ -334,6 +342,7 @@ verify_public_endpoints() {
     error "Public endpoint verification failed."
     docker ps --format 'table {{.Names}}\t{{.Status}}'
     print_deploy_diagnostics
+    attempt_failed_deploy_recovery "public endpoint verification failed"
     exit 1
 }
 
@@ -401,6 +410,97 @@ swap_staged_artifacts() {
     done
 }
 
+backup_current_images() {
+    header "Backing up current application Docker images"
+
+    local existing_images=()
+    if docker image inspect nln_ui:prod >/dev/null 2>&1; then
+        existing_images+=(nln_ui:prod)
+    fi
+    if docker image inspect nln_server:prod >/dev/null 2>&1; then
+        existing_images+=(nln_server:prod)
+    fi
+
+    if [ ${#existing_images[@]} -eq 0 ]; then
+        warning "No current nln_ui:prod or nln_server:prod images found to back up."
+        return 0
+    fi
+
+    if ! docker save -o "${PREVIOUS_IMAGES_ARCHIVE}" "${existing_images[@]}"; then
+        error "Failed to back up current application Docker images."
+        exit 1
+    fi
+
+    success "Current application Docker images backed up at ${PREVIOUS_IMAGES_ARCHIVE}"
+}
+
+restore_previous_artifacts() {
+    local restored=false dir current_path previous_path
+
+    if [ ! -d "${PREVIOUS_ARTIFACTS_DIR}" ]; then
+        warning "Previous artifact directory is missing; cannot restore build artifacts automatically."
+        return 1
+    fi
+
+    header "Restoring previous build artifacts"
+    for dir in "${DIRECTORIES[@]}"; do
+        current_path="${HERE}/../${dir}"
+        previous_path="${PREVIOUS_ARTIFACTS_DIR}/${dir}"
+
+        if [ ! -e "${previous_path}" ]; then
+            warning "Previous artifact path is missing: ${previous_path}"
+            continue
+        fi
+
+        rm -rf "${current_path}"
+        mkdir -p "$(dirname "${current_path}")"
+        cp -rp "${previous_path}" "${current_path}"
+        restored=true
+    done
+
+    if [ "${restored}" = true ]; then
+        success "Previous build artifacts restored"
+        return 0
+    fi
+
+    warning "No previous build artifacts were restored"
+    return 1
+}
+
+restore_previous_images() {
+    if [ ! -f "${PREVIOUS_IMAGES_ARCHIVE}" ]; then
+        warning "Previous Docker image archive is missing; cannot restore images automatically."
+        return 1
+    fi
+
+    header "Restoring previous application Docker images"
+    if docker load -i "${PREVIOUS_IMAGES_ARCHIVE}"; then
+        success "Previous application Docker images restored"
+        return 0
+    fi
+
+    warning "Previous application Docker image restore failed"
+    return 1
+}
+
+attempt_failed_deploy_recovery() {
+    local reason="$1"
+
+    warning "Deployment verification failed: ${reason}"
+    warning "Attempting non-database recovery by restoring previous artifacts and application images."
+
+    restore_previous_artifacts || true
+    restore_previous_images || true
+
+    if docker-compose --env-file "${TMP_DIR}/.env-prod" -f "${HERE}/../docker-compose-prod.yml" up -d --force-recreate; then
+        warning "Previous artifacts/images were restarted. Verify the site and database state before retrying deployment."
+    else
+        error "Automatic non-database recovery could not restart containers."
+    fi
+
+    print_manual_recovery_guidance
+}
+
 # Validate environment configuration from the temporary directory
 if [ -f "${TMP_DIR}/.env-prod" ]; then
     header "Validating environment configuration"
@@ -425,6 +525,7 @@ verify_repository_state
 verify_deploy_manifest
 stage_artifacts
 create_runtime_state_backup
+backup_current_images
 
 if [ "${DEPLOY_REHEARSAL:-false}" = "true" ]; then
     warning "Deploy rehearsal mode enabled; host setup remains disabled."
@@ -459,6 +560,7 @@ info "Restarting docker containers..."
 if ! docker-compose --env-file "${TMP_DIR}/.env-prod" -f "${HERE}/../docker-compose-prod.yml" up -d; then
     error "Failed to restart docker containers"
     print_deploy_diagnostics
+    attempt_failed_deploy_recovery "docker-compose up failed"
     exit 1
 fi
 
@@ -529,6 +631,7 @@ if [ $ELAPSED -ge $TIMEOUT ]; then
     for container in "${EXPECTED_CONTAINERS[@]}"; do
         echo "  docker logs ${container}"
     done
+    attempt_failed_deploy_recovery "container health timeout"
     exit 1
 fi
 

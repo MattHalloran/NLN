@@ -9,6 +9,7 @@ HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 . "${HERE}/utils.sh"
 
 VERSION=""
+ROLLBACK_PROBE_VERSION=""
 ENV_FILE=""
 KEEP=false
 REPLACE_LOCAL_CONTAINERS=false
@@ -73,6 +74,7 @@ WORK_ROOT=$(mktemp -d "/tmp/nln-deploy-rehearsal.${VERSION}.XXXXXX")
 REHEARSAL_PROJECT_DIR="${WORK_ROOT}/project"
 PROJECT_DIR="${REHEARSAL_PROJECT_DIR}"
 TMP_VERSION_DIR="/var/tmp/${VERSION}"
+ROLLBACK_PROBE_VERSION="${VERSION}-rollback-probe"
 
 cleanup() {
     if [ -n "${RESTORE_CONTAINER}" ]; then
@@ -86,9 +88,11 @@ cleanup() {
     if [ "${KEEP}" != true ]; then
         rm -rf "${WORK_ROOT}"
         rm -rf "${TMP_VERSION_DIR}"
+        rm -rf "/var/tmp/${ROLLBACK_PROBE_VERSION}"
     else
         info "Kept rehearsal project at: ${REHEARSAL_PROJECT_DIR}"
         info "Kept rehearsal version slot at: ${TMP_VERSION_DIR}"
+        info "Kept rollback probe version slot at: /var/tmp/${ROLLBACK_PROBE_VERSION}"
     fi
 }
 trap cleanup EXIT
@@ -328,6 +332,19 @@ verify_dump_restores() {
     success "Logical dump restored successfully in a disposable Postgres container"
 }
 
+run_rollback_probe() {
+    local rollback_probe_dir="/var/tmp/${ROLLBACK_PROBE_VERSION}"
+
+    header "Running disposable rollback probe"
+    if [ -e "${rollback_probe_dir}" ]; then
+        error "Rollback probe version slot already exists: ${rollback_probe_dir}"
+        exit 1
+    fi
+
+    cp -a "${TMP_VERSION_DIR}" "${rollback_probe_dir}"
+    (cd "${REHEARSAL_PROJECT_DIR}" && ROLLBACK_CONFIRMED=true ./scripts/rollback.sh -v "${ROLLBACK_PROBE_VERSION}")
+}
+
 header "Preparing deploy rehearsal"
 if [ -z "${ENV_FILE}" ]; then
     write_generated_env
@@ -392,6 +409,7 @@ header "Running local deploy rehearsal"
 (cd "${REHEARSAL_PROJECT_DIR}" && DEPLOY_REHEARSAL=true ./scripts/deploy.sh -v "${VERSION}")
 
 verify_dump_restores
+run_rollback_probe
 
 header "Checking runtime-state restore dry run"
 RUNTIME_STATE_PROJECT_DIR="${REHEARSAL_PROJECT_DIR}" RUNTIME_STATE_BACKUP_BASE="/var/tmp" \

@@ -71,6 +71,7 @@ The deployment process is a two-phase manual workflow:
 - **Git pull failures**: Now exits with error instead of warning
 - **Migration failures**: Now exits with error and provides restore instructions
 - **Container startup failures**: Now detected and reported
+- **Failed deploy recovery**: If startup, health, or public endpoint verification fails after artifact swap, `deploy.sh` attempts non-database recovery by restoring previous build artifacts and application images, then prints explicit runtime restore and older-version rollback commands.
 
 ### 7. Mandatory Offsite Backup and VPS Health Gate (`deploy-production.sh`)
 - **What**: The standard deployment wrapper now runs a non-mutating VPS health check and requires a successful offsite backup before build/transfer.
@@ -89,8 +90,13 @@ The deployment process is a two-phase manual workflow:
 
 ### 10. Disposable Deploy Rehearsal
 - **What**: `deploy-rehearsal.sh` runs a local disposable rehearsal of the production deploy path.
-- **Why**: Verifies build artifacts, logical backup creation, container restart, public endpoint checks, and SQL dump restore before touching production.
+- **Why**: Verifies build artifacts, logical backup creation, container restart, public endpoint checks, SQL dump restore, and rollback execution before touching production.
 - **Safety**: Generates a loopback-only env by default, refuses production-looking env values, and refuses to replace existing local `nln_*` containers unless explicitly allowed.
+
+### 11. Non-Deploying Readiness Gate
+- **What**: `deploy-readiness.sh` runs the pre-production confidence checks without deploying.
+- **Why**: Gives one command for env validation, clean/synced git state, local validation, rehearsal, read-only VPS health, version-slot freshness, and backup preflight.
+- **Safety**: It must not deploy, restart, restore, prune, update, clean up, or create backup archives.
 
 ## Prerequisites
 
@@ -160,12 +166,20 @@ For high-confidence deploys, run the disposable local rehearsal before the produ
 ./scripts/deploy-rehearsal.sh -v rehearsal-<VERSION>
 ```
 
-The rehearsal creates a temp project clone, generates a local loopback production-shaped env file, starts disposable Postgres and Redis containers, runs the production build locally, runs `deploy.sh` in rehearsal mode, verifies public UI/API responses, verifies the runtime-state SQL dump restores into a separate disposable Postgres container, and runs a full runtime-state restore dry run.
+The rehearsal creates a temp project clone, generates a local loopback production-shaped env file, starts disposable Postgres and Redis containers, runs the production build locally, runs `deploy.sh` in rehearsal mode, verifies public UI/API responses, verifies the runtime-state SQL dump restores into a separate disposable Postgres container, executes a disposable rollback probe, and runs a full runtime-state restore dry run.
 
 Important constraints:
 - The rehearsal requires a clean tracked worktree so `deploy-commit.txt` matches the cloned project.
 - It uses the production compose container names (`nln_ui`, `nln_server`, `nln_db`, `nln_redis`) and refuses to run if those local containers already exist. Use `--replace-local-containers` only when those containers are disposable local state.
 - It does not read `.env-prod` unless explicitly passed with `-e`; explicit env files are copied into the temp rehearsal directory and forced to use the disposable `PROJECT_DIR`.
+
+Or run the combined non-deploying readiness gate:
+
+```bash
+./scripts/deploy-readiness.sh -v <VERSION> -e .env-prod
+```
+
+This checks the env file, clean/synced git state, local validation, disposable deploy rehearsal, read-only VPS health, fresh deployment version slot, and offsite backup preflight. It does not deploy, restart, restore, prune, update, clean up, or create backup archives.
 
 ### Step 2: Build (On Development Machine)
 
