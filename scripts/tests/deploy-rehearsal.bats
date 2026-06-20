@@ -76,3 +76,9 @@ teardown() {
     grep -q 'deploy_rehearsal_probe' "$SCRIPT_PATH"
     grep -q 'restore-runtime-state.sh' "$SCRIPT_PATH"
 }
+
+@test "deploy rehearsal installs project-local env file for docker compose env_file" {
+    grep -q 'install_project_env_file' "$SCRIPT_PATH"
+    grep -q 'cp -p "${ENV_FILE}" "${REHEARSAL_PROJECT_DIR}/.env-prod"' "$SCRIPT_PATH"
+    grep -q 'env_file: .env-prod' "$BATS_TEST_DIRNAME/../../docker-compose-prod.yml"
+}

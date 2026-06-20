@@ -149,6 +149,10 @@ guard_rehearsal_env() {
     fi
 }
 
+install_project_env_file() {
+    cp -p "${ENV_FILE}" "${REHEARSAL_PROJECT_DIR}/.env-prod"
+}
+
 require_clean_worktree() {
     local changes
     changes=$(git -C "${REPO_ROOT}" status --porcelain --untracked-files=no)
@@ -327,6 +331,7 @@ printf 'deploy rehearsal migration backup\n' >"${REHEARSAL_PROJECT_DIR}/data/mig
 
 "${REHEARSAL_PROJECT_DIR}/scripts/validate-env.sh" "${ENV_FILE}"
 load_env
+install_project_env_file
 
 header "Starting disposable baseline database"
 docker network create nginx-proxy >/dev/null 2>&1 || true
