@@ -28,17 +28,15 @@ default_env_apply
 # Read arguments
 VERSION=""
 NGINX_LOCATION="${NGINX_LOCATION:-}"
-for arg in "$@"; do
-    case $arg in
+while [ $# -gt 0 ]; do
+    case "$1" in
     -v | --version)
-        VERSION="${2}"
-        shift
-        shift
+        VERSION="$2"
+        shift 2
         ;;
     -n | --nginx-location)
-        NGINX_LOCATION="${2}"
-        shift
-        shift
+        NGINX_LOCATION="$2"
+        shift 2
         ;;
     -h | --help)
         echo "Usage: $0 [-v VERSION] [-n NGINX_LOCATION] [-h]"
@@ -48,7 +46,7 @@ for arg in "$@"; do
         exit 0
         ;;
     *)
-        error "Unknown option: ${arg}"
+        error "Unknown option: $1"
         echo "Usage: $0 [-v VERSION] [-n NGINX_LOCATION] [-h]"
         exit 1
         ;;

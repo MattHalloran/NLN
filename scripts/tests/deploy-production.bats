@@ -186,6 +186,12 @@ run_deploy_production() {
     grep -q 'docker-compose --env-file "${TMP_DIR}/.env-prod" -f "${HERE}/../docker-compose-prod.yml" down' "$BATS_TEST_DIRNAME/../deploy.sh"
 }
 
+@test "deploy parses paired version arguments with while loop" {
+    grep -q 'while \[ \$# -gt 0 \]; do' "$BATS_TEST_DIRNAME/../deploy.sh"
+    grep -q 'VERSION="$2"' "$BATS_TEST_DIRNAME/../deploy.sh"
+    grep -q 'shift 2' "$BATS_TEST_DIRNAME/../deploy.sh"
+}
+
 @test "build and deploy artifacts exclude host node_modules" {
     refute grep -q '"node_modules"' "$BATS_TEST_DIRNAME/../build.sh"
     refute grep -q '"packages/server/node_modules"' "$BATS_TEST_DIRNAME/../deploy.sh"
