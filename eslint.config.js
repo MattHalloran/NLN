@@ -64,7 +64,7 @@ export default [
         rules: {
             ...js.configs.recommended.rules,
             ...prettierConfig.rules,
-            "quotes": ["error", "double"],
+            "quotes": ["error", "double", { "avoidEscape": true }],
             "comma-dangle": ["error", "always-multiline"],
             "semi": ["error", "always"],
             "space-infix-ops": "error",
