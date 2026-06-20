@@ -1,0 +1,78 @@
+#!/usr/bin/env bats
+bats_require_minimum_version 1.5.0
+load '__testHelper.bash'
+
+SCRIPT_PATH="$BATS_TEST_DIRNAME/../deploy-rehearsal.sh"
+
+write_env_file() {
+    ENV_FILE="${BATS_TMPDIR}/rehearsal.env"
+    cat >"${ENV_FILE}" <<EOF
+SERVER_LOCATION=dns
+CREATE_MOCK_DATA=false
+DB_PULL=false
+PORT_UI=3101
+PORT_SERVER=5331
+PORT_DB=55433
+PORT_REDIS=56380
+PROJECT_DIR=/srv/app
+SITE_IP=${SITE_IP_VALUE:-127.0.0.1}
+SERVER_URL=${SERVER_URL_VALUE:-http://127.0.0.1:5331}
+UI_URL=${UI_URL_VALUE:-http://127.0.0.1:3101}
+VIRTUAL_HOST=localhost
+JWT_SECRET=rehearsal-jwt-secret
+CSRF_SECRET=rehearsal-csrf-secret
+DB_NAME=nln_rehearsal
+DB_USER=nln_rehearsal
+DB_PASSWORD=rehearsal-db-password
+ADMIN_EMAIL=admin@example.test
+ADMIN_PASSWORD=rehearsal-admin-password
+SITE_EMAIL_USERNAME=mailer@example.test
+SITE_EMAIL_PASSWORD=rehearsal-email-password
+LETSENCRYPT_EMAIL=admin@example.test
+EOF
+}
+
+teardown() {
+    rm -rf "${BATS_TMPDIR}"
+}
+
+@test "deploy rehearsal requires a rehearsal version prefix" {
+    run "$SCRIPT_PATH" -v 9.9.9
+
+    assert_equal "$status" 1
+    assert_output --partial "Rehearsal version must start"
+}
+
+@test "deploy rehearsal rejects production-looking SITE_IP before command checks" {
+    SITE_IP_VALUE=203.0.113.10 write_env_file
+
+    run "$SCRIPT_PATH" -v rehearsal-guard -e "$ENV_FILE"
+
+    assert_equal "$status" 1
+    assert_output --partial "SITE_IP must be loopback"
+}
+
+@test "deploy rehearsal rejects non-local public URLs before command checks" {
+    SERVER_URL_VALUE=https://api.example.com UI_URL_VALUE=https://example.com write_env_file
+
+    run "$SCRIPT_PATH" -v rehearsal-guard -e "$ENV_FILE"
+
+    assert_equal "$status" 1
+    assert_output --partial "UI_URL must be a local loopback URL"
+}
+
+@test "deploy script has rehearsal mode for proxy and setup skipping" {
+    grep -q 'DEPLOY_REHEARSAL' "$BATS_TEST_DIRNAME/../deploy.sh"
+    grep -q 'skipping proxy bootstrap checks' "$BATS_TEST_DIRNAME/../deploy.sh"
+    grep -q 'skipping setup.sh host setup' "$BATS_TEST_DIRNAME/../deploy.sh"
+}
+
+@test "build script can skip package version updates for rehearsal" {
+    grep -q 'BUILD_SKIP_PACKAGE_VERSION_UPDATE' "$BATS_TEST_DIRNAME/../build.sh"
+}
+
+@test "deploy rehearsal verifies logical dump restore" {
+    grep -q 'verify_dump_restores' "$SCRIPT_PATH"
+    grep -q 'deploy_rehearsal_probe' "$SCRIPT_PATH"
+    grep -q 'restore-runtime-state.sh' "$SCRIPT_PATH"
+}

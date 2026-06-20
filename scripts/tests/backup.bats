@@ -30,7 +30,6 @@ if [[ "$cmd" == *"xargs -r du -sh"* ]]; then
 fi
 
 if [[ "$cmd" == *"critical="* ]]; then
-  echo "data/postgres"
   echo "data/uploads"
   echo "assets"
   echo "data/redis"
@@ -48,6 +47,12 @@ if [[ "$cmd" == *"tar -czf - -T -"* ]]; then
   exit 0
 fi
 
+if [[ "$cmd" == *"pg_dump"* ]]; then
+  echo "-- PostgreSQL database dump"
+  echo "CREATE TABLE example (id integer);"
+  exit 0
+fi
+
 exit 0
 EOF
     chmod +x "${BATS_MOCK_BINDIR}/ssh"
@@ -59,8 +64,16 @@ setup() {
     export HOME="${BATS_TMPDIR}/home"
     write_env_file
     FIXTURE_DIR="${BATS_TMPDIR}/fixture"
-    mkdir -p "${FIXTURE_DIR}/data/postgres"
-    echo "ok" >"${FIXTURE_DIR}/data/postgres/README"
+    mkdir -p \
+        "${FIXTURE_DIR}/data/uploads" \
+        "${FIXTURE_DIR}/assets" \
+        "${FIXTURE_DIR}/data/redis" \
+        "${FIXTURE_DIR}/data/migration-backups"
+    echo "upload" >"${FIXTURE_DIR}/data/uploads/README"
+    echo "asset" >"${FIXTURE_DIR}/assets/README"
+    echo "redis" >"${FIXTURE_DIR}/data/redis/README"
+    echo "migration" >"${FIXTURE_DIR}/data/migration-backups/README"
+    echo "prod-env" >"${FIXTURE_DIR}/.env-prod"
     export FIXTURE_ARCHIVE="${BATS_TMPDIR}/fixture.tar.gz"
     tar -czf "${FIXTURE_ARCHIVE}" -C "${FIXTURE_DIR}" .
 }
@@ -84,7 +97,8 @@ teardown() {
     run "$SCRIPT_PATH" --preflight-only -e "$ENV_FILE" --output-dir "${BATS_TMPDIR}/backups"
 
     assert_equal "$status" 0
-    assert_output --partial "data/postgres"
+    assert_output --partial "Database backup: logical pg_dump saved as data/postgres.sql"
+    refute_output --partial "data/postgres	"
     refute_output --partial "data/logs"
     [ ! -d "${BATS_TMPDIR}/backups" ]
 }
@@ -113,5 +127,7 @@ teardown() {
     [ -f "${archive}.sha256" ]
     grep -q "backup_type=runtime-state" "$manifest"
     grep -q "include_logs=false" "$manifest"
-    grep -q -- "- data/postgres" "$manifest"
+    grep -q "database_dump=data/postgres.sql" "$manifest"
+    grep -q -- "- data/postgres.sql" "$manifest"
+    tar -tzf "$archive" | grep -q 'data/postgres.sql'
 }

@@ -97,8 +97,23 @@ run_deploy_production() {
     run_deploy_production
 
     assert_equal "$status" 0
-    expected=$'validate\nyarn:test\nyarn:typecheck\nhealth\nssh:test ! -f \'/var/tmp/9.9.9/runtime-state/manifest.txt\'\nbackup:-e '"${ENV_FILE}"$' --preflight-only\nbackup:-e '"${ENV_FILE}"$'\nbuild:-v 9.9.9 -e '"${ENV_FILE}"$' -d y\nssh:cd \'/srv/app\' && ./scripts/deploy.sh -v \'9.9.9\'\nssh:docker ps --format \'table {{.Names}}\\t{{.Status}}\''
+    expected=$'validate\nyarn:validate:ci\nhealth\nssh:test ! -f \'/var/tmp/9.9.9/runtime-state/manifest.txt\'\nbackup:-e '"${ENV_FILE}"$' --preflight-only\nbackup:-e '"${ENV_FILE}"$'\nbuild:-v 9.9.9 -e '"${ENV_FILE}"$' -d y\nssh:cd \'/srv/app\' && ./scripts/deploy.sh -v \'9.9.9\'\nssh:docker ps --format \'table {{.Names}}\\t{{.Status}}\''
     assert_equal "$(cat "${DEPLOY_ORDER_LOG}")" "${expected}"
+}
+
+@test "validation command can be overridden" {
+    run env \
+        VALIDATE_ENV_SCRIPT="${VALIDATE_ENV_SCRIPT}" \
+        HEALTHCHECK_SCRIPT="${HEALTHCHECK_SCRIPT}" \
+        BACKUP_SCRIPT="${BACKUP_SCRIPT}" \
+        BUILD_SCRIPT="${BUILD_SCRIPT}" \
+        YARN_CMD="${YARN_CMD}" \
+        DEPLOY_VALIDATE_CMD="validate" \
+        DEPLOY_ORDER_LOG="${DEPLOY_ORDER_LOG}" \
+        "$SCRIPT_PATH" -v 9.9.9 -e "$ENV_FILE"
+
+    assert_equal "$status" 0
+    grep -q '^yarn:validate$' "${DEPLOY_ORDER_LOG}"
 }
 
 @test "offsite backup failure blocks deployment before build" {
@@ -146,6 +161,7 @@ run_deploy_production() {
 
     assert_equal "$status" 0
     refute grep -q '^yarn:' "${DEPLOY_ORDER_LOG}"
+    assert_output --partial "Skipping validation gate"
     grep -q '^health$' "${DEPLOY_ORDER_LOG}"
     grep -q '^backup:.*--preflight-only' "${DEPLOY_ORDER_LOG}"
     grep -q '^backup:-e' "${DEPLOY_ORDER_LOG}"
@@ -153,4 +169,34 @@ run_deploy_production() {
 
 @test "deploy script stops containers with production compose file" {
     grep -q 'docker-compose --env-file "${TMP_DIR}/.env-prod" -f "${HERE}/../docker-compose-prod.yml" down' "$BATS_TEST_DIRNAME/../deploy.sh"
+}
+
+@test "build and deploy artifacts exclude host node_modules" {
+    refute grep -q '"node_modules"' "$BATS_TEST_DIRNAME/../build.sh"
+    refute grep -q '"packages/server/node_modules"' "$BATS_TEST_DIRNAME/../deploy.sh"
+    refute grep -q '"packages/shared/node_modules"' "$BATS_TEST_DIRNAME/../deploy.sh"
+    refute grep -q '"packages/ui/node_modules"' "$BATS_TEST_DIRNAME/../deploy.sh"
+}
+
+@test "production wrapper builds without mutating package versions" {
+    grep -q 'BUILD_SKIP_PACKAGE_VERSION_UPDATE=true DEPLOY_CONFIRMED=true' "$SCRIPT_PATH"
+}
+
+@test "deploy verifies built commit before staging artifacts" {
+    grep -q 'COMMIT_FILE="${TMP_DIR}/deploy-commit.txt"' "$BATS_TEST_DIRNAME/../deploy.sh"
+    grep -q 'verify_repository_state' "$BATS_TEST_DIRNAME/../deploy.sh"
+    grep -q 'git pull --ff-only' "$BATS_TEST_DIRNAME/../deploy.sh"
+    grep -q 'Remote commit does not match built artifact commit' "$BATS_TEST_DIRNAME/../deploy.sh"
+}
+
+@test "deploy stages artifacts before swapping live directories" {
+    grep -q 'STAGING_DIR="${TMP_DIR}/staged-artifacts"' "$BATS_TEST_DIRNAME/../deploy.sh"
+    grep -q 'stage_artifacts' "$BATS_TEST_DIRNAME/../deploy.sh"
+    grep -q 'swap_staged_artifacts' "$BATS_TEST_DIRNAME/../deploy.sh"
+}
+
+@test "deploy verifies public UI and API endpoints" {
+    grep -q 'verify_public_endpoints' "$BATS_TEST_DIRNAME/../deploy.sh"
+    grep -q 'curl -fsS "${ui_url}"' "$BATS_TEST_DIRNAME/../deploy.sh"
+    grep -q 'curl -fsS "${server_health_url}"' "$BATS_TEST_DIRNAME/../deploy.sh"
 }

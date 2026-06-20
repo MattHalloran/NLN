@@ -1,5 +1,5 @@
 #!/bin/bash
-# Rolls back to a previous deployment version
+# Rolls back application images and database to a previous deployment version
 # NOTE: Run this on the production server
 #
 # This script:
@@ -15,7 +15,8 @@
 #
 # Prerequisites:
 # - The version backup must exist at /var/tmp/{VERSION}/
-# - Backup must contain: postgres/, *.tar.gz files, .env-prod
+# - Backup must contain: runtime-state/data/postgres.sql or legacy postgres/,
+#   production-docker-images.tar.gz, .env-prod
 
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 . "${HERE}/utils.sh"
@@ -89,7 +90,7 @@ fi
 # Confirm rollback with user
 warning "⚠️  WARNING: This will:"
 warning "  1. Stop all running containers"
-warning "  2. Replace the current database with the ${VERSION} backup"
+warning "  2. Replace the current database with the ${VERSION} database backup"
 warning "  3. Load Docker images from ${VERSION}"
 warning "  4. Start containers with the old version"
 echo ""
@@ -101,21 +102,27 @@ if [[ ! "$CONFIRM" =~ ^(yes|YES)$ ]]; then
     exit 0
 fi
 
-# Create a backup of current state before rollback
+set -a
+# shellcheck disable=SC1090
+. "${BACKUP_DIR}/.env-prod"
+set +a
+
+# Create a backup of current database before rollback
 EMERGENCY_BACKUP_DIR="/var/tmp/emergency-backup-$(date +%Y%m%d-%H%M%S)"
-info "Creating emergency backup of current state at ${EMERGENCY_BACKUP_DIR}"
+EMERGENCY_DB_DUMP="${EMERGENCY_BACKUP_DIR}/current-postgres.sql"
+info "Creating emergency logical database backup at ${EMERGENCY_DB_DUMP}"
 mkdir -p "${EMERGENCY_BACKUP_DIR}"
-if [ -d "${HERE}/../data/postgres" ]; then
-    info "Backing up current database..."
-    cp -rp "${HERE}/../data/postgres" "${EMERGENCY_BACKUP_DIR}/"
-    if [ $? -ne 0 ]; then
-        error "Failed to create emergency backup"
-        exit 1
-    fi
-    success "Emergency backup created successfully"
-else
-    warning "No current database found to backup"
+if ! docker exec -e PGPASSWORD="${DB_PASSWORD}" nln_db pg_dump -U "${DB_USER}" -d "${DB_NAME}" --no-owner --no-privileges >"${EMERGENCY_DB_DUMP}"; then
+    error "Failed to create emergency logical database backup"
+    error "Rollback aborted before stopping containers."
+    exit 1
 fi
+if [ ! -s "${EMERGENCY_DB_DUMP}" ]; then
+    error "Emergency logical database backup is empty"
+    error "Rollback aborted before stopping containers."
+    exit 1
+fi
+success "Emergency logical database backup created successfully"
 
 # Stop current containers
 info "Stopping current containers..."
@@ -128,29 +135,69 @@ if [ $? -ne 0 ]; then
 fi
 success "Containers stopped"
 
-# Restore database
-info "Restoring database from ${DB_BACKUP_PATH}"
 DB_DIR="${HERE}/../data/postgres"
 
-# Remove current database
-if [ -d "${DB_DIR}" ]; then
-    info "Removing current database..."
-    rm -rf "${DB_DIR}"
+if [ -f "${DB_BACKUP_PATH}" ]; then
+    info "Restoring database from logical dump ${DB_BACKUP_PATH}"
+    if [ -d "${DB_DIR}" ]; then
+        info "Removing current database directory so Postgres initializes a clean database..."
+        rm -rf "${DB_DIR}"
+        if [ $? -ne 0 ]; then
+            error "Failed to remove current database"
+            exit 1
+        fi
+    fi
+
+    info "Starting database container for restore..."
+    docker-compose --env-file "${BACKUP_DIR}/.env-prod" -f "${HERE}/../docker-compose-prod.yml" up -d db
     if [ $? -ne 0 ]; then
-        error "Failed to remove current database"
+        error "Failed to start database container for restore"
         exit 1
     fi
-fi
 
-# Restore from backup
-info "Restoring database backup..."
-cp -rp "${DB_BACKUP_PATH}" "${DB_DIR}"
-if [ $? -ne 0 ]; then
-    error "Failed to restore database backup"
-    error "Your current database has been removed. Please restore manually from: ${EMERGENCY_BACKUP_DIR}"
-    exit 1
+    DB_READY=false
+    for i in {1..30}; do
+        if docker exec nln_db pg_isready -U "${DB_USER}" -d "${DB_NAME}" >/dev/null 2>&1; then
+            DB_READY=true
+            break
+        fi
+        sleep 2
+    done
+
+    if [ "${DB_READY}" != true ]; then
+        error "Database did not become ready for restore"
+        error "Emergency database dump is available at: ${EMERGENCY_DB_DUMP}"
+        exit 1
+    fi
+
+    if ! docker exec -i -e PGPASSWORD="${DB_PASSWORD}" nln_db psql -v ON_ERROR_STOP=1 -U "${DB_USER}" -d "${DB_NAME}" <"${DB_BACKUP_PATH}"; then
+        error "Failed to restore logical database dump"
+        error "Emergency database dump is available at: ${EMERGENCY_DB_DUMP}"
+        exit 1
+    fi
+
+    docker-compose --env-file "${BACKUP_DIR}/.env-prod" -f "${HERE}/../docker-compose-prod.yml" down
+    success "Database restored successfully from logical dump"
+else
+    warning "Using legacy raw Postgres directory restore: ${DB_BACKUP_PATH}"
+    if [ -d "${DB_DIR}" ]; then
+        info "Removing current database..."
+        rm -rf "${DB_DIR}"
+        if [ $? -ne 0 ]; then
+            error "Failed to remove current database"
+            exit 1
+        fi
+    fi
+
+    info "Restoring legacy database directory backup..."
+    cp -rp "${DB_BACKUP_PATH}" "${DB_DIR}"
+    if [ $? -ne 0 ]; then
+        error "Failed to restore legacy database backup"
+        error "Emergency database dump is available at: ${EMERGENCY_DB_DUMP}"
+        exit 1
+    fi
+    success "Legacy database directory restored successfully"
 fi
-success "Database restored successfully"
 
 # Load Docker images
 info "Loading Docker images from ${DOCKER_IMAGES_ARCHIVE}"
@@ -241,6 +288,6 @@ fi
 echo ""
 success "✅ Rollback to version ${VERSION} completed successfully!"
 echo ""
-info "Emergency backup of previous state saved at: ${EMERGENCY_BACKUP_DIR}"
+info "Emergency database dump of previous state saved at: ${EMERGENCY_DB_DUMP}"
 info "If everything is working correctly, you can remove it with:"
 info "  rm -rf ${EMERGENCY_BACKUP_DIR}"

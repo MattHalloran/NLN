@@ -4,7 +4,7 @@
 # NOTE 3: If docker-compose file was changed since the last build, you should prune the containers and images before running this script.
 # Finishes up the deployment process, which was started by build.sh:
 # 1. Checks if Nginx containers are running
-# 2. Copies current database and build to a safe location, under a temporary directory.
+# 2. Copies current runtime files and a logical database dump to a safe location.
 # 3. Runs git fetch and git pull to get the latest changes.
 # 4. Runs setup.sh
 # 5. Moves build created by build.sh to the correct location.
@@ -63,8 +63,12 @@ if [ -z "$VERSION" ]; then
     fi
 fi
 
+if [ "${DEPLOY_REHEARSAL:-false}" = "true" ]; then
+    warning "Deploy rehearsal mode enabled; skipping proxy bootstrap checks."
+fi
+
 # Check if nginx-proxy and nginx-proxy-le are running
-if [ ! "$(docker ps -q -f name=nginx-proxy)" ] || [ ! "$(docker ps -q -f name=nginx-proxy-le)" ]; then
+if [ "${DEPLOY_REHEARSAL:-false}" != "true" ] && { [ ! "$(docker ps -q -f name=nginx-proxy)" ] || [ ! "$(docker ps -q -f name=nginx-proxy-le)" ]; }; then
     error "Proxy containers are not running!"
     if [ -z "$NGINX_LOCATION" ]; then
         while true; do
@@ -107,10 +111,56 @@ if [ ! "$(docker ps -q -f name=nginx-proxy)" ] || [ ! "$(docker ps -q -f name=ng
 fi
 
 TMP_DIR="/var/tmp/${VERSION}"
+STAGING_DIR="${TMP_DIR}/staged-artifacts"
+PREVIOUS_ARTIFACTS_DIR="${TMP_DIR}/previous-artifacts"
+COMMIT_FILE="${TMP_DIR}/deploy-commit.txt"
+
+verify_repository_state() {
+    header "Validating repository state"
+
+    if [ ! -f "${COMMIT_FILE}" ]; then
+        error "Expected commit metadata not found: ${COMMIT_FILE}"
+        error "Rebuild this version with build.sh before deploying."
+        exit 1
+    fi
+
+    local expected_commit current_changes actual_commit
+    expected_commit=$(tr -d '[:space:]' <"${COMMIT_FILE}")
+    if [ -z "${expected_commit}" ]; then
+        error "Expected commit metadata is empty: ${COMMIT_FILE}"
+        exit 1
+    fi
+
+    current_changes=$(git status --porcelain --untracked-files=no)
+    if [ -n "${current_changes}" ]; then
+        error "Remote repository has tracked changes. Deployment aborted before artifact changes."
+        git status --short --untracked-files=no
+        exit 1
+    fi
+
+    git fetch
+    if ! git pull --ff-only; then
+        error "Could not fast-forward remote repository."
+        error "Deployment aborted before artifact changes."
+        exit 1
+    fi
+
+    actual_commit=$(git rev-parse HEAD)
+    if [ "${actual_commit}" != "${expected_commit}" ]; then
+        error "Remote commit does not match built artifact commit."
+        error "Expected: ${expected_commit}"
+        error "Actual:   ${actual_commit}"
+        exit 1
+    fi
+
+    success "Repository is at expected commit ${expected_commit}"
+}
 
 create_runtime_state_backup() {
     local backup_dir="${TMP_DIR}/runtime-state"
     local manifest="${backup_dir}/manifest.txt"
+    local db_dump
+    db_dump="$(runtime_state_database_dump_path)"
 
     if [ -f "${manifest}" ]; then
         info "Runtime-state backup already exists at ${backup_dir}; not overwriting it"
@@ -128,6 +178,22 @@ create_runtime_state_backup() {
         echo "include_logs=false"
         echo "paths:"
     } >"${manifest}"
+
+    info "Creating logical Postgres dump..."
+    mkdir -p "${backup_dir}/$(dirname "${db_dump}")"
+    set -a
+    # shellcheck disable=SC1090
+    . "${TMP_DIR}/.env-prod"
+    set +a
+    if ! docker exec -e PGPASSWORD="${DB_PASSWORD}" nln_db pg_dump -U "${DB_USER}" -d "${DB_NAME}" --no-owner --no-privileges >"${backup_dir}/${db_dump}"; then
+        error "Could not create logical Postgres dump"
+        exit 1
+    fi
+    if [ ! -s "${backup_dir}/${db_dump}" ]; then
+        error "Logical Postgres dump is missing or empty: ${db_dump}"
+        exit 1
+    fi
+    echo "- ${db_dump}" >>"${manifest}"
 
     local path
     while IFS= read -r path; do
@@ -174,6 +240,107 @@ EOF
     success "Runtime-state backup created at ${backup_dir}"
 }
 
+print_deploy_diagnostics() {
+    warning "Recent container logs:"
+    for container in nln_ui nln_server nginx-proxy; do
+        echo "---- ${container} ----"
+        docker logs --tail 80 "${container}" 2>&1 || true
+    done
+}
+
+verify_public_endpoints() {
+    header "Verifying public endpoints"
+
+    local ui_url server_health_url attempt
+    ui_url="${UI_URL:-}"
+    server_health_url="${SERVER_URL:-}"
+
+    if [ -z "${ui_url}" ] || [ -z "${server_health_url}" ]; then
+        warning "UI_URL or SERVER_URL is not set; skipping public endpoint verification."
+        return 0
+    fi
+
+    server_health_url="${server_health_url%/}/healthcheck"
+
+    for attempt in {1..12}; do
+        if curl -fsS "${ui_url}" >/dev/null && curl -fsS "${server_health_url}" >/dev/null; then
+            success "Public UI and API healthcheck endpoints are responding"
+            return 0
+        fi
+        info "Public endpoint verification attempt ${attempt}/12 failed; retrying..."
+        sleep 5
+    done
+
+    error "Public endpoint verification failed."
+    docker ps --format 'table {{.Names}}\t{{.Status}}'
+    print_deploy_diagnostics
+    exit 1
+}
+
+stage_artifacts() {
+    header "Staging build artifacts"
+
+    DIRECTORIES=("packages/ui/dist"
+        "packages/server/dist"
+        "packages/shared/dist")
+
+    rm -rf "${STAGING_DIR}"
+    mkdir -p "${STAGING_DIR}"
+
+    for dir in "${DIRECTORIES[@]}"; do
+        TAR_NAME=$(echo "${dir}" | tr '/' '.')
+        TAR_PATH="${TMP_DIR}/${TAR_NAME}.tar.gz"
+        STAGED_PATH="${STAGING_DIR}/${dir}"
+
+        if [ ! -f "${TAR_PATH}" ]; then
+            error "Could not find tar for ${dir} at ${TAR_PATH}"
+            exit 1
+        fi
+
+        info "Extracting ${dir} into staging"
+        mkdir -p "${STAGED_PATH}"
+        if ! tar -xzf "${TAR_PATH}" -C "${STAGED_PATH}"; then
+            error "Failed to extract ${dir} from ${TAR_PATH}"
+            exit 1
+        fi
+    done
+
+    success "Build artifacts staged at ${STAGING_DIR}"
+}
+
+swap_staged_artifacts() {
+    header "Swapping staged artifacts into place"
+
+    local dir current_path staged_path previous_path
+    rm -rf "${PREVIOUS_ARTIFACTS_DIR}"
+    mkdir -p "${PREVIOUS_ARTIFACTS_DIR}"
+
+    for dir in "${DIRECTORIES[@]}"; do
+        current_path="${HERE}/../${dir}"
+        staged_path="${STAGING_DIR}/${dir}"
+        previous_path="${PREVIOUS_ARTIFACTS_DIR}/${dir}"
+
+        if [ ! -d "${staged_path}" ]; then
+            error "Staged artifact is missing: ${staged_path}"
+            exit 1
+        fi
+
+        mkdir -p "$(dirname "${previous_path}")"
+        if [ -e "${current_path}" ]; then
+            mv "${current_path}" "${previous_path}"
+        fi
+
+        mkdir -p "$(dirname "${current_path}")"
+        if ! mv "${staged_path}" "${current_path}"; then
+            error "Could not move staged artifact into place: ${dir}"
+            if [ -e "${previous_path}" ] && [ ! -e "${current_path}" ]; then
+                mv "${previous_path}" "${current_path}" || true
+            fi
+            exit 1
+        fi
+    done
+}
+
 # Validate environment configuration from the temporary directory
 if [ -f "${TMP_DIR}/.env-prod" ]; then
     header "Validating environment configuration"
@@ -183,75 +350,31 @@ if [ -f "${TMP_DIR}/.env-prod" ]; then
         exit 1
     fi
     success "Environment configuration is valid"
+    set -a
+    # shellcheck disable=SC1090
+    . "${TMP_DIR}/.env-prod"
+    set +a
 else
     error "Environment file not found at ${TMP_DIR}/.env-prod"
     error "This should have been created by build.sh. Aborting deployment."
     exit 1
 fi
 
-# Copy current runtime state to a safe location before changing artifacts or containers.
 cd "${HERE}/.."
+verify_repository_state
+stage_artifacts
 create_runtime_state_backup
 
-# Define paths for the additional directories
-DIRECTORIES=("packages/ui/dist"
-    "node_modules"
-    "packages/server/node_modules"
-    "packages/shared/node_modules"
-    "packages/ui/node_modules"
-    "packages/server/dist"
-    "packages/shared/dist")
-# Extract each compressed directory
-for dir in "${DIRECTORIES[@]}"; do
-    # Formulate tar name as stored
-    TAR_NAME=$(echo "${dir}" | tr '/' '.')
-    TAR_PATH="${TMP_DIR}/${TAR_NAME}.tar.gz"
-    CURRENT_PATH="${HERE}/../${dir}"
-    # Stash the current directory contents if they don't already exist in the temporary directory
-    if [ -d "${TAR_PATH%/*}" ]; then
-        info "${dir} already exists at ${TAR_PATH%/*}, so not moving it"
-    elif [ -d "${CURRENT_PATH}" ]; then
-        info "Moving ${dir} to ${TAR_PATH%/*}"
-        mv -f "${CURRENT_PATH}" "${TAR_PATH%/*}"
-        if [ $? -ne 0 ]; then
-            error "Could not move ${dir} to ${TAR_PATH%/*}"
-            exit 1
-        fi
-    fi
-    # Extract the compressed directory
-    if [ -f "${TAR_PATH}" ]; then
-        info "Extracting ${dir} from ${TAR_PATH}"
-        mkdir -p "${CURRENT_PATH}"
-        tar -xzf "${TAR_PATH}" -C "${CURRENT_PATH}" --strip-components=1
-        if [ $? -ne 0 ]; then
-            error "Failed to extract ${dir} from ${TAR_PATH}"
-            exit 1
-        fi
-    else
-        error "Could not find tar for ${dir} at ${TAR_PATH}"
+if [ "${DEPLOY_REHEARSAL:-false}" = "true" ]; then
+    warning "Deploy rehearsal mode enabled; skipping setup.sh host setup."
+else
+    # Running setup.sh
+    info "Running setup.sh..."
+    . "${HERE}/setup.sh" "${SETUP_ARGS[@]}" -p -e y
+    if [ $? -ne 0 ]; then
+        error "setup.sh failed"
         exit 1
     fi
-done
-
-# Pull the latest changes from the repository.
-info "Pulling latest changes from repository..."
-git fetch
-git pull
-if [ $? -ne 0 ]; then
-    error "Could not pull latest changes from repository."
-    error "This usually means you have uncommitted changes or merge conflicts."
-    error "Please resolve these issues and try again."
-    error "Deployment aborted to prevent inconsistencies."
-    exit 1
-fi
-success "Repository updated successfully"
-
-# Running setup.sh
-info "Running setup.sh..."
-. "${HERE}/setup.sh" "${SETUP_ARGS[@]}" -p -e y
-if [ $? -ne 0 ]; then
-    error "setup.sh failed"
-    exit 1
 fi
 
 # Transfer and load Docker images
@@ -273,6 +396,8 @@ if ! runtime_state_require_backup_before_container_change "${TMP_DIR}/runtime-st
     exit 1
 fi
 docker-compose --env-file "${TMP_DIR}/.env-prod" -f "${HERE}/../docker-compose-prod.yml" down
+
+swap_staged_artifacts
 
 # Restart docker containers.
 info "Restarting docker containers..."
@@ -365,5 +490,7 @@ if [ "$SERVER_HEALTHY" = false ]; then
 else
     success "✅ Server healthcheck endpoint is responding"
 fi
+
+verify_public_endpoints
 
 success "Done! Deployment completed successfully."

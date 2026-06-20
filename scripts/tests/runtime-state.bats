@@ -8,11 +8,11 @@ load '__testHelper.bash'
 make_runtime_backup() {
     BACKUP_DIR="${BATS_TMPDIR}/runtime-state"
     mkdir -p \
-        "${BACKUP_DIR}/data/postgres" \
         "${BACKUP_DIR}/data/uploads" \
         "${BACKUP_DIR}/assets" \
         "${BACKUP_DIR}/data/redis" \
         "${BACKUP_DIR}/data/migration-backups"
+    echo "postgres dump" >"${BACKUP_DIR}/data/postgres.sql"
     touch "${BACKUP_DIR}/.env-prod"
     cat >"${BACKUP_DIR}/manifest.txt" <<EOF
 backup_type=runtime-state
@@ -49,6 +49,16 @@ teardown() {
     assert_output --partial "data/uploads"
 }
 
+@test "runtime-state validation rejects missing database dump" {
+    make_runtime_backup
+    rm -f "${BACKUP_DIR}/data/postgres.sql"
+
+    run runtime_state_validate_backup "${BACKUP_DIR}"
+
+    assert_equal "$status" 1
+    assert_output --partial "data/postgres.sql"
+}
+
 @test "rollback database selection prefers runtime-state backup over legacy postgres backup" {
     VERSION_DIR="${BATS_TMPDIR}/version"
     mkdir -p "${VERSION_DIR}/postgres"
@@ -59,7 +69,7 @@ teardown() {
     run runtime_state_select_db_backup "${VERSION_DIR}"
 
     assert_equal "$status" 0
-    assert_output "${VERSION_DIR}/runtime-state/data/postgres"
+    assert_output "${VERSION_DIR}/runtime-state/data/postgres.sql"
 }
 
 @test "rollback database selection supports legacy postgres backup" {
@@ -70,4 +80,11 @@ teardown() {
 
     assert_equal "$status" 0
     assert_output "${VERSION_DIR}/postgres"
+}
+
+@test "rollback script creates and restores logical database dumps" {
+    grep -q 'current-postgres.sql' "$BATS_TEST_DIRNAME/../rollback.sh"
+    grep -q 'pg_dump' "$BATS_TEST_DIRNAME/../rollback.sh"
+    grep -q 'psql -v ON_ERROR_STOP=1' "$BATS_TEST_DIRNAME/../rollback.sh"
+    grep -q 'Using legacy raw Postgres directory restore' "$BATS_TEST_DIRNAME/../rollback.sh"
 }

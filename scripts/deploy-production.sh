@@ -11,6 +11,7 @@ ENV_FILE="${HERE}/../.env-prod"
 VERSION=""
 SKIP_TESTS=false
 YARN_CMD="${YARN_CMD:-yarn}"
+DEPLOY_VALIDATE_CMD="${DEPLOY_VALIDATE_CMD:-validate:ci}"
 VALIDATE_ENV_SCRIPT="${VALIDATE_ENV_SCRIPT:-${HERE}/validate-env.sh}"
 HEALTHCHECK_SCRIPT="${HEALTHCHECK_SCRIPT:-${HERE}/vps-healthcheck.sh}"
 BACKUP_SCRIPT="${BACKUP_SCRIPT:-${HERE}/backup.sh}"
@@ -21,7 +22,7 @@ usage() {
 Usage: $0 -v VERSION [options]
   -v, --version VERSION     Version number to build and deploy
   -e, --env-file FILE       Environment file to source (default: .env-prod)
-      --skip-tests          Skip yarn test and yarn typecheck
+      --skip-tests          Skip the local validation gate
   -h, --help                Show this help message
 EOF
 }
@@ -84,13 +85,10 @@ header "Validating environment"
 cd "${HERE}/.."
 
 if [ "${SKIP_TESTS}" != true ]; then
-    header "Running tests"
-    "${YARN_CMD}" test
-
-    header "Running typecheck"
-    "${YARN_CMD}" typecheck
+    header "Running validation gate"
+    "${YARN_CMD}" "${DEPLOY_VALIDATE_CMD}"
 else
-    warning "Skipping tests and typecheck by request"
+    warning "Skipping validation gate by request; backups and VPS health checks still run."
 fi
 
 header "Running VPS health checks"
@@ -111,7 +109,7 @@ header "Creating mandatory offsite backup"
 "${BACKUP_SCRIPT}" -e "${ENV_FILE}"
 
 header "Building and transferring artifacts"
-DEPLOY_CONFIRMED=true "${BUILD_SCRIPT}" -v "${VERSION}" -e "${ENV_FILE}" -d y
+BUILD_SKIP_PACKAGE_VERSION_UPDATE=true DEPLOY_CONFIRMED=true "${BUILD_SCRIPT}" -v "${VERSION}" -e "${ENV_FILE}" -d y
 
 header "Deploying remotely"
 ssh -i "${KEY_PATH}" -o BatchMode=yes "root@${SITE_IP}" \

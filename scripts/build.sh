@@ -82,6 +82,11 @@ else
     SHOULD_UPDATE_VERSION=true
 fi
 
+if [ "${BUILD_SKIP_PACKAGE_VERSION_UPDATE:-false}" = "true" ]; then
+    SHOULD_UPDATE_VERSION=false
+    info "Skipping package.json version updates for this build."
+fi
+
 # Update package.json files for every package, if necessary
 if [ "${SHOULD_UPDATE_VERSION}" = true ]; then
     cd ${HERE}/../packages
@@ -175,29 +180,40 @@ fi
 # Compress multiple build locations
 info "Compressing build..."
 DIRECTORIES=("packages/ui/dist"
-    "node_modules"
-    "packages/server/node_modules"
-    "packages/shared/node_modules"
-    "packages/ui/node_modules"
     "packages/server/dist"
     "packages/shared/dist")
 # Declare an array to store the paths of the tar files
 TAR_FILES=()
+COMMIT_FILE=""
+
+cleanup_build_artifacts() {
+    if [ ${#TAR_FILES[@]} -gt 0 ]; then
+        rm -f "${TAR_FILES[@]}"
+    fi
+    if [ -n "${COMMIT_FILE}" ]; then
+        rm -f "${COMMIT_FILE}"
+    fi
+    rm -f production-docker-images.tar production-docker-images.tar.gz
+}
+
+trap cleanup_build_artifacts EXIT
+
 for dir in "${DIRECTORIES[@]}"; do
     # Replace slashes with periods for the tar filenames
     TAR_NAME=$(echo "${dir}" | tr '/' '.')
     TAR_PATH="${HERE}/../${TAR_NAME}.tar.gz"
     tar -czf "${TAR_PATH}" -C "${HERE}/../${dir}" .
-    trap "rm ${TAR_PATH}" EXIT
     if [ $? -ne 0 ]; then
         error "Failed to compress ${dir}"
         exit 1
     fi
     # Append the tar path to our TAR_FILES array
     TAR_FILES+=("${TAR_PATH}")
-    # Add trap to remove the tar file on exit
-    trap "rm ${TAR_PATH}" EXIT
 done
+
+COMMIT_FILE="${HERE}/../deploy-commit.txt"
+git -C "${HERE}/.." rev-parse HEAD >"${COMMIT_FILE}"
+TAR_FILES+=("${COMMIT_FILE}")
 
 # Build Docker images
 cd "${HERE}/.."
@@ -220,7 +236,6 @@ if ! docker save -o production-docker-images.tar nln_ui:prod "nln_ui:${VERSION}"
     error "Failed to save Docker images"
     exit 1
 fi
-trap "rm production-docker-images.tar*" EXIT
 info "Compressing Docker images..."
 if ! gzip -f production-docker-images.tar; then
     error "Failed to compress Docker images"

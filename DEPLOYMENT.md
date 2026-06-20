@@ -25,10 +25,12 @@ The deployment process is a two-phase manual workflow:
 
 2. **Deploy Phase** (`deploy.sh`) - Run on the production server
    - Validates environment configuration
+   - Verifies the remote repository can fast-forward to the commit that was built
    - Backs up current runtime state
-   - Extracts build artifacts
+   - Stages build artifacts before replacing live files
    - Loads new Docker images
    - Restarts containers with health checks
+   - Verifies public UI and API endpoints
    - Verifies successful deployment
 
 ## Recent Improvements
@@ -59,9 +61,9 @@ The deployment process is a two-phase manual workflow:
 - **What**: Automated rollback to a previous version
 - **Why**: Quick recovery from failed deployments
 - **What it does**:
-  - Creates emergency backup of current state
+  - Creates emergency SQL dump of the current database
   - Stops containers
-  - Restores database from specified version
+  - Restores database from the specified version's logical dump
   - Loads old Docker images
   - Starts containers with health checks
 
@@ -74,6 +76,21 @@ The deployment process is a two-phase manual workflow:
 - **What**: The standard deployment wrapper now runs a non-mutating VPS health check and requires a successful offsite backup before build/transfer.
 - **Why**: Prevents routine deployments from proceeding without a fresh offsite recovery point or with critical VPS health problems.
 - **Policy**: Critical health issues block deployment; cleanup/update findings are warnings with recommended operator commands only.
+
+### 8. Logical Runtime-State Database Backups
+- **What**: Runtime-state backups now require `data/postgres.sql`, created with `pg_dump`, instead of copying live Postgres data files as the primary backup.
+- **Why**: A logical dump is consistent while Postgres is running and is safer to validate and restore.
+- **Compatibility**: Legacy `/var/tmp/<VERSION>/postgres` raw backups are still recognized by rollback as a fallback for older deployments.
+
+### 9. Staged Artifact Deployment
+- **What**: `deploy.sh` validates Git state and extracts artifacts into `/var/tmp/<VERSION>/staged-artifacts` before replacing live `dist` directories.
+- **Why**: Git or extraction failures now stop before live build artifacts are changed.
+- **Commit check**: `build.sh` transfers `deploy-commit.txt`; `deploy.sh` fast-forwards the remote repository and verifies `HEAD` matches that commit.
+
+### 10. Disposable Deploy Rehearsal
+- **What**: `deploy-rehearsal.sh` runs a local disposable rehearsal of the production deploy path.
+- **Why**: Verifies build artifacts, logical backup creation, container restart, public endpoint checks, and SQL dump restore before touching production.
+- **Safety**: Generates a loopback-only env by default, refuses production-looking env values, and refuses to replace existing local `nln_*` containers unless explicitly allowed.
 
 ## Prerequisites
 
@@ -127,11 +144,8 @@ That script creates `~/.ssh/id_rsa_${SITE_IP}` when missing, appends the public 
 Before starting deployment, verify:
 
 ```bash
-# Run local validation
-yarn validate
-
-# Type check
-yarn typecheck
+# Run the same default validation gate used by deploy-production.sh
+yarn validate:ci
 
 # Verify git status
 git status
@@ -139,6 +153,19 @@ git status
 # Validate environment configuration (optional - runs automatically in build.sh)
 ./scripts/validate-env.sh .env-prod
 ```
+
+For high-confidence deploys, run the disposable local rehearsal before the production wrapper:
+
+```bash
+./scripts/deploy-rehearsal.sh -v rehearsal-<VERSION>
+```
+
+The rehearsal creates a temp project clone, generates a local loopback production-shaped env file, starts disposable Postgres and Redis containers, runs the production build locally, runs `deploy.sh` in rehearsal mode, verifies public UI/API responses, verifies the runtime-state SQL dump restores into a separate disposable Postgres container, and runs a full runtime-state restore dry run.
+
+Important constraints:
+- The rehearsal requires a clean tracked worktree so `deploy-commit.txt` matches the cloned project.
+- It uses the production compose container names (`nln_ui`, `nln_server`, `nln_db`, `nln_redis`) and refuses to run if those local containers already exist. Use `--replace-local-containers` only when those containers are disposable local state.
+- It does not read `.env-prod` unless explicitly passed with `-e`; explicit env files are copied into the temp rehearsal directory and forced to use the disposable `PROJECT_DIR`.
 
 ### Step 2: Build (On Development Machine)
 
@@ -151,13 +178,13 @@ cd /path/to/NLN
 ```
 
 Arguments:
-- `-v`: Version number (updates all package.json files)
+- `-v`: Version number (updates all package.json files unless `BUILD_SKIP_PACKAGE_VERSION_UPDATE=true`)
 - `-e`: Environment file path (defaults to `.env-prod`)
 - `-d`: Deploy to VPS (y/N) - if 'y', automatically transfers files
 
 The build script will:
 1. ✓ Validate environment configuration
-2. ✓ Update version numbers
+2. ✓ Update version numbers unless `BUILD_SKIP_PACKAGE_VERSION_UPDATE=true`
 3. ✓ Build shared packages
 4. ✓ Build server
 5. ✓ Build UI with production settings
@@ -177,7 +204,15 @@ Complete deployment from your development machine with the standard wrapper:
 ./scripts/deploy-production.sh -v <VERSION> -e .env-prod
 ```
 
-This wrapper validates the environment, runs tests and typecheck, runs non-mutating VPS health checks, refuses reused deployment versions, creates a mandatory offsite backup, builds and transfers artifacts, deploys remotely, and prints final container status.
+This wrapper validates the environment, runs the configured validation gate (`yarn validate:ci` by default), runs non-mutating VPS health checks, refuses reused deployment versions, creates a mandatory offsite backup, builds and transfers artifacts, deploys remotely, and prints final container status.
+
+The wrapper uses `<VERSION>` as the deployment slot and Docker image tag, but it does not mutate package.json versions during the build. If package version bumps are needed, make and commit them before running the production wrapper so the built commit and remote checkout stay identical.
+
+To use a lighter local validation gate intentionally:
+
+```bash
+DEPLOY_VALIDATE_CMD=validate ./scripts/deploy-production.sh -v <VERSION> -e .env-prod
+```
 
 Use a fresh version for each deployment. The wrapper refuses to deploy if `/var/tmp/<VERSION>/runtime-state/manifest.txt` already exists on the VPS, because reusing a version would prevent a fresh pre-deployment runtime-state backup from being created.
 
@@ -233,21 +268,23 @@ This one-liner will:
 2. Navigate to project directory
 3. Run the deploy script with the specified version
 
-**Note**: The deploy script (`deploy.sh`) handles git operations internally (lines 182-184), so you don't need to run `git stash && git fetch && git pull` manually.
+**Note**: The deploy script (`deploy.sh`) handles git operations internally and verifies the remote checkout matches the commit built by `build.sh`, so you do not need to run `git stash && git fetch && git pull` manually.
 
 **Note**: The production docker-compose file (`docker-compose-prod.yml`) now automatically loads `.env-prod` via the `env_file` directive. No need to manually specify `--env-file` when starting containers.
 
 The deploy script will:
 1. ✓ Validate environment configuration
-2. ✓ Backup current runtime state to `/var/tmp/{VERSION}/runtime-state`
-3. ✓ Extract build artifacts
-4. ✓ Pull latest code (scripts, configs)
+2. ✓ Fast-forward Git and verify the built commit
+3. ✓ Stage build artifacts under `/var/tmp/{VERSION}/staged-artifacts`
+4. ✓ Backup current runtime state to `/var/tmp/{VERSION}/runtime-state`
 5. ✓ Run setup.sh
 6. ✓ Load Docker images
 7. ✓ Stop old containers
-8. ✓ Start new containers (automatically uses `.env-prod`)
-9. ✓ **Wait for health checks** (NEW!)
-10. ✓ Verify server is responding
+8. ✓ Swap staged artifacts into place
+9. ✓ Start new containers (automatically uses `.env-prod`)
+10. ✓ Wait for health checks
+11. ✓ Verify internal server healthcheck
+12. ✓ Verify public UI and API healthcheck endpoints
 
 ### VPS Health Checks
 
@@ -349,7 +386,7 @@ If deployment fails or you discover issues:
 ```
 
 This will:
-1. Create emergency backup of current state
+1. Create emergency SQL dump of the current database
 2. Stop current containers
 3. Restore database from specified version backup
 4. Load Docker images from specified version
@@ -359,30 +396,46 @@ This will:
 
 ### Manual Rollback (if rollback.sh fails)
 
-1. **Stop containers**:
+1. **Create an emergency SQL dump**:
+   ```bash
+   mkdir -p /var/tmp/manual-emergency-backup
+   set -a
+   . ./.env-prod
+   set +a
+   docker exec -e PGPASSWORD="${DB_PASSWORD}" nln_db pg_dump -U "${DB_USER}" -d "${DB_NAME}" --no-owner --no-privileges > /var/tmp/manual-emergency-backup/current-postgres.sql
+   test -s /var/tmp/manual-emergency-backup/current-postgres.sql
+   ```
+
+2. **Stop containers**:
    ```bash
    docker-compose -f docker-compose-prod.yml down
    ```
 
-2. **Restore database**:
+3. **Restore database from logical dump**:
    ```bash
    ROLLBACK_VERSION="<PREVIOUS_VERSION>"  # e.g., "3.0.0"
    rm -rf data/postgres
-   cp -rp /var/tmp/${ROLLBACK_VERSION}/runtime-state/data/postgres data/
+   docker-compose --env-file /var/tmp/${ROLLBACK_VERSION}/.env-prod -f docker-compose-prod.yml up -d db
+   set -a
+   . /var/tmp/${ROLLBACK_VERSION}/.env-prod
+   set +a
+   until docker exec nln_db pg_isready -U "${DB_USER}" -d "${DB_NAME}"; do sleep 2; done
+   docker exec -i -e PGPASSWORD="${DB_PASSWORD}" nln_db psql -v ON_ERROR_STOP=1 -U "${DB_USER}" -d "${DB_NAME}" < /var/tmp/${ROLLBACK_VERSION}/runtime-state/data/postgres.sql
+   docker-compose --env-file /var/tmp/${ROLLBACK_VERSION}/.env-prod -f docker-compose-prod.yml down
    ```
 
-3. **Load old images**:
+4. **Load old images**:
    ```bash
    docker load -i /var/tmp/${ROLLBACK_VERSION}/production-docker-images.tar.gz
    ```
 
-4. **Start containers**:
+5. **Start containers**:
    ```bash
    docker-compose -f docker-compose-prod.yml up -d
    ```
    Note: The `.env-prod` file is automatically loaded via the `env_file` directive in `docker-compose-prod.yml`
 
-5. **Monitor startup**:
+6. **Monitor startup**:
    ```bash
    docker ps
    docker logs -f nln_server
@@ -498,29 +551,23 @@ This will:
    - **Impact**: Users see errors during deployment
    - **Mitigation**: Deploy during low-traffic periods
 
-2. **Testing Gate Depends on Entry Point**
-   - `./scripts/deploy-production.sh` runs its configured test/typecheck gate before deploying
+2. **Validation Gate Depends on Entry Point**
+   - `./scripts/deploy-production.sh` runs its configured validation gate before deploying
    - Manual `build.sh` + remote `deploy.sh` workflows still rely on the operator to run tests first
    - **Impact**: Bypassing the wrapper can still let broken code reach production
    - **Mitigation**: Use `deploy-production.sh` for standard deploys, or run tests manually before lower-level workflows
 
-3. **Large Transfer Sizes**
-   - `node_modules` are transferred (can be 100s of MB)
-   - Slow deployments over slow connections
-   - **Impact**: Build/deploy takes longer
-   - **Mitigation**: Use fast internet connection for builds
-
-4. **No Staging Environment**
-   - Production is first place full integration is tested
+3. **No Staging Environment**
+   - There is no persistent staging VPS
    - **Impact**: Higher risk of issues in production
-   - **Mitigation**: Thorough local testing, manual QA
+   - **Mitigation**: Run `./scripts/deploy-rehearsal.sh -v rehearsal-<VERSION>` before production deploys, plus manual QA where needed
 
-5. **Manual Version Management**
+4. **Manual Version Management**
    - Version must be manually entered and updated
    - **Impact**: Potential for version number mistakes
    - **Mitigation**: Double-check version numbers
 
-6. **UI Container Network Binding**
+5. **UI Container Network Binding**
    - The UI container's serve configuration may occasionally bind to localhost instead of all interfaces
    - **Symptoms**:
      - Containers show as healthy
@@ -549,6 +596,11 @@ This will:
 - ✅ Automated rollback
 - ✅ Git pull error handling
 - ✅ Migration failure handling
+- ✅ Logical `pg_dump` runtime-state database backups
+- ✅ Staged artifact extraction before live file replacement
+- ✅ Host `node_modules` no longer transferred
+- ✅ Public UI/API post-deploy verification
+- ✅ Disposable local deploy rehearsal
 
 ## Future Improvements
 
@@ -565,35 +617,31 @@ This will:
    - Push images to container registry
    - Optional automated deployment
 
-3. **Stop Transferring node_modules**
-   - Install inside Docker build
-   - Dramatically faster deployments
-   - Already configured in Dockerfiles, just need to update build.sh
-
 ### Medium Priority
 
-4. **Proper Docker Image Tagging**
+3. **Proper Docker Image Tagging**
    - Current build saves both version tags and `:prod`
    - Compose still runs `:prod` for compatibility
    - Future work could make compose run versioned tags directly
 
-5. **Separate UI and Server Deployments**
+4. **Separate UI and Server Deployments**
    - Deploy independently
    - Faster, lower-risk updates
    - Hotfix one service without affecting the other
 
-6. **Staging Environment**
+5. **Persistent Staging Environment**
    - Test deployments before production
    - Could run on same VPS with different ports
+   - The local deploy rehearsal reduces risk, but does not replace a persistent staging environment with production-like DNS, proxy, and data scale
 
 ### Lower Priority
 
-7. **Database Migration Safety Tools**
+6. **Database Migration Safety Tools**
    - Migration validation tests
    - Backward-compatibility checks
    - Tools like Atlas or Bytebase
 
-8. **Monitoring and Alerting**
+7. **Monitoring and Alerting**
    - Automatic alerts on deployment failures
    - Application error tracking
    - Performance monitoring
@@ -605,7 +653,7 @@ This will:
 **Deployment Backups** (`/var/tmp/{VERSION}/runtime-state`)
 - Created at start of each deployment
 - One backup per version
-- Includes `data/postgres`, `data/uploads`, `assets`, `data/redis`, `data/migration-backups`, `.env-prod`, optional `.env`, and optional `jwt_*`
+- Includes `data/postgres.sql`, `data/uploads`, `assets`, `data/redis`, `data/migration-backups`, `.env-prod`, optional `.env`, and optional `jwt_*`
 - Excludes logs by default
 - Manual cleanup (not automatic)
 
@@ -620,8 +668,9 @@ This will:
 - Keeps last 10 backups automatically
 - SQL format (easy to inspect and restore)
 
-**Emergency Backups** (created by rollback.sh)
+**Emergency Database Backups** (created by rollback.sh)
 - Created at `/var/tmp/emergency-backup-{timestamp}/`
+- Contains `current-postgres.sql`
 - Manual cleanup after verifying rollback worked
 
 ### Offsite Backups
@@ -664,14 +713,13 @@ If the dry run validates the selected backup and the restore is intentional, exe
 ./scripts/restore-runtime-state.sh -v <VERSION> --execute
 ```
 
-The execute mode creates an emergency runtime-state backup first, then stops containers, restores `data/postgres`, `data/uploads`, `data/redis`, `data/migration-backups`, `assets`, `.env-prod`, optional `.env`, and optional `jwt_*`, then starts containers again.
+The execute mode creates an emergency runtime-state backup first, then stops containers, restores runtime filesystem paths (`data/uploads`, `data/redis`, `data/migration-backups`, `assets`, `.env-prod`, optional `.env`, and optional `jwt_*`), then starts containers again. Database rollback is handled by `rollback.sh` from the logical dump at `data/postgres.sql`.
 
 Manual equivalent if the restore script is unavailable:
 
 ```bash
 cd /root/NLN
 docker-compose -f docker-compose-prod.yml down
-cp -rp /var/tmp/<VERSION>/runtime-state/data/postgres data/
 cp -rp /var/tmp/<VERSION>/runtime-state/data/uploads data/
 cp -rp /var/tmp/<VERSION>/runtime-state/data/redis data/
 cp -rp /var/tmp/<VERSION>/runtime-state/data/migration-backups data/

@@ -15,12 +15,11 @@ setup() {
     export RUNTIME_STATE_BACKUP_BASE="${BACKUP_BASE}"
 
     mkdir -p \
-        "${BACKUP_DIR}/data/postgres" \
         "${BACKUP_DIR}/data/uploads" \
         "${BACKUP_DIR}/assets" \
         "${BACKUP_DIR}/data/redis" \
         "${BACKUP_DIR}/data/migration-backups"
-    echo "new-db" >"${BACKUP_DIR}/data/postgres/marker"
+    echo "-- PostgreSQL database dump" >"${BACKUP_DIR}/data/postgres.sql"
     echo "new-upload" >"${BACKUP_DIR}/data/uploads/marker"
     echo "new-asset" >"${BACKUP_DIR}/assets/marker"
     echo "new-redis" >"${BACKUP_DIR}/data/redis/marker"
@@ -33,8 +32,8 @@ backup_type=runtime-state
 paths:
 EOF
 
-    mkdir -p "${PROJECT_DIR}/data/postgres"
-    echo "old-db" >"${PROJECT_DIR}/data/postgres/marker"
+    mkdir -p "${PROJECT_DIR}/data/uploads"
+    echo "old-upload" >"${PROJECT_DIR}/data/uploads/marker"
 }
 
 teardown() {
@@ -57,7 +56,7 @@ EOF
 
     assert_equal "$status" 0
     assert_output --partial "Dry run complete"
-    assert_equal "$(cat "${PROJECT_DIR}/data/postgres/marker")" "old-db"
+    assert_equal "$(cat "${PROJECT_DIR}/data/uploads/marker")" "old-upload"
 }
 
 @test "restore-runtime-state rejects missing manifest" {
@@ -78,6 +77,15 @@ EOF
     assert_output --partial "data/redis"
 }
 
+@test "restore-runtime-state rejects missing database dump" {
+    rm -f "${BACKUP_DIR}/data/postgres.sql"
+
+    run "$SCRIPT_PATH" -v "$VERSION"
+
+    assert_equal "$status" 1
+    assert_output --partial "data/postgres.sql"
+}
+
 @test "restore-runtime-state execute cancels unless user types yes" {
     install_docker_compose_stub
 
@@ -85,7 +93,7 @@ EOF
 
     assert_equal "$status" 0
     assert_output --partial "Restore cancelled"
-    assert_equal "$(cat "${PROJECT_DIR}/data/postgres/marker")" "old-db"
+    assert_equal "$(cat "${PROJECT_DIR}/data/uploads/marker")" "old-upload"
     [ ! -f "${BATS_TMPDIR}/docker-compose.log" ]
 }
 
@@ -96,7 +104,6 @@ EOF
 
     assert_equal "$status" 0
     assert_output --partial "Runtime-state restore completed"
-    assert_equal "$(cat "${PROJECT_DIR}/data/postgres/marker")" "new-db"
     assert_equal "$(cat "${PROJECT_DIR}/data/uploads/marker")" "new-upload"
     assert_equal "$(cat "${PROJECT_DIR}/assets/marker")" "new-asset"
     assert_equal "$(cat "${PROJECT_DIR}/data/redis/marker")" "new-redis"

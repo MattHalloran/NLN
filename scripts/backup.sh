@@ -2,8 +2,9 @@
 # Backs up production runtime state from a remote server without modifying it.
 #
 # Default mode is targeted runtime state:
-#   data/postgres, data/uploads, assets, data/redis, data/migration-backups,
-#   .env-prod, plus optional .env and jwt_* files when present.
+#   data/postgres.sql logical dump, data/uploads, assets, data/redis,
+#   data/migration-backups, .env-prod, plus optional .env and jwt_* files when
+#   present.
 #
 # Use --include-logs to include data/logs. Use --full for an explicit
 # whole-project backup excluding generated and bulky directories.
@@ -165,11 +166,22 @@ done
 EOF
 }
 
+remote_postgres_dump_script() {
+    cat <<EOF
+cd "${PROJECT_DIR}"
+set -a
+. ./.env-prod
+set +a
+docker exec -e PGPASSWORD="\${DB_PASSWORD}" nln_db pg_dump -U "\${DB_USER}" -d "\${DB_NAME}" --no-owner --no-privileges
+EOF
+}
+
 print_runtime_preflight() {
     info "Remote server: ${REMOTE_SERVER}"
     info "Project directory: ${PROJECT_DIR}"
     info "Backup mode: runtime-state"
     info "Include logs: ${INCLUDE_LOGS}"
+    info "Database backup: logical pg_dump saved as $(runtime_state_database_dump_path)"
     ssh -i "${KEY_PATH}" -o BatchMode=yes "${REMOTE_SERVER}" "$(remote_runtime_paths_script "${INCLUDE_LOGS}")" |
         ssh -i "${KEY_PATH}" -o BatchMode=yes "${REMOTE_SERVER}" "cd '${PROJECT_DIR}' && xargs -r du -sh"
 }
@@ -180,6 +192,9 @@ create_runtime_backup() {
     local archive="${local_dir}/runtime-state-${timestamp}.tar.gz"
     local paths_file="${local_dir}/runtime-state-paths.txt"
     local manifest="${local_dir}/manifest.txt"
+    local staging_dir="${local_dir}/runtime-state"
+    local db_dump
+    db_dump="$(runtime_state_database_dump_path)"
 
     mkdir -p "${local_dir}"
     chmod 700 "${BACKUP_ROOT}" "${local_dir}"
@@ -188,14 +203,19 @@ create_runtime_backup() {
     ssh -i "${KEY_PATH}" -o BatchMode=yes "${REMOTE_SERVER}" "$(remote_runtime_paths_script "${INCLUDE_LOGS}")" >"${paths_file}"
     chmod 600 "${paths_file}"
 
-    info "Creating runtime-state backup archive..."
-    ssh -i "${KEY_PATH}" -o BatchMode=yes "${REMOTE_SERVER}" "cd '${PROJECT_DIR}' && tar -czf - -T -" <"${paths_file}" >"${archive}"
+    info "Collecting runtime-state files..."
+    mkdir -p "${staging_dir}"
+    ssh -i "${KEY_PATH}" -o BatchMode=yes "${REMOTE_SERVER}" "cd '${PROJECT_DIR}' && tar -czf - -T -" <"${paths_file}" |
+        tar -xzf - -C "${staging_dir}"
 
-    info "Verifying archive can be listed..."
-    tar -tzf "${archive}" >/dev/null
+    info "Creating logical Postgres dump..."
+    mkdir -p "${staging_dir}/$(dirname "${db_dump}")"
+    ssh -i "${KEY_PATH}" -o BatchMode=yes "${REMOTE_SERVER}" "$(remote_postgres_dump_script)" >"${staging_dir}/${db_dump}"
 
-    sha256sum "${archive}" >"${archive}.sha256"
-    chmod 600 "${archive}" "${archive}.sha256"
+    if [ ! -s "${staging_dir}/${db_dump}" ]; then
+        error "Logical Postgres dump is missing or empty: ${db_dump}"
+        exit 1
+    fi
 
     {
         echo "backup_type=runtime-state"
@@ -204,11 +224,32 @@ create_runtime_backup() {
         echo "remote_server=${REMOTE_SERVER}"
         echo "project_dir=${PROJECT_DIR}"
         echo "include_logs=${INCLUDE_LOGS}"
+        echo "database_dump=${db_dump}"
+        echo "paths:"
+        echo "- ${db_dump}"
+        sed 's/^/- /' "${paths_file}"
+    } >"${staging_dir}/manifest.txt"
+    chmod 600 "${staging_dir}/manifest.txt"
+
+    if ! runtime_state_validate_backup "${staging_dir}"; then
+        error "Runtime-state staging validation failed"
+        exit 1
+    fi
+
+    info "Creating runtime-state backup archive..."
+    tar -czf "${archive}" -C "${staging_dir}" .
+
+    info "Verifying archive can be listed..."
+    tar -tzf "${archive}" >/dev/null
+
+    sha256sum "${archive}" >"${archive}.sha256"
+    chmod 600 "${archive}" "${archive}.sha256"
+
+    cp -p "${staging_dir}/manifest.txt" "${manifest}"
+    {
         echo "archive=$(basename "${archive}")"
         echo "sha256=$(cut -d' ' -f1 "${archive}.sha256")"
-        echo "paths:"
-        sed 's/^/- /' "${paths_file}"
-    } >"${manifest}"
+    } >>"${manifest}"
     chmod 600 "${manifest}"
 
     success "Runtime-state backup created: ${archive}"

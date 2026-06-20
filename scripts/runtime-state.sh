@@ -3,12 +3,19 @@
 
 runtime_state_critical_paths() {
     printf '%s\n' \
-        "data/postgres" \
         "data/uploads" \
         "assets" \
         "data/redis" \
         "data/migration-backups" \
         ".env-prod"
+}
+
+runtime_state_database_dump_path() {
+    printf '%s\n' "data/postgres.sql"
+}
+
+runtime_state_cold_database_paths() {
+    printf '%s\n' "data/postgres"
 }
 
 runtime_state_optional_paths() {
@@ -24,6 +31,7 @@ runtime_state_log_paths() {
 }
 
 runtime_state_healthcheck_paths() {
+    printf '%s\n' "data/postgres"
     runtime_state_critical_paths
     printf '%s\n' "docker-compose-prod.yml"
 }
@@ -34,6 +42,8 @@ runtime_state_shell_words() {
 
 runtime_state_validate_backup() {
     local backup_dir="$1"
+    local db_dump
+    db_dump="$(runtime_state_database_dump_path)"
 
     if [ ! -f "${backup_dir}/manifest.txt" ]; then
         error "Runtime-state manifest not found: ${backup_dir}/manifest.txt"
@@ -55,6 +65,11 @@ runtime_state_validate_backup() {
 $(runtime_state_critical_paths)
 EOF
 
+    if [ ! -s "${backup_dir}/${db_dump}" ]; then
+        error "Runtime-state backup is missing required database dump: ${db_dump}"
+        return 1
+    fi
+
     return 0
 }
 
@@ -71,10 +86,17 @@ runtime_state_require_backup_before_container_change() {
 
 runtime_state_select_db_backup() {
     local version_dir="$1"
+    local db_dump
+    db_dump="$(runtime_state_database_dump_path)"
 
     if [ -d "${version_dir}/runtime-state" ]; then
         runtime_state_validate_backup "${version_dir}/runtime-state" || return 1
-        printf '%s\n' "${version_dir}/runtime-state/data/postgres"
+        printf '%s\n' "${version_dir}/runtime-state/${db_dump}"
+        return 0
+    fi
+
+    if [ -f "${version_dir}/${db_dump}" ]; then
+        printf '%s\n' "${version_dir}/${db_dump}"
         return 0
     fi
 
@@ -83,6 +105,6 @@ runtime_state_select_db_backup() {
         return 0
     fi
 
-    error "Database backup not found at ${version_dir}/runtime-state/data/postgres or ${version_dir}/postgres"
+    error "Database backup not found at ${version_dir}/runtime-state/${db_dump}, ${version_dir}/${db_dump}, or ${version_dir}/postgres"
     return 1
 }
