@@ -100,6 +100,27 @@ require_command() {
     fi
 }
 
+use_project_node() {
+    local node_version
+    node_version=$(tr -d '[:space:]' <"${REPO_ROOT}/.nvmrc")
+
+    if command -v node >/dev/null 2>&1 && [ "v$(node -v | sed 's/^v//')" = "${node_version}" ]; then
+        return 0
+    fi
+
+    if [ -s "${NVM_DIR:-${HOME}/.nvm}/nvm.sh" ]; then
+        # shellcheck disable=SC1091
+        . "${NVM_DIR:-${HOME}/.nvm}/nvm.sh"
+        nvm install "${node_version}"
+        nvm use "${node_version}"
+        return 0
+    fi
+
+    error "Node ${node_version} is required for deploy rehearsal. Current node is $(node -v 2>/dev/null || echo missing)."
+    error "Install/use the version from .nvmrc, then rerun the rehearsal."
+    exit 1
+}
+
 choose_port() {
     local base="$1"
     local port
@@ -326,6 +347,7 @@ guard_rehearsal_env
 for cmd in git docker docker-compose yarn tar curl; do
     require_command "${cmd}"
 done
+use_project_node
 
 require_clean_worktree
 refuse_existing_local_containers

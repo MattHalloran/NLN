@@ -250,6 +250,12 @@ run_deploy_production() {
     grep -q 'DOCKER_SAVE_IMAGES+=(postgres:13-alpine redis:7-alpine)' "$BATS_TEST_DIRNAME/../build.sh"
 }
 
+@test "setup installs node version from .nvmrc" {
+    grep -q 'NODE_VERSION=$(tr -d' "$BATS_TEST_DIRNAME/../setup.sh"
+    grep -q 'nvm install "${NODE_VERSION}"' "$BATS_TEST_DIRNAME/../setup.sh"
+    refute grep -q '20.18.1' "$BATS_TEST_DIRNAME/../setup.sh"
+}
+
 @test "deploy verifies public UI and API endpoints" {
     grep -q 'verify_public_endpoints' "$BATS_TEST_DIRNAME/../deploy.sh"
     grep -q 'curl -fsS "${ui_url}"' "$BATS_TEST_DIRNAME/../deploy.sh"

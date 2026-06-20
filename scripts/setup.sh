@@ -142,8 +142,9 @@ curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
 . ~/.nvm/nvm.sh
 
 header "Installing Node (includes npm)"
-nvm install 20.18.1
-nvm alias default v20.18.1
+NODE_VERSION=$(tr -d '[:space:]' <"${HERE}/../.nvmrc")
+nvm install "${NODE_VERSION}"
+nvm alias default "${NODE_VERSION}"
 
 header "Installing Yarn"
 npm install -g yarn

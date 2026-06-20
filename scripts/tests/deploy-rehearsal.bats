@@ -99,6 +99,12 @@ teardown() {
     grep -q 'yarn install --frozen-lockfile' "$SCRIPT_PATH"
 }
 
+@test "deploy rehearsal uses project Node version before yarn install" {
+    grep -q 'use_project_node' "$SCRIPT_PATH"
+    grep -q 'REPO_ROOT}/.nvmrc' "$SCRIPT_PATH"
+    grep -q 'nvm use "${node_version}"' "$SCRIPT_PATH"
+}
+
 @test "deploy rehearsal applies baseline migrations before seeding probe data" {
     grep -q 'apply_baseline_migrations' "$SCRIPT_PATH"
     grep -q -- '--network project_app' "$SCRIPT_PATH"
