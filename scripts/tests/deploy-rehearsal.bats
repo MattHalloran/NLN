@@ -67,6 +67,11 @@ teardown() {
     grep -q 'skipping setup.sh host setup' "$BATS_TEST_DIRNAME/../deploy.sh"
 }
 
+@test "deploy script validates rehearsal commit without git pull" {
+    grep -q 'Rehearsal repository is at expected commit' "$BATS_TEST_DIRNAME/../deploy.sh"
+    grep -q 'DEPLOY_REHEARSAL' "$BATS_TEST_DIRNAME/../deploy.sh"
+}
+
 @test "build script can skip package version updates for rehearsal" {
     grep -q 'BUILD_SKIP_PACKAGE_VERSION_UPDATE' "$BATS_TEST_DIRNAME/../build.sh"
 }

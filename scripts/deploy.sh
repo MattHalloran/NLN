@@ -138,6 +138,18 @@ verify_repository_state() {
         exit 1
     fi
 
+    actual_commit=$(git rev-parse HEAD)
+    if [ "${DEPLOY_REHEARSAL:-false}" = "true" ]; then
+        if [ "${actual_commit}" != "${expected_commit}" ]; then
+            error "Rehearsal commit does not match built artifact commit."
+            error "Expected: ${expected_commit}"
+            error "Actual:   ${actual_commit}"
+            exit 1
+        fi
+        success "Rehearsal repository is at expected commit ${expected_commit}"
+        return 0
+    fi
+
     git fetch
     if ! git pull --ff-only; then
         error "Could not fast-forward remote repository."

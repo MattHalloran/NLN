@@ -132,6 +132,14 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
+info "Copying Prisma schema and migrations into server dist..."
+mkdir -p dist/db
+cp src/db/schema.prisma dist/db/schema.prisma
+if [ -d src/db/migrations ]; then
+    rm -rf dist/db/migrations
+    cp -r src/db/migrations dist/db/migrations
+fi
+
 # Navigate to UI directory
 cd ${HERE}/../packages/ui
 
@@ -227,7 +235,10 @@ TAR_FILES+=("${COMMIT_FILE}")
 # Build Docker images
 cd "${HERE}/.."
 info "Building (and Pulling) Docker images..."
-docker-compose --env-file "${ENV_FILE}" -f docker-compose-prod.yml build
+if ! docker-compose --env-file "${ENV_FILE}" -f docker-compose-prod.yml build; then
+    error "Failed to build Docker images"
+    exit 1
+fi
 docker pull postgres:13-alpine
 docker pull redis:7-alpine
 

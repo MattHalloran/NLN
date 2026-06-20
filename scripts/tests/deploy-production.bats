@@ -182,6 +182,13 @@ run_deploy_production() {
     grep -q 'yarn prisma generate --schema=src/db/schema.prisma' "$BATS_TEST_DIRNAME/../build.sh"
 }
 
+@test "build packages Prisma schema and fails on Docker build failure" {
+    grep -q 'cp src/db/schema.prisma dist/db/schema.prisma' "$BATS_TEST_DIRNAME/../build.sh"
+    grep -q 'cp -r src/db/migrations dist/db/migrations' "$BATS_TEST_DIRNAME/../build.sh"
+    grep -q 'if ! docker-compose --env-file "${ENV_FILE}" -f docker-compose-prod.yml build' "$BATS_TEST_DIRNAME/../build.sh"
+    grep -q 'Failed to build Docker images' "$BATS_TEST_DIRNAME/../build.sh"
+}
+
 @test "production wrapper builds without mutating package versions" {
     grep -q 'BUILD_SKIP_PACKAGE_VERSION_UPDATE=true DEPLOY_CONFIRMED=true' "$SCRIPT_PATH"
 }
