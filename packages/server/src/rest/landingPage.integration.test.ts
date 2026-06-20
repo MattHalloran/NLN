@@ -383,6 +383,35 @@ describe("Landing Page API Integration Tests", () => {
             expect(fileContent.content.seasonal.plants).toEqual(newPlants);
         });
 
+        it("should return updated seasonal plants from the public read endpoint", async () => {
+            const newPlants = [
+                {
+                    id: "public-read-plant",
+                    name: "Public Read Plant",
+                    description: "Visible after admin save",
+                    season: "Spring",
+                    careLevel: "Easy",
+                    icon: "leaf",
+                    displayOrder: 1,
+                    isActive: true,
+                },
+            ];
+
+            const updateRes = await request(app)
+                .put(REST_ROUTES.landingPage.root)
+                .set("Cookie", adminCookie)
+                .send({ seasonalPlants: newPlants });
+
+            expect(updateRes.status).toBe(200);
+
+            const readRes = await request(app).get(
+                `${REST_ROUTES.landingPage.root}?abTest=false&onlyActive=false`
+            );
+
+            expect(readRes.status).toBe(200);
+            expect(readRes.body.content.seasonal.plants).toEqual(newPlants);
+        });
+
         it("should update plant tips successfully", async () => {
             const newTips = [
                 {
@@ -428,6 +457,16 @@ describe("Landing Page API Integration Tests", () => {
             expect(res.body.updatedSections).toContain("plantTips");
         });
 
+        it("should reject edits to a missing variant", async () => {
+            const res = await request(app)
+                .put(`${REST_ROUTES.landingPage.root}?variantId=missing-variant`)
+                .set("Cookie", adminCookie)
+                .send(mockUpdateData);
+
+            expect(res.status).toBe(404);
+            expect(res.body.error).toContain("missing-variant");
+        });
+
         it("should return error when no valid sections provided", async () => {
             const res = await request(app)
                 .put(REST_ROUTES.landingPage.root)
@@ -461,6 +500,22 @@ describe("Landing Page API Integration Tests", () => {
             // Verify hours were updated in the consolidated landing-page-content.json
             const fileContent = JSON.parse(readFileSync(landingPageFile, "utf8"));
             expect(fileContent.contact.hours).toBe(mockContactInfoUpdate.hours);
+        });
+
+        it("should return updated business hours from the public read endpoint", async () => {
+            const hours = "| Day | Hours |\n| --- | --- |\n| Monday | 8:00 am to 4:00 pm |\n";
+
+            const updateRes = await request(app)
+                .put(REST_ROUTES.landingPage.contactInfo)
+                .set("Cookie", adminCookie)
+                .send({ hours });
+
+            expect(updateRes.status).toBe(200);
+
+            const readRes = await request(app).get(`${REST_ROUTES.landingPage.root}?abTest=false`);
+
+            expect(readRes.status).toBe(200);
+            expect(readRes.body.contact.hours).toBe(hours);
         });
 
         it("should return error when neither business nor hours provided", async () => {

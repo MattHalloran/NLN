@@ -37,10 +37,13 @@ export function getImageCleanupQueue(): Bull.Queue {
                 jobId: "weekly-image-cleanup", // Ensures only one scheduled job exists
                 removeOnComplete: 10, // Keep last 10 successful jobs for history
                 removeOnFail: 50, // Keep last 50 failed jobs for debugging
-            },
+            }
         );
 
-        logger.log(LogLevel.info, "✅ Image cleanup queue initialized with weekly schedule (Sundays 2:00 AM)");
+        logger.log(
+            LogLevel.info,
+            "✅ Image cleanup queue initialized with weekly schedule (Sundays 2:00 AM)"
+        );
 
         return imageCleanupQueue;
     } catch (error: unknown) {
@@ -50,6 +53,16 @@ export function getImageCleanupQueue(): Bull.Queue {
         });
         throw error;
     }
+}
+
+export async function closeImageCleanupQueue(): Promise<void> {
+    if (!imageCleanupQueue) {
+        return;
+    }
+
+    const queue = imageCleanupQueue;
+    imageCleanupQueue = null;
+    await queue.close();
 }
 
 /**
@@ -67,7 +80,7 @@ export async function triggerManualCleanup(): Promise<Bull.Job> {
             priority: 1, // High priority
             removeOnComplete: true,
             removeOnFail: false,
-        },
+        }
     );
 
     return job;

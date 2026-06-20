@@ -63,6 +63,17 @@ function getEmailQueue(): Bull.Queue {
     }
 }
 
+export async function closeEmailQueue(): Promise<void> {
+    if (!emailQueue) {
+        return;
+    }
+
+    const queue = emailQueue;
+    emailQueue = null;
+    WEBSITE = null;
+    await queue.close();
+}
+
 export function sendMail(to: string[] = [], subject = "", text = "", html = ""): void {
     try {
         const queue = getEmailQueue();

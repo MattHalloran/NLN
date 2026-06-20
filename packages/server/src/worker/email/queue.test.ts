@@ -4,6 +4,7 @@ const queueMocks = vi.hoisted(() => {
     const mockQueue = {
         add: vi.fn().mockResolvedValue({ id: "job-1" }),
         process: vi.fn(),
+        close: vi.fn().mockResolvedValue(undefined),
     };
     return {
         Bull: vi.fn(() => mockQueue),
@@ -35,6 +36,7 @@ describe("email queue wrapper", () => {
         queueMocks.Bull.mockClear();
         queueMocks.mockQueue.add.mockClear();
         queueMocks.mockQueue.process.mockClear();
+        queueMocks.mockQueue.close.mockClear();
         queueMocks.readFileSync.mockReset();
         queueMocks.readFileSync.mockReturnValue(
             JSON.stringify({
@@ -114,5 +116,15 @@ describe("email queue wrapper", () => {
             subject: "You've received feedback!",
             text: "Feedback from customer@example.com: Great service",
         });
+    });
+
+    it("closes and clears the initialized email queue", async () => {
+        const { closeEmailQueue, sendMail } = await import("./queue.js");
+
+        sendMail(["person@example.com"], "Subject", "Plain", "<p>Html</p>");
+        await closeEmailQueue();
+        await closeEmailQueue();
+
+        expect(queueMocks.mockQueue.close).toHaveBeenCalledTimes(1);
     });
 });

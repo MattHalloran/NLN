@@ -23,6 +23,10 @@ import {
 import { csrfProtection, csrfErrorHandler } from "./middleware/csrf.js";
 import { startLandingPageWatcher, stopLandingPageWatcher } from "./utils/landingPageWatcher.js";
 import { ASSETS_DIR, IMAGE_ASSETS_DIR } from "./config/paths.js";
+import { closeRedis } from "./redisConn.js";
+import { closeImageCleanupQueue } from "./worker/imageCleanup/queue.js";
+import { closeLabelSyncQueue } from "./worker/labelSync/queue.js";
+import { closeEmailQueue } from "./worker/email/queue.js";
 
 const SERVER_URL =
     process.env.VITE_SERVER_URL ??
@@ -363,17 +367,30 @@ const main = async () => {
     });
 
     // Graceful shutdown
-    process.on("SIGINT", () => {
-        logger.log(LogLevel.info, "Shutting down server...");
+    const shutdown = (signal: NodeJS.Signals) => {
+        logger.log(LogLevel.info, `Shutting down server after ${signal}...`);
 
         // Stop file watcher
         stopLandingPageWatcher();
 
         server.close(() => {
-            logger.log(LogLevel.info, "Server shutdown complete");
-            process.exit(0);
+            void Promise.all([closeImageCleanupQueue(), closeLabelSyncQueue(), closeEmailQueue()])
+                .then(() => closeRedis())
+                .catch((error: Error) => {
+                    logger.log(LogLevel.error, "Server shutdown cleanup failed", {
+                        code: genErrorCode("0018"),
+                        error,
+                    });
+                })
+                .finally(() => {
+                    logger.log(LogLevel.info, "Server shutdown complete");
+                    process.exit(0);
+                });
         });
-    });
+    };
+
+    process.on("SIGINT", shutdown);
+    process.on("SIGTERM", shutdown);
 
     // Global error handlers to catch uncaught errors
     process.on("uncaughtException", (error: Error) => {

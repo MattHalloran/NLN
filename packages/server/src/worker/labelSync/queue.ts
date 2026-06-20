@@ -37,7 +37,7 @@ export function getLabelSyncQueue(): Bull.Queue {
                 jobId: "daily-label-sync", // Ensures only one scheduled job exists
                 removeOnComplete: 7, // Keep last 7 successful jobs for history (one week)
                 removeOnFail: 30, // Keep last 30 failed jobs for debugging
-            },
+            }
         );
 
         logger.log(LogLevel.info, "✅ Label sync queue initialized with daily schedule (3:00 AM)");
@@ -50,6 +50,16 @@ export function getLabelSyncQueue(): Bull.Queue {
         });
         throw error;
     }
+}
+
+export async function closeLabelSyncQueue(): Promise<void> {
+    if (!labelSyncQueue) {
+        return;
+    }
+
+    const queue = labelSyncQueue;
+    labelSyncQueue = null;
+    await queue.close();
 }
 
 /**
@@ -67,7 +77,7 @@ export async function triggerManualSync(): Promise<Bull.Job> {
             priority: 1, // High priority
             removeOnComplete: true,
             removeOnFail: false,
-        },
+        }
     );
 
     return job;
