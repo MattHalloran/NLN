@@ -6,6 +6,8 @@ set -euo pipefail
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 # shellcheck disable=SC1091
 . "${HERE}/utils.sh"
+# shellcheck source=scripts/deploy-safety.sh
+. "${HERE}/deploy-safety.sh"
 
 ENV_FILE="${HERE}/../.env-prod"
 VERSION=""
@@ -16,6 +18,7 @@ VALIDATE_ENV_SCRIPT="${VALIDATE_ENV_SCRIPT:-${HERE}/validate-env.sh}"
 HEALTHCHECK_SCRIPT="${HEALTHCHECK_SCRIPT:-${HERE}/vps-healthcheck.sh}"
 BACKUP_SCRIPT="${BACKUP_SCRIPT:-${HERE}/backup.sh}"
 BUILD_SCRIPT="${BUILD_SCRIPT:-${HERE}/build.sh}"
+RECEIPT_MAX_AGE_SECONDS="${DEPLOY_READINESS_RECEIPT_MAX_AGE_SECONDS:-14400}"
 
 usage() {
     cat <<EOF
@@ -24,6 +27,9 @@ Usage: $0 -v VERSION [options]
   -e, --env-file FILE       Environment file to source (default: .env-prod)
       --skip-tests          Skip the local validation gate
   -h, --help                Show this help message
+
+Requires a fresh matching receipt from:
+  ./scripts/deploy-readiness.sh -v VERSION -e ENV_FILE
 EOF
 }
 
@@ -60,6 +66,8 @@ if [ -z "${VERSION}" ]; then
 fi
 validate_deploy_version "${VERSION}"
 
+REPO_ROOT=$(deploy_repo_root "${HERE}")
+
 if [ -f "${ENV_FILE}" ]; then
     # shellcheck disable=SC1090
     . "${ENV_FILE}"
@@ -84,12 +92,14 @@ header "Validating environment"
 "${VALIDATE_ENV_SCRIPT}" "${ENV_FILE}"
 
 cd "${HERE}/.."
+deploy_require_clean_synced_worktree "${REPO_ROOT}"
 
 if [ "${SKIP_TESTS}" != true ]; then
-    header "Running validation gate"
-    "${YARN_CMD}" "${DEPLOY_VALIDATE_CMD}"
+    deploy_verify_readiness_receipt "${REPO_ROOT}" "${VERSION}" "${DEPLOY_VALIDATE_CMD}" "${RECEIPT_MAX_AGE_SECONDS}"
+    header "Using readiness receipt validation gate"
+    info "Skipping duplicate local ${DEPLOY_VALIDATE_CMD}; receipt proves it passed for this commit."
 else
-    warning "Skipping validation gate by request; backups and VPS health checks still run."
+    warning "Skipping validation/readiness receipt gate by request; backups and VPS health checks still run."
 fi
 
 header "Running VPS health checks"

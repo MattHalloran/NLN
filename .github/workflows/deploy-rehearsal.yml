@@ -1,0 +1,33 @@
+name: Deploy Rehearsal
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "23 10 * * 1"
+
+concurrency:
+  group: deploy-rehearsal
+  cancel-in-progress: false
+
+jobs:
+  rehearsal:
+    name: Disposable Deploy Rehearsal
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: yarn
+
+      - name: Install system prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+
+      - name: Run disposable deploy rehearsal
+        run: ./scripts/deploy-rehearsal.sh -v "rehearsal-ci-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"

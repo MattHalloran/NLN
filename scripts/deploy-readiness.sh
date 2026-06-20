@@ -6,6 +6,8 @@ set -euo pipefail
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 # shellcheck disable=SC1091
 . "${HERE}/utils.sh"
+# shellcheck source=scripts/deploy-safety.sh
+. "${HERE}/deploy-safety.sh"
 
 ENV_FILE="${HERE}/../.env-prod"
 VERSION=""
@@ -76,6 +78,8 @@ if [ -z "${VERSION}" ]; then
 fi
 validate_deploy_version "${VERSION}"
 
+REPO_ROOT=$(deploy_repo_root "${HERE}")
+
 if [ -f "${ENV_FILE}" ]; then
     # shellcheck disable=SC1090
     . "${ENV_FILE}"
@@ -84,42 +88,11 @@ else
     exit 1
 fi
 
-require_clean_synced_worktree() {
-    header "Checking git readiness"
-
-    local repo_root changes upstream counts behind ahead
-    repo_root="${HERE}/.."
-    changes=$(git -C "${repo_root}" status --porcelain --untracked-files=no)
-    if [ -n "${changes}" ]; then
-        error "Tracked worktree changes are present. Commit or stash them before readiness/deploy."
-        git -C "${repo_root}" status --short --untracked-files=no
-        exit 1
-    fi
-
-    if ! upstream=$(git -C "${repo_root}" rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null); then
-        error "Current branch has no upstream. Push and set upstream before production deploy."
-        exit 1
-    fi
-
-    git -C "${repo_root}" fetch --quiet
-    counts=$(git -C "${repo_root}" rev-list --left-right --count "${upstream}...HEAD")
-    behind=$(echo "${counts}" | awk '{print $1}')
-    ahead=$(echo "${counts}" | awk '{print $2}')
-
-    if [ "${behind}" != "0" ] || [ "${ahead}" != "0" ]; then
-        error "Branch is not synchronized with ${upstream}: ahead=${ahead}, behind=${behind}."
-        error "Push/pull until ahead=0 and behind=0 before production deploy."
-        exit 1
-    fi
-
-    success "Git branch is clean and synchronized with ${upstream}"
-}
-
 run_local_gates() {
     header "Validating environment"
     "${VALIDATE_ENV_SCRIPT}" "${ENV_FILE}"
 
-    require_clean_synced_worktree
+    deploy_require_clean_synced_worktree "${REPO_ROOT}"
 
     if [ "${SKIP_VALIDATION}" != true ]; then
         header "Running local validation gate"
@@ -173,5 +146,6 @@ run_vps_preflight_gates() {
 
 run_local_gates
 run_vps_preflight_gates
+deploy_write_readiness_receipt "${REPO_ROOT}" "${VERSION}" "${DEPLOY_VALIDATE_CMD}" "${SKIP_VALIDATION}" "${SKIP_REHEARSAL}" "${SKIP_VPS}"
 
 success "Deploy readiness checks passed for version ${VERSION}. No deployment was run."

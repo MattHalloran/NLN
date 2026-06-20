@@ -647,8 +647,10 @@ for _ in {1..10}; do
 done
 
 if [ "$SERVER_HEALTHY" = false ]; then
-    warning "Server healthcheck endpoint not responding. Server may still be initializing."
-    warning "Please verify manually by checking: docker logs nln_server"
+    error "Server healthcheck endpoint is not responding."
+    print_deploy_diagnostics
+    attempt_failed_deploy_recovery "internal server healthcheck failed"
+    exit 1
 else
     success "✅ Server healthcheck endpoint is responding"
 fi

@@ -106,6 +106,8 @@ Validation:
 
 ## Phase 3: Strengthen The Production Wrapper Gate
 
+Status: Extended locally. `deploy-readiness.sh` now writes a freshness-limited readiness receipt after validation, rehearsal, read-only VPS checks, version-slot inspection, and backup preflight pass. `deploy-production.sh` verifies clean/synced git state and requires that receipt for the same version, commit, and validation command before building or transferring artifacts.
+
 1. Change `deploy-production.sh` from separate `yarn test` and `yarn typecheck` calls to one configured validation command.
 2. Default to:
 
@@ -144,7 +146,7 @@ Validation:
 
 ## Phase 4: Add A Production Deploy Rehearsal
 
-Status: Implemented locally as `./scripts/deploy-rehearsal.sh -v rehearsal-<VERSION>`.
+Status: Implemented locally as `./scripts/deploy-rehearsal.sh -v rehearsal-<VERSION>`. A manual/scheduled GitHub Actions workflow also runs the same disposable rehearsal path without reading `.env-prod`.
 
 1. Create a non-production rehearsal script:
 
@@ -244,7 +246,7 @@ Validation:
 
 ## Phase 7: Add Public Post-Deploy Verification
 
-Status: Implemented locally for deploy and rollback. `deploy.sh` and `rollback.sh` verify public UI and API healthcheck endpoints with retries after container health passes, and print container status/log diagnostics on failure.
+Status: Implemented locally for deploy and rollback. `deploy.sh` and `rollback.sh` verify public UI and API healthcheck endpoints with retries after container health passes, and print container status/log diagnostics on failure. `deploy.sh` now also treats the internal server healthcheck as fatal and attempts non-database recovery before reporting failure.
 
 1. After container health passes, verify from the VPS host:
 
@@ -268,6 +270,23 @@ Validation:
 - Add shell tests with stubbed curl success and failure. Basic script-surface coverage is present; deeper curl failure-path tests can be added if this code changes again.
 - Include this check in deploy rehearsal where possible. Included through `deploy.sh` during rehearsal.
 - Manually validate in staging or local rehearsal before production.
+
+## Phase 8: Guard Risky Migrations
+
+Status: Implemented locally as `scripts/check-migrations.sh`, included in `yarn check:drift`.
+
+1. Scan Prisma migration SQL for destructive operations.
+2. Fail validation for risky migration SQL unless the migration includes:
+
+   ```sql
+   -- deploy-safe: allow-destructive-migration: <reviewed reason>
+   ```
+
+3. Treat the marker as a reviewed exception, not a bypass for routine changes.
+
+Validation:
+
+- Add shell tests for safe SQL, blocked destructive SQL, and explicitly reviewed destructive SQL.
 
 ## Recommended Implementation Order
 

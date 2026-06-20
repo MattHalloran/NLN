@@ -97,6 +97,17 @@ The deployment process is a two-phase manual workflow:
 - **What**: `deploy-readiness.sh` runs the pre-production confidence checks without deploying.
 - **Why**: Gives one command for env validation, clean/synced git state, local validation, rehearsal, read-only VPS health, version-slot freshness, and backup preflight.
 - **Safety**: It must not deploy, restart, restore, prune, update, clean up, or create backup archives.
+- **Receipt**: On success, it writes a local `.deploy-readiness/<VERSION>.receipt` proving the exact commit, validation command, rehearsal, and VPS preflight that passed.
+
+### 12. Readiness Receipt Enforcement
+- **What**: `deploy-production.sh` now requires a fresh readiness receipt for the same version, commit, and validation command before it builds or transfers artifacts.
+- **Why**: The expensive local validation and rehearsal can be completed before the deploy window, while the actual deploy still verifies that the current commit is clean, pushed, synchronized, and recently rehearsed.
+- **Freshness**: Receipts are valid for 4 hours by default. Override with `DEPLOY_READINESS_RECEIPT_MAX_AGE_SECONDS` only when the deploy window has been intentionally planned.
+
+### 13. Migration Risk Checks
+- **What**: `scripts/check-migrations.sh` runs as part of `yarn check:drift`.
+- **Why**: Potentially destructive migration SQL, such as dropping columns/tables, truncation, broad deletes, type changes, or new NOT NULL constraints, must carry an explicit review marker before passing validation.
+- **Marker**: Use `-- deploy-safe: allow-destructive-migration: <reason>` only after backup and rollback implications are reviewed.
 
 ## Prerequisites
 
@@ -181,6 +192,8 @@ Or run the combined non-deploying readiness gate:
 
 This checks the env file, clean/synced git state, local validation, disposable deploy rehearsal, read-only VPS health, fresh deployment version slot, and offsite backup preflight. It does not deploy, restart, restore, prune, update, clean up, or create backup archives.
 
+When this passes, it writes `.deploy-readiness/<VERSION>.receipt`. The standard production wrapper requires that receipt to be fresh and bound to the current commit before it proceeds.
+
 ### Step 2: Build (On Development Machine)
 
 ```bash
@@ -218,7 +231,14 @@ Complete deployment from your development machine with the standard wrapper:
 ./scripts/deploy-production.sh -v <VERSION> -e .env-prod
 ```
 
-This wrapper validates the environment, runs the configured validation gate (`yarn validate:ci` by default), runs non-mutating VPS health checks, refuses reused deployment versions, creates a mandatory offsite backup, builds and transfers artifacts, deploys remotely, and prints final container status.
+This wrapper validates the environment, verifies the git worktree is clean and synchronized, verifies the fresh readiness receipt, runs non-mutating VPS health checks, refuses reused deployment versions, creates a mandatory offsite backup, builds and transfers artifacts, deploys remotely, and prints final container status.
+
+Run readiness first:
+
+```bash
+./scripts/deploy-readiness.sh -v <VERSION> -e .env-prod
+./scripts/deploy-production.sh -v <VERSION> -e .env-prod
+```
 
 The wrapper uses `<VERSION>` as the deployment slot and Docker image tag, but it does not mutate package.json versions during the build. If package version bumps are needed, make and commit them before running the production wrapper so the built commit and remote checkout stay identical.
 
@@ -228,7 +248,19 @@ To use a lighter local validation gate intentionally:
 DEPLOY_VALIDATE_CMD=validate ./scripts/deploy-production.sh -v <VERSION> -e .env-prod
 ```
 
+The deploy wrapper will only accept this when the readiness receipt was created with the same `DEPLOY_VALIDATE_CMD` value.
+
 Use a fresh version for each deployment. The wrapper refuses to deploy if `/var/tmp/<VERSION>/runtime-state/manifest.txt` already exists on the VPS, because reusing a version would prevent a fresh pre-deployment runtime-state backup from being created.
+
+### Rehearsal and Recovery Drill
+
+Before a high-risk deployment, run a local drill:
+
+```bash
+./scripts/deploy-rehearsal.sh -v rehearsal-<VERSION>
+```
+
+The drill creates a disposable project, runs the production build/deploy path locally, verifies the runtime SQL dump restores into a separate disposable Postgres container, executes a disposable rollback probe, and dry-runs full runtime-state restore. It must not read `.env-prod` unless you explicitly pass `-e`, and it refuses production-looking endpoints.
 
 Manual equivalent:
 

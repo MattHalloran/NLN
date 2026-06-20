@@ -32,6 +32,40 @@ EOF
     chmod +x "${BATS_MOCK_BINDIR}/ssh"
 }
 
+install_git_stub() {
+    cat >"${BATS_MOCK_BINDIR}/git" <<'EOF'
+#!/usr/bin/env bash
+case "$*" in
+  *"status --porcelain --untracked-files=no"*)
+    [ -n "${GIT_CHANGES:-}" ] && printf '%s\n' "${GIT_CHANGES}"
+    exit 0
+    ;;
+  *"status --short --untracked-files=no"*)
+    [ -n "${GIT_CHANGES:-}" ] && printf '%s\n' "${GIT_CHANGES}"
+    exit 0
+    ;;
+  *"rev-parse --abbrev-ref --symbolic-full-name @{u}"*)
+    [ "${GIT_NO_UPSTREAM:-false}" = "true" ] && exit 1
+    echo "origin/master"
+    exit 0
+    ;;
+  *"fetch --quiet"*)
+    exit 0
+    ;;
+  *"rev-list --left-right --count origin/master...HEAD"*)
+    echo "${GIT_BEHIND:-0} ${GIT_AHEAD:-0}"
+    exit 0
+    ;;
+  *"rev-parse HEAD"*)
+    echo "${GIT_COMMIT:-abc123}"
+    exit 0
+    ;;
+esac
+exit 0
+EOF
+    chmod +x "${BATS_MOCK_BINDIR}/git"
+}
+
 install_script_stubs() {
     VALIDATE_ENV_SCRIPT="${BATS_TMPDIR}/validate-env"
     HEALTHCHECK_SCRIPT="${BATS_TMPDIR}/healthcheck"
@@ -68,10 +102,13 @@ setup() {
     mkdir -p "${BATS_MOCK_BINDIR}" "${BATS_TMPDIR}/home/.ssh"
     export HOME="${BATS_TMPDIR}/home"
     export DEPLOY_ORDER_LOG="${BATS_TMPDIR}/order.log"
+    export DEPLOY_READINESS_RECEIPT_DIR="${BATS_TMPDIR}/receipts"
     touch "${HOME}/.ssh/id_rsa_203.0.113.10"
     write_env_file
+    install_git_stub
     install_ssh_stub
     install_script_stubs
+    write_readiness_receipt
 }
 
 teardown() {
@@ -80,6 +117,7 @@ teardown() {
 
 run_deploy_production() {
     run env \
+        DEPLOY_READINESS_RECEIPT_DIR="${DEPLOY_READINESS_RECEIPT_DIR}" \
         VALIDATE_ENV_SCRIPT="${VALIDATE_ENV_SCRIPT}" \
         HEALTHCHECK_SCRIPT="${HEALTHCHECK_SCRIPT}" \
         BACKUP_SCRIPT="${BACKUP_SCRIPT}" \
@@ -90,30 +128,79 @@ run_deploy_production() {
         BACKUP_PREFLIGHT_FAIL="${BACKUP_PREFLIGHT_FAIL:-false}" \
         BACKUP_FAIL="${BACKUP_FAIL:-false}" \
         DEPLOY_ORDER_LOG="${DEPLOY_ORDER_LOG}" \
+        GIT_AHEAD="${GIT_AHEAD:-0}" \
+        GIT_BEHIND="${GIT_BEHIND:-0}" \
+        GIT_CHANGES="${GIT_CHANGES:-}" \
+        GIT_COMMIT="${GIT_COMMIT:-abc123}" \
+        GIT_NO_UPSTREAM="${GIT_NO_UPSTREAM:-false}" \
         "$SCRIPT_PATH" -v 9.9.9 -e "$ENV_FILE" "$@"
 }
 
-@test "standard deployment runs health check and mandatory offsite backup before build" {
+write_readiness_receipt() {
+    mkdir -p "${DEPLOY_READINESS_RECEIPT_DIR}"
+    cat >"${DEPLOY_READINESS_RECEIPT_DIR}/9.9.9.receipt" <<EOF
+version=9.9.9
+commit=${GIT_COMMIT:-abc123}
+validation_command=${DEPLOY_VALIDATE_CMD:-validate:ci}
+validation_skipped=false
+rehearsal_skipped=false
+vps_skipped=false
+created_at=2026-06-20T12:00:00Z
+created_epoch=$(date -u +%s)
+EOF
+}
+
+@test "standard deployment requires readiness receipt then runs health and mandatory offsite backup before build" {
     run_deploy_production
 
     assert_equal "$status" 0
-    expected=$'validate\nyarn:validate:ci\nhealth\nssh:test ! -f \'/var/tmp/9.9.9/runtime-state/manifest.txt\'\nbackup:-e '"${ENV_FILE}"$' --preflight-only\nbackup:-e '"${ENV_FILE}"$' --verify-restore\nbuild:-v 9.9.9 -e '"${ENV_FILE}"$' -d y\nssh:cd \'/srv/app\' && ./scripts/deploy.sh -v \'9.9.9\'\nssh:docker ps --format \'table {{.Names}}\\t{{.Status}}\''
+    expected=$'validate\nhealth\nssh:test ! -f \'/var/tmp/9.9.9/runtime-state/manifest.txt\'\nbackup:-e '"${ENV_FILE}"$' --preflight-only\nbackup:-e '"${ENV_FILE}"$' --verify-restore\nbuild:-v 9.9.9 -e '"${ENV_FILE}"$' -d y\nssh:cd \'/srv/app\' && ./scripts/deploy.sh -v \'9.9.9\'\nssh:docker ps --format \'table {{.Names}}\\t{{.Status}}\''
     assert_equal "$(cat "${DEPLOY_ORDER_LOG}")" "${expected}"
+    assert_output --partial "Deploy readiness receipt is fresh"
 }
 
 @test "validation command can be overridden" {
+    export DEPLOY_VALIDATE_CMD=validate
+    write_readiness_receipt
+
     run env \
+        DEPLOY_READINESS_RECEIPT_DIR="${DEPLOY_READINESS_RECEIPT_DIR}" \
         VALIDATE_ENV_SCRIPT="${VALIDATE_ENV_SCRIPT}" \
         HEALTHCHECK_SCRIPT="${HEALTHCHECK_SCRIPT}" \
         BACKUP_SCRIPT="${BACKUP_SCRIPT}" \
         BUILD_SCRIPT="${BUILD_SCRIPT}" \
         YARN_CMD="${YARN_CMD}" \
-        DEPLOY_VALIDATE_CMD="validate" \
+        DEPLOY_VALIDATE_CMD="${DEPLOY_VALIDATE_CMD}" \
         DEPLOY_ORDER_LOG="${DEPLOY_ORDER_LOG}" \
+        GIT_COMMIT="${GIT_COMMIT:-abc123}" \
         "$SCRIPT_PATH" -v 9.9.9 -e "$ENV_FILE"
 
     assert_equal "$status" 0
-    grep -q '^yarn:validate$' "${DEPLOY_ORDER_LOG}"
+    assert_output --partial "readiness receipt"
+}
+
+@test "missing readiness receipt blocks deployment before health and backup" {
+    rm -f "${DEPLOY_READINESS_RECEIPT_DIR}/9.9.9.receipt"
+
+    run_deploy_production
+
+    assert_equal "$status" 1
+    assert_output --partial "Deploy readiness receipt not found"
+    refute grep -q '^health' "${DEPLOY_ORDER_LOG}"
+    refute grep -q '^backup:' "${DEPLOY_ORDER_LOG}"
+    refute grep -q '^build:' "${DEPLOY_ORDER_LOG}"
+}
+
+@test "production deploy blocks when branch is ahead of upstream" {
+    export GIT_AHEAD=2
+
+    run_deploy_production
+
+    assert_equal "$status" 1
+    assert_output --partial "ahead=2"
+    refute grep -q '^health' "${DEPLOY_ORDER_LOG}"
+    refute grep -q '^backup:' "${DEPLOY_ORDER_LOG}"
+    refute grep -q '^build:' "${DEPLOY_ORDER_LOG}"
 }
 
 @test "offsite backup failure blocks deployment before build" {
@@ -157,11 +244,13 @@ run_deploy_production() {
 }
 
 @test "skip-tests skips yarn only, not health or offsite backup" {
+    rm -f "${DEPLOY_READINESS_RECEIPT_DIR}/9.9.9.receipt"
+
     run_deploy_production --skip-tests
 
     assert_equal "$status" 0
     refute grep -q '^yarn:' "${DEPLOY_ORDER_LOG}"
-    assert_output --partial "Skipping validation gate"
+    assert_output --partial "Skipping validation/readiness receipt gate"
     grep -q '^health$' "${DEPLOY_ORDER_LOG}"
     grep -q '^backup:.*--preflight-only' "${DEPLOY_ORDER_LOG}"
     grep -q '^backup:.*--verify-restore' "${DEPLOY_ORDER_LOG}"
@@ -278,6 +367,7 @@ run_deploy_production() {
 @test "deploy attempts non-database recovery on failed startup or verification" {
     grep -q 'attempt_failed_deploy_recovery "docker-compose up failed"' "$BATS_TEST_DIRNAME/../deploy.sh"
     grep -q 'attempt_failed_deploy_recovery "container health timeout"' "$BATS_TEST_DIRNAME/../deploy.sh"
+    grep -q 'attempt_failed_deploy_recovery "internal server healthcheck failed"' "$BATS_TEST_DIRNAME/../deploy.sh"
     grep -q 'attempt_failed_deploy_recovery "public endpoint verification failed"' "$BATS_TEST_DIRNAME/../deploy.sh"
     grep -q 'restore_previous_artifacts' "$BATS_TEST_DIRNAME/../deploy.sh"
     grep -q 'restore_previous_images' "$BATS_TEST_DIRNAME/../deploy.sh"
@@ -294,4 +384,9 @@ run_deploy_production() {
     grep -q 'DB_DUMP_PASSWORD="${DB_PASSWORD:-}"' "$BATS_TEST_DIRNAME/../server.sh"
     grep -q 'PGPASSWORD="${DB_DUMP_PASSWORD}" pg_dump' "$BATS_TEST_DIRNAME/../server.sh"
     refute grep -q "DB_USER=.*sed -n 's/.*" "$BATS_TEST_DIRNAME/../server.sh"
+}
+
+@test "migration risk checks are part of drift gate" {
+    grep -q 'scripts/check-migrations.sh' "$BATS_TEST_DIRNAME/../../package.json"
+    "$BATS_TEST_DIRNAME/../check-migrations.sh" >/dev/null
 }

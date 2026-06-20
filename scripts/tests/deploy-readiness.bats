@@ -40,6 +40,10 @@ case "$*" in
     echo "${GIT_BEHIND:-0} ${GIT_AHEAD:-0}"
     exit 0
     ;;
+  *"rev-parse HEAD"*)
+    echo "${GIT_COMMIT:-abc123}"
+    exit 0
+    ;;
 esac
 exit 0
 EOF
@@ -86,6 +90,7 @@ setup() {
     mkdir -p "${BATS_MOCK_BINDIR}" "${BATS_TMPDIR}/home/.ssh"
     export HOME="${BATS_TMPDIR}/home"
     export READINESS_ORDER_LOG="${BATS_TMPDIR}/order.log"
+    export DEPLOY_READINESS_RECEIPT_DIR="${BATS_TMPDIR}/receipts"
     touch "${HOME}/.ssh/id_rsa_203.0.113.10"
     write_env_file
     install_git_stub
@@ -100,6 +105,7 @@ teardown() {
 run_readiness() {
     run env \
         VALIDATE_ENV_SCRIPT="${VALIDATE_ENV_SCRIPT}" \
+        DEPLOY_READINESS_RECEIPT_DIR="${DEPLOY_READINESS_RECEIPT_DIR}" \
         HEALTHCHECK_SCRIPT="${HEALTHCHECK_SCRIPT}" \
         BACKUP_SCRIPT="${BACKUP_SCRIPT}" \
         REHEARSAL_SCRIPT="${REHEARSAL_SCRIPT}" \
@@ -108,6 +114,7 @@ run_readiness() {
         GIT_AHEAD="${GIT_AHEAD:-0}" \
         GIT_BEHIND="${GIT_BEHIND:-0}" \
         GIT_CHANGES="${GIT_CHANGES:-}" \
+        GIT_COMMIT="${GIT_COMMIT:-abc123}" \
         GIT_NO_UPSTREAM="${GIT_NO_UPSTREAM:-false}" \
         VERSION_EXISTS="${VERSION_EXISTS:-false}" \
         "$SCRIPT_PATH" -v 9.9.9 -e "$ENV_FILE" "$@"
@@ -125,6 +132,11 @@ run_readiness() {
     grep -q "^ssh:test ! -f '/var/tmp/9.9.9/runtime-state/manifest.txt'$" "${READINESS_ORDER_LOG}"
     grep -q '^backup:-e '"${ENV_FILE}"' --preflight-only$' "${READINESS_ORDER_LOG}"
     refute grep -q 'deploy.sh' "${READINESS_ORDER_LOG}"
+    grep -q '^version=9.9.9$' "${DEPLOY_READINESS_RECEIPT_DIR}/9.9.9.receipt"
+    grep -q '^commit=abc123$' "${DEPLOY_READINESS_RECEIPT_DIR}/9.9.9.receipt"
+    grep -q '^validation_skipped=false$' "${DEPLOY_READINESS_RECEIPT_DIR}/9.9.9.receipt"
+    grep -q '^rehearsal_skipped=false$' "${DEPLOY_READINESS_RECEIPT_DIR}/9.9.9.receipt"
+    grep -q '^vps_skipped=false$' "${DEPLOY_READINESS_RECEIPT_DIR}/9.9.9.receipt"
 }
 
 @test "readiness blocks when branch is ahead of upstream" {
@@ -137,6 +149,7 @@ run_readiness() {
     refute grep -q '^yarn:' "${READINESS_ORDER_LOG}"
     refute grep -q '^rehearsal:' "${READINESS_ORDER_LOG}"
     refute grep -q '^health:' "${READINESS_ORDER_LOG}"
+    [ ! -f "${DEPLOY_READINESS_RECEIPT_DIR}/9.9.9.receipt" ]
 }
 
 @test "readiness skip flags avoid expensive local and VPS gates" {
@@ -147,6 +160,9 @@ run_readiness() {
     refute grep -q '^rehearsal:' "${READINESS_ORDER_LOG}"
     refute grep -q '^health:' "${READINESS_ORDER_LOG}"
     refute grep -q '^backup:' "${READINESS_ORDER_LOG}"
+    grep -q '^validation_skipped=true$' "${DEPLOY_READINESS_RECEIPT_DIR}/9.9.9.receipt"
+    grep -q '^rehearsal_skipped=true$' "${DEPLOY_READINESS_RECEIPT_DIR}/9.9.9.receipt"
+    grep -q '^vps_skipped=true$' "${DEPLOY_READINESS_RECEIPT_DIR}/9.9.9.receipt"
 }
 
 @test "readiness blocks reused production version slot" {
