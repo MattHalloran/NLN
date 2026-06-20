@@ -6,7 +6,7 @@
 # 1. Checks if Nginx containers are running
 # 2. Copies current runtime files and a logical database dump to a safe location.
 # 3. Runs git fetch and git pull to get the latest changes.
-# 4. Runs setup.sh
+# 4. Verifies transferred artifacts.
 # 5. Moves build created by build.sh to the correct location.
 # 6. Restarts docker containers
 #
@@ -28,7 +28,6 @@ default_env_apply
 # Read arguments
 VERSION=""
 NGINX_LOCATION="${NGINX_LOCATION:-}"
-SETUP_ARGS=()
 for arg in "$@"; do
     case $arg in
     -v | --version)
@@ -49,8 +48,9 @@ for arg in "$@"; do
         exit 0
         ;;
     *)
-        SETUP_ARGS+=("${arg}")
-        shift
+        error "Unknown option: ${arg}"
+        echo "Usage: $0 [-v VERSION] [-n NGINX_LOCATION] [-h]"
+        exit 1
         ;;
     esac
 done
@@ -122,6 +122,48 @@ TMP_DIR="/var/tmp/${VERSION}"
 STAGING_DIR="${TMP_DIR}/staged-artifacts"
 PREVIOUS_ARTIFACTS_DIR="${TMP_DIR}/previous-artifacts"
 COMMIT_FILE="${TMP_DIR}/deploy-commit.txt"
+DEPLOY_MANIFEST="${TMP_DIR}/deploy-manifest.sha256"
+
+verify_host_prerequisites() {
+    header "Verifying host prerequisites"
+
+    local missing=()
+    for cmd in git docker docker-compose tar sha256sum curl; do
+        if ! command -v "${cmd}" >/dev/null 2>&1; then
+            missing+=("${cmd}")
+        fi
+    done
+
+    if [ ${#missing[@]} -gt 0 ]; then
+        error "Missing required deploy command(s): ${missing[*]}"
+        error "Run setup/provisioning separately before deploying."
+        exit 1
+    fi
+
+    if ! docker info >/dev/null 2>&1; then
+        error "Docker daemon is not reachable. Run setup/provisioning separately before deploying."
+        exit 1
+    fi
+
+    success "Host prerequisites are available"
+}
+
+verify_deploy_manifest() {
+    header "Verifying transferred artifact checksums"
+
+    if [ ! -f "${DEPLOY_MANIFEST}" ]; then
+        error "Deploy checksum manifest not found: ${DEPLOY_MANIFEST}"
+        error "Rebuild this version with build.sh before deploying."
+        exit 1
+    fi
+
+    if ! (cd "${TMP_DIR}" && sha256sum -c "$(basename "${DEPLOY_MANIFEST}")"); then
+        error "Deploy artifact checksum verification failed."
+        exit 1
+    fi
+
+    success "Transferred artifact checksums verified"
+}
 
 verify_repository_state() {
     header "Validating repository state"
@@ -380,20 +422,14 @@ else
 fi
 
 cd "${HERE}/.."
+verify_host_prerequisites
 verify_repository_state
+verify_deploy_manifest
 stage_artifacts
 create_runtime_state_backup
 
 if [ "${DEPLOY_REHEARSAL:-false}" = "true" ]; then
-    warning "Deploy rehearsal mode enabled; skipping setup.sh host setup."
-else
-    # Running setup.sh
-    info "Running setup.sh..."
-    # shellcheck disable=SC1091
-    if ! . "${HERE}/setup.sh" "${SETUP_ARGS[@]}" -p -e y; then
-        error "setup.sh failed"
-        exit 1
-    fi
+    warning "Deploy rehearsal mode enabled; host setup remains disabled."
 fi
 
 # Transfer and load Docker images

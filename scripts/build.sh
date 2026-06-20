@@ -21,8 +21,10 @@ ENV_FILE="${HERE}/../.env-prod"
 VERSION=""
 DEPLOY=""
 TEST="${TEST:-false}"
+BUILD_INCLUDE_BASE_IMAGES="${BUILD_INCLUDE_BASE_IMAGES:-false}"
 TAR_FILES=()
 COMMIT_FILE=""
+MANIFEST_FILE=""
 UI_ENV_FILE=""
 
 cleanup_build_artifacts() {
@@ -31,6 +33,9 @@ cleanup_build_artifacts() {
     fi
     if [ -n "${COMMIT_FILE}" ]; then
         rm -f "${COMMIT_FILE}"
+    fi
+    if [ -n "${MANIFEST_FILE}" ]; then
+        rm -f "${MANIFEST_FILE}"
     fi
     if [ -n "${UI_ENV_FILE}" ]; then
         rm -f "${UI_ENV_FILE}"
@@ -107,6 +112,15 @@ else
     SHOULD_UPDATE_VERSION=true
 fi
 validate_deploy_version "${VERSION}"
+
+if [ "${BUILD_ALLOW_DIRTY_WORKTREE:-false}" != "true" ]; then
+    WORKTREE_CHANGES=$(git -C "${HERE}/.." status --porcelain --untracked-files=no)
+    if [ -n "${WORKTREE_CHANGES}" ]; then
+        error "Tracked worktree changes are present. Commit or stash them before building deploy artifacts."
+        git -C "${HERE}/.." status --short --untracked-files=no
+        exit 1
+    fi
+fi
 
 if [ "${BUILD_SKIP_PACKAGE_VERSION_UPDATE:-false}" = "true" ]; then
     SHOULD_UPDATE_VERSION=false
@@ -252,14 +266,6 @@ if ! docker-compose --env-file "${ENV_FILE}" -f docker-compose-prod.yml build; t
     error "Failed to build Docker images"
     exit 1
 fi
-if ! docker pull postgres:13-alpine; then
-    error "Failed to pull postgres:13-alpine"
-    exit 1
-fi
-if ! docker pull redis:7-alpine; then
-    error "Failed to pull redis:7-alpine"
-    exit 1
-fi
 
 # Save and compress Docker images
 info "Saving Docker images..."
@@ -271,7 +277,19 @@ if ! docker tag nln_server:prod "nln_server:${VERSION}"; then
     error "Failed to tag server Docker image with version ${VERSION}"
     exit 1
 fi
-if ! docker save -o production-docker-images.tar nln_ui:prod "nln_ui:${VERSION}" nln_server:prod "nln_server:${VERSION}" postgres:13-alpine redis:7-alpine; then
+DOCKER_SAVE_IMAGES=(nln_ui:prod "nln_ui:${VERSION}" nln_server:prod "nln_server:${VERSION}")
+if [ "${BUILD_INCLUDE_BASE_IMAGES}" = "true" ]; then
+    if ! docker pull postgres:13-alpine; then
+        error "Failed to pull postgres:13-alpine"
+        exit 1
+    fi
+    if ! docker pull redis:7-alpine; then
+        error "Failed to pull redis:7-alpine"
+        exit 1
+    fi
+    DOCKER_SAVE_IMAGES+=(postgres:13-alpine redis:7-alpine)
+fi
+if ! docker save -o production-docker-images.tar "${DOCKER_SAVE_IMAGES[@]}"; then
     error "Failed to save Docker images"
     exit 1
 fi
@@ -281,6 +299,17 @@ if ! gzip -f production-docker-images.tar; then
     exit 1
 fi
 TAR_FILES+=("production-docker-images.tar.gz")
+
+MANIFEST_FILE="${HERE}/../deploy-manifest.sha256"
+(
+    cd "${HERE}/.."
+    sha256sum "$(basename "${COMMIT_FILE}")" \
+        "packages.ui.dist.tar.gz" \
+        "packages.server.dist.tar.gz" \
+        "packages.shared.dist.tar.gz" \
+        "production-docker-images.tar.gz" >"${MANIFEST_FILE}"
+)
+TAR_FILES+=("${MANIFEST_FILE}")
 
 # Copy build to VPS
 if [ -z "$DEPLOY" ]; then
@@ -296,8 +325,12 @@ if [ "${DEPLOY}" = "y" ] || [ "${DEPLOY}" = "Y" ] || [ "${DEPLOY}" = "yes" ] || 
         prompt "Going to copy build and .env-prod to ${BUILD_DIR}. Press any key to continue..."
         read -n1 -r -s
     fi
-    if ! rsync -ri --info=progress2 -e "ssh -i ~/.ssh/id_rsa_${SITE_IP}" "${TAR_FILES[@]}" "${ENV_FILE}" "root@${BUILD_DIR}"; then
+    if ! rsync -ri --info=progress2 -e "ssh -i ~/.ssh/id_rsa_${SITE_IP}" "${TAR_FILES[@]}" "root@${BUILD_DIR}"; then
         error "Failed to copy files to ${BUILD_DIR}"
+        exit 1
+    fi
+    if ! rsync -ri --info=progress2 -e "ssh -i ~/.ssh/id_rsa_${SITE_IP}" "${ENV_FILE}" "root@${BUILD_DIR}.env-prod"; then
+        error "Failed to copy ${ENV_FILE} to ${BUILD_DIR}.env-prod"
         exit 1
     fi
     success "Files copied to ${BUILD_DIR}! To finish deployment, run deploy.sh on the VPS."

@@ -204,6 +204,12 @@ run_deploy_production() {
     grep -q 'Failed to build Docker images' "$BATS_TEST_DIRNAME/../build.sh"
 }
 
+@test "build refuses dirty tracked worktree by default" {
+    grep -q 'BUILD_ALLOW_DIRTY_WORKTREE' "$BATS_TEST_DIRNAME/../build.sh"
+    grep -q 'status --porcelain --untracked-files=no' "$BATS_TEST_DIRNAME/../build.sh"
+    grep -q 'Tracked worktree changes are present' "$BATS_TEST_DIRNAME/../build.sh"
+}
+
 @test "production wrapper builds without mutating package versions" {
     grep -q 'BUILD_SKIP_PACKAGE_VERSION_UPDATE=true DEPLOY_CONFIRMED=true' "$SCRIPT_PATH"
 }
@@ -219,6 +225,29 @@ run_deploy_production() {
     grep -q 'STAGING_DIR="${TMP_DIR}/staged-artifacts"' "$BATS_TEST_DIRNAME/../deploy.sh"
     grep -q 'stage_artifacts' "$BATS_TEST_DIRNAME/../deploy.sh"
     grep -q 'swap_staged_artifacts' "$BATS_TEST_DIRNAME/../deploy.sh"
+}
+
+@test "deploy verifies artifact checksum manifest before staging" {
+    grep -q 'DEPLOY_MANIFEST="${TMP_DIR}/deploy-manifest.sha256"' "$BATS_TEST_DIRNAME/../deploy.sh"
+    grep -q 'sha256sum -c' "$BATS_TEST_DIRNAME/../deploy.sh"
+    grep -q 'verify_deploy_manifest' "$BATS_TEST_DIRNAME/../deploy.sh"
+}
+
+@test "build transfers env file explicitly as .env-prod and sends checksum manifest" {
+    grep -q 'deploy-manifest.sha256' "$BATS_TEST_DIRNAME/../build.sh"
+    grep -q '"root@${BUILD_DIR}.env-prod"' "$BATS_TEST_DIRNAME/../build.sh"
+}
+
+@test "production deploy no longer runs setup.sh host mutation" {
+    refute grep -q 'setup.sh' "$BATS_TEST_DIRNAME/../deploy.sh"
+    grep -q 'verify_host_prerequisites' "$BATS_TEST_DIRNAME/../deploy.sh"
+    grep -q 'Run setup/provisioning separately before deploying' "$BATS_TEST_DIRNAME/../deploy.sh"
+}
+
+@test "build excludes base images by default with opt-in fallback" {
+    grep -q 'BUILD_INCLUDE_BASE_IMAGES' "$BATS_TEST_DIRNAME/../build.sh"
+    grep -q 'DOCKER_SAVE_IMAGES=(nln_ui:prod "nln_ui:${VERSION}" nln_server:prod "nln_server:${VERSION}")' "$BATS_TEST_DIRNAME/../build.sh"
+    grep -q 'DOCKER_SAVE_IMAGES+=(postgres:13-alpine redis:7-alpine)' "$BATS_TEST_DIRNAME/../build.sh"
 }
 
 @test "deploy verifies public UI and API endpoints" {

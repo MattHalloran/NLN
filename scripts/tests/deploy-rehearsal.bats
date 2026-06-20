@@ -61,10 +61,10 @@ teardown() {
     assert_output --partial "UI_URL must be a local loopback URL"
 }
 
-@test "deploy script has rehearsal mode for proxy and setup skipping" {
+@test "deploy script has rehearsal mode while host setup remains disabled" {
     grep -q 'DEPLOY_REHEARSAL' "$BATS_TEST_DIRNAME/../deploy.sh"
     grep -q 'skipping proxy bootstrap checks' "$BATS_TEST_DIRNAME/../deploy.sh"
-    grep -q 'skipping setup.sh host setup' "$BATS_TEST_DIRNAME/../deploy.sh"
+    grep -q 'host setup remains disabled' "$BATS_TEST_DIRNAME/../deploy.sh"
 }
 
 @test "deploy script validates rehearsal commit without git pull" {
