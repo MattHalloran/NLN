@@ -178,6 +178,10 @@ run_deploy_production() {
     refute grep -q '"packages/ui/node_modules"' "$BATS_TEST_DIRNAME/../deploy.sh"
 }
 
+@test "build generates Prisma client before compiling server" {
+    grep -q 'yarn prisma generate --schema=src/db/schema.prisma' "$BATS_TEST_DIRNAME/../build.sh"
+}
+
 @test "production wrapper builds without mutating package versions" {
     grep -q 'BUILD_SKIP_PACKAGE_VERSION_UPDATE=true DEPLOY_CONFIRMED=true' "$SCRIPT_PATH"
 }

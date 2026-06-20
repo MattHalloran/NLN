@@ -115,6 +115,15 @@ cd ${HERE}/../packages/server
 # Build shared
 "${HERE}/shared.sh"
 
+# Generate Prisma client types from the checked-in schema before TypeScript
+# compilation. This does not run migrations or connect to production.
+info "Generating Prisma client types..."
+yarn prisma generate --schema=src/db/schema.prisma
+if [ $? -ne 0 ]; then
+    error "Failed to generate Prisma client types"
+    exit 1
+fi
+
 # Build server
 info "Building server..."
 yarn build
