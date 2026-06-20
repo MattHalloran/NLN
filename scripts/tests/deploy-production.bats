@@ -211,3 +211,10 @@ run_deploy_production() {
     grep -q 'curl -fsS "${ui_url}"' "$BATS_TEST_DIRNAME/../deploy.sh"
     grep -q 'curl -fsS "${server_health_url}"' "$BATS_TEST_DIRNAME/../deploy.sh"
 }
+
+@test "server migration backup uses explicit database env vars for pg_dump credentials" {
+    grep -q 'DB_DUMP_USER="${DB_USER:-}"' "$BATS_TEST_DIRNAME/../server.sh"
+    grep -q 'DB_DUMP_PASSWORD="${DB_PASSWORD:-}"' "$BATS_TEST_DIRNAME/../server.sh"
+    grep -q 'PGPASSWORD="${DB_DUMP_PASSWORD}" pg_dump' "$BATS_TEST_DIRNAME/../server.sh"
+    refute grep -q "DB_USER=.*sed -n 's/.*" "$BATS_TEST_DIRNAME/../server.sh"
+}

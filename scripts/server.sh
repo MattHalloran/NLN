@@ -37,16 +37,34 @@ else
         # First, check if we can connect to the database
         if echo "SELECT 1;" | yarn prisma db execute --stdin --schema=${PRISMA_SCHEMA_FILE} >/dev/null 2>&1; then
             info "Database is accessible, creating backup..."
-            # Use pg_dump through the db container
-            # Extract db connection details
-            DB_HOST=$(echo $DB_URL | sed -n 's/.*@\(.*\):.*/\1/p')
-            DB_PORT=$(echo $DB_URL | sed -n 's/.*:\([0-9]*\)\/.*/\1/p')
-            DB_NAME=$(echo $DB_URL | sed -n 's/.*\/\(.*\)/\1/p')
-            DB_USER=$(echo $DB_URL | sed -n 's/.*:\/\/\(.*\):.*/\1/p')
-            DB_PASS=$(echo $DB_URL | sed -n 's/.*:\/\/.*:\(.*\)@.*/\1/p')
+            # Prefer explicit env vars from docker-compose; parse only host/port
+            # from DB_CONN/DB_URL to avoid corrupting credentials that contain separators.
+            DB_HOST="${DB_HOST:-}"
+            DB_PORT="${DB_PORT:-}"
+            DB_DUMP_NAME="${DB_NAME:-}"
+            DB_DUMP_USER="${DB_USER:-}"
+            DB_DUMP_PASSWORD="${DB_PASSWORD:-}"
+
+            if [ -n "${DB_CONN:-}" ]; then
+                DB_HOST="${DB_HOST:-${DB_CONN%:*}}"
+                DB_PORT="${DB_PORT:-${DB_CONN##*:}}"
+            fi
+
+            if [ -z "${DB_HOST}" ] || [ -z "${DB_PORT}" ] || [ -z "${DB_DUMP_NAME}" ]; then
+                DB_URL_WITHOUT_PROTOCOL="${DB_URL#*://}"
+                DB_AUTHORITY="${DB_URL_WITHOUT_PROTOCOL%@*}"
+                DB_HOST_PORT_AND_NAME="${DB_URL_WITHOUT_PROTOCOL#*@}"
+                DB_HOST_PORT="${DB_HOST_PORT_AND_NAME%%/*}"
+                DB_NAME_FROM_URL="${DB_HOST_PORT_AND_NAME#*/}"
+                DB_HOST="${DB_HOST:-${DB_HOST_PORT%:*}}"
+                DB_PORT="${DB_PORT:-${DB_HOST_PORT##*:}}"
+                DB_DUMP_NAME="${DB_DUMP_NAME:-${DB_NAME_FROM_URL}}"
+                DB_DUMP_USER="${DB_DUMP_USER:-${DB_AUTHORITY%%:*}}"
+                DB_DUMP_PASSWORD="${DB_DUMP_PASSWORD:-${DB_AUTHORITY#*:}}"
+            fi
 
             # Create backup using pg_dump
-            PGPASSWORD="${DB_PASS}" pg_dump -h "${DB_HOST}" -p "${DB_PORT}" -U "${DB_USER}" -d "${DB_NAME}" -F p -f "${BACKUP_FILE}" 2>/dev/null
+            PGPASSWORD="${DB_DUMP_PASSWORD}" pg_dump -h "${DB_HOST}" -p "${DB_PORT}" -U "${DB_DUMP_USER}" -d "${DB_DUMP_NAME}" -F p -f "${BACKUP_FILE}" 2>/dev/null
 
             if [ $? -eq 0 ]; then
                 success "✓ Pre-migration backup created successfully"
