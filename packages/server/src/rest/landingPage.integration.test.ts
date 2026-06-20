@@ -4,7 +4,7 @@
  * Tests landing page CRUD endpoints with consolidated landing-page-content.json file system
  * These tests verify admin functionality for managing hero banners, seasonal content, and contact info
  */
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
+import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from "vitest";
 import { StartedPostgreSqlContainer } from "@testcontainers/postgresql";
 import { PrismaClient } from "@prisma/client";
 import { Express } from "express";
@@ -29,6 +29,21 @@ import {
     stopPostgresTestDatabase,
 } from "../__tests__/integrationUtils.js";
 import { invalidateCache } from "./landingPage/landingPageCache.js";
+import type { LandingPageContent } from "../types/landingPage.js";
+
+const landingPageCacheMock = vi.hoisted((): { content: LandingPageContent | null } => ({
+    content: null,
+}));
+
+vi.mock("./landingPage/landingPageCache.js", () => ({
+    getCachedContent: async () => landingPageCacheMock.content,
+    setCachedContent: async (content: LandingPageContent) => {
+        landingPageCacheMock.content = content;
+    },
+    invalidateCache: async () => {
+        landingPageCacheMock.content = null;
+    },
+}));
 
 describe("Landing Page API Integration Tests", () => {
     let container: StartedPostgreSqlContainer;

@@ -58,6 +58,7 @@ if [ -z "${VERSION}" ]; then
     usage
     exit 1
 fi
+validate_deploy_version "${VERSION}"
 
 if [ -f "${ENV_FILE}" ]; then
     # shellcheck disable=SC1090
@@ -106,7 +107,7 @@ header "Verifying offsite backup preflight"
 "${BACKUP_SCRIPT}" -e "${ENV_FILE}" --preflight-only
 
 header "Creating mandatory offsite backup"
-"${BACKUP_SCRIPT}" -e "${ENV_FILE}"
+"${BACKUP_SCRIPT}" -e "${ENV_FILE}" --verify-restore
 
 header "Building and transferring artifacts"
 BUILD_SKIP_PACKAGE_VERSION_UPDATE=true DEPLOY_CONFIRMED=true "${BUILD_SCRIPT}" -v "${VERSION}" -e "${ENV_FILE}" -d y

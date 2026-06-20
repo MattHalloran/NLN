@@ -4,6 +4,7 @@ import { E2E_TIMEOUTS, E2E_URLS } from "@local/shared";
 import * as dotenv from "dotenv";
 
 dotenv.config();
+process.env.E2E_MANAGE_SERVICES ??= "true";
 
 type E2EConfigOptions = {
     testMatch: PlaywrightTestConfig["testMatch"];
@@ -35,6 +36,7 @@ export const createE2EConfig = ({ testMatch, reportName }: E2EConfigOptions) =>
             ["list"],
             ["json", { outputFile: `test-results/${reportName}.json` }],
         ],
+        globalTeardown: "./e2e/teardown/e2e-services.teardown.ts",
         use: {
             baseURL: E2E_URLS.ui,
             trace: "on-first-retry",

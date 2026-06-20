@@ -58,6 +58,33 @@ EOF
     chmod +x "${BATS_MOCK_BINDIR}/ssh"
 }
 
+install_docker_stub() {
+    cat >"${BATS_MOCK_BINDIR}/docker" <<'EOF'
+#!/usr/bin/env bash
+echo "$*" >>"${BATS_TMPDIR}/docker.log"
+if [ "$1" = "info" ]; then
+  exit 0
+fi
+if [ "$1" = "rm" ]; then
+  exit 0
+fi
+if [ "$1" = "run" ]; then
+  exit 0
+fi
+if [ "$1" = "exec" ]; then
+  if [[ "$*" == *"pg_isready"* ]]; then
+    exit 0
+  fi
+  if [[ "$*" == *"psql"* ]]; then
+    cat >/dev/null
+    exit 0
+  fi
+fi
+exit 0
+EOF
+    chmod +x "${BATS_MOCK_BINDIR}/docker"
+}
+
 setup() {
     mkdir -p "${BATS_MOCK_BINDIR}"
     mkdir -p "${BATS_TMPDIR}/home/.ssh"
@@ -73,7 +100,11 @@ setup() {
     echo "asset" >"${FIXTURE_DIR}/assets/README"
     echo "redis" >"${FIXTURE_DIR}/data/redis/README"
     echo "migration" >"${FIXTURE_DIR}/data/migration-backups/README"
-    echo "prod-env" >"${FIXTURE_DIR}/.env-prod"
+    cat >"${FIXTURE_DIR}/.env-prod" <<EOF
+DB_NAME=nln_backup_test
+DB_USER=nln_backup_test
+DB_PASSWORD=nln_backup_password
+EOF
     export FIXTURE_ARCHIVE="${BATS_TMPDIR}/fixture.tar.gz"
     tar -czf "${FIXTURE_ARCHIVE}" -C "${FIXTURE_DIR}" .
 }
@@ -81,6 +112,7 @@ setup() {
 teardown() {
     rm -rf "${BATS_TMPDIR}/home" "${BATS_TMPDIR}/fixture" "${BATS_TMPDIR}/fixture.tar.gz" "${BATS_TMPDIR}/backups" "${BATS_TMPDIR}/ssh-commands.log"
     rm -f "${BATS_MOCK_BINDIR}/ssh"
+    rm -f "${BATS_MOCK_BINDIR}/docker" "${BATS_TMPDIR}/docker.log"
 }
 
 @test "backup refuses to provision SSH keys by default" {
@@ -130,4 +162,17 @@ teardown() {
     grep -q "database_dump=data/postgres.sql" "$manifest"
     grep -q -- "- data/postgres.sql" "$manifest"
     tar -tzf "$archive" | grep -q 'data/postgres.sql'
+}
+
+@test "runtime-state backup can verify logical dump restore with disposable local Postgres" {
+    touch "${HOME}/.ssh/id_rsa_203.0.113.10"
+    install_ssh_stub
+    install_docker_stub
+
+    run "$SCRIPT_PATH" -e "$ENV_FILE" --output-dir "${BATS_TMPDIR}/backups" --verify-restore
+
+    assert_equal "$status" 0
+    assert_output --partial "Logical Postgres dump restore verification passed"
+    grep -q '^run -d --name nln_backup_restore_' "${BATS_TMPDIR}/docker.log"
+    grep -q 'psql -v ON_ERROR_STOP=1' "${BATS_TMPDIR}/docker.log"
 }

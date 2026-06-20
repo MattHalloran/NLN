@@ -5,6 +5,7 @@
 set -euo pipefail
 
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+# shellcheck disable=SC1091
 . "${HERE}/utils.sh"
 
 VERSION=""

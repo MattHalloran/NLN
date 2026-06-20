@@ -10,11 +10,36 @@
 # -d: Deploy to VPS (y/N)
 # -e: .env file location (e.g. "/root/my-folder/.env"). Defaults to .env-prod
 # -h: Show this help message
+set -euo pipefail
+
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+# shellcheck disable=SC1091
 . "${HERE}/utils.sh"
 
 # Read arguments
 ENV_FILE="${HERE}/../.env-prod"
+VERSION=""
+DEPLOY=""
+TEST="${TEST:-false}"
+TAR_FILES=()
+COMMIT_FILE=""
+UI_ENV_FILE=""
+
+cleanup_build_artifacts() {
+    if [ ${#TAR_FILES[@]} -gt 0 ]; then
+        rm -f "${TAR_FILES[@]}"
+    fi
+    if [ -n "${COMMIT_FILE}" ]; then
+        rm -f "${COMMIT_FILE}"
+    fi
+    if [ -n "${UI_ENV_FILE}" ]; then
+        rm -f "${UI_ENV_FILE}"
+    fi
+    rm -f "${HERE}/../production-docker-images.tar" "${HERE}/../production-docker-images.tar.gz"
+}
+
+trap cleanup_build_artifacts EXIT
+
 while getopts ":v:d:he:" opt; do
     case $opt in
     v)
@@ -47,6 +72,7 @@ done
 
 # Load variables from ENV_FILE (defaults to .env-prod, can be overridden with -e flag)
 if [ -f "${ENV_FILE}" ]; then
+    # shellcheck disable=SC1090
     . "${ENV_FILE}"
 else
     error "Could not find environment file: ${ENV_FILE}. Exiting..."
@@ -55,15 +81,14 @@ fi
 
 # Validate environment configuration
 header "Validating environment configuration"
-"${HERE}/validate-env.sh" "${ENV_FILE}"
-if [ $? -ne 0 ]; then
+if ! "${HERE}/validate-env.sh" "${ENV_FILE}"; then
     error "Environment validation failed. Please fix the errors and try again."
     exit 1
 fi
 success "Environment configuration is valid"
 
 # Extract the current version number from the package.json file
-CURRENT_VERSION=$(cat ${HERE}/../packages/ui/package.json | grep version | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[[:space:]]')
+CURRENT_VERSION=$(sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "${HERE}/../packages/ui/package.json" | head -1)
 # Ask for version number, if not supplied in arguments
 SHOULD_UPDATE_VERSION=false
 if [ -z "$VERSION" ]; then
@@ -71,7 +96,7 @@ if [ -z "$VERSION" ]; then
     warning "WARNING: Keeping the same version number will overwrite the previous build."
     read -r ENTERED_VERSION
     # If version entered, set version
-    if [ ! -z "$ENTERED_VERSION" ]; then
+    if [ -n "$ENTERED_VERSION" ]; then
         VERSION=$ENTERED_VERSION
         SHOULD_UPDATE_VERSION=true
     else
@@ -81,6 +106,7 @@ if [ -z "$VERSION" ]; then
 else
     SHOULD_UPDATE_VERSION=true
 fi
+validate_deploy_version "${VERSION}"
 
 if [ "${BUILD_SKIP_PACKAGE_VERSION_UPDATE:-false}" = "true" ]; then
     SHOULD_UPDATE_VERSION=false
@@ -89,45 +115,46 @@ fi
 
 # Update package.json files for every package, if necessary
 if [ "${SHOULD_UPDATE_VERSION}" = true ]; then
-    cd ${HERE}/../packages
+    cd "${HERE}/../packages"
     # Find every directory containing a package.json file, up to 3 levels deep
-    for dir in $(find . -maxdepth 3 -name package.json -printf '%h '); do
+    while IFS= read -r dir; do
         info "Updating package.json for ${dir}"
         # Go to directory
-        cd ${dir}
+        cd "${dir}"
         # Patch with yarn
-        yarn version patch --new-version ${VERSION} --no-git-tag-version
+        yarn version patch --new-version "${VERSION}" --no-git-tag-version
         # Go back to packages directory
-        cd ${HERE}/../packages
-    done
+        cd "${HERE}/../packages"
+    done < <(find . -maxdepth 3 -name package.json -printf '%h\n')
 fi
 
 # Run bash script tests
-if is_yes "$TEST"; then
+if is_yes "${TEST}"; then
     run_step "Running bash script tests (bats)" "${HERE}/tests/__runTests.sh"
 else
     warning "Skipping bash script tests..."
 fi
 
 # Navigate to server directory
-cd ${HERE}/../packages/server
+cd "${HERE}/../packages/server"
 
 # Build shared
-"${HERE}/shared.sh"
+if ! "${HERE}/shared.sh"; then
+    error "Failed to build shared package"
+    exit 1
+fi
 
 # Generate Prisma client types from the checked-in schema before TypeScript
 # compilation. This does not run migrations or connect to production.
 info "Generating Prisma client types..."
-yarn prisma generate --schema=src/db/schema.prisma
-if [ $? -ne 0 ]; then
+if ! yarn prisma generate --schema=src/db/schema.prisma; then
     error "Failed to generate Prisma client types"
     exit 1
 fi
 
 # Build server
 info "Building server..."
-yarn build
-if [ $? -ne 0 ]; then
+if ! yarn build; then
     error "Failed to build server"
     exit 1
 fi
@@ -141,36 +168,38 @@ if [ -d src/db/migrations ]; then
 fi
 
 # Navigate to UI directory
-cd ${HERE}/../packages/ui
+cd "${HERE}/../packages/ui"
 
 # Create local .env file
-touch .env
+UI_ENV_FILE="${HERE}/../packages/ui/.env"
 # Set environment variables
-echo "VITE_SERVER_LOCATION=${SERVER_LOCATION}" >>.env
-echo "VITE_PORT_SERVER=${PORT_SERVER}" >>.env
-echo "VITE_SERVER_URL=${SERVER_URL}" >>.env
-echo "VITE_SITE_IP=${SITE_IP}" >>.env
-# Set trap to remove .env file on exit
-trap "rm .env" EXIT
+{
+    echo "VITE_SERVER_LOCATION=${SERVER_LOCATION}"
+    echo "VITE_PORT_SERVER=${PORT_SERVER}"
+    echo "VITE_SERVER_URL=${SERVER_URL}"
+    echo "VITE_SITE_IP=${SITE_IP}"
+} >"${UI_ENV_FILE}"
 
 # Build React app
 info "Building React app..."
-yarn build
-if [ $? -ne 0 ]; then
+if ! yarn build; then
     error "Failed to build React app"
     exit 1
 fi
 
 # Normalize UI_URL to ensure it ends with exactly one "/"
-export UI_URL="${UI_URL%/}/"
-DOMAIN=$(echo "${UI_URL%/}" | sed -E 's|https?://([^/]+)|\1|')
-echo "Got domain ${DOMAIN} from UI_URL ${UI_URL}"
+if [ -n "${UI_URL:-}" ]; then
+    export UI_URL="${UI_URL%/}/"
+    DOMAIN=$(echo "${UI_URL%/}" | sed -E 's|https?://([^/]+)|\1|')
+    echo "Got domain ${DOMAIN} from UI_URL ${UI_URL}"
+else
+    DOMAIN=""
+fi
 
 # Generate sitemap.xml
 # Explicitly pass UI_URL to ensure it's available in the tsx environment
-if [ -n "$UI_URL" ]; then
-    UI_URL="$UI_URL" npx tsx ./src/sitemap.ts
-    if [ $? -ne 0 ]; then
+if [ -n "${UI_URL:-}" ]; then
+    if ! UI_URL="$UI_URL" npx tsx ./src/sitemap.ts; then
         warning "Failed to generate sitemap.xml - continuing anyway"
         # This is not a critical error, so we don't exit
     fi
@@ -199,28 +228,12 @@ info "Compressing build..."
 DIRECTORIES=("packages/ui/dist"
     "packages/server/dist"
     "packages/shared/dist")
-# Declare an array to store the paths of the tar files
-TAR_FILES=()
-COMMIT_FILE=""
-
-cleanup_build_artifacts() {
-    if [ ${#TAR_FILES[@]} -gt 0 ]; then
-        rm -f "${TAR_FILES[@]}"
-    fi
-    if [ -n "${COMMIT_FILE}" ]; then
-        rm -f "${COMMIT_FILE}"
-    fi
-    rm -f production-docker-images.tar production-docker-images.tar.gz
-}
-
-trap cleanup_build_artifacts EXIT
 
 for dir in "${DIRECTORIES[@]}"; do
     # Replace slashes with periods for the tar filenames
     TAR_NAME=$(echo "${dir}" | tr '/' '.')
     TAR_PATH="${HERE}/../${TAR_NAME}.tar.gz"
-    tar -czf "${TAR_PATH}" -C "${HERE}/../${dir}" .
-    if [ $? -ne 0 ]; then
+    if ! tar -czf "${TAR_PATH}" -C "${HERE}/../${dir}" .; then
         error "Failed to compress ${dir}"
         exit 1
     fi
@@ -239,8 +252,14 @@ if ! docker-compose --env-file "${ENV_FILE}" -f docker-compose-prod.yml build; t
     error "Failed to build Docker images"
     exit 1
 fi
-docker pull postgres:13-alpine
-docker pull redis:7-alpine
+if ! docker pull postgres:13-alpine; then
+    error "Failed to pull postgres:13-alpine"
+    exit 1
+fi
+if ! docker pull redis:7-alpine; then
+    error "Failed to pull redis:7-alpine"
+    exit 1
+fi
 
 # Save and compress Docker images
 info "Saving Docker images..."
@@ -287,8 +306,7 @@ else
     info "Copying build locally to ${BUILD_DIR}."
     # Make sure to create missing directories
     mkdir -p "${BUILD_DIR}"
-    cp -p "${TAR_FILES[@]}" "${BUILD_DIR}"
-    if [ $? -ne 0 ]; then
+    if ! cp -p "${TAR_FILES[@]}" "${BUILD_DIR}"; then
         error "Failed to copy tar.gz files to ${BUILD_DIR}"
         exit 1
     fi

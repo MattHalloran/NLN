@@ -14,13 +14,20 @@
 # -v: Version number to use (e.g. "1.0.0")
 # -n: Nginx proxy location (e.g. "/root/NginxSSLReverseProxy")
 # -h: Show this help message
+set -euo pipefail
+
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+# shellcheck disable=SC1091
 . "${HERE}/utils.sh"
+# shellcheck source=scripts/runtime-state.sh
 . "${HERE}/runtime-state.sh"
+# shellcheck source=scripts/env-defaults.sh
 . "${HERE}/env-defaults.sh"
 default_env_apply
 
 # Read arguments
+VERSION=""
+NGINX_LOCATION="${NGINX_LOCATION:-}"
 SETUP_ARGS=()
 for arg in "$@"; do
     case $arg in
@@ -49,19 +56,20 @@ for arg in "$@"; do
 done
 
 # Extract the current version number from the package.json file
-CURRENT_VERSION=$(cat ${HERE}/../packages/ui/package.json | grep version | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[[:space:]]')
+CURRENT_VERSION=$(sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "${HERE}/../packages/ui/package.json" | head -1)
 # Ask for version number, if not supplied in arguments
 if [ -z "$VERSION" ]; then
     prompt "What version number do you want to deploy? (current is ${CURRENT_VERSION}). Leave blank if keeping the same version number."
     warning "WARNING: Keeping the same version number will overwrite the previous build AND database backup."
     read -r ENTERED_VERSION
     # If version entered, set version
-    if [ ! -z "$ENTERED_VERSION" ]; then
+    if [ -n "$ENTERED_VERSION" ]; then
         VERSION=$ENTERED_VERSION
     else
         VERSION=$CURRENT_VERSION
     fi
 fi
+validate_deploy_version "${VERSION}"
 
 if [ "${DEPLOY_REHEARSAL:-false}" = "true" ]; then
     warning "Deploy rehearsal mode enabled; skipping proxy bootstrap checks."
@@ -96,7 +104,7 @@ if [ "${DEPLOY_REHEARSAL:-false}" != "true" ] && { [ ! "$(docker ps -q -f name=n
     if [ ! -d "${NGINX_LOCATION}" ]; then
         info "NginxSSLReverseProxy not installed. Cloning and setting up..."
         git clone --depth 1 --branch main https://github.com/MattHalloran/NginxSSLReverseProxy.git "${NGINX_LOCATION}"
-        chmod +x "${NGINX_LOCATION}/scripts/*"
+        chmod +x "${NGINX_LOCATION}"/scripts/*
         "${NGINX_LOCATION}/scripts/fullSetup.sh"
     fi
 
@@ -356,8 +364,7 @@ swap_staged_artifacts() {
 # Validate environment configuration from the temporary directory
 if [ -f "${TMP_DIR}/.env-prod" ]; then
     header "Validating environment configuration"
-    "${HERE}/validate-env.sh" "${TMP_DIR}/.env-prod"
-    if [ $? -ne 0 ]; then
+    if ! "${HERE}/validate-env.sh" "${TMP_DIR}/.env-prod"; then
         error "Environment validation failed. Deployment aborted."
         exit 1
     fi
@@ -382,8 +389,8 @@ if [ "${DEPLOY_REHEARSAL:-false}" = "true" ]; then
 else
     # Running setup.sh
     info "Running setup.sh..."
-    . "${HERE}/setup.sh" "${SETUP_ARGS[@]}" -p -e y
-    if [ $? -ne 0 ]; then
+    # shellcheck disable=SC1091
+    if ! . "${HERE}/setup.sh" "${SETUP_ARGS[@]}" -p -e y; then
         error "setup.sh failed"
         exit 1
     fi
@@ -392,8 +399,7 @@ fi
 # Transfer and load Docker images
 if [ -f "${TMP_DIR}/production-docker-images.tar.gz" ]; then
     info "Loading Docker images from ${TMP_DIR}/production-docker-images.tar.gz"
-    docker load -i "${TMP_DIR}/production-docker-images.tar.gz"
-    if [ $? -ne 0 ]; then
+    if ! docker load -i "${TMP_DIR}/production-docker-images.tar.gz"; then
         error "Failed to load Docker images from ${TMP_DIR}/production-docker-images.tar.gz"
         exit 1
     fi
@@ -407,13 +413,20 @@ info "Stopping docker containers..."
 if ! runtime_state_require_backup_before_container_change "${TMP_DIR}/runtime-state"; then
     exit 1
 fi
-docker-compose --env-file "${TMP_DIR}/.env-prod" -f "${HERE}/../docker-compose-prod.yml" down
+if ! docker-compose --env-file "${TMP_DIR}/.env-prod" -f "${HERE}/../docker-compose-prod.yml" down; then
+    error "Failed to stop docker containers"
+    exit 1
+fi
 
 swap_staged_artifacts
 
 # Restart docker containers.
 info "Restarting docker containers..."
-docker-compose --env-file "${TMP_DIR}/.env-prod" -f "${HERE}/../docker-compose-prod.yml" up -d
+if ! docker-compose --env-file "${TMP_DIR}/.env-prod" -f "${HERE}/../docker-compose-prod.yml" up -d; then
+    error "Failed to restart docker containers"
+    print_deploy_diagnostics
+    exit 1
+fi
 
 # Wait for containers to become healthy
 info "Waiting for containers to become healthy..."
@@ -437,13 +450,13 @@ while [ $ELAPSED -lt $TIMEOUT ]; do
         fi
 
         # Get container health status
-        HEALTH=$(docker inspect --format='{{.State.Health.Status}}' ${container} 2>/dev/null || echo "no-healthcheck")
+        HEALTH=$(docker inspect --format='{{.State.Health.Status}}' "${container}" 2>/dev/null || echo "no-healthcheck")
 
         if [ "$HEALTH" = "healthy" ]; then
             CONTAINER_STATUS="${CONTAINER_STATUS}\n  ${container}: ✓ healthy"
         elif [ "$HEALTH" = "no-healthcheck" ]; then
             # For containers without health checks (like redis in some configs), check if running
-            STATE=$(docker inspect --format='{{.State.Status}}' ${container})
+            STATE=$(docker inspect --format='{{.State.Status}}' "${container}")
             if [ "$STATE" = "running" ]; then
                 CONTAINER_STATUS="${CONTAINER_STATUS}\n  ${container}: ✓ running (no health check)"
             else
@@ -488,7 +501,7 @@ fi
 # Additional verification: Check if server is responding
 info "Verifying server is responding..."
 SERVER_HEALTHY=false
-for i in {1..10}; do
+for _ in {1..10}; do
     if docker exec nln_server wget -q --spider "http://localhost:${PORT_SERVER}/healthcheck" 2>/dev/null; then
         SERVER_HEALTHY=true
         break

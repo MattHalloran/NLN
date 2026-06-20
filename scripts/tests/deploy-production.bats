@@ -97,7 +97,7 @@ run_deploy_production() {
     run_deploy_production
 
     assert_equal "$status" 0
-    expected=$'validate\nyarn:validate:ci\nhealth\nssh:test ! -f \'/var/tmp/9.9.9/runtime-state/manifest.txt\'\nbackup:-e '"${ENV_FILE}"$' --preflight-only\nbackup:-e '"${ENV_FILE}"$'\nbuild:-v 9.9.9 -e '"${ENV_FILE}"$' -d y\nssh:cd \'/srv/app\' && ./scripts/deploy.sh -v \'9.9.9\'\nssh:docker ps --format \'table {{.Names}}\\t{{.Status}}\''
+    expected=$'validate\nyarn:validate:ci\nhealth\nssh:test ! -f \'/var/tmp/9.9.9/runtime-state/manifest.txt\'\nbackup:-e '"${ENV_FILE}"$' --preflight-only\nbackup:-e '"${ENV_FILE}"$' --verify-restore\nbuild:-v 9.9.9 -e '"${ENV_FILE}"$' -d y\nssh:cd \'/srv/app\' && ./scripts/deploy.sh -v \'9.9.9\'\nssh:docker ps --format \'table {{.Names}}\\t{{.Status}}\''
     assert_equal "$(cat "${DEPLOY_ORDER_LOG}")" "${expected}"
 }
 
@@ -164,7 +164,22 @@ run_deploy_production() {
     assert_output --partial "Skipping validation gate"
     grep -q '^health$' "${DEPLOY_ORDER_LOG}"
     grep -q '^backup:.*--preflight-only' "${DEPLOY_ORDER_LOG}"
-    grep -q '^backup:-e' "${DEPLOY_ORDER_LOG}"
+    grep -q '^backup:.*--verify-restore' "${DEPLOY_ORDER_LOG}"
+}
+
+@test "invalid version is rejected before validation or ssh" {
+    run env \
+        VALIDATE_ENV_SCRIPT="${VALIDATE_ENV_SCRIPT}" \
+        HEALTHCHECK_SCRIPT="${HEALTHCHECK_SCRIPT}" \
+        BACKUP_SCRIPT="${BACKUP_SCRIPT}" \
+        BUILD_SCRIPT="${BUILD_SCRIPT}" \
+        YARN_CMD="${YARN_CMD}" \
+        DEPLOY_ORDER_LOG="${DEPLOY_ORDER_LOG}" \
+        "$SCRIPT_PATH" -v "9.9.9;bad" -e "$ENV_FILE"
+
+    assert_equal "$status" 1
+    assert_output --partial "Invalid deployment version"
+    [ ! -f "${DEPLOY_ORDER_LOG}" ]
 }
 
 @test "deploy script stops containers with production compose file" {

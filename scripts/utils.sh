@@ -203,3 +203,17 @@ is_yes() {
         ;;
     esac
 }
+
+validate_deploy_version() {
+    local version="$1"
+
+    case "${version}" in
+    "" | *[!A-Za-z0-9._-]*)
+        error "Invalid deployment version: ${version}"
+        error "Use only letters, numbers, dots, underscores, and hyphens."
+        return 1
+        ;;
+    esac
+
+    return 0
+}

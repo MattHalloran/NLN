@@ -49,6 +49,7 @@ if [ -z "${VERSION}" ]; then
     usage
     exit 1
 fi
+validate_deploy_version "${VERSION}"
 
 PROJECT_DIR="${RUNTIME_STATE_PROJECT_DIR:-$(cd "${HERE}/.." && pwd)}"
 BACKUP_BASE="${RUNTIME_STATE_BACKUP_BASE:-/var/tmp}"

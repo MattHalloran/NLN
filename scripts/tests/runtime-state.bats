@@ -89,6 +89,21 @@ teardown() {
     grep -q 'Using legacy raw Postgres directory restore' "$BATS_TEST_DIRNAME/../rollback.sh"
 }
 
+@test "rollback script validates image archive before stopping containers" {
+    grep -q 'gzip -t "${DOCKER_IMAGES_ARCHIVE}"' "$BATS_TEST_DIRNAME/../rollback.sh"
+    grep -q 'Docker images archive failed integrity check' "$BATS_TEST_DIRNAME/../rollback.sh"
+}
+
+@test "playwright e2e server manages disposable local services" {
+    grep -q 'process.env.E2E_MANAGE_SERVICES' "$BATS_TEST_DIRNAME/../../playwright.shared.ts"
+    grep -q 'globalTeardown: "./e2e/teardown/e2e-services.teardown.ts"' "$BATS_TEST_DIRNAME/../../playwright.shared.ts"
+    grep -q 'docker run -d' "$BATS_TEST_DIRNAME/../start-e2e-server.sh"
+    grep -q 'postgres:13-alpine' "$BATS_TEST_DIRNAME/../start-e2e-server.sh"
+    grep -q 'redis:7-alpine' "$BATS_TEST_DIRNAME/../start-e2e-server.sh"
+    grep -q 'docker rm -f "${E2E_DB_CONTAINER}" "${E2E_REDIS_CONTAINER}"' "$BATS_TEST_DIRNAME/../start-e2e-server.sh"
+    grep -q 'execFileSync("docker", \["rm", "-f", name\]' "$BATS_TEST_DIRNAME/../../e2e/teardown/e2e-services.teardown.ts"
+}
+
 @test "rollback script verifies database and public endpoints after rollback" {
     grep -q 'verify_database_connectivity' "$BATS_TEST_DIRNAME/../rollback.sh"
     grep -q 'SELECT 1;' "$BATS_TEST_DIRNAME/../rollback.sh"

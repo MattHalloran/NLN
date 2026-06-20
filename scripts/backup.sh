@@ -22,6 +22,7 @@ ENV_FILE="${HERE}/../.env-prod"
 MODE="runtime-state"
 INCLUDE_LOGS=false
 PREFLIGHT_ONLY=false
+VERIFY_RESTORE=false
 ALLOW_PROVISION=false
 BACKUP_COUNT=""
 WILL_LOOP=false
@@ -40,6 +41,7 @@ Usage: $0 [options]
       --mode MODE           Backup mode: runtime-state or full
       --include-logs        Include data/logs in runtime-state backup
       --preflight-only      Print remote size estimates and exit without creating an archive
+      --verify-restore      Restore the new logical dump into disposable local Postgres
       --allow-provision     Allow keylessSsh.sh to create/install SSH keys if needed
   -h, --help                Show this help message
 EOF
@@ -81,6 +83,10 @@ while [ $# -gt 0 ]; do
         ;;
     --preflight-only)
         PREFLIGHT_ONLY=true
+        shift
+        ;;
+    --verify-restore)
+        VERIFY_RESTORE=true
         shift
         ;;
     --allow-provision)
@@ -236,6 +242,12 @@ create_runtime_backup() {
         exit 1
     fi
 
+    if [ "${VERIFY_RESTORE}" = true ]; then
+        if ! verify_runtime_backup_restore "${staging_dir}" "${timestamp}"; then
+            exit 1
+        fi
+    fi
+
     info "Creating runtime-state backup archive..."
     tar -czf "${archive}" -C "${staging_dir}" .
 
@@ -253,6 +265,76 @@ create_runtime_backup() {
     chmod 600 "${manifest}"
 
     success "Runtime-state backup created: ${archive}"
+}
+
+verify_runtime_backup_restore() {
+    local staging_dir="$1"
+    local timestamp="$2"
+    local db_dump env_file restore_container db_name db_user db_password
+    db_dump="$(runtime_state_database_dump_path)"
+    env_file="${staging_dir}/.env-prod"
+    restore_container="nln_backup_restore_${timestamp}"
+
+    if ! command -v docker >/dev/null 2>&1; then
+        error "Docker is required for --verify-restore but was not found on PATH"
+        return 1
+    fi
+
+    if ! docker info >/dev/null 2>&1; then
+        error "Docker daemon is required for --verify-restore but is not reachable"
+        return 1
+    fi
+
+    set -a
+    # shellcheck disable=SC1090
+    . "${env_file}"
+    set +a
+
+    db_name="${DB_NAME:-}"
+    db_user="${DB_USER:-}"
+    db_password="${DB_PASSWORD:-}"
+    if [ -z "${db_name}" ] || [ -z "${db_user}" ] || [ -z "${db_password}" ]; then
+        error "DB_NAME, DB_USER, and DB_PASSWORD are required in backup .env-prod for restore verification"
+        return 1
+    fi
+
+    cleanup_restore_container() {
+        docker rm -f "${restore_container}" >/dev/null 2>&1 || true
+    }
+
+    cleanup_restore_container
+    trap cleanup_restore_container RETURN
+
+    info "Verifying logical Postgres dump restores into disposable local Postgres..."
+    docker run -d --name "${restore_container}" \
+        -e POSTGRES_DB="${db_name}" \
+        -e POSTGRES_USER="${db_user}" \
+        -e POSTGRES_PASSWORD="${db_password}" \
+        postgres:13-alpine >/dev/null
+
+    local ready=false
+    for _ in $(seq 1 30); do
+        if docker exec "${restore_container}" pg_isready -U "${db_user}" -d "${db_name}" >/dev/null 2>&1; then
+            ready=true
+            break
+        fi
+        sleep 2
+    done
+
+    if [ "${ready}" != true ]; then
+        error "Restore verification database did not become ready"
+        return 1
+    fi
+
+    if ! docker exec -i -e PGPASSWORD="${db_password}" "${restore_container}" \
+        psql -v ON_ERROR_STOP=1 -U "${db_user}" -d "${db_name}" <"${staging_dir}/${db_dump}"; then
+        error "Logical Postgres dump failed restore verification"
+        return 1
+    fi
+
+    cleanup_restore_container
+    trap - RETURN
+    success "Logical Postgres dump restore verification passed"
 }
 
 create_full_backup() {

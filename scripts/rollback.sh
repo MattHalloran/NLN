@@ -18,8 +18,12 @@
 # - Backup must contain: runtime-state/data/postgres.sql or legacy postgres/,
 #   production-docker-images.tar.gz, .env-prod
 
+set -euo pipefail
+
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+# shellcheck disable=SC1091
 . "${HERE}/utils.sh"
+# shellcheck source=scripts/runtime-state.sh
 . "${HERE}/runtime-state.sh"
 
 # Parse arguments
@@ -58,6 +62,7 @@ if [ -z "$VERSION" ]; then
     echo "Example: $0 -v 2.2.5"
     exit 1
 fi
+validate_deploy_version "${VERSION}"
 
 header "Rolling back to version ${VERSION}"
 
@@ -66,7 +71,17 @@ BACKUP_DIR="/var/tmp/${VERSION}"
 if [ ! -d "${BACKUP_DIR}" ]; then
     error "Backup directory not found: ${BACKUP_DIR}"
     error "Available versions:"
-    ls -1 /var/tmp/ | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' || echo "  (none found)"
+    found_version=false
+    for version_dir in /var/tmp/*; do
+        version_name=$(basename "${version_dir}")
+        if [[ "${version_name}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "${version_name}"
+            found_version=true
+        fi
+    done
+    if [ "${found_version}" != true ]; then
+        echo "  (none found)"
+    fi
     exit 1
 fi
 
@@ -137,9 +152,13 @@ if [ ! -f "${DOCKER_IMAGES_ARCHIVE}" ]; then
     error "Docker images archive not found: ${DOCKER_IMAGES_ARCHIVE}"
     exit 1
 fi
+if ! gzip -t "${DOCKER_IMAGES_ARCHIVE}"; then
+    error "Docker images archive failed integrity check: ${DOCKER_IMAGES_ARCHIVE}"
+    exit 1
+fi
 
 # Confirm rollback with user
-warning "⚠️  WARNING: This will:"
+warning "WARNING: This will:"
 warning "  1. Stop all running containers"
 warning "  2. Replace the current database with the ${VERSION} database backup"
 warning "  3. Load Docker images from ${VERSION}"
@@ -178,9 +197,7 @@ success "Emergency logical database backup created successfully"
 # Stop current containers
 info "Stopping current containers..."
 cd "${HERE}/.."
-docker-compose -f docker-compose-prod.yml down
-
-if [ $? -ne 0 ]; then
+if ! docker-compose -f docker-compose-prod.yml down; then
     error "Failed to stop containers"
     exit 1
 fi
@@ -192,22 +209,20 @@ if [ -f "${DB_BACKUP_PATH}" ]; then
     info "Restoring database from logical dump ${DB_BACKUP_PATH}"
     if [ -d "${DB_DIR}" ]; then
         info "Removing current database directory so Postgres initializes a clean database..."
-        rm -rf "${DB_DIR}"
-        if [ $? -ne 0 ]; then
+        if ! rm -rf "${DB_DIR}"; then
             error "Failed to remove current database"
             exit 1
         fi
     fi
 
     info "Starting database container for restore..."
-    docker-compose --env-file "${BACKUP_DIR}/.env-prod" -f "${HERE}/../docker-compose-prod.yml" up -d db
-    if [ $? -ne 0 ]; then
+    if ! docker-compose --env-file "${BACKUP_DIR}/.env-prod" -f "${HERE}/../docker-compose-prod.yml" up -d db; then
         error "Failed to start database container for restore"
         exit 1
     fi
 
     DB_READY=false
-    for i in {1..30}; do
+    for _ in {1..30}; do
         if docker exec nln_db pg_isready -U "${DB_USER}" -d "${DB_NAME}" >/dev/null 2>&1; then
             DB_READY=true
             break
@@ -227,22 +242,23 @@ if [ -f "${DB_BACKUP_PATH}" ]; then
         exit 1
     fi
 
-    docker-compose --env-file "${BACKUP_DIR}/.env-prod" -f "${HERE}/../docker-compose-prod.yml" down
+    if ! docker-compose --env-file "${BACKUP_DIR}/.env-prod" -f "${HERE}/../docker-compose-prod.yml" down; then
+        error "Failed to stop database container after restore"
+        exit 1
+    fi
     success "Database restored successfully from logical dump"
 else
     warning "Using legacy raw Postgres directory restore: ${DB_BACKUP_PATH}"
     if [ -d "${DB_DIR}" ]; then
         info "Removing current database..."
-        rm -rf "${DB_DIR}"
-        if [ $? -ne 0 ]; then
+        if ! rm -rf "${DB_DIR}"; then
             error "Failed to remove current database"
             exit 1
         fi
     fi
 
     info "Restoring legacy database directory backup..."
-    cp -rp "${DB_BACKUP_PATH}" "${DB_DIR}"
-    if [ $? -ne 0 ]; then
+    if ! cp -rp "${DB_BACKUP_PATH}" "${DB_DIR}"; then
         error "Failed to restore legacy database backup"
         error "Emergency database dump is available at: ${EMERGENCY_DB_DUMP}"
         exit 1
@@ -252,8 +268,7 @@ fi
 
 # Load Docker images
 info "Loading Docker images from ${DOCKER_IMAGES_ARCHIVE}"
-docker load -i "${DOCKER_IMAGES_ARCHIVE}"
-if [ $? -ne 0 ]; then
+if ! docker load -i "${DOCKER_IMAGES_ARCHIVE}"; then
     error "Failed to load Docker images"
     exit 1
 fi
@@ -261,9 +276,7 @@ success "Docker images loaded successfully"
 
 # Start containers with old version
 info "Starting containers with version ${VERSION}..."
-docker-compose --env-file "${BACKUP_DIR}/.env-prod" -f "${HERE}/../docker-compose-prod.yml" up -d
-
-if [ $? -ne 0 ]; then
+if ! docker-compose --env-file "${BACKUP_DIR}/.env-prod" -f "${HERE}/../docker-compose-prod.yml" up -d; then
     error "Failed to start containers"
     exit 1
 fi
@@ -287,12 +300,12 @@ while [ $ELAPSED -lt $TIMEOUT ]; do
             continue
         fi
 
-        HEALTH=$(docker inspect --format='{{.State.Health.Status}}' ${container} 2>/dev/null || echo "no-healthcheck")
+        HEALTH=$(docker inspect --format='{{.State.Health.Status}}' "${container}" 2>/dev/null || echo "no-healthcheck")
 
         if [ "$HEALTH" = "healthy" ]; then
             CONTAINER_STATUS="${CONTAINER_STATUS}\n  ${container}: ✓ healthy"
         elif [ "$HEALTH" = "no-healthcheck" ]; then
-            STATE=$(docker inspect --format='{{.State.Status}}' ${container})
+            STATE=$(docker inspect --format='{{.State.Status}}' "${container}")
             if [ "$STATE" = "running" ]; then
                 CONTAINER_STATUS="${CONTAINER_STATUS}\n  ${container}: ✓ running (no health check)"
             else
