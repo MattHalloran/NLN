@@ -242,11 +242,13 @@ wait_for_db() {
 
 apply_baseline_migrations() {
     header "Applying baseline migrations to disposable database"
-    (
-        cd "${REHEARSAL_PROJECT_DIR}/packages/server"
-        DB_URL="postgresql://${DB_USER}:${DB_PASSWORD}@127.0.0.1:${PORT_DB}/${DB_NAME}" \
-            yarn prisma migrate deploy --schema=src/db/schema.prisma
-    )
+    docker run --rm \
+        --network project_app \
+        -v "${REHEARSAL_PROJECT_DIR}:${REHEARSAL_PROJECT_DIR}" \
+        -w "${REHEARSAL_PROJECT_DIR}/packages/server" \
+        -e "DB_URL=postgresql://${DB_USER}:${DB_PASSWORD}@db:${PORT_DB}/${DB_NAME}" \
+        node:20-alpine \
+        yarn prisma migrate deploy --schema=src/db/schema.prisma
 }
 
 seed_disposable_database() {
