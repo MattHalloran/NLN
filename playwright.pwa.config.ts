@@ -9,7 +9,11 @@ export default defineConfig({
         timeout: E2E_TIMEOUTS.longMs,
     },
     fullyParallel: false,
-    reporter: [["list"], ["html", { outputFolder: "playwright-report/pwa", open: "never" }]],
+    reporter: [
+        ["list"],
+        ["html", { outputFolder: "playwright-report/pwa", open: "never" }],
+        ["json", { outputFile: "test-results/pwa.json" }],
+    ],
     use: {
         baseURL: E2E_URLS.ui,
         trace: "on-first-retry",

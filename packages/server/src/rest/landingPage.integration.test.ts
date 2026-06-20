@@ -7,14 +7,12 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
 import { StartedPostgreSqlContainer } from "@testcontainers/postgresql";
 import { PrismaClient } from "@prisma/client";
-import express, { Express } from "express";
+import { Express } from "express";
 import request from "supertest";
 import bcrypt from "bcryptjs";
-import cookieParser from "cookie-parser";
 import { readFileSync, writeFileSync } from "fs";
 import { join } from "path";
 import { REST_ROUTES } from "@local/shared";
-import * as auth from "../auth.js";
 import {
     mockHeroBanners,
     mockHeroSettings,
@@ -24,7 +22,9 @@ import {
     mockContactInfoUpdate,
 } from "../__tests__/fixtures/landingPage.js";
 import {
+    createRestTestApp,
     createTestProjectDir,
+    loginAndGetCookie,
     startPostgresTestDatabase,
     stopPostgresTestDatabase,
 } from "../__tests__/integrationUtils.js";
@@ -125,33 +125,12 @@ describe("Landing Page API Integration Tests", () => {
             },
         });
 
-        // Setup Express app
-        const { default: restRouter } = await import("./index.js");
-        app = express();
-        app.use(express.json());
-        app.use(express.urlencoded({ extended: false }));
-        app.use(cookieParser(process.env.JWT_SECRET));
-        // Attach TEST prisma instance, not the global one
-        app.use((req: any, _res, next) => {
-            req.prisma = prisma; // Use test prisma instance
-            next();
+        app = await createRestTestApp(prisma);
+        adminCookie = await loginAndGetCookie(app, {
+            email: "admin@test.com",
+            password: "admin123",
         });
-        app.use(auth.authenticate);
-        app.use(REST_ROUTES.root, restRouter);
-
-        // Login as admin and get cookie
-        const adminLoginRes = await request(app)
-            .post(REST_ROUTES.auth.login)
-            .send({ email: "admin@test.com", password: "admin123" });
-
-        adminCookie = adminLoginRes.headers["set-cookie"][0];
-
-        // Login as regular user and get cookie
-        const userLoginRes = await request(app)
-            .post(REST_ROUTES.auth.login)
-            .send({ email: "user@test.com", password: "admin123" });
-
-        userCookie = userLoginRes.headers["set-cookie"][0];
+        userCookie = await loginAndGetCookie(app, { email: "user@test.com", password: "admin123" });
     }, 120000);
 
     afterAll(async () => {

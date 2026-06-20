@@ -6,7 +6,7 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     include: ['src/**/*.test.ts'],
-    exclude: ['node_modules', 'dist', 'rust', 'generated'],
+    exclude: ['node_modules', 'dist', 'rust', 'generated', 'src/**/*.integration.test.ts'],
     setupFiles: ['./vitest.setup.ts'],
     coverage: {
       provider: 'v8',
@@ -95,14 +95,6 @@ export default defineConfig({
       ],
     },
     clearMocks: true,
-    pool: 'forks',
-    poolOptions: {
-      forks: {
-        singleFork: true,
-      },
-    },
-    // Disable test concurrency for integration tests
-    fileParallelism: false,
   },
   resolve: {
     alias: {

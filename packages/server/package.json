@@ -11,8 +11,8 @@
         "seed": "./dist/db/seeds/init.js"
     },
     "scripts": {
-        "test": "vitest run --coverage",
-        "test:unit": "vitest run --coverage --exclude \"**/*.integration.test.ts\"",
+        "test": "yarn test:unit && yarn test:integration",
+        "test:unit": "vitest run --config vitest.config.mts --coverage",
         "test:integration": "vitest run --config vitest.integration.config.mts",
         "test:watch": "vitest",
         "test:ui": "vitest --ui",

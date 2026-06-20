@@ -58,7 +58,19 @@ Stable admin specs live in `e2e/admin/stable`:
 - `e2e/admin/stable/hero-banner-simple.spec.ts`
 - `e2e/admin/stable/seasonal-content-simple.spec.ts`
 
-Legacy admin specs live in `e2e/admin/legacy` and remain available through `yarn test:e2e:full`, but they contain more timing and selector coupling. Treat failures there as useful regression signals, not as the primary merge gate until they are hardened.
+Legacy admin specs and their legacy-only page objects live in `e2e/admin/legacy` and remain available through `yarn test:e2e:full`, but they contain more timing and selector coupling. Treat failures there as useful regression signals, not as the primary merge gate until they are hardened.
+
+## Stable vs Legacy Policy
+
+Stable specs are the merge-gated browser suite. They should stay small, deterministic, and focused on workflows that need a real browser. `scripts/check-test-quality.sh` enforces the most important reliability rules for stable specs and non-legacy E2E support files.
+
+Legacy specs are quarantined because they still contain data-dependent skips, fixed waits, broad `networkidle` waits, and DOM-structure selectors. When converting a legacy case to stable:
+
+- Seed or create the data required by the spec.
+- Replace fixed sleeps with locator, URL, response, or persisted-state waits.
+- Prefer role/label queries and `data-testid` values over CSS classes or parent traversal.
+- Move exhaustive CRUD cases to server integration tests when browser coverage adds little value.
+- Delete the legacy case once the stable or integration replacement covers the same risk.
 
 ## Writing Reliable Specs
 
@@ -71,4 +83,4 @@ Legacy admin specs live in `e2e/admin/legacy` and remain available through `yarn
 
 ## Reports
 
-Playwright writes HTML reports under `playwright-report/<suite>` and JSON results under `test-results/<suite>.json` for admin suites. CI uploads these as artifacts.
+Playwright writes HTML reports under `playwright-report/<suite>` and JSON results under `test-results/<suite>.json` for admin and PWA suites. CI uploads these as artifacts.

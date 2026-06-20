@@ -24,7 +24,7 @@
     "test:unit": "yarn workspace @local/shared test && yarn workspace ui test && yarn workspace server test:unit",
     "test:integration": "yarn workspace server test:integration",
     "test:scripts": "scripts/tests/__runTests.sh",
-    "check:drift": "scripts/check-env-defaults.sh && scripts/check-source-drift.sh",
+    "check:drift": "scripts/check-env-defaults.sh && scripts/check-source-drift.sh && scripts/check-test-quality.sh",
     "test:server": "yarn workspace server test",
     "test:ui": "yarn workspace ui test",
     "test:e2e": "yarn test:e2e:smoke",

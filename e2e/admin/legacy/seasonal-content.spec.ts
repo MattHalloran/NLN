@@ -1,5 +1,5 @@
 import { test, expect } from "../../fixtures/auth";
-import { AdminHomePage } from "../../pages/admin-home.page";
+import { AdminHomePage } from "./pages/admin-home.page";
 
 /**
  * E2E Tests for Admin Seasonal Content Management

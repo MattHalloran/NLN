@@ -1,6 +1,7 @@
 import { CSRF, DEFAULT_SERVER_URLS, LOCAL_DEV_ORIGINS, REST_ROUTES } from "@local/shared";
 import { test as setup } from "./fixtures/auth";
 import { testHeroBanners, testHeroSettings } from "./fixtures/test-data";
+import { expect } from "@playwright/test";
 
 /**
  * Hero Data Setup
@@ -14,7 +15,7 @@ setup("seed hero banner test data", async ({ authenticatedPage }) => {
     try {
         // Navigate to the app to ensure CSRF token is initialized
         await authenticatedPage.goto(LOCAL_DEV_ORIGINS[0]);
-        await authenticatedPage.waitForLoadState("networkidle");
+        await expect(authenticatedPage.locator("body")).toBeVisible();
 
         // Fetch CSRF token from the server
         const csrfResponse = await authenticatedPage.request.get(

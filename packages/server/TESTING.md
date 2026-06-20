@@ -11,7 +11,8 @@ yarn workspace server test:unit
 # From the repository root, run server integration tests only
 yarn workspace server test:integration
 
-# From packages/server, run all server tests with coverage
+# From packages/server, run all server tests with coverage.
+# Requires Docker because this includes integration tests.
 yarn test
 
 # From packages/server, run only unit tests
@@ -91,6 +92,15 @@ describe("MyTest", () => {
 
 Integration tests are named `*.integration.test.ts`. They use Testcontainers-managed PostgreSQL and Redis dependencies, so Docker must be available locally and in CI. Tests that need file-backed runtime state create temporary project directories instead of writing to source data files.
 
+Shared helpers live under `src/__tests__`:
+
+- `startPostgresTestDatabase` starts PostgreSQL, runs Prisma migrations, and returns a connected Prisma client.
+- `stopPostgresTestDatabase` disconnects Prisma and stops the container.
+- `truncatePublicTables` clears migrated tables while preserving `_prisma_migrations`.
+- `createTestProjectDir` creates disposable file-backed runtime state for tests that touch `PROJECT_DIR` data.
+- `createRestTestApp` wires Express, cookie parsing, auth middleware, the REST router, and the test Prisma client.
+- `loginAndGetCookie` logs in through the real auth route and returns a cookie for authenticated Supertest requests.
+
 ### Integration Test Template
 
 ```typescript
@@ -123,11 +133,18 @@ describe("Database Integration Tests", () => {
 
 ## Configuration
 
-Test configuration is in `vitest.config.mts`:
+Unit test configuration is in `vitest.config.mts`:
 
 - Test environment: Node.js
 - Coverage provider: v8
 - Test pattern: `src/**/*.test.ts`
+- Integration tests are excluded and run through `vitest.integration.config.mts`
+
+Integration test configuration is in `vitest.integration.config.mts`:
+
+- Test pattern: `src/**/*.integration.test.ts`
+- Coverage writes to `coverage-integration`
+- Tests run serially in a single fork to avoid container and process-env cross-talk
 
 ## Migration from Jest
 

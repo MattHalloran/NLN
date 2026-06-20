@@ -1,4 +1,4 @@
-import { CODE, CSRF } from "@local/shared";
+import { CODE, CSRF, REST_ROUTES } from "@local/shared";
 import { describe, expect, it, vi } from "vitest";
 import type { NextFunction, Request, Response } from "express";
 import { csrfErrorHandler, exemptFromCsrf, isValidCsrfToken } from "./csrf.js";
@@ -35,7 +35,7 @@ const request = (overrides: Partial<Request> = {}) =>
         headers: {},
         ip: "127.0.0.1",
         method: "POST",
-        path: "/api/rest/v1/example",
+        path: `${REST_ROUTES.v1}/example`,
         ...overrides,
     }) as Request;
 

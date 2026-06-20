@@ -1,10 +1,14 @@
 import { PrismaClient } from "@prisma/client";
 import { PostgreSqlContainer, StartedPostgreSqlContainer } from "@testcontainers/postgresql";
 import { exec } from "child_process";
+import cookieParser from "cookie-parser";
+import express, { Express } from "express";
 import fs from "fs";
 import os from "os";
 import path from "path";
+import request from "supertest";
 import { promisify } from "util";
+import { REST_ROUTES } from "@local/shared";
 
 const execAsync = promisify(exec);
 
@@ -82,6 +86,49 @@ export async function truncatePublicTables(
 
         await prisma.$executeRawUnsafe(`TRUNCATE TABLE "public"."${tablename}" CASCADE;`);
     }
+}
+
+export async function createRestTestApp(prisma: PrismaClient): Promise<Express> {
+    const [{ default: restRouter }, auth] = await Promise.all([
+        import("../rest/index.js"),
+        import("../auth.js"),
+    ]);
+    const app = express();
+
+    app.use(express.json());
+    app.use(express.urlencoded({ extended: false }));
+    app.use(cookieParser(process.env.JWT_SECRET));
+    app.use((req: any, _res, next) => {
+        req.prisma = prisma;
+        next();
+    });
+    app.use(auth.authenticate);
+    app.use(REST_ROUTES.root, restRouter);
+
+    return app;
+}
+
+export async function loginAndGetCookie(
+    app: Express,
+    credentials: { email: string; password: string }
+): Promise<string> {
+    const response = await request(app).post(REST_ROUTES.auth.login).send(credentials);
+
+    if (response.status !== 200) {
+        throw new Error(
+            `Login failed for ${credentials.email} with status ${response.status}: ${JSON.stringify(
+                response.body
+            )}`
+        );
+    }
+
+    const cookie = response.headers["set-cookie"]?.[0];
+
+    if (!cookie) {
+        throw new Error(`Login for ${credentials.email} did not return an auth cookie.`);
+    }
+
+    return cookie;
 }
 
 type TestProjectDir = {

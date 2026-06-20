@@ -1,6 +1,6 @@
 import { DEFAULT_SERVER_URLS, REST_ROUTES } from "@local/shared";
 import { test, expect } from "../../fixtures/auth";
-import { AdminHomePage } from "../../pages/admin-home.page";
+import { AdminHomePage } from "./pages/admin-home.page";
 import { testHeroBanners, testHeroSettings } from "../../fixtures/test-data";
 
 /**

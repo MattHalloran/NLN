@@ -39,8 +39,9 @@ export async function setupAuth(page: Page) {
     // Navigate to login page
     await page.goto(APP_LINKS.LogIn);
 
-    // Wait for the page to load
-    await page.waitForLoadState("networkidle");
+    await expect(page.getByRole("button", { name: /log in|sign in/i })).toBeVisible({
+        timeout: E2E_TIMEOUTS.longMs,
+    });
 
     console.log("✓ Login page loaded");
 
