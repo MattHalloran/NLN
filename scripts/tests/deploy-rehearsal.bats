@@ -98,3 +98,8 @@ teardown() {
     grep -q 'Installing disposable project dependencies' "$SCRIPT_PATH"
     grep -q 'yarn install --frozen-lockfile' "$SCRIPT_PATH"
 }
+
+@test "deploy rehearsal applies baseline migrations before seeding probe data" {
+    grep -q 'apply_baseline_migrations' "$SCRIPT_PATH"
+    grep -q 'yarn prisma migrate deploy --schema=src/db/schema.prisma' "$SCRIPT_PATH"
+}

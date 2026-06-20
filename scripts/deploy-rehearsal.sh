@@ -240,6 +240,15 @@ wait_for_db() {
     fi
 }
 
+apply_baseline_migrations() {
+    header "Applying baseline migrations to disposable database"
+    (
+        cd "${REHEARSAL_PROJECT_DIR}/packages/server"
+        DB_URL="postgresql://${DB_USER}:${DB_PASSWORD}@127.0.0.1:${PORT_DB}/${DB_NAME}" \
+            yarn prisma migrate deploy --schema=src/db/schema.prisma
+    )
+}
+
 seed_disposable_database() {
     header "Seeding disposable database"
     docker exec -i -e PGPASSWORD="${DB_PASSWORD}" nln_db psql -v ON_ERROR_STOP=1 -U "${DB_USER}" -d "${DB_NAME}" <<'SQL'
@@ -348,6 +357,7 @@ header "Starting disposable baseline database"
 docker network create nginx-proxy >/dev/null 2>&1 || true
 (cd "${REHEARSAL_PROJECT_DIR}" && docker-compose --env-file "${ENV_FILE}" -f docker-compose-prod.yml up -d db redis)
 wait_for_db
+apply_baseline_migrations
 seed_disposable_database
 
 header "Building deploy artifacts"
