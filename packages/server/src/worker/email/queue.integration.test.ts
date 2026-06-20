@@ -7,6 +7,30 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
 import { GenericContainer, StartedTestContainer } from "testcontainers";
 import Bull, { Queue, Job } from "bull";
 
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const waitFor = async (
+    assertion: () => void | Promise<void>,
+    options: { timeoutMs?: number; intervalMs?: number } = {}
+) => {
+    const timeoutMs = options.timeoutMs ?? 2000;
+    const intervalMs = options.intervalMs ?? 25;
+    const start = Date.now();
+    let lastError: unknown;
+
+    while (Date.now() - start < timeoutMs) {
+        try {
+            await assertion();
+            return;
+        } catch (error) {
+            lastError = error;
+            await delay(intervalMs);
+        }
+    }
+
+    throw lastError;
+};
+
 describe("Bull Queue Integration Tests", () => {
     let container: StartedTestContainer;
     let redisHost: string;
@@ -111,12 +135,13 @@ describe("Bull Queue Integration Tests", () => {
                 return { success: true };
             });
 
-            await emailQueue.add({ order: "first", to: ["test@example.com"] });
-            await emailQueue.add({ order: "second", to: ["test@example.com"] });
-            await emailQueue.add({ order: "third", to: ["test@example.com"] });
+            const jobs = await Promise.all([
+                emailQueue.add({ order: "first", to: ["test@example.com"] }),
+                emailQueue.add({ order: "second", to: ["test@example.com"] }),
+                emailQueue.add({ order: "third", to: ["test@example.com"] }),
+            ]);
 
-            // Wait for processing
-            await new Promise((resolve) => setTimeout(resolve, 1000));
+            await Promise.all(jobs.map((job) => job.finished()));
 
             expect(processed).toEqual(["first", "second", "third"]);
         });
@@ -126,7 +151,7 @@ describe("Bull Queue Integration Tests", () => {
         it("should track job progress", async () => {
             void emailQueue.process(async (job: Job) => {
                 await job.progress(50);
-                await new Promise((resolve) => setTimeout(resolve, 100));
+                await delay(100);
                 await job.progress(100);
                 return { success: true };
             });
@@ -178,11 +203,10 @@ describe("Bull Queue Integration Tests", () => {
                 // Expected to fail
             }
 
-            // Wait a bit for job to be marked as failed
-            await new Promise((resolve) => setTimeout(resolve, 500));
-
-            const failedJob = await emailQueue.getJob(job.id);
-            expect(await failedJob?.isFailed()).toBe(true);
+            await waitFor(async () => {
+                const failedJob = await emailQueue.getJob(job.id);
+                expect(await failedJob?.isFailed()).toBe(true);
+            });
         });
     });
 
@@ -277,11 +301,10 @@ describe("Bull Queue Integration Tests", () => {
 
             await job.finished();
 
-            // Wait a bit for removal
-            await new Promise((resolve) => setTimeout(resolve, 500));
-
-            const retrievedJob = await emailQueue.getJob(job.id);
-            expect(retrievedJob).toBeNull();
+            await waitFor(async () => {
+                const retrievedJob = await emailQueue.getJob(job.id);
+                expect(retrievedJob).toBeNull();
+            });
         });
     });
 
@@ -339,7 +362,7 @@ describe("Bull Queue Integration Tests", () => {
     describe("Queue Management", () => {
         it("should get job counts by status", async () => {
             void emailQueue.process(async (_job: Job) => {
-                await new Promise((resolve) => setTimeout(resolve, 500));
+                await delay(100);
                 return { success: true };
             });
 
@@ -368,7 +391,6 @@ describe("Bull Queue Integration Tests", () => {
             expect(await emailQueue.isPaused()).toBe(true);
 
             const job = await emailQueue.add({ to: ["paused@example.com"], subject: "Paused" });
-            await new Promise((resolve) => setTimeout(resolve, 250));
 
             expect(processed).toEqual([]);
             expect(await job.getState()).toBe("paused");
@@ -488,7 +510,7 @@ describe("Bull Queue Integration Tests", () => {
         it("should handle job timeout", async () => {
             void emailQueue.process(async (_job: Job) => {
                 // Simulate long-running task
-                await new Promise((resolve) => setTimeout(resolve, 5000));
+                await delay(5000);
                 return { success: true };
             });
 
@@ -502,12 +524,8 @@ describe("Bull Queue Integration Tests", () => {
                 }
             );
 
-            try {
-                await job.finished();
-            } catch (error: any) {
-                // Bull wraps timeout errors - check for common timeout-related words
-                expect(error.message.toLowerCase()).toMatch(/timeout|timed out/);
-            }
+            // Bull wraps timeout errors - check for common timeout-related words.
+            await expect(job.finished()).rejects.toThrow(/timeout|timed out/i);
         }, 10000);
 
         it("should handle concurrent job processing", async () => {
@@ -515,12 +533,12 @@ describe("Bull Queue Integration Tests", () => {
 
             void emailQueue.process(3, async (job: Job) => {
                 processed.push(job.data.id);
-                await new Promise((resolve) => setTimeout(resolve, 200));
+                await delay(50);
                 return { success: true };
             });
 
             // Add multiple jobs
-            await Promise.all([
+            const jobs = await Promise.all([
                 emailQueue.add({ id: "1", to: ["test@example.com"], subject: "Test 1" }),
                 emailQueue.add({ id: "2", to: ["test@example.com"], subject: "Test 2" }),
                 emailQueue.add({ id: "3", to: ["test@example.com"], subject: "Test 3" }),
@@ -528,8 +546,7 @@ describe("Bull Queue Integration Tests", () => {
                 emailQueue.add({ id: "5", to: ["test@example.com"], subject: "Test 5" }),
             ]);
 
-            // Wait for all jobs to complete
-            await new Promise((resolve) => setTimeout(resolve, 2000));
+            await Promise.all(jobs.map((job) => job.finished()));
 
             expect(processed).toHaveLength(5);
         });

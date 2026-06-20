@@ -1,4 +1,5 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 
 vi.mock("@mui/icons-material", () => {
     const Icon = () => <span aria-hidden="true" />;
@@ -60,6 +61,8 @@ describe("ErrorBoundary", () => {
     });
 
     it("can reset after a recoverable error", async () => {
+        vi.useRealTimers();
+        const user = userEvent.setup();
         const RecoverableChild = ({ shouldThrow }: { shouldThrow: boolean }) => {
             if (shouldThrow) throw new Error("temporary failure");
             return <div>Recovered child</div>;
@@ -79,11 +82,8 @@ describe("ErrorBoundary", () => {
             </ErrorBoundary>,
         );
 
-        await act(async () => {
-            fireEvent.click(screen.getByRole("button", { name: /try again/i }));
-            vi.advanceTimersByTime(1000);
-        });
+        await user.click(screen.getByRole("button", { name: /try again/i }));
 
-        expect(screen.getByText("Recovered child")).toBeInTheDocument();
+        expect(await screen.findByText("Recovered child")).toBeInTheDocument();
     });
 });

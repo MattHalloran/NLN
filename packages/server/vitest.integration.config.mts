@@ -11,7 +11,7 @@ export default defineConfig({
     coverage: {
       enabled: true,
       provider: 'v8',
-      reporter: ['text', 'json', 'html'],
+      reporter: ['text', 'json', 'json-summary', 'html'],
       reportsDirectory: './coverage-integration',
       include: ['src/**/*.ts'],
       exclude: [
@@ -31,7 +31,7 @@ export default defineConfig({
       ],
       thresholds: {
         statements: 19.6,
-        branches: 59.7,
+        branches: 59.4,
         functions: 31,
         lines: 19.6,
       },

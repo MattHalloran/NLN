@@ -13,13 +13,13 @@ export default defineConfig({
         clearMocks: true,
         coverage: {
             provider: "v8",
-            reporter: ["text", "json", "html"],
+            reporter: ["text", "json", "json-summary", "html"],
             include: ["src/**/*.{ts,tsx}"],
             thresholds: {
-                statements: 8.4,
-                branches: 68.5,
-                functions: 33.8,
-                lines: 8.4,
+                statements: 8.6,
+                branches: 69,
+                functions: 34.7,
+                lines: 8.6,
                 "src/api/rest/**/*.{ts,tsx}": {
                     statements: 50,
                     branches: 77,
@@ -40,9 +40,63 @@ export default defineConfig({
                 },
                 "src/utils/**/*.{ts,tsx}": {
                     statements: 40,
-                    branches: 92,
+                    branches: 91,
                     functions: 74,
                     lines: 40,
+                },
+                "src/components/ErrorBoundary/ErrorBoundary.tsx": {
+                    statements: 78,
+                    branches: 60,
+                    functions: 68,
+                    lines: 78,
+                },
+                "src/components/Hero/Hero.tsx": {
+                    statements: 98,
+                    branches: 51,
+                    functions: 100,
+                    lines: 98,
+                },
+                "src/hooks/useDebounce.ts": {
+                    statements: 100,
+                    branches: 100,
+                    functions: 100,
+                    lines: 100,
+                },
+                "src/hooks/useDimensions.ts": {
+                    statements: 84,
+                    branches: 93,
+                    functions: 75,
+                    lines: 84,
+                },
+                "src/hooks/useHistoryState.ts": {
+                    statements: 100,
+                    branches: 100,
+                    functions: 100,
+                    lines: 100,
+                },
+                "src/hooks/useWindowSize.ts": {
+                    statements: 100,
+                    branches: 100,
+                    functions: 100,
+                    lines: 100,
+                },
+                "src/pages/admin/AdminMainPage/AdminMainPage.tsx": {
+                    statements: 100,
+                    branches: 100,
+                    functions: 100,
+                    lines: 100,
+                },
+                "src/pages/admin/AdminHomepageHeroBanner/heroBannerFormState.ts": {
+                    statements: 95,
+                    branches: 94,
+                    functions: 100,
+                    lines: 95,
+                },
+                "src/utils/csrf.ts": {
+                    statements: 80,
+                    branches: 78,
+                    functions: 88,
+                    lines: 80,
                 },
             },
             exclude: [

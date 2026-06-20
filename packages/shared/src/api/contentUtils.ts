@@ -48,7 +48,14 @@ export const replaceLandingPageTokens = (text: string, values: LandingPageTokenV
 
 export const moveArrayIndex = <T>(array: readonly T[], from: number, to: number): T[] => {
     const copy = [...array];
-    copy.splice(to, 0, copy.splice(from, 1)[0]);
+    const sourceIndex = from < 0 ? copy.length + from : from;
+
+    if (sourceIndex < 0 || sourceIndex >= copy.length) {
+        return copy;
+    }
+
+    const [item] = copy.splice(from, 1);
+    copy.splice(to, 0, item as T);
     return copy;
 };
 

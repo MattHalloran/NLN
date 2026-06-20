@@ -362,10 +362,8 @@ describe("Data File Integrity Tests", () => {
             const filePath = join(DATA_PATH, "landing-page-content.json");
             const data = JSON.parse(readFileSync(filePath, "utf8"));
 
-            if (data.contact.website) {
-                expect(typeof data.contact.website).toBe("string");
-                expect(data.contact.website).toMatch(/^https?:\/\/.+/);
-            }
+            expect(data.contact.website ? typeof data.contact.website : "string").toBe("string");
+            expect(data.contact.website ?? "https://example.test").toMatch(/^https?:\/\/.+/);
         });
     });
 
@@ -397,29 +395,33 @@ describe("Data File Integrity Tests", () => {
 
             const lines = content.split("\n").filter((l: string) => l.trim());
 
-            lines.forEach((line: string, index: number) => {
-                if (line.includes("|") && !line.includes("---")) {
+            const malformedRows = lines
+                .map((line: string, index: number): { line: string; index: number } => ({
+                    line,
+                    index,
+                }))
+                .filter(
+                    ({ line }: { line: string; index: number }) =>
+                        line.includes("|") && !line.includes("---")
+                )
+                .map(({ line, index }: { line: string; index: number }) => {
                     const parts = line.split("|").filter((p: string) => p.trim());
 
-                    // Each row should have at least 2 columns (Day and Hours)
-                    expect(
-                        parts.length,
-                        `Line ${index + 1}: "${line}" should have at least 2 columns`
-                    ).toBeGreaterThanOrEqual(2);
+                    return {
+                        line,
+                        lineNumber: index + 1,
+                        parts,
+                    };
+                })
+                .filter(
+                    ({ parts }: { line: string; lineNumber: number; parts: string[] }) =>
+                        parts.length < 2 || !parts[0]?.trim() || !parts[1]?.trim()
+                );
 
-                    // Day column shouldn't be empty
-                    expect(
-                        parts[0].trim().length,
-                        `Line ${index + 1}: Day column should not be empty`
-                    ).toBeGreaterThan(0);
-
-                    // Hours column shouldn't be empty
-                    expect(
-                        parts[1].trim().length,
-                        `Line ${index + 1}: Hours column should not be empty`
-                    ).toBeGreaterThan(0);
-                }
-            });
+            expect(
+                malformedRows,
+                `Malformed business hours rows: ${JSON.stringify(malformedRows)}`
+            ).toEqual([]);
         });
 
         test("hours contains valid time format or CLOSED", () => {
@@ -436,27 +438,33 @@ describe("Data File Integrity Tests", () => {
 
             const timePattern = /\d{1,2}:\d{2}\s*(AM|PM)/i;
 
-            lines.forEach((line: string, index: number) => {
-                const parts = line
-                    .split("|")
-                    .map((p: string) => p.trim())
-                    .filter((p: string) => p);
-
-                if (parts.length >= 2) {
+            const invalidRows = lines
+                .map((line: string, index: number) => ({
+                    line,
+                    lineNumber: index + 1,
+                    parts: line
+                        .split("|")
+                        .map((p: string) => p.trim())
+                        .filter((p: string) => p),
+                }))
+                .filter(
+                    ({ parts }: { line: string; lineNumber: number; parts: string[] }) =>
+                        parts.length >= 2
+                )
+                .filter(({ parts }: { line: string; lineNumber: number; parts: string[] }) => {
                     const hours = parts[1];
 
-                    // Should either contain time pattern or be CLOSED
-                    const isValid =
+                    return !(
                         hours.toUpperCase().includes("CLOSED") ||
                         timePattern.test(hours) ||
-                        parts[0].toLowerCase().includes("note");
+                        parts[0].toLowerCase().includes("note")
+                    );
+                });
 
-                    expect(
-                        isValid,
-                        `Line ${index + 1}: "${hours}" should contain valid time format (HH:MM AM/PM) or "CLOSED"`
-                    ).toBe(true);
-                }
-            });
+            expect(
+                invalidRows,
+                `Rows should contain valid time format (HH:MM AM/PM) or "CLOSED": ${JSON.stringify(invalidRows)}`
+            ).toEqual([]);
         });
     });
 

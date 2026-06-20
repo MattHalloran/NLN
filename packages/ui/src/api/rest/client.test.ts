@@ -1,4 +1,4 @@
-import { CODE, CSRF } from "@local/shared";
+import { CODE, CSRF, REST_ROUTES, stripApiPrefix } from "@local/shared";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../../utils/serverUrl", () => ({
@@ -42,7 +42,9 @@ describe("restApi client", () => {
         await restApi.getLandingPageContent({ onlyActive: false, variantId: "variant-a" });
 
         expect(fetch).toHaveBeenCalledWith(
-            "https://server.test/api/rest/v1/landing-page?onlyActive=false&variantId=variant-a",
+            `https://server.test/api${stripApiPrefix(
+                REST_ROUTES.landingPage.root,
+            )}?onlyActive=false&variantId=variant-a`,
             expect.objectContaining({
                 method: "GET",
                 credentials: "include",
@@ -83,19 +85,17 @@ describe("restApi client", () => {
             ),
         );
 
-        try {
-            await restApi.login({ email: "person@example.com", password: "bad-password" });
-        } catch (error) {
-            expect(error).toBeInstanceOf(ApiError);
-            expect(error).toMatchObject({
-                status: 401,
-                message: "Invalid credentials",
-                data: {
-                    code: "AUTH_INVALID",
-                },
-            });
-            expect(getApiErrorCode(error)).toBe("AUTH_INVALID");
-        }
+        const request = restApi.login({ email: "person@example.com", password: "bad-password" });
+
+        await expect(request).rejects.toBeInstanceOf(ApiError);
+        await expect(request).rejects.toMatchObject({
+            status: 401,
+            message: "Invalid credentials",
+            data: {
+                code: "AUTH_INVALID",
+            },
+        });
+        await expect(request.catch(getApiErrorCode)).resolves.toBe("AUTH_INVALID");
     });
 
     it("refreshes CSRF and retries once on CSRF validation failures", async () => {
@@ -123,15 +123,13 @@ describe("restApi client", () => {
         csrfMocks.getCsrfToken.mockResolvedValueOnce(null);
         globalThis.allowConsoleError("[CSRF] Failed to get CSRF token");
 
-        try {
-            await restApi.logout();
-        } catch (error) {
-            expect(error).toMatchObject({
-                status: 500,
-                message: CODE.CsrfTokenUnavailable.message,
-            });
-            expect(getApiErrorCode(error)).toBe(CODE.CsrfTokenUnavailable.code);
-        }
+        const request = restApi.logout();
+
+        await expect(request).rejects.toMatchObject({
+            status: 500,
+            message: CODE.CsrfTokenUnavailable.message,
+        });
+        await expect(request.catch(getApiErrorCode)).resolves.toBe(CODE.CsrfTokenUnavailable.code);
         expect(fetch).not.toHaveBeenCalled();
     });
 });

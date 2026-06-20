@@ -26,6 +26,7 @@ export function isEqual(obj1: unknown, obj2: unknown): boolean {
         if (keys1.length !== keys2.length) return false;
         for (let i = 0; i < keys1.length; i++) {
             const key = keys1[i];
+            if (key === undefined) return false;
             if (!isEqual(record1[key], record2[key])) return false;
         }
         return true;

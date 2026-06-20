@@ -18,6 +18,7 @@
     "typecheck:test": "yarn workspaces run typecheck:test",
     "test": "yarn test:unit",
     "validate": "yarn typecheck && yarn typecheck:test && yarn lint && yarn test:unit && yarn test:scripts && yarn check:drift",
+    "coverage:summary": "node scripts/coverage-summary.mjs",
     "validate:full": "yarn validate && yarn test:integration && yarn workspace ui build && yarn test:pwa && yarn test:e2e:admin",
     "validate:ci": "yarn validate:full",
     "test:unit": "yarn workspace @local/shared test && yarn workspace ui test && yarn workspace server test:unit",
@@ -55,7 +56,9 @@
     "eslint": "^9.37.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
-    "eslint-plugin-react-hooks": "^7.0.0"
+    "eslint-plugin-react-hooks": "^7.0.0",
+    "eslint-plugin-testing-library": "^7.16.2",
+    "eslint-plugin-vitest": "^0.5.4"
   },
   "dependencies": {}
 }

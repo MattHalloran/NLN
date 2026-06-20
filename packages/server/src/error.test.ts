@@ -107,16 +107,10 @@ describe("error", () => {
             const validationErrors = ["Name is required"];
             mockSchema.validate.mockRejectedValue({ errors: validationErrors });
 
-            try {
-                await validateArgs(mockSchema, { name: "" });
-                throw new Error("Should have thrown");
-            } catch (error: any) {
-                expect(error).toBeInstanceOf(CustomError);
-                expect(error.code).toBe("ARGS_VALIDATION_FAILED");
-                expect(Array.isArray(error.message) ? error.message : [error.message]).toContain(
-                    validationErrors[0]
-                );
-            }
+            await expect(validateArgs(mockSchema, { name: "" })).rejects.toMatchObject({
+                code: "ARGS_VALIDATION_FAILED",
+                message: validationErrors[0],
+            });
         });
 
         it("should log failed validation attempts", async () => {
@@ -152,19 +146,16 @@ describe("error", () => {
             ];
             mockSchema.validate.mockRejectedValue({ errors: complexErrors });
 
-            try {
-                await validateArgs(mockSchema, {
+            await expect(
+                validateArgs(mockSchema, {
                     email: "invalid",
                     password: "short",
                     confirmPassword: "different",
-                });
-                throw new Error("Should have thrown");
-            } catch (error: any) {
-                expect(error.code).toBe("ARGS_VALIDATION_FAILED");
-                // Message should contain the errors in some form
-                const message = Array.isArray(error.message) ? error.message : [error.message];
-                expect(message.length).toBeGreaterThan(0);
-            }
+                })
+            ).rejects.toMatchObject({
+                code: "ARGS_VALIDATION_FAILED",
+                message: expect.stringContaining(complexErrors[0]),
+            });
         });
     });
 });

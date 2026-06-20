@@ -46,6 +46,13 @@ describe("contentUtils", () => {
         expect(input).toEqual(["a", "b", "c", "d"]);
     });
 
+    it("leaves the array unchanged when moving from an out-of-range index", () => {
+        const input = ["a", "b", "c"];
+
+        expect(moveArrayIndex(input, 9, 1)).toEqual(input);
+        expect(moveArrayIndex(input, -9, 1)).toEqual(input);
+    });
+
     it("reads and flattens nested object paths", () => {
         const input = {
             hero: {

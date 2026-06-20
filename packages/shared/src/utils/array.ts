@@ -60,7 +60,7 @@ export const deleteArrayObject = <T>(
 
 export const findWithAttr = <T>(array: T[], attr: keyof T, value: T[keyof T]): number => {
     for (let i = 0; i < array.length; i += 1) {
-        if (array[i][attr] === value) {
+        if (array[i]?.[attr] === value) {
             return i;
         }
     }

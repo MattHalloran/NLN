@@ -47,6 +47,13 @@ jobs:
       - name: Script tests
         run: yarn test:scripts
 
+      - name: Drift checks
+        run: yarn check:drift
+
+      - name: Coverage summary
+        if: always()
+        run: yarn coverage:summary
+
       - name: Build UI
         run: yarn workspace ui build
 
@@ -86,6 +93,10 @@ jobs:
 
       - name: Integration tests
         run: yarn test:integration
+
+      - name: Coverage summary
+        if: always()
+        run: yarn coverage:summary
 
       - name: Upload integration coverage
         if: always()

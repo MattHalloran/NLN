@@ -4,8 +4,16 @@ import tsparser from "@typescript-eslint/parser";
 import reactHooks from "eslint-plugin-react-hooks";
 import prettier from "eslint-plugin-prettier";
 import prettierConfig from "eslint-config-prettier";
+import vitest from "eslint-plugin-vitest";
+import testingLibrary from "eslint-plugin-testing-library";
 
 export default [
+    {
+        linterOptions: {
+            reportUnusedDisableDirectives: "error",
+        },
+    },
+
     // Global ignores
     {
         ignores: [
@@ -318,7 +326,11 @@ export default [
                 fail: "readonly",
             },
         },
+        plugins: {
+            vitest,
+        },
         rules: {
+            ...vitest.configs.recommended.rules,
             "@typescript-eslint/no-explicit-any": "off",
             "@typescript-eslint/no-unsafe-assignment": "off",
             "@typescript-eslint/no-unsafe-member-access": "off",
@@ -326,16 +338,37 @@ export default [
             "@typescript-eslint/no-unsafe-argument": "off",
             "@typescript-eslint/no-unsafe-return": "off",
             "@typescript-eslint/unbound-method": "off",
-            "no-restricted-properties": [
-                "error",
-                { "object": "describe", "property": "only", "message": "Focused tests must not be committed." },
-                { "object": "it", "property": "only", "message": "Focused tests must not be committed." },
-                { "object": "test", "property": "only", "message": "Focused tests must not be committed." },
-                { "object": "describe", "property": "skip", "message": "Skipped tests must be fixed or deleted." },
-                { "object": "it", "property": "skip", "message": "Skipped tests must be fixed or deleted." },
-                { "object": "test", "property": "skip", "message": "Skipped tests must be fixed or deleted." }
-            ],
+            "vitest/no-focused-tests": "error",
+            "vitest/no-disabled-tests": "error",
+            "vitest/valid-expect": ["error", { maxArgs: 2 }],
+            "vitest/no-conditional-expect": "error",
+            "vitest/prefer-to-be": "error",
             "no-console": "off",
+        },
+    },
+
+    // React component tests
+    {
+        files: ["packages/ui/**/*.test.tsx", "packages/ui/**/*.spec.tsx"],
+        plugins: {
+            "testing-library": testingLibrary,
+        },
+        rules: {
+            ...testingLibrary.configs["flat/react"].rules,
+            "testing-library/no-node-access": "error",
+            "testing-library/no-container": "error",
+            "testing-library/no-unnecessary-act": "error",
+            "testing-library/prefer-screen-queries": "error",
+            "testing-library/prefer-user-event": "error",
+            "testing-library/render-result-naming-convention": "error",
+        },
+    },
+
+    // Legacy E2E tests are intentionally data-dependent and may skip at runtime.
+    {
+        files: ["e2e/admin/legacy/**/*.spec.ts"],
+        rules: {
+            "vitest/no-disabled-tests": "off",
         },
     },
 

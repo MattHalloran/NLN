@@ -1,4 +1,5 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { Hero } from "./Hero";
 
 const mockSetLocation = vi.fn();
@@ -80,19 +81,23 @@ describe("Hero", () => {
         expect(screen.getByTestId("hero-slider")).toHaveTextContent("Nursery hero banner");
     });
 
-    it("routes internal CTA buttons through app navigation", () => {
+    it("routes internal CTA buttons through app navigation", async () => {
+        const user = userEvent.setup();
+
         render(<Hero />);
 
-        fireEvent.click(screen.getByRole("button", { name: /visit us/i }));
+        await user.click(screen.getByRole("button", { name: /visit us/i }));
 
         expect(mockSetLocation).toHaveBeenCalledWith("/about");
         expect(window.open).not.toHaveBeenCalled();
     });
 
-    it("opens external CTA buttons in a new tab", () => {
+    it("opens external CTA buttons in a new tab", async () => {
+        const user = userEvent.setup();
+
         render(<Hero />);
 
-        fireEvent.click(screen.getByRole("button", { name: /browse plants/i }));
+        await user.click(screen.getByRole("button", { name: /browse plants/i }));
 
         expect(window.open).toHaveBeenCalledWith("https://example.com/catalog", "_blank");
         expect(mockSetLocation).not.toHaveBeenCalled();

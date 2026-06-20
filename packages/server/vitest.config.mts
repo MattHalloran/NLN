@@ -5,18 +5,24 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    include: ['src/**/*.test.ts', 'src/**/*.integration.test.ts'],
+    include: ['src/**/*.test.ts'],
     exclude: ['node_modules', 'dist', 'rust', 'generated'],
     setupFiles: ['./vitest.setup.ts'],
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'json', 'html'],
+      reporter: ['text', 'json', 'json-summary', 'html'],
       include: ['src/**/*.ts'],
       thresholds: {
-        statements: 6.8,
-        branches: 64.9,
-        functions: 37.9,
-        lines: 6.8,
+        statements: 7.7,
+        branches: 65.8,
+        functions: 38.5,
+        lines: 7.7,
+        'src/middleware/**/*.ts': {
+          statements: 44,
+          branches: 85,
+          functions: 43,
+          lines: 44,
+        },
         'src/rest/*.ts': {
           statements: 3.6,
           branches: 76,
@@ -34,6 +40,42 @@ export default defineConfig({
           branches: 88,
           functions: 24,
           lines: 8.3,
+        },
+        'src/config/paths.ts': {
+          statements: 87,
+          branches: 71,
+          functions: 55,
+          lines: 87,
+        },
+        'src/error.ts': {
+          statements: 100,
+          branches: 69,
+          functions: 100,
+          lines: 100,
+        },
+        'src/logger.ts': {
+          statements: 88,
+          branches: 33,
+          functions: 100,
+          lines: 88,
+        },
+        'src/utils/objectTools.ts': {
+          statements: 100,
+          branches: 100,
+          functions: 100,
+          lines: 100,
+        },
+        'src/utils/random.ts': {
+          statements: 100,
+          branches: 100,
+          functions: 100,
+          lines: 100,
+        },
+        'src/utils/secureCompare.ts': {
+          statements: 92,
+          branches: 90,
+          functions: 100,
+          lines: 92,
         },
       },
       exclude: [

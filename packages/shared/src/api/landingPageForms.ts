@@ -141,12 +141,21 @@ export const buildHeroContentPatch = (
     },
 });
 
-export const getServicesFormData = (content?: LandingPageContent | null): ServicesContent => ({
-    ...DEFAULT_SERVICES_CONTENT,
-    ...(content?.content?.services ?? {}),
-    cta: content?.content?.services?.cta || DEFAULT_SERVICES_CONTENT.cta,
-    items: content?.content?.services?.items || DEFAULT_SERVICES_CONTENT.items,
-});
+export const getServicesFormData = (content?: LandingPageContent | null): ServicesContent => {
+    const services = content?.content?.services;
+    const cta = services?.cta ?? DEFAULT_SERVICES_CONTENT.cta;
+    const formData: ServicesContent = {
+        ...DEFAULT_SERVICES_CONTENT,
+        ...(services ?? {}),
+        items: services?.items ?? DEFAULT_SERVICES_CONTENT.items,
+    };
+
+    if (cta) {
+        formData.cta = cta;
+    }
+
+    return formData;
+};
 
 export const buildServicesPatch = (
     services: ServicesContent,

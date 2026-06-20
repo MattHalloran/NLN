@@ -1,4 +1,5 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 
 const mockSetLocation = vi.fn();
 const mockUseDashboardStats = vi.fn();
@@ -54,19 +55,23 @@ describe("AdminMainPage", () => {
         expect(screen.getByText("System Logs")).toBeInTheDocument();
     });
 
-    it("navigates to internal admin modules", () => {
+    it("navigates to internal admin modules", async () => {
+        const user = userEvent.setup();
+
         render(<AdminMainPage />);
 
-        fireEvent.click(screen.getByText("Contact Info"));
+        await user.click(screen.getByText("Contact Info"));
 
         expect(mockSetLocation).toHaveBeenCalledWith("/admin/contact-info");
         expect(window.open).not.toHaveBeenCalled();
     });
 
-    it("opens external back office links in a new tab", () => {
+    it("opens external back office links in a new tab", async () => {
+        const user = userEvent.setup();
+
         render(<AdminMainPage />);
 
-        fireEvent.click(screen.getByText("Back Office"));
+        await user.click(screen.getByText("Back Office"));
 
         expect(window.open).toHaveBeenCalledWith(
             expect.stringContaining("http"),
@@ -79,8 +84,8 @@ describe("AdminMainPage", () => {
     it("shows a loading state while dashboard data is pending", () => {
         mockUseDashboardStats.mockReturnValue({ loading: true, error: null, data: null });
 
-        const { container } = render(<AdminMainPage />);
+        render(<AdminMainPage />);
 
-        expect(container.querySelector(".MuiCircularProgress-root")).toBeInTheDocument();
+        expect(screen.getByRole("progressbar")).toBeInTheDocument();
     });
 });

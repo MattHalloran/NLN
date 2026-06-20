@@ -72,22 +72,22 @@ describe("REST hooks", () => {
     });
 
     it("exposes auth/session mutations with loading, data, and reset state", async () => {
-        const login = renderHook(() => useLogin());
-        const session = renderHook(() => useSession());
+        const { result: loginResult } = renderHook(() => useLogin());
+        const { result: sessionResult } = renderHook(() => useSession());
 
         await act(async () => {
-            await login.result.current.mutate({
+            await loginResult.current.mutate({
                 email: "person@example.com",
                 password: "password",
             });
-            await session.result.current.mutate();
+            await sessionResult.current.mutate();
         });
 
         expect(restApi.login).toHaveBeenCalledWith({
             email: "person@example.com",
             password: "password",
         });
-        expect(login.result.current.data).toEqual({
+        expect(loginResult.current.data).toEqual({
             id: "customer-1",
             emailVerified: true,
             accountApproved: true,
@@ -95,14 +95,14 @@ describe("REST hooks", () => {
             theme: "default",
             roles: [{ role: { title: "customer" } }],
         });
-        expect(session.result.current.data).toEqual({ authenticated: false, user: null });
+        expect(sessionResult.current.data).toEqual({ authenticated: false, user: null });
 
         act(() => {
-            login.result.current.reset();
+            loginResult.current.reset();
         });
 
-        expect(login.result.current.data).toBeNull();
-        expect(login.result.current.error).toBeNull();
-        expect(login.result.current.loading).toBe(false);
+        expect(loginResult.current.data).toBeNull();
+        expect(loginResult.current.error).toBeNull();
+        expect(loginResult.current.loading).toBe(false);
     });
 });
