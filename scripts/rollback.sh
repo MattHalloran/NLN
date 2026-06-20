@@ -80,6 +80,57 @@ if ! DB_BACKUP_PATH=$(runtime_state_select_db_backup "${BACKUP_DIR}"); then
     exit 1
 fi
 
+print_rollback_diagnostics() {
+    warning "Recent container logs:"
+    for container in nln_ui nln_server nginx-proxy; do
+        echo "---- ${container} ----"
+        docker logs --tail 80 "${container}" 2>&1 || true
+    done
+}
+
+verify_database_connectivity() {
+    header "Verifying database connectivity"
+
+    if docker exec -e PGPASSWORD="${DB_PASSWORD}" nln_db psql -U "${DB_USER}" -d "${DB_NAME}" -c "SELECT 1;" >/dev/null; then
+        success "Database connectivity verified"
+        return 0
+    fi
+
+    error "Database connectivity verification failed"
+    error "Emergency database dump is available at: ${EMERGENCY_DB_DUMP}"
+    exit 1
+}
+
+verify_public_endpoints() {
+    header "Verifying public endpoints"
+
+    local ui_url server_health_url attempt
+    ui_url="${UI_URL:-}"
+    server_health_url="${SERVER_URL:-}"
+
+    if [ -z "${ui_url}" ] || [ -z "${server_health_url}" ]; then
+        warning "UI_URL or SERVER_URL is not set; skipping public endpoint verification."
+        return 0
+    fi
+
+    server_health_url="${server_health_url%/}/healthcheck"
+
+    for attempt in {1..12}; do
+        if curl -fsS "${ui_url}" >/dev/null && curl -fsS "${server_health_url}" >/dev/null; then
+            success "Public UI and API healthcheck endpoints are responding"
+            return 0
+        fi
+        info "Public endpoint verification attempt ${attempt}/12 failed; retrying..."
+        sleep 5
+    done
+
+    error "Public endpoint verification failed."
+    docker ps --format 'table {{.Names}}\t{{.Status}}'
+    print_rollback_diagnostics
+    error "Emergency database dump is available at: ${EMERGENCY_DB_DUMP}"
+    exit 1
+}
+
 # List available Docker image archives
 DOCKER_IMAGES_ARCHIVE="${BACKUP_DIR}/production-docker-images.tar.gz"
 if [ ! -f "${DOCKER_IMAGES_ARCHIVE}" ]; then
@@ -283,6 +334,9 @@ if [ $ELAPSED -ge $TIMEOUT ]; then
     error "You can restore the previous state from: ${EMERGENCY_BACKUP_DIR}"
     exit 1
 fi
+
+verify_database_connectivity
+verify_public_endpoints
 
 # Final success message
 echo ""

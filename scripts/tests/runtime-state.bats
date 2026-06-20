@@ -88,3 +88,12 @@ teardown() {
     grep -q 'psql -v ON_ERROR_STOP=1' "$BATS_TEST_DIRNAME/../rollback.sh"
     grep -q 'Using legacy raw Postgres directory restore' "$BATS_TEST_DIRNAME/../rollback.sh"
 }
+
+@test "rollback script verifies database and public endpoints after rollback" {
+    grep -q 'verify_database_connectivity' "$BATS_TEST_DIRNAME/../rollback.sh"
+    grep -q 'SELECT 1;' "$BATS_TEST_DIRNAME/../rollback.sh"
+    grep -q 'verify_public_endpoints' "$BATS_TEST_DIRNAME/../rollback.sh"
+    grep -q 'curl -fsS "${ui_url}"' "$BATS_TEST_DIRNAME/../rollback.sh"
+    grep -q 'curl -fsS "${server_health_url}"' "$BATS_TEST_DIRNAME/../rollback.sh"
+    grep -q 'print_rollback_diagnostics' "$BATS_TEST_DIRNAME/../rollback.sh"
+}

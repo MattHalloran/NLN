@@ -36,6 +36,8 @@ Validation:
 
 ## Phase 1: Make Backups Data-Safe
 
+Status: Implemented locally. Runtime-state backups use `data/postgres.sql` as the required database artifact, and both rollback and full runtime restore understand the logical dump shape.
+
 1. Replace live raw Postgres directory backup as the primary database backup with a logical dump from the running DB container:
 
    ```bash
@@ -213,6 +215,8 @@ Validation:
 
 ## Phase 6: Make Rollback Safer And More Explicit
 
+Status: Implemented locally for logical rollback and full runtime restore. `rollback.sh` creates an emergency SQL dump before database rollback, restores logical dumps, keeps legacy raw Postgres fallback, verifies DB connectivity, and verifies public UI/API endpoints. `restore-runtime-state.sh` remains dry-run by default; when executed, it creates an emergency runtime-state backup with a current SQL dump before stopping containers, restores filesystem state, initializes a clean Postgres data directory, and imports `data/postgres.sql`. It aborts if the emergency DB dump cannot be created unless `RUNTIME_STATE_ALLOW_NO_EMERGENCY_DB_DUMP=true` is set for an explicit disaster recovery case.
+
 1. Rename output language in `rollback.sh` to database rollback.
 2. Before destructive DB restore:
    - Create a verified emergency SQL dump of the current database.
@@ -235,10 +239,12 @@ Validation:
 Validation:
 
 - Test rollback from a disposable backup in rehearsal.
-- Test failure during restore leaves clear emergency backup instructions.
-- Add shell tests for clear warning text and refusal when the dump is missing.
+- Test failure during restore leaves clear emergency backup instructions. Covered by local shell tests and script output checks; still needs a full disposable Docker rehearsal execution.
+- Add shell tests for clear warning text and refusal when the dump is missing. Completed in `scripts/tests/runtime-state.bats` and `scripts/tests/restore-runtime-state.bats`.
 
 ## Phase 7: Add Public Post-Deploy Verification
+
+Status: Implemented locally for deploy and rollback. `deploy.sh` and `rollback.sh` verify public UI and API healthcheck endpoints with retries after container health passes, and print container status/log diagnostics on failure.
 
 1. After container health passes, verify from the VPS host:
 
@@ -259,8 +265,8 @@ Validation:
 
 Validation:
 
-- Add shell tests with stubbed curl success and failure.
-- Include this check in deploy rehearsal where possible.
+- Add shell tests with stubbed curl success and failure. Basic script-surface coverage is present; deeper curl failure-path tests can be added if this code changes again.
+- Include this check in deploy rehearsal where possible. Included through `deploy.sh` during rehearsal.
 - Manually validate in staging or local rehearsal before production.
 
 ## Recommended Implementation Order

@@ -62,6 +62,7 @@ info "Backup: ${BACKUP_DIR}"
 info "Project: ${PROJECT_DIR}"
 
 info "Paths that will be restored:"
+echo "  $(runtime_state_database_dump_path) (restored into Postgres)"
 while IFS= read -r path; do
     echo "  ${path}"
 done <<EOF
@@ -109,7 +110,39 @@ create_emergency_backup() {
         echo "paths:"
     } >"${EMERGENCY_BACKUP_DIR}/manifest.txt"
 
-    local path
+    local path db_dump
+    db_dump="$(runtime_state_database_dump_path)"
+
+    if [ -f "${PROJECT_DIR}/.env-prod" ] && docker ps --format '{{.Names}}' | grep -q '^nln_db$'; then
+        set -a
+        # shellcheck disable=SC1090
+        . "${PROJECT_DIR}/.env-prod"
+        set +a
+
+        info "Creating emergency logical database dump..."
+        mkdir -p "${EMERGENCY_BACKUP_DIR}/$(dirname "${db_dump}")"
+        if ! docker exec -e PGPASSWORD="${DB_PASSWORD}" nln_db pg_dump -U "${DB_USER}" -d "${DB_NAME}" --no-owner --no-privileges >"${EMERGENCY_BACKUP_DIR}/${db_dump}"; then
+            error "Failed to create emergency logical database dump"
+            error "Restore aborted before stopping containers."
+            exit 1
+        fi
+        if [ ! -s "${EMERGENCY_BACKUP_DIR}/${db_dump}" ]; then
+            error "Emergency logical database dump is empty"
+            error "Restore aborted before stopping containers."
+            exit 1
+        fi
+        echo "- ${db_dump}" >>"${EMERGENCY_BACKUP_DIR}/manifest.txt"
+    else
+        if [ "${RUNTIME_STATE_ALLOW_NO_EMERGENCY_DB_DUMP:-false}" = "true" ]; then
+            warning "Proceeding without emergency logical database dump because RUNTIME_STATE_ALLOW_NO_EMERGENCY_DB_DUMP=true."
+        else
+            error "Could not create emergency logical database dump because .env-prod or nln_db is unavailable."
+            error "Restore aborted before stopping containers."
+            error "Set RUNTIME_STATE_ALLOW_NO_EMERGENCY_DB_DUMP=true only for an explicit disaster recovery case."
+            exit 1
+        fi
+    fi
+
     while IFS= read -r path; do
         if [ -e "${PROJECT_DIR}/${path}" ]; then
             mkdir -p "${EMERGENCY_BACKUP_DIR}/$(dirname "${path}")"
@@ -146,11 +179,59 @@ restore_path() {
     cp -rp "${source}" "${target}"
 }
 
+wait_for_restore_db() {
+    local ready=false
+    for _ in $(seq 1 30); do
+        if docker exec nln_db pg_isready -U "${DB_USER}" -d "${DB_NAME}" >/dev/null 2>&1; then
+            ready=true
+            break
+        fi
+        sleep 2
+    done
+
+    if [ "${ready}" != true ]; then
+        error "Database did not become ready for runtime-state restore"
+        error "Emergency backup of previous state is available at: ${EMERGENCY_BACKUP_DIR}"
+        exit 1
+    fi
+}
+
+restore_database_dump() {
+    local db_dump source db_dir
+    db_dump="$(runtime_state_database_dump_path)"
+    source="${BACKUP_DIR}/${db_dump}"
+    db_dir="${PROJECT_DIR}/data/postgres"
+
+    header "Restoring database from logical dump"
+
+    set -a
+    # shellcheck disable=SC1090
+    . "${PROJECT_DIR}/.env-prod"
+    set +a
+
+    rm -rf "${db_dir}"
+
+    docker-compose --env-file .env-prod -f docker-compose-prod.yml up -d db
+    wait_for_restore_db
+
+    if ! docker exec -i -e PGPASSWORD="${DB_PASSWORD}" nln_db psql -v ON_ERROR_STOP=1 -U "${DB_USER}" -d "${DB_NAME}" <"${source}"; then
+        error "Failed to restore logical database dump"
+        error "Emergency backup of previous state is available at: ${EMERGENCY_BACKUP_DIR}"
+        exit 1
+    fi
+
+    success "Database restored successfully from logical dump"
+}
+
 create_emergency_backup
 
 header "Stopping containers"
 cd "${PROJECT_DIR}"
-docker-compose --env-file "${BACKUP_DIR}/.env-prod" -f docker-compose-prod.yml down
+if [ -f "${PROJECT_DIR}/.env-prod" ]; then
+    docker-compose --env-file .env-prod -f docker-compose-prod.yml down
+else
+    docker-compose --env-file "${BACKUP_DIR}/.env-prod" -f docker-compose-prod.yml down
+fi
 
 header "Restoring runtime-state paths"
 while IFS= read -r path; do
@@ -166,6 +247,8 @@ for jwt_file in "${BACKUP_DIR}"/jwt_*; do
     cp -rp "${jwt_file}" "${PROJECT_DIR}/$(basename "${jwt_file}")"
 done
 shopt -u nullglob
+
+restore_database_dump
 
 header "Starting containers"
 docker-compose --env-file .env-prod -f docker-compose-prod.yml up -d
