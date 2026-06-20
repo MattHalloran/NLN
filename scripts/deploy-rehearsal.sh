@@ -208,12 +208,20 @@ EOF
 refuse_existing_local_containers() {
     local existing
     existing=$(docker ps -a --format '{{.Names}}' | grep -E '^(nln_ui|nln_server|nln_db|nln_redis)$' || true)
-    if [ -n "${existing}" ] && [ "${REPLACE_LOCAL_CONTAINERS}" != true ]; then
+    if [ -z "${existing}" ]; then
+        return 0
+    fi
+
+    if [ "${REPLACE_LOCAL_CONTAINERS}" != true ]; then
         error "Found existing local nln_* containers:"
         echo "${existing}"
         error "Re-run with --replace-local-containers only if these are disposable local containers."
         exit 1
     fi
+
+    warning "Removing existing local nln_* containers for disposable rehearsal:"
+    echo "${existing}"
+    echo "${existing}" | xargs docker rm -f >/dev/null
 }
 
 wait_for_db() {

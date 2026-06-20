@@ -82,3 +82,9 @@ teardown() {
     grep -q 'cp -p "${ENV_FILE}" "${REHEARSAL_PROJECT_DIR}/.env-prod"' "$SCRIPT_PATH"
     grep -q 'env_file: .env-prod' "$BATS_TEST_DIRNAME/../../docker-compose-prod.yml"
 }
+
+@test "deploy rehearsal replacement flag removes existing local containers" {
+    grep -q 'REPLACE_LOCAL_CONTAINERS' "$SCRIPT_PATH"
+    grep -q 'docker rm -f' "$SCRIPT_PATH"
+    grep -q 'Removing existing local nln_\* containers' "$SCRIPT_PATH"
+}
