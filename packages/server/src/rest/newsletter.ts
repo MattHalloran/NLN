@@ -129,13 +129,13 @@ router.post(
                 return res.status(500).json({ error: "Database connection not available" });
             }
 
-            // Basic email format validation
-            if (!isValidNewsletterEmail(email)) {
-                return res.status(400).json({ error: "Invalid email format" });
-            }
-
             // Normalize email (lowercase, trim)
             const normalizedEmail = normalizeNewsletterEmail(email);
+
+            // Basic email format validation
+            if (!isValidNewsletterEmail(normalizedEmail)) {
+                return res.status(400).json({ error: "Invalid email format" });
+            }
 
             // Check if already subscribed
             const existing = await prisma.newsletter_subscription.findUnique({

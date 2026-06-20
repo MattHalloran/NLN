@@ -62,7 +62,7 @@ Stable browser specs live in `e2e/admin/stable`:
 - `e2e/admin/stable/public-visual-simple.spec.ts`
 - `e2e/admin/stable/seasonal-content-simple.spec.ts`
 
-The stable browser suite currently contains 37 application checks. It covers public route smoke checks, first-viewport visual smoke checks, and representative browser-driven persistence coverage for contact info, hero banner, and seasonal content saves. These tests assert that the successful save response contains the updated persisted landing page document, which is less brittle than requiring newly saved content to be visible in a specific expanded UI panel after reload.
+The stable browser suite currently contains 42 application checks. It covers public route smoke checks, public newsletter signup, first-viewport visual smoke checks, and representative browser-driven persistence coverage for contact info, hero banner, and seasonal content saves. These tests assert that the successful save response contains the updated persisted landing page document, which is less brittle than requiring newly saved content to be visible in a specific expanded UI panel after reload.
 
 `public-visual-simple.spec.ts` intentionally keeps screenshot coverage narrow. It guards homepage and gallery first viewports plus mobile overflow on the homepage/about routes. Add new screenshots only for pages where visual regressions are expensive to miss and the content is deterministic enough for CI.
 

@@ -34,6 +34,12 @@ export default defineConfig({
         branches: 59.4,
         functions: 31,
         lines: 19.6,
+        'src/rest/newsletter.ts': {
+          statements: 88,
+          branches: 67,
+          functions: 100,
+          lines: 88,
+        },
       },
     },
     pool: 'forks',

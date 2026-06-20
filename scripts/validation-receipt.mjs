@@ -19,6 +19,15 @@ const commandOutput = (command, args) => {
     }
 };
 
+const fileFreshness = (relativePath) => {
+    const filePath = path.resolve(relativePath);
+    if (!fs.existsSync(filePath)) return "missing";
+
+    const stats = fs.statSync(filePath);
+    const ageSeconds = Math.round((Date.now() - stats.mtimeMs) / 1000);
+    return `${stats.mtime.toISOString()} (${ageSeconds}s old)`;
+};
+
 const coverageSummaries = [
     ["shared unit", "packages/shared/coverage/coverage-summary.json"],
     ["ui unit", "packages/ui/coverage/coverage-summary.json"],
@@ -40,19 +49,27 @@ const coverageRows = coverageSummaries.flatMap(([label, relativePath]) => {
 
     const { total } = summary;
     return [
-        `| ${label} | ${formatMetric(total.statements)} | ${formatMetric(total.branches)} | ${formatMetric(total.functions)} | ${formatMetric(total.lines)} |`,
+        `| ${label} | ${formatMetric(total.statements)} | ${formatMetric(total.branches)} | ${formatMetric(total.functions)} | ${formatMetric(total.lines)} | ${fileFreshness(relativePath)} |`,
     ];
 });
 
 const countPlaywright = (suite) => {
     let total = 0;
     let failed = 0;
+    let skipped = 0;
+    let flaky = 0;
 
     for (const spec of suite.specs ?? []) {
         for (const test of spec.tests ?? []) {
             total += 1;
             if (test.status !== "expected") {
                 failed += 1;
+            }
+            if (test.status === "skipped") {
+                skipped += 1;
+            }
+            if (test.status === "expected" && (test.results?.length ?? 0) > 1) {
+                flaky += 1;
             }
         }
     }
@@ -61,9 +78,11 @@ const countPlaywright = (suite) => {
         const child = countPlaywright(childSuite);
         total += child.total;
         failed += child.failed;
+        skipped += child.skipped;
+        flaky += child.flaky;
     }
 
-    return { total, failed };
+    return { total, failed, skipped, flaky };
 };
 
 const playwrightRows = playwrightResults.flatMap(([label, relativePath]) => {
@@ -71,7 +90,9 @@ const playwrightRows = playwrightResults.flatMap(([label, relativePath]) => {
     if (!result) return [];
 
     const counts = countPlaywright(result);
-    return [`| ${label} | ${counts.total} | ${counts.failed} | ${relativePath} |`];
+    return [
+        `| ${label} | ${counts.total} | ${counts.failed} | ${counts.flaky} | ${counts.skipped} | ${relativePath} | ${fileFreshness(relativePath)} |`,
+    ];
 });
 
 const lines = [
@@ -81,18 +102,21 @@ const lines = [
     `Commit: ${commandOutput("git", ["rev-parse", "HEAD"])}`,
     `Branch: ${commandOutput("git", ["branch", "--show-current"])}`,
     `Worktree: ${commandOutput("git", ["status", "--short"]) || "clean"}`,
+    `Validation command: ${process.env.VALIDATION_COMMAND || process.env.DEPLOY_VALIDATE_CMD || "not provided"}`,
+    `CI run: ${process.env.GITHUB_SERVER_URL && process.env.GITHUB_REPOSITORY && process.env.GITHUB_RUN_ID ? `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}` : "local"}`,
+    `CI job: ${process.env.GITHUB_JOB || "local"}`,
     "",
     "## Coverage",
     "",
-    "| Suite | Statements | Branches | Functions | Lines |",
-    "| --- | ---: | ---: | ---: | ---: |",
-    ...(coverageRows.length ? coverageRows : ["| no coverage summaries found | | | | |"]),
+    "| Suite | Statements | Branches | Functions | Lines | Artifact Freshness |",
+    "| --- | ---: | ---: | ---: | ---: | --- |",
+    ...(coverageRows.length ? coverageRows : ["| no coverage summaries found | | | | | |"]),
     "",
     "## Playwright",
     "",
-    "| Suite | Tests | Failed | Result File |",
-    "| --- | ---: | ---: | --- |",
-    ...(playwrightRows.length ? playwrightRows : ["| no Playwright results found | | | |"]),
+    "| Suite | Tests | Failed | Flaky | Skipped | Result File | Artifact Freshness |",
+    "| --- | ---: | ---: | ---: | ---: | --- | --- |",
+    ...(playwrightRows.length ? playwrightRows : ["| no Playwright results found | | | | | | |"]),
     "",
 ];
 

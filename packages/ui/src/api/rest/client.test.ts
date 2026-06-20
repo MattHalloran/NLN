@@ -132,4 +132,77 @@ describe("restApi client", () => {
         await expect(request.catch(getApiErrorCode)).resolves.toBe(CODE.CsrfTokenUnavailable.code);
         expect(fetch).not.toHaveBeenCalled();
     });
+
+    it("submits newsletter signup with normalized endpoint, JSON body, credentials, and CSRF", async () => {
+        const { restApi } = await import("./client");
+        vi.mocked(fetch).mockResolvedValueOnce(
+            jsonResponse({ success: true, message: "Thank you for subscribing!" }),
+        );
+
+        await expect(
+            restApi.subscribeToNewsletter({
+                email: "person@example.com",
+                variantId: "variant-a",
+                source: "homepage",
+            }),
+        ).resolves.toEqual({ success: true, message: "Thank you for subscribing!" });
+
+        expect(fetch).toHaveBeenCalledWith(
+            `https://server.test/api${stripApiPrefix(REST_ROUTES.newsletter.subscribe)}`,
+            expect.objectContaining({
+                method: "POST",
+                credentials: "include",
+                body: JSON.stringify({
+                    email: "person@example.com",
+                    variantId: "variant-a",
+                    source: "homepage",
+                }),
+            }),
+        );
+        const [, init] = vi.mocked(fetch).mock.calls[0] ?? [];
+        expect((init?.headers as Headers).get(CSRF.HeaderName)).toBe("csrf-token");
+    });
+
+    it("exports newsletter subscribers as a credentialed CSV request with optional status filter", async () => {
+        const { restApi } = await import("./client");
+        vi.mocked(fetch).mockResolvedValueOnce(
+            new Response("Email\nperson@example.com", {
+                status: 200,
+                headers: { "Content-Type": "text/csv" },
+            }),
+        );
+
+        const result = await restApi.exportNewsletterSubscribers("active");
+
+        await expect(result.text()).resolves.toBe("Email\nperson@example.com");
+
+        expect(fetch).toHaveBeenCalledWith(
+            `https://server.test/api${stripApiPrefix(
+                REST_ROUTES.newsletter.subscribersExport,
+            )}?status=active`,
+            {
+                method: "GET",
+                credentials: "include",
+            },
+        );
+        expect(csrfMocks.getCsrfToken).not.toHaveBeenCalled();
+    });
+
+    it("throws an ApiError when newsletter subscriber export fails", async () => {
+        const { ApiError, restApi } = await import("./client");
+        vi.mocked(fetch).mockResolvedValueOnce(
+            new Response("unauthorized", {
+                status: 401,
+                statusText: "Unauthorized",
+            }),
+        );
+
+        const request = restApi.exportNewsletterSubscribers();
+
+        await expect(request).rejects.toMatchObject({
+            status: 401,
+            message: "Failed to export subscribers: Unauthorized",
+        });
+        await expect(request.catch((error) => error)).resolves.toBeInstanceOf(ApiError);
+    });
 });

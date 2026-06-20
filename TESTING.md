@@ -2,6 +2,8 @@
 
 This project uses layered validation. Pick the narrowest command that covers the change you made, and use the CI command before merging broad changes.
 
+For release readiness, use the workflow-level checklist in [TEST_COVERAGE_MATRIX.md](./TEST_COVERAGE_MATRIX.md). That matrix is the source of truth for what the automated suite is expected to prove before production deployment.
+
 ## Command Tiers
 
 ```bash
@@ -45,7 +47,7 @@ yarn validation:receipt
 - Script tests use top-level Bats files in `scripts/tests`; helper library tests under `scripts/tests/helpers` are vendored and not part of project validation.
 - E2E tests use Playwright.
 - PWA tests use a separate Playwright config against the production UI build.
-- Lighthouse checks are available through `yarn lighthouse:prod` but are not part of the default CI gate.
+- Lighthouse checks are available through `yarn lighthouse:prod`. CI also collects/asserts Lighthouse results for public pages as a non-blocking artifact so accessibility, SEO, best-practices, and performance drift are visible before release.
 
 ## Test Architecture
 
@@ -71,7 +73,7 @@ Use the narrowest layer that proves the behavior:
 
 Playwright-started API servers use `.e2e-runtime` as `PROJECT_DIR` by default. The server copies `packages/server/src/data` into that generated runtime directory before booting, so normal Playwright runs do not write back to source data files. Set `E2E_PROJECT_DIR` only when you intentionally want a different disposable runtime directory. If you run against an already-running local API server, that server's own `PROJECT_DIR` controls where data is read and written.
 
-The stable browser suite currently covers 37 application checks across public route smoke coverage, visual smoke coverage, contact info, hero banner, and seasonal content. It includes browser-driven save assertions for representative persisted edits in each admin area. Those tests verify the successful save response contains the updated persisted landing page document, which catches failed writes without depending on post-save accordion/card visibility.
+The stable browser suite currently covers 42 application checks across public route smoke coverage, public newsletter signup, visual smoke coverage, contact info, hero banner, and seasonal content. It includes browser-driven save assertions for representative persisted edits in each admin area. Those tests verify the successful save response contains the updated persisted landing page document, which catches failed writes without depending on post-save accordion/card visibility.
 
 Stable specs attach a runtime guard from `e2e/fixtures/runtime-guard.ts` through either `e2e/fixtures/auth.ts` or `e2e/fixtures/guarded.ts`. The guard fails tests on unexpected browser console warnings/errors, uncaught page errors, and HTTP 4xx/5xx responses. The only allowed failures are documented known development-noise cases such as the stale-CSRF retry during first authenticated mutation and the analytics tracking retry after login.
 
@@ -85,7 +87,7 @@ Stable specs attach a runtime guard from `e2e/fixtures/runtime-guard.ts` through
 
 Stable E2E specs and non-legacy E2E support files may not use fixed sleeps, broad `networkidle` waits, runtime `test.skip`, or parent-traversal selectors. Legacy E2E specs and their legacy-only page objects are exempt while they are being hardened or retired.
 
-`yarn validation:receipt` writes `.validation/latest-receipt.md` with the current commit, worktree state, available coverage totals, and available Playwright result counts. CI uploads this receipt from each validation job.
+`yarn validation:receipt` writes `.validation/latest-receipt.md` with the current commit, worktree state, declared validation command, CI run/job metadata when available, available coverage totals, Playwright expected/failed/flaky/skipped counts, and artifact freshness. CI uploads this receipt from each validation job.
 
 ## Release Gate
 
@@ -114,6 +116,7 @@ GitHub Actions uploads:
 - Server integration coverage.
 - Playwright HTML/JSON reports for admin E2E.
 - Playwright HTML/JSON reports for PWA tests.
+- Lighthouse CI results for public pages.
 
 ## Validation Matrix
 

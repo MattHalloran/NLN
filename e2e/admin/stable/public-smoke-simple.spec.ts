@@ -1,4 +1,4 @@
-import { APP_LINKS } from "@local/shared";
+import { APP_LINKS, REST_ROUTES, stripApiPrefix } from "@local/shared";
 import { test, expect } from "../../fixtures/guarded";
 
 const expectUsablePage = async (page: import("@playwright/test").Page, heading: RegExp) => {
@@ -45,5 +45,27 @@ test.describe("Public Site - Smoke", () => {
         await expect(page.getByLabel(/email address/i)).toBeVisible();
         await expect(page.getByLabel(/^password$/i)).toBeVisible();
         await expect(page.getByRole("button", { name: /sign in/i })).toBeVisible();
+    });
+
+    test("submits the public newsletter signup from the homepage", async ({ page }) => {
+        await page.goto(APP_LINKS.Home);
+        await expectUsablePage(page, /new life nursery|wholesale nursery/i);
+
+        const emailInput = page.getByPlaceholder(/enter your email address/i);
+        await emailInput.scrollIntoViewIfNeeded();
+        await expect(emailInput).toBeVisible();
+
+        const subscribeResponsePromise = page.waitForResponse(
+            (response) =>
+                response.url().includes(stripApiPrefix(REST_ROUTES.newsletter.subscribe)) &&
+                response.request().method() === "POST",
+        );
+
+        await emailInput.fill(`e2e-newsletter-${Date.now()}@example.test`);
+        await page.getByRole("button", { name: /subscribe|sign up|get updates/i }).last().click();
+
+        const subscribeResponse = await subscribeResponsePromise;
+        expect(subscribeResponse.status()).toBe(200);
+        await expect(page.getByText(/thank you|already subscribed|welcome back/i)).toBeVisible();
     });
 });

@@ -36,6 +36,7 @@ export const createE2EConfig = ({ testMatch, reportName }: E2EConfigOptions) =>
             ["list"],
             ["json", { outputFile: `test-results/${reportName}.json` }],
         ],
+        outputDir: `test-results/${reportName}-artifacts`,
         globalTeardown: "./e2e/teardown/e2e-services.teardown.ts",
         use: {
             baseURL: E2E_URLS.ui,

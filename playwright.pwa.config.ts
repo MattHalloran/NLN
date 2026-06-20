@@ -14,6 +14,7 @@ export default defineConfig({
         ["html", { outputFolder: "playwright-report/pwa", open: "never" }],
         ["json", { outputFile: "test-results/pwa.json" }],
     ],
+    outputDir: "test-results/pwa-artifacts",
     use: {
         baseURL: E2E_URLS.ui,
         trace: "on-first-retry",

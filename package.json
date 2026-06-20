@@ -21,7 +21,7 @@
     "coverage:summary": "node scripts/coverage-summary.mjs",
     "validation:receipt": "node scripts/validation-receipt.mjs",
     "validate:full": "yarn validate && yarn test:integration && yarn workspace ui build && yarn test:pwa && yarn test:e2e:admin",
-    "validate:release": "yarn validate:full && yarn validation:receipt",
+    "validate:release": "yarn validate:full && VALIDATION_COMMAND=\"yarn validate:release\" yarn validation:receipt",
     "validate:ci": "yarn validate:full",
     "deploy:readiness": "./scripts/deploy-readiness.sh",
     "test:unit": "yarn workspace @local/shared test && yarn workspace ui test && yarn workspace server test:unit",
