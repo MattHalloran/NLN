@@ -887,7 +887,7 @@ export const AdminHomepageSeasonal = () => {
                                             <TextField
                                                 fullWidth
                                                 label="Section Title"
-                                                value={form.data?.sectionText.header.title}
+                                                value={form.data?.sectionText.header.title ?? ""}
                                                 onChange={(e) => {
                                                     if (!form.data) return;
                                                     form.setData({
@@ -908,7 +908,7 @@ export const AdminHomepageSeasonal = () => {
                                             <TextField
                                                 fullWidth
                                                 label="Section Subtitle"
-                                                value={form.data?.sectionText.header.subtitle}
+                                                value={form.data?.sectionText.header.subtitle ?? ""}
                                                 onChange={(e) => {
                                                     if (!form.data) return;
                                                     form.setData({
@@ -946,7 +946,7 @@ export const AdminHomepageSeasonal = () => {
                                                 label="Current Season Title"
                                                 value={
                                                     form.data?.sectionText.sections.plants
-                                                        .currentSeasonTitle
+                                                        .currentSeasonTitle ?? ""
                                                 }
                                                 onChange={(e) => {
                                                     if (!form.data) return;
@@ -975,7 +975,7 @@ export const AdminHomepageSeasonal = () => {
                                                 label="Other Season Title Template"
                                                 value={
                                                     form.data?.sectionText.sections.plants
-                                                        .otherSeasonTitleTemplate
+                                                        .otherSeasonTitleTemplate ?? ""
                                                 }
                                                 onChange={(e) => {
                                                     if (!form.data) return;
@@ -1017,7 +1017,9 @@ export const AdminHomepageSeasonal = () => {
                                             <TextField
                                                 fullWidth
                                                 label="Tips Section Title"
-                                                value={form.data?.sectionText.sections.tips.title}
+                                                value={
+                                                    form.data?.sectionText.sections.tips.title ?? ""
+                                                }
                                                 onChange={(e) => {
                                                     if (!form.data) return;
                                                     form.setData({
@@ -1053,7 +1055,10 @@ export const AdminHomepageSeasonal = () => {
                                             <TextField
                                                 fullWidth
                                                 label="Subscribe Button Text"
-                                                value={form.data?.sectionText.newsletterButtonText}
+                                                value={
+                                                    form.data?.sectionText.newsletterButtonText ??
+                                                    ""
+                                                }
                                                 onChange={(e) => {
                                                     if (!form.data) return;
                                                     form.setData({
@@ -1086,7 +1091,7 @@ export const AdminHomepageSeasonal = () => {
                                             <TextField
                                                 fullWidth
                                                 label="Gallery Button Text"
-                                                value={form.data?.galleryButton.text}
+                                                value={form.data?.galleryButton.text ?? ""}
                                                 onChange={(e) => {
                                                     if (!form.data) return;
                                                     form.setData({
@@ -1104,7 +1109,10 @@ export const AdminHomepageSeasonal = () => {
                                             <FormControlLabel
                                                 control={
                                                     <Switch
-                                                        checked={form.data?.galleryButton.enabled}
+                                                        checked={
+                                                            form.data?.galleryButton.enabled ??
+                                                            false
+                                                        }
                                                         onChange={(e) => {
                                                             if (!form.data) return;
                                                             form.setData({
@@ -1306,7 +1314,7 @@ export const AdminHomepageSeasonal = () => {
                                                                 <TextField
                                                                     fullWidth
                                                                     label="Name"
-                                                                    value={editingPlant.name}
+                                                                    value={editingPlant.name ?? ""}
                                                                     onChange={(e) =>
                                                                         handlePlantFieldChange(
                                                                             "name",
@@ -1322,7 +1330,10 @@ export const AdminHomepageSeasonal = () => {
                                                                     multiline
                                                                     rows={2}
                                                                     label="Description"
-                                                                    value={editingPlant.description}
+                                                                    value={
+                                                                        editingPlant.description ??
+                                                                        ""
+                                                                    }
                                                                     onChange={(e) =>
                                                                         handlePlantFieldChange(
                                                                             "description",
@@ -1336,7 +1347,10 @@ export const AdminHomepageSeasonal = () => {
                                                                 <FormControl fullWidth size="small">
                                                                     <InputLabel>Season</InputLabel>
                                                                     <Select
-                                                                        value={editingPlant.season}
+                                                                        value={
+                                                                            editingPlant.season ??
+                                                                            ""
+                                                                        }
                                                                         label="Season"
                                                                         onChange={(e) =>
                                                                             handlePlantFieldChange(
@@ -1363,7 +1377,8 @@ export const AdminHomepageSeasonal = () => {
                                                                     </InputLabel>
                                                                     <Select
                                                                         value={
-                                                                            editingPlant.careLevel
+                                                                            editingPlant.careLevel ??
+                                                                            ""
                                                                         }
                                                                         label="Care Level"
                                                                         onChange={(e) =>
@@ -1508,7 +1523,7 @@ export const AdminHomepageSeasonal = () => {
                                                                     Icon (Fallback) *Required
                                                                 </Typography>
                                                                 <ToggleButtonGroup
-                                                                    value={editingPlant.icon}
+                                                                    value={editingPlant.icon ?? ""}
                                                                     exclusive
                                                                     onChange={(_, value) =>
                                                                         value &&
@@ -1542,7 +1557,8 @@ export const AdminHomepageSeasonal = () => {
                                                                     control={
                                                                         <Switch
                                                                             checked={
-                                                                                editingPlant.isActive
+                                                                                editingPlant.isActive ??
+                                                                                false
                                                                             }
                                                                             onChange={(e) =>
                                                                                 handlePlantFieldChange(
@@ -1727,7 +1743,7 @@ export const AdminHomepageSeasonal = () => {
                                                                 <TextField
                                                                     fullWidth
                                                                     label="Title"
-                                                                    value={editingTip.title}
+                                                                    value={editingTip.title ?? ""}
                                                                     onChange={(e) =>
                                                                         handleTipFieldChange(
                                                                             "title",
@@ -1743,7 +1759,9 @@ export const AdminHomepageSeasonal = () => {
                                                                     multiline
                                                                     rows={3}
                                                                     label="Description"
-                                                                    value={editingTip.description}
+                                                                    value={
+                                                                        editingTip.description ?? ""
+                                                                    }
                                                                     onChange={(e) =>
                                                                         handleTipFieldChange(
                                                                             "description",
@@ -1759,7 +1777,10 @@ export const AdminHomepageSeasonal = () => {
                                                                         Category
                                                                     </InputLabel>
                                                                     <Select
-                                                                        value={editingTip.category}
+                                                                        value={
+                                                                            editingTip.category ??
+                                                                            ""
+                                                                        }
                                                                         label="Category"
                                                                         onChange={(e) =>
                                                                             handleTipFieldChange(
@@ -1790,7 +1811,9 @@ export const AdminHomepageSeasonal = () => {
                                                                 <FormControl fullWidth size="small">
                                                                     <InputLabel>Season</InputLabel>
                                                                     <Select
-                                                                        value={editingTip.season}
+                                                                        value={
+                                                                            editingTip.season ?? ""
+                                                                        }
                                                                         label="Season"
                                                                         onChange={(e) =>
                                                                             handleTipFieldChange(
@@ -1817,7 +1840,8 @@ export const AdminHomepageSeasonal = () => {
                                                                     control={
                                                                         <Switch
                                                                             checked={
-                                                                                editingTip.isActive
+                                                                                editingTip.isActive ??
+                                                                                false
                                                                             }
                                                                             onChange={(e) =>
                                                                                 handleTipFieldChange(

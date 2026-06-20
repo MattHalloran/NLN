@@ -61,7 +61,9 @@ export const Slide = ({
                 sizes="100vw"
                 alt={image.alt || ""}
                 loading={loading}
-                fetchPriority={fetchPriority}
+                ref={(element: HTMLImageElement | null) => {
+                    element?.setAttribute("fetchpriority", fetchPriority);
+                }}
                 decoding={isPriority ? "sync" : "async"}
                 width={fallbackFile?.width || undefined}
                 height={fallbackFile?.height || undefined}

@@ -15,7 +15,7 @@ const removeContainer = (name: string) => {
 };
 
 export default async function globalTeardown() {
-  if (process.env.E2E_MANAGE_SERVICES !== "true") {
+  if (process.env.E2E_TEARDOWN_REMOVE_SERVICES !== "true") {
     return;
   }
 

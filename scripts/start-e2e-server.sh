@@ -53,7 +53,16 @@ SERVER_PID=""
 
 cleanup() {
     if [ -n "${SERVER_PID}" ]; then
-        kill "${SERVER_PID}" >/dev/null 2>&1 || true
+        if kill -0 "${SERVER_PID}" >/dev/null 2>&1; then
+            kill -TERM "${SERVER_PID}" >/dev/null 2>&1 || true
+            for _ in $(seq 1 20); do
+                if ! kill -0 "${SERVER_PID}" >/dev/null 2>&1; then
+                    break
+                fi
+                sleep 0.25
+            done
+            kill -KILL "${SERVER_PID}" >/dev/null 2>&1 || true
+        fi
         wait "${SERVER_PID}" >/dev/null 2>&1 || true
     fi
 
@@ -119,6 +128,8 @@ if [ "${E2E_MANAGE_SERVICES}" = "true" ]; then
 fi
 
 cd "${ROOT_DIR}/packages/server"
-yarn start-development &
+yarn pre-build
+yarn build
+node dist/index.js &
 SERVER_PID="$!"
 wait "${SERVER_PID}"

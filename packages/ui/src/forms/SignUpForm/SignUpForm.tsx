@@ -1,6 +1,6 @@
 import { APP_LINKS, CODE, DEFAULT_PRONOUNS, signUpSchema } from "@local/shared";
-import { Autocomplete } from "@mui/lab";
 import {
+    Autocomplete,
     Box,
     Button,
     Checkbox,

@@ -1,7 +1,7 @@
 import { test, expect } from "../../fixtures/auth";
 import { gotoAdminPage } from "../../fixtures/admin";
 import type { Page } from "@playwright/test";
-import { APP_LINKS } from "@local/shared";
+import { APP_LINKS, REST_ROUTES, stripApiPrefix } from "@local/shared";
 
 /**
  * Simplified E2E Tests for Admin Contact Info Management
@@ -77,6 +77,27 @@ test.describe("Contact Info - Advanced Features", () => {
     await expect(authenticatedPage.getByRole("heading", { name: /preview/i })).toBeVisible();
     await expect(authenticatedPage.getByRole("heading", { name: /special notes/i })).toBeVisible();
     await expect(authenticatedPage.getByRole("table")).toContainText(/hours/i);
+  });
+
+  test("should save a special note and return it from the persisted document", async ({
+    authenticatedPage,
+  }) => {
+    await openContactInfo(authenticatedPage);
+
+    const note = `E2E persisted note ${Date.now()}`;
+    await authenticatedPage.getByTestId("add-note-button").click();
+    await authenticatedPage.locator('[data-testid^="note-input-"] input').last().fill(note);
+
+    const saveResponse = authenticatedPage.waitForResponse(
+      (response) =>
+        response.url().includes(stripApiPrefix(REST_ROUTES.landingPage.contactInfo)) &&
+        response.request().method() === "PUT" &&
+        response.status() === 200,
+    );
+    await authenticatedPage.getByTestId("save-changes-button").click();
+    const responseBody = await (await saveResponse).json();
+
+    expect(JSON.stringify(responseBody.data.contact)).toContain(note);
   });
 });
 

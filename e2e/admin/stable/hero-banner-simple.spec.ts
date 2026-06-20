@@ -1,7 +1,7 @@
 import { test, expect } from "../../fixtures/auth";
 import { gotoAdminPage } from "../../fixtures/admin";
 import type { Page } from "@playwright/test";
-import { APP_LINKS } from "@local/shared";
+import { APP_LINKS, REST_ROUTES, stripApiPrefix } from "@local/shared";
 
 /**
  * Simplified E2E Tests for Admin Hero Banner Management
@@ -89,6 +89,27 @@ test.describe("Hero Banner - Form Interactions", () => {
       authenticatedPage.getByRole("button", { name: /save all changes/i }).first(),
     ).toBeVisible();
     await expect(authenticatedPage.getByRole("button", { name: /^cancel$/i }).first()).toBeVisible();
+  });
+
+  test("should save hero banner alt text and return it from the persisted document", async ({
+    authenticatedPage,
+  }) => {
+    await openHeroBanner(authenticatedPage);
+
+    const altText = `E2E hero alt ${Date.now()}`;
+    const altInput = authenticatedPage.getByTestId("hero-alt-input-0").locator("input");
+    await altInput.fill(altText);
+
+    const saveResponse = authenticatedPage.waitForResponse(
+      (response) =>
+        response.url().includes(stripApiPrefix(REST_ROUTES.landingPage.root)) &&
+        response.request().method() === "PUT" &&
+        response.status() === 200,
+    );
+    await authenticatedPage.getByRole("button", { name: /save all changes/i }).first().click();
+    const responseBody = await (await saveResponse).json();
+
+    expect(responseBody.data.content.hero.banners[0].alt).toBe(altText);
   });
 });
 

@@ -737,7 +737,7 @@ export const AdminHomepageHeroBanner = () => {
                                         <TextField
                                             fullWidth
                                             label="Title"
-                                            value={form.data?.content.title}
+                                            value={form.data?.content.title ?? ""}
                                             onChange={(e) => {
                                                 if (!form.data) return;
                                                 form.setData({
@@ -759,7 +759,7 @@ export const AdminHomepageHeroBanner = () => {
                                         <TextField
                                             fullWidth
                                             label="Subtitle"
-                                            value={form.data?.content.subtitle}
+                                            value={form.data?.content.subtitle ?? ""}
                                             onChange={(e) => {
                                                 if (!form.data) return;
                                                 form.setData({
@@ -783,7 +783,7 @@ export const AdminHomepageHeroBanner = () => {
                                             multiline
                                             rows={3}
                                             label="Description"
-                                            value={form.data?.content.description}
+                                            value={form.data?.content.description ?? ""}
                                             onChange={(e) => {
                                                 if (!form.data) return;
                                                 form.setData({
@@ -805,7 +805,7 @@ export const AdminHomepageHeroBanner = () => {
                                         <TextField
                                             fullWidth
                                             label="Business Hours"
-                                            value={form.data?.content.businessHours}
+                                            value={form.data?.content.businessHours ?? ""}
                                             onChange={(e) => {
                                                 if (!form.data) return;
                                                 form.setData({
@@ -1544,7 +1544,10 @@ export const AdminHomepageHeroBanner = () => {
                                                     fullWidth
                                                     type="number"
                                                     label="Auto-play Delay (milliseconds)"
-                                                    value={form.data?.settings.autoPlayDelay}
+                                                    value={
+                                                        form.data?.settings.autoPlayDelay ??
+                                                        HERO_SETTINGS_LIMITS.autoPlayDelay.defaultMs
+                                                    }
                                                     onChange={(e) => {
                                                         if (!form.data) return;
                                                         form.setData({
@@ -1700,7 +1703,10 @@ export const AdminHomepageHeroBanner = () => {
                                                     type="number"
                                                     label="Fade Transition Duration (milliseconds)"
                                                     value={
-                                                        form.data?.settings.fadeTransitionDuration
+                                                        form.data?.settings
+                                                            .fadeTransitionDuration ??
+                                                        HERO_SETTINGS_LIMITS.fadeTransitionDuration
+                                                            .defaultMs
                                                     }
                                                     onChange={(e) => {
                                                         if (!form.data) return;
@@ -1992,7 +1998,8 @@ export const AdminHomepageHeroBanner = () => {
                                                                                     <TextField
                                                                                         label="Alt Text"
                                                                                         value={
-                                                                                            banner.alt
+                                                                                            banner.alt ??
+                                                                                            ""
                                                                                         }
                                                                                         onChange={(
                                                                                             e,
@@ -2019,7 +2026,8 @@ export const AdminHomepageHeroBanner = () => {
                                                                                     <TextField
                                                                                         label="Description"
                                                                                         value={
-                                                                                            banner.description
+                                                                                            banner.description ??
+                                                                                            ""
                                                                                         }
                                                                                         onChange={(
                                                                                             e,
@@ -2059,7 +2067,8 @@ export const AdminHomepageHeroBanner = () => {
                                                                                             control={
                                                                                                 <Switch
                                                                                                     checked={
-                                                                                                        banner.isActive
+                                                                                                        banner.isActive ??
+                                                                                                        false
                                                                                                     }
                                                                                                     onChange={(
                                                                                                         e,

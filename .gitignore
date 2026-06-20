@@ -206,6 +206,7 @@ scripts/tests/tmp
 /backups/
 *.tar.gz
 .deploy-readiness/
+.validation/
 
 # Playwright E2E Testing
 test-results/

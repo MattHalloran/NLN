@@ -1,7 +1,7 @@
 import { test, expect } from "../../fixtures/auth";
 import { gotoAdminPage } from "../../fixtures/admin";
 import type { Page } from "@playwright/test";
-import { APP_LINKS } from "@local/shared";
+import { APP_LINKS, REST_ROUTES, stripApiPrefix } from "@local/shared";
 
 /**
  * Simplified E2E Tests for Admin Seasonal Content Management
@@ -73,6 +73,36 @@ test.describe("Seasonal Content - Plants Tab", () => {
     await expect(
       authenticatedPage.locator("p").filter({ hasText: /striking fall foliage/i }).first(),
     ).toBeVisible();
+  });
+
+  test("should add a plant and return it from the persisted document", async ({
+    authenticatedPage,
+  }) => {
+    await openSeasonalContent(authenticatedPage);
+
+    const plantName = `E2E Plant ${Date.now()}`;
+    const plantDescription = "Persisted through the stable admin browser suite.";
+    await authenticatedPage.getByRole("button", { name: /add new plant/i }).click();
+    await authenticatedPage.getByLabel(/^name$/i).last().fill(plantName);
+    await authenticatedPage.getByLabel(/^description$/i).last().fill(plantDescription);
+
+    const saveResponse = authenticatedPage.waitForResponse(
+      (response) =>
+        response.url().includes(stripApiPrefix(REST_ROUTES.landingPage.root)) &&
+        response.request().method() === "PUT" &&
+        response.status() === 200,
+    );
+    await authenticatedPage.getByRole("button", { name: /save all changes/i }).first().click();
+    const responseBody = await (await saveResponse).json();
+
+    expect(responseBody.data.content.seasonal.plants).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          name: plantName,
+          description: plantDescription,
+        }),
+      ]),
+    );
   });
 });
 

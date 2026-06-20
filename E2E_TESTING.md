@@ -9,7 +9,7 @@ Playwright covers browser-level admin and PWA behavior. The default E2E command 
 yarn test:e2e
 yarn test:e2e:smoke
 
-# Stable admin regression suite: e2e/admin/stable/*-simple.spec.ts
+# Stable browser regression suite: e2e/admin/stable/*-simple.spec.ts
 yarn test:e2e:admin
 yarn test:e2e:stable
 
@@ -44,6 +44,8 @@ When Playwright starts the API through `scripts/start-e2e-server.sh`, the server
 
 That means normal Playwright runs do not mutate source data files. If you reuse an already-running server, Playwright cannot change that server's data location; make sure the server is already using disposable local data before running mutation-heavy specs.
 
+When `E2E_MANAGE_SERVICES=true`, `scripts/start-e2e-server.sh` owns the temporary PostgreSQL/Redis containers and removes them after the API process has shut down. The Playwright global teardown only removes those containers when `E2E_TEARDOWN_REMOVE_SERVICES=true` is explicitly set; this avoids stopping Redis while the API is still closing its Bull queues.
+
 ## Authentication
 
 `e2e/auth.setup.ts` logs in once with `ADMIN_EMAIL` and `ADMIN_PASSWORD`, then writes browser storage state to `e2e/.auth/admin.json`. Tests that need auth import `test` from `e2e/fixtures/auth.ts` and use `authenticatedPage`.
@@ -52,17 +54,29 @@ CI provides non-secret test credentials. Local runs can use values from `.env` o
 
 ## Current Suite Shape
 
-Stable admin specs live in `e2e/admin/stable`:
+Stable browser specs live in `e2e/admin/stable`:
 
 - `e2e/admin/stable/contact-info-simple.spec.ts`
 - `e2e/admin/stable/hero-banner-simple.spec.ts`
+- `e2e/admin/stable/public-smoke-simple.spec.ts`
+- `e2e/admin/stable/public-visual-simple.spec.ts`
 - `e2e/admin/stable/seasonal-content-simple.spec.ts`
+
+The stable browser suite currently contains 37 application checks. It covers public route smoke checks, first-viewport visual smoke checks, and representative browser-driven persistence coverage for contact info, hero banner, and seasonal content saves. These tests assert that the successful save response contains the updated persisted landing page document, which is less brittle than requiring newly saved content to be visible in a specific expanded UI panel after reload.
+
+`public-visual-simple.spec.ts` intentionally keeps screenshot coverage narrow. It guards homepage and gallery first viewports plus mobile overflow on the homepage/about routes. Add new screenshots only for pages where visual regressions are expensive to miss and the content is deterministic enough for CI.
 
 Legacy admin specs and their legacy-only page objects live in `e2e/admin/legacy` and remain available through `yarn test:e2e:full`, but they contain more timing and selector coupling. Treat failures there as useful regression signals, not as the primary merge gate until they are hardened.
 
+## Runtime Guard
+
+Stable tests automatically attach `e2e/fixtures/runtime-guard.ts` through `e2e/fixtures/auth.ts` for authenticated tests or `e2e/fixtures/guarded.ts` for public tests. At teardown, the guard fails the test on unexpected browser console warnings/errors, uncaught page errors, and HTTP 4xx/5xx responses.
+
+The allowlist should stay small and explicit. Current allowances cover known development-noise paths such as the first stale-CSRF retry for authenticated mutations and the login-time analytics tracking retry. Do not add broad allowlist patterns for new warnings; fix the source warning unless it is intentionally harmless and documented.
+
 ## Stable vs Legacy Policy
 
-Stable specs are the merge-gated browser suite. They should stay small, deterministic, and focused on workflows that need a real browser. `scripts/check-test-quality.sh` enforces the most important reliability rules for stable specs and non-legacy E2E support files.
+Stable specs are the merge-gated browser suite. They should stay small, deterministic, and focused on workflows that need a real browser. `scripts/check-test-quality.sh` enforces the most important reliability rules for stable specs and non-legacy E2E support files, including the requirement to use guarded fixtures instead of Playwright's base `test`.
 
 Legacy specs are quarantined because they still contain data-dependent skips, fixed waits, broad `networkidle` waits, and DOM-structure selectors. When converting a legacy case to stable:
 

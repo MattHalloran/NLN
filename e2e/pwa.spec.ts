@@ -197,15 +197,18 @@ test("activates a real updated service worker and moves the page to the new vers
     await page.evaluate(async () => {
       const registration = await navigator.serviceWorker.ready;
       await registration.update();
+
+      const updatedWorker = registration.waiting ?? registration.installing;
+      updatedWorker?.postMessage({ type: "SKIP_WAITING" });
     });
 
     await page.waitForFunction(() => {
       return (window as typeof window & { updateInstalled?: boolean }).updateInstalled === true;
     });
-    await expect.poll(getControllerVersion).toBe("v2");
     await expect.poll(() => page.evaluate(() => {
       return (window as typeof window & { controllerChanges?: number }).controllerChanges;
     })).toBeGreaterThan(0);
+    await expect.poll(getControllerVersion).toBe("v2");
   } finally {
     await server.close();
   }

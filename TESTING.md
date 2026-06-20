@@ -14,6 +14,9 @@ yarn validate
 # Full local gate; CI runs these layers in parallel jobs
 yarn validate:full
 
+# Full local release gate plus validation receipt
+yarn validate:release
+
 # Backward-compatible alias
 yarn validate:ci
 ```
@@ -32,6 +35,7 @@ yarn test:e2e:admin
 yarn test:e2e:legacy
 yarn test:e2e:full
 yarn test:pwa
+yarn validation:receipt
 ```
 
 ## Test Types
@@ -53,19 +57,23 @@ Use the narrowest layer that proves the behavior:
 | UI unit tests            | Component behavior, hooks, stores, REST client behavior                       | Testing Library role/label queries, `packages/ui/src/setupTests.ts`, fetch/CSRF test doubles                                  |
 | Server unit tests        | Middleware, auth helpers, pure service logic, queue behavior with mocks       | Vitest mocks and focused request objects                                                                                      |
 | Server integration tests | Prisma, REST endpoints, auth cookies, file-backed runtime state, Redis/queues | `packages/server/src/__tests__/integrationUtils.ts` for Testcontainers, temp project dirs, REST app wiring, and login cookies |
-| Stable E2E tests         | Critical admin journeys and browser-only confidence                           | Playwright role/label/test-id locators, seeded runtime data, explicit UI/response waits                                       |
+| Stable E2E tests         | Critical admin journeys, browser runtime errors, and persisted admin saves    | Playwright role/label/test-id locators, seeded runtime data, explicit UI/response waits, `e2e/fixtures/runtime-guard.ts`       |
 | Legacy E2E tests         | Useful regression signals while being hardened                                | Quarantined behind `yarn test:e2e:legacy` and `yarn test:e2e:full`                                                            |
 | Bats script tests        | Deployment and VPS safety wrappers                                            | Stubbed shell commands and temp directories; no production mutation                                                           |
 
 ## Playwright Suites
 
 - `yarn test:e2e:smoke` runs one stable admin smoke spec in `e2e/admin/stable`.
-- `yarn test:e2e:admin` and `yarn test:e2e:stable` run the current stable admin suite in `e2e/admin/stable`.
+- `yarn test:e2e:admin` and `yarn test:e2e:stable` run the current stable browser suite in `e2e/admin/stable`.
 - `yarn test:e2e:legacy` runs only `e2e/admin/legacy`.
 - `yarn test:e2e:full` runs all admin Playwright specs, including `e2e/admin/legacy`.
 - `yarn test:pwa` runs PWA/browser-cache checks against a production build.
 
 Playwright-started API servers use `.e2e-runtime` as `PROJECT_DIR` by default. The server copies `packages/server/src/data` into that generated runtime directory before booting, so normal Playwright runs do not write back to source data files. Set `E2E_PROJECT_DIR` only when you intentionally want a different disposable runtime directory. If you run against an already-running local API server, that server's own `PROJECT_DIR` controls where data is read and written.
+
+The stable browser suite currently covers 37 application checks across public route smoke coverage, visual smoke coverage, contact info, hero banner, and seasonal content. It includes browser-driven save assertions for representative persisted edits in each admin area. Those tests verify the successful save response contains the updated persisted landing page document, which catches failed writes without depending on post-save accordion/card visibility.
+
+Stable specs attach a runtime guard from `e2e/fixtures/runtime-guard.ts` through either `e2e/fixtures/auth.ts` or `e2e/fixtures/guarded.ts`. The guard fails tests on unexpected browser console warnings/errors, uncaught page errors, and HTTP 4xx/5xx responses. The only allowed failures are documented known development-noise cases such as the stale-CSRF retry during first authenticated mutation and the analytics tracking retry after login.
 
 ## Quality Gates
 
@@ -73,9 +81,17 @@ Playwright-started API servers use `.e2e-runtime` as `PROJECT_DIR` by default. T
 
 - `scripts/check-env-defaults.sh` keeps shared default ports aligned with Docker and CI.
 - `scripts/check-source-drift.sh` prevents raw API routes, raw app routes, and unapproved UI `fetch` calls from drifting away from shared seams.
-- `scripts/check-test-quality.sh` blocks focused tests, disabled unit tests, and brittle patterns in stable E2E specs and non-legacy E2E support files.
+- `scripts/check-test-quality.sh` blocks focused tests, disabled unit tests, brittle patterns in stable E2E specs and non-legacy E2E support files, and stable specs that import Playwright's unguarded base `test`.
 
 Stable E2E specs and non-legacy E2E support files may not use fixed sleeps, broad `networkidle` waits, runtime `test.skip`, or parent-traversal selectors. Legacy E2E specs and their legacy-only page objects are exempt while they are being hardened or retired.
+
+`yarn validation:receipt` writes `.validation/latest-receipt.md` with the current commit, worktree state, available coverage totals, and available Playwright result counts. CI uploads this receipt from each validation job.
+
+## Release Gate
+
+Use `yarn validate:release` as the local pre-deploy gate. It runs typechecks, lint, unit tests with coverage thresholds, script safety tests, drift checks, server integration tests, the production UI build, PWA browser checks, the stable guarded E2E suite, and then writes `.validation/latest-receipt.md`.
+
+A release should not be considered ready until the matching CI jobs are also green and their validation receipts are attached as artifacts. Local success is useful for fast feedback, but CI is the shared trust boundary.
 
 ## Coverage Policy
 
@@ -87,6 +103,8 @@ When adding coverage:
 - Add or extend builders in shared/server test helpers instead of duplicating large payloads.
 - Keep browser tests small; move exhaustive CRUD and permission edges into server integration tests.
 - Use `yarn coverage:summary` locally or from CI job summaries to see package-level totals.
+
+Server integration coverage thresholds are package-wide. Running one integration file directly can pass its assertions but fail the process because the full package coverage threshold is not met; use `yarn test:integration` for a coverage-valid integration run.
 
 ## CI Outputs
 
@@ -110,6 +128,8 @@ GitHub Actions uploads:
 | `yarn test:e2e:full`    | Stable + legacy admin Playwright specs    | Local or CI PostgreSQL/Redis services, browser install     | Uses `.e2e-runtime` by default                            |
 | `yarn test:pwa`         | Production-build PWA browser checks       | Browser install                                            | Writes Playwright reports only                            |
 | `yarn validate:full`    | Full local merge gate                     | Docker, PostgreSQL/Redis services for E2E, browser install | Uses disposable test/runtime state                        |
+| `yarn validate:release` | Full local release gate plus receipt      | Docker, PostgreSQL/Redis services for E2E, browser install | Uses disposable test/runtime state and writes `.validation/latest-receipt.md` |
+| `yarn validation:receipt` | Local validation evidence summary       | Existing coverage/results files                            | Writes `.validation/latest-receipt.md`                    |
 
 ## What To Run
 
@@ -123,6 +143,7 @@ GitHub Actions uploads:
 | Admin browser workflow or locator/test-id seam   | `yarn test:e2e:smoke` or `yarn test:e2e:admin`               |
 | PWA, service worker, or production UI build      | `yarn workspace ui build && yarn test:pwa`                   |
 | Cross-package or release-boundary change         | `yarn validate:full`                                         |
+| Pre-deploy release readiness                     | `yarn validate:release`                                      |
 
 ## Reliability Rules
 

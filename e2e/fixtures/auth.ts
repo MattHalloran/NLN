@@ -3,6 +3,7 @@ import type { Page } from "@playwright/test";
 import { APP_LINKS, E2E_TIMEOUTS, REST_ROUTES, stripApiPrefix } from "@local/shared";
 import path from "path";
 import { fileURLToPath } from "url";
+import { attachRuntimeGuard } from "./runtime-guard";
 
 /**
  * Authentication Fixture
@@ -21,6 +22,7 @@ const authFile = path.join(__dirname, "../.auth/admin.json");
  * This reduces test execution time significantly
  */
 export async function setupAuth(page: Page) {
+    const runtimeGuard = attachRuntimeGuard(page);
     // Track responses
     const responses: Array<{ url: string; status: number }> = [];
 
@@ -103,6 +105,7 @@ export async function setupAuth(page: Page) {
 
     // Save storage state to file
     await page.context().storageState({ path: authFile });
+    runtimeGuard.assertClean();
 
     console.log("✓ Authentication successful, state saved");
 }
@@ -118,9 +121,11 @@ export const test = base.extend<{ authenticatedPage: Page }>({
         });
 
         const page = await context.newPage();
+        const runtimeGuard = attachRuntimeGuard(page);
 
         await use(page);
 
+        runtimeGuard.assertClean();
         await context.close();
     },
 });

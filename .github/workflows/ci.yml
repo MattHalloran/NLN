@@ -72,6 +72,18 @@ jobs:
             test-results/pwa.json
           if-no-files-found: ignore
 
+      - name: Validation receipt
+        if: always()
+        run: yarn validation:receipt
+
+      - name: Upload validation receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: validation-receipt-validate
+          path: .validation/latest-receipt.md
+          if-no-files-found: ignore
+
   integration:
     name: Integration Tests
     runs-on: ubuntu-latest
@@ -106,6 +118,18 @@ jobs:
         with:
           name: integration-coverage
           path: packages/server/coverage-integration
+          if-no-files-found: ignore
+
+      - name: Validation receipt
+        if: always()
+        run: yarn validation:receipt
+
+      - name: Upload validation receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: validation-receipt-integration
+          path: .validation/latest-receipt.md
           if-no-files-found: ignore
 
   e2e:
@@ -184,4 +208,16 @@ jobs:
           path: |
             playwright-report/admin
             test-results/admin.json
+          if-no-files-found: ignore
+
+      - name: Validation receipt
+        if: always()
+        run: yarn validation:receipt
+
+      - name: Upload validation receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: validation-receipt-e2e
+          path: .validation/latest-receipt.md
           if-no-files-found: ignore

@@ -18,7 +18,7 @@ interface DropzoneProps {
     sxs?: {
         root?: SxProps;
         thumbs?: SxProps;
-    }
+    };
 }
 
 interface PreviewableFile extends File {
@@ -41,28 +41,39 @@ export const Dropzone = ({
 
     const [files, setFiles] = useState<PreviewableFile[]>([]);
     const { getRootProps, getInputProps } = useDropzone({
-        accept: acceptedFileTypes.reduce((acc, type) => {
-            if (type.includes("/")) {
-                acc[type] = [];
-            } else {
-                acc[type] = [];
-            }
-            return acc;
-        }, {} as Record<string, string[]>),
+        accept: acceptedFileTypes.reduce(
+            (acc, type) => {
+                if (type.includes("/")) {
+                    acc[type] ??= [];
+                } else {
+                    acc["image/*"] ??= [];
+                    acc["image/*"].push(type);
+                }
+                return acc;
+            },
+            {} as Record<string, string[]>,
+        ),
         maxFiles,
-        onDrop: acceptedFiles => {
+        onDrop: (acceptedFiles) => {
             if (acceptedFiles.length <= 0) {
-                PubSub.get().publishSnack({ message: "Files not accepted", severity: SnackSeverity.Error });
+                PubSub.get().publishSnack({
+                    message: "Files not accepted",
+                    severity: SnackSeverity.Error,
+                });
                 return;
             }
             // Type annotate file as File
-            setFiles(acceptedFiles.map((file: File) => {
-                // Set custom image preview for spreadsheet files
-                const isSpreadsheet = [".xlsx", ".xls", ".ods"].some(ext => file.name.endsWith(ext));
-                const preview = isSpreadsheet ? SpreadsheetFallback : URL.createObjectURL(file);
-                // Otherwise, use default preview
-                return Object.assign(file, { preview });
-            }));
+            setFiles(
+                acceptedFiles.map((file: File) => {
+                    // Set custom image preview for spreadsheet files
+                    const isSpreadsheet = [".xlsx", ".xls", ".ods"].some((ext) =>
+                        file.name.endsWith(ext),
+                    );
+                    const preview = isSpreadsheet ? SpreadsheetFallback : URL.createObjectURL(file);
+                    // Otherwise, use default preview
+                    return Object.assign(file, { preview });
+                }),
+            );
             // If autoUpload is true, automatically upload the files
             if (autoUpload) {
                 onUpload(acceptedFiles);
@@ -74,7 +85,10 @@ export const Dropzone = ({
     const upload = (e: React.MouseEvent<HTMLButtonElement>) => {
         e.stopPropagation();
         if (files.length === 0) {
-            PubSub.get().publishSnack({ message: "No files selected", severity: SnackSeverity.Error });
+            PubSub.get().publishSnack({
+                message: "No files selected",
+                severity: SnackSeverity.Error,
+            });
             return;
         }
         onUpload(files);
@@ -86,24 +100,29 @@ export const Dropzone = ({
         setFiles([]);
     };
 
-    const thumbs = files.map(file => {
-        const isSpreadsheet = [".xlsx", ".xls", ".ods"].some(ext => file.name.endsWith(ext));
+    const thumbs = files.map((file) => {
+        const isSpreadsheet = [".xlsx", ".xls", ".ods"].some((ext) => file.name.endsWith(ext));
         return (
-            <Box key={file.name} sx={{
-                display: "inline-flex",
-                flexDirection: "column",
-                alignItems: "center",
-                margin: 1,
-                width: 100,
-                height: 100,
-                boxSizing: "border-box",
-                ...sxs?.thumbs,
-            }}>
-                <Box sx={{
-                    display: "flex",
-                    minWidth: 0,
-                    overflow: "hidden",
-                }}>
+            <Box
+                key={file.name}
+                sx={{
+                    display: "inline-flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    margin: 1,
+                    width: 100,
+                    height: 100,
+                    boxSizing: "border-box",
+                    ...sxs?.thumbs,
+                }}
+            >
+                <Box
+                    sx={{
+                        display: "flex",
+                        minWidth: 0,
+                        overflow: "hidden",
+                    }}
+                >
                     <Box
                         component="img"
                         src={file.preview}
@@ -112,76 +131,105 @@ export const Dropzone = ({
                             display: "block",
                             width: "auto",
                             height: "100%",
-                        }} />
+                        }}
+                    />
                 </Box>
                 {isSpreadsheet && (
-                    <Typography variant="body2" sx={{
-                        marginTop: 1,
-                        overflowWrap: "anywhere",
-                    }}>{file.name}</Typography>
+                    <Typography
+                        variant="body2"
+                        sx={{
+                            marginTop: 1,
+                            overflowWrap: "anywhere",
+                        }}
+                    >
+                        {file.name}
+                    </Typography>
                 )}
             </Box>
         );
     });
 
-    useEffect(() => () => {
-        // Make sure to revoke the data uris to avoid memory leaks, except for the spreadsheet preview
-        files.forEach(file => {
-            if (!file.preview.endsWith("spreadsheet-fallback.png")) {
-                URL.revokeObjectURL(file.preview);
-            }
-        });
-    }, [files]);
+    useEffect(
+        () => () => {
+            // Make sure to revoke the data uris to avoid memory leaks, except for the spreadsheet preview
+            files.forEach((file) => {
+                if (!file.preview.endsWith("spreadsheet-fallback.png")) {
+                    URL.revokeObjectURL(file.preview);
+                }
+            });
+        },
+        [files],
+    );
 
     return (
-        <Box component="section" sx={{
-            background: "white",
-            color: "black",
-            border: "3px dashed gray",
-            borderRadius: "5px",
-            ...sxs?.root,
-        }}>
-            <Box sx={{ textAlign: "center", cursor: "pointer" }} {...getRootProps({ className: "dropzone" })}>
+        <Box
+            component="section"
+            sx={{
+                background: "white",
+                color: "black",
+                border: "3px dashed gray",
+                borderRadius: "5px",
+                ...sxs?.root,
+            }}
+        >
+            <Box
+                sx={{ textAlign: "center", cursor: "pointer" }}
+                {...getRootProps({ className: "dropzone" })}
+            >
                 <input {...getInputProps()} />
                 <p>{dropzoneText}</p>
-                {showThumbs &&
-                    <Box component="aside" sx={{
-                        display: "flex",
-                        flexDirection: "row",
-                        flexWrap: "wrap",
-                        marginTop: files.length === 0 ? spacing(8) : 0,
-                    }}>
+                {showThumbs && (
+                    <Box
+                        component="aside"
+                        sx={{
+                            display: "flex",
+                            flexDirection: "row",
+                            flexWrap: "wrap",
+                            marginTop: files.length === 0 ? spacing(8) : 0,
+                        }}
+                    >
                         {thumbs}
-                    </Box>}
-                {!autoUpload && <Grid container spacing={1} sx={{
-                    paddingLeft: spacing(1),
-                    paddingRight: spacing(1),
-                }}>
-                    <Grid item xs={6}>
-                        <Button
-                            disabled={disabled || files.length === 0}
-                            fullWidth
-                            onClick={cancel}
-                            sx={{
-                                marginTop: spacing(1),
-                                marginBottom: spacing(1),
-                            }}
-                            variant="outlined"
-                        >{cancelText}</Button>
+                    </Box>
+                )}
+                {!autoUpload && (
+                    <Grid
+                        container
+                        spacing={1}
+                        sx={{
+                            paddingLeft: spacing(1),
+                            paddingRight: spacing(1),
+                        }}
+                    >
+                        <Grid item xs={6}>
+                            <Button
+                                disabled={disabled || files.length === 0}
+                                fullWidth
+                                onClick={cancel}
+                                sx={{
+                                    marginTop: spacing(1),
+                                    marginBottom: spacing(1),
+                                }}
+                                variant="outlined"
+                            >
+                                {cancelText}
+                            </Button>
+                        </Grid>
+                        <Grid item xs={6}>
+                            <Button
+                                disabled={disabled || files.length === 0}
+                                fullWidth
+                                onClick={upload}
+                                sx={{
+                                    marginTop: spacing(1),
+                                    marginBottom: spacing(1),
+                                }}
+                                variant="contained"
+                            >
+                                {uploadText}
+                            </Button>
+                        </Grid>
                     </Grid>
-                    <Grid item xs={6}>
-                        <Button
-                            disabled={disabled || files.length === 0}
-                            fullWidth
-                            onClick={upload}
-                            sx={{
-                                marginTop: spacing(1),
-                                marginBottom: spacing(1),
-                            }}
-                            variant="contained"
-                        >{uploadText}</Button>
-                    </Grid>
-                </Grid>}
+                )}
             </Box>
         </Box>
     );

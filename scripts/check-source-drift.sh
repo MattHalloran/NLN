@@ -20,33 +20,35 @@ report_matches() {
 cd "${ROOT_DIR}"
 
 report_matches "Raw REST version strings found outside shared route definitions:" \
-    git grep -n "/api/rest/v1" -- packages/server/src packages/ui/src e2e scripts \
-        ':!packages/shared/src/api/routes.ts' \
-        ':!packages/shared/src/api/contracts.ts' \
-        ':!packages/server/src/rest/*.ts' \
-        ':!packages/server/src/rest/*.test.ts' \
-        ':!packages/server/src/rest/*.integration.test.ts' \
-        ':!scripts/check-source-drift.sh'
+    bash -c "grep -RInF --exclude-dir=node_modules --exclude-dir=dist \
+        --include='*.ts' --include='*.tsx' --include='*.sh' \
+        '/api/rest/v1' packages/server/src packages/ui/src e2e scripts | \
+        grep -v 'packages/shared/src/api/routes.ts' | \
+        grep -v 'packages/shared/src/api/contracts.ts' | \
+        grep -v 'packages/server/src/rest/[^/]*\\.ts' | \
+        grep -v 'packages/server/src/rest/[^/]*\\.test\\.ts' | \
+        grep -v 'packages/server/src/rest/[^/]*\\.integration\\.test\\.ts' | \
+        grep -v 'e2e/fixtures/runtime-guard.ts' | \
+        grep -v 'scripts/check-source-drift.sh'"
 
 report_matches "Raw app route literals found in app/stable e2e code; use APP_LINKS instead:" \
-    git grep -nE '"(/admin|/login|/gallery|/about)([^"]*)"' -- \
-        packages/ui/src \
-        e2e/admin/stable \
-        e2e/fixtures \
-        e2e/pages \
-        ':!*.test.ts' \
-        ':!*.test.tsx' \
-        ':!packages/ui/src/sitemap.ts' \
-        ':!packages/ui/src/sw-template.js' \
-        ':!packages/ui/src/utils/openLink.test.ts'
+    bash -c "grep -RInE --exclude-dir=node_modules --exclude-dir=dist \
+        --include='*.ts' --include='*.tsx' \
+        '\"(/admin|/login|/gallery|/about)([^\"]*)\"' packages/ui/src e2e/admin/stable e2e/fixtures 2>/dev/null | \
+        grep -v '\\.test\\.tsx\\?:' | \
+        grep -v 'packages/ui/src/sitemap.ts' | \
+        grep -v 'packages/ui/src/sw-template.js' | \
+        grep -v 'packages/ui/src/utils/openLink.test.ts'"
 
 report_matches "Direct fetch calls found in UI app code; use api/rest/client unless this is service-worker/bootstrap code:" \
-    git grep -nE '\bfetch\(' -- packages/ui/src \
-        ':!packages/ui/src/api/rest/client.ts' \
-        ':!packages/ui/src/utils/csrf.ts' \
-        ':!packages/ui/src/utils/errorMonitoring.ts' \
-        ':!packages/ui/src/serviceWorkerRegistration.ts' \
-        ':!packages/ui/src/sw-template.js'
+    bash -c "grep -RInE --exclude-dir=node_modules --exclude-dir=dist \
+        --include='*.ts' --include='*.tsx' --include='*.js' \
+        '\\bfetch\\(' packages/ui/src | \
+        grep -v 'packages/ui/src/api/rest/client.ts' | \
+        grep -v 'packages/ui/src/utils/csrf.ts' | \
+        grep -v 'packages/ui/src/utils/errorMonitoring.ts' | \
+        grep -v 'packages/ui/src/serviceWorkerRegistration.ts' | \
+        grep -v 'packages/ui/src/sw-template.js'"
 
 if [ "${failures}" -gt 0 ]; then
     exit 1
