@@ -337,6 +337,9 @@ mkdir -p \
 printf 'deploy rehearsal upload\n' >"${REHEARSAL_PROJECT_DIR}/data/uploads/rehearsal.txt"
 printf 'deploy rehearsal migration backup\n' >"${REHEARSAL_PROJECT_DIR}/data/migration-backups/rehearsal.txt"
 
+header "Installing disposable project dependencies"
+(cd "${REHEARSAL_PROJECT_DIR}" && yarn install --frozen-lockfile)
+
 "${REHEARSAL_PROJECT_DIR}/scripts/validate-env.sh" "${ENV_FILE}"
 load_env
 install_project_env_file

@@ -88,3 +88,8 @@ teardown() {
     grep -q 'docker rm -f' "$SCRIPT_PATH"
     grep -q 'Removing existing local nln_\* containers' "$SCRIPT_PATH"
 }
+
+@test "deploy rehearsal installs dependencies in disposable clone before build" {
+    grep -q 'Installing disposable project dependencies' "$SCRIPT_PATH"
+    grep -q 'yarn install --frozen-lockfile' "$SCRIPT_PATH"
+}
