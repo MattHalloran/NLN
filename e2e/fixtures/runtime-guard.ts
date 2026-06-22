@@ -22,12 +22,12 @@ const ALLOWED_CONSOLE_PATTERNS = [
 
 const ALLOWED_RESPONSE_FAILURES = [
     {
-        status: 403,
-        pattern: /\/api\/rest\/v1\/landing-page\/variants\/[^/]+\/track$/,
+        status: 401,
+        pattern: /\/api\/rest\/v1\/auth\/login$/,
     },
     {
         status: 403,
-        pattern: /\/api\/rest\/v1\/landing-page(?:\/contact-info)?(?:\?.*)?$/,
+        pattern: /\/api\/rest\/v1\/landing-page\/variants\/[^/]+\/track$/,
     },
 ];
 
@@ -76,9 +76,7 @@ export const attachRuntimeGuard = (page: Page): RuntimeGuard => {
         assertClean: () => {
             if (issues.length === 0) return;
 
-            const details = issues
-                .map((issue) => `- ${issue.kind}: ${issue.message}`)
-                .join("\n");
+            const details = issues.map((issue) => `- ${issue.kind}: ${issue.message}`).join("\n");
             throw new Error(`Unexpected browser/runtime issues detected:\n${details}`);
         },
     };

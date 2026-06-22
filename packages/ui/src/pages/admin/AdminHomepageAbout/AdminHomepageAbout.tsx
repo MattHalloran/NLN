@@ -28,6 +28,7 @@ import {
     useTheme,
 } from "@mui/material";
 import { useLandingPageContent, useUpdateLandingPageContent } from "api/rest/hooks";
+import { restApi } from "api/rest/client";
 import { BackButton, PageContainer } from "components";
 import { ABTestEditingBanner } from "components/admin/ABTestEditingBanner";
 import { TopBar } from "components/navigation/TopBar/TopBar";
@@ -351,7 +352,11 @@ export const AdminHomepageAbout = () => {
     // Use the standardized useAdminForm hook
     const form = useAdminForm<AboutData>({
         fetchFn: async () => {
-            return getAboutFormData(landingPageData);
+            const latestLandingPageData = await restApi.getLandingPageContent({
+                onlyActive: false,
+                variantId,
+            });
+            return getAboutFormData(latestLandingPageData);
         },
         saveFn: async (data) => {
             const queryParams = variantId ? { variantId } : undefined;

@@ -71,7 +71,7 @@ export const createE2EConfig = ({ testMatch, reportName }: E2EConfigOptions) =>
         ],
         webServer: [
             {
-                command: "bash scripts/start-e2e-server.sh",
+                command: "E2E_MANAGE_SERVICES=true bash scripts/start-e2e-server.sh",
                 url: E2E_URLS.serverHealthcheck,
                 reuseExistingServer: !process.env.CI,
                 timeout: E2E_TIMEOUTS.serverStartMs,

@@ -25,6 +25,15 @@ const landingPageResponse = (variantId?: string) =>
         content: {},
     }) as unknown as LandingPageContent;
 
+const deferred = <T>() => {
+    let resolve!: (value: T) => void;
+    const promise = new Promise<T>((res) => {
+        resolve = res;
+    });
+
+    return { promise, resolve };
+};
+
 describe("landingPageStore", () => {
     const getLandingPageContent = vi.mocked(restApi.getLandingPageContent);
 
@@ -97,5 +106,24 @@ describe("landingPageStore", () => {
         expect(state.loading).toBe(false);
         expect(state.data).toBeNull();
         expect(state.error?.message).toBe("network down");
+    });
+
+    it("performs a fresh request when refetch is called during an in-flight fetch", async () => {
+        const initialFetch = deferred<LandingPageContent>();
+        getLandingPageContent
+            .mockReturnValueOnce(initialFetch.promise)
+            .mockResolvedValueOnce(landingPageResponse("updated-variant"));
+
+        const fetchPromise = useLandingPageStore.getState().fetchLandingPage();
+        const refetchPromise = useLandingPageStore.getState().refetch();
+
+        expect(getLandingPageContent).toHaveBeenCalledTimes(1);
+
+        initialFetch.resolve(landingPageResponse("initial-variant"));
+        await refetchPromise;
+        await fetchPromise;
+
+        expect(getLandingPageContent).toHaveBeenCalledTimes(2);
+        expect(useLandingPageStore.getState().data).toEqual(landingPageResponse("updated-variant"));
     });
 });

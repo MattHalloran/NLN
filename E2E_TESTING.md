@@ -40,11 +40,11 @@ yarn test:e2e:report
 
 ## Test Data
 
-When Playwright starts the API through `scripts/start-e2e-server.sh`, the server uses `.e2e-runtime` as `PROJECT_DIR` by default, even if `.env` has a different `PROJECT_DIR`. The script copies `packages/server/src/data` into `.e2e-runtime/packages/server/src/data` before booting and points E2E setup/teardown at that runtime copy. Set `E2E_PROJECT_DIR` only when you intentionally want another disposable runtime directory.
+When Playwright starts the API through `scripts/start-e2e-server.sh`, it sets `E2E_MANAGE_SERVICES=true` and owns disposable PostgreSQL/Redis containers for the run. The server uses `.e2e-runtime` as `PROJECT_DIR` by default, even if `.env` has a different `PROJECT_DIR`. The script copies `packages/server/src/data` into `.e2e-runtime/packages/server/src/data` before booting and points E2E setup/teardown at that runtime copy. Set `E2E_PROJECT_DIR` only when you intentionally want another disposable runtime directory.
 
 That means normal Playwright runs do not mutate source data files. If you reuse an already-running server, Playwright cannot change that server's data location; make sure the server is already using disposable local data before running mutation-heavy specs.
 
-When `E2E_MANAGE_SERVICES=true`, `scripts/start-e2e-server.sh` owns the temporary PostgreSQL/Redis containers and removes them after the API process has shut down. The Playwright global teardown only removes those containers when `E2E_TEARDOWN_REMOVE_SERVICES=true` is explicitly set; this avoids stopping Redis while the API is still closing its Bull queues.
+When `E2E_MANAGE_SERVICES=true`, `scripts/start-e2e-server.sh` removes the temporary PostgreSQL/Redis containers after the API process has shut down. The Playwright global teardown only removes those containers when `E2E_TEARDOWN_REMOVE_SERVICES=true` is explicitly set; this avoids stopping Redis while the API is still closing its Bull queues.
 
 ## Authentication
 
@@ -57,13 +57,17 @@ CI provides non-secret test credentials. Local runs can use values from `.env` o
 Stable browser specs live in `e2e/admin/stable`:
 
 - `e2e/admin/stable/contact-info-simple.spec.ts`
+- `e2e/admin/stable/about-content-simple.spec.ts`
+- `e2e/admin/stable/admin-gallery-simple.spec.ts`
 - `e2e/admin/stable/hero-banner-simple.spec.ts`
 - `e2e/admin/stable/newsletter-subscribers-simple.spec.ts`
+- `e2e/admin/stable/public-account-flows-simple.spec.ts`
+- `e2e/admin/stable/public-gallery-simple.spec.ts`
 - `e2e/admin/stable/public-smoke-simple.spec.ts`
 - `e2e/admin/stable/public-visual-simple.spec.ts`
 - `e2e/admin/stable/seasonal-content-simple.spec.ts`
 
-The stable browser suite covers public route smoke checks, public newsletter signup, first-viewport visual smoke checks, newsletter subscriber administration, and representative browser-driven persistence coverage for contact info, hero banner, and seasonal content saves. These tests assert that the successful save response contains the updated persisted landing page document, which is less brittle than requiring newly saved content to be visible in a specific expanded UI panel after reload.
+The stable browser suite covers public route smoke checks, public account signup/login-reset flows, public newsletter signup, gallery browsing, first-viewport visual smoke checks, newsletter subscriber administration, admin gallery upload/edit/publish cleanup, and representative browser-driven persistence coverage for contact info, about content, hero banner, and seasonal content saves. These tests assert that the successful save response contains the updated persisted landing page document when that is the least brittle way to prove persistence. The About content spec also verifies the saved story title on the public About page for the active variant/session.
 
 The PWA suite runs against the production UI build and checks cache headers, public route rendering, offline app-shell behavior, update prompts, and service-worker activation.
 
@@ -75,7 +79,7 @@ Legacy admin specs and their legacy-only page objects live in `e2e/admin/legacy`
 
 Stable tests automatically attach `e2e/fixtures/runtime-guard.ts` through `e2e/fixtures/auth.ts` for authenticated tests or `e2e/fixtures/guarded.ts` for public tests. At teardown, the guard fails the test on unexpected browser console warnings/errors, uncaught page errors, and HTTP 4xx/5xx responses.
 
-The allowlist should stay small and explicit. Current allowances cover known development-noise paths such as the first stale-CSRF retry for authenticated mutations and the login-time analytics tracking retry. Do not add broad allowlist patterns for new warnings; fix the source warning unless it is intentionally harmless and documented.
+The allowlist should stay small and explicit. Current response allowances cover the intentionally tested invalid-login response and the login-time analytics tracking retry. Authenticated login/signup refresh CSRF after the session changes, so stable specs should not need broad stale-CSRF mutation allowances.
 
 ## Stable vs Legacy Policy
 

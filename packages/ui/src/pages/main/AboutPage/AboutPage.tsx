@@ -19,6 +19,7 @@ import {
 } from "components/breadcrumbs/InformationalTabs/InformationalTabs";
 import { ContactInfo } from "components/ContactInfo/ContactInfo";
 import { TopBar } from "components/navigation/TopBar/TopBar";
+import { AboutStory } from "components/AboutStory/AboutStory";
 import { BusinessContext } from "contexts/BusinessContext";
 import { FacebookIcon, InstagramIcon } from "icons";
 import { useContext, useEffect } from "react";
@@ -289,6 +290,8 @@ export const AboutPage = () => {
                         </Stack>
                     </Container>
                 </Box>
+
+                <AboutStory />
 
                 {/* Main Content Area */}
                 <Box

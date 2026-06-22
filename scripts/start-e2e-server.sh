@@ -128,6 +128,7 @@ if [ "${E2E_MANAGE_SERVICES}" = "true" ]; then
 fi
 
 cd "${ROOT_DIR}/packages/server"
+yarn workspace @local/shared build
 yarn pre-build
 yarn build
 node dist/index.js &

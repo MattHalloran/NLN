@@ -75,7 +75,7 @@ export interface UseAdminFormConfig<TData> {
      * Example: If your fetchFn uses useLandingPage(), pass [refetchLandingPage]
      * to ensure the cache is updated before refetch runs
      */
-    refetchDependencies?: Array<() => Promise<void> | void>;
+    refetchDependencies?: Array<() => Promise<unknown>>;
 }
 
 /**
@@ -299,7 +299,7 @@ export function useAdminForm<TData>({
             // This ensures fetchFn gets fresh data instead of stale cached data
             if (refetchDependencies.length > 0) {
                 try {
-                    refetchDependencies.forEach((fn) => fn());
+                    await Promise.all(refetchDependencies.map((fn) => fn()));
                 } catch (depError) {
                     console.warn("Failed to refetch dependencies:", depError);
                     // Continue anyway - internal refetch might still work

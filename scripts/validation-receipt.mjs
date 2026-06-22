@@ -57,14 +57,14 @@ const validationCommand =
 
 const expectedArtifactsByCommand = [
     {
-        pattern: /validate:release|validate:full|validate:ci|ci validate job/i,
+        pattern: /validate:release|validate:full|validate:trusted|validate:ci|ci validate job/i,
         artifacts: [
             ...coverageSummaries.map(([, relativePath]) => relativePath),
             "test-results/pwa.json",
         ],
     },
     {
-        pattern: /validate:release|validate:full|ci e2e job/i,
+        pattern: /validate:release|validate:full|validate:trusted|ci e2e job/i,
         artifacts: ["test-results/admin.json"],
     },
     {

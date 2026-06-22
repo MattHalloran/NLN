@@ -20,6 +20,7 @@
     "validate": "yarn typecheck && yarn typecheck:test && yarn lint && yarn test:unit && yarn test:scripts && yarn check:drift",
     "coverage:summary": "node scripts/coverage-summary.mjs",
     "validation:receipt": "node scripts/validation-receipt.mjs",
+    "validate:trusted": "bash scripts/validate-trusted.sh",
     "validate:full": "yarn validate && yarn test:integration && yarn workspace ui build && yarn test:pwa && yarn test:e2e:admin",
     "validate:release": "yarn validate:full && yarn lighthouse:local && VALIDATION_COMMAND=\"yarn validate:release\" yarn validation:receipt",
     "validate:ci": "yarn validate:full",

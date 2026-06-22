@@ -14,7 +14,7 @@ test.describe("Public Site - Smoke", () => {
 
         await page.goto(APP_LINKS.About);
         await expectUsablePage(page, /our heritage/i);
-        await expect(page.getByText(/years of experience/i)).toBeVisible();
+        await expect(page.getByRole("heading", { name: /years of experience/i })).toBeVisible();
 
         await page.goto(APP_LINKS.Gallery);
         await expectUsablePage(page, /our collection/i);
@@ -22,7 +22,9 @@ test.describe("Public Site - Smoke", () => {
         await expect(page.getByText(/showing \d+ of \d+ items/i)).toBeVisible();
     });
 
-    test("renders mobile public pages without layout-blocking runtime failures", async ({ page }) => {
+    test("renders mobile public pages without layout-blocking runtime failures", async ({
+        page,
+    }) => {
         await page.setViewportSize({ width: 390, height: 844 });
 
         await page.goto(APP_LINKS.Home);
@@ -62,7 +64,10 @@ test.describe("Public Site - Smoke", () => {
         );
 
         await emailInput.fill(`e2e-newsletter-${Date.now()}@example.test`);
-        await page.getByRole("button", { name: /subscribe|sign up|get updates/i }).last().click();
+        await page
+            .getByRole("button", { name: /subscribe|sign up|get updates/i })
+            .last()
+            .click();
 
         const subscribeResponse = await subscribeResponsePromise;
         expect(subscribeResponse.status()).toBe(200);

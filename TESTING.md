@@ -16,6 +16,9 @@ yarn validate
 # Full local gate; CI runs these layers in parallel jobs
 yarn validate:full
 
+# High-confidence local trust gate without Lighthouse
+yarn validate:trusted
+
 # Full local release gate plus validation receipt
 yarn validate:release
 
@@ -38,6 +41,7 @@ yarn test:e2e:legacy
 yarn test:e2e:full
 yarn test:pwa
 yarn lighthouse:local
+yarn validate:trusted
 yarn validation:receipt
 ```
 
@@ -72,9 +76,9 @@ Use the narrowest layer that proves the behavior:
 - `yarn test:e2e:full` runs all admin Playwright specs, including `e2e/admin/legacy`.
 - `yarn test:pwa` runs PWA/browser-cache checks against a production build.
 
-Playwright-started API servers use `.e2e-runtime` as `PROJECT_DIR` by default. The server copies `packages/server/src/data` into that generated runtime directory before booting, so normal Playwright runs do not write back to source data files. Set `E2E_PROJECT_DIR` only when you intentionally want a different disposable runtime directory. If you run against an already-running local API server, that server's own `PROJECT_DIR` controls where data is read and written.
+Playwright-started API servers set `E2E_MANAGE_SERVICES=true`, use disposable PostgreSQL/Redis containers, and use `.e2e-runtime` as `PROJECT_DIR` by default. The server copies `packages/server/src/data` into that generated runtime directory before booting, so normal Playwright runs do not write back to source data files. Set `E2E_PROJECT_DIR` only when you intentionally want a different disposable runtime directory. If you run against an already-running local API server, that server's own `PROJECT_DIR` controls where data is read and written.
 
-The stable browser suite covers public route smoke coverage, public newsletter signup, visual smoke coverage, newsletter subscriber administration, contact info, hero banner, and seasonal content. It includes browser-driven save assertions for representative persisted edits in each admin area. Those tests verify the successful save response contains the updated persisted landing page document, which catches failed writes without depending on post-save accordion/card visibility.
+The stable browser suite covers public route smoke coverage, public account signup/login-reset flows, public newsletter signup, public gallery browsing, visual smoke coverage, newsletter subscriber administration, admin gallery upload/edit/publish cleanup, contact info, about content, hero banner, and seasonal content. It includes browser-driven save assertions for representative persisted edits in each admin area. The About workflow now also verifies that saved story content renders on the public About page for the active variant/session.
 
 Stable specs attach a runtime guard from `e2e/fixtures/runtime-guard.ts` through either `e2e/fixtures/auth.ts` or `e2e/fixtures/guarded.ts`. The guard fails tests on unexpected browser console warnings/errors, uncaught page errors, and HTTP 4xx/5xx responses. The only allowed failures are documented known development-noise cases such as the stale-CSRF retry during first authenticated mutation and the analytics tracking retry after login.
 
@@ -88,7 +92,11 @@ Stable specs attach a runtime guard from `e2e/fixtures/runtime-guard.ts` through
 
 Stable E2E specs and non-legacy E2E support files may not use fixed sleeps, broad `networkidle` waits, runtime `test.skip`, or parent-traversal selectors. Legacy E2E specs and their legacy-only page objects are exempt while they are being hardened or retired.
 
-`yarn validation:receipt` writes `.validation/latest-receipt.md` with the current commit, worktree state, declared validation command, CI run/job metadata when available, available coverage totals, Playwright expected/failed/flaky/skipped counts, Lighthouse artifact freshness, and required-artifact checks. For declared full/release/CI commands, the receipt fails if expected artifacts are missing or older than `VALIDATION_ARTIFACT_MAX_AGE_MINUTES` (default: 120).
+`yarn validation:receipt` writes `.validation/latest-receipt.md` with the current commit, worktree state, declared validation command, CI run/job metadata when available, available coverage totals, Playwright expected/failed/flaky/skipped counts, Lighthouse artifact freshness, and required-artifact checks. For declared trusted/full/release/CI commands, the receipt fails if expected artifacts are missing or older than `VALIDATION_ARTIFACT_MAX_AGE_MINUTES` (default: 120).
+
+## Trusted Gate
+
+Use `yarn validate:trusted` when you want high local confidence before manual testing but do not need Lighthouse. It runs typecheck, test typecheck, drift checks, unit tests, server integration tests, the production UI build, PWA checks, the stable guarded E2E suite, and then writes `.validation/latest-receipt.md`.
 
 ## Release Gate
 
@@ -133,6 +141,7 @@ GitHub Actions uploads:
 | `yarn test:e2e:full`      | Stable + legacy admin Playwright specs               | Local or CI PostgreSQL/Redis services, browser install                        | Uses `.e2e-runtime` by default                                                |
 | `yarn test:pwa`           | Production-build PWA and public-route browser checks | Browser install                                                               | Writes Playwright reports only                                                |
 | `yarn lighthouse:local`   | Local production-build Lighthouse checks             | Built UI assets, Chrome/Lighthouse                                            | Writes `.lighthouseci/` artifacts                                             |
+| `yarn validate:trusted`   | High-confidence local trust gate                     | Docker, PostgreSQL/Redis services for E2E, browser install                    | Uses disposable test/runtime state and writes `.validation/latest-receipt.md` |
 | `yarn validate:full`      | Full local merge gate                                | Docker, PostgreSQL/Redis services for E2E, browser install                    | Uses disposable test/runtime state                                            |
 | `yarn validate:release`   | Full local release gate plus Lighthouse and receipt  | Docker, PostgreSQL/Redis services for E2E, browser install, Chrome/Lighthouse | Uses disposable test/runtime state and writes `.validation/latest-receipt.md` |
 | `yarn validation:receipt` | Local validation evidence summary                    | Existing coverage/results files                                               | Writes `.validation/latest-receipt.md`                                        |
@@ -149,6 +158,7 @@ GitHub Actions uploads:
 | Admin browser workflow or locator/test-id seam   | `yarn test:e2e:smoke` or `yarn test:e2e:admin`               |
 | PWA, service worker, or production UI build      | `yarn workspace ui build && yarn test:pwa`                   |
 | Cross-package or release-boundary change         | `yarn validate:full`                                         |
+| Local readiness before manual test               | `yarn validate:trusted`                                      |
 | Pre-deploy release readiness                     | `yarn validate:release`                                      |
 
 ## Reliability Rules

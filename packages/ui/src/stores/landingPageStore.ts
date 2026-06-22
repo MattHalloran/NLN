@@ -152,6 +152,11 @@ export const useLandingPageStore = create<LandingPageState>((set, get) => {
         },
 
         refetch: async () => {
+            const pendingFetch = fetchPromise;
+            if (pendingFetch) {
+                await pendingFetch.catch(() => undefined);
+            }
+
             const currentState = get();
             await currentState.fetchLandingPage();
         },
