@@ -32,7 +32,7 @@ interface UpsertCustomerData {
     firstName: string;
     lastName: string;
     pronouns?: string;
-    business?: { name: string };
+    business?: { name: string; subscribedToNewsletters?: boolean };
     password?: string;
     accountApproved?: boolean;
     theme?: string;
@@ -68,6 +68,7 @@ export async function upsertCustomer({ prisma, data }: UpsertCustomerParams) {
         const business = await prisma.business.create({
             data: {
                 name: data.business.name,
+                subscribedToNewsletters: data.business.subscribedToNewsletters ?? true,
             },
         });
         businessId = business.id;

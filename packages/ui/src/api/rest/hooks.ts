@@ -168,9 +168,11 @@ export function useSignUp() {
             firstName: string;
             lastName: string;
             pronouns?: string;
-            businessName?: string;
-            emails: Array<{ emailAddress: string; receivesDeliveryUpdates?: boolean }>;
-            phones?: Array<{ number: string; receivesDeliveryUpdates?: boolean }>;
+            business: string;
+            email: string;
+            phone: string;
+            accountApproved: boolean;
+            marketingEmails: boolean;
             password: string;
         },
         CustomerSession

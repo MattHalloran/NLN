@@ -339,6 +339,7 @@ router.post(REST_CHILD_PATHS.auth.signup, signupLimiter, async (req: Request, re
             email,
             phone,
             accountApproved,
+            marketingEmails,
             theme,
             password,
         } = req.body;
@@ -360,7 +361,7 @@ router.post(REST_CHILD_PATHS.auth.signup, signupLimiter, async (req: Request, re
                 firstName,
                 lastName,
                 pronouns,
-                business: { name: business },
+                business: { name: business, subscribedToNewsletters: marketingEmails },
                 password: bcrypt.hashSync(password, HASHING_ROUNDS),
                 accountApproved,
                 theme,

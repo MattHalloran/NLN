@@ -77,9 +77,11 @@ export const SignUpForm = () => {
                     firstName: rest.firstName,
                     lastName: rest.lastName,
                     pronouns: rest.pronouns,
-                    businessName: rest.business,
-                    emails: [{ emailAddress: rest.email }],
-                    phones: rest.phone ? [{ number: rest.phone }] : undefined,
+                    business: rest.business,
+                    email: rest.email,
+                    phone: rest.phone,
+                    accountApproved: rest.accountApproved,
+                    marketingEmails: rest.marketingEmails,
                     password: rest.password,
                 });
 

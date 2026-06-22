@@ -88,10 +88,14 @@ export async function truncatePublicTables(
     }
 }
 
-export async function createRestTestApp(prisma: PrismaClient): Promise<Express> {
-    const [{ default: restRouter }, auth] = await Promise.all([
+export async function createRestTestApp(
+    prisma: PrismaClient,
+    options: { csrf?: boolean } = {}
+): Promise<Express> {
+    const [{ default: restRouter }, auth, csrf] = await Promise.all([
         import("../rest/index.js"),
         import("../auth.js"),
+        import("../middleware/csrf.js"),
     ]);
     const app = express();
 
@@ -103,7 +107,13 @@ export async function createRestTestApp(prisma: PrismaClient): Promise<Express> 
         next();
     });
     app.use(auth.authenticate);
+    if (options.csrf) {
+        app.use(REST_ROUTES.root, csrf.csrfProtection);
+    }
     app.use(REST_ROUTES.root, restRouter);
+    if (options.csrf) {
+        app.use(csrf.csrfErrorHandler);
+    }
 
     return app;
 }

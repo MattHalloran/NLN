@@ -264,9 +264,11 @@ export const restApi = {
         password: string;
         verificationCode?: string;
     }): Promise<CustomerSession> {
-        return requestEndpoint(REST_ENDPOINTS.auth.login, {
+        const session = await requestEndpoint(REST_ENDPOINTS.auth.login, {
             body: input,
         });
+        await refreshCsrfToken();
+        return session;
     },
 
     async logout(): Promise<{ success: boolean }> {
@@ -277,14 +279,18 @@ export const restApi = {
         firstName: string;
         lastName: string;
         pronouns?: string;
-        businessName?: string;
-        emails: Array<{ emailAddress: string; receivesDeliveryUpdates?: boolean }>;
-        phones?: Array<{ number: string; receivesDeliveryUpdates?: boolean }>;
+        business: string;
+        email: string;
+        phone: string;
+        accountApproved: boolean;
+        marketingEmails: boolean;
         password: string;
     }): Promise<CustomerSession> {
-        return requestEndpoint(REST_ENDPOINTS.auth.signup, {
+        const session = await requestEndpoint(REST_ENDPOINTS.auth.signup, {
             body: input,
         });
+        await refreshCsrfToken();
+        return session;
     },
 
     async resetPassword(input: { token: string; password: string }): Promise<CustomerSession> {
