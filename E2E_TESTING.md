@@ -19,7 +19,7 @@ yarn test:e2e:legacy
 # Full admin suite, including legacy/brittle specs
 yarn test:e2e:full
 
-# PWA production-build browser checks
+# PWA and public-route production-build browser checks
 yarn test:pwa
 
 # Development helpers
@@ -35,7 +35,7 @@ yarn test:e2e:report
 - `playwright.admin.config.ts`: stable admin suite.
 - `playwright.legacy.config.ts`: legacy admin suite.
 - `playwright.full.config.ts`: all admin specs.
-- `playwright.pwa.config.ts`: PWA tests against the production UI build.
+- `playwright.pwa.config.ts`: PWA and public-route smoke tests against the production UI build.
 - `playwright.shared.ts`: common admin E2E projects, web servers, reporters, retries, and artifact settings.
 
 ## Test Data
@@ -58,11 +58,14 @@ Stable browser specs live in `e2e/admin/stable`:
 
 - `e2e/admin/stable/contact-info-simple.spec.ts`
 - `e2e/admin/stable/hero-banner-simple.spec.ts`
+- `e2e/admin/stable/newsletter-subscribers-simple.spec.ts`
 - `e2e/admin/stable/public-smoke-simple.spec.ts`
 - `e2e/admin/stable/public-visual-simple.spec.ts`
 - `e2e/admin/stable/seasonal-content-simple.spec.ts`
 
-The stable browser suite currently contains 42 application checks. It covers public route smoke checks, public newsletter signup, first-viewport visual smoke checks, and representative browser-driven persistence coverage for contact info, hero banner, and seasonal content saves. These tests assert that the successful save response contains the updated persisted landing page document, which is less brittle than requiring newly saved content to be visible in a specific expanded UI panel after reload.
+The stable browser suite covers public route smoke checks, public newsletter signup, first-viewport visual smoke checks, newsletter subscriber administration, and representative browser-driven persistence coverage for contact info, hero banner, and seasonal content saves. These tests assert that the successful save response contains the updated persisted landing page document, which is less brittle than requiring newly saved content to be visible in a specific expanded UI panel after reload.
+
+The PWA suite runs against the production UI build and checks cache headers, public route rendering, offline app-shell behavior, update prompts, and service-worker activation.
 
 `public-visual-simple.spec.ts` intentionally keeps screenshot coverage narrow. It guards homepage and gallery first viewports plus mobile overflow on the homepage/about routes. Add new screenshots only for pages where visual regressions are expensive to miss and the content is deterministic enough for CI.
 

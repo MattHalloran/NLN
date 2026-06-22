@@ -63,21 +63,7 @@ jobs:
           yarn test:pwa
 
       - name: Lighthouse public page checks
-        run: |
-          cd packages/ui
-          PORT_UI=3001 node scripts/serve-production.js &
-          server_pid=$!
-          trap "kill $server_pid" EXIT
-          for attempt in {1..30}; do
-            if curl -fsS http://localhost:3001/ >/dev/null; then
-              break
-            fi
-            sleep 1
-          done
-          cd ../..
-          yarn lighthouse:collect
-          yarn lighthouse:assert
-        continue-on-error: true
+        run: yarn lighthouse:local
 
       - name: Upload Lighthouse results
         if: always()
@@ -99,7 +85,8 @@ jobs:
 
       - name: Validation receipt
         if: always()
-        run: VALIDATION_COMMAND="ci validate job: typecheck, lint, unit, scripts, drift, ui build, pwa, lighthouse" yarn validation:receipt
+        run: |
+          VALIDATION_COMMAND="ci validate job: typecheck, lint, unit, scripts, drift, ui build, pwa, lighthouse" yarn validation:receipt
 
       - name: Upload validation receipt
         if: always()
@@ -147,7 +134,8 @@ jobs:
 
       - name: Validation receipt
         if: always()
-        run: VALIDATION_COMMAND="ci integration job: yarn test:integration" yarn validation:receipt
+        run: |
+          VALIDATION_COMMAND="ci integration job: yarn test:integration" yarn validation:receipt
 
       - name: Upload validation receipt
         if: always()
@@ -237,7 +225,8 @@ jobs:
 
       - name: Validation receipt
         if: always()
-        run: VALIDATION_COMMAND="ci e2e job: yarn test:e2e:admin" yarn validation:receipt
+        run: |
+          VALIDATION_COMMAND="ci e2e job: yarn test:e2e:admin" yarn validation:receipt
 
       - name: Upload validation receipt
         if: always()

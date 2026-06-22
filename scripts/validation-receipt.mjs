@@ -4,6 +4,7 @@ import path from "node:path";
 
 const outputDir = path.resolve(".validation");
 const outputPath = path.join(outputDir, "latest-receipt.md");
+const artifactMaxAgeMinutes = Number(process.env.VALIDATION_ARTIFACT_MAX_AGE_MINUTES ?? 120);
 
 const readJson = (relativePath) => {
     const filePath = path.resolve(relativePath);
@@ -28,6 +29,12 @@ const fileFreshness = (relativePath) => {
     return `${stats.mtime.toISOString()} (${ageSeconds}s old)`;
 };
 
+const fileAgeSeconds = (relativePath) => {
+    const filePath = path.resolve(relativePath);
+    if (!fs.existsSync(filePath)) return null;
+    return Math.round((Date.now() - fs.statSync(filePath).mtimeMs) / 1000);
+};
+
 const coverageSummaries = [
     ["shared unit", "packages/shared/coverage/coverage-summary.json"],
     ["ui unit", "packages/ui/coverage/coverage-summary.json"],
@@ -40,6 +47,56 @@ const playwrightResults = [
     ["pwa", "test-results/pwa.json"],
     ["smoke e2e", "test-results/smoke.json"],
 ];
+
+const lighthouseArtifacts = [
+    ["Lighthouse assertion results", ".lighthouseci/assertion-results.json"],
+];
+
+const validationCommand =
+    process.env.VALIDATION_COMMAND || process.env.DEPLOY_VALIDATE_CMD || "not provided";
+
+const expectedArtifactsByCommand = [
+    {
+        pattern: /validate:release|validate:full|validate:ci|ci validate job/i,
+        artifacts: [
+            ...coverageSummaries.map(([, relativePath]) => relativePath),
+            "test-results/pwa.json",
+        ],
+    },
+    {
+        pattern: /validate:release|validate:full|ci e2e job/i,
+        artifacts: ["test-results/admin.json"],
+    },
+    {
+        pattern: /validate:release|ci validate job/i,
+        artifacts: lighthouseArtifacts.map(([, relativePath]) => relativePath),
+    },
+    {
+        pattern: /ci integration job/i,
+        artifacts: ["packages/server/coverage-integration/coverage-summary.json"],
+    },
+];
+
+const requiredArtifacts = [
+    ...new Set(
+        expectedArtifactsByCommand.flatMap(({ pattern, artifacts }) =>
+            pattern.test(validationCommand) ? artifacts : [],
+        ),
+    ),
+];
+
+const artifactProblems = requiredArtifacts.flatMap((relativePath) => {
+    const ageSeconds = fileAgeSeconds(relativePath);
+    if (ageSeconds === null) {
+        return [`missing required artifact: ${relativePath}`];
+    }
+    if (ageSeconds > artifactMaxAgeMinutes * 60) {
+        return [
+            `stale required artifact: ${relativePath} is ${Math.round(ageSeconds / 60)} minutes old`,
+        ];
+    }
+    return [];
+});
 
 const formatMetric = (metric) => `${metric.pct.toFixed(2)}%`;
 
@@ -95,6 +152,10 @@ const playwrightRows = playwrightResults.flatMap(([label, relativePath]) => {
     ];
 });
 
+const lighthouseRows = lighthouseArtifacts.map(
+    ([label, relativePath]) => `| ${label} | ${relativePath} | ${fileFreshness(relativePath)} |`,
+);
+
 const lines = [
     "# Validation Receipt",
     "",
@@ -102,9 +163,10 @@ const lines = [
     `Commit: ${commandOutput("git", ["rev-parse", "HEAD"])}`,
     `Branch: ${commandOutput("git", ["branch", "--show-current"])}`,
     `Worktree: ${commandOutput("git", ["status", "--short"]) || "clean"}`,
-    `Validation command: ${process.env.VALIDATION_COMMAND || process.env.DEPLOY_VALIDATE_CMD || "not provided"}`,
+    `Validation command: ${validationCommand}`,
     `CI run: ${process.env.GITHUB_SERVER_URL && process.env.GITHUB_REPOSITORY && process.env.GITHUB_RUN_ID ? `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}` : "local"}`,
     `CI job: ${process.env.GITHUB_JOB || "local"}`,
+    `Artifact freshness limit: ${artifactMaxAgeMinutes} minutes`,
     "",
     "## Coverage",
     "",
@@ -118,6 +180,20 @@ const lines = [
     "| --- | ---: | ---: | ---: | ---: | --- | --- |",
     ...(playwrightRows.length ? playwrightRows : ["| no Playwright results found | | | | | | |"]),
     "",
+    "## Lighthouse",
+    "",
+    "| Artifact | Result File | Artifact Freshness |",
+    "| --- | --- | --- |",
+    ...lighthouseRows,
+    "",
+    "## Artifact Check",
+    "",
+    ...(requiredArtifacts.length
+        ? artifactProblems.length
+            ? artifactProblems.map((problem) => `- ${problem}`)
+            : ["All required artifacts for the declared validation command are present and fresh."]
+        : ["No required artifact set matched the declared validation command."]),
+    "",
 ];
 
 fs.mkdirSync(outputDir, { recursive: true });
@@ -127,4 +203,9 @@ console.log(`Validation receipt written to ${outputPath}`);
 
 if (process.env.GITHUB_STEP_SUMMARY) {
     fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, lines.join("\n"));
+}
+
+if (artifactProblems.length > 0) {
+    console.error(artifactProblems.join("\n"));
+    process.exit(1);
 }
