@@ -15,7 +15,7 @@
  * - Expose GET /csrf-token endpoint for clients to fetch tokens
  */
 
-import { CODE, CSRF } from "@local/shared";
+import { CODE, CSRF, REST_ROUTES } from "@local/shared";
 import { doubleCsrf } from "csrf-csrf";
 import { Request, Response, NextFunction } from "express";
 import { logger, LogLevel } from "../logger.js";
@@ -78,11 +78,38 @@ const csrfConfig = doubleCsrf({
     },
 });
 
+const doubleCsrfProtection = csrfConfig.doubleCsrfProtection;
+
+const analyticsTrackingPattern = new RegExp(
+    `^${REST_ROUTES.landingPage.root}/variants/[^/]+/track/?$`
+);
+const analyticsTrackingExemptionReason =
+    "anonymous landing-page analytics events sent by fetch/sendBeacon";
+
+const getRequestPath = (req: Request): string => (req.originalUrl ?? req.path).split("?")[0];
+
+export const isCsrfExemptRequest = (req: Request): boolean => {
+    return (
+        req.method.toUpperCase() === "POST" && analyticsTrackingPattern.test(getRequestPath(req))
+    );
+};
+
 /**
  * CSRF protection middleware
  * Apply this to all state-changing routes (POST, PUT, DELETE, PATCH)
  */
-export const csrfProtection = csrfConfig.doubleCsrfProtection;
+export const csrfProtection = (req: Request, res: Response, next: NextFunction): void => {
+    if (isCsrfExemptRequest(req)) {
+        logger.log(LogLevel.debug, `CSRF exemption: ${analyticsTrackingExemptionReason}`, {
+            path: req.path,
+            method: req.method,
+        });
+        next();
+        return;
+    }
+
+    doubleCsrfProtection(req, res, next);
+};
 
 /**
  * Generate a new CSRF token
