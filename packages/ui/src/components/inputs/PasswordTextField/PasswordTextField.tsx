@@ -160,6 +160,7 @@ export const PasswordTextField = ({
             />
             {autoComplete === "new-password" && (
                 <LinearProgress
+                    aria-label="Password strength meter"
                     value={strengthProps.score * 25} // Convert score to percentage
                     variant="determinate"
                     sx={{

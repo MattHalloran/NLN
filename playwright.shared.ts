@@ -9,9 +9,10 @@ process.env.E2E_MANAGE_SERVICES ??= "true";
 type E2EConfigOptions = {
     testMatch: PlaywrightTestConfig["testMatch"];
     reportName: string;
+    testIgnore?: PlaywrightTestConfig["testIgnore"];
 };
 
-export const createE2EConfig = ({ testMatch, reportName }: E2EConfigOptions) =>
+export const createE2EConfig = ({ testMatch, reportName, testIgnore = [] }: E2EConfigOptions) =>
     defineConfig({
         testDir: "./e2e",
         testMatch,
@@ -22,6 +23,7 @@ export const createE2EConfig = ({ testMatch, reportName }: E2EConfigOptions) =>
             "**/packages/**",
             "**/dist/**",
             "pwa.spec.ts",
+            ...(Array.isArray(testIgnore) ? testIgnore : [testIgnore]),
         ],
         timeout: E2E_TIMEOUTS.testMs,
         expect: {

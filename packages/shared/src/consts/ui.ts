@@ -25,6 +25,7 @@ export const APP_LINKS = {
     AdminStorage: "/admin/storage",
     AdminLogs: "/admin/logs",
     Cart: "/cart",
+    Contact: "/contact",
     ForgotPassword: "/forgot-password",
     Gallery: "/gallery",
     Home: "/",

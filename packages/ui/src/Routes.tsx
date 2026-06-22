@@ -20,6 +20,7 @@ const lazyNamed = <TModule, TExport extends keyof TModule>(
 
 // Lazy loading in the Routes component is a recommended way to improve performance. See https://reactjs.org/docs/code-splitting.html#route-based-code-splitting
 const AboutPage = lazyNamed(() => import("./pages/main/AboutPage/AboutPage"), "AboutPage");
+const ContactPage = lazyNamed(() => import("./pages/ContactPage/ContactPage"), "ContactPage");
 const FormPage = lazyNamed(() => import("./pages/main/FormPage/FormPage"), "FormPage");
 const GalleryPage = lazyNamed(() => import("./pages/main/GalleryPage/GalleryPage"), "GalleryPage");
 const HomePage = lazyNamed(() => import("./pages/main/HomePage/HomePage"), "HomePage");
@@ -162,6 +163,13 @@ export const Routes = () => {
                     <Suspense fallback={Fallback}>
                         <Page excludePageContainer>
                             <AboutPage />
+                        </Page>
+                    </Suspense>
+                </Route>
+                <Route path={APP_LINKS.Contact} sitemapIndex priority={0.5}>
+                    <Suspense fallback={Fallback}>
+                        <Page>
+                            <ContactPage />
                         </Page>
                     </Suspense>
                 </Route>

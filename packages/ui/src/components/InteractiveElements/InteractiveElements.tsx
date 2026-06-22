@@ -271,6 +271,7 @@ export const InteractiveElements = () => {
                                 >
                                     {/* Navigation Arrows */}
                                     <IconButton
+                                        aria-label="Previous seasonal plant"
                                         onClick={prevPlant}
                                         sx={{
                                             position: "absolute",
@@ -286,6 +287,7 @@ export const InteractiveElements = () => {
                                     </IconButton>
 
                                     <IconButton
+                                        aria-label="Next seasonal plant"
                                         onClick={nextPlant}
                                         sx={{
                                             position: "absolute",
@@ -463,7 +465,7 @@ export const InteractiveElements = () => {
                             </Tabs>
 
                             {/* Tips List */}
-                            <Box sx={{ maxHeight: "400px", overflowY: "auto" }}>
+                            <Box tabIndex={0} sx={{ maxHeight: "400px", overflowY: "auto" }}>
                                 {filteredTips.map((tip, index) => (
                                     <Card
                                         key={index}

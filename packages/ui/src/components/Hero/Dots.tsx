@@ -14,12 +14,16 @@ export const Dots = ({ quantity = 0, activeIndex, onDotClick }: DotsProps) => {
         slides.push(
             <Box
                 key={"dot-" + i}
+                aria-label={`Go to slide ${i + 1}`}
+                component="button"
+                type="button"
                 onClick={() => onDotClick?.(i)}
                 sx={{
                     padding: "10px",
                     marginRight: "5px",
                     cursor: "pointer",
                     borderRadius: "50%",
+                    border: 0,
                     background: activeIndex === i ? palette.primary.main : "white",
                     transition: "background 0.2s ease-in-out",
                     opacity: activeIndex === i ? "0.9" : "80%",

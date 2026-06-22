@@ -13,13 +13,13 @@ yarn test
 # Local quality gate without browser or service dependencies
 yarn validate
 
-# Full local gate; CI runs these layers in parallel jobs
+# Full local gate without Lighthouse; CI runs these layers in parallel jobs
 yarn validate:full
 
-# High-confidence local trust gate without Lighthouse
+# High-confidence local trust gate without Lighthouse, with a receipt
 yarn validate:trusted
 
-# Full local release gate plus validation receipt
+# Release gate: full validation plus Lighthouse, with a receipt
 yarn validate:release
 
 # Backward-compatible alias
@@ -37,6 +37,7 @@ yarn test:scripts
 yarn test:e2e:smoke
 yarn test:e2e:stable
 yarn test:e2e:admin
+yarn test:a11y
 yarn test:e2e:legacy
 yarn test:e2e:full
 yarn test:pwa
@@ -51,6 +52,7 @@ yarn validation:receipt
 - Server integration tests use Vitest with Testcontainers-managed PostgreSQL and Redis dependencies.
 - Script tests use top-level Bats files in `scripts/tests`; helper library tests under `scripts/tests/helpers` are vendored and not part of project validation.
 - E2E tests use Playwright.
+- Accessibility E2E tests use Playwright plus axe-core and write a dedicated accessibility report.
 - PWA tests use a separate Playwright config against the production UI build and include core public-route rendering checks.
 - Lighthouse checks are available through `yarn lighthouse:local` for the local production UI build and `yarn lighthouse:prod` for production. CI runs local Lighthouse assertions as a blocking gate for public accessibility, SEO, best-practices, and performance drift.
 
@@ -71,14 +73,15 @@ Use the narrowest layer that proves the behavior:
 ## Playwright Suites
 
 - `yarn test:e2e:smoke` runs one stable admin smoke spec in `e2e/admin/stable`.
-- `yarn test:e2e:admin` and `yarn test:e2e:stable` run the current stable browser suite in `e2e/admin/stable`.
+- `yarn test:e2e:admin` and `yarn test:e2e:stable` run the current stable browser suite in `e2e/admin/stable`, excluding the dedicated accessibility spec.
+- `yarn test:a11y` runs the public accessibility spec in `e2e/admin/stable/public-accessibility-simple.spec.ts` and writes `test-results/accessibility.json`.
 - `yarn test:e2e:legacy` runs only `e2e/admin/legacy`.
 - `yarn test:e2e:full` runs all admin Playwright specs, including `e2e/admin/legacy`.
 - `yarn test:pwa` runs PWA/browser-cache checks against a production build.
 
 Playwright-started API servers set `E2E_MANAGE_SERVICES=true`, use disposable PostgreSQL/Redis containers, and use `.e2e-runtime` as `PROJECT_DIR` by default. The server copies `packages/server/src/data` into that generated runtime directory before booting, so normal Playwright runs do not write back to source data files. Set `E2E_PROJECT_DIR` only when you intentionally want a different disposable runtime directory. If you run against an already-running local API server, that server's own `PROJECT_DIR` controls where data is read and written.
 
-The stable browser suite covers public route smoke coverage, public account signup/login-reset flows, public newsletter signup, public gallery browsing, visual smoke coverage, newsletter subscriber administration, admin gallery upload/edit/publish cleanup, contact info, about content, hero banner, and seasonal content. It includes browser-driven save assertions for representative persisted edits in each admin area. The About workflow now also verifies that saved story content renders on the public About page for the active variant/session.
+The stable browser suite covers public route smoke coverage, protected-route redirects, public account signup/login-reset flows, public auth validation and failure paths, public newsletter signup, public gallery browsing, visual smoke coverage, newsletter subscriber administration, admin gallery upload/edit/publish cleanup, contact info, about content, hero banner, and seasonal content. It includes browser-driven save assertions for representative persisted edits in each admin area and an injected contact-info save failure to prove failed mutations keep the user's edits visible. The About workflow now also verifies that saved story content renders on the public About page for the active variant/session.
 
 Stable specs attach a runtime guard from `e2e/fixtures/runtime-guard.ts` through either `e2e/fixtures/auth.ts` or `e2e/fixtures/guarded.ts`. The guard fails tests on unexpected browser console warnings/errors, uncaught page errors, and HTTP 4xx/5xx responses. The only allowed failures are documented known development-noise cases such as the stale-CSRF retry during first authenticated mutation and the analytics tracking retry after login.
 
@@ -96,13 +99,13 @@ Stable E2E specs and non-legacy E2E support files may not use fixed sleeps, broa
 
 ## Trusted Gate
 
-Use `yarn validate:trusted` when you want high local confidence before manual testing but do not need Lighthouse. It runs typecheck, test typecheck, drift checks, unit tests, server integration tests, the production UI build, PWA checks, the stable guarded E2E suite, and then writes `.validation/latest-receipt.md`.
+Use `yarn validate:trusted` when you want high local confidence before manual testing but do not need Lighthouse. It runs typecheck, test typecheck, drift checks, unit tests, server integration tests, the shared package build, production UI build, PWA checks, accessibility E2E checks, the stable guarded E2E suite, and then writes `.validation/latest-receipt.md`.
 
 ## Release Gate
 
-Use `yarn validate:release` as the local pre-deploy gate. It runs typechecks, lint, unit tests with coverage thresholds, script safety tests, drift checks, server integration tests, the production UI build, PWA browser checks, the stable guarded E2E suite, blocking Lighthouse checks for the local production UI build, and then writes `.validation/latest-receipt.md`.
+Use `yarn validate:release` as the local pre-deploy gate. It runs the full validation command, blocking Lighthouse checks for the local production UI build, and then writes `.validation/latest-receipt.md`.
 
-A release should not be considered ready until the matching CI jobs are also green and their validation receipts are attached as artifacts. Local success is useful for fast feedback, but CI is the shared trust boundary.
+A release should not be considered ready until the matching CI jobs are also green and their validation receipts are attached as artifacts. Local success is useful for fast feedback, but CI is the shared trust boundary. In branch protection, require the `Trusted Gate` CI job; it fails unless the validate, integration, and E2E jobs all pass.
 
 ## Coverage Policy
 
@@ -124,6 +127,7 @@ GitHub Actions uploads:
 - Vitest coverage from server and UI unit tests.
 - Server integration coverage.
 - Playwright HTML/JSON reports for admin E2E.
+- Playwright HTML/JSON reports for accessibility E2E.
 - Playwright HTML/JSON reports for PWA tests.
 - Lighthouse CI results for public pages.
 - Validation receipts that fail when required evidence for the declared command is missing or stale.
@@ -137,12 +141,13 @@ GitHub Actions uploads:
 | `yarn test:integration`   | Server integration tests                             | Docker/Testcontainers                                                         | No; tests use disposable containers and temp project dirs                     |
 | `yarn test:e2e:smoke`     | One stable admin Playwright spec                     | Local or CI PostgreSQL/Redis services, browser install                        | Uses `.e2e-runtime` by default                                                |
 | `yarn test:e2e:admin`     | Stable admin Playwright suite                        | Local or CI PostgreSQL/Redis services, browser install                        | Uses `.e2e-runtime` by default                                                |
+| `yarn test:a11y`          | Public axe accessibility browser checks              | Local or CI PostgreSQL/Redis services, browser install                        | Uses `.e2e-runtime` by default                                                |
 | `yarn test:e2e:legacy`    | Legacy admin Playwright suite                        | Local or CI PostgreSQL/Redis services, browser install                        | Uses `.e2e-runtime` by default                                                |
 | `yarn test:e2e:full`      | Stable + legacy admin Playwright specs               | Local or CI PostgreSQL/Redis services, browser install                        | Uses `.e2e-runtime` by default                                                |
 | `yarn test:pwa`           | Production-build PWA and public-route browser checks | Browser install                                                               | Writes Playwright reports only                                                |
 | `yarn lighthouse:local`   | Local production-build Lighthouse checks             | Built UI assets, Chrome/Lighthouse                                            | Writes `.lighthouseci/` artifacts                                             |
 | `yarn validate:trusted`   | High-confidence local trust gate                     | Docker, PostgreSQL/Redis services for E2E, browser install                    | Uses disposable test/runtime state and writes `.validation/latest-receipt.md` |
-| `yarn validate:full`      | Full local merge gate                                | Docker, PostgreSQL/Redis services for E2E, browser install                    | Uses disposable test/runtime state                                            |
+| `yarn validate:full`      | Full local merge gate without Lighthouse             | Docker, PostgreSQL/Redis services for E2E, browser install                    | Uses disposable test/runtime state                                            |
 | `yarn validate:release`   | Full local release gate plus Lighthouse and receipt  | Docker, PostgreSQL/Redis services for E2E, browser install, Chrome/Lighthouse | Uses disposable test/runtime state and writes `.validation/latest-receipt.md` |
 | `yarn validation:receipt` | Local validation evidence summary                    | Existing coverage/results files                                               | Writes `.validation/latest-receipt.md`                                        |
 

@@ -177,7 +177,7 @@ export const SignUpForm = () => {
                             autoFocus
                             id="firstName"
                             name="firstName"
-                            autoComplete="fname"
+                            autoComplete="given-name"
                             label="First Name"
                             value={formik.values.firstName}
                             onChange={formik.handleChange}
@@ -190,7 +190,7 @@ export const SignUpForm = () => {
                             fullWidth
                             id="lastName"
                             name="lastName"
-                            autoComplete="lname"
+                            autoComplete="family-name"
                             label="Last Name"
                             value={formik.values.lastName}
                             onChange={formik.handleChange}
@@ -225,7 +225,7 @@ export const SignUpForm = () => {
                             fullWidth
                             id="business"
                             name="business"
-                            autoComplete="business"
+                            autoComplete="organization"
                             label="Business/Organization (Optional)"
                             value={formik.values.business}
                             onChange={formik.handleChange}

@@ -13,7 +13,9 @@ const expectNoHorizontalOverflow = async (page: import("@playwright/test").Page)
 test.describe("Public Site - Visual Smoke", () => {
     test("keeps the public homepage first viewport stable", async ({ page }) => {
         await page.goto(APP_LINKS.Home);
-        await expect(page.getByRole("heading", { name: /new life nursery|wholesale nursery/i }).first()).toBeVisible();
+        await expect(
+            page.getByRole("heading", { name: /new life nursery|wholesale nursery/i }).first(),
+        ).toBeVisible();
         await expectNoHorizontalOverflow(page);
 
         await expect(page).toHaveScreenshot("public-home-desktop.png", {
@@ -36,11 +38,57 @@ test.describe("Public Site - Visual Smoke", () => {
         });
     });
 
+    test("keeps informational public pages visually stable", async ({ page }) => {
+        await page.goto(APP_LINKS.About);
+        await expect(page.getByRole("heading", { name: /our heritage/i }).first()).toBeVisible();
+        await expectNoHorizontalOverflow(page);
+
+        await expect(page).toHaveScreenshot("public-about-desktop.png", {
+            animations: "disabled",
+            fullPage: false,
+            maxDiffPixelRatio: 0.02,
+        });
+
+        await page.goto(APP_LINKS.Contact);
+        await expect(page.getByRole("heading", { name: /contact us/i }).first()).toBeVisible();
+        await expectNoHorizontalOverflow(page);
+
+        await expect(page).toHaveScreenshot("public-contact-desktop.png", {
+            animations: "disabled",
+            fullPage: false,
+            maxDiffPixelRatio: 0.02,
+        });
+    });
+
+    test("keeps account entry pages visually stable", async ({ page }) => {
+        await page.goto(APP_LINKS.LogIn);
+        await expect(page.getByRole("heading", { name: /log in/i }).last()).toBeVisible();
+        await expectNoHorizontalOverflow(page);
+
+        await expect(page).toHaveScreenshot("public-login-desktop.png", {
+            animations: "disabled",
+            fullPage: false,
+            maxDiffPixelRatio: 0.02,
+        });
+
+        await page.goto(APP_LINKS.Register);
+        await expect(page.getByRole("heading", { name: /sign up/i }).last()).toBeVisible();
+        await expectNoHorizontalOverflow(page);
+
+        await expect(page).toHaveScreenshot("public-register-desktop.png", {
+            animations: "disabled",
+            fullPage: false,
+            maxDiffPixelRatio: 0.02,
+        });
+    });
+
     test("keeps mobile public entry pages within the viewport", async ({ page }) => {
         await page.setViewportSize({ width: 390, height: 844 });
 
         await page.goto(APP_LINKS.Home);
-        await expect(page.getByRole("heading", { name: /new life nursery|wholesale nursery/i }).first()).toBeVisible();
+        await expect(
+            page.getByRole("heading", { name: /new life nursery|wholesale nursery/i }).first(),
+        ).toBeVisible();
         await expectNoHorizontalOverflow(page);
 
         await expect(page).toHaveScreenshot("public-home-mobile.png", {

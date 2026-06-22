@@ -1,4 +1,5 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
+import { REST_ROUTES } from "@local/shared";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useAdminForm } from "./useAdminForm";
 
@@ -38,7 +39,7 @@ describe("useAdminForm", () => {
                 saveFn,
                 refetchDependencies: [refetchDependency],
                 pageName: "test-admin-form",
-                endpointName: "/api/rest/v1/test",
+                endpointName: `${REST_ROUTES.v1}/test`,
             }),
         );
 

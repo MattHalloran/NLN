@@ -13,6 +13,9 @@ yarn test:e2e:smoke
 yarn test:e2e:admin
 yarn test:e2e:stable
 
+# Public accessibility checks with a dedicated report
+yarn test:a11y
+
 # Legacy admin suite only
 yarn test:e2e:legacy
 
@@ -33,6 +36,7 @@ yarn test:e2e:report
 
 - `playwright.config.ts`: smoke suite.
 - `playwright.admin.config.ts`: stable admin suite.
+- `playwright.accessibility.config.ts`: public accessibility suite.
 - `playwright.legacy.config.ts`: legacy admin suite.
 - `playwright.full.config.ts`: all admin specs.
 - `playwright.pwa.config.ts`: PWA and public-route smoke tests against the production UI build.
@@ -62,16 +66,17 @@ Stable browser specs live in `e2e/admin/stable`:
 - `e2e/admin/stable/hero-banner-simple.spec.ts`
 - `e2e/admin/stable/newsletter-subscribers-simple.spec.ts`
 - `e2e/admin/stable/public-account-flows-simple.spec.ts`
+- `e2e/admin/stable/public-accessibility-simple.spec.ts`
 - `e2e/admin/stable/public-gallery-simple.spec.ts`
 - `e2e/admin/stable/public-smoke-simple.spec.ts`
 - `e2e/admin/stable/public-visual-simple.spec.ts`
 - `e2e/admin/stable/seasonal-content-simple.spec.ts`
 
-The stable browser suite covers public route smoke checks, public account signup/login-reset flows, public newsletter signup, gallery browsing, first-viewport visual smoke checks, newsletter subscriber administration, admin gallery upload/edit/publish cleanup, and representative browser-driven persistence coverage for contact info, about content, hero banner, and seasonal content saves. These tests assert that the successful save response contains the updated persisted landing page document when that is the least brittle way to prove persistence. The About content spec also verifies the saved story title on the public About page for the active variant/session.
+The stable browser suite covers public route smoke checks, protected-route redirects, public account signup/login-reset flows, public auth validation and failure paths, public newsletter signup, gallery browsing, first-viewport visual smoke checks, newsletter subscriber administration, admin gallery upload/edit/publish cleanup, and representative browser-driven persistence coverage for contact info, about content, hero banner, and seasonal content saves. It also verifies that an injected contact-info save failure leaves the edited values visible so an admin can retry. These tests assert that the successful save response contains the updated persisted landing page document when that is the least brittle way to prove persistence. The About content spec also verifies the saved story title on the public About page for the active variant/session.
 
-The PWA suite runs against the production UI build and checks cache headers, public route rendering, offline app-shell behavior, update prompts, and service-worker activation.
+The accessibility suite runs axe-core against the public homepage, about, gallery, contact, register, and login pages and fails on serious or critical violations. The PWA suite runs against the production UI build and checks cache headers, public route rendering, offline app-shell behavior, update prompts, and service-worker activation.
 
-`public-visual-simple.spec.ts` intentionally keeps screenshot coverage narrow. It guards homepage and gallery first viewports plus mobile overflow on the homepage/about routes. Add new screenshots only for pages where visual regressions are expensive to miss and the content is deterministic enough for CI.
+`public-visual-simple.spec.ts` intentionally keeps screenshot coverage focused on deterministic public pages. It guards homepage, about, contact, gallery, login, and register first viewports plus mobile overflow on the homepage/about routes. Add new screenshots only for pages where visual regressions are expensive to miss and the content is deterministic enough for CI.
 
 Legacy admin specs and their legacy-only page objects live in `e2e/admin/legacy` and remain available through `yarn test:e2e:full`, but they contain more timing and selector coupling. Treat failures there as useful regression signals, not as the primary merge gate until they are hardened.
 
@@ -79,7 +84,7 @@ Legacy admin specs and their legacy-only page objects live in `e2e/admin/legacy`
 
 Stable tests automatically attach `e2e/fixtures/runtime-guard.ts` through `e2e/fixtures/auth.ts` for authenticated tests or `e2e/fixtures/guarded.ts` for public tests. At teardown, the guard fails the test on unexpected browser console warnings/errors, uncaught page errors, and HTTP 4xx/5xx responses.
 
-The allowlist should stay small and explicit. Current response allowances cover the intentionally tested invalid-login response and the login-time analytics tracking retry. Authenticated login/signup refresh CSRF after the session changes, so stable specs should not need broad stale-CSRF mutation allowances.
+The allowlist should stay small and explicit. Current response allowances cover the intentionally tested invalid-login response, signed-out session checks, and the injected contact-info save failure. Authenticated login/signup refresh CSRF after the session changes, so stable specs should not need broad stale-CSRF mutation allowances.
 
 ## Stable vs Legacy Policy
 

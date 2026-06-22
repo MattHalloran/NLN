@@ -1,6 +1,8 @@
 import { APP_LINKS, REST_ROUTES, stripApiPrefix } from "@local/shared";
 import { test, expect } from "../../fixtures/guarded";
 
+const CONTACT_PATH = "/contact";
+
 const expectUsablePage = async (page: import("@playwright/test").Page, heading: RegExp) => {
     await expect(page.getByRole("heading", { name: heading }).first()).toBeVisible();
     await expect(page.locator("body")).not.toBeEmpty();
@@ -20,6 +22,13 @@ test.describe("Public Site - Smoke", () => {
         await expectUsablePage(page, /our collection/i);
         await expect(page.getByRole("tab", { name: "All", exact: true })).toBeVisible();
         await expect(page.getByText(/showing \d+ of \d+ items/i)).toBeVisible();
+
+        await page.goto(CONTACT_PATH);
+        await expectUsablePage(page, /contact us/i);
+        const contactContent = page.locator("#page").last();
+        await expect(contactContent.getByRole("heading", { name: /hours/i })).toBeVisible();
+        await expect(contactContent.getByText(/call us/i)).toBeVisible();
+        await expect(contactContent.getByText(/email us/i)).toBeVisible();
     });
 
     test("renders mobile public pages without layout-blocking runtime failures", async ({
@@ -32,6 +41,9 @@ test.describe("Public Site - Smoke", () => {
 
         await page.goto(APP_LINKS.About);
         await expectUsablePage(page, /our heritage/i);
+
+        await page.goto(CONTACT_PATH);
+        await expectUsablePage(page, /contact us/i);
     });
 
     test("loads account entry forms with accessible controls", async ({ page }) => {

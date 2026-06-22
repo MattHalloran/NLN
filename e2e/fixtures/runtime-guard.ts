@@ -17,7 +17,12 @@ const ALLOWED_CONSOLE_PATTERNS = [
     /Download the React DevTools/i,
     /Failed to execute 'write' on 'Document'/i,
     /Failed to load resource: the server responded with a status of 401/i,
+    /Failed to load resource: the server responded with a status of 500/i,
     /Failed to load resource: the server responded with a status of 403/i,
+    /^Error in AdminContactPage$/i,
+    /^Action: updateContactInfo$/i,
+    /Injected E2E contact save failure/i,
+    /^Context: \{component: AdminContactPage, action: updateContactInfo\}$/i,
 ];
 
 const ALLOWED_RESPONSE_FAILURES = [
@@ -26,8 +31,12 @@ const ALLOWED_RESPONSE_FAILURES = [
         pattern: /\/api\/rest\/v1\/auth\/login$/,
     },
     {
-        status: 403,
-        pattern: /\/api\/rest\/v1\/landing-page\/variants\/[^/]+\/track$/,
+        status: 401,
+        pattern: /\/api\/rest\/v1\/auth\/session$/,
+    },
+    {
+        status: 500,
+        pattern: /\/api\/rest\/v1\/landing-page\/contact-info(?:\?|$)/,
     },
 ];
 

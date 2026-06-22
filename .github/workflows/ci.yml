@@ -21,17 +21,8 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
-      - name: Typecheck
-        run: yarn typecheck
-
-      - name: Test typecheck
-        run: yarn typecheck:test
-
-      - name: Lint
-        run: yarn lint
-
-      - name: Unit tests
-        run: yarn test:unit
+      - name: Validate node-only gate
+        run: yarn validate
 
       - name: Upload unit coverage
         if: always()
@@ -44,15 +35,12 @@ jobs:
             packages/ui/coverage
           if-no-files-found: ignore
 
-      - name: Script tests
-        run: yarn test:scripts
-
-      - name: Drift checks
-        run: yarn check:drift
-
       - name: Coverage summary
         if: always()
         run: yarn coverage:summary
+
+      - name: Build shared package
+        run: yarn workspace @local/shared build
 
       - name: Build UI
         run: yarn workspace ui build
@@ -86,7 +74,7 @@ jobs:
       - name: Validation receipt
         if: always()
         run: |
-          VALIDATION_COMMAND="ci validate job: typecheck, lint, unit, scripts, drift, ui build, pwa, lighthouse" yarn validation:receipt
+          VALIDATION_COMMAND="ci validate job: yarn validate, shared build, ui build, pwa, lighthouse" yarn validation:receipt
 
       - name: Upload validation receipt
         if: always()
@@ -210,6 +198,19 @@ jobs:
       - name: Install Chromium
         run: yarn playwright install --with-deps chromium
 
+      - name: Run accessibility E2E tests
+        run: yarn test:a11y
+
+      - name: Upload accessibility Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-accessibility
+          path: |
+            playwright-report/accessibility
+            test-results/accessibility.json
+          if-no-files-found: ignore
+
       - name: Run E2E tests
         run: yarn test:e2e:admin
 
@@ -235,3 +236,25 @@ jobs:
           name: validation-receipt-e2e
           path: .validation/latest-receipt.md
           if-no-files-found: ignore
+
+  trusted-gate:
+    name: Trusted Gate
+    runs-on: ubuntu-latest
+    needs:
+      - validate
+      - integration
+      - e2e
+    if: always()
+    steps:
+      - name: Check required validation jobs
+        run: |
+          if [ "${{ needs.validate.result }}" != "success" ] || \
+             [ "${{ needs.integration.result }}" != "success" ] || \
+             [ "${{ needs.e2e.result }}" != "success" ]; then
+            echo "Required validation jobs did not all pass."
+            echo "validate=${{ needs.validate.result }}"
+            echo "integration=${{ needs.integration.result }}"
+            echo "e2e=${{ needs.e2e.result }}"
+            exit 1
+          fi
+          echo "Trusted gate passed."

@@ -15,13 +15,11 @@ export const PageTabs = <T, S extends boolean = true>({
 }: PageTabsProps<T, S>) => {
     const { breakpoints, palette } = useTheme();
     const isMobile = useWindowSize(({ width }) => width <= breakpoints.values.md);
+    const idPrefix = ariaLabel.replace(/[^a-zA-Z0-9_-]+/g, "-");
 
     const tabsRef = useRef<HTMLDivElement>(null);
     // Update refs array when tabs changes
-    const tabRefs = useMemo(
-        () => tabs.map(() => createRef<HTMLDivElement>()),
-        [tabs],
-    );
+    const tabRefs = useMemo(() => tabs.map(() => createRef<HTMLDivElement>()), [tabs]);
     const underlineRef = useRef<HTMLDivElement>(null);
 
     // Handle dragging of tabs
@@ -37,7 +35,7 @@ export const PageTabs = <T, S extends boolean = true>({
                 if (!tabsRef.current) return;
 
                 const x = e.clientX;
-                const walk = (x - startX);
+                const walk = x - startX;
                 distanceMoved = Math.abs(walk);
 
                 // Only consider it a drag if the mouse has moved more than the minimum distance
@@ -51,7 +49,9 @@ export const PageTabs = <T, S extends boolean = true>({
             const handleMouseUp = () => {
                 // Only set draggingRef to false if it was considered a drag
                 if (distanceMoved > minimumDistance) {
-                    setTimeout(() => { draggingRef.current = false; }, 50);
+                    setTimeout(() => {
+                        draggingRef.current = false;
+                    }, 50);
                 }
                 document.removeEventListener("mousemove", handleMouseMove);
                 document.removeEventListener("mouseup", handleMouseUp);
@@ -64,23 +64,28 @@ export const PageTabs = <T, S extends boolean = true>({
         e.preventDefault();
     };
 
-    const handleTabChange = useCallback((event: React.SyntheticEvent, newValue: number) => {
-        if (draggingRef.current) return;
-        // Add transition for smooth animation of underline
-        if (underlineRef.current) {
-            underlineRef.current.style.transition = "left 0.3s ease, width 0.3s ease";
-        }
-        // Call onChange prop
-        onChange(event, tabs[newValue]);
-    }, [onChange, tabs]);
+    const handleTabChange = useCallback(
+        (event: React.SyntheticEvent, newValue: number) => {
+            if (draggingRef.current) return;
+            // Add transition for smooth animation of underline
+            if (underlineRef.current) {
+                underlineRef.current.style.transition = "left 0.3s ease, width 0.3s ease";
+            }
+            // Call onChange prop
+            onChange(event, tabs[newValue]);
+        },
+        [onChange, tabs],
+    );
 
     // Scroll so new tab is centered
-    const easeInOutCubic = (t: number) => t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1;
+    const easeInOutCubic = (t: number) =>
+        t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1;
     useEffect(() => {
         const selectedTab = tabRefs[currTab.index]?.current;
         if (!selectedTab || !tabsRef.current) return;
 
-        const targetScrollPosition = selectedTab.offsetLeft + selectedTab.offsetWidth / 2 - tabsRef.current.offsetWidth / 2;
+        const targetScrollPosition =
+            selectedTab.offsetLeft + selectedTab.offsetWidth / 2 - tabsRef.current.offsetWidth / 2;
         const startScrollPosition = tabsRef.current.scrollLeft;
         const duration = 300;
         const startTime = performance.now();
@@ -92,7 +97,8 @@ export const PageTabs = <T, S extends boolean = true>({
             // Apply the easing function to the linear progress
             const easedProgress = easeInOutCubic(linearProgress);
 
-            const newScrollPosition = startScrollPosition + (targetScrollPosition - startScrollPosition) * easedProgress;
+            const newScrollPosition =
+                startScrollPosition + (targetScrollPosition - startScrollPosition) * easedProgress;
             if (tabsRef.current) tabsRef.current.scrollLeft = newScrollPosition;
 
             if (linearProgress < 1) {
@@ -191,28 +197,31 @@ export const PageTabs = <T, S extends boolean = true>({
                 // Apply custom styles
                 ...sx,
             }}
+            tabIndex={0}
         >
             {tabs.map(({ color, href, Icon, label }, index) => {
                 const isSelected = currTab.index === index;
-                const providedColor = color !== undefined ?
-                    typeof color === "string" ? color :
-                        isSelected ?
-                            color.active :
-                            color.inactive :
-                    undefined;
-                const tabColor = providedColor ?? (isMobile ?
-                    palette.primary.contrastText :
-                    palette.primary.light);
+                const providedColor =
+                    color !== undefined
+                        ? typeof color === "string"
+                            ? color
+                            : isSelected
+                              ? color.active
+                              : color.inactive
+                        : undefined;
+                const tabColor =
+                    providedColor ??
+                    (isMobile ? palette.primary.contrastText : palette.primary.main);
                 return (
-                    <Tooltip key={index} title={(Icon && !ignoreIcons) ? label : ""}>
+                    <Tooltip key={index} title={Icon && !ignoreIcons ? label : ""}>
                         <Box
-                            id={`${ariaLabel}-${index}`}
+                            id={`${idPrefix}-${index}`}
                             ref={tabRefs[index]}
                             role="tab"
                             component={href ? "a" : "div"}
                             href={href}
                             aria-selected={isSelected}
-                            aria-controls={`${ariaLabel}-tabpanel-${index}`}
+                            tabIndex={isSelected ? 0 : -1}
                             onClick={(event: React.MouseEvent) => handleTabChange(event, index)}
                             style={{
                                 padding: "10px",
@@ -224,7 +233,13 @@ export const PageTabs = <T, S extends boolean = true>({
                                 textDecoration: "none",
                             }}
                         >
-                            {(Icon && !ignoreIcons) ? <Icon fill={tabColor} /> : <Typography variant="body2" style={{ color: tabColor }}>{label}</Typography>}
+                            {Icon && !ignoreIcons ? (
+                                <Icon fill={tabColor} />
+                            ) : (
+                                <Typography variant="body2" style={{ color: tabColor }}>
+                                    {label}
+                                </Typography>
+                            )}
                         </Box>
                     </Tooltip>
                 );

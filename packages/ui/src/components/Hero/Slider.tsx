@@ -158,6 +158,7 @@ export const Slider = ({
             {showArrows && images.length > 1 && (
                 <>
                     <IconButton
+                        aria-label="Previous slide"
                         onClick={previousSlide}
                         sx={{
                             position: "absolute",
@@ -174,6 +175,7 @@ export const Slider = ({
                         <ChevronLeft size={32} />
                     </IconButton>
                     <IconButton
+                        aria-label="Next slide"
                         onClick={nextSlide}
                         sx={{
                             position: "absolute",

@@ -44,6 +44,7 @@ const coverageSummaries = [
 
 const playwrightResults = [
     ["admin e2e", "test-results/admin.json"],
+    ["accessibility e2e", "test-results/accessibility.json"],
     ["pwa", "test-results/pwa.json"],
     ["smoke e2e", "test-results/smoke.json"],
 ];
@@ -65,7 +66,7 @@ const expectedArtifactsByCommand = [
     },
     {
         pattern: /validate:release|validate:full|validate:trusted|ci e2e job/i,
-        artifacts: ["test-results/admin.json"],
+        artifacts: ["test-results/admin.json", "test-results/accessibility.json"],
     },
     {
         pattern: /validate:release|ci validate job/i,
