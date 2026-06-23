@@ -22,6 +22,10 @@ if [ -z "${CHROME_PATH:-}" ]; then
     export CHROME_PATH
 fi
 
+cd "${ROOT_DIR}"
+yarn workspace @local/shared build
+yarn workspace ui build
+
 cleanup() {
     if [ -n "${ui_pid}" ]; then
         kill "${ui_pid}" >/dev/null 2>&1 || true

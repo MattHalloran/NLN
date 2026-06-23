@@ -36,8 +36,8 @@ jobs:
       - name: Generate Prisma client
         run: yarn workspace server prisma generate --schema src/db/schema.prisma
 
-      - name: Validate node-only gate
-        run: yarn validate
+      - name: Validate quick gate
+        run: yarn validate:quick
 
       - name: Upload unit coverage
         if: always()
@@ -87,7 +87,7 @@ jobs:
       - name: Validation receipt
         if: always()
         run: |
-          VALIDATION_COMMAND="ci validate job: yarn validate, shared build, ui build, pwa, lighthouse" yarn validation:receipt
+          VALIDATION_COMMAND="ci validate job: yarn validate:quick, shared build, ui build, pwa, lighthouse" yarn validation:receipt
 
       - name: Upload validation receipt
         if: always()
@@ -225,7 +225,20 @@ jobs:
             test-results/accessibility.json
           if-no-files-found: ignore
 
-      - name: Run E2E tests
+      - name: Run public visitor E2E tests
+        run: yarn test:e2e:public
+
+      - name: Upload public Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-public
+          path: |
+            playwright-report/public
+            test-results/public.json
+          if-no-files-found: ignore
+
+      - name: Run admin E2E tests
         run: yarn test:e2e:admin
 
       - name: Upload Playwright report
@@ -241,7 +254,7 @@ jobs:
       - name: Validation receipt
         if: always()
         run: |
-          VALIDATION_COMMAND="ci e2e job: yarn test:e2e:admin" yarn validation:receipt
+          VALIDATION_COMMAND="ci e2e job: yarn test:a11y, yarn test:e2e:public, yarn test:e2e:admin" yarn validation:receipt
 
       - name: Upload validation receipt
         if: always()

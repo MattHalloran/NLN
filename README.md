@@ -146,6 +146,9 @@ yarn validate:full
 # Browser validation gate
 yarn validate:browser
 
+# Stable public visitor E2E suite
+yarn test:e2e:public
+
 # Stable admin E2E suite
 yarn test:e2e:admin
 
@@ -166,7 +169,7 @@ The project includes layered test coverage:
 
 - **Unit Tests**: Shared, UI, and server Vitest suites with coverage thresholds
 - **Integration Tests**: Server Vitest suites with Testcontainers-backed PostgreSQL and Redis
-- **Browser Tests**: Playwright stable admin/public flows, accessibility checks, and PWA checks
+- **Browser Tests**: Playwright public visitor flows, stable admin flows, accessibility checks, and PWA checks
 - **Script Tests**: Bats coverage for backup, deploy, rollback, readiness, healthcheck, and migration safety
 
 ```bash
