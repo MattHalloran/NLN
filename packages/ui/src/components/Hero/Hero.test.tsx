@@ -4,6 +4,11 @@ import { Hero } from "./Hero";
 
 const mockSetLocation = vi.fn();
 const mockUseLandingPage = vi.fn();
+const mockSliderImages: Array<{
+    hash: string;
+    alt: string;
+    files?: Array<{ src: string; width: number; height: number }> | null;
+}> = [];
 
 vi.mock("hooks/useLandingPage", () => ({
     useLandingPage: () => mockUseLandingPage(),
@@ -14,13 +19,26 @@ vi.mock("route", () => ({
 }));
 
 vi.mock("./Slider", () => ({
-    Slider: ({ images }: { images: Array<{ hash: string; alt: string }> }) => (
-        <div data-testid="hero-slider">
-            {images.map((image) => (
-                <span key={image.hash}>{image.alt}</span>
-            ))}
-        </div>
-    ),
+    Slider: ({
+        images,
+    }: {
+        images: Array<{
+            hash: string;
+            alt: string;
+            files?: Array<{ src: string; width: number; height: number }> | null;
+        }>;
+    }) => {
+        mockSliderImages.length = 0;
+        mockSliderImages.push(...images);
+
+        return (
+            <div data-testid="hero-slider">
+                {images.map((image) => (
+                    <span key={image.hash}>{image.alt}</span>
+                ))}
+            </div>
+        );
+    },
 }));
 
 const landingPageData = {
@@ -65,6 +83,7 @@ const landingPageData = {
 describe("Hero", () => {
     beforeEach(() => {
         mockSetLocation.mockClear();
+        mockSliderImages.length = 0;
         vi.mocked(window.open).mockClear();
         mockUseLandingPage.mockReturnValue({ data: landingPageData });
     });
@@ -79,6 +98,87 @@ describe("Hero", () => {
         ).toBeInTheDocument();
         expect(screen.getByText("Locally Grown")).toBeInTheDocument();
         expect(screen.getByTestId("hero-slider")).toHaveTextContent("Nursery hero banner");
+    });
+
+    it("derives responsive files for generated single-file hero banners", () => {
+        mockUseLandingPage.mockReturnValue({
+            data: {
+                ...landingPageData,
+                content: {
+                    ...landingPageData.content,
+                    hero: {
+                        ...landingPageData.content.hero,
+                        banners: [
+                            {
+                                id: "banner-1",
+                                src: "/images/Newlife-16-XXL.jpeg",
+                                alt: "Fall hero banner",
+                                description: "Fall color",
+                                width: 0,
+                                height: 0,
+                                displayOrder: 1,
+                                isActive: true,
+                                files: [
+                                    {
+                                        src: "/images/Newlife-16-XXL.jpeg",
+                                        width: 4096,
+                                        height: 0,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                },
+            },
+        });
+
+        render(<Hero />);
+
+        expect(mockSliderImages[0]?.files).toContainEqual({
+            src: "/images/Newlife-16-XL.webp",
+            width: 2048,
+            height: 0,
+        });
+        expect(mockSliderImages[0]?.files).toContainEqual({
+            src: "/images/Newlife-16-XL.jpeg",
+            width: 2048,
+            height: 0,
+        });
+    });
+
+    it("preserves explicit multi-file hero banner data", () => {
+        const files = [
+            { src: "/images/custom-small.jpg", width: 640, height: 360 },
+            { src: "/images/custom-large.jpg", width: 1280, height: 720 },
+        ];
+        mockUseLandingPage.mockReturnValue({
+            data: {
+                ...landingPageData,
+                content: {
+                    ...landingPageData.content,
+                    hero: {
+                        ...landingPageData.content.hero,
+                        banners: [
+                            {
+                                id: "banner-1",
+                                src: "/images/custom-large.jpg",
+                                alt: "Custom hero banner",
+                                description: "Custom",
+                                width: 1280,
+                                height: 720,
+                                displayOrder: 1,
+                                isActive: true,
+                                files,
+                            },
+                        ],
+                    },
+                },
+            },
+        });
+
+        render(<Hero />);
+
+        expect(mockSliderImages[0]?.files).toBe(files);
     });
 
     it("routes internal CTA buttons through app navigation", async () => {
