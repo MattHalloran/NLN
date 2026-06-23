@@ -1,7 +1,6 @@
 import {
     createTimestampedId,
     REST_RESOURCE,
-    REST_ROUTES,
     REST_VERSION_PREFIX,
     UPLOAD_LIMITS,
 } from "@local/shared";
@@ -21,6 +20,7 @@ import newsletterRouter from "./newsletter.js";
 // ARCHIVED: import analyticsRouter from "./analytics.js"; // Old A/B test analytics moved to variant system
 import { csrfTokenEndpoint } from "../middleware/csrf.js";
 import { TEMP_UPLOAD_DIR } from "../config/paths.js";
+import { createRestApiInfo } from "./apiInfo.js";
 
 const router = Router();
 
@@ -77,47 +77,7 @@ router.use(REST_VERSION_PREFIX, v1Router);
 
 // Root API info
 router.get("/", (_req, res) => {
-    res.json({
-        name: "New Life Nursery REST API",
-        version: "1.0.0",
-        endpoints: {
-            v1: {
-                health: REST_ROUTES.health,
-                csrfToken: REST_ROUTES.csrfToken,
-                auth: {
-                    session: REST_ROUTES.auth.session,
-                    login: REST_ROUTES.auth.login,
-                    logout: REST_ROUTES.auth.logout,
-                    signup: REST_ROUTES.auth.signup,
-                    resetPassword: REST_ROUTES.auth.resetPassword,
-                    requestPasswordChange: REST_ROUTES.auth.requestPasswordChange,
-                },
-                // ARCHIVED: Customer management moved to external system
-                // customers: {
-                //     profile: "/api/rest/v1/customers/profile",
-                //     list: "/api/rest/v1/customers",
-                //     add: "/api/rest/v1/customers",
-                //     update: "/api/rest/v1/customers/:id",
-                //     delete: "/api/rest/v1/customers/:id",
-                //     changeStatus: "/api/rest/v1/customers/:id/status",
-                // },
-                images: {
-                    getByLabel: REST_ROUTES.images.byLabel(),
-                    add: REST_ROUTES.images.root,
-                    update: REST_ROUTES.images.root,
-                },
-                assets: {
-                    read: REST_ROUTES.assets.read,
-                    write: REST_ROUTES.assets.write,
-                },
-                dashboard: {
-                    stats: REST_ROUTES.dashboard.stats,
-                },
-                landingPage: REST_ROUTES.landingPage.root,
-                // ARCHIVED: plants endpoint removed
-            },
-        },
-    });
+    res.json(createRestApiInfo());
 });
 
 export default router;
