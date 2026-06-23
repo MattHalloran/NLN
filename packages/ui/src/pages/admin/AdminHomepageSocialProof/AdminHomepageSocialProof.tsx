@@ -702,7 +702,7 @@ export const AdminHomepageSocialProof = () => {
                         <Button
                             variant="contained"
                             size="large"
-                            onClick={form.save}
+                            onClick={() => void form.save().catch(() => undefined)}
                             disabled={form.isSaving}
                             sx={{ px: 4, fontWeight: 600 }}
                         >
@@ -1722,7 +1722,7 @@ export const AdminHomepageSocialProof = () => {
                                     <Button
                                         variant="contained"
                                         size="large"
-                                        onClick={form.save}
+                                        onClick={() => void form.save().catch(() => undefined)}
                                         disabled={form.isSaving}
                                         sx={{ px: 4, fontWeight: 600 }}
                                     >

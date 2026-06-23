@@ -22,6 +22,7 @@ const ALLOWED_CONSOLE_PATTERNS = [
     /^Error in AdminContactPage$/i,
     /^Action: updateContactInfo$/i,
     /Injected E2E contact save failure/i,
+    /Injected E2E landing page save failure/i,
     /^Context: \{component: AdminContactPage, action: updateContactInfo\}$/i,
 ];
 
@@ -37,6 +38,10 @@ const ALLOWED_RESPONSE_FAILURES = [
     {
         status: 500,
         pattern: /\/api\/rest\/v1\/landing-page\/contact-info(?:\?|$)/,
+    },
+    {
+        status: 500,
+        pattern: /\/api\/rest\/v1\/landing-page(?:\?|$)/,
     },
 ];
 

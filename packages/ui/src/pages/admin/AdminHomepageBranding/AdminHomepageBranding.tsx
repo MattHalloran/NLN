@@ -510,7 +510,7 @@ export const AdminHomepageBranding = () => {
                             variant="contained"
                             size="large"
                             startIcon={<Save size={20} />}
-                            onClick={form.save}
+                            onClick={() => void form.save().catch(() => undefined)}
                             disabled={!form.isDirty || form.isSaving || hasCriticalErrors}
                             sx={{
                                 px: 4,
@@ -1407,7 +1407,7 @@ export const AdminHomepageBranding = () => {
                                             variant="contained"
                                             size="large"
                                             startIcon={<Save size={20} />}
-                                            onClick={form.save}
+                                            onClick={() => void form.save().catch(() => undefined)}
                                             disabled={
                                                 !form.isDirty || form.isSaving || hasCriticalErrors
                                             }

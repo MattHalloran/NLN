@@ -227,6 +227,9 @@ describe("REST API Integration Tests", () => {
                 });
 
                 expect(response.status).toBe(400);
+                expect(response.body).toMatchObject({
+                    error: expect.stringMatching(/email.*already exists/i),
+                });
             });
         });
 

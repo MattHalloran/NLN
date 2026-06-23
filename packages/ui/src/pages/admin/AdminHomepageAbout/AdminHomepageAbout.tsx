@@ -44,7 +44,7 @@ import {
     Trash2,
     Target as ValuesIcon,
 } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { landingPageIconOptions, resolveLandingPageIcon } from "utils/landingPageIcons";
 
 // Available icons for value cards
@@ -339,11 +339,11 @@ export const AdminHomepageAbout = () => {
     const { palette } = useTheme();
     // Admin needs to see ALL content (including inactive) so they can manage it
     const { variantId } = useABTestQueryParams();
-    const {
-        data: landingPageData,
-        loading: landingPageLoading,
-        refetch: refetchLandingPage,
-    } = useLandingPageContent(false, variantId);
+    const lastVariantIdRef = useRef(variantId);
+    const { data: landingPageData, refetch: refetchLandingPage } = useLandingPageContent(
+        false,
+        variantId,
+    );
     const { mutate: updateContent } = useUpdateLandingPageContent();
 
     // Get founded year
@@ -374,13 +374,15 @@ export const AdminHomepageAbout = () => {
         errorMessagePrefix: "Failed to save",
     });
 
-    // Trigger refetch when landing page data loads
+    // The auxiliary landing-page hook is only needed for metadata such as foundedYear.
+    // Refetching the form when it resolves can overwrite quick user edits after load.
     useEffect(() => {
-        if (landingPageData && !landingPageLoading) {
+        if (lastVariantIdRef.current !== variantId) {
+            lastVariantIdRef.current = variantId;
             void form.refetch();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [landingPageData, landingPageLoading]);
+    }, [variantId]);
 
     // Story section handlers
     const updateStoryField = <TField extends keyof StoryData>(
@@ -554,7 +556,7 @@ export const AdminHomepageAbout = () => {
                         <Button
                             variant="contained"
                             size="large"
-                            onClick={form.save}
+                            onClick={() => void form.save().catch(() => undefined)}
                             disabled={form.isSaving}
                             sx={{
                                 px: 4,
@@ -1266,7 +1268,7 @@ export const AdminHomepageAbout = () => {
                                     <Button
                                         variant="contained"
                                         size="large"
-                                        onClick={form.save}
+                                        onClick={() => void form.save().catch(() => undefined)}
                                         disabled={form.isSaving}
                                         sx={{
                                             px: 4,

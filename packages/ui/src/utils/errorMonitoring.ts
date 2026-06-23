@@ -90,7 +90,7 @@ const getMonitoringWindow = (): MonitoringWindow | null => {
  */
 export function trackMutationError(event: MutationErrorEvent): void {
     // Log to console in development
-    if (process.env.NODE_ENV === "development") {
+    if (import.meta.env.DEV) {
         console.error("[Mutation Error]", event);
     }
 
@@ -113,8 +113,9 @@ export function trackMutationError(event: MutationErrorEvent): void {
     }
 
     // Send to custom analytics endpoint
-    if (process.env.REACT_APP_ANALYTICS_ENDPOINT) {
-        fetch(process.env.REACT_APP_ANALYTICS_ENDPOINT, {
+    const analyticsEndpoint = import.meta.env.VITE_ANALYTICS_ENDPOINT;
+    if (analyticsEndpoint) {
+        fetch(analyticsEndpoint, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({

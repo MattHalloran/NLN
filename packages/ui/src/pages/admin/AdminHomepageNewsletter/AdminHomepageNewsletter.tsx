@@ -298,7 +298,7 @@ export const AdminHomepageNewsletter = () => {
                             variant="contained"
                             size="large"
                             startIcon={<SaveIcon size={20} />}
-                            onClick={form.save}
+                            onClick={() => void form.save().catch(() => undefined)}
                             disabled={form.isSaving}
                             sx={{
                                 px: 4,
@@ -644,7 +644,7 @@ export const AdminHomepageNewsletter = () => {
                                         variant="contained"
                                         size="large"
                                         startIcon={<SaveIcon size={20} />}
-                                        onClick={form.save}
+                                        onClick={() => void form.save().catch(() => undefined)}
                                         disabled={form.isSaving}
                                         sx={{
                                             px: 4,

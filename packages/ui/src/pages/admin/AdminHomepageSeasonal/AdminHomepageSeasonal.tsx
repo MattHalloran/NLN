@@ -703,7 +703,7 @@ export const AdminHomepageSeasonal = () => {
                             variant="contained"
                             size="large"
                             startIcon={<Save size={20} />}
-                            onClick={form.save}
+                            onClick={() => void form.save().catch(() => undefined)}
                             disabled={form.isSaving}
                             sx={{
                                 px: 4,
@@ -1882,7 +1882,7 @@ export const AdminHomepageSeasonal = () => {
                                         variant="contained"
                                         size="large"
                                         startIcon={<Save size={20} />}
-                                        onClick={form.save}
+                                        onClick={() => void form.save().catch(() => undefined)}
                                         disabled={form.isSaving}
                                         sx={{
                                             px: 4,

@@ -886,7 +886,7 @@ export const AdminHomepageLocation = () => {
                         <Button
                             variant="contained"
                             size="large"
-                            onClick={form.save}
+                            onClick={() => void form.save().catch(() => undefined)}
                             disabled={form.isSaving}
                             sx={{
                                 px: 4,
@@ -2934,7 +2934,9 @@ export const AdminHomepageLocation = () => {
                                             <Button
                                                 variant="contained"
                                                 size="large"
-                                                onClick={form.save}
+                                                onClick={() =>
+                                                    void form.save().catch(() => undefined)
+                                                }
                                                 disabled={form.isSaving}
                                                 sx={{
                                                     px: 4,

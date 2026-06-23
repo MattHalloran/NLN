@@ -334,7 +334,7 @@ export const AdminHomepageSections = () => {
                         variant="contained"
                         color="primary"
                         startIcon={<Save size={20} />}
-                        onClick={form.save}
+                        onClick={() => void form.save().catch(() => undefined)}
                         disabled={!form.isDirty || form.isSaving}
                     >
                         {form.isSaving ? "Saving..." : "Save Changes"}
