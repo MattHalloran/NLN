@@ -5,6 +5,8 @@
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 source "${HERE}/../utils.sh"
 
+"${HERE}/bootstrap-bats-helpers.sh"
+
 total_tests=0
 total_failures=0
 test_files=("${HERE}"/*.bats)
