@@ -120,6 +120,7 @@ if [ "${PROJECT_DIR}" = "${DEFAULT_E2E_PROJECT_DIR}" ]; then
     mkdir -p "${PROJECT_DIR}/packages/server/src"
     cp -R "${ROOT_DIR}/packages/server/src/data" "${PROJECT_DIR}/packages/server/src/data"
     mkdir -p "${PROJECT_DIR}/data/logs"
+    mkdir -p "${ROOT_DIR}/assets/images" "${ROOT_DIR}/assets/private" "${ROOT_DIR}/assets/public"
     ln -s "${ROOT_DIR}/assets" "${PROJECT_DIR}/assets"
 fi
 

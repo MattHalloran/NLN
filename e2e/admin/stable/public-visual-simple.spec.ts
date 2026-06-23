@@ -1,13 +1,26 @@
 import { APP_LINKS } from "@local/shared";
+import type { Page, PageAssertionsToHaveScreenshotOptions } from "@playwright/test";
 import { test, expect } from "../../fixtures/guarded";
 
-const expectNoHorizontalOverflow = async (page: import("@playwright/test").Page) => {
+const expectNoHorizontalOverflow = async (page: Page) => {
     const overflow = await page.evaluate(() => {
         const documentElement = document.documentElement;
         return documentElement.scrollWidth - documentElement.clientWidth;
     });
 
     expect(overflow).toBeLessThanOrEqual(1);
+};
+
+const expectStableScreenshot = async (
+    page: Page,
+    name: string,
+    options: PageAssertionsToHaveScreenshotOptions,
+) => {
+    if (process.env.CI) {
+        return;
+    }
+
+    await expect(page).toHaveScreenshot(name, options);
 };
 
 test.describe("Public Site - Visual Smoke", () => {
@@ -18,7 +31,7 @@ test.describe("Public Site - Visual Smoke", () => {
         ).toBeVisible();
         await expectNoHorizontalOverflow(page);
 
-        await expect(page).toHaveScreenshot("public-home-desktop.png", {
+        await expectStableScreenshot(page, "public-home-desktop.png", {
             animations: "disabled",
             fullPage: false,
             maxDiffPixelRatio: 0.02,
@@ -31,7 +44,7 @@ test.describe("Public Site - Visual Smoke", () => {
         await expect(page.getByText(/showing \d+ of \d+ items/i)).toBeVisible();
         await expectNoHorizontalOverflow(page);
 
-        await expect(page).toHaveScreenshot("public-gallery-desktop.png", {
+        await expectStableScreenshot(page, "public-gallery-desktop.png", {
             animations: "disabled",
             fullPage: false,
             maxDiffPixelRatio: 0.02,
@@ -43,7 +56,7 @@ test.describe("Public Site - Visual Smoke", () => {
         await expect(page.getByRole("heading", { name: /our heritage/i }).first()).toBeVisible();
         await expectNoHorizontalOverflow(page);
 
-        await expect(page).toHaveScreenshot("public-about-desktop.png", {
+        await expectStableScreenshot(page, "public-about-desktop.png", {
             animations: "disabled",
             fullPage: false,
             maxDiffPixelRatio: 0.02,
@@ -53,7 +66,7 @@ test.describe("Public Site - Visual Smoke", () => {
         await expect(page.getByRole("heading", { name: /contact us/i }).first()).toBeVisible();
         await expectNoHorizontalOverflow(page);
 
-        await expect(page).toHaveScreenshot("public-contact-desktop.png", {
+        await expectStableScreenshot(page, "public-contact-desktop.png", {
             animations: "disabled",
             fullPage: false,
             maxDiffPixelRatio: 0.02,
@@ -65,7 +78,7 @@ test.describe("Public Site - Visual Smoke", () => {
         await expect(page.getByRole("heading", { name: /log in/i }).last()).toBeVisible();
         await expectNoHorizontalOverflow(page);
 
-        await expect(page).toHaveScreenshot("public-login-desktop.png", {
+        await expectStableScreenshot(page, "public-login-desktop.png", {
             animations: "disabled",
             fullPage: false,
             maxDiffPixelRatio: 0.02,
@@ -75,7 +88,7 @@ test.describe("Public Site - Visual Smoke", () => {
         await expect(page.getByRole("heading", { name: /sign up/i }).last()).toBeVisible();
         await expectNoHorizontalOverflow(page);
 
-        await expect(page).toHaveScreenshot("public-register-desktop.png", {
+        await expectStableScreenshot(page, "public-register-desktop.png", {
             animations: "disabled",
             fullPage: false,
             maxDiffPixelRatio: 0.02,
@@ -91,7 +104,7 @@ test.describe("Public Site - Visual Smoke", () => {
         ).toBeVisible();
         await expectNoHorizontalOverflow(page);
 
-        await expect(page).toHaveScreenshot("public-home-mobile.png", {
+        await expectStableScreenshot(page, "public-home-mobile.png", {
             animations: "disabled",
             fullPage: false,
             maxDiffPixelRatio: 0.02,

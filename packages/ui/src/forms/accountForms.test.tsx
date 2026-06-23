@@ -96,6 +96,28 @@ const business = {
     hours: "",
 };
 
+const pasteField = async (
+    user: ReturnType<typeof userEvent.setup>,
+    label: RegExp,
+    value: string,
+) => {
+    await user.click(screen.getByLabelText(label));
+    await user.paste(value);
+};
+
+const fillSignupContractFields = async (
+    user: ReturnType<typeof userEvent.setup>,
+    confirmPassword = "ValidPass123!",
+) => {
+    await pasteField(user, /first name/i, "Contract");
+    await pasteField(user, /last name/i, "User");
+    await pasteField(user, /business\/organization/i, "Contract Nursery");
+    await pasteField(user, /email address/i, "contract@example.test");
+    await pasteField(user, /phone number/i, "555-555-0123");
+    await pasteField(user, /^password$/i, "ValidPass123!");
+    await pasteField(user, /confirm password/i, confirmPassword);
+};
+
 describe("account forms", () => {
     beforeEach(() => {
         hookMocks.login.mockReset();
@@ -154,13 +176,7 @@ describe("account forms", () => {
             </BusinessContext.Provider>,
         );
 
-        await user.type(screen.getByLabelText(/first name/i), "Contract");
-        await user.type(screen.getByLabelText(/last name/i), "User");
-        await user.type(screen.getByLabelText(/business\/organization/i), "Contract Nursery");
-        await user.type(screen.getByLabelText(/email address/i), "contract@example.test");
-        await user.type(screen.getByLabelText(/phone number/i), "555-555-0123");
-        await user.type(screen.getByLabelText(/^password$/i), "ValidPass123!");
-        await user.type(screen.getByLabelText(/confirm password/i), "ValidPass123!");
+        await fillSignupContractFields(user);
         await user.click(screen.getByRole("button", { name: /create account/i }));
 
         await waitFor(() =>
@@ -187,13 +203,7 @@ describe("account forms", () => {
             </BusinessContext.Provider>,
         );
 
-        await user.type(screen.getByLabelText(/first name/i), "Contract");
-        await user.type(screen.getByLabelText(/last name/i), "User");
-        await user.type(screen.getByLabelText(/business\/organization/i), "Contract Nursery");
-        await user.type(screen.getByLabelText(/email address/i), "contract@example.test");
-        await user.type(screen.getByLabelText(/phone number/i), "555-555-0123");
-        await user.type(screen.getByLabelText(/^password$/i), "ValidPass123!");
-        await user.type(screen.getByLabelText(/confirm password/i), "DifferentPass123!");
+        await fillSignupContractFields(user, "DifferentPass123!");
         await user.click(screen.getByRole("button", { name: /create account/i }));
 
         await waitFor(() => expect(hookMocks.signUp).not.toHaveBeenCalled());
