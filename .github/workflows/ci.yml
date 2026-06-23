@@ -21,8 +21,17 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
+      - name: Install script test runner
+        run: sudo apt-get update && sudo apt-get install -y bats
+
       - name: Build shared package
         run: yarn workspace @local/shared build
+
+      - name: Prepare Prisma schema
+        run: |
+          mkdir -p packages/server/dist/db
+          cp packages/server/src/db/schema.prisma packages/server/dist/db/schema.prisma
+          cp -R packages/server/src/db/migrations packages/server/dist/db/migrations
 
       - name: Generate Prisma client
         run: yarn workspace server prisma generate --schema src/db/schema.prisma
@@ -111,6 +120,12 @@ jobs:
       - name: Build shared package
         run: yarn workspace @local/shared build
 
+      - name: Prepare Prisma schema
+        run: |
+          mkdir -p packages/server/dist/db
+          cp packages/server/src/db/schema.prisma packages/server/dist/db/schema.prisma
+          cp -R packages/server/src/db/migrations packages/server/dist/db/migrations
+
       - name: Generate Prisma client
         run: yarn workspace server prisma generate --schema src/db/schema.prisma
 
@@ -145,29 +160,6 @@ jobs:
   e2e:
     name: E2E
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:13-alpine
-        env:
-          POSTGRES_DB: nln_e2e
-          POSTGRES_USER: nln_e2e
-          POSTGRES_PASSWORD: nln_e2e
-        ports:
-          - 5433:5432
-        options: >-
-          --health-cmd "pg_isready -U nln_e2e -d nln_e2e"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
     env:
       NODE_ENV: development
       PROJECT_DIR: ${{ github.workspace }}
@@ -206,6 +198,12 @@ jobs:
 
       - name: Build shared package
         run: yarn workspace @local/shared build
+
+      - name: Prepare Prisma schema
+        run: |
+          mkdir -p packages/server/dist/db
+          cp packages/server/src/db/schema.prisma packages/server/dist/db/schema.prisma
+          cp -R packages/server/src/db/migrations packages/server/dist/db/migrations
 
       - name: Generate Prisma client
         run: yarn workspace server prisma generate --schema src/db/schema.prisma

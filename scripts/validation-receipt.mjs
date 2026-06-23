@@ -42,6 +42,12 @@ const coverageSummaries = [
     ["server integration", "packages/server/coverage-integration/coverage-summary.json"],
 ];
 
+const unitCoverageArtifacts = coverageSummaries
+    .filter(([label]) => !label.includes("integration"))
+    .map(([, relativePath]) => relativePath);
+
+const allCoverageArtifacts = coverageSummaries.map(([, relativePath]) => relativePath);
+
 const playwrightResults = [
     ["admin e2e", "test-results/admin.json"],
     ["accessibility e2e", "test-results/accessibility.json"],
@@ -58,11 +64,12 @@ const validationCommand =
 
 const expectedArtifactsByCommand = [
     {
-        pattern: /validate:release|validate:full|validate:trusted|validate:ci|ci validate job/i,
-        artifacts: [
-            ...coverageSummaries.map(([, relativePath]) => relativePath),
-            "test-results/pwa.json",
-        ],
+        pattern: /ci validate job/i,
+        artifacts: [...unitCoverageArtifacts, "test-results/pwa.json"],
+    },
+    {
+        pattern: /validate:release|validate:full|validate:trusted|validate:ci/i,
+        artifacts: [...allCoverageArtifacts, "test-results/pwa.json"],
     },
     {
         pattern: /validate:release|validate:full|validate:trusted|ci e2e job/i,
