@@ -116,28 +116,20 @@ Comprehensive documentation is available in the [`/docs`](docs) directory:
 
 ### Getting Started
 - [📖 Documentation Index](docs/README.md) - Central documentation hub
-- [🚀 Setup Guide](docs/getting-started/setup.md) - Detailed setup instructions
 - [⚙️ Environment Variables](ENVIRONMENT.md) - Complete env var reference (532 lines)
 
 ### Development
 - [💻 Testing Guide](TESTING.md) - Validation tiers and test commands
 - [🧪 Server Testing](packages/server/TESTING.md) - Server unit and integration tests
-- [🎭 E2E Testing](E2E_TESTING.md) - Playwright E2E test suite
-- [🐛 Debugging Guide](docs/development/debugging.md) - Debug techniques
+- [🎭 Lighthouse CI](docs/lighthouse-ci.md) - Public page performance and quality checks
 
 ### Architecture
 - [🏗️ System Overview](docs/architecture/overview.md) - Architecture and data flow
 - [🔌 REST API](docs/api/rest-api.md) - API endpoint reference
-- [🔐 Authentication](docs/api/authentication.md) - Auth system documentation
 
 ### Deployment
-- [🚀 Deployment Guide](DEPLOYMENT.md) - Production deployment (410 lines)
-- [🔒 Security Checklist](SECURITY_CHECKLIST.md) - Pre-deployment security (343 lines)
+- [🚀 Production Hardening Plan](docs/production-deploy-hardening-plan.md) - Deployment safety context
 - [📧 Email Protection](docs/EMAIL_PROTECTION.md) - Development email safety
-
-### Contributing
-- [🤝 Contributing Guidelines](CONTRIBUTING.md) - How to contribute
-- [📋 Code Standards](docs/development/code-style.md) - Coding conventions
 
 ## Development Commands
 
@@ -151,6 +143,9 @@ yarn validate
 # Full local validation gate
 yarn validate:full
 
+# Browser validation gate
+yarn validate:browser
+
 # Stable admin E2E suite
 yarn test:e2e:admin
 
@@ -160,9 +155,6 @@ yarn typecheck
 # Lint code
 yarn lint
 
-# Build for production
-yarn build
-
 # Start development servers
 yarn workspace ui start-development
 yarn workspace server start-development
@@ -170,15 +162,19 @@ yarn workspace server start-development
 
 ## Testing
 
-The project includes comprehensive test coverage:
+The project includes layered test coverage:
 
-- **Unit Tests**: 108+ tests with Vitest
-- **Integration Tests**: 158+ tests with Testcontainers (PostgreSQL, Redis)
-- **E2E Tests**: 29 tests with Playwright (admin panel workflows)
+- **Unit Tests**: Shared, UI, and server Vitest suites with coverage thresholds
+- **Integration Tests**: Server Vitest suites with Testcontainers-backed PostgreSQL and Redis
+- **Browser Tests**: Playwright stable admin/public flows, accessibility checks, and PWA checks
+- **Script Tests**: Bats coverage for backup, deploy, rollback, readiness, healthcheck, and migration safety
 
 ```bash
 # Run fast unit tests
 yarn test
+
+# Run the quick local quality gate
+yarn validate
 
 # Run full local validation
 yarn validate:full

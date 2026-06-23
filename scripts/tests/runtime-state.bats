@@ -104,6 +104,13 @@ teardown() {
     grep -q 'execFileSync("docker", \["rm", "-f", name\]' "$BATS_TEST_DIRNAME/../../e2e/teardown/e2e-services.teardown.ts"
 }
 
+@test "local lighthouse gate starts disposable API services" {
+    grep -q 'default_env_apply_e2e' "$BATS_TEST_DIRNAME/../lighthouse-local.sh"
+    grep -q 'E2E_MANAGE_SERVICES=true bash "${ROOT_DIR}/scripts/start-e2e-server.sh"' "$BATS_TEST_DIRNAME/../lighthouse-local.sh"
+    grep -q 'http://localhost:${PORT_SERVER}/healthcheck' "$BATS_TEST_DIRNAME/../lighthouse-local.sh"
+    grep -q 'kill -TERM "${api_pid}"' "$BATS_TEST_DIRNAME/../lighthouse-local.sh"
+}
+
 @test "rollback script verifies database and public endpoints after rollback" {
     grep -q 'verify_database_connectivity' "$BATS_TEST_DIRNAME/../rollback.sh"
     grep -q 'SELECT 1;' "$BATS_TEST_DIRNAME/../rollback.sh"
