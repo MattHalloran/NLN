@@ -20,9 +20,11 @@ module.exports = {
         'http://localhost:3001/gallery',     // Gallery page (priority 0.3)
       ],
 
-      // Number of times to run Lighthouse on each URL
-      // Lighthouse will use the median run to reduce variance
-      numberOfRuns: 3,
+      // Use the median of three local runs to reduce variance. CI runs once so
+      // this browser-level smoke check remains bounded on fresh runners.
+      numberOfRuns: process.env.LIGHTHOUSE_NUMBER_OF_RUNS
+        ? Number(process.env.LIGHTHOUSE_NUMBER_OF_RUNS)
+        : (process.env.CI ? 1 : 3),
 
       // Use Playwright's Chromium binary (works better in WSL2/headless environments)
       // Use environment variable if set, otherwise undefined (Lighthouse will find Chrome automatically)

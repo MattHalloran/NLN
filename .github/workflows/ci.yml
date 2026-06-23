@@ -63,6 +63,7 @@ jobs:
           yarn test:pwa
 
       - name: Lighthouse public page checks
+        timeout-minutes: 10
         run: yarn lighthouse:local
 
       - name: Upload Lighthouse results
