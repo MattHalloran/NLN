@@ -21,6 +21,12 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
+      - name: Build shared package
+        run: yarn workspace @local/shared build
+
+      - name: Generate Prisma client
+        run: yarn workspace server prisma generate --schema src/db/schema.prisma
+
       - name: Validate node-only gate
         run: yarn validate
 
@@ -38,9 +44,6 @@ jobs:
       - name: Coverage summary
         if: always()
         run: yarn coverage:summary
-
-      - name: Build shared package
-        run: yarn workspace @local/shared build
 
       - name: Build UI
         run: yarn workspace ui build
@@ -104,6 +107,12 @@ jobs:
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
+
+      - name: Build shared package
+        run: yarn workspace @local/shared build
+
+      - name: Generate Prisma client
+        run: yarn workspace server prisma generate --schema src/db/schema.prisma
 
       - name: Integration tests
         run: yarn test:integration
@@ -194,6 +203,12 @@ jobs:
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
+
+      - name: Build shared package
+        run: yarn workspace @local/shared build
+
+      - name: Generate Prisma client
+        run: yarn workspace server prisma generate --schema src/db/schema.prisma
 
       - name: Install Chromium
         run: yarn playwright install --with-deps chromium
