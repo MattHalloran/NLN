@@ -23,6 +23,7 @@ write_required_release_artifacts() {
     printf '%s\n' "$minimal_playwright_result" > test-results/admin.json
     printf '%s\n' "$minimal_playwright_result" > test-results/accessibility.json
     printf '%s\n' "$minimal_playwright_result" > test-results/pwa.json
+    printf '%s\n' "$minimal_playwright_result" > test-results/production.json
     printf '{"results":[]}\n' > .lighthouseci/assertion-results.json
     printf '{"links":{}}\n' > .lighthouseci/links.json
 }

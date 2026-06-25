@@ -8,10 +8,27 @@ const expectUsablePage = async (page: import("@playwright/test").Page, heading: 
     await expect(page.locator("body")).not.toBeEmpty();
 };
 
+const waitForHomepageViewTracking = (page: import("@playwright/test").Page) =>
+    page.waitForResponse(
+        (response) =>
+            response.url().includes("/rest/v1/landing-page/variants/") &&
+            response.url().endsWith("/track") &&
+            response.request().method() === "POST",
+    );
+
+const gotoHomeAndExpectUsable = async (page: import("@playwright/test").Page) => {
+    const viewTrackingResponsePromise = waitForHomepageViewTracking(page);
+
+    await page.goto(APP_LINKS.Home);
+    await expectUsablePage(page, /new life nursery|wholesale nursery/i);
+
+    const viewTrackingResponse = await viewTrackingResponsePromise;
+    expect(viewTrackingResponse.status()).toBe(200);
+};
+
 test.describe("Public Site - Smoke", () => {
     test("loads the core public pages and navigates between them", async ({ page }) => {
-        await page.goto(APP_LINKS.Home);
-        await expectUsablePage(page, /new life nursery|wholesale nursery/i);
+        await gotoHomeAndExpectUsable(page);
         await expect(page.getByRole("button", { name: /browse plants/i })).toBeVisible();
 
         await page.goto(APP_LINKS.About);
@@ -36,8 +53,7 @@ test.describe("Public Site - Smoke", () => {
     }) => {
         await page.setViewportSize({ width: 390, height: 844 });
 
-        await page.goto(APP_LINKS.Home);
-        await expectUsablePage(page, /new life nursery|wholesale nursery/i);
+        await gotoHomeAndExpectUsable(page);
 
         await page.goto(APP_LINKS.About);
         await expectUsablePage(page, /our heritage/i);
@@ -62,8 +78,7 @@ test.describe("Public Site - Smoke", () => {
     });
 
     test("submits the public newsletter signup from the homepage", async ({ page }) => {
-        await page.goto(APP_LINKS.Home);
-        await expectUsablePage(page, /new life nursery|wholesale nursery/i);
+        await gotoHomeAndExpectUsable(page);
 
         const emailInput = page.getByPlaceholder(/enter your email address/i);
         await emailInput.scrollIntoViewIfNeeded();

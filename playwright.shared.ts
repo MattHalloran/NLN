@@ -10,9 +10,17 @@ type E2EConfigOptions = {
     testMatch: PlaywrightTestConfig["testMatch"];
     reportName: string;
     testIgnore?: PlaywrightTestConfig["testIgnore"];
+    uiServerCommand?: string;
+    uiServerTimeout?: number;
 };
 
-export const createE2EConfig = ({ testMatch, reportName, testIgnore = [] }: E2EConfigOptions) =>
+export const createE2EConfig = ({
+    testMatch,
+    reportName,
+    testIgnore = [],
+    uiServerCommand = "cd packages/ui && yarn start-development",
+    uiServerTimeout = E2E_TIMEOUTS.uiStartMs,
+}: E2EConfigOptions) =>
     defineConfig({
         testDir: "./e2e",
         testMatch,
@@ -81,10 +89,10 @@ export const createE2EConfig = ({ testMatch, reportName, testIgnore = [] }: E2EC
                 stderr: "pipe",
             },
             {
-                command: "cd packages/ui && yarn start-development",
+                command: uiServerCommand,
                 url: E2E_URLS.ui,
                 reuseExistingServer: !process.env.CI,
-                timeout: E2E_TIMEOUTS.uiStartMs,
+                timeout: uiServerTimeout,
                 stdout: "ignore",
                 stderr: "pipe",
             },

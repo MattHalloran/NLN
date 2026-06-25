@@ -25,6 +25,9 @@ yarn test:e2e:full
 # PWA and public-route production-build browser checks
 yarn test:pwa
 
+# Representative public/admin smoke checks against the production UI build
+yarn test:e2e:production
+
 # Development helpers
 yarn test:e2e:ui
 yarn test:e2e:headed
@@ -40,6 +43,7 @@ yarn test:e2e:report
 - `playwright.legacy.config.ts`: legacy admin suite.
 - `playwright.full.config.ts`: all admin specs.
 - `playwright.pwa.config.ts`: PWA and public-route smoke tests against the production UI build.
+- `playwright.production.config.ts`: representative stable public/admin smoke specs against the production UI build.
 - `playwright.shared.ts`: common admin E2E projects, web servers, reporters, retries, and artifact settings.
 
 ## Test Data
@@ -73,6 +77,8 @@ Stable browser specs live in `e2e/admin/stable`:
 - `e2e/admin/stable/seasonal-content-simple.spec.ts`
 
 The stable browser suite covers public route smoke checks, protected-route redirects, public account signup/login-reset flows, public auth validation and failure paths, public newsletter signup, gallery browsing, first-viewport visual smoke checks, newsletter subscriber administration, admin gallery upload/edit/publish cleanup, and representative browser-driven persistence coverage for contact info, about content, hero banner, and seasonal content saves. It also verifies that an injected contact-info save failure leaves the edited values visible so an admin can retry. These tests assert that the successful save response contains the updated persisted landing page document when that is the least brittle way to prove persistence. The About content spec also verifies the saved story title on the public About page for the active variant/session.
+
+The production-build suite intentionally reuses only the public smoke spec and contact-info admin smoke spec. Its job is to prove that the built UI bundle can load core public pages and perform one authenticated admin persistence workflow against the disposable E2E backend. Keep deeper workflow coverage in the normal stable suites unless a bug only reproduces in the production bundle.
 
 The accessibility suite runs axe-core against the public homepage, about, gallery, contact, register, and login pages and fails on serious or critical violations. The PWA suite runs against the production UI build and checks cache headers, public route rendering, offline app-shell behavior, update prompts, and service-worker activation.
 
@@ -109,4 +115,4 @@ Legacy specs are quarantined because they still contain data-dependent skips, fi
 
 ## Reports
 
-Playwright writes HTML reports under `playwright-report/<suite>` and JSON results under `test-results/<suite>.json` for admin and PWA suites. CI uploads these as artifacts.
+Playwright writes HTML reports under `playwright-report/<suite>` and JSON results under `test-results/<suite>.json` for admin, public, visual, accessibility, production, and PWA suites. CI uploads these as artifacts.

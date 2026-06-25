@@ -265,10 +265,23 @@ jobs:
             test-results/admin.json
           if-no-files-found: ignore
 
+      - name: Run production-build E2E smoke tests
+        run: yarn test:e2e:production
+
+      - name: Upload production Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-production
+          path: |
+            playwright-report/production
+            test-results/production.json
+          if-no-files-found: ignore
+
       - name: Validation receipt
         if: always()
         run: |
-          VALIDATION_COMMAND="ci e2e job: yarn test:a11y, yarn test:e2e:public, yarn test:visual, yarn test:e2e:admin" yarn validation:receipt
+          VALIDATION_COMMAND="ci e2e job: yarn test:a11y, yarn test:e2e:public, yarn test:visual, yarn test:e2e:admin, yarn test:e2e:production" yarn validation:receipt
 
       - name: Upload validation receipt
         if: always()

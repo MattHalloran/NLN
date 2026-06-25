@@ -13,10 +13,10 @@ export default defineConfig({
       reporter: ['text', 'json', 'json-summary', 'html'],
       include: ['src/**/*.ts'],
       thresholds: {
-        statements: 7.7,
-        branches: 65.8,
-        functions: 38.5,
-        lines: 7.7,
+        statements: 9.7,
+        branches: 70,
+        functions: 43.6,
+        lines: 9.7,
         'src/middleware/**/*.ts': {
           statements: 44,
           branches: 85,
@@ -24,10 +24,16 @@ export default defineConfig({
           lines: 44,
         },
         'src/rest/*.ts': {
-          statements: 3.6,
-          branches: 76,
-          functions: 52,
-          lines: 3.6,
+          statements: 7,
+          branches: 79,
+          functions: 58,
+          lines: 7,
+        },
+        'src/rest/assets.ts': {
+          statements: 69,
+          branches: 77,
+          functions: 100,
+          lines: 69,
         },
         'src/worker/email/**/*.ts': {
           statements: 48,

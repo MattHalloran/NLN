@@ -22,6 +22,8 @@ const ALLOWED_CONSOLE_PATTERNS = [
     /Failed to load resource: the server responded with a status of 401/i,
     /Failed to load resource: the server responded with a status of 500/i,
     /Failed to load resource: the server responded with a status of 403/i,
+    /Content is cached for offline use/i,
+    /This web app is being served cache-first by a service worker/i,
     /^Error in AdminContactPage$/i,
     /^Action: updateContactInfo$/i,
     /Injected E2E contact save failure/i,

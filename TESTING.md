@@ -8,9 +8,10 @@ This project has five validation tiers. Use the cheapest tier that answers the q
 | --- | --- | --- | --- |
 | Quick gate | `yarn validate` or `yarn validate:quick` | TypeScript, test typecheck, lint, unit tests, script tests, drift checks, migration risk checks | Node/Yarn, Bats for script tests |
 | Server integration | `yarn test:integration` | REST, auth, database, Redis, queue, storage, newsletter, and landing-page behavior against real infrastructure | Docker |
-| Browser gate | `yarn validate:browser` | Production UI build, PWA checks, accessibility E2E, public visitor Playwright flows, visual regression snapshots, stable admin Playwright flows | Docker, Playwright Chromium |
+| Browser gate | `yarn validate:browser` | Production UI build, PWA checks, accessibility E2E, public visitor Playwright flows, visual regression snapshots, stable admin Playwright flows, and production-build public/admin smoke coverage | Docker, Playwright Chromium |
 | Full gate | `yarn validate:full` | Quick gate, server integration, browser gate | Docker, Playwright Chromium |
-| Release gate | `yarn validate:release` | Full gate plus Lighthouse public page checks and a validation receipt | Docker, Playwright Chromium |
+| Trusted gate | `yarn validate:trusted` | Full gate plus Lighthouse public page checks and a validation receipt | Docker, Playwright Chromium |
+| Release gate | `yarn validate:release` | Same evidence profile as the trusted gate, using the release command label for receipts | Docker, Playwright Chromium |
 
 CI runs the same core layers as separate jobs: quick validation plus PWA/Lighthouse, server integration tests, public/admin browser E2E, visual regression and accessibility tests, and a final trusted gate that fails unless all required jobs pass. A scheduled Lighthouse workflow also runs weekly to catch public-page performance drift.
 
@@ -28,10 +29,10 @@ Before merging or handing work off:
 yarn validate:full
 ```
 
-Before production readiness checks:
+Before manual acceptance testing or production readiness checks:
 
 ```bash
-yarn validate:release
+yarn validate:trusted
 ```
 
 Before a production deployment, use the non-deploying readiness gate with a fresh version:
@@ -52,9 +53,9 @@ PUBLIC_SMOKE_BASE_URL=https://<your-site> yarn smoke:public
 
 `yarn test:integration` catches behavior that mocks usually miss: Prisma migrations, PostgreSQL queries, Redis behavior, authentication cookies, CSRF-sensitive REST flows, storage cleanup, newsletter management, landing-page APIs, and queue behavior.
 
-`yarn validate:browser` catches browser-level failures: public and admin navigation, admin content management smoke flows, accessibility smoke coverage, visual regressions on key public pages, PWA/service-worker expectations, unexpected console/page errors, and unexpected failed HTTP responses.
+`yarn validate:browser` catches browser-level failures: public and admin navigation, admin content management smoke flows, accessibility smoke coverage, visual regressions on key public pages, PWA/service-worker expectations, unexpected console/page errors, unexpected failed HTTP responses, and a small production-build public/admin smoke path.
 
-`yarn validate:release` adds Lighthouse checks for homepage, about, and gallery. Lighthouse blocks failed quality categories and homepage-critical performance regressions such as LCP exceeding the configured threshold.
+`yarn validate:trusted` and `yarn validate:release` add Lighthouse checks for homepage, about, and gallery. Lighthouse blocks failed quality categories and homepage-critical performance regressions such as LCP exceeding the configured threshold.
 
 ## Test Organization
 
@@ -64,6 +65,7 @@ PUBLIC_SMOKE_BASE_URL=https://<your-site> yarn smoke:public
 - Public visitor Playwright specs are named `public-*-simple.spec.ts` and run through `yarn test:e2e:public`.
 - Visual regression specs run through `yarn test:visual`; update snapshots only after reviewing intentional visual changes with `yarn test:visual --update-snapshots`.
 - Stable admin Playwright specs run through `yarn test:e2e:admin`; public specs are excluded from this gate.
+- Production-build public/admin smoke specs run through `yarn test:e2e:production`; this gate reuses stable specs against the built UI served from `packages/ui/dist`.
 - Legacy or broader Playwright tests live under `e2e/admin/legacy`.
 - Script tests live under `scripts/tests` and run through Bats.
 - Shared route and API contract tests live in `packages/shared/src/api`.
@@ -86,7 +88,7 @@ The quick gate intentionally blocks common reliability problems:
 
 The backend and deployment-script layers are the strongest parts of the suite. They have unit, integration, and script-level coverage with real PostgreSQL/Redis checks and deployment safety tests.
 
-The UI has many useful unit tests and stable browser smoke tests, but page-level unit coverage is still uneven. Treat Playwright as the primary safety net for page workflows until more page/component tests are added.
+The UI has many useful unit tests and stable browser smoke tests, but page-level unit coverage is still uneven. Treat Playwright as the primary safety net for page workflows until more page/component tests are added. The production-build smoke gate narrows the gap between dev-server E2E and deployed bundle behavior, but it is intentionally representative rather than exhaustive.
 
 The browser gate is reliable enough for regression detection, but it is not a substitute for final manual acceptance before production. It should catch broken pages, failed admin/public smoke flows, unexpected runtime errors, and many API contract regressions.
 

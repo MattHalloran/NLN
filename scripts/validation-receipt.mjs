@@ -54,6 +54,7 @@ const playwrightResults = [
     ["admin e2e", "test-results/admin.json"],
     ["accessibility e2e", "test-results/accessibility.json"],
     ["pwa", "test-results/pwa.json"],
+    ["production e2e", "test-results/production.json"],
     ["smoke e2e", "test-results/smoke.json"],
 ];
 
@@ -80,6 +81,7 @@ const expectedArtifactsByCommand = [
             "test-results/visual.json",
             "test-results/admin.json",
             "test-results/accessibility.json",
+            "test-results/production.json",
         ],
     },
     {

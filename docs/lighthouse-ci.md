@@ -139,7 +139,7 @@ Key configuration points:
 | Best Practices Score | ≥80% | error |
 | SEO Score | ≥80% | error |
 | First Contentful Paint | ≤2s | warn |
-| Largest Contentful Paint | ≤2.5s | warn |
+| Largest Contentful Paint | ≤2.5s | error |
 | Total Blocking Time | ≤300ms | warn |
 | Cumulative Layout Shift | ≤0.1 | warn |
 | Color Contrast | Pass | error |
