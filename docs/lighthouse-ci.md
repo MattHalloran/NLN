@@ -66,6 +66,8 @@ Currently testing 3 public pages. Local runs use the median of 3 audits per page
 
 `yarn lighthouse:local` builds the production UI, starts disposable local API services, serves the built UI, waits for `/healthcheck`, and then runs Lighthouse against the public pages.
 
+CI also runs a scheduled weekly Lighthouse workflow so public-page performance drift is visible even when a branch is not actively changing Lighthouse-related code.
+
 The configured assertions fail the command for low quality category scores, accessibility must-haves, and LCP above 2.5s. FCP, CLS, TBT, and console errors remain warning-level checks.
 
 ## Understanding Results

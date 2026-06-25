@@ -86,8 +86,8 @@ export const Slider = ({
         const previousIndex = slideIndex === 0 ? images.length - 1 : slideIndex - 1;
         const nextIndex = slideIndex === images.length - 1 ? 0 : slideIndex + 1;
         const visibleIndexes = canPreloadNeighbors
-            ? new Set([previousIndex, slideIndex, nextIndex])
-            : new Set([slideIndex]);
+            ? [...new Set([previousIndex, slideIndex, nextIndex])]
+            : [slideIndex];
 
         return [...visibleIndexes].map((index) => {
             const offset = index === slideIndex ? 0 : index === previousIndex ? -100 : 100;
@@ -98,6 +98,7 @@ export const Slider = ({
                     key={`slide-${index}`}
                     image={images[index]}
                     isPriority={index === slideIndex}
+                    loading={canPreloadNeighbors || index === slideIndex ? "eager" : "lazy"}
                     fadeTransition={fadeTransition}
                     isActive={fadeTransition ? index === slideIndex : undefined}
                     offsetPercent={fadeTransition ? undefined : offset}

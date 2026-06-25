@@ -8,11 +8,11 @@ This project has five validation tiers. Use the cheapest tier that answers the q
 | --- | --- | --- | --- |
 | Quick gate | `yarn validate` or `yarn validate:quick` | TypeScript, test typecheck, lint, unit tests, script tests, drift checks, migration risk checks | Node/Yarn, Bats for script tests |
 | Server integration | `yarn test:integration` | REST, auth, database, Redis, queue, storage, newsletter, and landing-page behavior against real infrastructure | Docker |
-| Browser gate | `yarn validate:browser` | Production UI build, PWA checks, accessibility E2E, public visitor Playwright flows, stable admin Playwright flows | Docker, Playwright Chromium |
+| Browser gate | `yarn validate:browser` | Production UI build, PWA checks, accessibility E2E, public visitor Playwright flows, visual regression snapshots, stable admin Playwright flows | Docker, Playwright Chromium |
 | Full gate | `yarn validate:full` | Quick gate, server integration, browser gate | Docker, Playwright Chromium |
 | Release gate | `yarn validate:release` | Full gate plus Lighthouse public page checks and a validation receipt | Docker, Playwright Chromium |
 
-CI runs the same core layers as separate jobs: quick validation plus PWA/Lighthouse, server integration tests, public/admin browser E2E and accessibility tests, and a final trusted gate that fails unless all required jobs pass.
+CI runs the same core layers as separate jobs: quick validation plus PWA/Lighthouse, server integration tests, public/admin browser E2E, visual regression and accessibility tests, and a final trusted gate that fails unless all required jobs pass. A scheduled Lighthouse workflow also runs weekly to catch public-page performance drift.
 
 ## Recommended Local Workflow
 
@@ -40,13 +40,19 @@ Before a production deployment, use the non-deploying readiness gate with a fres
 ./scripts/deploy-readiness.sh -v <VERSION> -e .env-prod
 ```
 
+After a deployment, run the read-only public smoke check against the deployed base URL:
+
+```bash
+PUBLIC_SMOKE_BASE_URL=https://<your-site> yarn smoke:public
+```
+
 ## What Each Layer Catches
 
 `yarn validate` catches compile errors, broken test types, lint failures, unit regressions, unsafe test patterns, raw route drift, env default drift, risky migrations, and deployment-script regressions.
 
 `yarn test:integration` catches behavior that mocks usually miss: Prisma migrations, PostgreSQL queries, Redis behavior, authentication cookies, CSRF-sensitive REST flows, storage cleanup, newsletter management, landing-page APIs, and queue behavior.
 
-`yarn validate:browser` catches browser-level failures: public and admin navigation, admin content management smoke flows, accessibility smoke coverage, PWA/service-worker expectations, unexpected console/page errors, and unexpected failed HTTP responses.
+`yarn validate:browser` catches browser-level failures: public and admin navigation, admin content management smoke flows, accessibility smoke coverage, visual regressions on key public pages, PWA/service-worker expectations, unexpected console/page errors, and unexpected failed HTTP responses.
 
 `yarn validate:release` adds Lighthouse checks for homepage, about, and gallery. Lighthouse blocks failed quality categories and homepage-critical performance regressions such as LCP exceeding the configured threshold.
 
@@ -56,6 +62,7 @@ Before a production deployment, use the non-deploying readiness gate with a fres
 - Server integration tests use `*.integration.test.ts`.
 - Stable Playwright tests live under `e2e/admin/stable`.
 - Public visitor Playwright specs are named `public-*-simple.spec.ts` and run through `yarn test:e2e:public`.
+- Visual regression specs run through `yarn test:visual`; update snapshots only after reviewing intentional visual changes with `yarn test:visual --update-snapshots`.
 - Stable admin Playwright specs run through `yarn test:e2e:admin`; public specs are excluded from this gate.
 - Legacy or broader Playwright tests live under `e2e/admin/legacy`.
 - Script tests live under `scripts/tests` and run through Bats.

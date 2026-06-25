@@ -11,6 +11,7 @@ interface SlideProps {
     isActive?: boolean;
     offsetPercent?: number;
     transitionDuration?: number;
+    loading?: "eager" | "lazy";
 }
 
 export const Slide = ({
@@ -21,6 +22,7 @@ export const Slide = ({
     isActive,
     offsetPercent,
     transitionDuration = 1000,
+    loading,
 }: SlideProps) => {
     if (!image) return null;
 
@@ -42,7 +44,7 @@ export const Slide = ({
         .map((file) => `${toImageUrl(file.src)} ${file.width}w`)
         .join(", ");
     const fallbackFile = files.find((file) => file.src === imageSrc) ?? files[0];
-    const loading = isPriority ? "eager" : "lazy";
+    const imageLoading = loading ?? (isPriority ? "eager" : "lazy");
     const fetchPriority = isPriority ? "high" : "auto";
     const imageElement = (
         <Box
@@ -60,7 +62,7 @@ export const Slide = ({
                 srcSet={fallbackSrcSet || undefined}
                 sizes="100vw"
                 alt={image.alt || ""}
-                loading={loading}
+                loading={imageLoading}
                 ref={(element: HTMLImageElement | null) => {
                     element?.setAttribute("fetchpriority", fetchPriority);
                 }}

@@ -11,15 +11,23 @@ const expectNoHorizontalOverflow = async (page: Page) => {
     expect(overflow).toBeLessThanOrEqual(1);
 };
 
+const hideHomepageHeroMedia = async (page: Page) => {
+    await page.addStyleTag({
+        content: `
+            main picture img[alt="Fall 2025 Highlights"],
+            main picture img[alt="Plant selection at New Life Nursery"],
+            main picture img[alt="Butterfly at New Life Nursery"] {
+                visibility: hidden !important;
+            }
+        `,
+    });
+};
+
 const expectStableScreenshot = async (
     page: Page,
     name: string,
     options: PageAssertionsToHaveScreenshotOptions,
 ) => {
-    if (process.env.CI) {
-        return;
-    }
-
     await expect(page).toHaveScreenshot(name, options);
 };
 
@@ -30,6 +38,7 @@ test.describe("Public Site - Visual Smoke", () => {
             page.getByRole("heading", { name: /new life nursery|wholesale nursery/i }).first(),
         ).toBeVisible();
         await expectNoHorizontalOverflow(page);
+        await hideHomepageHeroMedia(page);
 
         await expectStableScreenshot(page, "public-home-desktop.png", {
             animations: "disabled",
@@ -103,6 +112,7 @@ test.describe("Public Site - Visual Smoke", () => {
             page.getByRole("heading", { name: /new life nursery|wholesale nursery/i }).first(),
         ).toBeVisible();
         await expectNoHorizontalOverflow(page);
+        await hideHomepageHeroMedia(page);
 
         await expectStableScreenshot(page, "public-home-mobile.png", {
             animations: "disabled",

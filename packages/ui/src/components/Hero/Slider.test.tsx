@@ -43,7 +43,7 @@ describe("Slider", () => {
             "high",
         );
         const preloadedSecondSlide = screen.getByRole("img", { name: "Second hero slide" });
-        expect(preloadedSecondSlide).toHaveAttribute("loading", "lazy");
+        expect(preloadedSecondSlide).toHaveAttribute("loading", "eager");
         expect(preloadedSecondSlide).toHaveAttribute("fetchpriority", "auto");
 
         act(() => {

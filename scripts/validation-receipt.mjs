@@ -49,6 +49,8 @@ const unitCoverageArtifacts = coverageSummaries
 const allCoverageArtifacts = coverageSummaries.map(([, relativePath]) => relativePath);
 
 const playwrightResults = [
+    ["public e2e", "test-results/public.json"],
+    ["visual e2e", "test-results/visual.json"],
     ["admin e2e", "test-results/admin.json"],
     ["accessibility e2e", "test-results/accessibility.json"],
     ["pwa", "test-results/pwa.json"],
@@ -73,7 +75,12 @@ const expectedArtifactsByCommand = [
     },
     {
         pattern: /validate:release|validate:full|validate:trusted|ci e2e job/i,
-        artifacts: ["test-results/admin.json", "test-results/accessibility.json"],
+        artifacts: [
+            "test-results/public.json",
+            "test-results/visual.json",
+            "test-results/admin.json",
+            "test-results/accessibility.json",
+        ],
     },
     {
         pattern: /validate:release|ci validate job/i,

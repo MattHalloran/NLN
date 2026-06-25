@@ -238,6 +238,20 @@ jobs:
             test-results/public.json
           if-no-files-found: ignore
 
+      - name: Run visual regression tests
+        run: yarn test:visual
+
+      - name: Upload visual Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-visual
+          path: |
+            playwright-report/visual
+            test-results/visual.json
+            test-results/visual-artifacts
+          if-no-files-found: ignore
+
       - name: Run admin E2E tests
         run: yarn test:e2e:admin
 
@@ -254,7 +268,7 @@ jobs:
       - name: Validation receipt
         if: always()
         run: |
-          VALIDATION_COMMAND="ci e2e job: yarn test:a11y, yarn test:e2e:public, yarn test:e2e:admin" yarn validation:receipt
+          VALIDATION_COMMAND="ci e2e job: yarn test:a11y, yarn test:e2e:public, yarn test:visual, yarn test:e2e:admin" yarn validation:receipt
 
       - name: Upload validation receipt
         if: always()

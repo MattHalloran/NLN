@@ -177,21 +177,30 @@ test("shows a reload action when a service worker update is ready", async ({ pag
     await page.goto("/", { waitUntil: "load" });
     await expect(page.getByRole("button", { name: "Browse Plants" })).toBeVisible();
 
-    await page.evaluate(() => {
-        window.dispatchEvent(
-            new window.CustomEvent("nln-service-worker-update-ready", {
-                detail: {
-                    reload: () => {
-                        (
-                            window as typeof window & { __pwaReloadRequested?: boolean }
-                        ).__pwaReloadRequested = true;
-                    },
-                },
-            }),
-        );
-    });
+    await expect
+        .poll(() =>
+            page.evaluate(() => {
+                if (document.body.textContent?.includes("A site update is ready.")) {
+                    return true;
+                }
 
-    await expect(page.getByText("A site update is ready.")).toBeVisible();
+                window.dispatchEvent(
+                    new window.CustomEvent("nln-service-worker-update-ready", {
+                        detail: {
+                            reload: () => {
+                                (
+                                    window as typeof window & {
+                                        __pwaReloadRequested?: boolean;
+                                    }
+                                ).__pwaReloadRequested = true;
+                            },
+                        },
+                    }),
+                );
+                return document.body.textContent?.includes("A site update is ready.") ?? false;
+            }),
+        )
+        .toBe(true);
     await page.getByRole("button", { name: /reload/i }).click();
     await expect
         .poll(() =>
