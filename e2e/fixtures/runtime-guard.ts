@@ -5,7 +5,10 @@ type RuntimeIssue = {
     message: string;
 };
 
+type RuntimeIssueMatcher = (issue: RuntimeIssue) => boolean;
+
 type RuntimeGuard = {
+    allowIssue: (matcher: RuntimeIssueMatcher) => void;
     assertClean: () => void;
 };
 
@@ -55,6 +58,7 @@ const isAllowedResponseFailure = (response: Response) =>
 
 export const attachRuntimeGuard = (page: Page): RuntimeGuard => {
     const issues: RuntimeIssue[] = [];
+    const allowedIssueMatchers: RuntimeIssueMatcher[] = [];
 
     page.on("console", (message) => {
         const type = message.type();
@@ -87,10 +91,18 @@ export const attachRuntimeGuard = (page: Page): RuntimeGuard => {
     });
 
     const guard = {
+        allowIssue: (matcher: RuntimeIssueMatcher) => {
+            allowedIssueMatchers.push(matcher);
+        },
         assertClean: () => {
-            if (issues.length === 0) return;
+            const unexpectedIssues = issues.filter(
+                (issue) => !allowedIssueMatchers.some((matcher) => matcher(issue)),
+            );
+            if (unexpectedIssues.length === 0) return;
 
-            const details = issues.map((issue) => `- ${issue.kind}: ${issue.message}`).join("\n");
+            const details = unexpectedIssues
+                .map((issue) => `- ${issue.kind}: ${issue.message}`)
+                .join("\n");
             throw new Error(`Unexpected browser/runtime issues detected:\n${details}`);
         },
     };
@@ -101,4 +113,12 @@ export const attachRuntimeGuard = (page: Page): RuntimeGuard => {
 
 export const assertRuntimeClean = (page: Page) => {
     pageGuards.get(page)?.assertClean();
+};
+
+export const allowRuntimeIssue = (page: Page, matcher: RuntimeIssueMatcher) => {
+    const guard = pageGuards.get(page);
+    if (!guard) {
+        throw new Error("Runtime guard is not attached to this page");
+    }
+    guard.allowIssue(matcher);
 };

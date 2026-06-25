@@ -56,30 +56,19 @@ yarn lighthouse:open     # Open the last collected report in browser
 
 ### What Gets Tested
 
-Currently testing 3 public pages (3 runs each = 9 total audits per execution):
+Currently testing 3 public pages. Local runs use the median of 3 audits per page by default; CI uses 1 audit per page to keep runtime bounded:
 
 1. **Homepage** (`/`) - Priority: Highest
 2. **About Page** (`/about`) - Priority: High
 3. **Gallery Page** (`/gallery`) - Priority: Medium
 
-## Current Baseline Scores (October 2025)
+## Current Local Gate
 
-### ⚠️ Development Build Scores (DO NOT USE - For reference only)
-These scores were taken against the **development server** and are artificially low:
-- **Performance:** 32-40% ❌ (dev builds are not minified)
-- **FCP:** 7.7-8.7s (includes dev tools overhead)
-- **LCP:** 16-18s (no minification/compression)
+`yarn lighthouse:local` builds the production UI, starts disposable local API services, serves the built UI, waits for `/healthcheck`, and then runs Lighthouse against the public pages.
 
-### ✅ Expected Production Build Scores
-After fixes implemented (October 22, 2025):
-- **Color contrast:** Fixed - All semantic colors now WCAG AA compliant
-- **Source maps:** Disabled in production
-- **Expected Performance:** 60-75% (needs verification)
-- **Expected FCP:** 3-4s
-- **Expected LCP:** 8-12s
-- **Expected TBT:** 200-300ms
+CI also runs a scheduled weekly Lighthouse workflow so public-page performance drift is visible even when a branch is not actively changing Lighthouse-related code.
 
-**TODO:** Run `yarn lighthouse:prod` to establish accurate baseline
+The configured assertions fail the command for low quality category scores, accessibility must-haves, and LCP above 2.5s. FCP, CLS, TBT, and console errors remain warning-level checks.
 
 ## Understanding Results
 

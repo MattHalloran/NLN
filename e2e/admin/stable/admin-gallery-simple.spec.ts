@@ -7,6 +7,7 @@ import {
     stripApiPrefix,
 } from "@local/shared";
 import { test, expect } from "../../fixtures/auth";
+import { allowRuntimeIssue } from "../../fixtures/runtime-guard";
 
 const tinyPng = Buffer.from(
     "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAGElEQVR4nGMQqQggCTGMaqgY1SAyXDUAALrA3AHTNK46AAAAAElFTkSuQmCC",
@@ -96,6 +97,38 @@ test.describe("Admin Gallery", () => {
                     }),
                 ]),
             );
+
+            await authenticatedPage.goto(APP_LINKS.AdminGallery);
+            await authenticatedPage.getByRole("button", { name: /delete image/i }).last().click();
+            const deleteDialog = authenticatedPage.getByRole("dialog", {
+                name: /delete image/i,
+            });
+            await expect(deleteDialog).toBeVisible();
+            const blockedDeleteResponsePromise = authenticatedPage.waitForResponse(
+                (response) =>
+                    response.url().includes(
+                        `${stripApiPrefix(REST_ROUTES.images.root)}/${uploadedHash}`,
+                    ) &&
+                    response.request().method() === "DELETE",
+            );
+            allowRuntimeIssue(
+                authenticatedPage,
+                (issue) =>
+                    (issue.kind === "response" &&
+                        issue.message.includes(
+                            `409 ${DEFAULT_SERVER_URLS.localOrigin}${REST_ROUTES.images.root}/${uploadedHash}`,
+                        )) ||
+                    (issue.kind === "console" &&
+                        issue.message.includes(
+                            "Failed to load resource: the server responded with a status of 409",
+                        )),
+            );
+            await deleteDialog.getByRole("button", { name: /^delete$/i }).click();
+            const blockedDeleteResponse = await blockedDeleteResponsePromise;
+            expect(blockedDeleteResponse.status()).toBe(409);
+            await expect(
+                authenticatedPage.getByText(/cannot delete image while in use/i),
+            ).toBeVisible();
         } finally {
             if (uploadedHash) {
                 const csrfResponse = await authenticatedPage.request.get(

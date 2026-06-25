@@ -18,6 +18,8 @@ write_required_release_artifacts() {
     printf '%s\n' "$minimal_coverage_summary" > packages/ui/coverage/coverage-summary.json
     printf '%s\n' "$minimal_coverage_summary" > packages/server/coverage/coverage-summary.json
     printf '%s\n' "$minimal_coverage_summary" > packages/server/coverage-integration/coverage-summary.json
+    printf '%s\n' "$minimal_playwright_result" > test-results/public.json
+    printf '%s\n' "$minimal_playwright_result" > test-results/visual.json
     printf '%s\n' "$minimal_playwright_result" > test-results/admin.json
     printf '%s\n' "$minimal_playwright_result" > test-results/accessibility.json
     printf '%s\n' "$minimal_playwright_result" > test-results/pwa.json

@@ -73,7 +73,7 @@ module.exports = {
 
         // Specific important metrics
         'first-contentful-paint': ['warn', { maxNumericValue: 2000 }],  // 2s
-        'largest-contentful-paint': ['warn', { maxNumericValue: 2500 }], // 2.5s
+        'largest-contentful-paint': ['error', { maxNumericValue: 2500 }], // 2.5s
         'cumulative-layout-shift': ['warn', { maxNumericValue: 0.1 }],   // 0.1
         'total-blocking-time': ['warn', { maxNumericValue: 300 }],       // 300ms
 
