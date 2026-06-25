@@ -61,6 +61,7 @@ deploy_write_readiness_receipt() {
     local validation_skipped="$4"
     local rehearsal_skipped="$5"
     local vps_skipped="$6"
+    local migration_rehearsal_skipped="${7:-true}"
     local receipt_dir receipt_path commit created_at
 
     receipt_dir=$(deploy_receipt_dir "${repo_root}")
@@ -77,6 +78,7 @@ deploy_write_readiness_receipt() {
         echo "validation_skipped=${validation_skipped}"
         echo "rehearsal_skipped=${rehearsal_skipped}"
         echo "vps_skipped=${vps_skipped}"
+        echo "migration_rehearsal_skipped=${migration_rehearsal_skipped}"
         echo "created_at=${created_at}"
         echo "created_epoch=$(date -u +%s)"
     } >"${receipt_path}"
@@ -132,6 +134,12 @@ deploy_verify_readiness_receipt() {
         [ "$(deploy_receipt_value "${receipt_path}" rehearsal_skipped)" != "false" ] ||
         [ "$(deploy_receipt_value "${receipt_path}" vps_skipped)" != "false" ]; then
         error "Deploy readiness receipt is incomplete because one or more gates were skipped."
+        return 1
+    fi
+
+    if [ "$(deploy_receipt_value "${receipt_path}" migration_rehearsal_skipped)" != "false" ]; then
+        error "Deploy readiness receipt did not include restored-backup migration rehearsal."
+        error "Run deploy-readiness with --migration-backup PATH before production deploy."
         return 1
     fi
 

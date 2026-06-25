@@ -278,6 +278,28 @@ jobs:
           path: .validation/latest-receipt.md
           if-no-files-found: ignore
 
+  deploy-rehearsal:
+    name: Deploy Rehearsal
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: yarn
+
+      - name: Install system prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+
+      - name: Run disposable deploy rehearsal
+        run: ./scripts/deploy-rehearsal.sh -v "rehearsal-ci-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+
   trusted-gate:
     name: Trusted Gate
     runs-on: ubuntu-latest
@@ -285,17 +307,20 @@ jobs:
       - validate
       - integration
       - e2e
+      - deploy-rehearsal
     if: always()
     steps:
       - name: Check required validation jobs
         run: |
           if [ "${{ needs.validate.result }}" != "success" ] || \
              [ "${{ needs.integration.result }}" != "success" ] || \
-             [ "${{ needs.e2e.result }}" != "success" ]; then
+             [ "${{ needs.e2e.result }}" != "success" ] || \
+             [ "${{ needs.deploy-rehearsal.result }}" != "success" ]; then
             echo "Required validation jobs did not all pass."
             echo "validate=${{ needs.validate.result }}"
             echo "integration=${{ needs.integration.result }}"
             echo "e2e=${{ needs.e2e.result }}"
+            echo "deploy-rehearsal=${{ needs.deploy-rehearsal.result }}"
             exit 1
           fi
           echo "Trusted gate passed."

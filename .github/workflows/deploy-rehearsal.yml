@@ -1,6 +1,22 @@
 name: Deploy Rehearsal
 
 on:
+  push:
+    paths:
+      - ".github/workflows/deploy-rehearsal.yml"
+      - "docker-compose-prod.yml"
+      - "package.json"
+      - "yarn.lock"
+      - "packages/**"
+      - "scripts/**"
+  pull_request:
+    paths:
+      - ".github/workflows/deploy-rehearsal.yml"
+      - "docker-compose-prod.yml"
+      - "package.json"
+      - "yarn.lock"
+      - "packages/**"
+      - "scripts/**"
   workflow_dispatch:
   schedule:
     - cron: "23 10 * * 1"

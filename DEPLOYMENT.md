@@ -95,16 +95,22 @@ The deployment process is a two-phase manual workflow:
 
 ### 11. Non-Deploying Readiness Gate
 - **What**: `deploy-readiness.sh` runs the pre-production confidence checks without deploying.
-- **Why**: Gives one command for env validation, clean/synced git state, local validation, rehearsal, read-only VPS health, version-slot freshness, and backup preflight.
+- **Why**: Gives one command for env validation, clean/synced git state, local validation, rehearsal, restored-backup migration rehearsal, read-only VPS health, version-slot freshness, and backup preflight.
 - **Safety**: It must not deploy, restart, restore, prune, update, clean up, or create backup archives.
 - **Receipt**: On success, it writes a local `.deploy-readiness/<VERSION>.receipt` proving the exact commit, validation command, rehearsal, and VPS preflight that passed.
+- **Migration gate**: A recent local runtime-state backup is required through `--migration-backup PATH`. The readiness receipt is not accepted by production deploy unless this restored-backup migration rehearsal passed.
 
 ### 12. Readiness Receipt Enforcement
 - **What**: `deploy-production.sh` now requires a fresh readiness receipt for the same version, commit, and validation command before it builds or transfers artifacts.
 - **Why**: The expensive local validation and rehearsal can be completed before the deploy window, while the actual deploy still verifies that the current commit is clean, pushed, synchronized, and recently rehearsed.
 - **Freshness**: Receipts are valid for 4 hours by default. Override with `DEPLOY_READINESS_RECEIPT_MAX_AGE_SECONDS` only when the deploy window has been intentionally planned.
 
-### 13. Migration Risk Checks
+### 13. Post-Deploy Smoke Gate
+- **What**: `deploy-production.sh` runs `deploy-smoke.sh --admin` after the remote deploy completes.
+- **Why**: Public page checks, Prisma migration status, recent fatal log scanning, and reversible admin API checks all need to pass before the wrapper reports success.
+- **Safety**: The standalone smoke script keeps admin checks explicit; the production wrapper opts into them for the standard deploy path.
+
+### 14. Migration Risk Checks
 - **What**: `scripts/check-migrations.sh` runs as part of `yarn check:drift`.
 - **Why**: Potentially destructive migration SQL, such as dropping columns/tables, truncation, broad deletes, type changes, or new NOT NULL constraints, must carry an explicit review marker before passing validation.
 - **Marker**: Use `-- deploy-safe: allow-destructive-migration: <reason>` only after backup and rollback implications are reviewed.
@@ -171,7 +177,14 @@ git status
 ./scripts/validate-env.sh .env-prod
 ```
 
-For high-confidence deploys, run the disposable local rehearsal before the production wrapper:
+Create or identify a recent local runtime-state backup for migration rehearsal. The production wrapper will create a fresh offsite backup during deployment, but readiness also needs a local backup path so migrations can be rehearsed against production-shaped data before the deploy window:
+
+```bash
+./scripts/backup.sh -e .env-prod --preflight-only
+./scripts/backup.sh -e .env-prod --verify-restore
+```
+
+For a focused rehearsal, run the disposable local deploy path before the production wrapper:
 
 ```bash
 ./scripts/deploy-rehearsal.sh -v rehearsal-<VERSION>
@@ -187,10 +200,10 @@ Important constraints:
 Or run the combined non-deploying readiness gate:
 
 ```bash
-./scripts/deploy-readiness.sh -v <VERSION> -e .env-prod
+./scripts/deploy-readiness.sh -v <VERSION> -e .env-prod --migration-backup backups/${SITE_IP}/<BACKUP_TIMESTAMP>
 ```
 
-This checks the env file, clean/synced git state, local validation, disposable deploy rehearsal, read-only VPS health, fresh deployment version slot, and offsite backup preflight. It does not deploy, restart, restore, prune, update, clean up, or create backup archives.
+This checks the env file, clean/synced git state, local validation, disposable deploy rehearsal, restored-backup migration rehearsal, read-only VPS health, fresh deployment version slot, and offsite backup preflight. It does not deploy, restart, restore, prune, update, clean up, or create backup archives.
 
 When this passes, it writes `.deploy-readiness/<VERSION>.receipt`. The standard production wrapper requires that receipt to be fresh and bound to the current commit before it proceeds.
 
@@ -236,7 +249,8 @@ This wrapper validates the environment, verifies the git worktree is clean and s
 Run readiness first:
 
 ```bash
-./scripts/deploy-readiness.sh -v <VERSION> -e .env-prod
+SITE_IP=$(grep SITE_IP .env-prod | cut -d= -f2)
+./scripts/deploy-readiness.sh -v <VERSION> -e .env-prod --migration-backup backups/${SITE_IP}/<BACKUP_TIMESTAMP>
 ./scripts/deploy-production.sh -v <VERSION> -e .env-prod
 ```
 
@@ -251,6 +265,8 @@ DEPLOY_VALIDATE_CMD=validate ./scripts/deploy-production.sh -v <VERSION> -e .env
 The deploy wrapper will only accept this when the readiness receipt was created with the same `DEPLOY_VALIDATE_CMD` value.
 
 Use a fresh version for each deployment. The wrapper refuses to deploy if `/var/tmp/<VERSION>/runtime-state/manifest.txt` already exists on the VPS, because reusing a version would prevent a fresh pre-deployment runtime-state backup from being created.
+
+Do not use `--skip-tests` for normal production deployments. It is reserved for an explicit emergency bypass and requires `DEPLOY_ALLOW_UNVALIDATED=true`; VPS health checks, version-slot checks, mandatory offsite backup, and post-deploy smoke still run.
 
 ### Rehearsal and Recovery Drill
 
