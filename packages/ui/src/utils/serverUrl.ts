@@ -1,4 +1,4 @@
-import { API_PREFIX, DEFAULT_PORTS, DEFAULT_SERVER_URLS } from "@local/shared";
+import { API_PREFIX, DEFAULT_PORTS } from "@local/shared";
 
 type ServerLocation = {
     host: string;
@@ -16,17 +16,30 @@ type ServerLocation = {
 export function getServerUrl(): string {
     // Get port from environment variable with fallback to 5331
     const serverPort = import.meta.env.VITE_PORT_SERVER || String(DEFAULT_PORTS.server);
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || undefined;
+    const serverUrl = import.meta.env.VITE_SERVER_URL || undefined;
 
-    return getServerUrlForLocation(window.location, serverPort);
+    return getServerUrlForLocation(window.location, serverPort, apiBaseUrl, serverUrl);
 }
 
 export function getServerUrlForLocation(
     location: ServerLocation,
     serverPort = String(DEFAULT_PORTS.server),
+    apiBaseUrl?: string,
+    serverUrl?: string,
 ): string {
+    const isLocalhost = location.hostname === "localhost" || location.hostname === "127.0.0.1";
+    const explicitApiBaseUrl = normalizeApiBaseUrl(apiBaseUrl, location);
+    if (explicitApiBaseUrl) return explicitApiBaseUrl;
+
+    const explicitServerUrl = normalizeApiBaseUrl(serverUrl, location);
+    if (explicitServerUrl && isServerUrlSafeForCurrentLocation(explicitServerUrl, location)) {
+        return explicitServerUrl;
+    }
+
     // If running locally through nginx (localhost without port or on standard ports)
     if (
-        (location.hostname === "localhost" || location.hostname === "127.0.0.1") &&
+        isLocalhost &&
         (location.port === "" || location.port === "80" || location.port === "443")
     ) {
         // Use nginx proxy - same protocol and host, nginx will route /api to backend
@@ -34,9 +47,9 @@ export function getServerUrlForLocation(
     }
 
     // If running locally in development mode with an explicit UI port.
-    if (location.host.includes("localhost:") || location.host.includes("192.168.0.")) {
-        if (serverPort === String(DEFAULT_PORTS.server) && location.hostname === "localhost") {
-            return DEFAULT_SERVER_URLS.localApi;
+    if (isLocalhost || location.host.includes("192.168.0.")) {
+        if (serverPort === String(DEFAULT_PORTS.server)) {
+            return `${location.protocol}//${location.hostname}:${serverPort}${API_PREFIX}`;
         }
 
         return `http://${location.hostname}:${serverPort}${API_PREFIX}`;
@@ -45,4 +58,43 @@ export function getServerUrlForLocation(
     // In production, use the same origin so cookies, service workers, and caches
     // stay scoped to the canonical app host.
     return `${location.origin}${API_PREFIX}`;
+}
+
+function normalizeApiBaseUrl(
+    value: string | undefined,
+    location: ServerLocation,
+): string | undefined {
+    const trimmed = value?.trim().replace(/\/+$/, "");
+    if (!trimmed) return undefined;
+
+    if (trimmed.startsWith("/")) {
+        return trimmed.startsWith(API_PREFIX) ? trimmed : `${location.origin}${trimmed}`;
+    }
+
+    try {
+        const url = new URL(trimmed);
+        if (url.pathname === "" || url.pathname === "/") {
+            url.pathname = API_PREFIX;
+        }
+
+        return url.toString().replace(/\/+$/, "");
+    } catch {
+        return undefined;
+    }
+}
+
+function isServerUrlSafeForCurrentLocation(serverUrl: string, location: ServerLocation): boolean {
+    if (serverUrl.startsWith("/")) return true;
+
+    try {
+        const url = new URL(serverUrl);
+        const isLocalhost = location.hostname === "localhost" || location.hostname === "127.0.0.1";
+        const isServerLocalhost = url.hostname === "localhost" || url.hostname === "127.0.0.1";
+
+        if (isLocalhost) return isServerLocalhost;
+
+        return true;
+    } catch {
+        return false;
+    }
 }

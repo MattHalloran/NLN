@@ -12,6 +12,7 @@ This document provides a comprehensive reference for all environment variables u
 - [Redis Configuration](#redis-configuration)
 - [Email Configuration](#email-configuration)
 - [Security Configuration](#security-configuration)
+- [Runtime Topologies](#runtime-topologies)
 - [Debug/Development Settings](#debugdevelopment-settings)
 - [Production Settings](#production-settings)
 - [Validation](#validation)
@@ -295,7 +296,16 @@ These variables **MUST** be set for the application to function correctly. The s
 - **Options**: `development`, `production`
 - **Description**: Node.js environment mode
 - **Example**: `production`
-- **Note**: Affects logging, error handling, and security settings
+- **Note**: Affects build/runtime behavior, but does not by itself mean public HTTPS production. Use `APP_RUNTIME` for topology-specific security policy.
+
+### APP_RUNTIME
+- **Required**: No
+- **Type**: Enum
+- **Default**: Derived from `NODE_ENV` and `SERVER_LOCATION`
+- **Options**: `development`, `local-production`, `production`, `staging`
+- **Description**: Explicit runtime topology used for CORS, Helmet/CSP, and cookie security policy
+- **Example**: `local-production`
+- **Note**: `local-production` is for production-built containers served over local HTTP. It should not be used on the public HTTPS VPS.
 
 ### SERVER_LOCATION
 - **Required**: No
@@ -332,7 +342,20 @@ These variables **MUST** be set for the application to function correctly. The s
 - **Type**: Comma-separated list of URL origins
 - **Description**: Additional browser origins allowed to call the API
 - **Example**: `https://newlifenurseryinc.com,https://www.newlifenurseryinc.com`
-- **Note**: Use full origins including protocol. `VIRTUAL_HOST` domains are also allowed automatically.
+- **Note**: Use full origins including protocol. `VIRTUAL_HOST` domains are also allowed automatically. In the preferred local-production path, the browser calls same-origin `/api`, so CORS is only a fallback and diagnostic surface.
+
+### UI_URL
+- **Required**: No
+- **Type**: URL origin
+- **Description**: Browser origin for the UI. Used by server runtime policy to allow local-production credentialed CORS when needed.
+- **Example**: `http://localhost:3001`
+
+### COOKIE_SECURE
+- **Required**: No
+- **Type**: Boolean
+- **Description**: Explicitly overrides whether CSRF and auth cookies use the `Secure` attribute
+- **Example**: `false`
+- **Note**: Leave unset for normal production. Set to `false` only for local HTTP production validation; public HTTPS production should use secure cookies.
 
 ### VITE_PORT_SERVER
 - **Required**: No
@@ -356,6 +379,13 @@ These variables **MUST** be set for the application to function correctly. The s
 - **Description**: Server URL for Vite/UI in production
 - **Example**: `https://newlifenurseryinc.com/api`
 
+### VITE_API_BASE_URL
+- **Required**: No
+- **Type**: URL or path
+- **Description**: Explicit UI API base URL. Takes precedence over inferred localhost/production URL rules.
+- **Example**: `/api`
+- **Note**: Local production uses `/api` so browser requests go through the production UI server proxy and stay same-origin.
+
 ### VITE_GOOGLE_MAPS_EMBED_API_KEY
 - **Required**: No
 - **Type**: String
@@ -368,6 +398,24 @@ These variables **MUST** be set for the application to function correctly. The s
 - **Type**: IP Address
 - **Description**: Site IP for Vite/UI
 - **Example**: `192.81.123.456`
+
+## Runtime Topologies
+
+The app supports three common browser/runtime shapes:
+
+- **Development**: Vite UI on `http://localhost:3001` calls the Node API on `http://localhost:5331/api`. This is split-origin and requires local CORS.
+- **Local production**: production-built UI runs on `http://localhost:3001` and proxies `/api` to the server container. Browser traffic should use same-origin `http://localhost:3001/api`, with `APP_RUNTIME=local-production`, `VITE_API_BASE_URL=/api`, `PROXY_API_TARGET=http://server:5331`, and `COOKIE_SECURE=false`.
+- **Remote production**: public HTTPS domain serves UI and proxies `/api` on the same origin. Use `APP_RUNTIME=production` or leave it derived from `NODE_ENV=production` and `SERVER_LOCATION=dns`; cookies should remain secure.
+
+Do not assume `.env-prod` alone is localhost-compatible. It contains public production DNS values, so local production validation must apply local-safe overrides from `docker-compose.local-production.yml` or `scripts/start-local-production.sh`.
+
+Validate the production-built local browser runtime with:
+
+```bash
+yarn test:e2e:production-local
+```
+
+That gate checks CORS/CSRF-sensitive public traffic, newsletter signup, and admin auth/session cookies against the local Docker stack.
 
 ---
 

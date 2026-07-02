@@ -11,6 +11,7 @@ const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
 const publicDir = path.resolve(rootDir, config.public ?? "dist");
 const port = Number(process.env.PORT || process.env.PORT_UI || 3001);
 const host = process.env.HOST || "127.0.0.1";
+const proxyApiTarget = process.env.PROXY_API_TARGET;
 
 const mimeTypes = new Map([
     [".br", "application/octet-stream"],
@@ -83,7 +84,42 @@ const resolveRequestPath = (url) => {
     return { filePath, requestPath: relativePath };
 };
 
+const proxyApiRequest = (request, response) => {
+    if (!proxyApiTarget) return false;
+
+    const target = new URL(request.url ?? "/", proxyApiTarget);
+    const proxyRequest = http.request(
+        target,
+        {
+            method: request.method,
+            headers: {
+                ...request.headers,
+                host: target.host,
+            },
+        },
+        (proxyResponse) => {
+            response.writeHead(proxyResponse.statusCode ?? 502, proxyResponse.headers);
+            proxyResponse.pipe(response);
+        },
+    );
+
+    proxyRequest.on("error", (error) => {
+        console.error(`API proxy error: ${error.message}`);
+        if (!response.headersSent) {
+            response.writeHead(502, { "Content-Type": "text/plain; charset=utf-8" });
+        }
+        response.end("Bad gateway");
+    });
+
+    request.pipe(proxyRequest);
+    return true;
+};
+
 const server = http.createServer((request, response) => {
+    if (new URL(request.url ?? "/", "http://localhost").pathname.startsWith("/api/")) {
+        if (proxyApiRequest(request, response)) return;
+    }
+
     const resolved = resolveRequestPath(request.url ?? "/");
     if (!resolved || !fs.existsSync(resolved.filePath)) {
         response.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
@@ -113,4 +149,7 @@ server.on("error", (error) => {
 
 server.listen(port, host, () => {
     console.log(`Serving ${publicDir} on http://${host}:${port}`);
+    if (proxyApiTarget) {
+        console.log(`Proxying /api to ${proxyApiTarget}`);
+    }
 });

@@ -2,6 +2,7 @@ import { test, expect } from "../../fixtures/auth";
 import { gotoAdminPage } from "../../fixtures/admin";
 import type { Page } from "@playwright/test";
 import { APP_LINKS, REST_ROUTES, stripApiPrefix } from "@local/shared";
+import { allowRuntimeIssue } from "../../fixtures/runtime-guard";
 
 /**
  * Simplified E2E Tests for Admin Hero Banner Management
@@ -144,6 +145,14 @@ test.describe("Hero Banner - Form Interactions", () => {
         const title = `E2E Failed Hero ${Date.now()}`;
         const titleInput = authenticatedPage.getByLabel(/^title$/i).first();
         await titleInput.fill(title);
+        allowRuntimeIssue(
+            authenticatedPage,
+            (issue) =>
+                (issue.kind === "response" &&
+                    issue.message.includes(stripApiPrefix(REST_ROUTES.landingPage.root)) &&
+                    issue.message.startsWith("500 ")) ||
+                (issue.kind === "console" && /status of 500/i.test(issue.message)),
+        );
         await injectLandingPageSaveFailure(authenticatedPage);
 
         const saveResponse = authenticatedPage.waitForResponse(

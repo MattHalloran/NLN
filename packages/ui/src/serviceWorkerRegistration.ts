@@ -15,7 +15,7 @@ interface Config {
     onUpdate?: (registration: ServiceWorkerRegistration) => void;
 }
 
-const isLocalhost = Boolean(
+export const isLocalhost = Boolean(
     window.location.hostname === "localhost" ||
         // [::1] is the IPv6 localhost address.
         window.location.hostname === "[::1]" ||
@@ -153,8 +153,8 @@ export function unregister(): void {
     }
 }
 
-export async function cleanupDevelopmentServiceWorkers(): Promise<boolean> {
-    if (!import.meta.env.DEV || !isLocalhost || !("serviceWorker" in navigator)) {
+export async function cleanupLocalServiceWorkers(): Promise<boolean> {
+    if (!isLocalhost || !("serviceWorker" in navigator)) {
         return false;
     }
 
@@ -176,7 +176,9 @@ export async function cleanupDevelopmentServiceWorkers(): Promise<boolean> {
 
         return true;
     } catch (error) {
-        console.error("Error during development service worker cleanup:", error);
+        console.error("Error during local service worker cleanup:", error);
         return false;
     }
 }
+
+export const cleanupDevelopmentServiceWorkers = cleanupLocalServiceWorkers;

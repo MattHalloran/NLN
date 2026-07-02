@@ -1,7 +1,7 @@
 import type { Page, Response } from "@playwright/test";
 
 type RuntimeIssue = {
-    kind: "console" | "pageerror" | "response";
+    kind: "console" | "pageerror" | "requestfailed" | "response";
     message: string;
 };
 
@@ -18,12 +18,8 @@ const ALLOWED_CONSOLE_PATTERNS = [
     /\[vite\] connecting/i,
     /\[vite\] connected/i,
     /Download the React DevTools/i,
-    /Failed to execute 'write' on 'Document'/i,
     /Failed to load resource: the server responded with a status of 401/i,
-    /Failed to load resource: the server responded with a status of 500/i,
     /Failed to load resource: the server responded with a status of 403/i,
-    /Content is cached for offline use/i,
-    /This web app is being served cache-first by a service worker/i,
     /^Error in AdminContactPage$/i,
     /^Action: updateContactInfo$/i,
     /Injected E2E contact save failure/i,
@@ -40,14 +36,6 @@ const ALLOWED_RESPONSE_FAILURES = [
         status: 401,
         pattern: /\/api\/rest\/v1\/auth\/session$/,
     },
-    {
-        status: 500,
-        pattern: /\/api\/rest\/v1\/landing-page\/contact-info(?:\?|$)/,
-    },
-    {
-        status: 500,
-        pattern: /\/api\/rest\/v1\/landing-page(?:\?|$)/,
-    },
 ];
 
 const isAllowedConsoleMessage = (message: string) =>
@@ -57,6 +45,32 @@ const isAllowedResponseFailure = (response: Response) =>
     ALLOWED_RESPONSE_FAILURES.some(
         ({ status, pattern }) => response.status() === status && pattern.test(response.url()),
     );
+
+const isMonitoredDataOrMediaUrl = (url: string) => {
+    const pathname = new URL(url).pathname;
+
+    return (
+        pathname.startsWith("/api/") ||
+        /\/rest\/v\d+(?:\/|$)/.test(pathname) ||
+        pathname.startsWith("/images/") ||
+        /\.(?:avif|br|css|gif|ico|jpe?g|js|json|png|svg|webmanifest|webp)(?:$|\?)/i.test(pathname)
+    );
+};
+
+const isAllowedRequestFailure = (url: string, errorText = "") => {
+    const { hostname, pathname } = new URL(url);
+
+    if (errorText !== "net::ERR_ABORTED") return false;
+
+    if (hostname !== "localhost" && hostname !== "127.0.0.1") return true;
+
+    return (
+        pathname.endsWith("/service-worker.js") ||
+        pathname.startsWith("/api/images/") ||
+        pathname.endsWith("/auth/session") ||
+        /\/variants\/[^/]+\/track$/.test(pathname)
+    );
+};
 
 export const attachRuntimeGuard = (page: Page): RuntimeGuard => {
     const issues: RuntimeIssue[] = [];
@@ -83,6 +97,7 @@ export const attachRuntimeGuard = (page: Page): RuntimeGuard => {
 
     page.on("response", (response) => {
         const status = response.status();
+        const contentType = response.headers()["content-type"] ?? "";
 
         if (status >= 400 && !isAllowedResponseFailure(response)) {
             issues.push({
@@ -90,6 +105,28 @@ export const attachRuntimeGuard = (page: Page): RuntimeGuard => {
                 message: `${status} ${response.url()}`,
             });
         }
+
+        if (
+            status < 400 &&
+            contentType.includes("text/html") &&
+            isMonitoredDataOrMediaUrl(response.url())
+        ) {
+            issues.push({
+                kind: "response",
+                message: `${status} ${contentType} for data/media URL ${response.url()}`,
+            });
+        }
+    });
+
+    page.on("requestfailed", (request) => {
+        const errorText = request.failure()?.errorText ?? "failed";
+        if (isAllowedRequestFailure(request.url(), errorText)) return;
+        if (!isMonitoredDataOrMediaUrl(request.url())) return;
+
+        issues.push({
+            kind: "requestfailed",
+            message: `${request.url()} ${errorText}`,
+        });
     });
 
     const guard = {

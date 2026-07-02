@@ -57,6 +57,8 @@ type RateLimitConfig = {
     message: string;
 };
 
+const areRateLimitsDisabledForE2E = (): boolean => process.env.E2E_DISABLE_RATE_LIMITS === "true";
+
 const createApiRateLimiter = (
     config: RateLimitConfig,
     options: {
@@ -71,7 +73,7 @@ const createApiRateLimiter = (
         message: config.message,
         standardHeaders: true,
         legacyHeaders: false,
-        skip: options.skip,
+        skip: (req) => areRateLimitsDisabledForE2E() || Boolean(options.skip?.(req)),
         skipSuccessfulRequests: options.skipSuccessfulRequests,
         handler: (req, res) => {
             sendRateLimitExceeded(req, res, config.id, config.message, options.extraBody);

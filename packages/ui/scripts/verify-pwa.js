@@ -162,13 +162,16 @@ assert(
     "destructive forceCleanup helper must not be exposed in service worker registration",
 );
 assert(
-    registration.includes("cleanupDevelopmentServiceWorkers") &&
-    registration.includes("import.meta.env.DEV") &&
-    registration.includes("isLocalhost"),
-    "development service worker cleanup must be gated to local dev only",
+    registration.includes("cleanupLocalServiceWorkers") && registration.includes("isLocalhost"),
+    "local service worker cleanup must stay gated to localhost",
 );
 
 const indexSource = read("src/index.tsx");
+assert(
+    indexSource.includes("VITE_ENABLE_LOCAL_PWA") &&
+        indexSource.includes("serviceWorkerRegistration.cleanupLocalServiceWorkers()"),
+    "local production validation must clear local service workers unless explicitly enabled",
+);
 assert(indexSource.includes("nln-service-worker-update-ready"), "visible service worker updates must dispatch an update event");
 assert(indexSource.includes("window.location.replace"), "production www traffic must be canonicalized before app startup");
 assert(indexSource.includes("hadControllerAtStartup"), "controllerchange handling must distinguish first install from updates");

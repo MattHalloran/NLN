@@ -4,6 +4,7 @@ import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { CustomError } from "./error.js";
 import { JWTPayload } from "./types/express.js";
+import { getCookieSecurityOptions } from "./config/runtimePolicy.js";
 
 const { PrismaClient } = pkg;
 type PrismaClientType = InstanceType<typeof PrismaClient>;
@@ -94,13 +95,11 @@ export async function generateToken(
     const token = jwt.sign(tokenContents, process.env.JWT_SECRET ?? "");
     res.cookie(COOKIE.Jwt, token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
         // SECURITY: Changed from 'none' to 'lax' for CSRF protection
         // 'lax' allows cookies on top-level GET navigation but blocks CSRF attacks
         // Since frontend and backend are same-origin, this is safe
-        sameSite: "lax",
+        ...getCookieSecurityOptions(),
         maxAge: SESSION_MILLI,
-        path: "/",
     });
 }
 

@@ -2,7 +2,6 @@ import {
     DEFAULT_PORTS,
     DEFAULT_SERVER_URLS,
     CACHE_LIMITS,
-    LOCAL_DEV_ORIGINS,
     REST_ROUTES,
     STATIC_API_PATHS,
 } from "@local/shared";
@@ -27,8 +26,14 @@ import { closeRedis } from "./redisConn.js";
 import { closeImageCleanupQueue } from "./worker/imageCleanup/queue.js";
 import { closeLabelSyncQueue } from "./worker/labelSync/queue.js";
 import { closeEmailQueue } from "./worker/email/queue.js";
+import {
+    buildAllowedCorsOrigins,
+    buildCorsOptions,
+    buildHelmetOptions,
+} from "./config/runtimePolicy.js";
 
 const SERVER_URL =
+    process.env.SERVER_URL ??
     process.env.VITE_SERVER_URL ??
     (process.env.VITE_SERVER_LOCATION === "local"
         ? DEFAULT_SERVER_URLS.localApi
@@ -68,96 +73,7 @@ const main = async () => {
     // SECURITY: HTTP Security Headers with Helmet
     // ============================================================================
     // Apply helmet early in middleware chain to set security headers on all responses
-    app.use(
-        helmet({
-            // Content Security Policy - controls what resources can be loaded
-            contentSecurityPolicy: {
-                directives: {
-                    defaultSrc: ["'self'"],
-                    // Scripts: Allow from same origin only (no inline scripts for security)
-                    // Note: If you need inline scripts, consider using nonces instead of 'unsafe-inline'
-                    scriptSrc: ["'self'"],
-                    // Styles: Allow same origin + inline styles (needed for Material-UI and React)
-                    styleSrc: ["'self'", "'unsafe-inline'"],
-                    // Images: Allow same origin, data URIs, and blob URIs
-                    imgSrc: ["'self'", "data:", "blob:"],
-                    // API connections: Allow same origin
-                    connectSrc: ["'self'"],
-                    // Fonts: Allow same origin
-                    fontSrc: ["'self'"],
-                    // Objects/embeds: Block all
-                    objectSrc: ["'none'"],
-                    // Media: Allow same origin
-                    mediaSrc: ["'self'"],
-                    // Frames: Block all (prevents clickjacking)
-                    frameSrc: ["'none'"],
-                    // Base URI: Restrict to same origin
-                    baseUri: ["'self'"],
-                    // Form actions: Restrict to same origin
-                    formAction: ["'self'"],
-                    // Upgrade insecure requests in production
-                    ...(process.env.NODE_ENV === "production" && {
-                        upgradeInsecureRequests: [],
-                    }),
-                },
-            },
-
-            // HTTP Strict Transport Security (HSTS)
-            // Forces browsers to use HTTPS for all future requests
-            // Only enable in production when HTTPS is available
-            hsts: {
-                maxAge: CACHE_LIMITS.immutableAssetMaxAgeSeconds,
-                includeSubDomains: true,
-                preload: true,
-            },
-
-            // X-Frame-Options: Prevents clickjacking by blocking iframe embedding
-            frameguard: {
-                action: "deny",
-            },
-
-            // X-Content-Type-Options: Prevents MIME-type sniffing
-            // Forces browser to respect declared Content-Type
-            noSniff: true,
-
-            // X-DNS-Prefetch-Control: Controls DNS prefetching
-            dnsPrefetchControl: {
-                allow: false,
-            },
-
-            // X-Download-Options: Prevents IE from executing downloads in site's context
-            ieNoOpen: true,
-
-            // Referrer-Policy: Controls how much referrer information is sent
-            referrerPolicy: {
-                policy: "strict-origin-when-cross-origin",
-            },
-
-            // X-Permitted-Cross-Domain-Policies: Restricts Adobe Flash/PDF cross-domain requests
-            permittedCrossDomainPolicies: {
-                permittedPolicies: "none",
-            },
-
-            // Cross-Origin-Embedder-Policy: Controls embedding of cross-origin resources
-            crossOriginEmbedderPolicy: false, // Set to true if you need stronger isolation
-
-            // Cross-Origin-Opener-Policy: Prevents other windows from getting references
-            crossOriginOpenerPolicy: {
-                policy: "same-origin-allow-popups",
-            },
-
-            // Cross-Origin-Resource-Policy: Controls resource sharing
-            // In development or local production testing, allow cross-origin to support separate local UI/server ports.
-            // In true production (VPS), use same-origin for security
-            crossOriginResourcePolicy: {
-                policy:
-                    process.env.NODE_ENV === "development" ||
-                    process.env.SERVER_LOCATION === "local"
-                        ? "cross-origin"
-                        : "same-origin",
-            },
-        })
-    );
+    app.use(helmet(buildHelmetOptions()));
 
     logger.log(LogLevel.info, "🛡️  HTTP security headers enabled (helmet.js)");
     logger.log(
@@ -202,55 +118,16 @@ const main = async () => {
     // IMPORTANT: CORS must be configured BEFORE authentication middleware
     // to properly handle preflight requests and cross-origin credentials
 
-    // Build allowed origins list based on environment
-    const allowedOrigins: string[] = [];
-
-    // Add additional domains from VIRTUAL_HOST if set
-    if (process.env.VIRTUAL_HOST) {
-        const virtualHosts = process.env.VIRTUAL_HOST.split(",").map((h) => h.trim());
-        virtualHosts.forEach((host) => {
-            if (!allowedOrigins.includes(`https://${host}`)) {
-                allowedOrigins.push(`https://${host}`);
-            }
-        });
-    }
-
-    if (process.env.CORS_ORIGINS) {
-        process.env.CORS_ORIGINS.split(",")
-            .map((origin) => origin.trim())
-            .filter(Boolean)
-            .forEach((origin) => {
-                if (!allowedOrigins.includes(origin)) {
-                    allowedOrigins.push(origin);
-                }
-            });
-    }
-
-    // In development, also allow localhost
-    if (process.env.NODE_ENV === "development" || process.env.SERVER_LOCATION === "local") {
-        allowedOrigins.push(...LOCAL_DEV_ORIGINS);
-    }
+    const allowedOrigins = buildAllowedCorsOrigins();
 
     logger.log(LogLevel.info, `🔒 CORS configured for origins: ${allowedOrigins.join(", ")}`);
 
-    app.use(
-        cors({
-            credentials: true,
-            origin: (origin, callback) => {
-                // Allow requests with no origin (like mobile apps, Postman, curl)
-                if (!origin) {
-                    return callback(null, true);
-                }
+    const corsOptions = buildCorsOptions(process.env, (origin) => {
+        logger.log(LogLevel.warn, `🚫 CORS blocked request from origin: ${origin}`);
+    });
 
-                if (allowedOrigins.includes(origin)) {
-                    callback(null, true);
-                } else {
-                    logger.log(LogLevel.warn, `🚫 CORS blocked request from origin: ${origin}`);
-                    callback(new Error(`Origin ${origin} not allowed by CORS policy`));
-                }
-            },
-        })
-    );
+    app.options("*", cors(corsOptions));
+    app.use(cors(corsOptions));
 
     // CRITICAL: Authentication MUST come before CSRF protection
     // Reason: CSRF tokens are bound to session identifiers (userId or IP)

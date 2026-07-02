@@ -33,6 +33,7 @@ const USER_IDLE_MS = UI_TIMING.serviceWorkerUserIdleMs;
 const UPDATE_IDLE_RECHECK_MS = UI_TIMING.serviceWorkerIdleRecheckMs;
 const UPDATE_RELOAD_KEY = "nln_sw_update_reload";
 const CHUNK_RELOAD_KEY = "nln_chunk_reload_done";
+const ENABLE_LOCAL_PRODUCTION_PWA = import.meta.env.VITE_ENABLE_LOCAL_PWA === "true";
 let lastUserActivityAt = Date.now();
 let isServiceWorkerUpdateActivationExpected = false;
 
@@ -125,6 +126,11 @@ const initializePWA = async (): Promise<void> => {
 
     // Only enable PWA in production for security and performance
     if (import.meta.env.PROD) {
+        if (serviceWorkerRegistration.isLocalhost && !ENABLE_LOCAL_PRODUCTION_PWA) {
+            void serviceWorkerRegistration.cleanupLocalServiceWorkers();
+            return;
+        }
+
         try {
             const hadControllerAtStartup = Boolean(navigator.serviceWorker.controller);
 
@@ -162,7 +168,7 @@ const initializePWA = async (): Promise<void> => {
         }
     } else {
         // In development, clean up any existing service workers to avoid conflicts
-        void serviceWorkerRegistration.cleanupDevelopmentServiceWorkers();
+        void serviceWorkerRegistration.cleanupLocalServiceWorkers();
     }
 };
 

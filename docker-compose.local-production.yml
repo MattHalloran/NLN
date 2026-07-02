@@ -1,0 +1,14 @@
+services:
+  ui:
+    environment:
+      APP_RUNTIME: "local-production"
+      VITE_API_BASE_URL: "/api"
+      PROXY_API_TARGET: "http://server:${PORT_SERVER:-5331}"
+
+  server:
+    environment:
+      APP_RUNTIME: "local-production"
+      UI_URL: "http://localhost:${PORT_UI:-3001}"
+      SERVER_URL: "http://localhost:${PORT_UI:-3001}/api"
+      CORS_ORIGINS: "http://localhost:${PORT_UI:-3001},http://127.0.0.1:${PORT_UI:-3001}"
+      COOKIE_SECURE: "false"

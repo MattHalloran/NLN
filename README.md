@@ -80,6 +80,23 @@ docker-compose up -d
 # Adminer (DB): http://localhost:8081
 ```
 
+### Running Local Production
+
+Use this when you need the production-built UI and server running locally without touching the production VPS:
+
+```bash
+bash scripts/start-local-production.sh -v <VERSION>
+```
+
+This builds production artifacts with `VITE_API_BASE_URL=/api`, starts Docker with `docker-compose.local-production.yml`, and serves browser API traffic through the UI origin at `http://localhost:3001/api`. That same-origin path avoids local CORS drift and lets CSRF/auth cookies behave like the remote production proxy topology.
+
+```bash
+# Validate the local production browser runtime
+yarn test:e2e:production-local
+```
+
+The production-local gate checks public page loading, CSRF-backed newsletter signup, and admin login/session cookies. It uses local Docker only and does not run production SSH, backup, deploy, cleanup, update, prune, restart, or deletion commands.
+
 ### Verify Installation
 
 ```bash
@@ -154,6 +171,9 @@ yarn test:visual
 
 # Stable admin E2E suite
 yarn test:e2e:admin
+
+# Production-built local stack browser gate
+yarn test:e2e:production-local
 
 # Read-only smoke check for a deployed public URL
 yarn smoke:public https://<your-site>

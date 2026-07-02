@@ -8,6 +8,26 @@ const expectUsablePage = async (page: import("@playwright/test").Page, heading: 
     await expect(page.locator("body")).not.toBeEmpty();
 };
 
+const expectHomepageHeroImageLoaded = async (page: import("@playwright/test").Page) => {
+    const heroImages = page.getByTestId("homepage-hero").locator("img");
+
+    await expect(heroImages.first()).toBeAttached();
+    await expect
+        .poll(async () =>
+            heroImages.evaluateAll((images) =>
+                images.some(
+                    (image) =>
+                        image instanceof HTMLImageElement &&
+                        image.complete &&
+                        image.naturalWidth > 0 &&
+                        image.naturalHeight > 0 &&
+                        image.currentSrc.length > 0,
+                ),
+            ),
+        )
+        .toBe(true);
+};
+
 const waitForHomepageViewTracking = (page: import("@playwright/test").Page) =>
     page.waitForResponse(
         (response) =>
@@ -21,6 +41,7 @@ const gotoHomeAndExpectUsable = async (page: import("@playwright/test").Page) =>
 
     await page.goto(APP_LINKS.Home);
     await expectUsablePage(page, /new life nursery|wholesale nursery/i);
+    await expectHomepageHeroImageLoaded(page);
 
     const viewTrackingResponse = await viewTrackingResponsePromise;
     expect(viewTrackingResponse.status()).toBe(200);

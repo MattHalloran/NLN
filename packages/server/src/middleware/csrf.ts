@@ -19,6 +19,7 @@ import { CODE, CSRF, REST_ROUTES } from "@local/shared";
 import { doubleCsrf } from "csrf-csrf";
 import { Request, Response, NextFunction } from "express";
 import { logger, LogLevel } from "../logger.js";
+import { getCookieSecurityOptions } from "../config/runtimePolicy.js";
 
 // CSRF secret - MUST be set in environment variables
 // NOTE: We use process.env.CSRF_SECRET dynamically in getSecret to ensure
@@ -45,13 +46,10 @@ const csrfConfig = doubleCsrf({
     cookieOptions: {
         // CRITICAL: httpOnly MUST be false so client can read the token
         httpOnly: false,
-        // Secure in production (HTTPS only)
-        secure: process.env.NODE_ENV === "production",
+        ...getCookieSecurityOptions(),
         // SameSite lax provides additional CSRF protection
-        sameSite: "lax",
         // Cookie valid for 24 hours
         maxAge: CSRF.TokenTtlMs,
-        path: "/",
     },
     // Token size in bytes (64 bytes = 512 bits)
     size: CSRF.TokenSizeBytes,

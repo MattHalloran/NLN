@@ -191,6 +191,9 @@ UI_ENV_FILE="${HERE}/../packages/ui/.env"
     echo "VITE_SERVER_LOCATION=${SERVER_LOCATION}"
     echo "VITE_PORT_SERVER=${PORT_SERVER}"
     echo "VITE_SERVER_URL=${SERVER_URL}"
+    if [ -n "${VITE_API_BASE_URL:-}" ]; then
+        echo "VITE_API_BASE_URL=${VITE_API_BASE_URL}"
+    fi
     echo "VITE_SITE_IP=${SITE_IP}"
 } >"${UI_ENV_FILE}"
 
