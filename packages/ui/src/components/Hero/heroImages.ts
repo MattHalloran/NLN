@@ -11,11 +11,29 @@ const GENERATED_IMAGE_PATTERN = /^(.*-)(XXS|XS|S|M|ML|L|XL|XXL)(\.[^/.]+)$/i;
 
 const sizeEntries = Object.entries(IMAGE_SIZE) as Array<[keyof typeof IMAGE_SIZE, number]>;
 
+const normalizeGeneratedPrefix = (prefix: string) => {
+    const pathWithoutLeadingSlash = prefix.replace(/^\/+/, "");
+    if (!pathWithoutLeadingSlash.includes("/")) {
+        return `/images/${pathWithoutLeadingSlash}`;
+    }
+
+    return prefix;
+};
+
+const normalizeLegacyRootImageSrc = (src: string) => {
+    const pathWithoutLeadingSlash = src.replace(/^\/+/, "");
+    if (!pathWithoutLeadingSlash.includes("/")) {
+        return `/images/${pathWithoutLeadingSlash}`;
+    }
+
+    return src;
+};
+
 export const getHeroBannerFiles = ({ src, width, height }: HeroBannerFileInput): ImageFile[] => {
     if (!src) return [];
 
     const fallbackFile = {
-        src,
+        src: normalizeLegacyRootImageSrc(src),
         width: width ?? 0,
         height: height ?? 0,
     };
@@ -23,8 +41,9 @@ export const getHeroBannerFiles = ({ src, width, height }: HeroBannerFileInput):
     if (!match) return [fallbackFile];
 
     const [, prefix, , extension] = match;
+    const normalizedPrefix = normalizeGeneratedPrefix(prefix);
     const originalFiles = sizeEntries.map(([label, fileWidth]) => ({
-        src: `${prefix}${label}${extension}`,
+        src: `${normalizedPrefix}${label}${extension}`,
         width: fileWidth,
         height: 0,
     }));
@@ -33,10 +52,14 @@ export const getHeroBannerFiles = ({ src, width, height }: HeroBannerFileInput):
         return originalFiles;
     }
 
+    if (normalizedPrefix !== prefix) {
+        return [fallbackFile];
+    }
+
     return [
         ...originalFiles,
         ...sizeEntries.map(([label, fileWidth]) => ({
-            src: `${prefix}${label}.webp`,
+            src: `${normalizedPrefix}${label}.webp`,
             width: fileWidth,
             height: 0,
         })),

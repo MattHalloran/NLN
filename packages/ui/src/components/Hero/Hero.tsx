@@ -70,6 +70,7 @@ export const Hero = ({
 
     return (
         <Box
+            data-testid="homepage-hero"
             sx={{
                 overflow: "hidden",
                 pointerEvents: "none",

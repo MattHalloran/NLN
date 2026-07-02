@@ -40,4 +40,20 @@ describe("getHeroBannerFiles", () => {
             },
         ]);
     });
+
+    it("maps legacy root-level generated image names to the image asset original", () => {
+        const files = getHeroBannerFiles({
+            src: "/hero-plants-XXL.jpg",
+            width: 4032,
+            height: 3024,
+        });
+
+        expect(files).toEqual([
+            {
+                src: "/images/hero-plants-XXL.jpg",
+                width: 4032,
+                height: 3024,
+            },
+        ]);
+    });
 });

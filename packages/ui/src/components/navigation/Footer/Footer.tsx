@@ -29,10 +29,13 @@ import {
     LogIn,
     Clock,
 } from "lucide-react";
-import { useContext, useEffect, useMemo } from "react";
+import { useContext, useMemo } from "react";
 import { useLocation } from "route";
 import { getServerUrl } from "utils/serverUrl";
 import { checkBusinessHoursStatus } from "utils/businessHours";
+
+const RAPIDSCAN_SEAL_CODE = "158,A67D1E952FE47EAFCF2B0E9D0FABF9840AD29386";
+const RAPIDSCAN_VERIFY_URL = `https://rapidscansecure.com/siteseal/Verify.aspx?code=${RAPIDSCAN_SEAL_CODE}`;
 
 export const Footer = () => {
     const [, setLocation] = useLocation();
@@ -43,26 +46,6 @@ export const Footer = () => {
     const businessHoursStatus = useMemo(() => {
         return checkBusinessHoursStatus(business?.hours || "");
     }, [business?.hours]);
-
-    // Load RapidScan compliance seal script
-    useEffect(() => {
-        const script = document.createElement("script");
-        script.type = "text/javascript";
-        script.src =
-            "https://www.rapidscansecure.com/siteseal/siteseal.js?code=158,A67D1E952FE47EAFCF2B0E9D0FABF9840AD29386";
-        script.async = true;
-
-        const sealContainer = document.getElementById("rapidscan-seal");
-        if (sealContainer) {
-            sealContainer.appendChild(script);
-        }
-
-        return () => {
-            if (sealContainer && script.parentNode === sealContainer) {
-                sealContainer.removeChild(script);
-            }
-        };
-    }, []);
 
     const contactLinks = [
         {
@@ -412,7 +395,29 @@ export const Footer = () => {
                             justifyContent: "center",
                             alignItems: "center",
                         }}
-                    />
+                    >
+                        <Link
+                            href={RAPIDSCAN_VERIFY_URL}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label="Verify CompliAssure SiteSeal"
+                            sx={{
+                                color: "rgba(255, 255, 255, 0.8)",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 0.75,
+                                fontSize: "0.8rem",
+                                textDecorationColor: "rgba(255, 255, 255, 0.45)",
+                                "&:hover": {
+                                    color: palette.secondary.main,
+                                    textDecorationColor: palette.secondary.main,
+                                },
+                            }}
+                        >
+                            Verify security compliance
+                            <ExternalLink size={14} />
+                        </Link>
+                    </Box>
                 </Box>
             </Container>
         </Box>
