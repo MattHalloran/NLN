@@ -17,6 +17,7 @@ import type {
     DashboardStats,
     DeepPartial,
     Image,
+    ImageLabel,
     JobStatus,
     LandingPageContent,
     LandingPageVariant,
@@ -41,6 +42,7 @@ export type {
     DashboardStats,
     DeepPartial,
     Image,
+    ImageLabel,
     JobStatus,
     LandingPageContent,
     LandingPageVariant,
@@ -366,6 +368,24 @@ export const restApi = {
         return fetchApi(url, {
             method: REST_ENDPOINTS.images.delete(hash).method,
         });
+    },
+
+    async removeImageLabel(
+        hash: string,
+        label: ImageLabel,
+    ): Promise<{
+        success: boolean;
+        hash: string;
+        removedLabel: ImageLabel;
+        removed: boolean;
+        remainingLabels: string[];
+        remainingPlantUsage: number;
+        unlabeled: boolean;
+        message: string;
+    }> {
+        return requestEndpoint(
+            REST_ENDPOINTS.images.removeLabel(encodeURIComponent(hash), encodeURIComponent(label)),
+        );
     },
 
     async checkImageUsage(hash: string): Promise<{

@@ -28,6 +28,7 @@ export const REST_CHILD_PATHS = {
     },
     images: {
         hash: "/:hash",
+        label: "/:hash/labels/:label",
         usage: "/:hash/usage",
         variants: "/:hash/variants",
     },
@@ -93,6 +94,8 @@ export const REST_ROUTES = {
     images: {
         root: `${REST_API_PREFIX}${REST_RESOURCE.Images}`,
         byLabel: (label = ":label") => `${REST_API_PREFIX}${REST_RESOURCE.Images}?label=${label}`,
+        label: (hash = ":hash", label = ":label") =>
+            `${REST_API_PREFIX}${REST_RESOURCE.Images}/${hash}/labels/${label}`,
         usage: (hash = ":hash") => `${REST_API_PREFIX}${REST_RESOURCE.Images}/${hash}/usage`,
         variants: (hash = ":hash") => `${REST_API_PREFIX}${REST_RESOURCE.Images}/${hash}/variants`,
     },

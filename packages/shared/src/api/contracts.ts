@@ -22,6 +22,7 @@ import type {
     UpdateSettingsRequest,
     VariantEvent,
 } from "./types";
+import type { ImageLabel } from "./images";
 
 export type HttpMethod = "GET" | "POST" | "PUT" | "DELETE";
 export type ApiFormData = FormData;
@@ -123,6 +124,20 @@ export const REST_ENDPOINTS = {
                 "DELETE",
                 `${REST_ROUTES.images.root}/${hash}`,
             ),
+        removeLabel: (hash = ":hash", label = ":label") =>
+            endpoint<
+                never,
+                {
+                    success: boolean;
+                    hash: string;
+                    removedLabel: ImageLabel;
+                    removed: boolean;
+                    remainingLabels: string[];
+                    remainingPlantUsage: number;
+                    unlabeled: boolean;
+                    message: string;
+                }
+            >("DELETE", REST_ROUTES.images.label(hash, label)),
         usage: (hash = ":hash") =>
             endpoint<
                 never,

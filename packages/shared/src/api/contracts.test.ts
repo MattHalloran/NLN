@@ -70,6 +70,12 @@ describe("REST route contracts", () => {
         expect(REST_ENDPOINTS.images.delete("abc123").path).toBe(
             `${REST_ROUTES.images.root}/abc123`,
         );
+        expect(REST_ENDPOINTS.images.removeLabel().path).toBe(
+            `${REST_ROUTES.images.root}/:hash/labels/:label`,
+        );
+        expect(REST_ENDPOINTS.images.removeLabel("abc123", "gallery").path).toBe(
+            `${REST_ROUTES.images.root}/abc123/labels/gallery`,
+        );
         expect(REST_ENDPOINTS.landingPage.promoteVariant("variant-a").path).toBe(
             REST_ROUTES.landingPage.promoteVariant("variant-a"),
         );

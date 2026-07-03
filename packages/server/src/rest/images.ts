@@ -1,7 +1,13 @@
 import { Router, Request, Response } from "express";
 import { CODE, MAX_IMAGE_STORAGE_MB, REST_CHILD_PATHS, UPLOAD_LIMITS } from "@local/shared";
 import { CustomError } from "../error.js";
-import { saveImage, deleteImage, checkImageUsage } from "../utils/index.js";
+import {
+    saveImage,
+    deleteImage,
+    checkImageUsage,
+    isKnownImageLabel,
+    removeImageLabelRelation,
+} from "../utils/index.js";
 import { logger, LogLevel } from "../logger.js";
 import { auditAdminAction, AuditEventType } from "../utils/auditLogger.js";
 import { imageUploadLimiter, imageFileCountLimiter } from "../middleware/rateLimiter.js";
@@ -290,6 +296,68 @@ router.put("/", async (req: Request, res: Response) => {
             return res.status(401).json({ error: error.message, code: error.code });
         }
         return res.status(500).json({ error: "Failed to update images" });
+    }
+});
+
+/**
+ * DELETE /api/rest/v1/images/:hash/labels/:label
+ * Remove an image from a label-backed collection without deleting the asset.
+ */
+router.delete(REST_CHILD_PATHS.images.label, async (req: Request, res: Response) => {
+    try {
+        const { hash, label } = req.params;
+        const { prisma, isAdmin } = req;
+
+        // Must be admin
+        if (!isAdmin) {
+            throw new CustomError(CODE.Unauthorized);
+        }
+
+        if (!prisma) {
+            return res.status(500).json({ error: "Database connection not available" });
+        }
+
+        if (!hash || typeof hash !== "string") {
+            return res.status(400).json({ error: "Image hash required" });
+        }
+
+        if (!label || typeof label !== "string" || !isKnownImageLabel(label)) {
+            return res.status(400).json({ error: "Known image label required" });
+        }
+
+        const result = await removeImageLabelRelation(prisma, { hash, label });
+
+        if (!result.exists) {
+            return res.status(404).json({ error: "Image not found" });
+        }
+
+        auditAdminAction(req, AuditEventType.ADMIN_IMAGE_UPDATE, "images", undefined, {
+            hash,
+            removedLabel: label,
+            removed: result.removed,
+            remainingLabels: result.remainingLabels,
+            remainingPlantUsage: result.remainingPlantUsage,
+            unlabeled: result.unlabeled,
+        });
+
+        return res.json({
+            success: true,
+            hash,
+            removedLabel: label,
+            removed: result.removed,
+            remainingLabels: result.remainingLabels,
+            remainingPlantUsage: result.remainingPlantUsage,
+            unlabeled: result.unlabeled,
+            message: result.removed
+                ? `Removed image from ${label}`
+                : `Image was already absent from ${label}`,
+        });
+    } catch (error) {
+        logger.log(LogLevel.error, "Remove image label error:", error);
+        if (error instanceof CustomError) {
+            return res.status(401).json({ error: error.message, code: error.code });
+        }
+        return res.status(500).json({ error: "Failed to remove image label" });
     }
 });
 

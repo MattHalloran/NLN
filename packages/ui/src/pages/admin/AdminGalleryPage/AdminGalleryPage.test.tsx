@@ -7,15 +7,14 @@ import { AdminGalleryPage } from "./AdminGalleryPage";
 
 const hookMocks = vi.hoisted(() => ({
     addImages: vi.fn(),
-    deleteImage: vi.fn(),
     refetchImages: vi.fn(),
+    removeImageLabel: vi.fn(),
     updateImages: vi.fn(),
 }));
 
 vi.mock("api/rest/hooks", async (importOriginal) => ({
     ...(await importOriginal<typeof import("api/rest/hooks")>()),
     useAddImages: () => ({ mutate: hookMocks.addImages }),
-    useDeleteImage: () => ({ mutate: hookMocks.deleteImage }),
     useImagesByLabel: () => ({
         data: [
             {
@@ -27,6 +26,7 @@ vi.mock("api/rest/hooks", async (importOriginal) => ({
         ],
         refetch: hookMocks.refetchImages,
     }),
+    useRemoveImageLabel: () => ({ mutate: hookMocks.removeImageLabel }),
     useUpdateImages: () => ({ mutate: hookMocks.updateImages }),
 }));
 
@@ -96,10 +96,15 @@ vi.mock("components/buttons/BackButton/BackButton", () => ({
 describe("AdminGalleryPage", () => {
     beforeEach(() => {
         hookMocks.addImages.mockResolvedValue([{ success: true, hash: "uploaded-image" }]);
-        hookMocks.deleteImage.mockResolvedValue({
+        hookMocks.removeImageLabel.mockResolvedValue({
             success: true,
-            deletedFiles: 1,
-            message: "Deleted",
+            hash: "gallery-image-1",
+            removedLabel: IMAGE_LABELS.Gallery,
+            removed: true,
+            remainingLabels: [],
+            remainingPlantUsage: 0,
+            unlabeled: true,
+            message: "Removed image from gallery",
         });
         hookMocks.refetchImages.mockResolvedValue(undefined);
         hookMocks.updateImages.mockResolvedValue({ success: true });
@@ -126,19 +131,24 @@ describe("AdminGalleryPage", () => {
         );
     });
 
-    it("confirms gallery image deletion and refetches on success", async () => {
+    it("confirms gallery image removal and refetches on success", async () => {
         const user = userEvent.setup();
 
         renderWithProviders(<AdminGalleryPage />);
 
         await user.click(screen.getByRole("button", { name: /delete image/i }));
-        const dialog = await screen.findByRole("dialog", { name: /delete image/i });
-        await user.click(within(dialog).getByRole("button", { name: /^delete$/i }));
+        const dialog = await screen.findByRole("dialog", { name: /remove from gallery/i });
+        expect(
+            within(dialog).getByText(
+                /the image asset will remain available anywhere else it is used/i,
+            ),
+        ).toBeInTheDocument();
+        await user.click(within(dialog).getByRole("button", { name: /^remove$/i }));
 
         await waitFor(() =>
-            expect(hookMocks.deleteImage).toHaveBeenCalledWith({
+            expect(hookMocks.removeImageLabel).toHaveBeenCalledWith({
                 hash: "gallery-image-1",
-                force: false,
+                label: IMAGE_LABELS.Gallery,
             }),
         );
         expect(hookMocks.refetchImages).toHaveBeenCalled();
