@@ -60,6 +60,8 @@ export VITE_API_BASE_URL="${VITE_API_BASE_URL:-/api}"
 
 PORT_UI="${PORT_UI:-3001}"
 PORT_SERVER="${PORT_SERVER:-5331}"
+REST_VERSION="${REST_VERSION:-v1}"
+CSRF_ROUTE="/api/rest/${REST_VERSION}/csrf-token"
 
 wait_for_url() {
     local label="$1"
@@ -106,9 +108,9 @@ docker compose \
 
 wait_for_url "API healthcheck" "http://localhost:${PORT_SERVER}/healthcheck" 240
 wait_for_url "production UI" "http://localhost:${PORT_UI}/" 180
-wait_for_url "same-origin CSRF endpoint" "http://localhost:${PORT_UI}/api/rest/v1/csrf-token" 120
+wait_for_url "same-origin CSRF endpoint" "http://localhost:${PORT_UI}${CSRF_ROUTE}" 120
 
 echo "Local production stack requested."
 echo "UI: http://localhost:${PORT_UI}"
 echo "API health: http://localhost:${PORT_SERVER}/healthcheck"
-echo "Same-origin CSRF: http://localhost:${PORT_UI}/api/rest/v1/csrf-token"
+echo "Same-origin CSRF: http://localhost:${PORT_UI}${CSRF_ROUTE}"

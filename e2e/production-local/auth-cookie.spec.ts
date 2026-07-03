@@ -31,7 +31,6 @@ test.describe("Production Local Auth Runtime", () => {
 
         await expect(page).toHaveURL(new RegExp(`${APP_LINKS.Home}$`));
         await expect(page.getByTestId("homepage-hero")).toBeVisible();
-        await page.waitForLoadState("networkidle");
 
         const sessionResponse = await page.request.get(REST_ROUTES.auth.session);
         expect(sessionResponse.status()).toBe(200);
