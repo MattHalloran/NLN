@@ -23,6 +23,12 @@ vi.mock("api/rest/hooks", async (importOriginal) => ({
                 description: "Original description",
                 files: [{ src: "images/gallery-image-1-XXL.png", width: 16, height: 16 }],
             },
+            {
+                hash: "gallery-image-2",
+                alt: "Second alt",
+                description: "Second description",
+                files: [{ src: "images/gallery-image-2-XXL.png", width: 16, height: 16 }],
+            },
         ],
         refetch: hookMocks.refetchImages,
     }),
@@ -78,6 +84,31 @@ vi.mock("components", () => ({
             >
                 Apply
             </button>
+            <button
+                type="button"
+                onClick={() =>
+                    onApply([
+                        {
+                            ...data[1],
+                            image: {
+                                ...data[1].image,
+                                alt: "Second alt",
+                                description: "Second description",
+                            },
+                        },
+                        {
+                            ...data[0],
+                            image: {
+                                ...data[0].image,
+                                alt: "Original alt",
+                                description: "Original description",
+                            },
+                        },
+                    ])
+                }
+            >
+                Apply Reordered
+            </button>
             <button type="button" onClick={() => onDelete(data[0])}>
                 Delete Image
             </button>
@@ -115,7 +146,7 @@ describe("AdminGalleryPage", () => {
 
         renderWithProviders(<AdminGalleryPage />);
 
-        await user.click(screen.getByRole("button", { name: /apply/i }));
+        await user.click(screen.getByRole("button", { name: /^apply$/i }));
 
         await waitFor(() =>
             expect(hookMocks.updateImages).toHaveBeenCalledWith({
@@ -124,6 +155,33 @@ describe("AdminGalleryPage", () => {
                         hash: "gallery-image-1",
                         alt: "Updated alt",
                         description: "Updated description",
+                        label: IMAGE_LABELS.Gallery,
+                    },
+                ],
+            }),
+        );
+    });
+
+    it("saves reordered gallery images in displayed order", async () => {
+        const user = userEvent.setup();
+
+        renderWithProviders(<AdminGalleryPage />);
+
+        await user.click(screen.getByRole("button", { name: /apply reordered/i }));
+
+        await waitFor(() =>
+            expect(hookMocks.updateImages).toHaveBeenCalledWith({
+                images: [
+                    {
+                        hash: "gallery-image-2",
+                        alt: "Second alt",
+                        description: "Second description",
+                        label: IMAGE_LABELS.Gallery,
+                    },
+                    {
+                        hash: "gallery-image-1",
+                        alt: "Original alt",
+                        description: "Original description",
                         label: IMAGE_LABELS.Gallery,
                     },
                 ],

@@ -1,10 +1,10 @@
 import { Box } from "@mui/material";
 import { EditImageDialog, ImageCard } from "components";
-import update from "immutability-helper";
 import { useCallback, useState } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { ImageInfo, SxType } from "types";
+import { reorderImageInfo } from "./imageListOrder";
 
 export const ImageList = ({
     data,
@@ -21,15 +21,7 @@ export const ImageList = ({
 
     const moveCard = useCallback(
         (dragIndex: number, hoverIndex: number) => {
-            const dragCard = data[dragIndex];
-            onUpdate(
-                update(data, {
-                    $splice: [
-                        [dragIndex, 1],
-                        [hoverIndex, 0, dragCard],
-                    ],
-                }),
-            );
+            onUpdate(reorderImageInfo(data, dragIndex, hoverIndex));
         },
         [data, onUpdate],
     );
@@ -80,7 +72,7 @@ export const ImageList = ({
                 />
                 {data?.map((item, index) => (
                     <ImageCard
-                        key={index}
+                        key={item.image.hash}
                         index={index}
                         data={item}
                         onDelete={() => deleteImage(index)}

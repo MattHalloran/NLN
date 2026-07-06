@@ -20,6 +20,7 @@ export const ImageCard = ({
     moveCard: (dragIndex: number, hoverIndex: number) => unknown;
 }) => {
     const { palette } = useTheme();
+    const image = "image" in data ? data.image : data;
 
     const ref = useRef<HTMLDivElement>(null);
 
@@ -62,6 +63,7 @@ export const ImageCard = ({
 
     return (
         <Card
+            data-testid={`gallery-image-card-${image.hash}`}
             style={{ opacity }}
             ref={ref}
             sx={{
@@ -83,6 +85,7 @@ export const ImageCard = ({
             >
                 <CardMedia
                     image={`${getServerUrl()}/${getImageSrc(data, IMAGE_SIZE.ML)}`}
+                    title={image.alt ?? image.hash}
                     sx={{
                         height: 0,
                         paddingTop: "56.25%",
@@ -93,7 +96,11 @@ export const ImageCard = ({
                 <IconButton aria-label="edit image data" onClick={onEdit}>
                     <EditIcon fill={palette.secondary.light} />
                 </IconButton>
-                <IconButton aria-label="delete image" onClick={onDelete} sx={{ marginLeft: "auto" }}>
+                <IconButton
+                    aria-label="delete image"
+                    onClick={onDelete}
+                    sx={{ marginLeft: "auto" }}
+                >
                     <DeleteIcon fill={palette.secondary.light} />
                 </IconButton>
             </CardActions>

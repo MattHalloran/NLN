@@ -1,9 +1,8 @@
 import { Box, Button, Grid, SxProps, Typography, useTheme } from "@mui/material";
 import SpreadsheetFallback from "assets/img/spreadsheet-fallback.png";
-import { SnackSeverity } from "components/dialogs";
 import { useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
-import { PubSub } from "utils";
+import { PubSub } from "utils/pubsub";
 
 interface DropzoneProps {
     acceptedFileTypes?: string[];
@@ -54,12 +53,19 @@ export const Dropzone = ({
             {} as Record<string, string[]>,
         ),
         maxFiles,
-        onDrop: (acceptedFiles) => {
-            if (acceptedFiles.length <= 0) {
+        disabled,
+        onDrop: (acceptedFiles, fileRejections) => {
+            if (fileRejections.length > 0) {
                 PubSub.get().publishSnack({
-                    message: "Files not accepted",
-                    severity: SnackSeverity.Error,
+                    message:
+                        fileRejections.length === 1
+                            ? "1 file was not accepted"
+                            : `${fileRejections.length} files were not accepted`,
+                    severity: "error" as never,
+                    data: { fileRejections },
                 });
+            }
+            if (acceptedFiles.length <= 0) {
                 return;
             }
             // Type annotate file as File
@@ -87,7 +93,7 @@ export const Dropzone = ({
         if (files.length === 0) {
             PubSub.get().publishSnack({
                 message: "No files selected",
-                severity: SnackSeverity.Error,
+                severity: "error" as never,
             });
             return;
         }

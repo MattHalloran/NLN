@@ -58,4 +58,36 @@ describe("useAdminForm", () => {
         expect(fetchFn).toHaveBeenLastCalledWith();
         expect(result.current.data).toEqual({ title: "fresh" });
     });
+
+    it("can keep the mutation response instead of verifying through fetchFn", async () => {
+        const fetchFn = vi.fn(async () => ({ title: "initial" }));
+        const saveFn = vi.fn(async (data: { title: string }) => data);
+        const refetchDependency = vi.fn(async () => undefined);
+
+        const { result } = renderHook(() =>
+            useAdminForm({
+                fetchFn,
+                saveFn,
+                refetchDependencies: [refetchDependency],
+                verifyAfterSave: false,
+                pageName: "test-admin-form",
+                endpointName: `${REST_ROUTES.v1}/test`,
+            }),
+        );
+
+        await waitFor(() => expect(result.current.data).toEqual({ title: "initial" }));
+
+        act(() => {
+            result.current.setData({ title: "edited" });
+        });
+
+        await act(async () => {
+            await result.current.save();
+        });
+
+        expect(refetchDependency).toHaveBeenCalledTimes(1);
+        expect(fetchFn).toHaveBeenCalledTimes(1);
+        expect(result.current.data).toEqual({ title: "edited" });
+        expect(result.current.originalData).toEqual({ title: "edited" });
+    });
 });
