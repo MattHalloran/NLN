@@ -3,6 +3,8 @@ import { test as setup } from "./fixtures/auth";
 import { testHeroBanners, testHeroSettings } from "./fixtures/test-data";
 import { expect } from "@playwright/test";
 
+const HERO_VARIANT_ID = "variant-homepage-official";
+
 /**
  * Hero Data Setup
  *
@@ -42,7 +44,7 @@ setup("seed hero banner test data", async ({ authenticatedPage }) => {
 
         // Use the authenticated page's request context which has the stored session
         const response = await authenticatedPage.request.put(
-            `${DEFAULT_SERVER_URLS.localOrigin}${REST_ROUTES.landingPage.root}`,
+            `${DEFAULT_SERVER_URLS.localOrigin}${REST_ROUTES.landingPage.root}?variantId=${HERO_VARIANT_ID}`,
             {
                 data: {
                     heroBanners: testHeroBanners,

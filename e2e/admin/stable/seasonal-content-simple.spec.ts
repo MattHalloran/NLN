@@ -220,6 +220,14 @@ test.describe("Seasonal Content - Navigation", () => {
     test("should navigate between hero and seasonal pages through homepage hub", async ({
         authenticatedPage,
     }) => {
+        allowRuntimeIssue(
+            authenticatedPage,
+            (issue) =>
+                issue.kind === "requestfailed" &&
+                issue.message.includes("/node_modules/.vite/deps/") &&
+                issue.message.includes("net::ERR_ABORTED"),
+        );
+
         await openHomepageHub(authenticatedPage);
 
         await authenticatedPage.getByRole("heading", { name: "Hero Banner" }).click();
