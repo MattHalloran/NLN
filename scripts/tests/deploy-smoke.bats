@@ -18,6 +18,14 @@ setup() {
     mkdir -p "${BATS_MOCK_BINDIR}"
     export SMOKE_LOG="${BATS_TMPDIR}/smoke.log"
     write_env_file
+    export PWA_HEADERS_SCRIPT="${BATS_TMPDIR}/pwa-headers"
+
+    cat >"${PWA_HEADERS_SCRIPT}" <<'EOF'
+#!/usr/bin/env bash
+echo "pwa-headers:$*" >>"${SMOKE_LOG}"
+exit 0
+EOF
+    chmod +x "${PWA_HEADERS_SCRIPT}"
 
     cat >"${BATS_MOCK_BINDIR}/node" <<'EOF'
 #!/usr/bin/env bash
@@ -53,17 +61,19 @@ teardown() {
 }
 
 @test "deploy smoke runs public, migration, and log checks by default" {
-    run env SMOKE_LOG="${SMOKE_LOG}" "$SCRIPT_PATH" -e "$ENV_FILE"
+    run env SMOKE_LOG="${SMOKE_LOG}" PWA_HEADERS_SCRIPT="${PWA_HEADERS_SCRIPT}" "$SCRIPT_PATH" -e "$ENV_FILE"
 
     assert_equal "$status" 0
     grep -q 'node:.*public-smoke.mjs' "${SMOKE_LOG}"
+    grep -q '^pwa-headers:-e '"${ENV_FILE}"'$' "${SMOKE_LOG}"
     grep -q 'docker-migrate:exec nln_server sh -lc' "${SMOKE_LOG}"
     assert_output --partial "Post-deploy smoke checks passed"
 }
 
 @test "deploy smoke admin checks are explicit" {
     run env SMOKE_LOG="${SMOKE_LOG}" ADMIN_SMOKE_CMD="echo admin-smoke >>${SMOKE_LOG}" \
-        "$SCRIPT_PATH" -e "$ENV_FILE" --admin --skip-public --skip-migrations --skip-log-scan
+        PWA_HEADERS_SCRIPT="${PWA_HEADERS_SCRIPT}" \
+        "$SCRIPT_PATH" -e "$ENV_FILE" --admin --skip-public --skip-pwa-headers --skip-migrations --skip-log-scan
 
     assert_equal "$status" 0
     grep -q '^admin-smoke$' "${SMOKE_LOG}"
@@ -82,7 +92,7 @@ exit 0
 EOF
     chmod +x "${BATS_MOCK_BINDIR}/docker"
 
-    run "$SCRIPT_PATH" -e "$ENV_FILE" --skip-public --skip-log-scan
+    run env PWA_HEADERS_SCRIPT="${PWA_HEADERS_SCRIPT}" "$SCRIPT_PATH" -e "$ENV_FILE" --skip-public --skip-pwa-headers --skip-log-scan
 
     assert_equal "$status" 1
     assert_output --partial "nln_server is not running"

@@ -27,6 +27,7 @@
     "validate:release": "bash scripts/validate-release.sh",
     "validate:ci": "yarn validate:full",
     "deploy:readiness": "./scripts/deploy-readiness.sh",
+    "check:pwa-headers": "./scripts/check-pwa-headers.sh",
     "test:unit": "yarn workspace @local/shared test && yarn workspace ui test && yarn workspace server test:unit",
     "test:integration": "yarn workspace server test:integration",
     "test:scripts": "scripts/tests/__runTests.sh",

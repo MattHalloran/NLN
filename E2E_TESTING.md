@@ -82,6 +82,22 @@ The production-build suite intentionally reuses only the public smoke spec and c
 
 The accessibility suite runs axe-core against the public homepage, about, gallery, contact, register, and login pages and fails on serious or critical violations. The PWA suite runs against the production UI build and checks cache headers, public route rendering, offline app-shell behavior, update prompts, and service-worker activation.
 
+## PWA Update Policy
+
+PWA service workers are production-only by default. Local production-build PWA tests opt in with `VITE_ENABLE_LOCAL_PWA=true`; normal localhost runs clean up service workers and caches so development is not accidentally cache-first.
+
+The intended update behavior is invisible for normal public browsing:
+
+- First service-worker install must not show update UI.
+- Safe public updates should activate the waiting service worker, avoid the reload snackbar, and reload silently when the tab is hidden or the user becomes idle.
+- Safe visible tabs should defer reload while the user has recent activity or a form element is focused.
+- Unsafe updates should show the persistent "A site update is ready." reload action instead of auto-reloading.
+- Admin forms mark updates unsafe while they are dirty or saving, so unsaved work is not discarded by a background deploy.
+
+The policy is covered at three levels: `pwaUpdatePolicy.test.ts` exercises the scheduler rules with deterministic clocks and visibility state; `pwaReloadSafety.test.ts` covers the reload-blocker registry; `e2e/pwa.spec.ts` validates production PWA assets, first-install behavior, offline app-shell loading, service-worker activation, and safe/unsafe browser update flows.
+
+Production/CDN header behavior is checked separately with `./scripts/check-pwa-headers.sh -e .env-prod` or `yarn check:pwa-headers`. The script is read-only: it fetches the public UI URL, verifies that app-shell/service-worker files are `no-cache, no-store, must-revalidate`, discovers the current hashed app entry chunk from `/service-worker.js`, and verifies that chunk is served as `public, max-age=31536000, immutable`. `deploy-smoke.sh` runs this check by default after deployment unless `--skip-pwa-headers` is passed.
+
 `public-visual-simple.spec.ts` intentionally keeps screenshot coverage focused on deterministic public pages. It guards homepage, about, contact, gallery, login, and register first viewports plus mobile overflow on the homepage/about routes. Add new screenshots only for pages where visual regressions are expensive to miss and the content is deterministic enough for CI.
 
 Legacy admin specs and their legacy-only page objects live in `e2e/admin/legacy` and remain available through `yarn test:e2e:full`, but they contain more timing and selector coupling. Treat failures there as useful regression signals, not as the primary merge gate until they are hardened.

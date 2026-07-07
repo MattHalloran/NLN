@@ -10,10 +10,12 @@ HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 ENV_FILE="${HERE}/../.env-prod"
 RUN_PUBLIC=true
 RUN_ADMIN="${DEPLOY_SMOKE_ADMIN:-false}"
+RUN_PWA_HEADERS=true
 RUN_MIGRATIONS=true
 RUN_LOG_SCAN=true
 LOG_SINCE="${DEPLOY_SMOKE_LOG_SINCE:-3m}"
 PUBLIC_SMOKE_SCRIPT="${PUBLIC_SMOKE_SCRIPT:-${HERE}/public-smoke.mjs}"
+PWA_HEADERS_SCRIPT="${PWA_HEADERS_SCRIPT:-${HERE}/check-pwa-headers.sh}"
 ADMIN_SMOKE_CMD="${ADMIN_SMOKE_CMD:-npx tsx ${HERE}/smoke-test-admin.ts}"
 
 usage() {
@@ -22,6 +24,7 @@ Usage: $0 [options]
   -e, --env-file FILE       Environment file to source (default: .env-prod)
       --admin               Run admin smoke checks that may perform reversible writes
       --skip-public         Skip public page content smoke checks
+      --skip-pwa-headers    Skip public PWA/static cache header checks
       --skip-migrations     Skip Prisma migration status check
       --skip-log-scan       Skip recent container log scan
   -h, --help                Show this help message
@@ -40,6 +43,10 @@ while [ $# -gt 0 ]; do
         ;;
     --skip-public)
         RUN_PUBLIC=false
+        shift
+        ;;
+    --skip-pwa-headers)
+        RUN_PWA_HEADERS=false
         shift
         ;;
     --skip-migrations)
@@ -80,6 +87,11 @@ if [ "${RUN_PUBLIC}" = true ]; then
 
     header "Running public content smoke checks"
     PUBLIC_SMOKE_BASE_URL="${UI_URL}" node "${PUBLIC_SMOKE_SCRIPT}"
+fi
+
+if [ "${RUN_PWA_HEADERS}" = true ]; then
+    header "Checking deployed PWA/static cache headers"
+    "${PWA_HEADERS_SCRIPT}" -e "${ENV_FILE}"
 fi
 
 if [ "${RUN_ADMIN}" = true ]; then
