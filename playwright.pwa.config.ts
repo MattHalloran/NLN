@@ -1,6 +1,9 @@
 import { defineConfig, devices } from "@playwright/test";
 import { DEFAULT_PORTS, E2E_TIMEOUTS, E2E_URLS } from "@local/shared";
 
+const pwaPort = Number(process.env.PORT_UI ?? DEFAULT_PORTS.ui);
+const pwaBaseURL = pwaPort === DEFAULT_PORTS.ui ? E2E_URLS.ui : `http://localhost:${pwaPort}`;
+
 export default defineConfig({
     testDir: "./e2e",
     testMatch: "pwa.spec.ts",
@@ -16,7 +19,7 @@ export default defineConfig({
     ],
     outputDir: "test-results/pwa-artifacts",
     use: {
-        baseURL: E2E_URLS.ui,
+        baseURL: pwaBaseURL,
         trace: "on-first-retry",
         screenshot: "only-on-failure",
         video: "retain-on-failure",
@@ -29,8 +32,8 @@ export default defineConfig({
         },
     ],
     webServer: {
-        command: `yarn workspace ui build && cd packages/ui && PORT_UI=${DEFAULT_PORTS.ui} node scripts/serve-production.js`,
-        url: E2E_URLS.ui,
+        command: `VITE_ENABLE_LOCAL_PWA=true yarn workspace ui build && cd packages/ui && PORT_UI=${pwaPort} node scripts/serve-production.js`,
+        url: pwaBaseURL,
         reuseExistingServer: false,
         timeout: E2E_TIMEOUTS.serverStartMs,
         stdout: "pipe",

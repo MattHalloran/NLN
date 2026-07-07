@@ -4,6 +4,8 @@ import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
 import { Router, locationHook, makeMatcher } from "route";
 import { App } from "./App";
+import { isPwaAutoReloadSafe } from "./pwaReloadSafety";
+import { createServiceWorkerUpdateScheduler } from "./pwaUpdatePolicy";
 import * as serviceWorkerRegistration from "./serviceWorkerRegistration";
 
 const canonicalHost = SITE_URLS.canonicalHost;
@@ -34,16 +36,7 @@ const UPDATE_IDLE_RECHECK_MS = UI_TIMING.serviceWorkerIdleRecheckMs;
 const UPDATE_RELOAD_KEY = "nln_sw_update_reload";
 const CHUNK_RELOAD_KEY = "nln_chunk_reload_done";
 const ENABLE_LOCAL_PRODUCTION_PWA = import.meta.env.VITE_ENABLE_LOCAL_PWA === "true";
-let lastUserActivityAt = Date.now();
 let isServiceWorkerUpdateActivationExpected = false;
-
-const trackUserActivity = () => {
-    lastUserActivityAt = Date.now();
-};
-
-["click", "keydown", "pointerdown", "touchstart"].forEach((eventName) => {
-    window.addEventListener(eventName, trackUserActivity, { passive: true });
-});
 
 const isFormElementActive = () => {
     const activeElement = document.activeElement;
@@ -57,45 +50,26 @@ const isFormElementActive = () => {
     );
 };
 
-const reloadWhenIdle = (reload: () => void) => {
-    const hasRecentActivity = Date.now() - lastUserActivityAt < USER_IDLE_MS;
-    if (!hasRecentActivity && !isFormElementActive()) {
-        reload();
-        return;
-    }
-
-    window.setTimeout(() => reloadWhenIdle(reload), UPDATE_IDLE_RECHECK_MS);
-};
-
-const scheduleUpdateReload = () => {
-    if (sessionStorage.getItem(UPDATE_RELOAD_KEY) === "pending") return;
-    sessionStorage.setItem(UPDATE_RELOAD_KEY, "pending");
-
-    const reload = () => {
-        window.location.reload();
-    };
-
-    if (document.visibilityState === "hidden") {
-        reload();
-        return;
-    }
-
+const dispatchUpdateReloadAction = (reload: () => void) => {
     window.dispatchEvent(
         new window.CustomEvent("nln-service-worker-update-ready", {
             detail: { reload },
         }),
     );
-
-    const onVisibilityChange = () => {
-        if (document.visibilityState === "hidden") {
-            document.removeEventListener("visibilitychange", onVisibilityChange);
-            reload();
-        }
-    };
-    document.addEventListener("visibilitychange", onVisibilityChange);
-
-    window.setTimeout(() => reloadWhenIdle(reload), UPDATE_IDLE_RECHECK_MS);
 };
+
+const updateScheduler = createServiceWorkerUpdateScheduler({
+    dispatchUpdateReloadAction,
+    idleRecheckMs: UPDATE_IDLE_RECHECK_MS,
+    isAutoReloadSafe: isPwaAutoReloadSafe,
+    isFormElementActive,
+    reloadKey: UPDATE_RELOAD_KEY,
+    userIdleMs: USER_IDLE_MS,
+});
+
+["click", "keydown", "pointerdown", "touchstart"].forEach((eventName) => {
+    window.addEventListener(eventName, updateScheduler.trackUserActivity, { passive: true });
+});
 
 const maybeRecoverFromChunkLoadError = (reason: unknown) => {
     const message =
@@ -139,7 +113,7 @@ const initializePWA = async (): Promise<void> => {
                     return;
                 }
                 isServiceWorkerUpdateActivationExpected = false;
-                scheduleUpdateReload();
+                updateScheduler.scheduleUpdateReload();
             });
 
             // Register new service worker

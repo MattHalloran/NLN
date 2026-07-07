@@ -167,6 +167,7 @@ assert(
 );
 
 const indexSource = read("src/index.tsx");
+const pwaUpdatePolicySource = read("src/pwaUpdatePolicy.ts");
 assert(
     indexSource.includes("VITE_ENABLE_LOCAL_PWA") &&
         indexSource.includes("serviceWorkerRegistration.cleanupLocalServiceWorkers()"),
@@ -176,7 +177,15 @@ assert(indexSource.includes("nln-service-worker-update-ready"), "visible service
 assert(indexSource.includes("window.location.replace"), "production www traffic must be canonicalized before app startup");
 assert(indexSource.includes("hadControllerAtStartup"), "controllerchange handling must distinguish first install from updates");
 assert(indexSource.includes("isServiceWorkerUpdateActivationExpected"), "service worker updates must mark expected controller changes");
-assert(indexSource.includes("reloadWhenIdle"), "visible tabs with updates must eventually reload when idle");
+assert(indexSource.includes("createServiceWorkerUpdateScheduler"), "service worker update scheduling must use the tested policy helper");
+assert(indexSource.includes("isPwaAutoReloadSafe"), "service worker update scheduling must use reload-safety state");
+assert(pwaUpdatePolicySource.includes("reloadWhenIdle"), "visible public tabs with updates must eventually reload when idle");
+assert(
+    pwaUpdatePolicySource.includes("dispatchUpdateReloadAction") &&
+        pwaUpdatePolicySource.includes("isAutoReloadSafe") &&
+        pwaUpdatePolicySource.includes("setTimeoutFn(reloadWhenIdle"),
+    "service worker update prompts must be limited to unsafe reload state",
+);
 assert(indexSource.includes("sessionStorage.removeItem(CHUNK_RELOAD_KEY)"), "chunk-load recovery lockout must reset after a clean app boot");
 
 if (failures.length > 0) {

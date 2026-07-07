@@ -5,8 +5,9 @@ const IS_LOCALHOST_SERVICE_WORKER =
     self.location.hostname === "localhost" ||
     self.location.hostname === "[::1]" ||
     /^127(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$/.test(self.location.hostname);
+const ENABLE_LOCAL_PWA = __ENABLE_LOCAL_PWA__;
 
-if (IS_LOCALHOST_SERVICE_WORKER) {
+if (IS_LOCALHOST_SERVICE_WORKER && !ENABLE_LOCAL_PWA) {
     self.addEventListener("install", (event) => {
         event.waitUntil(self.skipWaiting());
     });

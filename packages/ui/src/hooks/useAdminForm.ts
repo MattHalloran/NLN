@@ -1,5 +1,6 @@
 import { useSnackbar } from "notistack";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { usePwaReloadBlocker } from "../pwaReloadSafety";
 import { trackMutationError, trackMutationSuccess } from "../utils/errorMonitoring";
 import { PubSub } from "../utils/pubsub";
 import { useBlockNavigation } from "./useBlockNavigation";
@@ -222,6 +223,7 @@ export function useAdminForm<TData>({
 
     // Block navigation if there are unsaved changes
     useBlockNavigation(blockNavigation && isDirty);
+    usePwaReloadBlocker(isDirty || isSaving);
 
     // Fetch initial data
     const refetch = useCallback(async () => {
