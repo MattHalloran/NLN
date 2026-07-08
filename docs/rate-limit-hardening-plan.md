@@ -26,6 +26,7 @@ Completed in the second pass:
 - Implemented Phase 4 Redis-backed standard `express-rate-limit` stores with explicit `rl:<limiter-id>:<identity>` prefixes, memory-store injection for local tests, and local fake-Redis coverage.
 - Moved the custom image file-count limiter to the shared Redis key namespace and atomic Redis increment/decrement commands.
 - Added Phase 6 local proxy topology integration coverage using disposable local HTTP servers, including a broken-proxy identity-collapse regression test.
+- Added `scripts/rate-limit-proxy-smoke.mjs` and Bats coverage for controlled proxy smoke checks that detect shared rate-limit buckets.
 - Implemented Phase 7 static production compose/readiness checks and removed the production server service public port mapping in favor of Docker-network `expose`.
 
 Completed in the third pass:
@@ -586,6 +587,7 @@ Tasks:
    ```bash
    yarn workspace server test:unit -- clientIdentity rateLimiter proxyTrust
    yarn workspace server test:integration -- proxyTopology
+   node scripts/rate-limit-proxy-smoke.mjs --url http://localhost:3001/api/v1/health
    yarn test:scripts
    ```
 

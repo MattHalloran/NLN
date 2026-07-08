@@ -212,8 +212,9 @@ and deploy-readiness checks reject unsafe or missing proxy/rate-limit settings.
 All standard production rate limiters use Redis-backed counters keyed as
 `rl:<limiter-id>:<client-identity>`. Local and unit-test construction can inject
 memory stores so rate-limit behavior can be tested without a running Redis
-service. Proxy behavior is covered locally with forwarded-IP unit tests and a
-disposable proxy topology integration test.
+service. Proxy behavior is covered locally with forwarded-IP unit tests, a
+disposable proxy topology integration test, and the
+`scripts/rate-limit-proxy-smoke.mjs` checker for controlled proxy smoke tests.
 
 Image uploads have layered abuse controls: a request-count limiter runs before
 multipart parsing, `multer` enforces parser-level file size, file count, and

@@ -385,6 +385,16 @@ yarn workspace server vitest run --config vitest.integration.config.mts src/midd
 bash scripts/check-rate-limit-config.sh docker-compose-prod.yml
 ```
 
+For a production-like local proxy or another controlled test proxy that maps
+`X-Test-Client-IP` to the forwarded client identity, run:
+
+```bash
+node scripts/rate-limit-proxy-smoke.mjs --url http://localhost:3001/api/v1/health
+```
+
+The smoke check fails if two configured client identities consume the same
+`RateLimit-Remaining` bucket.
+
 ### CORS_ORIGINS
 - **Required**: No
 - **Type**: Comma-separated list of URL origins
