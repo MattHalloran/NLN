@@ -327,7 +327,7 @@ These variables **MUST** be set for the application to function correctly. The s
 - **Required**: No (required if SERVER_LOCATION=dns)
 - **Type**: IP Address
 - **Description**: IP address of the production server
-- **Example**: `192.81.123.456`
+- **Example**: `192.0.2.10`
 - **Note**: Only used if SERVER_LOCATION is set to 'dns'
 
 ### VIRTUAL_HOST
@@ -336,6 +336,54 @@ These variables **MUST** be set for the application to function correctly. The s
 - **Description**: Website domain names for nginx-proxy routing
 - **Example**: `newlifenurseryinc.com,www.newlifenurseryinc.com`
 - **Note**: No spaces between comma-separated values
+
+### TRUST_PROXY_HOPS
+- **Required**: Yes for production/staging, optional for local development
+- **Type**: Positive integer
+- **Default**: `1` in local development
+- **Description**: Number of trusted reverse-proxy hops in front of Express. This controls how Express resolves `req.ip`, which is used for anonymous CSRF identity and rate-limit buckets.
+- **Example**: `1`
+- **Note**: The standard nginx-proxy topology uses one trusted hop. If another public proxy or load balancer is added, update this value and run the local proxy/rate-limit tests before deploying.
+
+### E2E_DISABLE_RATE_LIMITS
+- **Required**: No
+- **Type**: Boolean
+- **Default**: `false`
+- **Description**: Disables API rate-limit middleware for managed local E2E server runs.
+- **Example**: `false`
+- **Note**: Production validation fails if this is set to `true`.
+
+### RATE_LIMIT_DIAGNOSTICS
+- **Required**: No
+- **Type**: Boolean
+- **Default**: `false`
+- **Description**: Logs sanitized request identity fields used by rate limiting for selected routes.
+- **Example**: `false`
+- **Note**: Keep disabled in production unless temporarily debugging a proxy identity issue.
+
+### Rate-limit diagnostics workflow
+
+Rate-limit diagnostics are for short-lived proxy identity debugging. When
+`RATE_LIMIT_DIAGNOSTICS=true`, the server logs sanitized identity fields for
+selected API routes:
+
+- HTTP method and route path
+- Express-resolved `req.ip` and `req.ips`
+- `X-Forwarded-For` and `X-Real-IP`
+- the rate-limit identity key
+
+Diagnostics must not log cookies, authorization headers, request bodies, secret
+environment values, or production infrastructure values. Production validation
+fails when `RATE_LIMIT_DIAGNOSTICS=true`; use it only as a temporary, explicit
+operator action and set it back to `false` before normal deployment readiness.
+
+Before changing proxy topology or `TRUST_PROXY_HOPS`, run the local checks:
+
+```bash
+yarn workspace server vitest run --config vitest.config.mts src/middleware/clientIdentity.test.ts src/middleware/rateLimiter.test.ts src/config/proxyTrust.test.ts --coverage.enabled=false
+yarn workspace server vitest run --config vitest.integration.config.mts src/middleware/proxyTopology.integration.test.ts --coverage.enabled=false
+bash scripts/check-rate-limit-config.sh docker-compose-prod.yml
+```
 
 ### CORS_ORIGINS
 - **Required**: No
@@ -568,6 +616,9 @@ Response format:
 - [ ] Set `CREATE_MOCK_DATA=false`
 - [ ] Set `EMAIL_MODE=production`
 - [ ] Set `SERVER_LOCATION=dns`
+- [ ] Set `TRUST_PROXY_HOPS=1` for the standard nginx-proxy topology
+- [ ] Confirm `E2E_DISABLE_RATE_LIMITS=false`
+- [ ] Confirm `RATE_LIMIT_DIAGNOSTICS=false`
 - [ ] Configure `SERVER_URL` with production domain
 - [ ] Set `VIRTUAL_HOST` with production domains
 - [ ] Update `SITE_IP` with production server IP

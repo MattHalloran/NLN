@@ -777,6 +777,8 @@ Return image hash & dimensions
 6. **Prisma ORM:** Prevents SQL injection
 7. **Email Mode Flexibility:** Development-safe email modes prevent accidental production emails
 8. **Environment-Specific Config:** Different settings for dev/prod/test
+9. **API Rate Limiting:** Per-client REST limits with Redis-backed production counters, explicit proxy-trust validation, and local tests for broken proxy topologies
+10. **Upload Abuse Guards:** Image uploads are request-rate limited before multipart parsing, then bounded by parser-level file size/file count/field count limits and a Redis-backed file-count limiter before image processing
 
 ### 7.2 Areas for Attention
 1. **CORS Configuration:** `origin: true` allows any domain - should be restricted to known domains
@@ -788,18 +790,19 @@ Return image hash & dimensions
 7. **Admin Initialization:** Admin user created via environment variables - consider secure initialization flow
 8. **Mock Data Flag:** `CREATE_MOCK_DATA` must be disabled in production
 9. **Email Service:** Different modes for different environments - ensure correct mode is used
+10. **Proxy Topology:** `TRUST_PROXY_HOPS` must match the deployed reverse-proxy chain, and direct public access to the server container port must remain blocked
+11. **Rate-Limit Diagnostics:** `RATE_LIMIT_DIAGNOSTICS` is only for short-lived proxy debugging and production validation rejects it when left enabled
 
 ### 7.3 Missing Security Controls to Consider
-1. **Rate Limiting:** No built-in rate limiting on API endpoints
-2. **Request Validation Middleware:** Input validation at Express middleware level
-3. **Security Headers:** No helmet.js or similar for HTTP security headers
-4. **CSRF Tokens:** Relies on SameSite cookies, no explicit CSRF tokens
-5. **Two-Factor Authentication:** Not mentioned in current implementation
-6. **Audit Logging:** No comprehensive audit trail of user actions
-7. **API Key Management:** No API key authentication for programmatic access
-8. **Database Encryption:** No mention of encrypted fields or SSL connections
-9. **Password Requirements:** No complexity requirements beyond length (8-50)
-10. **Session Invalidation:** No logout endpoint visible in auth.ts review
+1. **Request Validation Middleware:** Input validation at Express middleware level
+2. **Security Headers:** No helmet.js or similar for HTTP security headers
+3. **CSRF Tokens:** Relies on SameSite cookies, no explicit CSRF tokens
+4. **Two-Factor Authentication:** Not mentioned in current implementation
+5. **Audit Logging:** No comprehensive audit trail of user actions
+6. **API Key Management:** No API key authentication for programmatic access
+7. **Database Encryption:** No mention of encrypted fields or SSL connections
+8. **Password Requirements:** No complexity requirements beyond length (8-50)
+9. **Session Invalidation:** No logout endpoint visible in auth.ts review
 
 ---
 
@@ -857,4 +860,3 @@ SMTP_PORT=465
 8. **SSL Certificates:** Use Let's Encrypt with certbot (LETSENCRYPT_EMAIL configured)
 9. **Monitoring:** Set up logging and monitoring for authentication failures
 10. **Backups:** Regular database backups with encryption at rest
-

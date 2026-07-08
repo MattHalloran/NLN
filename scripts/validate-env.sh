@@ -94,6 +94,21 @@ validate_port() {
     return 0
 }
 
+# Function to validate positive integer value
+validate_positive_integer() {
+    local var_name="$1"
+    local value="${!var_name}"
+
+    if ! [[ "$value" =~ ^[1-9][0-9]*$ ]]; then
+        error "Variable ${var_name} (${value}) must be a positive integer"
+        VALIDATION_FAILED=1
+        return 1
+    fi
+
+    info "✓ ${var_name} is a positive integer"
+    return 0
+}
+
 # Function to validate boolean value
 validate_boolean() {
     local var_name="$1"
@@ -164,6 +179,9 @@ check_var_exists "PROJECT_DIR"
 check_var_exists "SITE_IP" && validate_ip "SITE_IP"
 check_var_exists "SERVER_URL" && validate_url "SERVER_URL"
 check_var_exists "VIRTUAL_HOST"
+if [ -n "${TRUST_PROXY_HOPS}" ]; then
+    validate_positive_integer "TRUST_PROXY_HOPS"
+fi
 
 # UI_URL is only required for production builds
 if [[ "${ENV_FILE}" == *"prod"* ]]; then
@@ -208,6 +226,22 @@ if [[ "${ENV_FILE}" == *"prod"* ]]; then
         VALIDATION_FAILED=1
     else
         info "✓ SERVER_LOCATION is correctly set to 'dns' for production"
+    fi
+
+    check_var_exists "TRUST_PROXY_HOPS" && validate_positive_integer "TRUST_PROXY_HOPS"
+
+    if [ "${E2E_DISABLE_RATE_LIMITS}" = "true" ]; then
+        error "E2E_DISABLE_RATE_LIMITS must not be 'true' for production"
+        VALIDATION_FAILED=1
+    else
+        info "✓ E2E_DISABLE_RATE_LIMITS is not enabled for production"
+    fi
+
+    if [ "${RATE_LIMIT_DIAGNOSTICS}" = "true" ]; then
+        error "RATE_LIMIT_DIAGNOSTICS must not be 'true' for production without a temporary override"
+        VALIDATION_FAILED=1
+    else
+        info "✓ RATE_LIMIT_DIAGNOSTICS is not enabled for production"
     fi
 fi
 

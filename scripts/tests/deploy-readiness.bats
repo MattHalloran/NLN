@@ -65,6 +65,7 @@ EOF
 
 install_script_stubs() {
     VALIDATE_ENV_SCRIPT="${BATS_TMPDIR}/validate-env"
+    CHECK_RATE_LIMIT_CONFIG_SCRIPT="${BATS_TMPDIR}/check-rate-limit-config"
     HEALTHCHECK_SCRIPT="${BATS_TMPDIR}/healthcheck"
     BACKUP_SCRIPT="${BATS_TMPDIR}/backup"
     REHEARSAL_SCRIPT="${BATS_TMPDIR}/deploy-rehearsal"
@@ -73,6 +74,9 @@ install_script_stubs() {
 
     write_executable "${VALIDATE_ENV_SCRIPT}" '#!/usr/bin/env bash
 echo validate >>"${READINESS_ORDER_LOG}"'
+
+    write_executable "${CHECK_RATE_LIMIT_CONFIG_SCRIPT}" '#!/usr/bin/env bash
+echo "rate-limit-config:$*" >>"${READINESS_ORDER_LOG}"'
 
     write_executable "${HEALTHCHECK_SCRIPT}" '#!/usr/bin/env bash
 echo "health:$*" >>"${READINESS_ORDER_LOG}"'
@@ -109,6 +113,7 @@ teardown() {
 run_readiness() {
     run env \
         VALIDATE_ENV_SCRIPT="${VALIDATE_ENV_SCRIPT}" \
+        CHECK_RATE_LIMIT_CONFIG_SCRIPT="${CHECK_RATE_LIMIT_CONFIG_SCRIPT}" \
         DEPLOY_READINESS_RECEIPT_DIR="${DEPLOY_READINESS_RECEIPT_DIR}" \
         HEALTHCHECK_SCRIPT="${HEALTHCHECK_SCRIPT}" \
         BACKUP_SCRIPT="${BACKUP_SCRIPT}" \
@@ -134,6 +139,7 @@ run_readiness() {
     assert_equal "$status" 0
     assert_output --partial "No deployment was run"
     grep -q '^validate$' "${READINESS_ORDER_LOG}"
+    grep -q '^rate-limit-config:.*/docker-compose-prod.yml$' "${READINESS_ORDER_LOG}"
     grep -q '^yarn:validate:ci$' "${READINESS_ORDER_LOG}"
     grep -q '^rehearsal:-v rehearsal-9.9.9$' "${READINESS_ORDER_LOG}"
     grep -q '^migration-rehearsal:--backup '"${migration_backup}"'$' "${READINESS_ORDER_LOG}"
@@ -165,6 +171,7 @@ run_readiness() {
     assert_equal "$status" 1
     assert_output --partial "ahead=5"
     refute grep -q '^yarn:' "${READINESS_ORDER_LOG}"
+    grep -q '^rate-limit-config:.*/docker-compose-prod.yml$' "${READINESS_ORDER_LOG}"
     refute grep -q '^rehearsal:' "${READINESS_ORDER_LOG}"
     refute grep -q '^migration-rehearsal:' "${READINESS_ORDER_LOG}"
     refute grep -q '^health:' "${READINESS_ORDER_LOG}"

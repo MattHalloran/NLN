@@ -14,6 +14,7 @@ VERSION=""
 YARN_CMD="${YARN_CMD:-yarn}"
 DEPLOY_VALIDATE_CMD="${DEPLOY_VALIDATE_CMD:-validate:ci}"
 VALIDATE_ENV_SCRIPT="${VALIDATE_ENV_SCRIPT:-${HERE}/validate-env.sh}"
+CHECK_RATE_LIMIT_CONFIG_SCRIPT="${CHECK_RATE_LIMIT_CONFIG_SCRIPT:-${HERE}/check-rate-limit-config.sh}"
 HEALTHCHECK_SCRIPT="${HEALTHCHECK_SCRIPT:-${HERE}/vps-healthcheck.sh}"
 BACKUP_SCRIPT="${BACKUP_SCRIPT:-${HERE}/backup.sh}"
 REHEARSAL_SCRIPT="${REHEARSAL_SCRIPT:-${HERE}/deploy-rehearsal.sh}"
@@ -99,6 +100,9 @@ fi
 run_local_gates() {
     header "Validating environment"
     "${VALIDATE_ENV_SCRIPT}" "${ENV_FILE}"
+
+    header "Checking rate-limit proxy configuration"
+    "${CHECK_RATE_LIMIT_CONFIG_SCRIPT}" "${REPO_ROOT}/docker-compose-prod.yml"
 
     deploy_require_clean_synced_worktree "${REPO_ROOT}"
 
