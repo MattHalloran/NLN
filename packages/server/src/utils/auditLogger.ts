@@ -2,7 +2,9 @@
  * Comprehensive Audit Logging System
  *
  * This module provides structured audit logging for security-relevant events.
- * Audit logs are written to both Winston logs and can optionally be stored in a database.
+ * Audit records are emitted through Winston as structured log payloads. Runtime
+ * log retention is the source of truth unless a future migration introduces a
+ * dedicated audit-log table and retention policy.
  *
  * Usage:
  *   import { auditLog, AuditEventType } from './utils/auditLogger';
@@ -143,10 +145,6 @@ export function auditLog(entry: AuditLogEntry): void {
         default:
             logger.log(LogLevel.info, logMessage, auditPayload);
     }
-
-    // TODO: Optional database storage
-    // If you want to store audit logs in the database, implement here:
-    // await prisma.auditLog.create({ data: auditPayload });
 }
 
 /**
