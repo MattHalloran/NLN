@@ -44,6 +44,21 @@ describe("serverUrl", () => {
         ).toBe("https://api.example.com/api");
     });
 
+    it("normalizes relative explicit API base URLs", () => {
+        expect(
+            getServerUrlForLocation(
+                locationFor({
+                    host: "app.example.com",
+                    hostname: "app.example.com",
+                    origin: "https://app.example.com",
+                    protocol: "https:",
+                }),
+                String(DEFAULT_PORTS.server),
+                "/internal-api/",
+            ),
+        ).toBe("https://app.example.com/internal-api");
+    });
+
     it("uses VITE_SERVER_URL when it is compatible with the current host", () => {
         expect(
             getServerUrlForLocation(
@@ -73,6 +88,38 @@ describe("serverUrl", () => {
                 "https://api.example.com/api",
             ),
         ).toBe("https://api.example.com/api");
+    });
+
+    it("adds the API prefix to explicit origin-only server URLs", () => {
+        expect(
+            getServerUrlForLocation(
+                locationFor({
+                    host: "app.example.com",
+                    hostname: "app.example.com",
+                    origin: "https://app.example.com",
+                    protocol: "https:",
+                }),
+                String(DEFAULT_PORTS.server),
+                undefined,
+                "https://api.example.com/",
+            ),
+        ).toBe("https://api.example.com/api");
+    });
+
+    it("ignores malformed explicit server URLs", () => {
+        expect(
+            getServerUrlForLocation(
+                locationFor({
+                    host: "app.example.com",
+                    hostname: "app.example.com",
+                    origin: "https://app.example.com",
+                    protocol: "https:",
+                }),
+                String(DEFAULT_PORTS.server),
+                undefined,
+                "not a url",
+            ),
+        ).toBe("https://app.example.com/api");
     });
 
     it("does not let a public VITE_SERVER_URL redirect localhost builds to production", () => {
