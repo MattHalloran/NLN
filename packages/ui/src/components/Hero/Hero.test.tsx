@@ -100,7 +100,7 @@ describe("Hero", () => {
         expect(screen.getByTestId("hero-slider")).toHaveTextContent("Nursery hero banner");
     });
 
-    it("derives responsive files for generated single-file hero banners", () => {
+    it("uses the exact file for generated single-file hero banners", () => {
         mockUseLandingPage.mockReturnValue({
             data: {
                 ...landingPageData,
@@ -134,16 +134,13 @@ describe("Hero", () => {
 
         render(<Hero />);
 
-        expect(mockSliderImages[0]?.files).toContainEqual({
-            src: "/images/Newlife-16-XL.webp",
-            width: 2048,
-            height: 0,
-        });
-        expect(mockSliderImages[0]?.files).toContainEqual({
-            src: "/images/Newlife-16-XL.jpeg",
-            width: 2048,
-            height: 0,
-        });
+        expect(mockSliderImages[0]?.files).toEqual([
+            {
+                src: "/images/Newlife-16-XXL.jpeg",
+                width: 4096,
+                height: 0,
+            },
+        ]);
     });
 
     it("preserves explicit multi-file hero banner data", () => {

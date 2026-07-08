@@ -19,6 +19,17 @@ const isLandingPageContentPut = (response: { url: () => string; request: () => {
     response.request().method() === "PUT" &&
     response.status() === 200;
 
+const isActiveLandingPageContentGet = (response: {
+    url: () => string;
+    request: () => { method: () => string };
+    status: () => number;
+}) =>
+    response.url().includes(LANDING_PAGE_ROOT_PATH) &&
+    response.url().includes("onlyActive=true") &&
+    response.url().includes(HERO_VARIANT_ID) &&
+    response.request().method() === "GET" &&
+    response.status() === 200;
+
 const openHeroBanner = (page: Page) =>
     gotoAdminPage(
         page,
@@ -197,6 +208,7 @@ test.describe("Hero Banner - Drag and Drop", () => {
     }) => {
         await openHeroBanner(authenticatedPage);
 
+        await expect(authenticatedPage.getByTestId("hero-banner-card-0")).toBeVisible();
         const bannerCards = authenticatedPage.getByTestId(/^hero-banner-card-/);
         const bannerCount = await bannerCards.count();
         expect(bannerCount).toBeGreaterThanOrEqual(2);
@@ -214,11 +226,13 @@ test.describe("Hero Banner - Drag and Drop", () => {
         await expect(firstAltInput).toHaveValue(secondAlt);
 
         const saveResponse = authenticatedPage.waitForResponse(isLandingPageContentPut);
+        const postSaveRefetch = authenticatedPage.waitForResponse(isActiveLandingPageContentGet);
         await authenticatedPage
             .getByRole("button", { name: /save all changes/i })
             .first()
             .click();
         const response = await saveResponse;
+        await postSaveRefetch;
         const responsePayload = response.request().postDataJSON() as {
             heroBanners: Array<{ alt: string; displayOrder: number }>;
         };
