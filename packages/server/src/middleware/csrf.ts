@@ -20,6 +20,7 @@ import { doubleCsrf } from "csrf-csrf";
 import { Request, Response, NextFunction } from "express";
 import { logger, LogLevel } from "../logger.js";
 import { getCookieSecurityOptions } from "../config/runtimePolicy.js";
+import { getClientIp } from "./clientIdentity.js";
 
 // CSRF secret - MUST be set in environment variables
 // NOTE: We use process.env.CSRF_SECRET dynamically in getSecret to ensure
@@ -64,7 +65,7 @@ const csrfConfig = doubleCsrf({
             return userId;
         }
         // Fallback to IP address for unauthenticated requests
-        const sessionId = req.ip || req.connection?.remoteAddress || "unknown";
+        const sessionId = getClientIp(req);
         logger.log(
             LogLevel.debug,
             `[CSRF] Session ID: IP=${sessionId}, headers=${JSON.stringify({
@@ -130,7 +131,7 @@ export const csrfTokenEndpoint = (req: Request, res: Response) => {
         const token = generateCsrfToken(req, res);
 
         logger.log(LogLevel.debug, "CSRF token generated", {
-            ip: req.ip,
+            ip: getClientIp(req),
             userAgent: req.headers["user-agent"],
         });
 
@@ -164,7 +165,7 @@ export const csrfErrorHandler = (
         err.message?.includes("CSRF")
     ) {
         logger.log(LogLevel.error, "🚫 CSRF validation failed", {
-            ip: req.ip,
+            ip: getClientIp(req),
             method: req.method,
             path: req.path,
             userAgent: req.headers["user-agent"],

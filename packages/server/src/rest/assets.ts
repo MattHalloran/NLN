@@ -4,6 +4,7 @@ import { CustomError } from "../error.js";
 import { readFiles, saveFiles } from "../utils/index.js";
 import { logger, LogLevel } from "../logger.js";
 import { auditSecurityEvent, AuditEventType } from "../utils/auditLogger.js";
+import { getClientIp } from "../middleware/clientIdentity.js";
 
 const router = Router();
 
@@ -52,7 +53,7 @@ router.post(REST_CHILD_PATHS.assets.read, async (req: Request, res: Response) =>
             );
 
             logger.log(LogLevel.warn, "🚫 Unauthorized file access attempt blocked", {
-                ip: req.ip,
+                ip: getClientIp(req),
                 requestedFiles: files,
                 deniedFiles: unauthorizedFiles,
             });

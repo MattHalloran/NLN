@@ -11,7 +11,6 @@ import {
     stopPostgresTestDatabase,
     truncatePublicTables,
 } from "../__tests__/integrationUtils.js";
-import { newsletterSubscribeLimiter } from "../middleware/rateLimiter.js";
 
 describe("Newsletter API Integration Tests", () => {
     let container: StartedPostgreSqlContainer;
@@ -52,8 +51,6 @@ describe("Newsletter API Integration Tests", () => {
     });
 
     beforeEach(async () => {
-        newsletterSubscribeLimiter.resetKey("::/56");
-        newsletterSubscribeLimiter.resetKey("127.0.0.1");
         await truncatePublicTables(prisma);
 
         const adminRole = await prisma.role.create({

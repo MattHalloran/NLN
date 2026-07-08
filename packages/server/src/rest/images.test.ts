@@ -2,7 +2,7 @@ import { IMAGE_LABELS, REST_CHILD_PATHS } from "@local/shared";
 import express, { type RequestHandler } from "express";
 import request from "supertest";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import imagesRouter, { estimateImageUploadSizeMB, sortImagesByLabelIndex } from "./images.js";
+import { createImagesRouter, estimateImageUploadSizeMB, sortImagesByLabelIndex } from "./images.js";
 
 const { auditAdminAction, loggerLog, removeImageLabelRelation } = vi.hoisted(() => ({
     auditAdminAction: vi.fn(),
@@ -44,7 +44,7 @@ const createApp = (options: { isAdmin?: boolean; prisma?: unknown } = {}) => {
         req.prisma = (options.prisma ?? {}) as never;
         next();
     }) as RequestHandler);
-    app.use(imagesRouter);
+    app.use(createImagesRouter());
     return app;
 };
 

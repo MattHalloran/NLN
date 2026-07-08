@@ -13,9 +13,9 @@ import jwt from "jsonwebtoken";
 import { randomUUID } from "crypto";
 import cookieParser from "cookie-parser";
 import { COOKIE, REST_ROUTES } from "@local/shared";
-import restRouter from "./index.js";
+import { createRestRouter } from "./index.js";
 import * as auth from "../auth.js";
-import { loginLimiter, passwordResetLimiter, signupLimiter } from "../middleware/rateLimiter.js";
+import { createRateLimiters, type RateLimiters } from "../middleware/rateLimiter.js";
 import {
     startPostgresTestDatabase,
     stopPostgresTestDatabase,
@@ -25,6 +25,7 @@ describe("REST API Integration Tests", () => {
     let container: StartedPostgreSqlContainer;
     let prisma: PrismaClient;
     let app: Express;
+    let limiters: RateLimiters;
 
     beforeAll(async () => {
         const database = await startPostgresTestDatabase("test_api_db");
@@ -67,7 +68,8 @@ describe("REST API Integration Tests", () => {
             next();
         });
         app.use(auth.authenticate);
-        app.use(REST_ROUTES.root, restRouter);
+        limiters = createRateLimiters();
+        app.use(REST_ROUTES.root, createRestRouter({ limiters }));
     }, 120000);
 
     afterAll(async () => {
@@ -75,7 +77,11 @@ describe("REST API Integration Tests", () => {
     });
 
     beforeEach(async () => {
-        for (const limiter of [loginLimiter, passwordResetLimiter, signupLimiter]) {
+        for (const limiter of [
+            limiters.loginLimiter,
+            limiters.passwordResetLimiter,
+            limiters.signupLimiter,
+        ]) {
             limiter.resetKey("::/56");
             limiter.resetKey("127.0.0.1");
         }

@@ -10,7 +10,7 @@
  *   auditLog({
  *     eventType: AuditEventType.AUTH_LOGIN_SUCCESS,
  *     userId: customer.id,
- *     ip: req.ip,
+ *     ip: getRequestMetadata(req).ip,
  *     userAgent: req.headers['user-agent'],
  *     details: { email }
  *   });
@@ -18,6 +18,7 @@
 
 import { Request } from "express";
 import { logger, LogLevel } from "../logger.js";
+import { getClientIp } from "../middleware/clientIdentity.js";
 
 /**
  * Comprehensive list of audit event types
@@ -94,7 +95,7 @@ export function getRequestMetadata(req: Request): {
     };
 
     return {
-        ip: req.ip || req.socket.remoteAddress,
+        ip: getClientIp(req),
         userAgent: req.headers["user-agent"],
         userId: typedReq.customerId,
         userName: typedReq.customer
@@ -155,7 +156,7 @@ export function auditAuthEvent(
     req: Request,
     eventType: AuditEventType,
     status: "success" | "failure" | "warning",
-    details?: Record<string, unknown>,
+    details?: Record<string, unknown>
 ): void {
     const metadata = getRequestMetadata(req);
     auditLog({
@@ -174,7 +175,7 @@ export function auditAdminAction(
     eventType: AuditEventType,
     resource: string,
     beforeState?: Record<string, unknown>,
-    afterState?: Record<string, unknown>,
+    afterState?: Record<string, unknown>
 ): void {
     const metadata = getRequestMetadata(req);
     auditLog({
@@ -194,7 +195,7 @@ export function auditSecurityEvent(
     req: Request,
     eventType: AuditEventType,
     errorMessage?: string,
-    details?: Record<string, unknown>,
+    details?: Record<string, unknown>
 ): void {
     const metadata = getRequestMetadata(req);
     auditLog({

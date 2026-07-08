@@ -92,11 +92,12 @@ export async function createRestTestApp(
     prisma: PrismaClient,
     options: { csrf?: boolean } = {}
 ): Promise<Express> {
-    const [{ default: restRouter }, auth, csrf] = await Promise.all([
+    const [{ createRestRouter }, auth, csrf] = await Promise.all([
         import("../rest/index.js"),
         import("../auth.js"),
         import("../middleware/csrf.js"),
     ]);
+    const restRouter = createRestRouter();
     const app = express();
 
     app.use(express.json());

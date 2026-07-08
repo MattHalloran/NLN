@@ -251,7 +251,6 @@ test.describe("Hero Banner - Drag and Drop", () => {
                 displayOrder: 1,
             });
 
-        await authenticatedPage.waitForLoadState("networkidle");
         await authenticatedPage.reload();
         await expect(
             authenticatedPage.getByRole("heading", { name: /hero section settings/i }),
