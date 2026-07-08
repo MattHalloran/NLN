@@ -118,13 +118,7 @@ if [[ "$ON_REMOTE" =~ ^[Yy]([Ee][Ss])?$ ]]; then
         fi
     fi
 else
-    # Otherwise, make sure mailx is installed. This may be used by some scripts which
-    # track errors on the remote server and notify the developer via email.
-    header "Installing mailx"
-    # TODO - Not working for some reason
-    # info "Select option 2 (Internet Site) then enter \"http://mirrors.kernel.org/ubuntu\" when prompted."
-    #sudo apt-get install -y mailutils
-    # While we're here, also check if .env and .env-prod exist. If not, create them using .env-example.
+    # Create local environment templates when they are missing.
     if [ ! -f "${HERE}/../.env" ]; then
         header "Creating .env file"
         cp "${HERE}/../.env-example" "${HERE}/../.env"
