@@ -12,3 +12,5 @@ services:
       SERVER_URL: "http://localhost:${PORT_UI:-3001}/api"
       CORS_ORIGINS: "http://localhost:${PORT_UI:-3001},http://127.0.0.1:${PORT_UI:-3001}"
       COOKIE_SECURE: "false"
+    ports:
+      - "${PORT_SERVER:-5331}:${PORT_SERVER:-5331}"
