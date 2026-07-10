@@ -53,4 +53,6 @@ write_required_release_artifacts() {
     [ "$status" -eq 0 ]
     [[ "$output" == *"Validation receipt written"* ]]
     grep -Fq "All required artifacts" .validation/latest-receipt.md
+    [ "$(stat -c '%a' .validation)" = "700" ]
+    [ "$(stat -c '%a' .validation/latest-receipt.md)" = "600" ]
 }

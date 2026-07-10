@@ -213,8 +213,10 @@ const lines = [
     "",
 ];
 
-fs.mkdirSync(outputDir, { recursive: true });
+fs.mkdirSync(outputDir, { recursive: true, mode: 0o700 });
+fs.chmodSync(outputDir, 0o700);
 fs.writeFileSync(outputPath, `${lines.join("\n")}\n`, "utf8");
+fs.chmodSync(outputPath, 0o600);
 
 console.log(`Validation receipt written to ${outputPath}`);
 
