@@ -15,7 +15,9 @@ EOF
 }
 
 setup() {
+    rm -rf "${BATS_TMPDIR}"
     mkdir -p "${BATS_MOCK_BINDIR}"
+    unset DEPLOY_SMOKE_ADMIN DEPLOY_SMOKE_LOG_SINCE PUBLIC_SMOKE_SCRIPT ADMIN_SMOKE_CMD
     export SMOKE_LOG="${BATS_TMPDIR}/smoke.log"
     write_env_file
     export PWA_HEADERS_SCRIPT="${BATS_TMPDIR}/pwa-headers"

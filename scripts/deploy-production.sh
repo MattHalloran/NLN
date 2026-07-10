@@ -8,6 +8,8 @@ HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 . "${HERE}/utils.sh"
 # shellcheck source=scripts/deploy-safety.sh
 . "${HERE}/deploy-safety.sh"
+# shellcheck source=scripts/deploy-lock.sh
+. "${HERE}/deploy-lock.sh"
 
 ENV_FILE="${HERE}/../.env-prod"
 VERSION=""
@@ -142,6 +144,7 @@ fi
 run_deploy_phase "Validating environment" "${VALIDATE_ENV_SCRIPT}" "${ENV_FILE}"
 
 cd "${HERE}/.."
+deploy_lock_acquire "${DEPLOY_LOCK_PATH:-${HERE}/../.deploy-lock/deploy-production.lock}" "deploy-production.sh" "${VERSION}" "${REPO_ROOT}"
 run_deploy_phase "Checking git readiness" deploy_require_clean_synced_worktree "${REPO_ROOT}"
 
 if [ "${SKIP_TESTS}" != true ]; then
@@ -175,9 +178,14 @@ run_deploy_phase "Creating mandatory offsite backup" "${BACKUP_SCRIPT}" -e "${EN
 run_deploy_phase "Building and transferring artifacts" \
     env BUILD_SKIP_PACKAGE_VERSION_UPDATE=true DEPLOY_CONFIRMED=true "${BUILD_SCRIPT}" -v "${VERSION}" -e "${ENV_FILE}" -d y
 
+REMOTE_DEPLOY_ENV="DEPLOY_VALIDATE_CMD='${DEPLOY_VALIDATE_CMD}'"
+if [ "${SKIP_TESTS}" = true ]; then
+    REMOTE_DEPLOY_ENV="DEPLOY_ALLOW_MISSING_READINESS_RECEIPT=true ${REMOTE_DEPLOY_ENV}"
+fi
+
 run_deploy_phase "Deploying remotely" \
     ssh -i "${KEY_PATH}" -o BatchMode=yes "root@${SITE_IP}" \
-    "cd '${PROJECT_DIR}' && ./scripts/deploy.sh -v '${VERSION}'"
+    "cd '${PROJECT_DIR}' && ${REMOTE_DEPLOY_ENV} ./scripts/deploy.sh -v '${VERSION}'"
 
 run_deploy_phase "Running post-deploy smoke checks" \
     ssh -i "${KEY_PATH}" -o BatchMode=yes "root@${SITE_IP}" \

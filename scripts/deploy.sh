@@ -19,8 +19,12 @@ set -euo pipefail
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 # shellcheck disable=SC1091
 . "${HERE}/utils.sh"
+# shellcheck source=scripts/deploy-safety.sh
+. "${HERE}/deploy-safety.sh"
 # shellcheck source=scripts/runtime-state.sh
 . "${HERE}/runtime-state.sh"
+# shellcheck source=scripts/deploy-lock.sh
+. "${HERE}/deploy-lock.sh"
 # shellcheck source=scripts/env-defaults.sh
 . "${HERE}/env-defaults.sh"
 default_env_apply
@@ -43,6 +47,11 @@ while [ $# -gt 0 ]; do
         echo "  -v --version: Version number to use (e.g. \"1.0.0\")"
         echo "  -n --nginx-location: Nginx proxy location (e.g. \"/root/NginxSSLReverseProxy\")"
         echo "  -h --help: Show this help message"
+        echo ""
+        echo "Routine production deployments should be started from the development machine with:"
+        echo "  ./scripts/prepare-deploy-readiness.sh -v <VERSION> -e .env-prod"
+        echo "  ./scripts/deploy-production.sh -v <VERSION> -e .env-prod"
+        echo "Use deploy.sh directly only for advanced recovery, debugging, or local rehearsal."
         exit 0
         ;;
     *)
@@ -68,6 +77,15 @@ if [ -z "$VERSION" ]; then
     fi
 fi
 validate_deploy_version "${VERSION}"
+if [ "${DEPLOY_REHEARSAL:-false}" != "true" ]; then
+    warning "deploy.sh is a lower-level production mutation path."
+    warning "Routine production deployments should use ./scripts/deploy-production.sh from the development machine."
+fi
+DEPLOY_DEFAULT_LOCK_PATH="/var/lock/nln-deploy.lock"
+if [ "${DEPLOY_REHEARSAL:-false}" = "true" ]; then
+    DEPLOY_DEFAULT_LOCK_PATH="/tmp/nln-deploy-rehearsal.lock"
+fi
+deploy_lock_acquire "${DEPLOY_LOCK_PATH:-${DEPLOY_DEFAULT_LOCK_PATH}}" "deploy.sh" "${VERSION}" "$(cd "${HERE}/.." && pwd)"
 
 if [ "${DEPLOY_REHEARSAL:-false}" = "true" ]; then
     warning "Deploy rehearsal mode enabled; skipping proxy bootstrap checks."
@@ -122,6 +140,11 @@ PREVIOUS_ARTIFACTS_DIR="${TMP_DIR}/previous-artifacts"
 PREVIOUS_IMAGES_ARCHIVE="${TMP_DIR}/previous-docker-images.tar"
 COMMIT_FILE="${TMP_DIR}/deploy-commit.txt"
 DEPLOY_MANIFEST="${TMP_DIR}/deploy-manifest.sha256"
+TRANSFERRED_READINESS_RECEIPT="${TMP_DIR}/deploy-readiness.receipt"
+MIGRATION_GATE_SCRIPT="${MIGRATION_GATE_SCRIPT:-${HERE}/check-deploy-migration-gate.sh}"
+DEPLOY_READINESS_RECEIPT_MAX_AGE_SECONDS="${DEPLOY_READINESS_RECEIPT_MAX_AGE_SECONDS:-14400}"
+DOWNTIME_TIMING_RECEIPT="${TMP_DIR}/deploy-downtime.receipt"
+DOWNTIME_START_EPOCH=""
 
 verify_host_prerequisites() {
     header "Verifying host prerequisites"
@@ -147,6 +170,34 @@ verify_host_prerequisites() {
     success "Host prerequisites are available"
 }
 
+mark_downtime_start() {
+    DOWNTIME_START_EPOCH=$(date -u +%s)
+    info "Downtime timer started at ${DOWNTIME_START_EPOCH}"
+}
+
+write_downtime_receipt() {
+    local downtime_end_epoch downtime_seconds
+
+    if [ -z "${DOWNTIME_START_EPOCH}" ]; then
+        warning "Downtime timer was not started; not writing downtime receipt."
+        return 0
+    fi
+
+    downtime_end_epoch=$(date -u +%s)
+    downtime_seconds=$((downtime_end_epoch - DOWNTIME_START_EPOCH))
+
+    {
+        echo "version=${VERSION}"
+        echo "downtime_start_epoch=${DOWNTIME_START_EPOCH}"
+        echo "downtime_end_epoch=${downtime_end_epoch}"
+        echo "downtime_seconds=${downtime_seconds}"
+        echo "completed_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    } >"${DOWNTIME_TIMING_RECEIPT}"
+    chmod 600 "${DOWNTIME_TIMING_RECEIPT}"
+    info "Downtime receipt written: ${DOWNTIME_TIMING_RECEIPT}"
+    info "Measured downtime seconds: ${downtime_seconds}"
+}
+
 verify_deploy_manifest() {
     header "Verifying transferred artifact checksums"
 
@@ -162,6 +213,37 @@ verify_deploy_manifest() {
     fi
 
     success "Transferred artifact checksums verified"
+}
+
+verify_transferred_readiness_receipt() {
+    header "Verifying transferred deploy readiness receipt"
+
+    if [ "${DEPLOY_REHEARSAL:-false}" = "true" ]; then
+        warning "Deploy rehearsal mode enabled; using rehearsal readiness proof."
+        DEPLOY_READINESS_RECEIPT_PATH="deploy-rehearsal"
+        return 0
+    fi
+
+    if [ "${DEPLOY_ALLOW_MISSING_READINESS_RECEIPT:-false}" = "true" ]; then
+        warning "Readiness receipt proof is missing or bypassed because override is enabled."
+        return 0
+    fi
+
+    if [ ! -f "${TRANSFERRED_READINESS_RECEIPT}" ]; then
+        error "Transferred deploy readiness receipt not found: ${TRANSFERRED_READINESS_RECEIPT}"
+        error "Use deploy-production.sh after prepare-deploy-readiness.sh so the receipt is transferred and checksummed."
+        exit 1
+    fi
+
+    local expected_commit
+    expected_commit=$(tr -d '[:space:]' <"${COMMIT_FILE}")
+    deploy_verify_readiness_receipt_file \
+        "${TRANSFERRED_READINESS_RECEIPT}" \
+        "${VERSION}" \
+        "${DEPLOY_VALIDATE_CMD:-validate:ci}" \
+        "${DEPLOY_READINESS_RECEIPT_MAX_AGE_SECONDS}" \
+        "${expected_commit}"
+    DEPLOY_READINESS_RECEIPT_PATH="${TRANSFERRED_READINESS_RECEIPT}"
 }
 
 verify_repository_state() {
@@ -299,6 +381,31 @@ EOF
     fi
 
     success "Runtime-state backup created at ${backup_dir}"
+}
+
+run_pre_downtime_migration_gate() {
+    local migration_root="${STAGING_DIR}/packages/server/dist/db/migrations"
+    local args=()
+
+    if [ ! -d "${migration_root}" ]; then
+        migration_root="${HERE}/../packages/server/src/db/migrations"
+    fi
+
+    args=(--migration-root "${migration_root}" --env-file "${TMP_DIR}/.env-prod")
+    if [ -n "${DEPLOY_READINESS_RECEIPT_PATH:-}" ]; then
+        args+=(--readiness-receipt "${DEPLOY_READINESS_RECEIPT_PATH}")
+    elif [ "${DEPLOY_REHEARSAL:-false}" = "true" ]; then
+        args+=(--readiness-receipt "deploy-rehearsal")
+    elif [ "${DEPLOY_ALLOW_MISSING_READINESS_RECEIPT:-false}" = "true" ]; then
+        args+=(--allow-missing-readiness-receipt)
+    fi
+
+    if [ "${DEPLOY_ALLOW_MISSING_DB_MIGRATION_STATUS:-false}" = "true" ]; then
+        args+=(--allow-missing-db-status)
+    fi
+
+    header "Running pre-downtime migration safety gate"
+    "${MIGRATION_GATE_SCRIPT}" "${args[@]}"
 }
 
 print_deploy_diagnostics() {
@@ -523,8 +630,10 @@ cd "${HERE}/.."
 verify_host_prerequisites
 verify_repository_state
 verify_deploy_manifest
+verify_transferred_readiness_receipt
 stage_artifacts
 create_runtime_state_backup
+run_pre_downtime_migration_gate
 backup_current_images
 
 if [ "${DEPLOY_REHEARSAL:-false}" = "true" ]; then
@@ -548,6 +657,7 @@ info "Stopping docker containers..."
 if ! runtime_state_require_backup_before_container_change "${TMP_DIR}/runtime-state"; then
     exit 1
 fi
+mark_downtime_start
 if ! docker-compose --env-file "${TMP_DIR}/.env-prod" -f "${HERE}/../docker-compose-prod.yml" down; then
     error "Failed to stop docker containers"
     exit 1
@@ -656,5 +766,6 @@ else
 fi
 
 verify_public_endpoints
+write_downtime_receipt
 
 success "Done! Deployment completed successfully."

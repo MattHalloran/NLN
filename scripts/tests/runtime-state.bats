@@ -20,8 +20,21 @@ paths:
 EOF
 }
 
+make_rollback_version_backup() {
+    VERSION_DIR="${BATS_TMPDIR}/versions/1.2.3"
+    mkdir -p "${VERSION_DIR}"
+    make_runtime_backup
+    mv "${BACKUP_DIR}" "${VERSION_DIR}/runtime-state"
+    touch "${VERSION_DIR}/.env-prod"
+    tar -czf "${VERSION_DIR}/production-docker-images.tar.gz" -C "${BATS_TMPDIR}" version 2>/dev/null || {
+        mkdir -p "${BATS_TMPDIR}/archive-src"
+        echo image >"${BATS_TMPDIR}/archive-src/image.txt"
+        tar -czf "${VERSION_DIR}/production-docker-images.tar.gz" -C "${BATS_TMPDIR}/archive-src" .
+    }
+}
+
 teardown() {
-    rm -rf "${BATS_TMPDIR}/runtime-state" "${BATS_TMPDIR}/version"
+    rm -rf "${BATS_TMPDIR}/runtime-state" "${BATS_TMPDIR}/version" "${BATS_TMPDIR}/versions" "${BATS_TMPDIR}/archive-src"
 }
 
 @test "runtime-state gate refuses missing backup before container changes" {
@@ -123,4 +136,30 @@ teardown() {
 @test "rollback confirmation bypass is explicit for rehearsal automation" {
     grep -q 'ROLLBACK_CONFIRMED' "$BATS_TEST_DIRNAME/../rollback.sh"
     grep -q 'skipping interactive rollback confirmation' "$BATS_TEST_DIRNAME/../rollback.sh"
+}
+
+@test "rollback script is protected by deployment mutation lock" {
+    grep -q 'deploy-lock.sh' "$BATS_TEST_DIRNAME/../rollback.sh"
+    grep -q 'deploy_lock_acquire.*rollback.sh' "$BATS_TEST_DIRNAME/../rollback.sh"
+    grep -q '/var/lock/nln-deploy.lock' "$BATS_TEST_DIRNAME/../rollback.sh"
+}
+
+@test "rollback dry-run prints summary and does not call docker" {
+    make_rollback_version_backup
+    cat >"${BATS_MOCK_BINDIR}/docker" <<'EOF'
+#!/usr/bin/env bash
+echo "docker should not be called in rollback dry-run" >&2
+exit 42
+EOF
+    chmod +x "${BATS_MOCK_BINDIR}/docker"
+
+    run env ROLLBACK_BACKUP_ROOT="${BATS_TMPDIR}/versions" DEPLOY_LOCK_PATH="${BATS_TMPDIR}/rollback.lock" "$BATS_TEST_DIRNAME/../rollback.sh" -v 1.2.3 --dry-run
+
+    assert_equal "$status" 0
+    assert_output --partial "Rollback summary for 1.2.3"
+    assert_output --partial "Database backup selected: ${BATS_TMPDIR}/versions/1.2.3/runtime-state/data/postgres.sql"
+    assert_output --partial "Expected emergency dump before mutation: /var/tmp/emergency-backup-<timestamp>/current-postgres.sql"
+    assert_output --partial "Data-loss risk"
+    assert_output --partial "No containers, files, images, or databases were changed"
+    refute_output --partial "docker should not be called"
 }

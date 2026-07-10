@@ -18,6 +18,7 @@ make_migration() {
     run env MIGRATION_ROOT="${BATS_TMPDIR}/migrations" "$SCRIPT_PATH"
 
     assert_equal "$status" 0
+    assert_output --partial "Migration risk summary: scanned=1 destructive=0 marked_destructive=0 failures=0"
     assert_output --partial "Migration risk checks passed"
 }
 
@@ -29,6 +30,7 @@ make_migration() {
     assert_equal "$status" 1
     assert_output --partial "Potentially destructive migration SQL"
     assert_output --partial "DROP COLUMN"
+    assert_output --partial "Migration risk summary: scanned=1 destructive=1 marked_destructive=0 failures=1"
 }
 
 @test "migration risk check allows destructive SQL with explicit marker" {
@@ -39,4 +41,6 @@ ALTER TABLE "customer" DROP COLUMN "nickname";'
 
     assert_equal "$status" 0
     assert_output --partial "Allowed destructive migration marker"
+    assert_output --partial "Destructive migration still requires release notes/runbook sign-off"
+    assert_output --partial "Migration risk summary: scanned=1 destructive=1 marked_destructive=1 failures=0"
 }

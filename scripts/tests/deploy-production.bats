@@ -100,6 +100,7 @@ echo "yarn:$*" >>"${DEPLOY_ORDER_LOG}"'
 }
 
 setup() {
+    rm -rf "${BATS_TMPDIR}"
     mkdir -p "${BATS_MOCK_BINDIR}" "${BATS_TMPDIR}/home/.ssh"
     export HOME="${BATS_TMPDIR}/home"
     export DEPLOY_ORDER_LOG="${BATS_TMPDIR}/order.log"
@@ -119,6 +120,7 @@ teardown() {
 run_deploy_production() {
     run env \
         DEPLOY_READINESS_RECEIPT_DIR="${DEPLOY_READINESS_RECEIPT_DIR}" \
+        DEPLOY_LOCK_PATH="${BATS_TMPDIR}/deploy-production.lock" \
         VALIDATE_ENV_SCRIPT="${VALIDATE_ENV_SCRIPT}" \
         HEALTHCHECK_SCRIPT="${HEALTHCHECK_SCRIPT}" \
         BACKUP_SCRIPT="${BACKUP_SCRIPT}" \
@@ -157,7 +159,7 @@ EOF
     run_deploy_production
 
     assert_equal "$status" 0
-    expected=$'validate\nhealth\nssh:test ! -f \'/var/tmp/9.9.9/runtime-state/manifest.txt\'\nbackup:-e '"${ENV_FILE}"$' --preflight-only\nbackup:-e '"${ENV_FILE}"$' --verify-restore\nbuild:-v 9.9.9 -e '"${ENV_FILE}"$' -d y\nssh:cd \'/srv/app\' && ./scripts/deploy.sh -v \'9.9.9\'\nssh:cd \'/srv/app\' && ./scripts/deploy-smoke.sh -e .env-prod --admin\nssh:docker ps --format \'table {{.Names}}\\t{{.Status}}\''
+    expected=$'validate\nhealth\nssh:test ! -f \'/var/tmp/9.9.9/runtime-state/manifest.txt\'\nbackup:-e '"${ENV_FILE}"$' --preflight-only\nbackup:-e '"${ENV_FILE}"$' --verify-restore\nbuild:-v 9.9.9 -e '"${ENV_FILE}"$' -d y\nssh:cd \'/srv/app\' && DEPLOY_VALIDATE_CMD=\'validate:ci\' ./scripts/deploy.sh -v \'9.9.9\'\nssh:cd \'/srv/app\' && ./scripts/deploy-smoke.sh -e .env-prod --admin\nssh:docker ps --format \'table {{.Names}}\\t{{.Status}}\''
     assert_equal "$(cat "${DEPLOY_ORDER_LOG}")" "${expected}"
     assert_output --partial "Deploy readiness receipt is fresh"
 }
@@ -168,6 +170,7 @@ EOF
 
     run env \
         DEPLOY_READINESS_RECEIPT_DIR="${DEPLOY_READINESS_RECEIPT_DIR}" \
+        DEPLOY_LOCK_PATH="${BATS_TMPDIR}/deploy-production.lock" \
         VALIDATE_ENV_SCRIPT="${VALIDATE_ENV_SCRIPT}" \
         HEALTHCHECK_SCRIPT="${HEALTHCHECK_SCRIPT}" \
         BACKUP_SCRIPT="${BACKUP_SCRIPT}" \
@@ -374,9 +377,42 @@ EOF
     grep -q 'verify_deploy_manifest' "$BATS_TEST_DIRNAME/../deploy.sh"
 }
 
+@test "deploy validates transferred readiness receipt before staging and downtime" {
+    grep -q 'TRANSFERRED_READINESS_RECEIPT="${TMP_DIR}/deploy-readiness.receipt"' "$BATS_TEST_DIRNAME/../deploy.sh"
+    grep -q 'deploy_verify_readiness_receipt_file' "$BATS_TEST_DIRNAME/../deploy.sh"
+    manifest_line=$(grep -n '^verify_deploy_manifest$' "$BATS_TEST_DIRNAME/../deploy.sh" | tail -n 1 | cut -d: -f1)
+    receipt_line=$(grep -n '^verify_transferred_readiness_receipt$' "$BATS_TEST_DIRNAME/../deploy.sh" | tail -n 1 | cut -d: -f1)
+    stage_line=$(grep -n '^stage_artifacts$' "$BATS_TEST_DIRNAME/../deploy.sh" | tail -n 1 | cut -d: -f1)
+    backup_line=$(grep -n '^create_runtime_state_backup$' "$BATS_TEST_DIRNAME/../deploy.sh" | tail -n 1 | cut -d: -f1)
+    [ "${manifest_line}" -lt "${receipt_line}" ]
+    [ "${receipt_line}" -lt "${stage_line}" ]
+    [ "${receipt_line}" -lt "${backup_line}" ]
+}
+
+@test "deploy records remote downtime from docker-compose down through public endpoint verification" {
+    grep -q 'DOWNTIME_TIMING_RECEIPT="${TMP_DIR}/deploy-downtime.receipt"' "$BATS_TEST_DIRNAME/../deploy.sh"
+    grep -q '^mark_downtime_start$' "$BATS_TEST_DIRNAME/../deploy.sh"
+    grep -q '^write_downtime_receipt$' "$BATS_TEST_DIRNAME/../deploy.sh"
+    grep -q 'downtime_seconds=' "$BATS_TEST_DIRNAME/../deploy.sh"
+
+    start_line=$(grep -n '^mark_downtime_start$' "$BATS_TEST_DIRNAME/../deploy.sh" | tail -n 1 | cut -d: -f1)
+    down_line=$(grep -n 'docker-compose --env-file "${TMP_DIR}/.env-prod" -f "${HERE}/../docker-compose-prod.yml" down' "$BATS_TEST_DIRNAME/../deploy.sh" | tail -n 1 | cut -d: -f1)
+    public_line=$(grep -n '^verify_public_endpoints$' "$BATS_TEST_DIRNAME/../deploy.sh" | tail -n 1 | cut -d: -f1)
+    receipt_line=$(grep -n '^write_downtime_receipt$' "$BATS_TEST_DIRNAME/../deploy.sh" | tail -n 1 | cut -d: -f1)
+
+    [ "${start_line}" -lt "${down_line}" ]
+    [ "${public_line}" -lt "${receipt_line}" ]
+}
+
 @test "build transfers env file explicitly as .env-prod and sends checksum manifest" {
     grep -q 'deploy-manifest.sha256' "$BATS_TEST_DIRNAME/../build.sh"
     grep -q '"root@${BUILD_DIR}.env-prod"' "$BATS_TEST_DIRNAME/../build.sh"
+}
+
+@test "build includes readiness receipt in transferred checksum manifest when present" {
+    grep -q 'deploy-readiness.receipt' "$BATS_TEST_DIRNAME/../build.sh"
+    grep -q 'READINESS_RECEIPT_SOURCE="$(deploy_receipt_path "${HERE}/.." "${VERSION}")"' "$BATS_TEST_DIRNAME/../build.sh"
+    grep -q 'MANIFEST_INPUTS+=("$(basename "${READINESS_RECEIPT_FILE}")")' "$BATS_TEST_DIRNAME/../build.sh"
 }
 
 @test "production deploy no longer runs setup.sh host mutation" {
