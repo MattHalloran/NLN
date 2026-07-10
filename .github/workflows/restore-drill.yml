@@ -1,0 +1,68 @@
+name: Restore Drill
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "41 10 * * 2"
+
+concurrency:
+  group: restore-drill
+  cancel-in-progress: false
+
+jobs:
+  fixture-restore-drill:
+    name: Fixture Restore Drill
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Create synthetic runtime-state backup
+        run: |
+          backup_dir=/tmp/nln-fixture-backup/runtime-state
+          mkdir -p \
+            "$backup_dir/data/uploads" \
+            "$backup_dir/assets" \
+            "$backup_dir/data/redis" \
+            "$backup_dir/data/migration-backups"
+          cat >"$backup_dir/.env-prod" <<'EOF'
+          DB_NAME=nln_restore_drill
+          DB_USER=nln_restore_drill
+          DB_PASSWORD=nln_restore_drill_password
+          EOF
+          cat >"$backup_dir/data/postgres.sql" <<'EOF'
+          -- Synthetic empty database fixture for migration rehearsal.
+          EOF
+          cat >"$backup_dir/manifest.txt" <<'EOF'
+          backup_type=runtime-state
+          database_dump=data/postgres.sql
+          redis_backup_semantics=best-effort-file-copy
+          paths:
+          - data/postgres.sql
+          - data/uploads
+          - assets
+          - data/redis
+          - data/migration-backups
+          - .env-prod
+          EOF
+
+      - name: Run restore drill against fixture
+        run: ./scripts/restore-drill.sh --backup /tmp/nln-fixture-backup
+
+      - name: Upload restore drill receipts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: restore-drill-receipts
+          path: .validation/restore-drills
+          if-no-files-found: ignore

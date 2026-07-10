@@ -130,6 +130,7 @@ teardown() {
 
     assert_equal "$status" 0
     assert_output --partial "Database backup: logical pg_dump saved as data/postgres.sql"
+    assert_output --partial "Redis backup semantics: best-effort file copy"
     refute_output --partial "data/postgres	"
     refute_output --partial "data/logs"
     [ ! -d "${BATS_TMPDIR}/backups" ]
@@ -160,8 +161,23 @@ teardown() {
     grep -q "backup_type=runtime-state" "$manifest"
     grep -q "include_logs=false" "$manifest"
     grep -q "database_dump=data/postgres.sql" "$manifest"
+    grep -q "redis_backup_semantics=best-effort-file-copy" "$manifest"
+    grep -q "redis_data_classification=operationally-important-recoverable" "$manifest"
     grep -q -- "- data/postgres.sql" "$manifest"
     tar -tzf "$archive" | grep -q 'data/postgres.sql'
+}
+
+@test "runtime-state backup can print machine-readable backup directory" {
+    touch "${HOME}/.ssh/id_rsa_203.0.113.10"
+    install_ssh_stub
+
+    run "$SCRIPT_PATH" -e "$ENV_FILE" --output-dir "${BATS_TMPDIR}/backups" --print-backup-dir
+
+    assert_equal "$status" 0
+    backup_dir=$(echo "$output" | sed -n 's/^backup_dir=//p' | tail -n 1)
+    [ -n "${backup_dir}" ]
+    [ -d "${backup_dir}" ]
+    [ -f "${backup_dir}/manifest.txt" ]
 }
 
 @test "runtime-state backup can verify logical dump restore with disposable local Postgres" {
