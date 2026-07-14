@@ -1,5 +1,7 @@
 # Production Deploy Hardening Plan
 
+> Authority: superseded historical implementation record. Use `release-runbook.md` for current operations.
+
 This document captures the plan for making the next production deployment safer, more reliable, less likely to lose data, and faster to execute. It is a plan only. Do not run real production deploy, restore, cleanup, restart, rollback, prune, update, or deletion commands while implementing these changes unless explicitly approved.
 
 ## Safety Principles

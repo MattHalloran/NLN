@@ -1,5 +1,7 @@
 # Redis Runtime-State Classification
 
+> Authority: runtime-state reference. It does not authorize restore or production mutation.
+
 Redis is classified as operationally important but recoverable.
 
 PostgreSQL remains the data of record for business data. Runtime-state backups still include `data/redis`, but that copy is a best-effort filesystem backup of Redis operational state, not a database-grade consistency guarantee.

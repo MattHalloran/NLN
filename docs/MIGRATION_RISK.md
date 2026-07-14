@@ -1,5 +1,7 @@
 # Migration Risk Classification
 
+> Authority: migration risk reference. It informs the release runbook but does not authorize migration execution.
+
 Use this guide before any production release that includes database migrations. The goal is to make rollback and data-loss implications explicit before the deployment window.
 
 ## Required Evidence

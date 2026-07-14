@@ -1,40 +1,19 @@
-# Deployment SLOs
+# Deployment SLI and SLO Contract
 
-These are initial operational budgets for routine production deploys. Replace the targets with measured values after local rehearsal and the first approved production deploy using the hardened process.
+> Authority: operational reference. Contract version `nln-operational-sli-v1` in `config/operational-sli.json` is authoritative for machine validation.
 
-## Targets
+Production observations, local observations, fixture rehearsals, and policy limits are distinct. Fixture measurements never satisfy a production SLO. Unless an indicator says otherwise, the aggregation window is the trailing 30 days ending at the receipt's canonical UTC `finishedAt`.
 
-| Metric | Initial target | Evidence |
-| --- | --- | --- |
-| RPO for routine deploy | latest mandatory pre-deploy runtime-state backup | `backup.sh --verify-restore` output and backup manifest |
-| RPO before database rollback | emergency dump immediately before rollback mutation | `rollback.sh` emergency dump path |
-| App-only recovery RTO | 10 minutes | deploy recovery output and rehearsal timing |
-| Full database rollback RTO | 30 minutes | rollback dry-run plus rehearsal/rollback timing |
-| Routine deploy downtime | 5 minutes | `${PROJECT_DIR}/../var/tmp/<VERSION>/deploy-downtime.receipt` or `/var/tmp/<VERSION>/deploy-downtime.receipt` on the VPS |
+| Indicator | Formula | Clock/unit | Evidence | Scope | Minimum samples | Alert | Owner |
+| --- | --- | --- | --- | --- | ---: | ---: | --- |
+| deployment success rate | successful production deploy receipts / completed production deploy receipts | `finishedAt`, ratio | `release-deploy` receipts | production | 5 | below 0.95 | release operator |
+| deployment downtime | `userVisibleDowntimeFinishedAt - userVisibleDowntimeStartedAt` | adapter monotonic clock, ms | production deploy receipt | production | 1 | above 60,000 ms | release operator |
+| fixture rollback RTO | rollback `finishedAt - startedAt` | receipt timestamps, ms | `app-only-rollback` | fixture | 3 | above 300,000 ms | release operator |
 
-## Receipts
+RPO is the age of the newest `qualified` backup at the instant database mutation begins. It is not capture completion time, remote publication time, or the age of an unverified archive. The routine production bound is 3,600 seconds, owned by the backup policy.
 
-`deploy-production.sh` writes `.validation/deploy-<VERSION>.json` with phase timings for environment validation, git readiness, readiness receipt verification, VPS health, backup preflight, mandatory backup, build/transfer, remote deploy, smoke checks, and container inventory.
+Restore-drill cadence has two clocks: fixture exercises must occur within 168 hours; a production-qualified backup restore requires explicit authorization and has a separate 2,160-hour maximum. One does not satisfy the other.
 
-`deploy.sh` writes `/var/tmp/<VERSION>/deploy-downtime.receipt` on the deployment host after public endpoint verification passes. The timer starts immediately before `docker-compose down` and stops after public endpoints pass.
+`release:summary` emits local events for stale/missing qualified backups, overdue restore evidence, repeated failures, threshold violations, missing remote verification or resilience evidence, and health/maintenance blockers. Alert transport is deferred. Review after every production deployment and monthly. Below the minimum sample count, report “insufficient samples,” never passing.
 
-`verify-production-backup-locally.sh` writes `.validation/local-production-backup/*.receipt`.
-
-`restore-drill.sh` writes `.validation/restore-drills/*.receipt`.
-
-`.github/workflows/restore-drill.yml` runs a scheduled fixture restore drill without production secrets or production data.
-
-## Review Rules
-
-Stop a deployment before downtime if the backup, readiness receipt, migration gate, or VPS health checks fail.
-
-After each deployment, record:
-
-- deploy receipt path;
-- backup path;
-- downtime seconds;
-- smoke result;
-- any recovery action taken;
-- whether the observed time exceeded the target.
-
-Do not loosen a target based on one slow run. Investigate the cause first, then revise the target only if the measured process has changed.
+Compatibility labels retained for current tooling are: **RPO for routine deploy** (3,600 seconds), **App-only recovery RTO** (300 seconds for fixture qualification), **Full database rollback RTO** (backup-dependent and measured separately), and **Routine deploy downtime** (60 seconds alert threshold). Current deployments may emit `/var/tmp/<VERSION>/deploy-downtime.receipt`; it remains legacy evidence and is not rewritten. The scheduled fixture source is `.github/workflows/restore-drill.yml`.

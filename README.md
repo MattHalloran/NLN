@@ -145,7 +145,8 @@ Comprehensive documentation is available in the [`/docs`](docs) directory:
 - [🔌 REST API](docs/api/rest-api.md) - API endpoint reference
 
 ### Deployment
-- [🚀 Production Hardening Plan](docs/production-deploy-hardening-plan.md) - Deployment safety context
+- [🚀 Operations Hub](docs/README.md) - Current procedure, candidate workflow, recovery, and maintenance lanes
+- [📋 Release Runbook](docs/release-runbook.md) - Only current routine production procedure
 - [📧 Email Protection](docs/EMAIL_PROTECTION.md) - Development email safety
 
 ## Development Commands
@@ -219,12 +220,7 @@ See [Testing Guide](TESTING.md) for details.
 
 ## Deployment
 
-The project uses a two-phase deployment process:
-
-1. **Build Phase** (local machine) - `./scripts/build.sh`
-2. **Deploy Phase** (production server) - `./scripts/deploy.sh`
-
-See the [Deployment Guide](DEPLOYMENT.md) for complete instructions.
+Use the [Operations Hub](docs/README.md) to select the correct safety lane. The only routine production procedure is the [Release Runbook](docs/release-runbook.md), which uses `prepare-deploy-readiness.sh` followed by `deploy-production.sh`. Direct `deploy.sh` is advanced-only. Phase 10 `release` commands are candidate fixture/local tools and cannot execute against production.
 
 ### Key Deployment Features
 - ✅ Environment validation

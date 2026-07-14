@@ -1,5 +1,7 @@
 # Deployment Operations Improvement Plan
 
+> Authority: superseded historical implementation record. It is not a current runbook or phase taxonomy.
+
 This document is a phased action plan for implementing and validating the next deployment-process improvements:
 
 - Recommendation 1: Make `deploy-production.sh` the only normal production deployment path.

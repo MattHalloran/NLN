@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "mapId": "nln-deployment-document-authority-v1",
+  "documents": [
+    { "path": "docs/release-runbook.md", "authority": "current-runbook" },
+    { "path": "docs/README.md", "authority": "operator-hub" },
+    { "path": "DEPLOYMENT.md", "authority": "reference" },
+    { "path": "docs/deployment-slo.md", "authority": "reference" },
+    { "path": "docs/deployment-command-catalog.md", "authority": "reference" },
+    { "path": "docs/deployment-capability-matrix.md", "authority": "generated-status" },
+    { "path": "docs/generated-operator-reference.md", "authority": "generated-reference" },
+    { "path": "docs/recovery-decision-matrix.md", "authority": "reference" },
+    { "path": "docs/MIGRATION_RISK.md", "authority": "reference" },
+    { "path": "docs/redis-runtime-state.md", "authority": "reference" },
+    { "path": "docs/vps-maintenance.md", "authority": "maintenance-reference" },
+    { "path": "docs/deployment-reliability-master-plan.md", "authority": "master-plan" },
+    { "path": "docs/deployment-phase10-operator-interface-action-plan.md", "authority": "candidate-design" },
+    { "path": "docs/deployment-surface-inventory.md", "authority": "historical-journal" },
+    { "path": "docs/deployment-reliability-action-plan.md", "authority": "historical-plan" },
+    { "path": "docs/deployment-operations-improvement-plan.md", "authority": "historical-plan" },
+    { "path": "docs/production-deploy-hardening-plan.md", "authority": "historical-plan" }
+  ]
+}

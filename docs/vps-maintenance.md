@@ -1,5 +1,7 @@
 # VPS Maintenance Policy
 
+> Authority: separately authorized maintenance reference. It is not part of the routine release procedure.
+
 Production maintenance must be scheduled separately from routine deployments. Deployment tooling may block on critical health failures and print recommendations, but it must not silently clean up disk, prune Docker resources, update packages, restart services, restore data, or delete files.
 
 ## Healthcheck Role

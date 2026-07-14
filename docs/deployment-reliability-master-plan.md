@@ -1,5 +1,7 @@
 # Deployment Reliability Master Implementation Plan
 
+> Authority: current master plan and sole owner of deployment phase numbering. It is not a live-window procedure.
+
 ## Purpose
 
 This plan defines how to implement and validate the complete deployment reliability improvement program without changing, interrupting, or depending on the current production deployment.
@@ -689,4 +691,3 @@ Execute phases in this dependency order:
 12. Phase 11: shadow adoption and approved cutover.
 
 Phases may be developed on separate branches, but production adoption must follow the dependency order. In particular, reduced-downtime deployment must not precede migration compatibility and immutable app-only rollback, and real-production local verification must not precede side-effect isolation.
-

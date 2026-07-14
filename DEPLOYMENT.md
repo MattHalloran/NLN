@@ -1,5 +1,7 @@
 # Deployment Guide
 
+> Authority: deployment architecture and reference. Use `docs/release-runbook.md` as the only current live-window procedure.
+
 This document describes the production deployment process for the New Life Nursery website.
 
 ## Table of Contents

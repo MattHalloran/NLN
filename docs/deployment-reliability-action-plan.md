@@ -1,5 +1,7 @@
 # Deployment Reliability Action Plan
 
+> Authority: superseded historical implementation record. Use the master plan phase taxonomy.
+
 This plan turns the deployment review findings into an implementation roadmap. It is intentionally operational: every phase lists the goal, implementation work, validation work, production safety boundary, and acceptance criteria.
 
 ## Scope

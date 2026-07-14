@@ -1,39 +1,45 @@
-# Documentation Index
+# Operations and Documentation Hub
 
-This index lists the documentation that exists in this checkout.
+> Authority: operator hub. This page routes operators by role and safety boundary; it is not itself a live-window procedure.
 
-## Project
+## Current supported routine release
 
-- [Main README](../README.md)
-- [Testing and Validation Guide](../TESTING.md)
-- [Environment Variables](../ENVIRONMENT.md)
-- [Agent Notes](../AGENTS.md)
+There is exactly one production procedure: [Release Runbook](release-runbook.md).
+The supported sequence remains:
 
-## Architecture and API
+```bash
+./scripts/prepare-deploy-readiness.sh -v <VERSION> -e .env-prod
+./scripts/deploy-production.sh -v <VERSION> -e .env-prod
+```
 
-- [Architecture Overview](architecture/overview.md)
-- [REST API Reference](api/rest-api.md)
+Do not substitute candidate `release` commands for this path. Phase 10 does not authorize production access or mutation.
 
-## Testing and Quality
+## Candidate local and rehearsal workflow
 
-- [Testing and Validation Guide](../TESTING.md)
-- [Server Testing Guide](../packages/server/TESTING.md)
-- [Server Integration Tests Summary](../packages/server/INTEGRATION_TESTS_SUMMARY.md)
-- [Lighthouse CI](lighthouse-ci.md)
+The Phase 10 interface is fixture/local only. Discover it without reading secrets or contacting a host:
 
-## Deployment and Operations
+```bash
+yarn release --help
+yarn release prepare --help
+yarn release evidence verify --help
+```
 
-- [Production Deploy Hardening Plan](production-deploy-hardening-plan.md)
-- [Email Protection](EMAIL_PROTECTION.md)
-- [DNS Setup](DNSSetup.txt)
-- [Messenger Setup](MessengerSetup.txt)
+See the [generated command and evidence reference](generated-operator-reference.md), [capability matrix](deployment-capability-matrix.md), and [Phase 10 candidate design](deployment-phase10-operator-interface-action-plan.md).
 
-## A/B Testing
+## Advanced recovery and destructive restore
 
-- [A/B Testing Index](ab-testing/INDEX.md)
-- [A/B Testing README](ab-testing/README.md)
-- [A/B Testing Admin Guide](ab-testing/admin-guide.md)
-- [Conversion Tracking](ab-testing/conversion-tracking.md)
-- [A/B Testing Developer Guide](ab-testing/developer-guide.md)
+Start with the [recovery decision matrix](recovery-decision-matrix.md). `rollback-app` means application-only recovery with the database preserved. `restore-data` and legacy `rollback.sh` can replace data and require separate authorization. Redis recovery expectations are in [Redis runtime state](redis-runtime-state.md).
 
-Last updated: 2026-06-23
+## Maintenance and disaster recovery
+
+Maintenance is never bundled with a routine release. Use [VPS maintenance](vps-maintenance.md) for read-only health and separately authorized maintenance. Phase 9 disaster recovery and Phase 11 production adoption remain dependencies, not supported Phase 10 operations.
+
+## Authoritative references
+
+- [Release Runbook](release-runbook.md) — only current live-window procedure.
+- [Deployment SLI/SLO](deployment-slo.md) — formulas, windows, scope, and owners.
+- [Deployment command catalog](deployment-command-catalog.md) — stable ownership and effects.
+- [Generated operator reference](generated-operator-reference.md) — registry-derived command and receipt names.
+- [Deployment reliability master plan](deployment-reliability-master-plan.md) — reserved phase taxonomy.
+- [Deployment architecture/reference](../DEPLOYMENT.md) — background, not a live procedure.
+- [Testing and Validation Guide](../TESTING.md) and [Environment Variables](../ENVIRONMENT.md).

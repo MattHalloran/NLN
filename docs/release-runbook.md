@@ -1,5 +1,7 @@
 # Release Runbook
 
+> Authority: current production live-window procedure. This is the only authoritative routine production deployment procedure.
+
 This is the short release-window checklist for production deployments. For full background and recovery details, use [DEPLOYMENT.md](../DEPLOYMENT.md).
 
 ## Normal Path
