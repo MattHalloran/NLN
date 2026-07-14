@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "policyId": "nln-reduced-downtime-fixture-v1",
+  "productionIntegrationEnabled": false,
+  "topologyPath": "config/deployment-topology.json",
+  "applicationServices": ["server", "ui"],
+  "protectedStateServices": ["db", "redis"],
+  "forbiddenLifecycleOperations": ["down", "down -v", "rm", "restart db", "restart redis", "prune"],
+  "requiredPreflightChecks": [
+    "release-bundle",
+    "trusted-gate",
+    "backup",
+    "environment",
+    "capacity",
+    "state-health",
+    "migration-compatibility",
+    "rollback-readiness"
+  ],
+  "activationOrder": [
+    "migration",
+    "server",
+    "server-health",
+    "ui",
+    "ui-health",
+    "public",
+    "post-smoke"
+  ],
+  "requireNoDependencies": true,
+  "requireProtectedStateIdentity": true,
+  "requireWriteSentinelPreservation": true,
+  "automaticRollbackRequiresCompatibilityReceipt": true,
+  "maximumProbeAttempts": 20,
+  "maximumRehearsedDowntimeMilliseconds": 300000
+}

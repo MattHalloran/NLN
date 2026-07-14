@@ -1,5 +1,7 @@
 # Deployment Surface Inventory
 
+> Authority: historical implementation journal. Stable command ownership moved to `deployment-command-catalog.md`; generated status moved to `deployment-capability-matrix.md`.
+
 Status: Phase 0 baseline. This document describes the current supported path; it
 does not authorize production access or change deployment behavior.
 
@@ -390,3 +392,119 @@ paths, and made, independently read, and restored an administrator write. It
 issued an owner-only passing receipt and removed its containers, volumes,
 networks, copied data, and generated secrets. No production data, credentials,
 SSH connection, provider, or VPS was used.
+
+## Phase 5 immutable release and app-only rollback boundary (additive only)
+
+`config/immutable-release-policy.json` defines the application services as
+`ui` and `server`, protects `db` and `redis`, requires digest-pinned images,
+exact trusted-gate evidence, migration compatibility, environment-schema
+compatibility, state identity checks, and all smoke gates. Production
+integration and automatic invocation are explicitly disabled.
+
+`scripts/immutable-release-bundle.mjs` creates and verifies no-overwrite release
+directories. A qualified bundle contains the exact Compose and helper bytes,
+built artifacts, optional image archive, digest-pinned image identities, the
+exact-commit trusted receipt and its validation manifest, structured migration
+compatibility evidence, an environment key schema without values, endpoint
+contracts, and per-artifact size, mode, and SHA-256 evidence. Verification is
+offline, rejects unlisted objects and unsafe links, and revalidates the bundled
+trusted receipt against its bundled manifest.
+
+`scripts/app-only-rollback.mjs` is a new command and does not reuse the existing
+destructive `rollback.sh`. It is plan-only by default. Execution is technically
+limited to an explicit fixture mode plus a release-specific confirmation and
+an injected adapter. It refuses incompatible migrations, expired compatibility
+windows, missing required environment keys, corrupt bundles, and changed
+database or Redis identities. Its adapter contract activates only `ui` and
+`server` with `noDeps: true`; the rollback receipt always records
+`databaseRestored: false`. Health, public, and post-deploy smoke failures invoke
+fixture restoration of the previously active application.
+
+`scripts/record-known-good-release.mjs` accepts only a qualified bundle and a
+complete successful smoke receipt for the same commit. It publishes an
+immutable owner-only qualification record and atomically updates a hash-bound
+current pointer. Phase 5 commands are not connected to deployment, readiness,
+backup, production Compose, legacy rollback, or restore. A real Docker adapter,
+production execution mode, and automatic failed-deploy invocation remain
+forbidden pending Phase 6 completion, reviewed rehearsal, and explicit cutover.
+
+## Phase 6 migration compatibility and controlled execution boundary (additive only)
+
+`config/migration-execution-policy.json` fixes the supported PostgreSQL major,
+minimum disk headroom, advisory-lock identity, lock and statement timeouts, and
+special-plan requirements. It explicitly keeps production integration and the
+removal of startup-coupled migration behavior unapproved.
+
+`config/migration-compatibility.json` classifies every checked-in migration and
+the release as a whole. It records rationale, rollback strategy, expected
+duration and affected-row bound, lock risk, transaction strategy, disk
+requirement, tested PostgreSQL majors, expand/transition/contract phase, and
+resumable/idempotent batch requirements for any backfill. The validator rejects
+missing or extra migration directories, destructive SQL presented as
+unconditionally compatible, unsafe contract phases, unbounded backfills,
+unsupported database versions, and incompatible or high-risk changes without
+a special deployment plan.
+
+`scripts/run-controlled-migrations.mjs` is the new one-shot execution
+orchestrator. It requires an exact-commit trusted-gate receipt and qualified
+backup evidence; checks exact starting migration state, PostgreSQL version,
+free space, and partial failures; acquires an advisory lock; passes bounded
+timeouts and the exact qualified migration list to an injected adapter; checks
+the exact ending state; releases the lock; and publishes owner-only,
+no-overwrite success or failure evidence. Child output is not relayed, keeping
+credentials and database diagnostics out of ordinary logs.
+
+`scripts/evaluate-migration-compatibility.mjs` produces the hash-bound evidence
+consumed by an app-only rollback decision. Unknown versions, missing or partial
+migrations, incompatible releases, and expired bounded windows fail closed.
+
+These commands are not called by `server.sh`, Compose, deployment, readiness,
+backup, rollback, or restore. The current production startup behavior remains
+unchanged under the master plan's preservation rule. Replacing that behavior,
+providing a reviewed PostgreSQL adapter, or enabling production execution
+requires a separate cutover after fixture and disposable-database rehearsals.
+
+## Phase 7 reduced-downtime rehearsal boundary (additive only)
+
+`config/reduced-downtime-deployment-policy.json` and
+`scripts/rehearse-reduced-downtime-deploy.mjs` define a fixture-only,
+service-scoped activation contract. Only `server` and then `ui` may be
+activated, both with dependency recreation forbidden. PostgreSQL and Redis
+container identities, volume identities, health, and a database write sentinel
+are compared before and after activation. Public probes measure observed
+unavailability rather than command duration. Activation failure may request
+app-only rollback only when a successful Phase 6 compatibility receipt exists.
+
+Execution requires an injected regular-file adapter, an explicitly non-production
+fixture context, and release-specific `REHEARSE` confirmation. The policy keeps
+production integration disabled. This command is not called by `deploy.sh`,
+`deploy-production.sh`, readiness, backup, rollback, restore, or maintenance and
+does not load the production Compose file. Production startup still performs
+incidental migrations, its health endpoint is not dependency-aware, and its
+bind-mounted artifacts are not immutable release directories. Production
+adoption therefore remains ineligible until those separate cutovers and a real
+disposable Compose rehearsal are reviewed.
+
+## Phase 8 VPS health and maintenance boundary (additive only)
+
+`config/vps-health-maintenance-policy.json` defines blocking resource and
+dependency thresholds, protected cleanup classes, read-only health semantics,
+and separately authorized maintenance prerequisites. Production integration
+and deployment-triggered maintenance are explicitly disabled.
+
+`scripts/evaluate-vps-health.mjs` accepts facts only through an injected adapter
+whose sole operation is `observe` in `read-only` mode. It classifies Docker and
+container health, PostgreSQL and Redis status, disk bytes and inodes, load, OOM
+and filesystem events, failed units, time synchronization, pending reboot,
+backup and restore evidence, TLS/public reachability, and package metadata.
+Secret-like evidence is rejected before an owner-only receipt is published.
+
+Maintenance planning is immutable and dry-run-only. Execution requires the
+exact plan hash, an unchanged fixture host fingerprint, qualified backup,
+remote-copy and restore evidence, explicit action IDs, and successful database,
+Redis, and public post-health checks. Cleanup of current/known-good releases,
+qualified backups, incident holds, or state volumes is rejected.
+
+These commands are not called by deployment, readiness, backup, rollback,
+restore, the existing SSH healthcheck, or production Compose. Real host adapters
+and any production observation or execution require separate authorization.

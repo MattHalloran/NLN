@@ -75,8 +75,8 @@ run_validator() { run node "$SCRIPT" --policy "$POLICY" --matrix "$MATRIX"; }
     [ "$status" -ne 0 ]
     assert_output --partial "dump tool older"
     cp "$MATRIX_SOURCE" "$MATRIX"
-    mutate "$MATRIX" 'v.cases[1].image="postgres:15-alpine"'
+    mutate "$MATRIX" 'v.cases[1].fixtureImage="postgres:15-alpine"'
     run_validator
     [ "$status" -ne 0 ]
-    assert_output --partial "image does not match"
+    assert_output --partial "fixture image does not match"
 }
