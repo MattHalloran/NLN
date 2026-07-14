@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "status": "not-run",
+  "independentParticipant": false,
+  "participantRole": "Record a participant who did not implement Phase 10",
+  "conductedAt": null,
+  "exercises": [
+    { "id": "find-current-release", "status": "not-run", "durationSeconds": null, "wrongTurns": [], "ambiguousWording": [], "unsafeSelections": [] },
+    { "id": "explain-candidate-production-boundary", "status": "not-run", "durationSeconds": null, "wrongTurns": [], "ambiguousWording": [], "unsafeSelections": [] },
+    { "id": "diagnose-stale-backup", "status": "not-run", "durationSeconds": null, "wrongTurns": [], "ambiguousWording": [], "unsafeSelections": [] },
+    { "id": "choose-app-rollback", "status": "not-run", "durationSeconds": null, "wrongTurns": [], "ambiguousWording": [], "unsafeSelections": [] },
+    { "id": "respond-incompatible-migration", "status": "not-run", "durationSeconds": null, "wrongTurns": [], "ambiguousWording": [], "unsafeSelections": [] },
+    { "id": "find-release-evidence-chain", "status": "not-run", "durationSeconds": null, "wrongTurns": [], "ambiguousWording": [], "unsafeSelections": [] },
+    { "id": "identify-downtime-slo", "status": "not-run", "durationSeconds": null, "wrongTurns": [], "ambiguousWording": [], "unsafeSelections": [] }
+  ]
+}
