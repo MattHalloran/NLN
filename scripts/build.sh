@@ -275,7 +275,15 @@ for dir in "${DIRECTORIES[@]}"; do
 done
 
 COMMIT_FILE="${HERE}/../deploy-commit.txt"
-git -C "${HERE}/.." rev-parse HEAD >"${COMMIT_FILE}"
+if [ -n "${BUILD_SOURCE_COMMIT:-}" ]; then
+    if [[ ! "${BUILD_SOURCE_COMMIT}" =~ ^[0-9a-f]{40}$ ]]; then
+        error "BUILD_SOURCE_COMMIT must be a full lowercase Git commit hash."
+        exit 1
+    fi
+    printf '%s\n' "${BUILD_SOURCE_COMMIT}" >"${COMMIT_FILE}"
+else
+    git -C "${HERE}/.." rev-parse HEAD >"${COMMIT_FILE}"
+fi
 TAR_FILES+=("${COMMIT_FILE}")
 
 READINESS_RECEIPT_SOURCE="$(deploy_receipt_path "${HERE}/.." "${VERSION}")"

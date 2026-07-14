@@ -27,7 +27,7 @@ let texting_client: Twilio | null = null;
             {
                 code: genErrorCode("00013"),
                 error,
-            },
+            }
         );
     }
 })().catch((error: Error) => {
@@ -35,6 +35,10 @@ let texting_client: Twilio | null = null;
 });
 
 export async function smsProcess(job: Bull.Job<SmsJobData>): Promise<boolean> {
+    if (process.env.SMS_MODE?.toLowerCase() === "disabled") {
+        logger.log(LogLevel.info, "SMS delivery disabled by runtime policy");
+        return true;
+    }
     if (texting_client === null) {
         logger.log(LogLevel.error, "Cannot send SMS. Texting client not initialized", {
             code: genErrorCode("00014"),
@@ -63,7 +67,7 @@ export async function smsProcess(job: Bull.Job<SmsJobData>): Promise<boolean> {
             } catch (error) {
                 logger.log(LogLevel.error, "Failed to send SMS", { error, to: phoneNumberTo });
             }
-        }),
+        })
     );
     return true;
 }

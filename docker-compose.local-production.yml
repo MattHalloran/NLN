@@ -3,14 +3,17 @@ services:
     environment:
       APP_RUNTIME: "local-production"
       VITE_API_BASE_URL: "/api"
-      PROXY_API_TARGET: "http://server:${PORT_SERVER:-5331}"
+      PROXY_API_TARGET: "http://server:5331"
 
   server:
     environment:
       APP_RUNTIME: "local-production"
+      # The compiled server uses the project's fixed internal production port.
+      # PORT_SERVER remains the collision-free host port used by the verifier.
+      PORT_SERVER: "5331"
       UI_URL: "http://localhost:${PORT_UI:-3001}"
       SERVER_URL: "http://localhost:${PORT_UI:-3001}/api"
       CORS_ORIGINS: "http://localhost:${PORT_UI:-3001},http://127.0.0.1:${PORT_UI:-3001}"
       COOKIE_SECURE: "false"
     ports:
-      - "${PORT_SERVER:-5331}:${PORT_SERVER:-5331}"
+      - "${PORT_SERVER:-5331}:5331"

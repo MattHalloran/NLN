@@ -51,6 +51,11 @@ SITE_EMAIL_ALIAS=prod@example.test
 LETSENCRYPT_EMAIL=admin@example.test
 E2E_DISABLE_RATE_LIMITS=false
 RATE_LIMIT_DIAGNOSTICS=false
+EMAIL_MODE=production
+SMTP_HOST=smtp.production.invalid
+PHONE_NUMBER=+15555550123
+TWILIO_ACCOUNT_SID=ACproductionfixture
+TWILIO_AUTH_TOKEN=production-twilio-fixture
 EOF
     cat >"${BACKUP_DIR}/manifest.txt" <<'EOF'
 backup_type=runtime-state
@@ -73,11 +78,16 @@ if [ "$1" = "ps" ]; then
 fi
 if [ "$1" = "network" ]; then
   if [ "$2" = "inspect" ]; then
+    echo true
     exit 0
   fi
   exit 0
 fi
 if [ "$1" = "compose" ]; then
+  if [[ "$*" == *"1.1.1.1"* ]]; then
+    [ "${VERIFY_LOCAL_ALLOW_EGRESS:-0}" = 1 ] && exit 0
+    exit 1
+  fi
   if [[ "$*" == *" exec -T db pg_isready"* ]]; then
     exit 0
   fi
@@ -122,13 +132,25 @@ setup() {
 
     BUILD_SCRIPT="${BATS_TMPDIR}/build-script"
     BACKUP_SCRIPT="${BATS_TMPDIR}/backup-script"
+    ADMIN_SMOKE_SCRIPT="${BATS_TMPDIR}/admin-smoke-script"
+    INSTALL_SCRIPT="${BATS_TMPDIR}/install-script"
     write_executable "${BUILD_SCRIPT}" '#!/usr/bin/env bash
 echo "build:$*" >>"${VERIFY_LOCAL_LOG}"
-echo "env-file:${*: -1}" >>"${VERIFY_LOCAL_LOG}"'
+env_file="${*: -1}"
+echo "env-file:${env_file}" >>"${VERIFY_LOCAL_LOG}"
+grep -E "^(EMAIL_MODE|SMS_MODE|TWILIO_|PHONE_NUMBER|SMTP_|ADMIN_EMAIL|SITE_IP)=" "${env_file}" >>"${VERIFY_LOCAL_LOG}"
+project_dir=$(dirname "${env_file}")
+find "${project_dir}/data/redis" -mindepth 1 -print >>"${VERIFY_LOCAL_LOG}"
+find "${project_dir}/data/redis-backup-inspection" -mindepth 1 -print | sed "s#.*#redis-inspection-present#" >>"${VERIFY_LOCAL_LOG}"'
     export VERIFIED_BACKUP="${BACKUP_INPUT}"
     write_executable "${BACKUP_SCRIPT}" '#!/usr/bin/env bash
 echo "backup:$*" >>"${VERIFY_LOCAL_LOG}"
 echo "backup_dir=${VERIFIED_BACKUP}"'
+    write_executable "${ADMIN_SMOKE_SCRIPT}" '#!/usr/bin/env bash
+echo "admin-smoke:${API_URL}:${ADMIN_EMAIL}" >>"${VERIFY_LOCAL_LOG}"
+[ -n "${ADMIN_PASSWORD}" ]'
+    write_executable "${INSTALL_SCRIPT}" '#!/usr/bin/env bash
+echo "install:$1" >>"${VERIFY_LOCAL_LOG}"'
 }
 
 teardown() {
@@ -142,6 +164,8 @@ run_verify_local() {
         VERIFIED_BACKUP="${VERIFIED_BACKUP}" \
         VERIFY_LOCAL_LOG="${VERIFY_LOCAL_LOG}" \
         LOCAL_PRODUCTION_BACKUP_RECEIPT_DIR="${LOCAL_PRODUCTION_BACKUP_RECEIPT_DIR}" \
+        ADMIN_SMOKE_SCRIPT="${ADMIN_SMOKE_SCRIPT}" \
+        INSTALL_SCRIPT="${INSTALL_SCRIPT}" \
         "$SCRIPT_PATH" "$@"
 }
 
@@ -151,9 +175,19 @@ run_verify_local() {
     assert_equal "$status" 0
     assert_output --partial "Local production backup verification passed"
     grep -q '^build:-v local-backup-' "${VERIFY_LOCAL_LOG}"
+    grep -q '^install:' "${VERIFY_LOCAL_LOG}"
     grep -q 'compose .* up -d db redis' "${VERIFY_LOCAL_LOG}"
     grep -q 'compose .* exec -T db sh -c' "${VERIFY_LOCAL_LOG}"
-    grep -q 'curl:.*http://localhost:3201/' "${VERIFY_LOCAL_LOG}"
+    grep -q 'compose .*exec -T ui node -e .*http://localhost:3201/' "${VERIFY_LOCAL_LOG}"
+    grep -q '^EMAIL_MODE=disabled$' "${VERIFY_LOCAL_LOG}"
+    grep -q '^SMS_MODE=disabled$' "${VERIFY_LOCAL_LOG}"
+    grep -q '^ADMIN_EMAIL=local-admin@example.test$' "${VERIFY_LOCAL_LOG}"
+    grep -q '^SITE_IP=127.0.0.1$' "${VERIFY_LOCAL_LOG}"
+    grep -q '^redis-inspection-present$' "${VERIFY_LOCAL_LOG}"
+    ! grep -Eq '^(TWILIO_|PHONE_NUMBER=|SMTP_)' "${VERIFY_LOCAL_LOG}"
+    ! grep -q '/data/redis/README' "${VERIFY_LOCAL_LOG}"
+    grep -q 'network inspect --format.*Internal' "${VERIFY_LOCAL_LOG}"
+    grep -q '^admin-smoke:http://localhost:5331:local-admin@example.test$' "${VERIFY_LOCAL_LOG}"
     refute_output --partial "https://example.test"
     [ ! -s "${VERIFY_LOCAL_LOG}.ssh" ]
     ! grep -q '^ssh-called:' "${VERIFY_LOCAL_LOG}"
@@ -162,6 +196,42 @@ run_verify_local() {
     [ -f "${receipt}" ]
     grep -q '^result=passed$' "${receipt}"
     grep -q '^ui_url=http://localhost:3201$' "${receipt}"
+    grep -q 'allowlist-env,delivery-sink-canaries,empty-active-redis,internal-networks,egress-denied' "${receipt}"
+    grep -q '^sensitive_data_retained=false$' "${receipt}"
+}
+
+@test "injected interruption at every stage cleans resources and emits no receipt" {
+    export LOCAL_VERIFY_TEST_MODE=true
+    for stage in project-preparation dependency-install database-start database-restore application-start delivery-sinks admin-smoke; do
+        export LOCAL_VERIFY_FAIL_AFTER="$stage"
+        rm -f "${VERIFY_LOCAL_LOG}"
+        rm -rf "${LOCAL_PRODUCTION_BACKUP_RECEIPT_DIR}"
+        run_verify_local --backup "${BACKUP_INPUT}" --replace-existing-local
+
+        [ "$status" -ne 0 ]
+        assert_output --partial "Injected local verification failure after ${stage}"
+        if [ "$stage" != project-preparation ] && [ "$stage" != dependency-install ]; then
+            grep -q 'compose .* down -v --remove-orphans' "${VERIFY_LOCAL_LOG}"
+        fi
+        [ -z "$(find "${LOCAL_PRODUCTION_BACKUP_RECEIPT_DIR}" -type f 2>/dev/null)" ]
+    done
+}
+
+@test "retaining copied data requires explicit acknowledgement" {
+    run_verify_local --backup "${BACKUP_INPUT}" --keep --replace-existing-local
+    [ "$status" -ne 0 ]
+    assert_output --partial "--keep requires --acknowledge-sensitive-data-retention"
+    [ ! -f "${VERIFY_LOCAL_LOG}" ]
+}
+
+@test "local verification fails closed when container egress is possible" {
+    export VERIFY_LOCAL_ALLOW_EGRESS=1
+    run_verify_local --backup "${BACKUP_INPUT}" --replace-existing-local
+
+    [ "$status" -ne 0 ]
+    assert_output --partial "EGRESS_CANARY unexpectedly reached"
+    grep -q 'compose .* down -v --remove-orphans' "${VERIFY_LOCAL_LOG}"
+    [ -z "$(find "${LOCAL_PRODUCTION_BACKUP_RECEIPT_DIR}" -type f 2>/dev/null)" ]
 }
 
 @test "create-backup mode delegates only to verified backup creation" {
