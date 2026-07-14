@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "nln-release-prepare-v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "receiptType", "receiptId", "status", "scope", "producer", "release", "startedAt", "finishedAt", "policy", "inputs", "checks", "outputs", "failure", "evidenceIndexSha256", "migrationClassification", "productionMutation"],
+  "properties": {
+    "schemaVersion": { "const": 1 }, "receiptType": { "const": "release-prepare" }, "receiptId": { "type": "string" },
+    "status": { "enum": ["planned", "failed"] }, "scope": { "const": "fixture" }, "producer": { "type": "object" },
+    "release": { "type": "object" }, "startedAt": { "type": "string" }, "finishedAt": { "type": "string" },
+    "policy": { "type": "object" }, "inputs": { "type": "array" }, "checks": { "type": "array" }, "outputs": { "type": "array" },
+    "failure": { "type": ["object", "null"] }, "evidenceIndexSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "migrationClassification": { "enum": ["none", "backward-compatible", "bounded-window", "incompatible"] }, "productionMutation": { "const": false }
+  }
+}

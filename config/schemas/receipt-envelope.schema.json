@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "nln-receipt-envelope-v1",
+  "type": "object",
+  "required": ["schemaVersion", "receiptType", "status"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "receiptType": { "type": "string", "minLength": 1 },
+    "receiptId": { "type": "string", "minLength": 1 },
+    "status": { "enum": ["success", "failed", "planned", "recovered", "blocked", "qualified", "failure", "passed"] },
+    "scope": { "enum": ["fixture", "local", "production"] },
+    "producer": { "type": "object" },
+    "release": { "type": "object" },
+    "startedAt": { "type": "string", "format": "date-time" },
+    "finishedAt": { "type": "string", "format": "date-time" },
+    "policy": { "type": "object" },
+    "inputs": { "type": "array" },
+    "checks": { "type": ["array", "object"] },
+    "outputs": { "type": "array" },
+    "failure": {}
+  },
+  "additionalProperties": true,
+  "$comment": "Compatibility envelope for pre-Phase-10 receipts. New Phase-10 schemas close additionalProperties."
+}
