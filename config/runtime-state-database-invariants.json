@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "contractId": "nln-runtime-state-database-invariants-v1",
+  "comparison": {
+    "postgresMajorMustMatch": true,
+    "appliedMigrationsMustMatchExactly": true,
+    "requiredTablesMustExist": true,
+    "rowCountsMustMatchExactly": true,
+    "allChecksMustBeTrue": true,
+    "unexpectedObservedFacts": "reject"
+  }
+}

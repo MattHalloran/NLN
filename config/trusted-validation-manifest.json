@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "manifestId": "nln-trusted-validation-v1",
+  "workflow": ".github/workflows/ci.yml",
+  "trustedGateJob": "trusted-gate",
+  "requiredJobs": [
+    {
+      "id": "validate",
+      "purpose": "Repository safety, dependency consistency, static analysis, unit and script tests, production build, PWA, and Lighthouse checks",
+      "commands": [
+        "yarn install --frozen-lockfile",
+        "yarn validate:quick",
+        "yarn workspace ui build",
+        "yarn test:pwa",
+        "yarn lighthouse:local"
+      ],
+      "requiredArtifacts": [
+        "packages/shared/coverage/coverage-summary.json",
+        "packages/server/coverage/coverage-summary.json",
+        "packages/ui/coverage/coverage-summary.json",
+        "test-results/pwa.json",
+        ".lighthouseci/assertion-results.json"
+      ],
+      "receiptRequired": true
+    },
+    {
+      "id": "integration",
+      "purpose": "Server integration tests against disposable dependencies",
+      "commands": [
+        "yarn test:integration"
+      ],
+      "requiredArtifacts": [
+        "packages/server/coverage-integration/coverage-summary.json"
+      ],
+      "receiptRequired": true
+    },
+    {
+      "id": "e2e",
+      "purpose": "Accessibility, public, visual, admin, and production-build browser qualification",
+      "commands": [
+        "yarn test:a11y",
+        "yarn test:e2e:public",
+        "yarn test:visual",
+        "yarn test:e2e:admin",
+        "yarn test:e2e:production"
+      ],
+      "requiredArtifacts": [
+        "test-results/accessibility.json",
+        "test-results/public.json",
+        "test-results/visual.json",
+        "test-results/admin.json",
+        "test-results/production.json"
+      ],
+      "receiptRequired": true
+    },
+    {
+      "id": "deploy-rehearsal",
+      "purpose": "Disposable deployment and rollback rehearsal using fixture infrastructure",
+      "commands": [
+        "./scripts/deploy-rehearsal.sh -v <REHEARSAL_VERSION>"
+      ],
+      "requiredArtifacts": [],
+      "receiptRequired": true
+    }
+  ]
+}

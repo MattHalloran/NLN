@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "policyId": "nln-runtime-state-remote-storage-policy-v1",
+  "scope": {
+    "qualifiedFormat": "runtime-state-v2",
+    "legacyRemoteQualificationAllowed": false,
+    "productionIntegrationEnabled": false
+  },
+  "encryption": {
+    "requiredBeforeProviderAccess": true,
+    "format": "age-x25519",
+    "recipientSource": "owner-only-external-file",
+    "privateKeyAllowedOnVps": false,
+    "privateKeyAllowedInRepository": false,
+    "privateKeyAllowedInBackup": false,
+    "privateKeyAllowedInObjectMetadata": false,
+    "plaintextArchiveUploadAllowed": false,
+    "plaintextRetentionAfterPublish": "governed-by-local-backup-policy"
+  },
+  "providerInterface": {
+    "protocolVersion": 1,
+    "providerNeutral": true,
+    "credentialsSource": "external-environment-or-owner-only-file",
+    "credentialsInArgumentsAllowed": false,
+    "minimumTransport": "tls-1.2",
+    "requireServerSideEncryption": true,
+    "requireVersioningOrObjectLock": true,
+    "preferSeparateReadAndWriteCredentials": true,
+    "requiredCapabilities": [
+      "put-staging-object",
+      "stat-object",
+      "promote-without-overwrite",
+      "get-object",
+      "list-safe-metadata"
+    ]
+  },
+  "publication": {
+    "stagingPrefix": "staging/",
+    "qualifiedPrefix": "qualified/",
+    "finalization": "copy-if-absent-then-delete-staging",
+    "overwriteQualifiedObjectAllowed": false,
+    "requiredObjects": ["archive.age", "archive.sha256", "safe-manifest.json", "receipt.json"],
+    "verifyCiphertextHashBeforeFinalization": true,
+    "downloadVerificationRequired": true,
+    "restoreFromDownloadedCiphertextRequired": true,
+    "partialPublicationQualifies": false
+  },
+  "resilience": {
+    "minimumIndependentCopies": 3,
+    "minimumMediaTypes": 2,
+    "minimumOffsiteCopies": 1,
+    "remoteProviderIndependentOfVps": true,
+    "remoteProviderIndependentOfOperatorWorkstation": true
+  },
+  "monitoring": {
+    "maximumFreshnessSeconds": 86400,
+    "alertOnMissingOrStaleQualifiedBackup": true,
+    "safeFieldsOnly": true,
+    "secretValuesAllowed": false,
+    "contentPathsAllowed": false
+  },
+  "retention": {
+    "cleanupCommandMustBeSeparate": true,
+    "cleanupDryRunByDefault": true,
+    "deploymentMayDeleteRemoteObjects": false,
+    "preserveIncidentHolds": true,
+    "qualifiedObjectsRequirePolicyRetention": true
+  },
+  "adoption": {
+    "fixtureProviderRequired": true,
+    "wrongKeyTestRequired": true,
+    "interruptedUploadTestRequired": true,
+    "corruptDownloadTestRequired": true,
+    "duplicateVersionTestRequired": true,
+    "credentialRedactionTestRequired": true,
+    "productionEnablementRequiresExplicitCutover": true
+  }
+}
