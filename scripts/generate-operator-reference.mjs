@@ -4,6 +4,8 @@ const registry = readJson("config/command-registry.json");
 const receipts = readJson("config/receipt-registry.json");
 const lines = ["# Generated Operator Command and Evidence Reference", "", "> Authority: generated reference. Do not edit; regenerate with `node scripts/generate-operator-reference.mjs`.", "", `Registry: \`${registry.registryId}\``, "", "## Commands", "", "| Command | Availability | Effect | Default | Receipt | Safest next command |", "| --- | --- | --- | --- | --- | --- |"];
 for (const item of registry.commands) lines.push(`| \`${item.command}\` | ${item.availability} | \`${item.effectClass}\` | ${item.defaultMode} | ${item.receiptType ? `\`${item.receiptType}\`` : "none"} | ${item.safestNextCommand} |`);
+lines.push("", "## Lower-level package commands", "", "| Alias | Owner | Visibility | Effect |", "| --- | --- | --- | --- |");
+for (const item of registry.packageCommandCoverage) lines.push(`| \`${item.alias}\` | ${item.owner} | ${item.visibility} | \`${item.effectClass}\` |`);
 lines.push("", "## Receipt types", "", "| Receipt | Semantic verifier | Schema |", "| --- | --- | --- |");
 for (const item of receipts.types) lines.push(`| \`${item.receiptType}\` | \`${item.semanticVerifier}\` | \`${item.schema}\` |`);
 lines.push("", "Legacy evidence is never upgraded in assurance by a compatibility reader.", "");

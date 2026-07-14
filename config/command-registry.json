@@ -2,6 +2,26 @@
   "schemaVersion": 1,
   "registryId": "nln-release-commands-v1",
   "productionCandidateEnabled": false,
+  "packageCommandCoverage": [
+    { "alias": "validate", "owner": "quality", "effectClass": "local-read-only", "visibility": "routine", "rationale": "Delegates to validate:quick." },
+    { "alias": "validate:quick", "owner": "quality", "effectClass": "local-read-only", "visibility": "routine", "rationale": "Canonical non-production local gate." },
+    { "alias": "validate:trusted-manifest", "owner": "trusted-gate", "effectClass": "local-read-only", "visibility": "internal", "rationale": "Manifest contract validator used by gates." },
+    { "alias": "validate:trusted-receipt", "owner": "trusted-gate", "effectClass": "local-read-only", "visibility": "advanced", "rationale": "Exact trusted receipt verifier." },
+    { "alias": "validate:runtime-state-inventory", "owner": "backup", "effectClass": "local-read-only", "visibility": "internal", "rationale": "Inventory contract validator." },
+    { "alias": "validate:runtime-state-backup-policy", "owner": "backup", "effectClass": "local-read-only", "visibility": "internal", "rationale": "Backup policy validator." },
+    { "alias": "validate:runtime-state-remote-storage-policy", "owner": "backup", "effectClass": "local-read-only", "visibility": "internal", "rationale": "Remote policy validator." },
+    { "alias": "validate:immutable-release-policy", "owner": "release-builder", "effectClass": "local-read-only", "visibility": "internal", "rationale": "Immutable release policy validator." },
+    { "alias": "validate:reduced-downtime-policy", "owner": "release-operator", "effectClass": "local-read-only", "visibility": "internal", "rationale": "Rehearsal policy validator." },
+    { "alias": "validate:vps-health-maintenance-policy", "owner": "maintenance", "effectClass": "local-read-only", "visibility": "internal", "rationale": "Maintenance policy validator." },
+    { "alias": "release", "owner": "release-operator", "effectClass": "local-read-only", "visibility": "routine", "rationale": "Candidate release help and subcommand dispatcher." },
+    { "alias": "release:evidence", "owner": "release-operator", "effectClass": "local-read-only", "visibility": "advanced", "rationale": "Evidence create, verify, and discovery dispatcher." },
+    { "alias": "validate:phase10-contracts", "owner": "phase10", "effectClass": "local-read-only", "visibility": "internal", "rationale": "Registry, schema, and documentation drift gate." },
+    { "alias": "check:runtime-state-backup-freshness", "owner": "backup", "effectClass": "local-read-only", "visibility": "advanced", "rationale": "Read-only remote metadata freshness check." },
+    { "alias": "cleanup:runtime-state-remote-backups", "owner": "backup", "effectClass": "local-fixture-mutation", "visibility": "advanced", "rationale": "Dry-run-first fixture retention; execution has exact confirmation." },
+    { "alias": "validate:browser", "owner": "quality", "effectClass": "local-fixture-mutation", "visibility": "advanced", "rationale": "Browser gate may start disposable local services; production browser scope requires separate authority." },
+    { "alias": "validate:full", "owner": "quality", "effectClass": "local-fixture-mutation", "visibility": "advanced", "rationale": "Includes integration and browser gates." },
+    { "alias": "validate:ci", "owner": "quality", "effectClass": "local-fixture-mutation", "visibility": "internal", "rationale": "CI alias for validate:full." }
+  ],
   "commands": [
     {
       "command": "release prepare",

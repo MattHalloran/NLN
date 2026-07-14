@@ -20,6 +20,16 @@ try {
         if (item.availability === "candidate" && item.productionExecution !== false) throw new Error(`candidate command enables production: ${item.command}`);
     }
     for (const required of ["release prepare", "release verify-backup", "release deploy", "release rollback-app", "release status", "release evidence verify", "prepare-deploy-readiness.sh", "deploy-production.sh", "rollback.sh"]) if (!commandNames.has(required)) throw new Error(`missing command ${required}`);
+    const packageJson = readJson("package.json", "package manifest");
+    const coveredPackageAliases = new Set([...commandNames, ...aliases]);
+    for (const item of commands.packageCommandCoverage) {
+        assertExactKeys(item, { required: ["alias", "owner", "effectClass", "visibility", "rationale"] }, `package command ${item.alias}`);
+        if (!Object.hasOwn(packageJson.scripts, item.alias) || coveredPackageAliases.has(item.alias)) throw new Error(`invalid or duplicate package command coverage: ${item.alias}`);
+        if (!vocabulary.commandEffectClasses.includes(item.effectClass)) throw new Error(`unknown package command effect: ${item.alias}`);
+        coveredPackageAliases.add(item.alias);
+    }
+    const operationalAlias = /^(validate|evaluate|run:|plan:|execute:|create:|record:|rollback:|publish:|check:runtime|cleanup:runtime|capture:|runtime-state:|deploy:|release|qualify:)/;
+    for (const alias of Object.keys(packageJson.scripts).filter((name) => operationalAlias.test(name))) if (!coveredPackageAliases.has(alias)) throw new Error(`unregistered package command: ${alias}`);
     if (JSON.stringify([...topology.applicationServices].sort()) !== JSON.stringify(["server", "ui"]) || new Set(topology.applicationServices).size !== 2) throw new Error("application membership is invalid");
     if (topology.activationOrder.map((x) => x.service).join(",") !== "server,ui") throw new Error("activation order is invalid");
     const receiptTypes = new Set();

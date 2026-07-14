@@ -40,6 +40,29 @@ Registry: `nln-release-commands-v1`
 | `rehearse:reduced-downtime` | candidate | `local-fixture-mutation` | plan | `reduced-downtime-deployment-rehearsal` | release evidence verify |
 | `plan:vps-maintenance` | candidate | `local-read-only` | plan | `vps-maintenance-plan` | review plan before execute:vps-maintenance |
 
+## Lower-level package commands
+
+| Alias | Owner | Visibility | Effect |
+| --- | --- | --- | --- |
+| `validate` | quality | routine | `local-read-only` |
+| `validate:quick` | quality | routine | `local-read-only` |
+| `validate:trusted-manifest` | trusted-gate | internal | `local-read-only` |
+| `validate:trusted-receipt` | trusted-gate | advanced | `local-read-only` |
+| `validate:runtime-state-inventory` | backup | internal | `local-read-only` |
+| `validate:runtime-state-backup-policy` | backup | internal | `local-read-only` |
+| `validate:runtime-state-remote-storage-policy` | backup | internal | `local-read-only` |
+| `validate:immutable-release-policy` | release-builder | internal | `local-read-only` |
+| `validate:reduced-downtime-policy` | release-operator | internal | `local-read-only` |
+| `validate:vps-health-maintenance-policy` | maintenance | internal | `local-read-only` |
+| `release` | release-operator | routine | `local-read-only` |
+| `release:evidence` | release-operator | advanced | `local-read-only` |
+| `validate:phase10-contracts` | phase10 | internal | `local-read-only` |
+| `check:runtime-state-backup-freshness` | backup | advanced | `local-read-only` |
+| `cleanup:runtime-state-remote-backups` | backup | advanced | `local-fixture-mutation` |
+| `validate:browser` | quality | advanced | `local-fixture-mutation` |
+| `validate:full` | quality | advanced | `local-fixture-mutation` |
+| `validate:ci` | quality | internal | `local-fixture-mutation` |
+
 ## Receipt types
 
 | Receipt | Semantic verifier | Schema |
