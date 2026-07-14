@@ -77,8 +77,12 @@ const matrix = readJson(matrixPath);
 if (matrix.schemaVersion !== 1 || !/^[-a-z0-9]+$/.test(matrix.matrixId ?? ""))
     fail("matrix identity is invalid");
 positiveInteger(matrix.productionMajor, "productionMajor");
-if (matrix.productionImage !== `postgres:${matrix.productionMajor}-alpine`)
-    fail("production image must match productionMajor");
+if (matrix.productionQualifiedImage !== null) {
+    if (!new RegExp(`^postgres:${matrix.productionMajor}(?:[.-][^@\\s]+)?@sha256:[0-9a-f]{64}$`).test(matrix.productionQualifiedImage))
+        fail("production-qualified image must be digest pinned and match productionMajor");
+} else if (matrix.productionImageQualification !== "deferred-phase11") {
+    fail("unqualified production image must be explicitly deferred");
+}
 if (
     matrix.adoption?.requireDigestPinnedImagesBeforeProductionUse !== true ||
     matrix.adoption?.allowUnqualifiedMatrixCaseForProduction !== false
@@ -95,8 +99,8 @@ for (const item of matrix.cases) {
         positiveInteger(item[key], `${item.caseId}.${key}`);
     if (item.dumpToolMajor < item.dumpServerMajor)
         fail(`${item.caseId} uses a dump tool older than its server`);
-    if (item.image !== `postgres:${item.restoreServerMajor}-alpine`)
-        fail(`${item.caseId} image does not match restore major`);
+    if (item.fixtureImage !== `postgres:${item.restoreServerMajor}-alpine`)
+        fail(`${item.caseId} fixture image does not match restore major`);
     if (
         !/^[-a-z0-9]+$/.test(item.classification ?? "") ||
         !/^[-a-z0-9]+$/.test(item.evidence ?? "")
