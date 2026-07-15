@@ -154,6 +154,7 @@ teardown() {
     grep -q 'verify_public_endpoints' "$BATS_TEST_DIRNAME/../rollback.sh"
     grep -q 'curl -fsS "${ui_url}"' "$BATS_TEST_DIRNAME/../rollback.sh"
     grep -q 'curl -fsS "${server_health_url}"' "$BATS_TEST_DIRNAME/../rollback.sh"
+    grep -q 'DEPLOY_REHEARSAL' "$BATS_TEST_DIRNAME/../rollback.sh"
     grep -q 'print_rollback_diagnostics' "$BATS_TEST_DIRNAME/../rollback.sh"
 }
 

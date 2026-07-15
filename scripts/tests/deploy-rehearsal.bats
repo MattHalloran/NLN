@@ -147,6 +147,8 @@ teardown() {
     grep -q 'docker exec --user 0:0 nln_db' "$SCRIPT_PATH"
     grep -q 'chmod -R a+rwX /var/lib/postgresql/data' "$SCRIPT_PATH"
     grep -q './data/postgres:/var/lib/postgresql/data' "$BATS_TEST_DIRNAME/../../docker-compose-prod.yml"
-    grep -q 'ROLLBACK_CONFIRMED=true ./scripts/rollback.sh -v "${ROLLBACK_PROBE_VERSION}"' "$SCRIPT_PATH"
+    grep -q 'DEPLOY_REHEARSAL=true ROLLBACK_CONFIRMED=true ./scripts/rollback.sh -v "${ROLLBACK_PROBE_VERSION}"' "$SCRIPT_PATH"
+    grep -q 'docker exec nln_ui wget -q --spider "http://127.0.0.1:${PORT_UI}"' "$BATS_TEST_DIRNAME/../rollback.sh"
+    grep -q 'docker exec nln_server wget -q --spider "http://127.0.0.1:${PORT_SERVER}/healthcheck"' "$BATS_TEST_DIRNAME/../rollback.sh"
     grep -q 'rm -rf "/var/tmp/${ROLLBACK_PROBE_VERSION}"' "$SCRIPT_PATH"
 }

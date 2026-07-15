@@ -361,7 +361,7 @@ run_rollback_probe() {
     docker exec --user 0:0 nln_db \
         chmod -R a+rwX /var/lib/postgresql/data
     cp -a "${TMP_VERSION_DIR}" "${rollback_probe_dir}"
-    (cd "${REHEARSAL_PROJECT_DIR}" && ROLLBACK_CONFIRMED=true ./scripts/rollback.sh -v "${ROLLBACK_PROBE_VERSION}")
+    (cd "${REHEARSAL_PROJECT_DIR}" && DEPLOY_REHEARSAL=true ROLLBACK_CONFIRMED=true ./scripts/rollback.sh -v "${ROLLBACK_PROBE_VERSION}")
 }
 
 header "Preparing deploy rehearsal"
