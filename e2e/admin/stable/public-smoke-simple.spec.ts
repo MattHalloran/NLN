@@ -45,6 +45,20 @@ const gotoHomeAndExpectUsable = async (page: import("@playwright/test").Page) =>
 
     const viewTrackingResponse = await viewTrackingResponsePromise;
     expect(viewTrackingResponse.status()).toBe(200);
+    const partnerLogos = page.locator("footer img[alt*='member'], footer img[alt*='Plant Brand']");
+    await expect(partnerLogos).toHaveCount(3);
+    await expect
+        .poll(() =>
+            partnerLogos.evaluateAll((images) =>
+                images.every(
+                    (image) =>
+                        image instanceof HTMLImageElement &&
+                        image.complete &&
+                        image.naturalWidth > 0,
+                ),
+            ),
+        )
+        .toBe(true);
 };
 
 test.describe("Public Site - Smoke", () => {
