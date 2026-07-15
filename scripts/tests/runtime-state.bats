@@ -117,6 +117,20 @@ teardown() {
     grep -q 'execFileSync("docker", \["rm", "-f", name\]' "$BATS_TEST_DIRNAME/../../e2e/teardown/e2e-services.teardown.ts"
 }
 
+@test "trusted browser validation is isolated from local and production runtime state" {
+    local root="$BATS_TEST_DIRNAME/../.."
+
+    grep -q 'E2E_IGNORE_DOTENV=true' "$root/scripts/validate-browser-fixture.sh"
+    grep -q 'E2E_TEARDOWN_REMOVE_SERVICES=true' "$root/scripts/validate-browser-fixture.sh"
+    grep -q 'E2E_DB_CONTAINER="nln_validation_db_' "$root/scripts/validate-browser-fixture.sh"
+    grep -q 'E2E_REDIS_CONTAINER="nln_validation_redis_' "$root/scripts/validate-browser-fixture.sh"
+    grep -q 'PORT_PWA="${VALIDATION_PORT_PWA:-13002}"' "$root/scripts/validate-browser-fixture.sh"
+    grep -q 'process.env.PORT_SERVER' "$root/packages/server/src/index.ts"
+    grep -q 'process.env.PORT_UI' "$root/packages/ui/vite.config.ts"
+    grep -q 'E2E_SERVER_ORIGIN' "$root/e2e/hero-data.setup.ts"
+    ! grep -R -q 'DEFAULT_SERVER_URLS\|LOCAL_DEV_ORIGINS' "$root/e2e" --include='*.ts'
+}
+
 @test "local lighthouse gate starts disposable API services" {
     grep -q 'default_env_apply_e2e' "$BATS_TEST_DIRNAME/../lighthouse-local.sh"
     grep -q 'E2E_MANAGE_SERVICES=true bash "${ROOT_DIR}/scripts/start-e2e-server.sh"' "$BATS_TEST_DIRNAME/../lighthouse-local.sh"

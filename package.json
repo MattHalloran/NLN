@@ -78,7 +78,7 @@
     "coverage:summary": "node scripts/coverage-summary.mjs",
     "validation:receipt": "node scripts/validation-receipt.mjs",
     "validate:trusted": "bash scripts/validate-trusted.sh",
-    "validate:browser": "yarn workspace @local/shared build && yarn workspace ui build && yarn test:pwa && yarn test:a11y && yarn test:e2e:public && yarn test:visual && yarn test:e2e:admin && yarn test:e2e:production && yarn test:e2e:production-local",
+    "validate:browser": "bash scripts/validate-browser-fixture.sh",
     "validate:full": "yarn validate:quick && yarn test:integration && yarn validate:browser",
     "validate:release": "bash scripts/validate-release.sh",
     "validate:ci": "yarn validate:full",

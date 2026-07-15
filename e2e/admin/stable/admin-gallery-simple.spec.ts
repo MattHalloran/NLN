@@ -1,14 +1,8 @@
-import {
-    APP_LINKS,
-    CSRF,
-    DEFAULT_SERVER_URLS,
-    IMAGE_LABELS,
-    REST_ROUTES,
-    stripApiPrefix,
-} from "@local/shared";
+import { APP_LINKS, CSRF, IMAGE_LABELS, REST_ROUTES, stripApiPrefix } from "@local/shared";
 import type { Page } from "@playwright/test";
 import sharp from "sharp";
 import { test, expect } from "../../fixtures/auth";
+import { E2E_SERVER_ORIGIN } from "../../fixtures/urls";
 
 const createPngImageBuffer = async (seed: number, variant: "checker" | "stripes") => {
     const width = 64;
@@ -23,18 +17,9 @@ const createPngImageBuffer = async (seed: number, variant: "checker" | "stripes"
                 (seed * 1103515245 + x * 374761393 + y * 668265263 + (x * y + 1) * 2246822519) >>>
                 0;
             const block = ((x >> 3) + (y >> 3) + seed) % 3;
-            const red =
-                variant === "checker"
-                    ? (value + block * 83) % 256
-                    : (value >>> 16) % 160;
-            const green =
-                variant === "checker"
-                    ? (value >>> 8) % 180
-                    : (value + block * 59) % 256;
-            const blue =
-                variant === "checker"
-                    ? (value >>> 16) % 160
-                    : (value >>> 8) % 256;
+            const red = variant === "checker" ? (value + block * 83) % 256 : (value >>> 16) % 160;
+            const green = variant === "checker" ? (value >>> 8) % 180 : (value + block * 59) % 256;
+            const blue = variant === "checker" ? (value >>> 16) % 160 : (value >>> 8) % 256;
 
             pixels[offset] = red;
             pixels[offset + 1] = green;
@@ -59,7 +44,9 @@ const dragByHtml5Events = async (page: Page, sourceTestId: string, targetTestId:
             const source = document.querySelector(`[data-testid="${sourceTestId}"]`);
             const target = document.querySelector(`[data-testid="${targetTestId}"]`);
             if (!source || !target) {
-                throw new Error(`Unable to find drag source ${sourceTestId} or target ${targetTestId}`);
+                throw new Error(
+                    `Unable to find drag source ${sourceTestId} or target ${targetTestId}`,
+                );
             }
 
             const dataTransfer = new DataTransfer();
@@ -68,8 +55,12 @@ const dragByHtml5Events = async (page: Page, sourceTestId: string, targetTestId:
                     bubbles: true,
                     cancelable: true,
                     dataTransfer,
-                    clientX: element.getBoundingClientRect().left + element.getBoundingClientRect().width / 2,
-                    clientY: element.getBoundingClientRect().top + element.getBoundingClientRect().height / 2,
+                    clientX:
+                        element.getBoundingClientRect().left +
+                        element.getBoundingClientRect().width / 2,
+                    clientY:
+                        element.getBoundingClientRect().top +
+                        element.getBoundingClientRect().height / 2,
                 });
                 element.dispatchEvent(event);
             };
@@ -88,7 +79,7 @@ const deleteUploadedImages = async (authenticatedPage: Page, hashes: string[]) =
     if (hashes.length === 0) return;
 
     const csrfResponse = await authenticatedPage.request.get(
-        `${DEFAULT_SERVER_URLS.localOrigin}${REST_ROUTES.csrfToken}`,
+        `${E2E_SERVER_ORIGIN}${REST_ROUTES.csrfToken}`,
     );
     expect(csrfResponse.ok()).toBe(true);
     const csrfData = await csrfResponse.json();
@@ -97,7 +88,7 @@ const deleteUploadedImages = async (authenticatedPage: Page, hashes: string[]) =
 
     for (const hash of hashes) {
         const cleanupResponse = await authenticatedPage.request.delete(
-            `${DEFAULT_SERVER_URLS.localOrigin}${REST_ROUTES.images.root}/${hash}?force=true`,
+            `${E2E_SERVER_ORIGIN}${REST_ROUTES.images.root}/${hash}?force=true`,
             {
                 headers: {
                     [CSRF.HeaderName]: csrfToken,
@@ -112,7 +103,7 @@ const waitForGalleryHashes = async (authenticatedPage: Page, hashes: string[]) =
     await expect
         .poll(async () => {
             const response = await authenticatedPage.request.get(
-                `${DEFAULT_SERVER_URLS.localOrigin}${REST_ROUTES.images.byLabel(IMAGE_LABELS.Gallery)}`,
+                `${E2E_SERVER_ORIGIN}${REST_ROUTES.images.byLabel(IMAGE_LABELS.Gallery)}`,
             );
             if (!response.ok()) return [];
             const images = (await response.json()) as Array<{ hash: string }>;
@@ -178,7 +169,9 @@ test.describe("Admin Gallery", () => {
             await waitForGalleryHashes(authenticatedPage, [uploadedHash]);
             await gotoAdminGalleryWithHashes(authenticatedPage, [uploadedHash]);
 
-            const uploadedCard = authenticatedPage.getByTestId(`gallery-image-card-${uploadedHash}`);
+            const uploadedCard = authenticatedPage.getByTestId(
+                `gallery-image-card-${uploadedHash}`,
+            );
             await expect(uploadedCard).toBeVisible();
             await uploadedCard.getByRole("button", { name: /edit image data/i }).click();
             await expect(authenticatedPage.getByRole("dialog")).toBeVisible();
@@ -206,7 +199,7 @@ test.describe("Admin Gallery", () => {
             await expect(authenticatedPage.getByText(description).first()).toBeVisible();
 
             const galleryResponse = await authenticatedPage.request.get(
-                `${DEFAULT_SERVER_URLS.localOrigin}${REST_ROUTES.images.byLabel(IMAGE_LABELS.Gallery)}`,
+                `${E2E_SERVER_ORIGIN}${REST_ROUTES.images.byLabel(IMAGE_LABELS.Gallery)}`,
             );
             expect(galleryResponse.status()).toBe(200);
             const galleryImages = (await galleryResponse.json()) as Array<{
@@ -235,9 +228,11 @@ test.describe("Admin Gallery", () => {
             await expect(deleteDialog).toBeVisible();
             const removeLabelResponsePromise = authenticatedPage.waitForResponse(
                 (response) =>
-                    response.url().includes(
-                        `${stripApiPrefix(REST_ROUTES.images.root)}/${uploadedHash}/labels/${IMAGE_LABELS.Gallery}`,
-                    ) &&
+                    response
+                        .url()
+                        .includes(
+                            `${stripApiPrefix(REST_ROUTES.images.root)}/${uploadedHash}/labels/${IMAGE_LABELS.Gallery}`,
+                        ) &&
                     response.request().method() === "DELETE" &&
                     response.status() === 200,
             );
@@ -351,7 +346,7 @@ test.describe("Admin Gallery", () => {
             );
 
             const galleryResponse = await authenticatedPage.request.get(
-                `${DEFAULT_SERVER_URLS.localOrigin}${REST_ROUTES.images.byLabel(IMAGE_LABELS.Gallery)}`,
+                `${E2E_SERVER_ORIGIN}${REST_ROUTES.images.byLabel(IMAGE_LABELS.Gallery)}`,
             );
             expect(galleryResponse.status()).toBe(200);
             const galleryImages = (await galleryResponse.json()) as Array<{ hash: string }>;

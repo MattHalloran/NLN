@@ -6,7 +6,7 @@ DEFAULT_E2E_PROJECT_DIR="${ROOT_DIR}/.e2e-runtime"
 # shellcheck source=scripts/env-defaults.sh
 . "${ROOT_DIR}/scripts/env-defaults.sh"
 
-if [ -f "${ROOT_DIR}/.env" ]; then
+if [ "${E2E_IGNORE_DOTENV:-false}" != true ] && [ -f "${ROOT_DIR}/.env" ]; then
     set -a
     # shellcheck disable=SC1091
     source "${ROOT_DIR}/.env"

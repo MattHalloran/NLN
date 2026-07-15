@@ -1,7 +1,8 @@
 import { test, expect } from "../../fixtures/auth";
 import { gotoAdminPage } from "../../fixtures/admin";
 import type { Page } from "@playwright/test";
-import { APP_LINKS, DEFAULT_SERVER_URLS, REST_ROUTES, stripApiPrefix } from "@local/shared";
+import { APP_LINKS, REST_ROUTES, stripApiPrefix } from "@local/shared";
+import { E2E_SERVER_ORIGIN } from "../../fixtures/urls";
 import { allowRuntimeIssue } from "../../fixtures/runtime-guard";
 
 /**
@@ -13,7 +14,11 @@ import { allowRuntimeIssue } from "../../fixtures/runtime-guard";
 const HERO_VARIANT_ID = "variant-homepage-official";
 const LANDING_PAGE_ROOT_PATH = stripApiPrefix(REST_ROUTES.landingPage.root);
 
-const isLandingPageContentPut = (response: { url: () => string; request: () => { method: () => string }; status: () => number }) =>
+const isLandingPageContentPut = (response: {
+    url: () => string;
+    request: () => { method: () => string };
+    status: () => number;
+}) =>
     response.url().includes(LANDING_PAGE_ROOT_PATH) &&
     !response.url().includes(`${LANDING_PAGE_ROOT_PATH}/settings`) &&
     response.request().method() === "PUT" &&
@@ -250,7 +255,7 @@ test.describe("Hero Banner - Drag and Drop", () => {
         await expect
             .poll(async () => {
                 const getResponse = await authenticatedPage.request.get(
-                    `${DEFAULT_SERVER_URLS.localOrigin}${REST_ROUTES.landingPage.root}?onlyActive=false&variantId=${HERO_VARIANT_ID}`,
+                    `${E2E_SERVER_ORIGIN}${REST_ROUTES.landingPage.root}?onlyActive=false&variantId=${HERO_VARIANT_ID}`,
                 );
                 expect(getResponse.status()).toBe(200);
                 const body = await getResponse.json();
@@ -269,8 +274,8 @@ test.describe("Hero Banner - Drag and Drop", () => {
         await expect(
             authenticatedPage.getByRole("heading", { name: /hero section settings/i }),
         ).toBeVisible();
-        await expect(authenticatedPage.getByTestId("hero-alt-input-0").locator("input")).toHaveValue(
-            secondAlt,
-        );
+        await expect(
+            authenticatedPage.getByTestId("hero-alt-input-0").locator("input"),
+        ).toHaveValue(secondAlt);
     });
 });

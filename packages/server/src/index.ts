@@ -14,7 +14,14 @@ const SERVER_URL =
     (process.env.VITE_SERVER_LOCATION === "local"
         ? DEFAULT_SERVER_URLS.localApi
         : DEFAULT_SERVER_URLS.productionApi);
-const SERVER_PORT = DEFAULT_PORTS.server;
+const configuredServerPort = process.env.PORT_SERVER ?? String(DEFAULT_PORTS.server);
+const SERVER_PORT = Number(configuredServerPort);
+if (!Number.isSafeInteger(SERVER_PORT) || SERVER_PORT < 1 || SERVER_PORT > 65535) {
+    throw new Error(
+        `PORT_SERVER must be an integer between 1 and 65535; received ${configuredServerPort}`
+    );
+}
+const SERVER_HEALTHCHECK = `http://localhost:${SERVER_PORT}/healthcheck`;
 
 const main = async () => {
     logger.log(LogLevel.info, "Starting server...");
@@ -52,13 +59,13 @@ const main = async () => {
         console.log(`\n${"=".repeat(60)}`);
         console.log("✅ Server ready and accepting connections");
         console.log(`   Server URL: ${SERVER_URL}`);
-        console.log(`   Health check: ${DEFAULT_SERVER_URLS.localHealthcheck}`);
+        console.log(`   Health check: ${SERVER_HEALTHCHECK}`);
         console.log(`   Environment: ${process.env.NODE_ENV || "development"}`);
         console.log(`${"=".repeat(60)}\n`);
 
         // Self health-check to verify server is responding
         try {
-            const response = await fetch(DEFAULT_SERVER_URLS.localHealthcheck);
+            const response = await fetch(SERVER_HEALTHCHECK);
             if (response.ok) {
                 console.log("✅ Health check passed - server is responding\n");
             } else {

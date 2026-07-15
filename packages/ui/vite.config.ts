@@ -27,7 +27,7 @@ export default defineConfig({
     assetsInclude: ["**/*.md"],
     server: {
         host: true,
-        port: DEFAULT_PORTS.ui,
+        port: Number(process.env.PORT_UI ?? DEFAULT_PORTS.ui),
         strictPort: true,
     },
     optimizeDeps: {

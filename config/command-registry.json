@@ -183,7 +183,7 @@
       "owner": "quality",
       "effectClass": "local-fixture-mutation",
       "visibility": "advanced",
-      "rationale": "Browser gate may start disposable local services; production browser scope requires separate authority."
+      "rationale": "Runs the trusted browser matrix with tracked synthetic credentials, isolated high ports, uniquely named disposable services, forced cleanup, and no production environment dependency."
     },
     {
       "alias": "validate:full",
