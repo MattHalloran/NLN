@@ -128,7 +128,7 @@ if [ "${PROJECT_DIR}" = "${DEFAULT_E2E_PROJECT_DIR}" ]; then
     # Tracked fixture content intentionally keeps production-shaped image paths.
     # Populate each path with a tracked, non-sensitive placeholder so a clean
     # checkout never depends on ignored local uploads.
-    fixture_image_source="${ROOT_DIR}/assets/public/hero-plants-XXL.jpg"
+    fixture_image_source="${ROOT_DIR}/assets/public/hero-chicks-XXL.jpg"
     fixture_image_names=(
         "Newlife-3-XXL.jpeg"
         "Newlife-4-XXL.jpeg"

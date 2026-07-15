@@ -37,10 +37,7 @@ const csrfConfig = doubleCsrf({
             );
             return "temporary-csrf-secret-CHANGE-IN-PRODUCTION";
         }
-        logger.log(
-            LogLevel.debug,
-            `[CSRF] Secret read: ${secret.substring(0, 20)}... (length: ${secret.length})`
-        );
+        logger.log(LogLevel.debug, "CSRF secret is configured", { secretLength: secret.length });
         return secret;
     },
     cookieName: CSRF.CookieName,
@@ -173,12 +170,6 @@ export const csrfErrorHandler = (
             errorMessage: err.message,
             hasToken: !!req.headers[CSRF.HeaderName.toLowerCase()],
             hasCookie: !!req.cookies[CSRF.CookieName],
-            tokenValue: req.headers[CSRF.HeaderName.toLowerCase()]
-                ? `${String(req.headers[CSRF.HeaderName.toLowerCase()]).substring(0, 20)}...`
-                : "none",
-            cookieValue: req.cookies[CSRF.CookieName]
-                ? `${String(req.cookies[CSRF.CookieName]).substring(0, 20)}...`
-                : "none",
         });
 
         res.status(403).json({

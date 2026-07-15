@@ -139,6 +139,13 @@ teardown() {
     grep -q 'E2E_MANAGE_SERVICES=true bash "${ROOT_DIR}/scripts/start-e2e-server.sh"' "$BATS_TEST_DIRNAME/../lighthouse-local.sh"
     grep -q 'http://localhost:${PORT_SERVER}/healthcheck' "$BATS_TEST_DIRNAME/../lighthouse-local.sh"
     grep -q 'kill -TERM "${api_pid}"' "$BATS_TEST_DIRNAME/../lighthouse-local.sh"
+    grep -q 'LIGHTHOUSE_PORT_UI:-14001' "$BATS_TEST_DIRNAME/../lighthouse-local.sh"
+    grep -q 'nln_lighthouse_db_' "$BATS_TEST_DIRNAME/../lighthouse-local.sh"
+    grep -q 'LIGHTHOUSE_BASE_URL' "$BATS_TEST_DIRNAME/../../lighthouserc.cjs"
+    grep -q 'LIGHTHOUSE_LOAD_DOTENV:-false' "$BATS_TEST_DIRNAME/../lighthouse-local.sh"
+    grep -q 'CSRF_SECRET=lighthouse-fixture-csrf-secret' "$BATS_TEST_DIRNAME/../lighthouse-local.sh"
+    ! grep -q 'Secret read:' "$BATS_TEST_DIRNAME/../../packages/server/src/middleware/csrf.ts"
+    ! grep -q 'tokenValue:\|cookieValue:' "$BATS_TEST_DIRNAME/../../packages/server/src/middleware/csrf.ts"
 }
 
 @test "rollback script verifies database and public endpoints after rollback" {
