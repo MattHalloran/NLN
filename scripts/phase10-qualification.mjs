@@ -71,6 +71,7 @@ try {
                 "commit",
                 "workingTreeClean",
                 "trustedGateRuns",
+                "validationReceipts",
                 "finishedAt",
             ],
         },
@@ -84,6 +85,22 @@ try {
         clean.trustedGateRuns !== 2
     )
         throw new ContractError("clean checkout validation is incomplete");
+    if (!Array.isArray(clean.validationReceipts) || clean.validationReceipts.length !== 2)
+        throw new ContractError("clean checkout validation must bind two receipts");
+    const cleanReceiptHashes = new Set();
+    for (const [index, receipt] of clean.validationReceipts.entries()) {
+        assertExactKeys(
+            receipt,
+            { required: ["path", "sha256", "generatedAt"] },
+            `clean checkout receipt ${index}`,
+        );
+        isoTimestamp(receipt.generatedAt, `clean checkout receipt ${index} generatedAt`);
+        if (sha256File(receipt.path) !== receipt.sha256)
+            throw new ContractError(`clean checkout receipt ${index} hash is invalid`);
+        cleanReceiptHashes.add(receipt.sha256);
+    }
+    if (cleanReceiptHashes.size !== 2)
+        throw new ContractError("clean checkout receipts must be distinct");
     isoTimestamp(clean.finishedAt, "clean checkout finishedAt");
     const evidenceResult = spawnSync(
         process.execPath,

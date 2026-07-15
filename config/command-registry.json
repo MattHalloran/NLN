@@ -410,6 +410,19 @@
       "safestNextCommand": "review recovery decision matrix"
     },
     {
+      "command": "qualify:clean-checkout",
+      "aliases": [],
+      "audience": "phase-qualification-reviewer",
+      "effectClass": "local-read-only",
+      "availability": "candidate",
+      "defaultMode": "verify",
+      "productionExecution": false,
+      "confirmation": null,
+      "inputs": ["two independent clean validate:trusted receipts", "exact commit"],
+      "receiptType": null,
+      "safestNextCommand": "qualify:phase10 after external gates and usability"
+    },
+    {
       "command": "qualify:phase10",
       "aliases": [],
       "audience": "phase-qualification-reviewer",

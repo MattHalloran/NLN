@@ -15,7 +15,10 @@ import{publishJsonNoOverwrite,receiptEnvelope}from'./scripts/lib/phase10-safe-io
 EOF
   echo "{\"schemaVersion\":1,\"components\":[{\"receiptType\":\"release-local-verification\",\"path\":\"$WORK/evidence/component.json\"}] }" >"$WORK/components.json"
   node scripts/release-evidence.mjs create --identity "$WORK/identity.json" --components "$WORK/components.json" --output "$WORK/evidence/index.json" --now "$NOW"
-  echo "{\"schemaVersion\":1,\"receiptType\":\"clean-checkout-validation\",\"status\":\"success\",\"commit\":\"$COMMIT\",\"workingTreeClean\":true,\"trustedGateRuns\":2,\"finishedAt\":\"$NOW\"}" >"$WORK/clean.json"
+  for run in one two; do printf '# Validation Receipt\n\nGenerated: %s\nCommit: %s\nBranch:\nWorktree: clean\nValidation command: yarn validate:trusted\n\n## Artifact Check\n\nAll required artifacts for the declared validation command are present and fresh.\n' "$NOW" "$COMMIT" >"$WORK/validation-$run.md"; done
+  printf '\nrun-two\n' >>"$WORK/validation-two.md"
+  chmod 600 "$WORK/validation-one.md" "$WORK/validation-two.md"
+  node scripts/qualify-clean-checkout.mjs --commit "$COMMIT" --receipt-one "$WORK/validation-one.md" --receipt-two "$WORK/validation-two.md" --output "$WORK/clean.json"
   echo '{"status":"success","total":338,"failureInjectionScenarios":[{"id":"pre-mutation","status":"passed"},{"id":"post-activation","status":"passed"}],"fixtureMeasurements":{"downtimeMilliseconds":[0,12],"rollbackRtoMilliseconds":[25]}}' >"$WORK/tests.json"
   node - "$WORK/usability.json" <<'EOF'
 const fs=require('fs'),ids=['find-current-release','explain-candidate-production-boundary','diagnose-stale-backup','choose-app-rollback','respond-incompatible-migration','find-release-evidence-chain','identify-downtime-slo'];fs.writeFileSync(process.argv[2],JSON.stringify({status:'passed',independentParticipant:true,exercises:ids.map((id,i)=>({id,status:'passed',durationSeconds:i?30:45,wrongTurns:[],ambiguousWording:[],unsafeSelections:[]}))}));

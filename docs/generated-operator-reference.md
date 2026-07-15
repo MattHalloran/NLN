@@ -24,6 +24,7 @@ Registry: `nln-release-commands-v1`
 | `prepare-deploy-readiness.sh` | current | `production-copy-out` | execute | `legacy-deploy-readiness` | deploy-production.sh |
 | `deploy-production.sh` | current | `production-app-mutation` | execute | `legacy-production-deploy` | follow release-runbook.md |
 | `rollback.sh` | advanced-destructive | `production-data-destructive` | dry-run | `legacy-destructive-rollback` | review recovery decision matrix |
+| `qualify:clean-checkout` | candidate | `local-read-only` | verify | none | qualify:phase10 after external gates and usability |
 | `qualify:phase10` | candidate | `local-read-only` | verify | `phase10-qualification` | Phase 11 review; do not execute production |
 | `validate:trusted` | current | `local-read-only` | validate | `validation-receipt` | release prepare or current production readiness |
 | `runtime-state:manifest:capture` | advanced | `local-fixture-mutation` | create local manifest | `runtime-state-manifest-v2` | runtime-state:manifest:verify |
