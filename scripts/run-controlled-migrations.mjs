@@ -53,8 +53,8 @@ try {
 }
 if (metadata.classification === "incompatible" && !metadata.specialDeploymentPlan)
     die("incompatible migration lacks special deployment plan");
-const started = new Date().toISOString(),
-    startMs = Date.now();
+const startMs = Date.now(),
+    started = new Date(startMs).toISOString();
 let locked = false,
     before = null,
     after = null,
@@ -73,42 +73,43 @@ const invoke = (command, payload = {}) => {
     }
 };
 const publish = () => {
-    const receipt = {
-        schemaVersion: 1,
-        receiptType: "controlled-migration",
-        status: failure ? "failure" : "success",
-        releaseVersion: metadata.releaseVersion,
-        commit: o.commit,
-        startedAt: started,
-        finishedAt: new Date().toISOString(),
-        durationMs: Date.now() - startMs,
-        policySha256: sha256File(o.policy),
-        metadataSha256: sha256File(o.metadata),
-        trustedReceiptSha256: sha256File(o["trusted-receipt"]),
-        backupReceiptSha256: sha256File(o["backup-receipt"]),
-        before,
-        after,
-        checks: {
-            advisoryLockAcquired: locked,
-            postgresMajorSupported: before
-                ? policy.supportedPostgresMajors.includes(before.postgresMajor)
-                : false,
-            freeSpaceSufficient: before
-                ? before.freeBytes >=
-                  Math.max(policy.minimumFreeBytes, metadata.diskSpaceRequiredBytes)
-                : false,
-            noPartialMigrations: before ? before.partialMigrations === false : false,
-            expectedStartingState: before
-                ? JSON.stringify(before.appliedMigrations) ===
-                  JSON.stringify(metadata.fromMigrations ?? [])
-                : false,
-            expectedEndingState: after
-                ? JSON.stringify(after.appliedMigrations) ===
-                  JSON.stringify(migrationContract.orderedMigrationIds)
-                : false,
-        },
-        failure: failure ? { stage: failure.stage, message: failure.message } : null,
-    };
+    const finishedMs = Date.now(),
+        receipt = {
+            schemaVersion: 1,
+            receiptType: "controlled-migration",
+            status: failure ? "failure" : "success",
+            releaseVersion: metadata.releaseVersion,
+            commit: o.commit,
+            startedAt: started,
+            finishedAt: new Date(finishedMs).toISOString(),
+            durationMs: finishedMs - startMs,
+            policySha256: sha256File(o.policy),
+            metadataSha256: sha256File(o.metadata),
+            trustedReceiptSha256: sha256File(o["trusted-receipt"]),
+            backupReceiptSha256: sha256File(o["backup-receipt"]),
+            before,
+            after,
+            checks: {
+                advisoryLockAcquired: locked,
+                postgresMajorSupported: before
+                    ? policy.supportedPostgresMajors.includes(before.postgresMajor)
+                    : false,
+                freeSpaceSufficient: before
+                    ? before.freeBytes >=
+                      Math.max(policy.minimumFreeBytes, metadata.diskSpaceRequiredBytes)
+                    : false,
+                noPartialMigrations: before ? before.partialMigrations === false : false,
+                expectedStartingState: before
+                    ? JSON.stringify(before.appliedMigrations) ===
+                      JSON.stringify(metadata.fromMigrations ?? [])
+                    : false,
+                expectedEndingState: after
+                    ? JSON.stringify(after.appliedMigrations) ===
+                      JSON.stringify(migrationContract.orderedMigrationIds)
+                    : false,
+            },
+            failure: failure ? { stage: failure.stage, message: failure.message } : null,
+        };
     publishJsonNoOverwrite(o.output, receipt);
 };
 regularFile(path.resolve(o.adapter), "migration adapter");
