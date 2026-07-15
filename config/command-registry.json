@@ -109,6 +109,13 @@
       "rationale": "Registry, schema, and documentation drift gate."
     },
     {
+      "alias": "validate:prisma-client",
+      "owner": "quality",
+      "effectClass": "local-fixture-mutation",
+      "visibility": "internal",
+      "rationale": "Generates the local Prisma client from the tracked schema so clean-checkout validation does not depend on developer machine state."
+    },
+    {
       "alias": "validate:deployment-traceability",
       "owner": "phase10",
       "effectClass": "local-read-only",
