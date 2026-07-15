@@ -85,6 +85,18 @@ teardown() {
     grep -q 'restore-runtime-state.sh' "$SCRIPT_PATH"
 }
 
+@test "deploy rehearsal makes disposable Redis state readable for non-root backup" {
+    grep -q 'make_runtime_state_readable' "$SCRIPT_PATH"
+    grep -q "chmod -R a+rX" "$SCRIPT_PATH"
+    grep -q 'docker exec nln_redis' "$SCRIPT_PATH"
+}
+
+@test "deploy rehearsal cleanup removes only container-owned disposable state" {
+    grep -q -- '--user 0:0' "$SCRIPT_PATH"
+    grep -q -- '-v "${REHEARSAL_PROJECT_DIR}:/rehearsal-project"' "$SCRIPT_PATH"
+    grep -q 'rm -rf /rehearsal-project/data/postgres /rehearsal-project/data/redis' "$SCRIPT_PATH"
+}
+
 @test "deploy rehearsal installs project-local env file for docker compose env_file" {
     grep -q 'install_project_env_file' "$SCRIPT_PATH"
     grep -q 'cp -p "${ENV_FILE}" "${REHEARSAL_PROJECT_DIR}/.env-prod"' "$SCRIPT_PATH"

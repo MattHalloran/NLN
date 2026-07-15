@@ -85,6 +85,14 @@ cleanup() {
         (cd "${REHEARSAL_PROJECT_DIR}" && docker-compose --env-file "${ENV_FILE}" -f docker-compose-prod.yml down) >/dev/null 2>&1 || true
     fi
 
+    if [ "${KEEP}" != true ] && [ -d "${REHEARSAL_PROJECT_DIR}" ] && command -v docker >/dev/null 2>&1; then
+        docker run --rm --user 0:0 \
+            -v "${REHEARSAL_PROJECT_DIR}:/rehearsal-project" \
+            redis:7-alpine \
+            rm -rf /rehearsal-project/data/postgres /rehearsal-project/data/redis \
+            >/dev/null 2>&1 || true
+    fi
+
     if [ "${KEEP}" != true ]; then
         rm -rf "${WORK_ROOT}"
         rm -rf "${TMP_VERSION_DIR}"
@@ -293,6 +301,12 @@ ON CONFLICT (id) DO UPDATE SET note = EXCLUDED.note;
 SQL
 }
 
+make_runtime_state_readable() {
+    header "Making disposable Redis state readable for host-side backup"
+    docker exec nln_redis sh -c \
+        'chmod -R a+rX "${PROJECT_DIR}/data/redis"'
+}
+
 verify_dump_restores() {
     local dump_path="${TMP_VERSION_DIR}/runtime-state/data/postgres.sql"
 
@@ -404,6 +418,7 @@ docker network create nginx-proxy >/dev/null 2>&1 || true
 wait_for_db
 apply_baseline_migrations
 seed_disposable_database
+make_runtime_state_readable
 
 header "Building deploy artifacts"
 (cd "${REHEARSAL_PROJECT_DIR}" && TEST=false BUILD_SKIP_PACKAGE_VERSION_UPDATE=true ./scripts/build.sh -v "${VERSION}" -d n -e "${ENV_FILE}")
