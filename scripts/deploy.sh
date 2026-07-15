@@ -430,7 +430,7 @@ verify_public_endpoints() {
     ui_url="${UI_URL:-}"
     server_health_url="${SERVER_URL:-}"
 
-    if [ -z "${ui_url}" ] || [ -z "${server_health_url}" ]; then
+    if [ "${DEPLOY_REHEARSAL:-false}" != "true" ] && { [ -z "${ui_url}" ] || [ -z "${server_health_url}" ]; }; then
         warning "UI_URL or SERVER_URL is not set; skipping public endpoint verification."
         return 0
     fi
@@ -438,7 +438,13 @@ verify_public_endpoints() {
     server_health_url="${server_health_url%/}/healthcheck"
 
     for attempt in {1..12}; do
-        if curl -fsS "${ui_url}" >/dev/null && curl -fsS "${server_health_url}" >/dev/null; then
+        if [ "${DEPLOY_REHEARSAL:-false}" = "true" ]; then
+            if docker exec nln_ui wget -q --spider "http://localhost:${PORT_UI}" && \
+                docker exec nln_server wget -q --spider "http://localhost:${PORT_SERVER}/healthcheck"; then
+                success "Rehearsal UI and API endpoints are responding inside their isolated containers"
+                return 0
+            fi
+        elif curl -fsS "${ui_url}" >/dev/null && curl -fsS "${server_health_url}" >/dev/null; then
             success "Public UI and API healthcheck endpoints are responding"
             return 0
         fi

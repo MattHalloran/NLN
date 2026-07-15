@@ -70,6 +70,13 @@ teardown() {
     grep -q 'host setup remains disabled' "$BATS_TEST_DIRNAME/../deploy.sh"
 }
 
+@test "deploy rehearsal verifies isolated container endpoints without host port publication" {
+    grep -q 'docker exec nln_ui wget -q --spider "http://localhost:${PORT_UI}"' "$BATS_TEST_DIRNAME/../deploy.sh"
+    grep -q 'docker exec nln_server wget -q --spider "http://localhost:${PORT_SERVER}/healthcheck"' "$BATS_TEST_DIRNAME/../deploy.sh"
+    grep -q 'curl -fsS "${ui_url}"' "$BATS_TEST_DIRNAME/../deploy.sh"
+    grep -q 'curl -fsS "${server_health_url}"' "$BATS_TEST_DIRNAME/../deploy.sh"
+}
+
 @test "deploy script validates rehearsal commit without git pull" {
     grep -q 'Rehearsal repository is at expected commit' "$BATS_TEST_DIRNAME/../deploy.sh"
     grep -q 'DEPLOY_REHEARSAL' "$BATS_TEST_DIRNAME/../deploy.sh"
