@@ -1,23 +1,29 @@
-import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
 import { readAndVerifyMigrationMetadata } from "./lib/migration-contract.mjs";
+import {
+    ContractError,
+    parseOptions,
+    readJson as readJsonStrict,
+    regularFile,
+    safeRelative as safeRelativePath,
+    sha256Bytes,
+} from "./lib/phase10-safe-io.mjs";
 
 const [command, ...argv] = process.argv.slice(2);
-const options = {};
-for (let i = 0; i < argv.length; i += 2) {
-    if (!argv[i]?.startsWith("--") || !argv[i + 1]) {
-        console.error(`Invalid argument: ${argv[i] ?? ""}`);
-        process.exit(2);
-    }
-    options[argv[i].slice(2)] = argv[i + 1];
+let options;
+try {
+    options = parseOptions(argv);
+} catch (error) {
+    console.error(`Immutable release bundle rejected: ${error.message}`);
+    process.exit(error.exitCode ?? 2);
 }
 const fail = (message) => {
     console.error(`Immutable release bundle rejected: ${message}`);
     process.exit(1);
 };
-const sha256 = (data) => crypto.createHash("sha256").update(data).digest("hex");
+const sha256 = sha256Bytes;
 const canonical = (value) => `${JSON.stringify(value, null, 2)}\n`;
 const safeName = (value, label) => {
     if (typeof value !== "string" || !/^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/.test(value))
@@ -25,34 +31,25 @@ const safeName = (value, label) => {
     return value;
 };
 const regular = (file, label) => {
-    let stat;
     try {
-        stat = fs.lstatSync(file);
-    } catch {
-        fail(`${label} is missing`);
+        return regularFile(file, label);
+    } catch (error) {
+        fail(error.message);
     }
-    if (!stat.isFile() || stat.isSymbolicLink() || stat.nlink !== 1)
-        fail(`${label} must be a regular, single-link file`);
-    return stat;
 };
 const readJson = (file, label) => {
-    regular(file, label);
     try {
-        return JSON.parse(fs.readFileSync(file, "utf8"));
-    } catch (e) {
-        fail(`${label} is invalid JSON: ${e.message}`);
+        return readJsonStrict(file, label);
+    } catch (error) {
+        fail(error instanceof ContractError ? error.message : `${label} is invalid`);
     }
 };
 const safeRelative = (value) => {
-    if (
-        typeof value !== "string" ||
-        !value ||
-        path.isAbsolute(value) ||
-        value.includes("\\") ||
-        value.split("/").some((part) => !part || part === "." || part === "..")
-    )
+    try {
+        return safeRelativePath(value, "artifact path");
+    } catch {
         fail(`unsafe artifact path: ${value ?? "(missing)"}`);
-    return value;
+    }
 };
 const mode = (stat) => (stat.mode & 0o777).toString(8).padStart(3, "0");
 
@@ -100,7 +97,9 @@ function verifyBundle(directory, expectedVersion) {
         fail("bundle contains unexpected or missing artifacts");
     const metadataPath = path.join(directory, "migration-compatibility.json");
     try {
-        readAndVerifyMigrationMetadata(metadataPath, { expectedReleaseVersion: manifest.release.version });
+        readAndVerifyMigrationMetadata(metadataPath, {
+            expectedReleaseVersion: manifest.release.version,
+        });
     } catch (error) {
         fail(error.message);
     }
@@ -241,7 +240,9 @@ if (command === "create") {
     if (spec.images.some((image) => !/^[^\s@]+@sha256:[0-9a-f]{64}$/.test(image)))
         fail("all images must use immutable sha256 digests");
     try {
-        readAndVerifyMigrationMetadata(options["migration-metadata"], { expectedReleaseVersion: version });
+        readAndVerifyMigrationMetadata(options["migration-metadata"], {
+            expectedReleaseVersion: version,
+        });
     } catch (error) {
         fail(error.message);
     }
@@ -279,10 +280,9 @@ if (command === "create") {
             if (destinations.has(relative)) fail(`duplicate artifact destination: ${relative}`);
             destinations.add(relative);
             if (
-                ![
-                    ...requiredKinds,
-                    ...immutablePolicy.bundle.optionalArtifactKinds,
-                ].includes(entry.kind)
+                ![...requiredKinds, ...immutablePolicy.bundle.optionalArtifactKinds].includes(
+                    entry.kind,
+                )
             )
                 fail(`unsupported artifact kind: ${entry.kind}`);
             const source = path.resolve(options.source, safeRelative(entry.source));

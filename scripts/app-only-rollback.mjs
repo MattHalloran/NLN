@@ -1,38 +1,38 @@
-import crypto from "node:crypto";
-import fs from "node:fs";
 import path from "node:path";
-import { execFileSync } from "node:child_process";
+import {
+    ContractError,
+    parseJsonStrict,
+    parseOptions,
+    publishJsonNoOverwrite,
+    readJson,
+    regularFile,
+    runChild,
+    sha256Bytes,
+} from "./lib/phase10-safe-io.mjs";
 
-const args = process.argv.slice(2),
-    options = {};
-for (let i = 0; i < args.length; i += 2) {
-    if (!args[i]?.startsWith("--") || !args[i + 1]) {
-        console.error(`Invalid argument: ${args[i] ?? ""}`);
-        process.exit(2);
-    }
-    options[args[i].slice(2)] = args[i + 1];
-}
+const options = parseOptions(process.argv.slice(2));
 const fail = (m) => {
-    throw new Error(m);
+    throw new ContractError(m);
 };
 for (const key of ["bundle", "adapter", "receipt"])
     if (!options[key]) {
         console.error(`--${key} is required`);
         process.exit(2);
     }
-if (fs.existsSync(options.receipt)) {
-    console.error("App-only rollback rejected: receipt already exists");
-    process.exit(1);
-}
-const readJson = (file) => {
-    const s = fs.lstatSync(file);
-    if (!s.isFile() || s.isSymbolicLink()) fail(`${file} must be a regular file`);
-    return JSON.parse(fs.readFileSync(file, "utf8"));
-};
-const manifest = readJson(path.join(options.bundle, "release-manifest.json"));
-const migration = readJson(path.join(options.bundle, "migration-compatibility.json"));
-const environmentSchema = readJson(path.join(options.bundle, "environment-schema.json"));
-const policy = readJson(options.policy ?? "config/immutable-release-policy.json");
+const manifest = readJson(path.join(options.bundle, "release-manifest.json"), "bundle manifest", {
+    ownerOnly: true,
+});
+const migration = readJson(
+    path.join(options.bundle, "migration-compatibility.json"),
+    "migration compatibility",
+    { ownerOnly: true },
+);
+const environmentSchema = readJson(
+    path.join(options.bundle, "environment-schema.json"),
+    "environment schema",
+    { ownerOnly: true },
+);
+const policy = readJson(options.policy ?? "config/immutable-release-policy.json", "policy");
 if (policy.productionIntegrationEnabled !== false) fail("unsafe policy");
 if (
     options.execute === "true" &&
@@ -40,20 +40,21 @@ if (
         options.confirm !== `ROLLBACK-APP-ONLY-${manifest.release.version}`)
 )
     fail("execution requires fixture mode and exact confirmation");
-const run = (operation, payload = {}) =>
-    JSON.parse(
-        execFileSync(options.adapter, [operation, JSON.stringify(payload)], {
-            encoding: "utf8",
-            stdio: ["ignore", "pipe", "pipe"],
-        }),
-    );
+regularFile(path.resolve(options.adapter), "app rollback adapter");
+const run = (operation, payload = {}) => {
+    const child = runChild(path.resolve(options.adapter), [operation, JSON.stringify(payload)], {
+        timeoutMilliseconds: 300000,
+    });
+    if (child.status !== 0 || child.timedOut) fail(`${operation} failed`);
+    return parseJsonStrict(child.stdout, `${operation} result`);
+};
 const started = Date.now();
 let before;
 let activated = false;
 let status = "failed";
 let reason = null;
 try {
-    execFileSync(
+    const bundleVerification = runChild(
         process.execPath,
         [
             path.resolve("scripts/immutable-release-bundle.mjs"),
@@ -63,8 +64,10 @@ try {
             "--version",
             manifest.release.version,
         ],
-        { stdio: "ignore" },
+        { timeoutMilliseconds: 300000 },
     );
+    if (bundleVerification.status !== 0 || bundleVerification.timedOut)
+        fail("immutable release bundle verification failed");
     before = run("inspect", { protectedServices: policy.rollback.protectedStateServices });
     if (
         !Array.isArray(before.appliedMigrations) ||
@@ -136,16 +139,15 @@ const receipt = {
     finishedAt: new Date(finished).toISOString(),
     durationMilliseconds: finished - started,
     databaseRestored: false,
-    protectedStateBeforeSha256: before
-        ? crypto.createHash("sha256").update(JSON.stringify(before.stateIdentity)).digest("hex")
-        : null,
+    protectedStateBeforeSha256: before ? sha256Bytes(JSON.stringify(before.stateIdentity)) : null,
     failure: reason,
 };
-fs.mkdirSync(path.dirname(options.receipt), { recursive: true, mode: 0o700 });
-fs.writeFileSync(options.receipt, `${JSON.stringify(receipt, null, 2)}\n`, {
-    flag: "wx",
-    mode: 0o600,
-});
+try {
+    publishJsonNoOverwrite(options.receipt, receipt);
+} catch (error) {
+    console.error(`App-only rollback rejected: ${error.message}`);
+    process.exit(1);
+}
 if (status === "failed") {
     console.error(`App-only rollback rejected: ${reason}`);
     process.exit(1);

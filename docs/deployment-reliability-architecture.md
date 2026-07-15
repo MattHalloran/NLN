@@ -31,7 +31,7 @@ Consumers must hash-bind governing contracts. They must not copy private constan
 
 ## Safety primitives
 
-`scripts/lib/phase10-safe-io.mjs` owns strict duplicate-key JSON parsing, exact object keys, safe paths, owner-only regular file checks, canonical hashing and timestamps, atomic no-overwrite publication, explicit fixture guards, bounded/redacted child execution, and temporary cleanup. Domain modules should use these primitives without moving business rules into the library.
+`scripts/lib/phase10-safe-io.mjs` owns strict duplicate-key JSON parsing, exact object keys, safe paths, owner-only regular file checks, canonical hashing and timestamps, atomic no-overwrite publication, explicitly named atomic pointer replacement, explicit fixture guards, bounded/redacted child execution, and temporary cleanup. Immutable evidence always uses no-overwrite publication; replacement is reserved for derived pointers such as `current.json`, never qualification records. Domain modules should use these primitives without moving business rules into the library.
 
 Production-capable adapters must not be added or enabled in Phase 10. Fixture contexts require `fixture: true` and `production: false`. Help and planning paths must be side-effect-free. Every mutating fixture command defaults to planning or requires exact confirmation.
 

@@ -1,13 +1,14 @@
 import fs from "node:fs";
 import path from "node:path";
-import crypto from "node:crypto";
 import { spawnSync } from "node:child_process";
 import {
     ContractError,
     assertFresh,
+    canonicalJson,
     isoTimestamp,
     readJson,
     regularFile,
+    sha256Bytes,
     sha256File,
 } from "./phase10-safe-io.mjs";
 import { verifyBackupQualification } from "./backup-qualification.mjs";
@@ -56,8 +57,7 @@ export const implementedSemanticVerifiers = Object.freeze(
 );
 
 const hash256 = (value) => /^[0-9a-f]{64}$/.test(value ?? "");
-const cryptoHashJson = (value) =>
-    crypto.createHash("sha256").update(JSON.stringify(value)).digest("hex");
+const cryptoHashJson = (value) => sha256Bytes(canonicalJson(value));
 
 function exactDuration(startedAt, finishedAt, duration, label) {
     const started = Date.parse(isoTimestamp(startedAt, `${label} startedAt`));

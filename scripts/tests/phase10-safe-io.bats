@@ -36,6 +36,10 @@ EOF
   [ "$status" -eq 0 ]
   grep -q '"z": 1' "$WORK/out.json"
 }
+@test "atomic replace publishes owner-only pointers without temporary residue" {
+  run node --input-type=module -e 'import fs from "node:fs";import path from "node:path";import {publishJsonReplaceAtomic} from "./scripts/lib/phase10-safe-io.mjs";const out=process.argv[1];publishJsonReplaceAtomic(out,{generation:1});publishJsonReplaceAtomic(out,{generation:2});if(JSON.parse(fs.readFileSync(out)).generation!==2||(fs.statSync(out).mode&511)!==384||fs.readdirSync(path.dirname(out)).some(x=>x.includes(".tmp-")))process.exit(1)' "$WORK/current.json"
+  [ "$status" -eq 0 ]
+}
 @test "release index rejects duplicate receipt types and unsafe component files" {
   H=$(printf 'a%.0s' {1..64})
   C=$(printf 'b%.0s' {1..40})

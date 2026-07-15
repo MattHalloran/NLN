@@ -1,35 +1,34 @@
-import crypto from "node:crypto";
-import fs from "node:fs";
-import path from "node:path";
 import { verifyMaintenancePrerequisites } from "./lib/maintenance-prerequisites.mjs";
+import {
+    canonicalJson,
+    ContractError,
+    parseOptions,
+    publishJsonNoOverwrite,
+    readJson,
+    sha256Bytes,
+} from "./lib/phase10-safe-io.mjs";
 if (process.argv.includes("--help")) {
     console.log(
         "Usage: plan-vps-maintenance.mjs --inventory FILE --actions ID[,ID] --output FILE [--policy FILE] [--now ISO]\nEffect: fixture-only dry-run planning; performs no maintenance.",
     );
     process.exit(0);
 }
-const a = process.argv.slice(2),
-    o = {};
-for (let i = 0; i < a.length; i += 2) {
-    if (!a[i]?.startsWith("--") || !a[i + 1]) {
-        console.error("Invalid arguments");
-        process.exit(2);
-    }
-    o[a[i].slice(2)] = a[i + 1];
-}
+const o = parseOptions(process.argv.slice(2));
 const fail = (m) => {
     console.error(`Maintenance plan rejected: ${m}`);
     process.exit(1);
 };
 if (!o.inventory || !o.output) fail("--inventory and --output are required");
-if (fs.existsSync(o.output)) fail("output already exists");
-const read = (p) => {
-    const s = fs.lstatSync(p);
-    if (!s.isFile() || s.isSymbolicLink()) fail(`${p} must be a regular file`);
-    return JSON.parse(fs.readFileSync(p, "utf8"));
-};
-const policy = read(o.policy ?? "config/vps-health-maintenance-policy.json"),
-    inv = read(o.inventory);
+let policy, inv;
+try {
+    policy = readJson(
+        o.policy ?? "config/vps-health-maintenance-policy.json",
+        "maintenance policy",
+    );
+    inv = readJson(o.inventory, "maintenance inventory");
+} catch (error) {
+    fail(error instanceof ContractError ? error.message : "invalid maintenance input");
+}
 if (
     policy.productionIntegrationEnabled !== false ||
     policy.maintenance.deploymentIntegrationEnabled !== false
@@ -87,8 +86,11 @@ const base = {
     }),
     actions,
 };
-const planHash = crypto.createHash("sha256").update(JSON.stringify(base)).digest("hex"),
+const planHash = sha256Bytes(canonicalJson(base)),
     plan = { ...base, planHash };
-fs.mkdirSync(path.dirname(o.output), { recursive: true, mode: 0o700 });
-fs.writeFileSync(o.output, `${JSON.stringify(plan, null, 2)}\n`, { flag: "wx", mode: 0o600 });
+try {
+    publishJsonNoOverwrite(o.output, plan);
+} catch (error) {
+    fail(error.message);
+}
 console.log(`Maintenance dry-run plan created: ${planHash}`);

@@ -304,6 +304,25 @@ export function publishJsonNoOverwrite(file, value) {
     }
 }
 
+export function publishJsonReplaceAtomic(file, value) {
+    const absolute = path.resolve(file),
+        directory = path.dirname(absolute),
+        temporary = path.join(
+            directory,
+            `.${path.basename(absolute)}.tmp-${process.pid}-${crypto.randomBytes(6).toString("hex")}`,
+        );
+    fs.mkdirSync(directory, { recursive: true, mode: 0o700 });
+    try {
+        fs.writeFileSync(temporary, canonicalJson(value), { flag: "wx", mode: 0o600 });
+        fs.renameSync(temporary, absolute);
+    } catch (error) {
+        try {
+            fs.unlinkSync(temporary);
+        } catch {}
+        throw error;
+    }
+}
+
 export function receiptEnvelope({
     receiptType,
     receiptId,

@@ -1,19 +1,18 @@
-import crypto from "node:crypto";
-import fs from "node:fs";
 import path from "node:path";
-import { execFileSync } from "node:child_process";
 import { readAndVerifyRollbackCompatibility } from "./lib/rollback-compatibility.mjs";
 import { verifyReceiptFile } from "./lib/receipt-verifier.mjs";
+import {
+    ContractError,
+    parseJsonStrict,
+    parseOptions,
+    publishJsonNoOverwrite,
+    readJson,
+    regularFile,
+    runChild,
+    sha256Bytes,
+} from "./lib/phase10-safe-io.mjs";
 
-const args = process.argv.slice(2),
-    o = {};
-for (let i = 0; i < args.length; i += 2) {
-    if (!args[i]?.startsWith("--") || !args[i + 1]) {
-        console.error(`Invalid argument: ${args[i] ?? ""}`);
-        process.exit(2);
-    }
-    o[args[i].slice(2)] = args[i + 1];
-}
+const o = parseOptions(process.argv.slice(2));
 const required = ["adapter", "context", "receipt"];
 for (const k of required)
     if (!o[k]) {
@@ -21,28 +20,10 @@ for (const k of required)
         process.exit(2);
     }
 const fail = (m) => {
-    throw new Error(m);
+    throw new ContractError(m);
 };
-const read = (file, label) => {
-    let s;
-    try {
-        s = fs.lstatSync(file);
-    } catch {
-        fail(`${label} is missing`);
-    }
-    if (!s.isFile() || s.isSymbolicLink()) fail(`${label} must be a regular non-symlink file`);
-    try {
-        return JSON.parse(fs.readFileSync(file, "utf8"));
-    } catch (e) {
-        fail(`${label} is invalid JSON: ${e.message}`);
-    }
-};
-if (fs.existsSync(o.receipt)) {
-    console.error("Reduced-downtime rehearsal rejected: receipt already exists");
-    process.exit(1);
-}
-const policy = read(o.policy ?? "config/reduced-downtime-deployment-policy.json", "policy"),
-    context = read(o.context, "fixture context");
+const policy = readJson(o.policy ?? "config/reduced-downtime-deployment-policy.json", "policy"),
+    context = readJson(o.context, "fixture context");
 if (
     policy.productionIntegrationEnabled !== false ||
     context.fixture !== true ||
@@ -78,8 +59,9 @@ if (o.execute === "true" && o.confirm !== `REHEARSE-REDUCED-DOWNTIME-${context.r
     process.exit(1);
 }
 const safeAdapter = path.resolve(o.adapter);
-const as = fs.lstatSync(safeAdapter);
-if (!as.isFile() || as.isSymbolicLink()) {
+try {
+    regularFile(safeAdapter, "rehearsal adapter");
+} catch {
     console.error("Reduced-downtime rehearsal rejected: adapter must be a regular file");
     process.exit(1);
 }
@@ -87,12 +69,11 @@ const events = [];
 const run = (operation, payload = {}) => {
     const started = Date.now();
     try {
-        const raw = execFileSync(safeAdapter, [operation, JSON.stringify(payload)], {
-            encoding: "utf8",
-            stdio: ["ignore", "pipe", "pipe"],
-            timeout: 30000,
+        const child = runChild(safeAdapter, [operation, JSON.stringify(payload)], {
+            timeoutMilliseconds: 30000,
         });
-        const result = JSON.parse(raw);
+        if (child.status !== 0 || child.timedOut) fail(`${operation} failed`);
+        const result = parseJsonStrict(child.stdout, `${operation} result`);
         events.push({ operation, status: "success", durationMilliseconds: Date.now() - started });
         return result;
     } catch (e) {
@@ -110,7 +91,7 @@ let before = null,
     recovered = false,
     status = "failed",
     failure = null;
-const digest = (v) => crypto.createHash("sha256").update(JSON.stringify(v)).digest("hex");
+const digest = (v) => sha256Bytes(JSON.stringify(v));
 const assertState = (value, label) => {
     if (!value?.services || !value.writeSentinel) fail(`${label} state evidence is incomplete`);
     for (const service of policy.protectedStateServices) {
@@ -238,8 +219,12 @@ const receipt = {
     events,
     failure,
 };
-fs.mkdirSync(path.dirname(o.receipt), { recursive: true, mode: 0o700 });
-fs.writeFileSync(o.receipt, `${JSON.stringify(receipt, null, 2)}\n`, { flag: "wx", mode: 0o600 });
+try {
+    publishJsonNoOverwrite(o.receipt, receipt);
+} catch (error) {
+    console.error(`Reduced-downtime rehearsal rejected: ${error.message}`);
+    process.exit(1);
+}
 if (status === "failed" || status === "recovered") {
     console.error(
         status === "recovered"
