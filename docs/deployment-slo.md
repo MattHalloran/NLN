@@ -1,14 +1,14 @@
 # Deployment SLI and SLO Contract
 
-> Authority: operational reference. Contract version `nln-operational-sli-v1` in `config/operational-sli.json` is authoritative for machine validation.
+> Authority: operational reference. Indicator formulas live in `config/operational-sli.json`; all freshness, RPO, RTO, restore-cadence, incident-hold, and downtime limits are authoritative in `config/deployment-operational-objectives.json`.
 
 Production observations, local observations, fixture rehearsals, and policy limits are distinct. Fixture measurements never satisfy a production SLO. Unless an indicator says otherwise, the aggregation window is the trailing 30 days ending at the receipt's canonical UTC `finishedAt`.
 
-| Indicator | Formula | Clock/unit | Evidence | Scope | Minimum samples | Alert | Owner |
-| --- | --- | --- | --- | --- | ---: | ---: | --- |
-| deployment success rate | successful production deploy receipts / completed production deploy receipts | `finishedAt`, ratio | `release-deploy` receipts | production | 5 | below 0.95 | release operator |
-| deployment downtime | `userVisibleDowntimeFinishedAt - userVisibleDowntimeStartedAt` | adapter monotonic clock, ms | production deploy receipt | production | 1 | above 60,000 ms | release operator |
-| fixture rollback RTO | rollback `finishedAt - startedAt` | receipt timestamps, ms | `app-only-rollback` | fixture | 3 | above 300,000 ms | release operator |
+| Indicator               | Formula                                                                      | Clock/unit                  | Evidence                  | Scope      | Minimum samples |            Alert | Owner            |
+| ----------------------- | ---------------------------------------------------------------------------- | --------------------------- | ------------------------- | ---------- | --------------: | ---------------: | ---------------- |
+| deployment success rate | successful production deploy receipts / completed production deploy receipts | `finishedAt`, ratio         | `release-deploy` receipts | production |               5 |       below 0.95 | release operator |
+| deployment downtime     | `userVisibleDowntimeFinishedAt - userVisibleDowntimeStartedAt`               | adapter monotonic clock, ms | production deploy receipt | production |               1 |  above 60,000 ms | release operator |
+| fixture rollback RTO    | rollback `finishedAt - startedAt`                                            | receipt timestamps, ms      | `app-only-rollback`       | fixture    |               3 | above 300,000 ms | release operator |
 
 RPO is the age of the newest `qualified` backup at the instant database mutation begins. It is not capture completion time, remote publication time, or the age of an unverified archive. The routine production bound is 3,600 seconds, owned by the backup policy.
 

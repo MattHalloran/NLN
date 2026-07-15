@@ -24,7 +24,7 @@ yarn release prepare --help
 yarn release evidence verify --help
 ```
 
-See the [generated command and evidence reference](generated-operator-reference.md), [capability matrix](deployment-capability-matrix.md), and [Phase 10 candidate design](deployment-phase10-operator-interface-action-plan.md).
+See the [generated command reference](generated-operator-reference.md), [evidence reference](deployment-evidence-reference.md), [capability matrix](deployment-capability-matrix.md), and [Phase 10 architecture](deployment-reliability-architecture.md).
 
 ## Advanced recovery and destructive restore
 
@@ -40,6 +40,8 @@ Maintenance is never bundled with a routine release. Use [VPS maintenance](vps-m
 - [Deployment SLI/SLO](deployment-slo.md) — formulas, windows, scope, and owners.
 - [Deployment command catalog](deployment-command-catalog.md) — stable ownership and effects.
 - [Generated operator reference](generated-operator-reference.md) — registry-derived command and receipt names.
+- [Deployment evidence reference](deployment-evidence-reference.md) — receipt relationships, compatibility limits, storage, and verification.
+- [Deployment reliability architecture](deployment-reliability-architecture.md) — policies, adapters, extension rules, and testing boundaries.
 - [Deployment reliability master plan](deployment-reliability-master-plan.md) — reserved phase taxonomy.
 - [Deployment architecture/reference](../DEPLOYMENT.md) — background, not a live procedure.
 - [Testing and Validation Guide](../TESTING.md) and [Environment Variables](../ENVIRONMENT.md).

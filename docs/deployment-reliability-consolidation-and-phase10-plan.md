@@ -1,5 +1,7 @@
 # Deployment Reliability Consolidation and Phase 10 Master Plan
 
+> Authority: implementation plan. This records Phase 10 requirements and rationale; it is not a production runbook or authorization to access production.
+
 ## Purpose
 
 This plan describes how to consolidate the Phase 1–8 deployment-reliability work,
@@ -98,20 +100,20 @@ operator interface.
 
 Use these terms consistently in code, receipts, help, and documentation:
 
-| Term | Meaning |
-| --- | --- |
-| release qualification | Evidence that an exact commit and its artifacts are eligible for rehearsal or deployment |
-| backup integrity verification | Cryptographic and structural verification without claiming restorability |
-| database restore verification | Disposable restoration plus database invariants |
-| application restore verification | Production-style app operation against restored data in an isolated fixture |
-| app rollback | Restore application code/images/configuration while preserving the live database |
-| database restore | Replace database/runtime state from a selected backup, with stated RPO consequences |
-| disaster restore | Rebuild a clean host from independent release and backup artifacts |
-| health observation | Read-only collection and classification of system facts |
-| maintenance | Separately authorized host mutation, never part of deployment |
-| fixture | Synthetic/disposable environment incapable of reaching production |
-| production observation | Separately authorized read-only production access |
-| production mutation | Separately authorized production-changing action |
+| Term                             | Meaning                                                                                  |
+| -------------------------------- | ---------------------------------------------------------------------------------------- |
+| release qualification            | Evidence that an exact commit and its artifacts are eligible for rehearsal or deployment |
+| backup integrity verification    | Cryptographic and structural verification without claiming restorability                 |
+| database restore verification    | Disposable restoration plus database invariants                                          |
+| application restore verification | Production-style app operation against restored data in an isolated fixture              |
+| app rollback                     | Restore application code/images/configuration while preserving the live database         |
+| database restore                 | Replace database/runtime state from a selected backup, with stated RPO consequences      |
+| disaster restore                 | Rebuild a clean host from independent release and backup artifacts                       |
+| health observation               | Read-only collection and classification of system facts                                  |
+| maintenance                      | Separately authorized host mutation, never part of deployment                            |
+| fixture                          | Synthetic/disposable environment incapable of reaching production                        |
+| production observation           | Separately authorized read-only production access                                        |
+| production mutation              | Separately authorized production-changing action                                         |
 
 Avoid the unqualified word `rollback` in new operator-facing output. Always say
 `app rollback`, `database restore`, or `disaster restore`.
