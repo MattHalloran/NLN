@@ -11,7 +11,7 @@ import fs from'node:fs';import{createReleaseIdentity}from'./scripts/lib/release-
 EOF
   NOW=$(date -u +%Y-%m-%dT%H:%M:%S.000Z)
   node --input-type=module - "$WORK/evidence/component.json" "$COMMIT" "$H" "$NOW" <<'EOF'
-import{publishJsonNoOverwrite,receiptEnvelope}from'./scripts/lib/phase10-safe-io.mjs';const[file,commit,h,now]=process.argv.slice(2);publishJsonNoOverwrite(file,receiptEnvelope({receiptType:'release-local-verification',receiptId:'phase10-fixture-local-verification',status:'success',scope:'fixture',command:'release verify-local',release:{version:'10.0.0',commit,releaseId:'phase10-fixture'},policy:{id:'fixture-policy',sha256:h},startedAt:now,finishedAt:now,result:{assuranceProfile:'application',executed:true,application:{status:'success'}}}));
+import{publishJsonNoOverwrite,receiptEnvelope}from'./scripts/lib/phase10-safe-io.mjs';const[file,commit,h,now]=process.argv.slice(2);publishJsonNoOverwrite(file,receiptEnvelope({receiptType:'release-local-verification',receiptId:'phase10-fixture-local-verification',status:'success',scope:'fixture',command:'release verify-local',release:{version:'10.0.0',commit,releaseId:'phase10-fixture'},policy:{id:'fixture-policy',sha256:h},startedAt:now,finishedAt:now,result:{assuranceProfile:'application',executed:true,application:{status:'success',productionConnectivity:false,databaseRestoreVerified:true,applicationSmokePassed:true}}}));
 EOF
   echo "{\"schemaVersion\":1,\"components\":[{\"receiptType\":\"release-local-verification\",\"path\":\"$WORK/evidence/component.json\"}] }" >"$WORK/components.json"
   node scripts/release-evidence.mjs create --identity "$WORK/identity.json" --components "$WORK/components.json" --output "$WORK/evidence/index.json" --now "$NOW"

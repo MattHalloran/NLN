@@ -230,6 +230,103 @@ export function verifyReceiptFile(
             if (options.maximumAgeSeconds !== undefined)
                 assertFresh(observedAt, options.maximumAgeSeconds, options.now);
         }
+        if (entry.semanticVerifier === "release-evidence-index") {
+            const args = [
+                path.resolve("scripts/release-evidence.mjs"),
+                "verify",
+                "--index",
+                absolute,
+            ];
+            if (options.now !== undefined) args.push("--now", new Date(options.now).toISOString());
+            const verified = spawnSync(process.execPath, args, { stdio: "ignore" });
+            if (verified.status !== 0)
+                throw new ContractError("release evidence index semantic verification failed");
+        }
+        if (entry.semanticVerifier === "release-prepare") {
+            const policyPath = path.resolve("config/command-registry.json"),
+                stateChildren = (value.childReceipts ?? []).filter(
+                    (child) => child.receiptType === "release-lifecycle-state",
+                );
+            if (
+                value.status !== "planned" ||
+                value.productionMutation !== false ||
+                value.result?.deployReady !== true ||
+                value.policy?.sha256 !== sha256File(policyPath) ||
+                stateChildren.length !== 1 ||
+                value.result?.stateReceiptSha256 !== stateChildren[0].sha256
+            )
+                throw new ContractError("release prepare evidence is not deploy-ready");
+        }
+        if (entry.semanticVerifier === "release-deploy") {
+            const policyPath = path.resolve("config/command-registry.json"),
+                success = value.status === "success";
+            if (
+                value.productionMutation !== false ||
+                value.databaseMutationOccurred !== false ||
+                value.policy?.sha256 !== sha256File(policyPath) ||
+                (success && value.failure !== null) ||
+                (success &&
+                    !value.checks?.some(
+                        (check) => check.id === "health-smoke" && check.status === "passed",
+                    )) ||
+                (["failed", "recovered"].includes(value.status) && !value.failure)
+            )
+                throw new ContractError("release deployment outcome is inconsistent");
+        }
+        if (entry.semanticVerifier === "phase10-qualification") {
+            const policyPath = path.resolve("config/phase10-qualification-policy.json"),
+                gates = value.result?.trustedGateReceipts;
+            if (
+                value.status !== "qualified" ||
+                value.scope !== "fixture" ||
+                value.result?.productionIntegrationEnabled !== false ||
+                value.policy?.sha256 !== sha256File(policyPath) ||
+                !Array.isArray(gates) ||
+                gates.length !== 2 ||
+                gates[0]?.sha256 === gates[1]?.sha256 ||
+                value.result?.productionObservations?.status !== "skipped"
+            )
+                throw new ContractError("Phase 10 qualification semantics are incomplete");
+        }
+        if (entry.semanticVerifier === "release-local-verification") {
+            if (
+                !["planned", "success"].includes(value.status) ||
+                value.scope === "production" ||
+                typeof value.result?.executed !== "boolean" ||
+                (value.status === "success" &&
+                    (value.result.executed !== true ||
+                        value.result.application?.productionConnectivity !== false ||
+                        value.result.application?.databaseRestoreVerified !== true ||
+                        value.result.application?.applicationSmokePassed !== true))
+            )
+                throw new ContractError("local verification semantics are incomplete");
+        }
+        if (entry.semanticVerifier === "release-recovery-plan") {
+            if (
+                value.status !== "planned" ||
+                value.scope === "production" ||
+                value.result?.executionAuthorized !== false ||
+                !["database restore", "disaster restore"].includes(value.result?.recoveryType)
+            )
+                throw new ContractError("recovery evidence is not a safe plan");
+        }
+        if (entry.semanticVerifier === "legacy-evidence-compatibility") {
+            if (
+                value.status !== "passed" ||
+                value.result?.qualifying !== false ||
+                value.result?.originalUnmodified !== true ||
+                !value.result?.assuranceLimit
+            )
+                throw new ContractError("legacy compatibility evidence overstates assurance");
+        }
+        if (entry.semanticVerifier === "release-alert") {
+            isoTimestamp(value.observedAt, "release alert observedAt");
+            if (
+                !Array.isArray(value.evidence) ||
+                value.evidence.some((item) => typeof item !== "string" || item.length < 1)
+            )
+                throw new ContractError("release alert evidence is malformed");
+        }
         if (entry.semanticVerifier === "rollback-compatibility")
             verifyRollbackCompatibility(
                 value,

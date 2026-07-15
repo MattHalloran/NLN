@@ -52,13 +52,12 @@ EOF
   node --input-type=module - "$WORK/receipt.json" "$H" "$C" <<'EOF'
 import {publishJsonNoOverwrite,receiptEnvelope} from './scripts/lib/phase10-safe-io.mjs';
 const [file,hash,commit]=process.argv.slice(2);
-const value=receiptEnvelope({receiptType:'release-prepare',receiptId:'r1',status:'planned',scope:'fixture',command:'release prepare',release:{version:'1.0.0',commit,releaseId:'id'},policy:{id:'policy',sha256:hash},startedAt:'2026-01-01T00:00:00.000Z',finishedAt:'2026-01-01T00:00:01.250Z'});
-Object.assign(value,{evidenceIndexSha256:hash,migrationClassification:'none',productionMutation:false});
+const value=receiptEnvelope({receiptType:'release-local-verification',receiptId:'r1',status:'planned',scope:'fixture',command:'release verify-local',release:{version:'1.0.0',commit,releaseId:'id'},policy:{id:'policy',sha256:hash},startedAt:'2026-01-01T00:00:00.000Z',finishedAt:'2026-01-01T00:00:01.250Z',result:{assuranceProfile:'database',executed:false,application:null}});
 publishJsonNoOverwrite(file,value);
 EOF
-  run node scripts/verify-release-receipt.mjs --receipt "$WORK/receipt.json" --type release-prepare --scope fixture --version 1.0.0 --commit "$C" --policy-sha256 "$H" --now 2026-01-01T00:00:02.000Z --max-age-seconds 5
+  run node scripts/verify-release-receipt.mjs --receipt "$WORK/receipt.json" --type release-local-verification --scope fixture --version 1.0.0 --commit "$C" --policy-sha256 "$H" --now 2026-01-01T00:00:02.000Z --max-age-seconds 5
   [ "$status" -eq 0 ]
-  node -e 'const r=require(process.argv[1]);if(r.durationMilliseconds!==1250||r.producer.name!=="release prepare"||!Array.isArray(r.childReceipts))process.exit(1)' "$WORK/receipt.json"
+  node -e 'const r=require(process.argv[1]);if(r.durationMilliseconds!==1250||r.producer.name!=="release verify-local"||!Array.isArray(r.childReceipts))process.exit(1)' "$WORK/receipt.json"
   chmod 644 "$WORK/receipt.json"
   run node scripts/verify-release-receipt.mjs --receipt "$WORK/receipt.json"
   [ "$status" -ne 0 ]
