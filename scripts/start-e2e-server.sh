@@ -121,8 +121,31 @@ if [ "${PROJECT_DIR}" = "${DEFAULT_E2E_PROJECT_DIR}" ]; then
     mkdir -p "${PROJECT_DIR}/packages/server/src"
     cp -R "${ROOT_DIR}/packages/server/src/data" "${PROJECT_DIR}/packages/server/src/data"
     mkdir -p "${PROJECT_DIR}/data/logs"
-    mkdir -p "${ROOT_DIR}/assets/images" "${ROOT_DIR}/assets/private" "${ROOT_DIR}/assets/public"
-    ln -s "${ROOT_DIR}/assets" "${PROJECT_DIR}/assets"
+    mkdir -p "${PROJECT_DIR}/assets/images"
+    cp -R "${ROOT_DIR}/assets/public" "${PROJECT_DIR}/assets/public"
+    cp -R "${ROOT_DIR}/assets/private" "${PROJECT_DIR}/assets/private"
+
+    # Tracked fixture content intentionally keeps production-shaped image paths.
+    # Populate each path with a tracked, non-sensitive placeholder so a clean
+    # checkout never depends on ignored local uploads.
+    fixture_image_source="${ROOT_DIR}/assets/public/hero-plants-XXL.jpg"
+    fixture_image_names=(
+        "Newlife-3-XXL.jpeg"
+        "Newlife-4-XXL.jpeg"
+        "Newlife-5-XXL.jpeg"
+        "Newlife-7-XXL.jpeg"
+        "Newlife-12-XXL.jpeg"
+        "Newlife-15-XXL.jpeg"
+        "Newlife-16-S.jpeg"
+        "Newlife-16-XXL.jpeg"
+        "Wedding -1-24 1-XXL.JPG"
+        "bluestar-XXL.jpg"
+        "test-hero.jpg"
+        "tiny_tot_arborvitae_3-M.jpg"
+    )
+    for fixture_image_name in "${fixture_image_names[@]}"; do
+        cp "${fixture_image_source}" "${PROJECT_DIR}/assets/images/${fixture_image_name}"
+    done
 fi
 
 if [ "${E2E_MANAGE_SERVICES}" = "true" ]; then

@@ -11,6 +11,7 @@ type AxeViolation = {
     description: string;
     nodes: Array<{
         target: string[];
+        html?: string;
         failureSummary?: string;
     }>;
 };
@@ -36,7 +37,7 @@ export const expectNoSeriousAccessibilityViolations = async (page: Page) => {
                 .slice(0, 3)
                 .map(
                     (node) =>
-                        `    ${node.target.join(" ")}${node.failureSummary ? `: ${node.failureSummary}` : ""}`,
+                        `    ${node.target.join(" ")}${node.html ? ` (${node.html})` : ""}${node.failureSummary ? `: ${node.failureSummary}` : ""}`,
                 )
                 .join("\n");
             return `- ${violation.id} (${violation.impact}): ${violation.description}\n${nodes}`;
