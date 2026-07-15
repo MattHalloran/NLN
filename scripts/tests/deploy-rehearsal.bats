@@ -87,8 +87,9 @@ teardown() {
 
 @test "deploy rehearsal makes disposable Redis state readable for non-root backup" {
     grep -q 'make_runtime_state_readable' "$SCRIPT_PATH"
-    grep -q "chmod -R a+rX" "$SCRIPT_PATH"
     grep -q 'docker exec nln_redis' "$SCRIPT_PATH"
+    grep -q 'chmod -R a+rX "${REHEARSAL_PROJECT_DIR}/data/redis"' "$SCRIPT_PATH"
+    ! grep -q 'chmod -R a+rX "${PROJECT_DIR}/data/redis"' "$SCRIPT_PATH"
 }
 
 @test "deploy rehearsal cleanup removes only container-owned disposable state" {

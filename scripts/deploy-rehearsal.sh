@@ -303,8 +303,8 @@ SQL
 
 make_runtime_state_readable() {
     header "Making disposable Redis state readable for host-side backup"
-    docker exec nln_redis sh -c \
-        'chmod -R a+rX "${PROJECT_DIR}/data/redis"'
+    docker exec nln_redis \
+        chmod -R a+rX "${REHEARSAL_PROJECT_DIR}/data/redis"
 }
 
 verify_dump_restores() {
