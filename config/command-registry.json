@@ -113,7 +113,7 @@
       "owner": "quality",
       "effectClass": "local-fixture-mutation",
       "visibility": "internal",
-      "rationale": "Generates the local Prisma client from the tracked schema so clean-checkout validation does not depend on developer machine state."
+      "rationale": "Safely stages the tracked schema and migrations in the ignored dist location used by package-scoped Prisma commands, then generates the local client so clean-checkout and CI integration validation share one preparation path."
     },
     {
       "alias": "validate:shared-build",

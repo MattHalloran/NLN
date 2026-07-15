@@ -34,13 +34,7 @@ jobs:
         run: yarn workspace @local/shared build
 
       - name: Prepare Prisma schema
-        run: |
-          mkdir -p packages/server/dist/db
-          cp packages/server/src/db/schema.prisma packages/server/dist/db/schema.prisma
-          cp -R packages/server/src/db/migrations packages/server/dist/db/migrations
-
-      - name: Generate Prisma client
-        run: yarn workspace server prisma generate --schema src/db/schema.prisma
+        run: yarn validate:prisma-client
 
       - name: Validate quick gate
         run: yarn validate:quick
@@ -139,13 +133,7 @@ jobs:
         run: yarn workspace @local/shared build
 
       - name: Prepare Prisma schema
-        run: |
-          mkdir -p packages/server/dist/db
-          cp packages/server/src/db/schema.prisma packages/server/dist/db/schema.prisma
-          cp -R packages/server/src/db/migrations packages/server/dist/db/migrations
-
-      - name: Generate Prisma client
-        run: yarn workspace server prisma generate --schema src/db/schema.prisma
+        run: yarn validate:prisma-client
 
       - name: Integration tests
         run: yarn test:integration
@@ -229,13 +217,7 @@ jobs:
         run: yarn workspace @local/shared build
 
       - name: Prepare Prisma schema
-        run: |
-          mkdir -p packages/server/dist/db
-          cp packages/server/src/db/schema.prisma packages/server/dist/db/schema.prisma
-          cp -R packages/server/src/db/migrations packages/server/dist/db/migrations
-
-      - name: Generate Prisma client
-        run: yarn workspace server prisma generate --schema src/db/schema.prisma
+        run: yarn validate:prisma-client
 
       - name: Install Chromium
         run: yarn playwright install --with-deps chromium
