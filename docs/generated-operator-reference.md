@@ -63,6 +63,7 @@ Registry: `nln-release-commands-v1`
 | `validate:legacy-release-evidence` | release-operator | advanced | `local-read-only` |
 | `validate:phase10-contracts` | phase10 | internal | `local-read-only` |
 | `validate:prisma-client` | quality | internal | `local-fixture-mutation` |
+| `validate:shared-build` | quality | internal | `local-fixture-mutation` |
 | `validate:deployment-traceability` | phase10 | internal | `local-read-only` |
 | `runtime-state:backup:create-qualification` | backup | advanced | `local-fixture-mutation` |
 | `validate:deployment-operational-objectives` | reliability | internal | `local-read-only` |

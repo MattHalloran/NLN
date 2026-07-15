@@ -116,6 +116,13 @@
       "rationale": "Generates the local Prisma client from the tracked schema so clean-checkout validation does not depend on developer machine state."
     },
     {
+      "alias": "validate:shared-build",
+      "owner": "quality",
+      "effectClass": "local-fixture-mutation",
+      "visibility": "internal",
+      "rationale": "Builds the tracked shared workspace before consumers are type-checked and tested so clean-checkout validation does not depend on stale dist output."
+    },
+    {
       "alias": "validate:deployment-traceability",
       "owner": "phase10",
       "effectClass": "local-read-only",
