@@ -29,7 +29,33 @@ let policy, metadata;
 try {
     policy = read(policyPath);
     metadata = read(metadataPath);
-    assertExactKeys(policy, { required: ["schemaVersion", "policyId", "productionIntegrationEnabled", "supportedPostgresMajors", "minimumFreeBytes", "lockTimeoutMs", "statementTimeoutMs", "advisoryLockId", "allowedClassifications", "allowedLockRisks", "requireQualifiedBackup", "maximumQualifiedBackupAgeSeconds", "backupPolicyPath", "runtimeStateInventoryPath", "requireTrustedGate", "requireSpecialPlanForHighRisk", "requireSpecialPlanForIncompatible", "applicationStartupMigrationRemovalApproved"] }, "migration execution policy");
+    assertExactKeys(
+        policy,
+        {
+            required: [
+                "schemaVersion",
+                "policyId",
+                "productionIntegrationEnabled",
+                "supportedPostgresMajors",
+                "minimumFreeBytes",
+                "lockTimeoutMs",
+                "statementTimeoutMs",
+                "advisoryLockId",
+                "allowedClassifications",
+                "allowedLockRisks",
+                "requireQualifiedBackup",
+                "maximumQualifiedBackupAgeSeconds",
+                "operationalObjectivesPath",
+                "backupPolicyPath",
+                "runtimeStateInventoryPath",
+                "requireTrustedGate",
+                "requireSpecialPlanForHighRisk",
+                "requireSpecialPlanForIncompatible",
+                "applicationStartupMigrationRemovalApproved",
+            ],
+        },
+        "migration execution policy",
+    );
     verifyMigrationMetadata(metadata, { policy });
 } catch (e) {
     fail(`cannot read contract: ${e.message}`);
@@ -42,6 +68,8 @@ if (
     fail("unsupported policy or production integration enabled");
 if (policy.applicationStartupMigrationRemovalApproved !== false)
     fail("startup migration cutover must remain separately approved");
+if (policy.operationalObjectivesPath !== "config/deployment-operational-objectives.json")
+    fail("migration freshness must reference the operational objectives");
 if (!Array.isArray(policy.supportedPostgresMajors) || !policy.supportedPostgresMajors.includes(13))
     fail("PostgreSQL 13 support is required");
 for (const key of ["minimumFreeBytes", "lockTimeoutMs", "statementTimeoutMs", "advisoryLockId"])

@@ -14,12 +14,39 @@ try {
     fail(`cannot read policy: ${e.message}`);
 }
 try {
-    assertExactKeys(p, { required: ["schemaVersion", "policyId", "productionIntegrationEnabled", "topologyPath", "applicationServices", "protectedStateServices", "forbiddenLifecycleOperations", "requiredPreflightChecks", "activationOrder", "requireNoDependencies", "requireProtectedStateIdentity", "requireWriteSentinelPreservation", "automaticRollbackRequiresCompatibilityReceipt", "maximumProbeAttempts", "maximumRehearsedDowntimeMilliseconds"] }, "reduced-downtime policy");
-} catch (error) { fail(error.message); }
+    assertExactKeys(
+        p,
+        {
+            required: [
+                "schemaVersion",
+                "policyId",
+                "productionIntegrationEnabled",
+                "topologyPath",
+                "operationalObjectivesPath",
+                "applicationServices",
+                "protectedStateServices",
+                "forbiddenLifecycleOperations",
+                "requiredPreflightChecks",
+                "activationOrder",
+                "requireNoDependencies",
+                "requireProtectedStateIdentity",
+                "requireWriteSentinelPreservation",
+                "automaticRollbackRequiresCompatibilityReceipt",
+                "maximumProbeAttempts",
+                "maximumRehearsedDowntimeMilliseconds",
+            ],
+        },
+        "reduced-downtime policy",
+    );
+} catch (error) {
+    fail(error.message);
+}
 const topology = JSON.parse(fs.readFileSync(p.topologyPath, "utf8"));
 if (p.schemaVersion !== 1 || p.policyId !== "nln-reduced-downtime-fixture-v1")
     fail("unsupported policy identity");
 if (p.productionIntegrationEnabled !== false) fail("production integration must remain disabled");
+if (p.operationalObjectivesPath !== "config/deployment-operational-objectives.json")
+    fail("downtime must reference the operational objectives");
 if (JSON.stringify(p.applicationServices) !== JSON.stringify(["server", "ui"]))
     fail("application service allowlist changed");
 if (JSON.stringify(p.protectedStateServices) !== JSON.stringify(["db", "redis"]))
@@ -57,7 +84,10 @@ if (
     ])
 )
     fail("unsafe activation order");
-const topologyActivation = topology.activationOrder.flatMap((item) => [item.service, item.thenCheck]);
+const topologyActivation = topology.activationOrder.flatMap((item) => [
+    item.service,
+    item.thenCheck,
+]);
 if (JSON.stringify(p.activationOrder.slice(1, 5)) !== JSON.stringify(topologyActivation))
     fail("activation order drifted from topology contract");
 for (const key of [

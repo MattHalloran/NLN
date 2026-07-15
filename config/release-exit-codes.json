@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "contractId": "nln-release-exit-codes-v1",
+  "codes": {
+    "success": 0,
+    "invalidInput": 2,
+    "failedGate": 3,
+    "failedMutation": 4,
+    "successfulRecovery": 5,
+    "internalError": 70
+  }
+}

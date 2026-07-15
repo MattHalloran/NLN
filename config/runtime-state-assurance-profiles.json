@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "contractId": "nln-runtime-state-assurance-profiles-v1",
+  "productionIntegrationEnabled": false,
+  "profiles": [
+    { "id": "integrity", "rank": 1, "requiredStates": ["captured", "content-verified"] },
+    {
+      "id": "database",
+      "rank": 2,
+      "requiredStates": ["captured", "content-verified", "database-restore-verified"]
+    },
+    {
+      "id": "application",
+      "rank": 3,
+      "requiredStates": [
+        "captured",
+        "content-verified",
+        "database-restore-verified",
+        "application-restore-verified"
+      ]
+    },
+    {
+      "id": "remote",
+      "rank": 4,
+      "requiredStates": [
+        "captured",
+        "content-verified",
+        "database-restore-verified",
+        "encrypted-published",
+        "remote-download-verified"
+      ]
+    },
+    {
+      "id": "full",
+      "rank": 5,
+      "requiredStates": [
+        "captured",
+        "content-verified",
+        "database-restore-verified",
+        "application-restore-verified",
+        "encrypted-published",
+        "remote-download-verified",
+        "resilience-qualified"
+      ]
+    }
+  ]
+}

@@ -7,16 +7,38 @@
     "schemaVersion": { "const": 1 },
     "receiptType": { "type": "string", "minLength": 1 },
     "receiptId": { "type": "string", "minLength": 1 },
-    "status": { "enum": ["success", "failed", "planned", "recovered", "blocked", "qualified", "failure", "passed"] },
+    "status": {
+      "enum": [
+        "success",
+        "failed",
+        "planned",
+        "recovered",
+        "blocked",
+        "qualified",
+        "failure",
+        "passed"
+      ]
+    },
     "scope": { "enum": ["fixture", "local", "production"] },
-    "producer": { "type": "object" },
+    "producer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 }
+      }
+    },
     "release": { "type": "object" },
     "startedAt": { "type": "string", "format": "date-time" },
     "finishedAt": { "type": "string", "format": "date-time" },
+    "durationMilliseconds": { "type": "integer", "minimum": 0 },
     "policy": { "type": "object" },
     "inputs": { "type": "array" },
     "checks": { "type": ["array", "object"] },
     "outputs": { "type": "array" },
+    "childReceipts": { "type": "array" },
+    "result": { "type": "object" },
     "failure": {}
   },
   "additionalProperties": true,

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "nln-legacy-evidence-compatibility-v1",
+  "type": "object",
+  "required": ["schemaVersion", "receiptType"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "minimum": 1 },
+    "receiptType": { "type": "string", "minLength": 1 },
+    "status": { "type": "string" },
+    "scope": { "type": "string" }
+  },
+  "additionalProperties": true,
+  "$comment": "Compatibility shape only. Registry membership does not promote this evidence to canonical qualification. A domain verifier must validate it."
+}

@@ -30,5 +30,6 @@
   "requireWriteSentinelPreservation": true,
   "automaticRollbackRequiresCompatibilityReceipt": true,
   "maximumProbeAttempts": 20,
-  "maximumRehearsedDowntimeMilliseconds": 300000
+  "maximumRehearsedDowntimeMilliseconds": 60000,
+  "operationalObjectivesPath": "config/deployment-operational-objectives.json"
 }

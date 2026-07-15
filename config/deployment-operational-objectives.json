@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "contractId": "nln-deployment-operational-objectives-v1",
+  "productionIntegrationEnabled": false,
+  "freshnessSeconds": {
+    "trustedValidation": 604800,
+    "qualifiedBackup": 86400,
+    "preDeploymentBackup": 3600,
+    "remoteVerifiedCopy": 86400,
+    "healthObservation": 300
+  },
+  "recoveryPointSeconds": {
+    "routineDeploymentMaximumExposure": 3600
+  },
+  "restoreCadenceHours": {
+    "fixture": 168,
+    "approvedQualifiedBackup": 2160
+  },
+  "recoveryTimeMilliseconds": {
+    "applicationRollback": 300000,
+    "databaseRestore": 3600000,
+    "disasterRestore": 7200000
+  },
+  "routineDowntimeMilliseconds": 60000,
+  "incidentHold": {
+    "preserveBackups": true,
+    "preserveEvidence": true,
+    "blockRetentionDeletion": true
+  }
+}
