@@ -327,6 +327,79 @@ export function verifyReceiptFile(
             )
                 throw new ContractError("release alert evidence is malformed");
         }
+        if (entry.semanticVerifier === "application-restore-compatibility") {
+            const policyPath = path.resolve("config/runtime-state-assurance-profiles.json"),
+                archiveInput = value.inputs?.find(
+                    (input) => input.path && !input.receiptType && input.sha256,
+                );
+            if (archiveInput)
+                regularFile(archiveInput.path, "application restore archive", {
+                    ownerOnly: true,
+                });
+            if (
+                value.status !== "success" ||
+                !["fixture", "local"].includes(value.scope) ||
+                value.policy?.sha256 !== sha256File(policyPath) ||
+                value.result?.productionConnectivity !== false ||
+                value.result?.sensitiveDataRetained !== false ||
+                !value.result?.assuranceStates?.includes("application-restore-verified") ||
+                value.archive?.sha256 !== value.result?.archive?.sha256 ||
+                !archiveInput ||
+                sha256File(archiveInput.path) !== archiveInput.sha256 ||
+                archiveInput.sha256 !== value.result?.archiveFileSha256
+            )
+                throw new ContractError("application restore evidence is incomplete");
+        }
+        if (entry.semanticVerifier === "archive-v2-compatibility") {
+            if (
+                value.schemaVersion !== 2 ||
+                !Number.isSafeInteger(value.archiveBytes) ||
+                value.archiveBytes < 1 ||
+                !/^[0-9a-f]{64}$/.test(value.archiveSha256 ?? "") ||
+                !/^[0-9a-f]{64}$/.test(value.contentManifestSha256 ?? "") ||
+                !/^[0-9a-f]{40}$/.test(value.sourceCommit ?? "")
+            )
+                throw new ContractError("v2 archive evidence is incomplete");
+        }
+        if (entry.semanticVerifier === "database-invariant-compatibility") {
+            if (
+                value.status !== "passed" ||
+                !/^[0-9a-f]{64}$/.test(value.contractSha256 ?? "") ||
+                !/^[0-9a-f]{64}$/.test(value.expectedSha256 ?? "") ||
+                !/^[0-9a-f]{64}$/.test(value.observedSha256 ?? "")
+            )
+                throw new ContractError("database invariant evidence is incomplete");
+        }
+        if (entry.semanticVerifier === "remote-download-compatibility") {
+            if (
+                value.status !== "success" ||
+                value.scope !== "fixture" ||
+                !/^[0-9a-f]{64}$/.test(value.policy?.sha256 ?? "") ||
+                !/^[0-9a-f]{64}$/.test(value.archive?.sha256 ?? "") ||
+                !value.assuranceStates?.includes("remote-download-verified") ||
+                value.resilienceQualified !== false
+            )
+                throw new ContractError("remote download evidence is incomplete");
+            isoTimestamp(value.finishedAt, "remote download finishedAt");
+            if (options.maximumAgeSeconds !== undefined)
+                assertFresh(value.finishedAt, options.maximumAgeSeconds, options.now);
+        }
+        if (entry.semanticVerifier === "resilience-compatibility") {
+            if (
+                value.status !== "success" ||
+                value.scope !== "fixture" ||
+                value.copyCount < 3 ||
+                value.mediaTypeCount < 2 ||
+                value.offsiteCopyCount < 1 ||
+                !/^[0-9a-f]{64}$/.test(value.archive?.sha256 ?? "") ||
+                !Array.isArray(value.copies) ||
+                value.copies.length !== value.copyCount
+            )
+                throw new ContractError("3-2-1 resilience evidence is incomplete");
+            isoTimestamp(value.finishedAt, "resilience qualification finishedAt");
+            if (options.maximumAgeSeconds !== undefined)
+                assertFresh(value.finishedAt, options.maximumAgeSeconds, options.now);
+        }
         if (entry.semanticVerifier === "rollback-compatibility")
             verifyRollbackCompatibility(
                 value,

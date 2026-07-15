@@ -193,9 +193,12 @@
     },
     {
       "receiptType": "runtime-state-application-restore-verification",
-      "producer": "scripts/verify-production-backup-locally.sh",
+      "producer": "scripts/qualify-runtime-state-application-restore.mjs",
       "consumers": ["scripts/qualify-runtime-state-backup.mjs"],
-      "tests": ["scripts/tests/verify-production-backup-locally.bats"]
+      "tests": [
+        "scripts/tests/runtime-state-application-restore-qualification.bats",
+        "scripts/tests/verify-production-backup-locally.bats"
+      ]
     },
     {
       "receiptType": "runtime-state-remote-download-verification",

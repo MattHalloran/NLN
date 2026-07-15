@@ -11,6 +11,7 @@ import {
     sha256File,
 } from "./lib/phase10-safe-io.mjs";
 import { verifyReleaseIdentity } from "./lib/release-identity.mjs";
+import { verifyReceiptFile } from "./lib/receipt-verifier.mjs";
 
 const HELP = `Usage: qualify-runtime-state-backup.mjs --identity FILE --archive FILE --archive-receipt FILE --profile integrity|database|application|remote|full --output FILE [--database-receipt FILE] [--application-receipt FILE] [--remote-receipt FILE] [--resilience-receipt FILE] [--inventory FILE] [--policy FILE] [--profiles FILE] [--now ISO]
 Effect: local-read-only except owner-only qualification receipt publication. Production integration: disabled.`;
@@ -109,6 +110,18 @@ try {
             value.scope !== identity.scope
         )
             throw new ContractError(`${type} evidence is invalid or has the wrong scope`);
+        verifyReceiptFile(o[option], {
+            expectedType: type,
+            expectedRelease: {
+                version: identity.releaseVersion,
+                commit: identity.commitSha,
+            },
+            expectedScope: identity.scope,
+            maximumAgeSeconds: policy.qualification.maximumQualifiedAgeSeconds,
+            now,
+        });
+        if (value.archive?.sha256 !== archive.archiveSha256)
+            throw new ContractError(`${type} evidence refers to a different archive`);
         for (const state of providedStates) states.add(state);
         childReceipts.push({
             receiptType: type,

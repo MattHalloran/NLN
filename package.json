@@ -53,6 +53,7 @@
     "release:summary": "node scripts/release-observability.mjs summarize",
     "qualify:phase10": "node scripts/phase10-qualification.mjs",
     "qualify:remote-evidence": "node scripts/qualify-remote-evidence.mjs",
+    "qualify:runtime-state-application-restore": "node scripts/qualify-runtime-state-application-restore.mjs",
     "validate:phase10-contracts": "node scripts/validate-phase10-contracts.mjs && node scripts/generate-operator-reference.mjs --check",
     "validate:deployment-traceability": "node scripts/validate-deployment-traceability.mjs",
     "validate:deployment-operational-objectives": "node scripts/validate-deployment-operational-objectives.mjs",

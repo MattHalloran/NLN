@@ -22,12 +22,15 @@ fixture health ─────┘
 
 Optional local application verification, remote download verification, and 3-2-1 resilience evidence strengthen the graph but never replace required evidence. `config/runtime-state-assurance-profiles.json` defines the ordered backup profiles. A weaker profile cannot satisfy a stronger gate.
 
+The isolated production-style rehearsal intentionally retains its legacy owner-only key/value receipt for compatibility. After that rehearsal passes against the same extracted v2 archive, `qualify:runtime-state-application-restore` verifies the archive again, requires every isolation/restore/smoke check, rejects retained sensitive data, and emits the canonical archive-bound `runtime-state-application-restore-verification` receipt. The `application` and `full` backup assurance profiles accept that typed evidence only when its archive SHA-256 matches the archive being qualified.
+
 `release:state evaluate` derives lifecycle state from exact indexed receipt types and hashes. Missing evidence emits a blocked receipt. It is not valid to edit a state field manually.
 
 ## Verification commands
 
 ```bash
 yarn validate:release-receipt --receipt <RECEIPT>
+yarn qualify:runtime-state-application-restore --identity <IDENTITY> --archive <ARCHIVE> --archive-receipt <ARCHIVE_RECEIPT> --local-verification-receipt <LOCAL_RECEIPT> --output <APPLICATION_RECEIPT>
 yarn release evidence verify --index <INDEX>
 yarn release:state evaluate --index <INDEX> --output <STATE_RECEIPT>
 yarn release evidence summarize --directory <EVIDENCE_DIR> --output <SUMMARY> --alerts <ALERTS>

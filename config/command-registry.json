@@ -123,6 +123,13 @@
       "rationale": "Builds the tracked shared workspace before consumers are type-checked and tested so clean-checkout validation does not depend on stale dist output."
     },
     {
+      "alias": "qualify:runtime-state-application-restore",
+      "owner": "backup",
+      "effectClass": "local-fixture-mutation",
+      "visibility": "advanced",
+      "rationale": "Converts a fully passed isolated production-style rehearsal and exact v2 archive into typed, archive-bound application restore evidence."
+    },
+    {
       "alias": "validate:deployment-traceability",
       "owner": "phase10",
       "effectClass": "local-read-only",
