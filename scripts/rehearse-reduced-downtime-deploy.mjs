@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
 import { readAndVerifyRollbackCompatibility } from "./lib/rollback-compatibility.mjs";
+import { verifyReceiptFile } from "./lib/receipt-verifier.mjs";
 
 const args = process.argv.slice(2),
     o = {};
@@ -48,6 +49,28 @@ if (
     context.production !== false
 ) {
     console.error("Reduced-downtime rehearsal rejected: fixture-only safety context is required");
+    process.exit(1);
+}
+if (!context.lifecycleStateReceipt) {
+    console.error(
+        "Reduced-downtime rehearsal rejected: exact deploy-ready lifecycle evidence is required",
+    );
+    process.exit(1);
+}
+try {
+    const lifecycle = verifyReceiptFile(context.lifecycleStateReceipt, {
+        expectedType: "release-lifecycle-state",
+        expectedScope: "fixture",
+        expectedRelease: { version: context.releaseVersion, commit: context.commit },
+        now: new Date(o.now ?? Date.now()),
+    });
+    if (
+        lifecycle.value.result.target !== "deploy-ready" ||
+        lifecycle.value.result.targetAchieved !== true
+    )
+        fail("lifecycle evidence is not deploy-ready");
+} catch (error) {
+    console.error(`Reduced-downtime rehearsal rejected: ${error.message}`);
     process.exit(1);
 }
 if (o.execute === "true" && o.confirm !== `REHEARSE-REDUCED-DOWNTIME-${context.releaseVersion}`) {

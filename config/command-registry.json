@@ -3,24 +3,181 @@
   "registryId": "nln-release-commands-v1",
   "productionCandidateEnabled": false,
   "packageCommandCoverage": [
-    { "alias": "validate", "owner": "quality", "effectClass": "local-read-only", "visibility": "routine", "rationale": "Delegates to validate:quick." },
-    { "alias": "validate:quick", "owner": "quality", "effectClass": "local-read-only", "visibility": "routine", "rationale": "Canonical non-production local gate." },
-    { "alias": "validate:trusted-manifest", "owner": "trusted-gate", "effectClass": "local-read-only", "visibility": "internal", "rationale": "Manifest contract validator used by gates." },
-    { "alias": "validate:trusted-receipt", "owner": "trusted-gate", "effectClass": "local-read-only", "visibility": "advanced", "rationale": "Exact trusted receipt verifier." },
-    { "alias": "validate:runtime-state-inventory", "owner": "backup", "effectClass": "local-read-only", "visibility": "internal", "rationale": "Inventory contract validator." },
-    { "alias": "validate:runtime-state-backup-policy", "owner": "backup", "effectClass": "local-read-only", "visibility": "internal", "rationale": "Backup policy validator." },
-    { "alias": "validate:runtime-state-remote-storage-policy", "owner": "backup", "effectClass": "local-read-only", "visibility": "internal", "rationale": "Remote policy validator." },
-    { "alias": "validate:immutable-release-policy", "owner": "release-builder", "effectClass": "local-read-only", "visibility": "internal", "rationale": "Immutable release policy validator." },
-    { "alias": "validate:reduced-downtime-policy", "owner": "release-operator", "effectClass": "local-read-only", "visibility": "internal", "rationale": "Rehearsal policy validator." },
-    { "alias": "validate:vps-health-maintenance-policy", "owner": "maintenance", "effectClass": "local-read-only", "visibility": "internal", "rationale": "Maintenance policy validator." },
-    { "alias": "release", "owner": "release-operator", "effectClass": "local-read-only", "visibility": "routine", "rationale": "Candidate release help and subcommand dispatcher." },
-    { "alias": "release:evidence", "owner": "release-operator", "effectClass": "local-read-only", "visibility": "advanced", "rationale": "Evidence create, verify, and discovery dispatcher." },
-    { "alias": "validate:phase10-contracts", "owner": "phase10", "effectClass": "local-read-only", "visibility": "internal", "rationale": "Registry, schema, and documentation drift gate." },
-    { "alias": "check:runtime-state-backup-freshness", "owner": "backup", "effectClass": "local-read-only", "visibility": "advanced", "rationale": "Read-only remote metadata freshness check." },
-    { "alias": "cleanup:runtime-state-remote-backups", "owner": "backup", "effectClass": "local-fixture-mutation", "visibility": "advanced", "rationale": "Dry-run-first fixture retention; execution has exact confirmation." },
-    { "alias": "validate:browser", "owner": "quality", "effectClass": "local-fixture-mutation", "visibility": "advanced", "rationale": "Browser gate may start disposable local services; production browser scope requires separate authority." },
-    { "alias": "validate:full", "owner": "quality", "effectClass": "local-fixture-mutation", "visibility": "advanced", "rationale": "Includes integration and browser gates." },
-    { "alias": "validate:ci", "owner": "quality", "effectClass": "local-fixture-mutation", "visibility": "internal", "rationale": "CI alias for validate:full." }
+    {
+      "alias": "validate",
+      "owner": "quality",
+      "effectClass": "local-read-only",
+      "visibility": "routine",
+      "rationale": "Delegates to validate:quick."
+    },
+    {
+      "alias": "validate:quick",
+      "owner": "quality",
+      "effectClass": "local-read-only",
+      "visibility": "routine",
+      "rationale": "Canonical non-production local gate."
+    },
+    {
+      "alias": "validate:trusted-manifest",
+      "owner": "trusted-gate",
+      "effectClass": "local-read-only",
+      "visibility": "internal",
+      "rationale": "Manifest contract validator used by gates."
+    },
+    {
+      "alias": "validate:trusted-receipt",
+      "owner": "trusted-gate",
+      "effectClass": "local-read-only",
+      "visibility": "advanced",
+      "rationale": "Exact trusted receipt verifier."
+    },
+    {
+      "alias": "validate:runtime-state-inventory",
+      "owner": "backup",
+      "effectClass": "local-read-only",
+      "visibility": "internal",
+      "rationale": "Inventory contract validator."
+    },
+    {
+      "alias": "validate:runtime-state-backup-policy",
+      "owner": "backup",
+      "effectClass": "local-read-only",
+      "visibility": "internal",
+      "rationale": "Backup policy validator."
+    },
+    {
+      "alias": "validate:runtime-state-remote-storage-policy",
+      "owner": "backup",
+      "effectClass": "local-read-only",
+      "visibility": "internal",
+      "rationale": "Remote policy validator."
+    },
+    {
+      "alias": "validate:immutable-release-policy",
+      "owner": "release-builder",
+      "effectClass": "local-read-only",
+      "visibility": "internal",
+      "rationale": "Immutable release policy validator."
+    },
+    {
+      "alias": "validate:reduced-downtime-policy",
+      "owner": "release-operator",
+      "effectClass": "local-read-only",
+      "visibility": "internal",
+      "rationale": "Rehearsal policy validator."
+    },
+    {
+      "alias": "validate:vps-health-maintenance-policy",
+      "owner": "maintenance",
+      "effectClass": "local-read-only",
+      "visibility": "internal",
+      "rationale": "Maintenance policy validator."
+    },
+    {
+      "alias": "release",
+      "owner": "release-operator",
+      "effectClass": "local-read-only",
+      "visibility": "routine",
+      "rationale": "Candidate release help and subcommand dispatcher."
+    },
+    {
+      "alias": "release:evidence",
+      "owner": "release-operator",
+      "effectClass": "local-read-only",
+      "visibility": "advanced",
+      "rationale": "Evidence create, verify, and discovery dispatcher."
+    },
+    {
+      "alias": "validate:release-receipt",
+      "owner": "release-operator",
+      "effectClass": "local-read-only",
+      "visibility": "advanced",
+      "rationale": "Canonical typed receipt and recursive child-evidence verifier."
+    },
+    {
+      "alias": "validate:legacy-release-evidence",
+      "owner": "release-operator",
+      "effectClass": "local-read-only",
+      "visibility": "advanced",
+      "rationale": "Produces non-qualifying compatibility verification without rewriting legacy evidence."
+    },
+    {
+      "alias": "validate:phase10-contracts",
+      "owner": "phase10",
+      "effectClass": "local-read-only",
+      "visibility": "internal",
+      "rationale": "Registry, schema, and documentation drift gate."
+    },
+    {
+      "alias": "validate:deployment-traceability",
+      "owner": "phase10",
+      "effectClass": "local-read-only",
+      "visibility": "internal",
+      "rationale": "Proves receipt ownership and freezes current production entrypoint bytes."
+    },
+    {
+      "alias": "runtime-state:backup:create-qualification",
+      "owner": "backup",
+      "effectClass": "local-fixture-mutation",
+      "visibility": "advanced",
+      "rationale": "Publishes canonical owner-only backup qualification after exact fixture/local evidence verification."
+    },
+    {
+      "alias": "validate:deployment-operational-objectives",
+      "owner": "reliability",
+      "effectClass": "local-read-only",
+      "visibility": "internal",
+      "rationale": "Rejects duplicated or conflicting freshness, RPO, RTO, restore cadence, and downtime limits."
+    },
+    {
+      "alias": "release:state",
+      "owner": "release-operator",
+      "effectClass": "local-read-only",
+      "visibility": "advanced",
+      "rationale": "Derives lifecycle state from an immutable typed evidence index."
+    },
+    {
+      "alias": "validate:deployment-module-boundaries",
+      "owner": "phase10",
+      "effectClass": "local-read-only",
+      "visibility": "internal",
+      "rationale": "Prevents domain helpers and fixture adapters from coupling to production or network capabilities."
+    },
+    {
+      "alias": "check:runtime-state-backup-freshness",
+      "owner": "backup",
+      "effectClass": "local-read-only",
+      "visibility": "advanced",
+      "rationale": "Read-only remote metadata freshness check."
+    },
+    {
+      "alias": "cleanup:runtime-state-remote-backups",
+      "owner": "backup",
+      "effectClass": "local-fixture-mutation",
+      "visibility": "advanced",
+      "rationale": "Dry-run-first fixture retention; execution has exact confirmation."
+    },
+    {
+      "alias": "validate:browser",
+      "owner": "quality",
+      "effectClass": "local-fixture-mutation",
+      "visibility": "advanced",
+      "rationale": "Browser gate may start disposable local services; production browser scope requires separate authority."
+    },
+    {
+      "alias": "validate:full",
+      "owner": "quality",
+      "effectClass": "local-fixture-mutation",
+      "visibility": "advanced",
+      "rationale": "Includes integration and browser gates."
+    },
+    {
+      "alias": "validate:ci",
+      "owner": "quality",
+      "effectClass": "local-fixture-mutation",
+      "visibility": "internal",
+      "rationale": "CI alias for validate:full."
+    }
   ],
   "commands": [
     {
@@ -48,6 +205,19 @@
       "inputs": ["backup qualification receipt"],
       "receiptType": "runtime-state-backup-qualification",
       "safestNextCommand": "release prepare"
+    },
+    {
+      "command": "release verify-local",
+      "aliases": [],
+      "audience": "release-operator",
+      "effectClass": "local-fixture-mutation",
+      "availability": "candidate",
+      "defaultMode": "plan",
+      "productionExecution": false,
+      "confirmation": "VERIFY-LOCAL-<RELEASE_ID>",
+      "inputs": ["release identity", "qualified backup", "fixture adapter/context"],
+      "receiptType": "release-local-verification",
+      "safestNextCommand": "release evidence verify"
     },
     {
       "command": "release deploy",
@@ -87,6 +257,84 @@
       "inputs": ["evidence directory"],
       "receiptType": null,
       "safestNextCommand": "release evidence verify"
+    },
+    {
+      "command": "release health",
+      "aliases": ["evaluate:vps-health"],
+      "audience": "maintenance-operator",
+      "effectClass": "local-read-only",
+      "availability": "candidate",
+      "defaultMode": "fixture observation",
+      "productionExecution": false,
+      "confirmation": null,
+      "inputs": ["fixture read-only adapter"],
+      "receiptType": "vps-health-gate",
+      "safestNextCommand": "release maintenance plan"
+    },
+    {
+      "command": "release restore-database",
+      "aliases": [],
+      "audience": "recovery-operator",
+      "effectClass": "local-read-only",
+      "availability": "candidate-plan-only",
+      "defaultMode": "plan",
+      "productionExecution": false,
+      "confirmation": null,
+      "inputs": ["release identity", "qualified backup", "immutable release bundle"],
+      "receiptType": "release-recovery-plan",
+      "safestNextCommand": "review recovery decision matrix; execution requires Phase 11 approval"
+    },
+    {
+      "command": "release restore-disaster",
+      "aliases": [],
+      "audience": "disaster-recovery-operator",
+      "effectClass": "local-read-only",
+      "availability": "candidate-plan-only",
+      "defaultMode": "plan",
+      "productionExecution": false,
+      "confirmation": null,
+      "inputs": ["release identity", "qualified backup", "immutable release bundle"],
+      "receiptType": "release-recovery-plan",
+      "safestNextCommand": "complete Phase 9 and obtain Phase 11 approval"
+    },
+    {
+      "command": "release maintenance plan",
+      "aliases": ["plan:vps-maintenance"],
+      "audience": "maintenance-operator",
+      "effectClass": "local-read-only",
+      "availability": "candidate",
+      "defaultMode": "plan",
+      "productionExecution": false,
+      "confirmation": null,
+      "inputs": ["fixture inventory", "verified prerequisite receipts"],
+      "receiptType": "vps-maintenance-plan",
+      "safestNextCommand": "review plan before release maintenance execute"
+    },
+    {
+      "command": "release maintenance execute",
+      "aliases": ["execute:vps-maintenance"],
+      "audience": "maintenance-operator",
+      "effectClass": "local-fixture-mutation",
+      "availability": "candidate",
+      "defaultMode": "blocked without confirmation",
+      "productionExecution": false,
+      "confirmation": "EXECUTE-MAINTENANCE-<PLAN_HASH>",
+      "inputs": ["immutable fixture maintenance plan", "fixture adapter"],
+      "receiptType": "vps-maintenance-execution",
+      "safestNextCommand": "release health"
+    },
+    {
+      "command": "release evidence summarize",
+      "aliases": ["release:summary"],
+      "audience": "release-operator",
+      "effectClass": "local-read-only",
+      "availability": "candidate",
+      "defaultMode": "summarize",
+      "productionExecution": false,
+      "confirmation": null,
+      "inputs": ["local evidence directory"],
+      "receiptType": "release-observability-summary",
+      "safestNextCommand": "review emitted local alert events"
     },
     {
       "command": "release evidence verify",
@@ -141,45 +389,6 @@
       "safestNextCommand": "review recovery decision matrix"
     },
     {
-      "command": "evaluate:vps-health",
-      "aliases": [],
-      "audience": "maintenance-operator",
-      "effectClass": "local-read-only",
-      "availability": "candidate",
-      "defaultMode": "fixture",
-      "productionExecution": false,
-      "confirmation": null,
-      "inputs": ["read-only fixture adapter"],
-      "receiptType": "vps-health-evaluation",
-      "safestNextCommand": "plan:vps-maintenance"
-    },
-    {
-      "command": "execute:vps-maintenance",
-      "aliases": [],
-      "audience": "maintenance-operator",
-      "effectClass": "local-fixture-mutation",
-      "availability": "candidate",
-      "defaultMode": "blocked without confirmation",
-      "productionExecution": false,
-      "confirmation": "EXECUTE-MAINTENANCE-<PLAN_HASH>",
-      "inputs": ["maintenance plan", "verified prerequisite receipts"],
-      "receiptType": "vps-maintenance-execution",
-      "safestNextCommand": "inspect failure receipt"
-    },
-    {
-      "command": "release:summary",
-      "aliases": [],
-      "audience": "release-operator",
-      "effectClass": "local-read-only",
-      "availability": "candidate",
-      "defaultMode": "summarize",
-      "productionExecution": false,
-      "confirmation": null,
-      "inputs": ["local evidence directory"],
-      "receiptType": "release-observability-summary",
-      "safestNextCommand": "review emitted local alert events"
-    },
-    {
       "command": "qualify:phase10",
       "aliases": [],
       "audience": "phase-qualification-reviewer",
@@ -188,7 +397,13 @@
       "defaultMode": "verify",
       "productionExecution": false,
       "confirmation": null,
-      "inputs": ["two trusted gates", "clean checkout evidence", "fixture evidence index", "tests", "independent usability results"],
+      "inputs": [
+        "two trusted gates",
+        "clean checkout evidence",
+        "fixture evidence index",
+        "tests",
+        "independent usability results"
+      ],
       "receiptType": "phase10-qualification",
       "safestNextCommand": "Phase 11 review; do not execute production"
     },
@@ -412,19 +627,6 @@
       "inputs": ["fixture context and adapter"],
       "receiptType": "reduced-downtime-deployment-rehearsal",
       "safestNextCommand": "release evidence verify"
-    },
-    {
-      "command": "plan:vps-maintenance",
-      "aliases": [],
-      "audience": "maintenance-operator",
-      "effectClass": "local-read-only",
-      "availability": "candidate",
-      "defaultMode": "plan",
-      "productionExecution": false,
-      "confirmation": null,
-      "inputs": ["fixture inventory and verified prerequisite receipts"],
-      "receiptType": "vps-maintenance-plan",
-      "safestNextCommand": "review plan before execute:vps-maintenance"
     }
   ]
 }

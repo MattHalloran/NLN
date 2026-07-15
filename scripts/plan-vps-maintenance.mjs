@@ -2,6 +2,12 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { verifyMaintenancePrerequisites } from "./lib/maintenance-prerequisites.mjs";
+if (process.argv.includes("--help")) {
+    console.log(
+        "Usage: plan-vps-maintenance.mjs --inventory FILE --actions ID[,ID] --output FILE [--policy FILE] [--now ISO]\nEffect: fixture-only dry-run planning; performs no maintenance.",
+    );
+    process.exit(0);
+}
 const a = process.argv.slice(2),
     o = {};
 for (let i = 0; i < a.length; i += 2) {

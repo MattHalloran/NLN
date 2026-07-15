@@ -2,22 +2,142 @@
   "schemaVersion": 1,
   "registryId": "nln-receipts-v1",
   "types": [
-    { "receiptType": "release-prepare", "schema": "config/schemas/release-prepare.schema.json", "semanticVerifier": "release-prepare" },
-    { "receiptType": "release-deploy", "schema": "config/schemas/release-deploy.schema.json", "semanticVerifier": "release-deploy" },
-    { "receiptType": "release-evidence-index", "schema": "config/schemas/release-evidence-index.schema.json", "semanticVerifier": "release-evidence-index" },
-    { "receiptType": "release-alert", "schema": "config/schemas/release-alert-event.schema.json", "semanticVerifier": "release-alert" },
-    { "receiptType": "phase10-qualification", "schema": "config/schemas/receipt-envelope.schema.json", "semanticVerifier": "phase10-qualification" },
-    { "receiptType": "runtime-state-backup-qualification", "schema": "config/schemas/receipt-envelope.schema.json", "semanticVerifier": "backup-qualification" },
-    { "receiptType": "migration-rollback-compatibility", "schema": "config/schemas/receipt-envelope.schema.json", "semanticVerifier": "rollback-compatibility" },
-    { "receiptType": "immutable-release-bundle", "schema": "config/schemas/receipt-envelope.schema.json", "semanticVerifier": "immutable-bundle" },
-    { "receiptType": "controlled-migration", "schema": "config/schemas/receipt-envelope.schema.json", "semanticVerifier": "controlled-migration" },
-    { "receiptType": "app-only-rollback", "schema": "config/schemas/receipt-envelope.schema.json", "semanticVerifier": "app-only-rollback" },
-    { "receiptType": "reduced-downtime-deployment-rehearsal", "schema": "config/schemas/receipt-envelope.schema.json", "semanticVerifier": "reduced-downtime" },
-    { "receiptType": "vps-maintenance-plan", "schema": "config/schemas/receipt-envelope.schema.json", "semanticVerifier": "maintenance-plan" },
-    { "receiptType": "vps-maintenance-execution", "schema": "config/schemas/receipt-envelope.schema.json", "semanticVerifier": "maintenance-execution" }
+    {
+      "receiptType": "release-prepare",
+      "schema": "config/schemas/release-prepare.schema.json",
+      "semanticVerifier": "release-prepare"
+    },
+    {
+      "receiptType": "release-deploy",
+      "schema": "config/schemas/release-deploy.schema.json",
+      "semanticVerifier": "release-deploy"
+    },
+    {
+      "receiptType": "release-evidence-index",
+      "schema": "config/schemas/release-evidence-index.schema.json",
+      "semanticVerifier": "release-evidence-index"
+    },
+    {
+      "receiptType": "release-alert",
+      "schema": "config/schemas/release-alert-event.schema.json",
+      "semanticVerifier": "release-alert"
+    },
+    {
+      "receiptType": "phase10-qualification",
+      "schema": "config/schemas/receipt-envelope.schema.json",
+      "semanticVerifier": "phase10-qualification"
+    },
+    {
+      "receiptType": "runtime-state-backup-qualification",
+      "schema": "config/schemas/receipt-envelope.schema.json",
+      "semanticVerifier": "backup-qualification"
+    },
+    {
+      "receiptType": "migration-rollback-compatibility",
+      "schema": "config/schemas/receipt-envelope.schema.json",
+      "semanticVerifier": "rollback-compatibility"
+    },
+    {
+      "receiptType": "immutable-release-bundle",
+      "schema": "config/schemas/receipt-envelope.schema.json",
+      "semanticVerifier": "immutable-bundle"
+    },
+    {
+      "receiptType": "controlled-migration",
+      "schema": "config/schemas/receipt-envelope.schema.json",
+      "semanticVerifier": "controlled-migration"
+    },
+    {
+      "receiptType": "app-only-rollback",
+      "schema": "config/schemas/receipt-envelope.schema.json",
+      "semanticVerifier": "app-only-rollback"
+    },
+    {
+      "receiptType": "reduced-downtime-deployment-rehearsal",
+      "schema": "config/schemas/receipt-envelope.schema.json",
+      "semanticVerifier": "reduced-downtime"
+    },
+    {
+      "receiptType": "vps-maintenance-plan",
+      "schema": "config/schemas/receipt-envelope.schema.json",
+      "semanticVerifier": "maintenance-plan"
+    },
+    {
+      "receiptType": "vps-maintenance-execution",
+      "schema": "config/schemas/receipt-envelope.schema.json",
+      "semanticVerifier": "maintenance-execution"
+    },
+    {
+      "receiptType": "nln-runtime-state-archive",
+      "schema": "config/schemas/legacy-evidence.schema.json",
+      "semanticVerifier": "archive-v2-compatibility"
+    },
+    {
+      "receiptType": "nln-runtime-state-database-invariant-verification",
+      "schema": "config/schemas/legacy-evidence.schema.json",
+      "semanticVerifier": "database-invariant-compatibility"
+    },
+    {
+      "receiptType": "runtime-state-application-restore-verification",
+      "schema": "config/schemas/legacy-evidence.schema.json",
+      "semanticVerifier": "application-restore-compatibility"
+    },
+    {
+      "receiptType": "runtime-state-remote-download-verification",
+      "schema": "config/schemas/legacy-evidence.schema.json",
+      "semanticVerifier": "remote-download-compatibility"
+    },
+    {
+      "receiptType": "runtime-state-resilience-qualification",
+      "schema": "config/schemas/legacy-evidence.schema.json",
+      "semanticVerifier": "resilience-compatibility"
+    },
+    {
+      "receiptType": "release-lifecycle-state",
+      "schema": "config/schemas/receipt-envelope.schema.json",
+      "semanticVerifier": "release-lifecycle-state"
+    },
+    {
+      "receiptType": "trusted-validation-gate",
+      "schema": "config/schemas/legacy-evidence.schema.json",
+      "semanticVerifier": "trusted-gate-compatibility"
+    },
+    {
+      "receiptType": "vps-health-gate",
+      "schema": "config/schemas/legacy-evidence.schema.json",
+      "semanticVerifier": "vps-health-compatibility"
+    },
+    {
+      "receiptType": "last-known-good-release",
+      "schema": "config/schemas/legacy-evidence.schema.json",
+      "semanticVerifier": "known-good-compatibility"
+    },
+    {
+      "receiptType": "release-local-verification",
+      "schema": "config/schemas/receipt-envelope.schema.json",
+      "semanticVerifier": "release-local-verification"
+    },
+    {
+      "receiptType": "release-recovery-plan",
+      "schema": "config/schemas/receipt-envelope.schema.json",
+      "semanticVerifier": "release-recovery-plan"
+    },
+    {
+      "receiptType": "legacy-evidence-compatibility-verification",
+      "schema": "config/schemas/receipt-envelope.schema.json",
+      "semanticVerifier": "legacy-evidence-compatibility"
+    }
   ],
   "legacyReaders": [
-    { "format": "key=value", "types": ["restore-drill", "local-production-backup-verification"], "assuranceLimit": "Legacy evidence is readable for discovery only and cannot independently qualify a release." },
-    { "format": "legacy-json", "types": ["legacy-deploy-readiness", "legacy-production-deploy"], "assuranceLimit": "Legacy evidence retains its original semantics and is never upgraded by translation." }
+    {
+      "format": "key=value",
+      "types": ["restore-drill", "local-production-backup-verification"],
+      "assuranceLimit": "Legacy evidence is readable for discovery only and cannot independently qualify a release."
+    },
+    {
+      "format": "legacy-json",
+      "types": ["legacy-deploy-readiness", "legacy-production-deploy"],
+      "assuranceLimit": "Legacy evidence retains its original semantics and is never upgraded by translation."
+    }
   ]
 }

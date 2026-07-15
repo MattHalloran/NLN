@@ -3,6 +3,12 @@ import fs from "node:fs";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
 import { verifyMaintenancePrerequisites } from "./lib/maintenance-prerequisites.mjs";
+if (process.argv.includes("--help")) {
+    console.log(
+        "Usage: execute-vps-maintenance.mjs --plan FILE --adapter FILE --receipt FILE --execute true --confirm EXECUTE-MAINTENANCE-<PLAN_HASH> [--policy FILE] [--now ISO]\nEffect: fixture-only mutation with exact confirmation; production integration disabled.",
+    );
+    process.exit(0);
+}
 const a = process.argv.slice(2),
     o = {};
 for (let i = 0; i < a.length; i += 2) {
@@ -39,15 +45,20 @@ if (
 const { planHash, ...base } = plan,
     actual = crypto.createHash("sha256").update(JSON.stringify(base)).digest("hex");
 if (actual !== planHash) fail("plan hash mismatch");
-const verifiedPrerequisites = verifyMaintenancePrerequisites({
-    qualifiedBackupReceipt: plan.prerequisites.qualifiedBackup.path,
-    remoteDownloadReceipt: plan.prerequisites.remoteDownload.path,
-    restoreReceipt: plan.prerequisites.applicationRestore.path,
-}, {
-    maximumAgeSeconds: policy.thresholds.maximumBackupAgeSeconds,
-    now: new Date(o.now ?? Date.now()),
-});
-for (const key of Object.keys(verifiedPrerequisites)) if (verifiedPrerequisites[key].sha256 !== plan.prerequisites[key].sha256) fail("maintenance prerequisite evidence changed since planning");
+const verifiedPrerequisites = verifyMaintenancePrerequisites(
+    {
+        qualifiedBackupReceipt: plan.prerequisites.qualifiedBackup.path,
+        remoteDownloadReceipt: plan.prerequisites.remoteDownload.path,
+        restoreReceipt: plan.prerequisites.applicationRestore.path,
+    },
+    {
+        maximumAgeSeconds: policy.thresholds.maximumBackupAgeSeconds,
+        now: new Date(o.now ?? Date.now()),
+    },
+);
+for (const key of Object.keys(verifiedPrerequisites))
+    if (verifiedPrerequisites[key].sha256 !== plan.prerequisites[key].sha256)
+        fail("maintenance prerequisite evidence changed since planning");
 if (o.execute !== "true" || o.confirm !== `EXECUTE-MAINTENANCE-${planHash}`)
     fail("execution requires --execute true and exact plan-hash confirmation");
 const adapter = path.resolve(o.adapter),

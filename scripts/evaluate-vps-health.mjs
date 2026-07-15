@@ -2,6 +2,12 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
+if (process.argv.includes("--help")) {
+    console.log(
+        "Usage: evaluate-vps-health.mjs --adapter FILE --output FILE [--policy FILE] [--now ISO]\nEffect: fixture/local read-only observation; production integration disabled.",
+    );
+    process.exit(0);
+}
 const a = process.argv.slice(2),
     o = {};
 for (let i = 0; i < a.length; i += 2) {

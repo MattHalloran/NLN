@@ -2,7 +2,7 @@
 setup() {
   ROOT="$BATS_TEST_TMPDIR/p10-$BATS_TEST_NUMBER"; mkdir -p "$ROOT/evidence"; NOW=$(date -u +%Y-%m-%dT%H:%M:%S.000Z); COMMIT=$(printf 'a%.0s' {1..40}); H=$(printf 'b%.0s' {1..64})
   node --input-type=module - "$ROOT/identity.json" "$COMMIT" "$H" <<'EOF'
-import fs from 'node:fs';import {createReleaseIdentity} from './scripts/lib/release-identity.mjs';const [out,commit,h]=process.argv.slice(2);fs.writeFileSync(out,JSON.stringify(createReleaseIdentity({releaseVersion:'10.0.0',commitSha:commit,trustedManifestId:'trusted-v1',trustedManifestSha256:h,bundleManifestSha256:h,environmentSchemaSha256:h,migrationMetadataSha256:h})));
+import fs from 'node:fs';import {createReleaseIdentity} from './scripts/lib/release-identity.mjs';const [out,commit,h]=process.argv.slice(2);fs.writeFileSync(out,JSON.stringify(createReleaseIdentity({releaseVersion:'10.0.0',commitSha:commit,repositoryId:'nln/fixture',trustedManifestId:'trusted-v1',trustedManifestSha256:h,immutablePolicyId:'immutable-v1',immutablePolicySha256:h,bundleManifestSha256:h,environmentSchemaSha256:h,migrationMetadataSha256:h,createdAt:'2026-01-01T00:00:00.000Z',scope:'fixture'})));
 EOF
   cat > "$ROOT/migration.json" <<'EOF'
 {"schemaVersion":1,"releaseVersion":"10.0.0","classification":"backward-compatible","rationale":"additive fixture migration","rollbackStrategy":"retain expanded schema safely","testedPostgresMajors":[13],"expectedDurationSeconds":5,"expectedAffectedRows":{"maximum":10,"basis":"fixture limit"},"lockRisk":"low","transactionStrategy":"single transaction","diskSpaceRequiredBytes":100,"specialDeploymentPlan":null,"migrations":[{"id":"20260101000000_expand","phase":"expand","classification":"backward-compatible","rationale":"adds fixture column safely","backfill":null}]}
@@ -13,8 +13,9 @@ EOF
   cat > "$ROOT/components.json" <<EOF
 {"schemaVersion":1,"components":[{"receiptType":"trusted-validation-gate","path":"$ROOT/evidence/trusted.json","stage":"trusted","maximumAgeSeconds":86400}]}
 EOF
-  cat > "$ROOT/context.json" <<'EOF'
-{"fixture":true,"production":false,"releaseVersion":"10.0.0"}
+  node scripts/tests/fixtures/create-release-lifecycle-fixture.mjs --directory "$ROOT/lifecycle" --version 10.0.0 --commit "$COMMIT" --output "$ROOT/lifecycle.json" --now "$NOW"
+  cat > "$ROOT/context.json" <<EOF
+{"fixture":true,"production":false,"releaseVersion":"10.0.0","commit":"$COMMIT","lifecycleStateReceipt":"$ROOT/lifecycle.json"}
 EOF
   export REDUCED_DOWNTIME_FIXTURE_STATE="$ROOT/state.json"
   cat > "$REDUCED_DOWNTIME_FIXTURE_STATE" <<'EOF'
@@ -31,3 +32,4 @@ prepare_release(){ run node scripts/release.mjs prepare --identity "$ROOT/identi
 @test "candidate production execution fails closed" { run node scripts/release.mjs deploy --production --prepare x --index x --receipt x; [ "$status" -ne 0 ]; [[ "$output" == *"Phase 11 cutover has not occurred"* ]]; [ ! -e x ]; }
 @test "wrong release and stale evidence are rejected" { sed -i 's/10.0.0/9.0.0/' "$ROOT/evidence/trusted.json"; prepare_release; [ "$status" -ne 0 ]; sed -i 's/9.0.0/10.0.0/' "$ROOT/evidence/trusted.json"; run node scripts/release.mjs prepare --identity "$ROOT/identity.json" --components "$ROOT/components.json" --migration-metadata "$ROOT/migration.json" --index "$ROOT/evidence/old.index.json" --receipt "$ROOT/evidence/old.prepare.json" --now 2030-01-01T00:00:00.000Z; [ "$status" -ne 0 ]; }
 @test "registries are strict and generated reference has no drift" { run node scripts/validate-phase10-contracts.mjs; [ "$status" -eq 0 ]; run node scripts/generate-operator-reference.mjs --check; [ "$status" -eq 0 ]; }
+@test "receipt registry rejects unknown verifier implementations" { cp config/receipt-registry.json "$ROOT/receipt-registry.json";node -e 'const fs=require("fs"),p=process.argv[1],v=require(p);v.types[0].semanticVerifier="not-implemented";fs.writeFileSync(p,JSON.stringify(v))' "$ROOT/receipt-registry.json";run env PHASE10_RECEIPT_REGISTRY="$ROOT/receipt-registry.json" node scripts/validate-phase10-contracts.mjs;[ "$status" -ne 0 ];[[ "$output" == *"unsupported semantic verifier"* ]]; }

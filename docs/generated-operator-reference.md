@@ -10,16 +10,20 @@ Registry: `nln-release-commands-v1`
 | --- | --- | --- | --- | --- | --- |
 | `release prepare` | candidate | `local-read-only` | plan | `release-prepare` | release evidence verify |
 | `release verify-backup` | candidate | `local-read-only` | verify | `runtime-state-backup-qualification` | release prepare |
+| `release verify-local` | candidate | `local-fixture-mutation` | plan | `release-local-verification` | release evidence verify |
 | `release deploy` | candidate | `local-fixture-mutation` | plan | `release-deploy` | release evidence verify |
 | `release rollback-app` | candidate | `local-fixture-mutation` | plan | `app-only-rollback` | release evidence verify |
 | `release status` | candidate | `local-read-only` | read | none | release evidence verify |
+| `release health` | candidate | `local-read-only` | fixture observation | `vps-health-gate` | release maintenance plan |
+| `release restore-database` | candidate-plan-only | `local-read-only` | plan | `release-recovery-plan` | review recovery decision matrix; execution requires Phase 11 approval |
+| `release restore-disaster` | candidate-plan-only | `local-read-only` | plan | `release-recovery-plan` | complete Phase 9 and obtain Phase 11 approval |
+| `release maintenance plan` | candidate | `local-read-only` | plan | `vps-maintenance-plan` | review plan before release maintenance execute |
+| `release maintenance execute` | candidate | `local-fixture-mutation` | blocked without confirmation | `vps-maintenance-execution` | release health |
+| `release evidence summarize` | candidate | `local-read-only` | summarize | `release-observability-summary` | review emitted local alert events |
 | `release evidence verify` | candidate | `local-read-only` | verify | `release-evidence-verification` | release status |
 | `prepare-deploy-readiness.sh` | current | `production-copy-out` | execute | `legacy-deploy-readiness` | deploy-production.sh |
 | `deploy-production.sh` | current | `production-app-mutation` | execute | `legacy-production-deploy` | follow release-runbook.md |
 | `rollback.sh` | advanced-destructive | `production-data-destructive` | dry-run | `legacy-destructive-rollback` | review recovery decision matrix |
-| `evaluate:vps-health` | candidate | `local-read-only` | fixture | `vps-health-evaluation` | plan:vps-maintenance |
-| `execute:vps-maintenance` | candidate | `local-fixture-mutation` | blocked without confirmation | `vps-maintenance-execution` | inspect failure receipt |
-| `release:summary` | candidate | `local-read-only` | summarize | `release-observability-summary` | review emitted local alert events |
 | `qualify:phase10` | candidate | `local-read-only` | verify | `phase10-qualification` | Phase 11 review; do not execute production |
 | `validate:trusted` | current | `local-read-only` | validate | `validation-receipt` | release prepare or current production readiness |
 | `runtime-state:manifest:capture` | advanced | `local-fixture-mutation` | create local manifest | `runtime-state-manifest-v2` | runtime-state:manifest:verify |
@@ -38,7 +42,6 @@ Registry: `nln-release-commands-v1`
 | `evaluate:migration-compatibility` | candidate | `local-read-only` | evaluate fixture facts | `migration-rollback-compatibility` | release deploy |
 | `run:controlled-migrations` | candidate | `local-fixture-mutation` | fixture adapter | `controlled-migration` | verify resulting migration receipt |
 | `rehearse:reduced-downtime` | candidate | `local-fixture-mutation` | plan | `reduced-downtime-deployment-rehearsal` | release evidence verify |
-| `plan:vps-maintenance` | candidate | `local-read-only` | plan | `vps-maintenance-plan` | review plan before execute:vps-maintenance |
 
 ## Lower-level package commands
 
@@ -56,7 +59,14 @@ Registry: `nln-release-commands-v1`
 | `validate:vps-health-maintenance-policy` | maintenance | internal | `local-read-only` |
 | `release` | release-operator | routine | `local-read-only` |
 | `release:evidence` | release-operator | advanced | `local-read-only` |
+| `validate:release-receipt` | release-operator | advanced | `local-read-only` |
+| `validate:legacy-release-evidence` | release-operator | advanced | `local-read-only` |
 | `validate:phase10-contracts` | phase10 | internal | `local-read-only` |
+| `validate:deployment-traceability` | phase10 | internal | `local-read-only` |
+| `runtime-state:backup:create-qualification` | backup | advanced | `local-fixture-mutation` |
+| `validate:deployment-operational-objectives` | reliability | internal | `local-read-only` |
+| `release:state` | release-operator | advanced | `local-read-only` |
+| `validate:deployment-module-boundaries` | phase10 | internal | `local-read-only` |
 | `check:runtime-state-backup-freshness` | backup | advanced | `local-read-only` |
 | `cleanup:runtime-state-remote-backups` | backup | advanced | `local-fixture-mutation` |
 | `validate:browser` | quality | advanced | `local-fixture-mutation` |
@@ -80,5 +90,17 @@ Registry: `nln-release-commands-v1`
 | `reduced-downtime-deployment-rehearsal` | `reduced-downtime` | `config/schemas/receipt-envelope.schema.json` |
 | `vps-maintenance-plan` | `maintenance-plan` | `config/schemas/receipt-envelope.schema.json` |
 | `vps-maintenance-execution` | `maintenance-execution` | `config/schemas/receipt-envelope.schema.json` |
+| `nln-runtime-state-archive` | `archive-v2-compatibility` | `config/schemas/legacy-evidence.schema.json` |
+| `nln-runtime-state-database-invariant-verification` | `database-invariant-compatibility` | `config/schemas/legacy-evidence.schema.json` |
+| `runtime-state-application-restore-verification` | `application-restore-compatibility` | `config/schemas/legacy-evidence.schema.json` |
+| `runtime-state-remote-download-verification` | `remote-download-compatibility` | `config/schemas/legacy-evidence.schema.json` |
+| `runtime-state-resilience-qualification` | `resilience-compatibility` | `config/schemas/legacy-evidence.schema.json` |
+| `release-lifecycle-state` | `release-lifecycle-state` | `config/schemas/receipt-envelope.schema.json` |
+| `trusted-validation-gate` | `trusted-gate-compatibility` | `config/schemas/legacy-evidence.schema.json` |
+| `vps-health-gate` | `vps-health-compatibility` | `config/schemas/legacy-evidence.schema.json` |
+| `last-known-good-release` | `known-good-compatibility` | `config/schemas/legacy-evidence.schema.json` |
+| `release-local-verification` | `release-local-verification` | `config/schemas/receipt-envelope.schema.json` |
+| `release-recovery-plan` | `release-recovery-plan` | `config/schemas/receipt-envelope.schema.json` |
+| `legacy-evidence-compatibility-verification` | `legacy-evidence-compatibility` | `config/schemas/receipt-envelope.schema.json` |
 
 Legacy evidence is never upgraded in assurance by a compatibility reader.
