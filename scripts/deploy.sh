@@ -439,8 +439,8 @@ verify_public_endpoints() {
 
     for attempt in {1..12}; do
         if [ "${DEPLOY_REHEARSAL:-false}" = "true" ]; then
-            if docker exec nln_ui wget -q --spider "http://localhost:${PORT_UI}" && \
-                docker exec nln_server wget -q --spider "http://localhost:${PORT_SERVER}/healthcheck"; then
+            if docker exec nln_ui wget -q --spider "http://127.0.0.1:${PORT_UI}" && \
+                docker exec nln_server wget -q --spider "http://127.0.0.1:${PORT_SERVER}/healthcheck"; then
                 success "Rehearsal UI and API endpoints are responding inside their isolated containers"
                 return 0
             fi

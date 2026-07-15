@@ -15,7 +15,7 @@
     },
     {
       "path": "scripts/deploy.sh",
-      "sha256": "d493235716e133d6e03a6d750d27806baa83df7f210fd4ae88f997912773396c",
+      "sha256": "ab34dc1afe705a16bb5cfb420bced1172baa795ef323ee4a974863c7ff159101",
       "role": "legacy-remote-deploy"
     },
     {
