@@ -10,6 +10,7 @@ import {
     readJson,
     receiptEnvelope,
     sha256File,
+    isoTimestamp,
 } from "./lib/phase10-safe-io.mjs";
 
 const HELP =
@@ -57,7 +58,9 @@ try {
     }
     if (sha256File(o["trusted-gate-one"]) === sha256File(o["trusted-gate-two"]))
         throw new ContractError("qualification requires two distinct trusted gate runs");
-    const clean = readJson(o["clean-checkout"], "clean checkout evidence");
+    const clean = readJson(o["clean-checkout"], "clean checkout evidence", {
+        ownerOnly: true,
+    });
     assertExactKeys(
         clean,
         {
@@ -81,6 +84,7 @@ try {
         clean.trustedGateRuns !== 2
     )
         throw new ContractError("clean checkout validation is incomplete");
+    isoTimestamp(clean.finishedAt, "clean checkout finishedAt");
     const evidenceResult = spawnSync(
         process.execPath,
         [
@@ -92,16 +96,90 @@ try {
         { stdio: "ignore" },
     );
     if (evidenceResult.status !== 0) throw new ContractError("fixture evidence index is invalid");
-    const tests = readJson(o["test-results"], "test results");
+    const tests = readJson(o["test-results"], "test results", { ownerOnly: true });
+    assertExactKeys(
+        tests,
+        {
+            required: ["status", "total", "failureInjectionScenarios"],
+            optional: ["fixtureMeasurements"],
+        },
+        "test results",
+    );
+    if (!Array.isArray(tests.failureInjectionScenarios))
+        throw new ContractError("failureInjectionScenarios must be an array");
+    for (const [index, scenario] of tests.failureInjectionScenarios.entries())
+        assertExactKeys(
+            scenario,
+            { required: ["id", "status"] },
+            `failure injection scenario ${index}`,
+        );
     if (
         tests.status !== "success" ||
         !Number.isSafeInteger(tests.total) ||
         tests.total < 1 ||
         !Array.isArray(tests.failureInjectionScenarios) ||
-        tests.failureInjectionScenarios.some((x) => x.status !== "passed")
+        tests.failureInjectionScenarios.length < 1 ||
+        tests.failureInjectionScenarios.some(
+            (x) => typeof x.id !== "string" || x.id.length < 1 || x.status !== "passed",
+        ) ||
+        new Set(tests.failureInjectionScenarios.map((x) => x.id)).size !==
+            tests.failureInjectionScenarios.length
     )
         throw new ContractError("test or failure-injection results are incomplete");
-    const usability = readJson(o["usability-results"], "usability results");
+    if (tests.fixtureMeasurements !== undefined) {
+        assertExactKeys(
+            tests.fixtureMeasurements,
+            { optional: ["downtimeMilliseconds", "rollbackRtoMilliseconds"] },
+            "fixture measurements",
+        );
+        for (const [name, values] of Object.entries(tests.fixtureMeasurements))
+            if (
+                !Array.isArray(values) ||
+                values.some((value) => !Number.isSafeInteger(value) || value < 0)
+            )
+                throw new ContractError(`${name} must contain non-negative integer milliseconds`);
+    }
+    const usability = readJson(o["usability-results"], "usability results", {
+        ownerOnly: true,
+    });
+    assertExactKeys(
+        usability,
+        { required: ["status", "independentParticipant", "exercises"] },
+        "usability results",
+    );
+    if (Array.isArray(usability.exercises))
+        for (const [index, exercise] of usability.exercises.entries()) {
+            assertExactKeys(
+                exercise,
+                {
+                    required: [
+                        "id",
+                        "status",
+                        "durationSeconds",
+                        "wrongTurns",
+                        "ambiguousWording",
+                        "unsafeSelections",
+                    ],
+                },
+                `usability exercise ${index}`,
+            );
+            if (
+                typeof exercise.id !== "string" ||
+                exercise.id.length < 1 ||
+                exercise.status !== "passed" ||
+                !Number.isFinite(exercise.durationSeconds) ||
+                exercise.durationSeconds < 0 ||
+                !Array.isArray(exercise.wrongTurns) ||
+                !Array.isArray(exercise.ambiguousWording) ||
+                !Array.isArray(exercise.unsafeSelections) ||
+                [
+                    ...exercise.wrongTurns,
+                    ...exercise.ambiguousWording,
+                    ...exercise.unsafeSelections,
+                ].some((value) => typeof value !== "string")
+            )
+                throw new ContractError(`usability exercise ${index} is malformed`);
+        }
     if (
         usability.status !== "passed" ||
         usability.independentParticipant !== true ||
@@ -109,6 +187,8 @@ try {
     )
         throw new ContractError("independent usability results are incomplete");
     const ids = new Set(usability.exercises.filter((x) => x.status === "passed").map((x) => x.id));
+    if (ids.size !== usability.exercises.length)
+        throw new ContractError("usability exercises must have unique IDs");
     for (const id of policy.requiredUsabilityExercises)
         if (!ids.has(id)) throw new ContractError(`missing passing usability exercise: ${id}`);
     const find = usability.exercises.find((x) => x.id === "find-current-release");
