@@ -201,6 +201,9 @@ write_generated_env() {
 SERVER_LOCATION=dns
 CREATE_MOCK_DATA=false
 DB_PULL=false
+TRUST_PROXY_HOPS=1
+E2E_DISABLE_RATE_LIMITS=false
+RATE_LIMIT_DIAGNOSTICS=false
 PORT_UI=${ui_port}
 PORT_SERVER=${server_port}
 PORT_DB=${db_port}

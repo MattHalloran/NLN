@@ -10,6 +10,9 @@ write_env_file() {
 SERVER_LOCATION=dns
 CREATE_MOCK_DATA=false
 DB_PULL=false
+TRUST_PROXY_HOPS=1
+E2E_DISABLE_RATE_LIMITS=false
+RATE_LIMIT_DIAGNOSTICS=false
 PORT_UI=3101
 PORT_SERVER=5331
 PORT_DB=55433
@@ -86,6 +89,12 @@ teardown() {
     grep -q 'install_project_env_file' "$SCRIPT_PATH"
     grep -q 'cp -p "${ENV_FILE}" "${REHEARSAL_PROJECT_DIR}/.env-prod"' "$SCRIPT_PATH"
     grep -q 'env_file: .env-prod' "$BATS_TEST_DIRNAME/../../docker-compose-prod.yml"
+}
+
+@test "generated rehearsal environment satisfies production proxy and rate-limit safeguards" {
+    grep -q '^TRUST_PROXY_HOPS=1$' "$SCRIPT_PATH"
+    grep -q '^E2E_DISABLE_RATE_LIMITS=false$' "$SCRIPT_PATH"
+    grep -q '^RATE_LIMIT_DIAGNOSTICS=false$' "$SCRIPT_PATH"
 }
 
 @test "deploy rehearsal replacement flag removes existing local containers" {
