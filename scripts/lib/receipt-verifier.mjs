@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { spawnSync } from "node:child_process";
 import {
     ContractError,
     assertFresh,
@@ -167,6 +168,68 @@ export function verifyReceiptFile(
                 maxAgeSeconds: options.maximumAgeSeconds,
                 now: options.now,
             });
+        if (entry.semanticVerifier === "trusted-gate-compatibility") {
+            const expectedCommit = options.expectedRelease?.commit ?? value.commit,
+                args = [
+                    path.resolve("scripts/verify-trusted-gate-receipt.mjs"),
+                    "--receipt",
+                    absolute,
+                    "--commit",
+                    expectedCommit,
+                ];
+            if (options.maximumAgeSeconds !== undefined)
+                args.push("--max-age-seconds", String(options.maximumAgeSeconds));
+            if (options.now !== undefined)
+                args.push(
+                    "--now-epoch",
+                    String(Math.floor(new Date(options.now).getTime() / 1000)),
+                );
+            const verified = spawnSync(process.execPath, args, { stdio: "ignore" });
+            if (verified.status !== 0)
+                throw new ContractError("trusted gate semantic verification failed");
+        }
+        if (entry.semanticVerifier === "immutable-bundle") {
+            if (path.basename(absolute) !== "release-manifest.json")
+                throw new ContractError(
+                    "immutable bundle evidence must reference release-manifest.json",
+                );
+            const verified = spawnSync(
+                process.execPath,
+                [
+                    path.resolve("scripts/immutable-release-bundle.mjs"),
+                    "verify",
+                    "--bundle",
+                    path.dirname(absolute),
+                    "--version",
+                    options.expectedRelease?.version ?? value.release?.version,
+                ],
+                { stdio: "ignore" },
+            );
+            if (
+                verified.status !== 0 ||
+                value.status !== "qualified" ||
+                value.release?.commit !== (options.expectedRelease?.commit ?? value.release?.commit)
+            )
+                throw new ContractError("immutable bundle semantic verification failed");
+        }
+        if (entry.semanticVerifier === "vps-health-compatibility") {
+            const policyPath = path.resolve("config/vps-health-maintenance-policy.json"),
+                policy = readJson(policyPath, "VPS health policy");
+            if (
+                value.status !== "passed" ||
+                value.adapterMode !== "read-only" ||
+                value.summary?.blocking !== 0 ||
+                !Array.isArray(value.checks) ||
+                value.checks.some((check) => check.classification === "blocking") ||
+                value.policy?.id !== policy.policyId ||
+                value.policy?.sha256 !== sha256File(policyPath)
+            )
+                throw new ContractError("VPS health evidence is not qualifying");
+            const observedAt = value.observedAt ?? value.finishedAt;
+            isoTimestamp(observedAt, "VPS health observation timestamp");
+            if (options.maximumAgeSeconds !== undefined)
+                assertFresh(observedAt, options.maximumAgeSeconds, options.now);
+        }
         if (entry.semanticVerifier === "rollback-compatibility")
             verifyRollbackCompatibility(
                 value,
@@ -214,6 +277,12 @@ export function verifyReceiptFile(
                 !/^[0-9a-f]{64}$/.test(child.sha256 ?? "")
             )
                 throw new ContractError(`child receipt ${index} is malformed`);
+            if (
+                child.maximumAgeSeconds !== undefined &&
+                child.maximumAgeSeconds !== null &&
+                (!Number.isSafeInteger(child.maximumAgeSeconds) || child.maximumAgeSeconds <= 0)
+            )
+                throw new ContractError(`child receipt ${index} has invalid freshness`);
             if (childTypes.has(child.receiptType))
                 throw new ContractError(`duplicate child receipt type: ${child.receiptType}`);
             childTypes.add(child.receiptType);
@@ -227,6 +296,8 @@ export function verifyReceiptFile(
                     expectedType: child.receiptType,
                     expectedRelease: value.release,
                     expectedScope: value.scope,
+                    expectedPolicySha256: undefined,
+                    maximumAgeSeconds: child.maximumAgeSeconds ?? undefined,
                 },
                 state,
             );

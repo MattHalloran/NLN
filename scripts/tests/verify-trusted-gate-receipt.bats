@@ -98,10 +98,25 @@ mutate() {
     run node "$VERIFY_SCRIPT" --receipt "$WORK_DIR/gate-link.json" --manifest "$WORK_DIR/config/manifest.json" \
         --commit "$COMMIT" --now-epoch "$NOW"
     [ "$status" -ne 0 ]
-    assert_output --partial "regular non-symlink file"
+    assert_output --partial "regular, single-link, non-symlink file"
 
     run node "$VERIFY_SCRIPT" --receipt "$WORK_DIR/gate.json" --manifest "$WORK_DIR/config/manifest.json" \
         --commit "$COMMIT" --max-age-seconds nope
     [ "$status" -ne 0 ]
     assert_output --partial "positive integer"
+}
+
+@test "duplicate keys and unknown receipt fields fail closed" {
+    cp "$WORK_DIR/gate.json" "$WORK_DIR/gate.original.json"
+    node -e 'const fs=require("fs"),p=process.argv[1],s=fs.readFileSync(p,"utf8");fs.writeFileSync(p,s.replace("{", "{\"status\":\"failure\","))' "$WORK_DIR/gate.json"
+    run verify_receipt
+    [ "$status" -ne 0 ]
+    assert_output --partial "duplicate object key"
+
+    cp "$WORK_DIR/gate.original.json" "$WORK_DIR/gate.json"
+    chmod 600 "$WORK_DIR/gate.json"
+    mutate 'r.unexpected=true'
+    run verify_receipt
+    [ "$status" -ne 0 ]
+    assert_output --partial "unknown field"
 }

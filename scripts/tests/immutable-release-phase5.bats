@@ -18,6 +18,7 @@ const fs=require('fs'),crypto=require('crypto'); const [out,commit]=process.argv
 const jobs=manifest.requiredJobs.map(j=>({job:j.id,receiptSha256:'a'.repeat(64),artifacts:j.requiredArtifacts.map(path=>({path,bytes:1,sha256:'b'.repeat(64)}))}));
 fs.writeFileSync(out,JSON.stringify({schemaVersion:1,receiptType:'trusted-validation-gate',status:'success',commit,manifestId:manifest.manifestId,manifestSha256:crypto.createHash('sha256').update(text).digest('hex'),generatedAt:new Date(Math.floor(Date.now()/1000)*1000).toISOString(),run:{id:'1',attempt:'1',repository:'fixture/repo',workflow:'ci'},jobs}));
 EOF
+    chmod 600 "$ROOT/trusted.json"
     cat > "$ROOT/migrations.json" <<'EOF'
 {"schemaVersion":1,"releaseVersion":"5.0.0","classification":"backward-compatible","rationale":"additive fixture migration","rollbackStrategy":"retain schema during application rollback","testedPostgresMajors":[13],"expectedDurationSeconds":5,"expectedAffectedRows":{"maximum":100,"basis":"fixture bound"},"lockRisk":"low","transactionStrategy":"single transaction","diskSpaceRequiredBytes":100,"specialDeploymentPlan":null,"migrations":[{"id":"20260101000000_initial","phase":"expand","classification":"backward-compatible","rationale":"creates fixture baseline","backfill":null}]}
 EOF

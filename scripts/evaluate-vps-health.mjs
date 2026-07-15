@@ -223,6 +223,13 @@ const receipt = {
     status: counts.blocking ? "blocked" : "passed",
     observedAt: o.now ?? new Date().toISOString(),
     adapterMode: "read-only",
+    policy: {
+        id: policy.policyId,
+        sha256: crypto
+            .createHash("sha256")
+            .update(fs.readFileSync(o.policy ?? "config/vps-health-maintenance-policy.json"))
+            .digest("hex"),
+    },
     factsSha256: crypto.createHash("sha256").update(JSON.stringify(facts)).digest("hex"),
     summary: counts,
     checks,

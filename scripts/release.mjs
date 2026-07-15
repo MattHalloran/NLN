@@ -16,6 +16,7 @@ import {
 import { verifyReleaseIdentity } from "./lib/release-identity.mjs";
 import { readAndVerifyMigrationMetadata } from "./lib/migration-contract.mjs";
 import { readAndVerifyBackupQualification } from "./lib/backup-qualification.mjs";
+import { verifyReceiptFile } from "./lib/receipt-verifier.mjs";
 
 const HELP = `NLN candidate release interface (Phase 10; production integration disabled)
 
@@ -81,6 +82,41 @@ try {
         const migration = readAndVerifyMigrationMetadata(o["migration-metadata"], {
             expectedReleaseVersion: identity.releaseVersion,
         });
+        const trustedManifestPath = "config/trusted-validation-manifest.json",
+            trustedManifest = readJson(trustedManifestPath, "trusted validation manifest"),
+            immutablePolicyPath = "config/immutable-release-policy.json",
+            immutablePolicy = readJson(immutablePolicyPath, "immutable release policy"),
+            componentManifest = readJson(o.components, "release component manifest"),
+            requiredTypes =
+                readJson("config/release-state-machine.json", "release state machine").states.find(
+                    (state) => state.id === "deploy-ready",
+                )?.requiredReceiptTypes ?? [],
+            componentTypes = new Set(
+                Array.isArray(componentManifest.components)
+                    ? componentManifest.components.map((component) => component.receiptType)
+                    : [],
+            ),
+            bundleComponent = componentManifest.components?.find(
+                (component) => component.receiptType === "immutable-release-bundle",
+            );
+        if (requiredTypes.some((type) => !componentTypes.has(type)))
+            throw new ContractError("prepare is missing deploy-ready component evidence");
+        if (!bundleComponent?.path)
+            throw new ContractError("prepare requires immutable bundle evidence");
+        const bundleManifest = readJson(bundleComponent.path, "immutable bundle manifest", {
+            ownerOnly: true,
+        });
+        if (
+            identity.trustedManifestId !== trustedManifest.manifestId ||
+            identity.trustedManifestSha256 !== sha256File(trustedManifestPath) ||
+            identity.immutablePolicyId !== immutablePolicy.policyId ||
+            identity.immutablePolicySha256 !== sha256File(immutablePolicyPath) ||
+            identity.bundleManifestSha256 !== sha256File(bundleComponent.path) ||
+            identity.environmentSchemaSha256 !== bundleManifest.evidence?.environmentSchemaSha256 ||
+            identity.migrationMetadataSha256 !== migration.sha256 ||
+            bundleManifest.evidence?.migrationSha256 !== migration.sha256
+        )
+            throw new ContractError("release identity does not bind the exact governing evidence");
         runNode("scripts/release-evidence.mjs", [
             "create",
             "--identity",
@@ -93,6 +129,18 @@ try {
             startedAt,
         ]);
         runNode("scripts/release-evidence.mjs", ["verify", "--index", o.index, "--now", startedAt]);
+        const stateReceipt = `${o.receipt}.state.json`;
+        runNode("scripts/release-state.mjs", [
+            "evaluate",
+            "--index",
+            o.index,
+            "--target",
+            "deploy-ready",
+            "--output",
+            stateReceipt,
+            "--now",
+            startedAt,
+        ]);
         const finishedAt = new Date().toISOString();
         const receipt = receiptEnvelope({
             receiptType: "release-prepare",
@@ -122,7 +170,26 @@ try {
                 { id: "evidence-chain", status: "passed" },
                 { id: "production-disabled", status: "passed" },
             ],
-            outputs: [{ path: path.resolve(o.index), sha256: sha256File(o.index) }],
+            outputs: [
+                { path: path.resolve(o.index), sha256: sha256File(o.index) },
+                {
+                    receiptType: "release-lifecycle-state",
+                    path: path.resolve(stateReceipt),
+                    sha256: sha256File(stateReceipt),
+                },
+            ],
+            childReceipts: [
+                {
+                    receiptType: "release-lifecycle-state",
+                    path: path.resolve(stateReceipt),
+                    sha256: sha256File(stateReceipt),
+                },
+            ],
+            result: {
+                deployReady: true,
+                evidenceIndexSha256: sha256File(o.index),
+                stateReceiptSha256: sha256File(stateReceipt),
+            },
             failure: null,
             startedAt,
             finishedAt,
@@ -295,12 +362,24 @@ try {
         productionBlocked(o);
         for (const key of ["prepare", "index", "receipt"])
             if (!o[key]) throw new ContractError(`--${key} is required`, 2);
-        const prepare = readJson(o.prepare, "prepare receipt", { ownerOnly: true });
+        const index = readJson(o.index, "release evidence index", { ownerOnly: true });
         if (
-            prepare.receiptType !== "release-prepare" ||
-            prepare.status !== "planned" ||
-            prepare.evidenceIndexSha256 !== sha256File(o.index)
+            index.receiptType !== "release-evidence-index" ||
+            !index.release ||
+            typeof index.release.version !== "string" ||
+            !/^[0-9a-f]{40}$/.test(index.release.commit ?? "") ||
+            !["fixture", "local"].includes(index.scope)
         )
+            throw new ContractError("deploy requires a valid release evidence index");
+        const verifiedPrepare = verifyReceiptFile(o.prepare, {
+                expectedType: "release-prepare",
+                expectedRelease: index.release,
+                expectedScope: index.scope,
+                expectedPolicySha256: sha256File(registryPath),
+                now: new Date(o.now ?? Date.now()),
+            }),
+            prepare = verifiedPrepare.value;
+        if (prepare.status !== "planned" || prepare.evidenceIndexSha256 !== sha256File(o.index))
             throw new ContractError("deploy requires the exact immutable prepare input index");
         runNode("scripts/release-evidence.mjs", [
             "verify",

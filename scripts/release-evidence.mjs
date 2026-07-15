@@ -12,6 +12,7 @@ import {
     sha256File,
 } from "./lib/phase10-safe-io.mjs";
 import { verifyReleaseIdentity } from "./lib/release-identity.mjs";
+import { verifyReceiptFile } from "./lib/receipt-verifier.mjs";
 
 const [command, ...argv] = process.argv.slice(2);
 const die = (error) => {
@@ -20,9 +21,63 @@ const die = (error) => {
 };
 
 function componentReceipt(file, expected, now) {
-    const value = readJson(file, `component receipt ${file}`);
+    const value = readJson(file, `component receipt ${file}`, { ownerOnly: true });
     if (value.schemaVersion !== 1 || typeof value.receiptType !== "string")
         throw new ContractError(`component ${file} is not a supported receipt`);
+    if (value.receiptType === "trusted-validation-gate") {
+        verifyReceiptFile(file, {
+            expectedType: value.receiptType,
+            expectedRelease: { version: expected.releaseVersion, commit: expected.commitSha },
+            expectedScope: expected.scope,
+            maximumAgeSeconds: expected.maximumAgeSeconds ?? 604800,
+            now,
+        });
+        return {
+            value: {
+                ...value,
+                scope: expected.scope,
+                release: { version: expected.releaseVersion, commit: expected.commitSha },
+                finishedAt: value.generatedAt,
+            },
+            now,
+        };
+    }
+    if (
+        [
+            "immutable-release-bundle",
+            "vps-health-gate",
+            "migration-rollback-compatibility",
+        ].includes(value.receiptType)
+    ) {
+        verifyReceiptFile(file, {
+            expectedType: value.receiptType,
+            expectedRelease: { version: expected.releaseVersion, commit: expected.commitSha },
+            expectedScope: expected.scope,
+            maximumAgeSeconds: expected.maximumAgeSeconds,
+            now,
+        });
+        return {
+            value: {
+                ...value,
+                scope: expected.scope,
+                release:
+                    value.release ??
+                    ({
+                        version: value.releaseVersion ?? expected.releaseVersion,
+                        commit: value.commit ?? expected.commitSha,
+                    }),
+                finishedAt: value.finishedAt ?? value.observedAt ?? now.toISOString(),
+            },
+            now,
+        };
+    }
+    verifyReceiptFile(file, {
+        expectedType: value.receiptType,
+        expectedRelease: { version: expected.releaseVersion, commit: expected.commitSha },
+        expectedScope: expected.scope,
+        maximumAgeSeconds: expected.maximumAgeSeconds,
+        now,
+    });
     const version = value.release?.version ?? value.releaseVersion;
     const commit = value.release?.commit ?? value.commit;
     if (version !== expected.releaseVersion)
@@ -71,7 +126,11 @@ try {
             regularFile(absolute, `component ${item.receiptType}`);
             const { value } = componentReceipt(
                 absolute,
-                { ...identity, scope: identity.scope },
+                {
+                    ...identity,
+                    scope: identity.scope,
+                    maximumAgeSeconds: item.maximumAgeSeconds,
+                },
                 now,
             );
             if (value.receiptType !== item.receiptType)
@@ -163,6 +222,7 @@ try {
                     releaseVersion: index.release.version,
                     commitSha: index.release.commit,
                     scope: index.scope,
+                    maximumAgeSeconds: item.maximumAgeSeconds ?? undefined,
                 },
                 now,
             );

@@ -5,12 +5,15 @@ setup() {
   node - "$WORK/gate1.json" "$WORK/gate2.json" "$COMMIT" <<'EOF'
 const fs=require('fs'),crypto=require('crypto');const [one,two,commit]=process.argv.slice(2),text=fs.readFileSync('config/trusted-validation-manifest.json','utf8'),manifest=JSON.parse(text),jobs=manifest.requiredJobs.map(j=>({job:j.id,receiptSha256:'a'.repeat(64),artifacts:j.requiredArtifacts.map(path=>({path,bytes:1,sha256:'b'.repeat(64)}))}));for(const [out,id] of [[one,'one'],[two,'two']])fs.writeFileSync(out,JSON.stringify({schemaVersion:1,receiptType:'trusted-validation-gate',status:'success',commit,manifestId:manifest.manifestId,manifestSha256:crypto.createHash('sha256').update(text).digest('hex'),generatedAt:new Date(Math.floor(Date.now()/1000)*1000).toISOString(),run:{id,attempt:'1',repository:'fixture/repo',workflow:'ci'},jobs}));
 EOF
+  chmod 600 "$WORK/gate1.json" "$WORK/gate2.json"
   node --input-type=module - "$WORK/identity.json" "$COMMIT" "$H" <<'EOF'
 import fs from'node:fs';import{createReleaseIdentity}from'./scripts/lib/release-identity.mjs';const[o,c,h]=process.argv.slice(2);fs.writeFileSync(o,JSON.stringify(createReleaseIdentity({releaseVersion:'10.0.0',commitSha:c,repositoryId:'nln/fixture',trustedManifestId:'trusted-v1',trustedManifestSha256:h,immutablePolicyId:'immutable-v1',immutablePolicySha256:h,bundleManifestSha256:h,environmentSchemaSha256:h,migrationMetadataSha256:h,createdAt:'2026-01-01T00:00:00.000Z',scope:'fixture'})));
 EOF
   NOW=$(date -u +%Y-%m-%dT%H:%M:%S.000Z)
-  echo "{\"schemaVersion\":1,\"receiptType\":\"fixture-chain\",\"status\":\"success\",\"scope\":\"fixture\",\"release\":{\"version\":\"10.0.0\",\"commit\":\"$COMMIT\"},\"finishedAt\":\"$NOW\"}" >"$WORK/evidence/component.json"
-  echo "{\"schemaVersion\":1,\"components\":[{\"receiptType\":\"fixture-chain\",\"path\":\"$WORK/evidence/component.json\"}] }" >"$WORK/components.json"
+  node --input-type=module - "$WORK/evidence/component.json" "$COMMIT" "$H" "$NOW" <<'EOF'
+import{publishJsonNoOverwrite,receiptEnvelope}from'./scripts/lib/phase10-safe-io.mjs';const[file,commit,h,now]=process.argv.slice(2);publishJsonNoOverwrite(file,receiptEnvelope({receiptType:'release-local-verification',receiptId:'phase10-fixture-local-verification',status:'success',scope:'fixture',command:'release verify-local',release:{version:'10.0.0',commit,releaseId:'phase10-fixture'},policy:{id:'fixture-policy',sha256:h},startedAt:now,finishedAt:now,result:{assuranceProfile:'application',executed:true,application:{status:'success'}}}));
+EOF
+  echo "{\"schemaVersion\":1,\"components\":[{\"receiptType\":\"release-local-verification\",\"path\":\"$WORK/evidence/component.json\"}] }" >"$WORK/components.json"
   node scripts/release-evidence.mjs create --identity "$WORK/identity.json" --components "$WORK/components.json" --output "$WORK/evidence/index.json" --now "$NOW"
   echo "{\"schemaVersion\":1,\"receiptType\":\"clean-checkout-validation\",\"status\":\"success\",\"commit\":\"$COMMIT\",\"workingTreeClean\":true,\"trustedGateRuns\":2,\"finishedAt\":\"$NOW\"}" >"$WORK/clean.json"
   echo '{"status":"success","total":338,"failureInjectionScenarios":[{"id":"pre-mutation","status":"passed"},{"id":"post-activation","status":"passed"}],"fixtureMeasurements":{"downtimeMilliseconds":[0,12],"rollbackRtoMilliseconds":[25]}}' >"$WORK/tests.json"

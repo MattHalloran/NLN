@@ -9,6 +9,7 @@ import {
     receiptEnvelope,
     sha256File,
 } from "./lib/phase10-safe-io.mjs";
+import { verifyReceiptFile } from "./lib/receipt-verifier.mjs";
 
 const HELP = `Usage: release-state.mjs evaluate --index FILE --output FILE [--target STATE] [--policy FILE] [--now ISO]
 Effect: local-read-only except owner-only derived receipt publication. States are derived from immutable evidence and cannot be selected manually.`;
@@ -50,7 +51,8 @@ try {
     )
         throw new ContractError("unsupported evidence index");
     const available = new Set(),
-        children = [];
+        children = [],
+        now = new Date(o.now ?? Date.now());
     for (const component of index.components) {
         if (available.has(component.receiptType))
             throw new ContractError(`duplicate evidence type: ${component.receiptType}`);
@@ -63,10 +65,18 @@ try {
             throw new ContractError(`mixed release evidence: ${component.receiptType}`);
         if (sha256File(component.path) !== component.sha256)
             throw new ContractError(`changed evidence: ${component.receiptType}`);
+        verifyReceiptFile(component.path, {
+            expectedType: component.receiptType,
+            expectedRelease: index.release,
+            expectedScope: index.scope,
+            maximumAgeSeconds: component.maximumAgeSeconds ?? undefined,
+            now,
+        });
         children.push({
             receiptType: component.receiptType,
             path: path.resolve(component.path),
             sha256: component.sha256,
+            maximumAgeSeconds: component.maximumAgeSeconds,
         });
     }
     const achieved = [],
@@ -87,7 +97,7 @@ try {
     if (!policy.states.some((item) => item.id === target && item.runtimeOnly !== true))
         throw new ContractError("target is not an evidence-derived state");
     const targetAchieved = achieved.includes(target),
-        finishedAt = new Date(o.now ?? Date.now()).toISOString();
+        finishedAt = now.toISOString();
     const receipt = receiptEnvelope({
         receiptType: "release-lifecycle-state",
         receiptId: `${index.releaseId}:state:${target}`,

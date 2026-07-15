@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 import { execFileSync } from "node:child_process";
+import { assertExactKeys, parseJsonStrict, regularFile } from "./lib/phase10-safe-io.mjs";
 
 const args = process.argv.slice(2);
 const options = {};
@@ -34,28 +35,32 @@ if (!expectedCommit) {
         fail(`cannot determine the current commit: ${error.message}`);
     }
 }
-if (!isCommit(expectedCommit)) fail("expected commit must be a full 40-character lowercase Git SHA");
+if (!isCommit(expectedCommit))
+    fail("expected commit must be a full 40-character lowercase Git SHA");
 
 const maxAgeSeconds = Number(options["max-age-seconds"] ?? 604800);
 if (!Number.isSafeInteger(maxAgeSeconds) || maxAgeSeconds <= 0) {
     fail("max-age-seconds must be a positive integer");
 }
-const nowEpoch = options["now-epoch"] === undefined ? Math.floor(Date.now() / 1000) : Number(options["now-epoch"]);
-if (!Number.isSafeInteger(nowEpoch) || nowEpoch < 0) fail("now-epoch must be a non-negative integer");
+const nowEpoch =
+    options["now-epoch"] === undefined
+        ? Math.floor(Date.now() / 1000)
+        : Number(options["now-epoch"]);
+if (!Number.isSafeInteger(nowEpoch) || nowEpoch < 0)
+    fail("now-epoch must be a non-negative integer");
 
 let manifestText;
 let manifest;
 let receipt;
 try {
     manifestText = fs.readFileSync(manifestPath, "utf8");
-    manifest = JSON.parse(manifestText);
+    manifest = parseJsonStrict(manifestText, "trusted validation manifest");
 } catch (error) {
     fail(`cannot read valid manifest ${manifestPath}: ${error.message}`);
 }
 try {
-    const stat = fs.lstatSync(receiptPath);
-    if (!stat.isFile() || stat.isSymbolicLink()) fail("receipt must be a regular non-symlink file");
-    receipt = JSON.parse(fs.readFileSync(receiptPath, "utf8"));
+    regularFile(receiptPath, "trusted gate receipt", { ownerOnly: true });
+    receipt = parseJsonStrict(fs.readFileSync(receiptPath, "utf8"), "trusted gate receipt");
 } catch (error) {
     if (error?.message?.startsWith("receipt must")) throw error;
     fail(`cannot read valid receipt ${receiptPath}: ${error.message}`);
@@ -64,12 +69,43 @@ try {
 if (receipt.schemaVersion !== 1 || receipt.receiptType !== "trusted-validation-gate") {
     fail("unsupported receipt schema or type");
 }
+try {
+    assertExactKeys(
+        receipt,
+        {
+            required: [
+                "schemaVersion",
+                "receiptType",
+                "status",
+                "commit",
+                "manifestId",
+                "manifestSha256",
+                "generatedAt",
+                "run",
+                "jobs",
+            ],
+        },
+        "trusted gate receipt",
+    );
+    assertExactKeys(
+        receipt.run,
+        { required: ["id", "attempt", "repository", "workflow"] },
+        "trusted gate run",
+    );
+} catch (error) {
+    fail(error.message);
+}
 if (receipt.status !== "success") fail("receipt does not record success");
 if (receipt.commit !== expectedCommit) fail("receipt is for the wrong commit");
 if (receipt.manifestId !== manifest.manifestId || receipt.manifestSha256 !== sha256(manifestText)) {
     fail("receipt uses a different trusted validation manifest");
 }
-if (!receipt.run || ["id", "attempt", "repository", "workflow"].some((key) => typeof receipt.run[key] !== "string" || !receipt.run[key])) {
+if (
+    !receipt.run ||
+    ["id", "attempt", "repository", "workflow"].some(
+        (key) => typeof receipt.run[key] !== "string" || !receipt.run[key],
+    )
+) {
     fail("receipt has incomplete workflow run identity");
 }
 
@@ -83,7 +119,17 @@ if (!Array.isArray(receipt.jobs)) fail("receipt has no job evidence");
 const expectedJobs = new Set((manifest.requiredJobs ?? []).map((job) => job.id));
 const seenJobs = new Set();
 for (const job of receipt.jobs) {
-    if (!expectedJobs.has(job.job)) fail(`receipt includes unexpected job evidence: ${job.job ?? "(missing job)"}`);
+    try {
+        assertExactKeys(
+            job,
+            { required: ["job", "receiptSha256", "artifacts"] },
+            "trusted gate job",
+        );
+    } catch (error) {
+        fail(error.message);
+    }
+    if (!expectedJobs.has(job.job))
+        fail(`receipt includes unexpected job evidence: ${job.job ?? "(missing job)"}`);
     if (seenJobs.has(job.job)) fail(`receipt repeats job evidence: ${job.job}`);
     seenJobs.add(job.job);
     if (!isSha256(job.receiptSha256)) fail(`${job.job} has an invalid job receipt hash`);
@@ -92,11 +138,28 @@ for (const job of receipt.jobs) {
     const expectedArtifacts = [...manifestJob.requiredArtifacts].sort();
     const seenArtifacts = new Set();
     for (const artifact of job.artifacts) {
-        if (typeof artifact.path !== "string" || !artifact.path || seenArtifacts.has(artifact.path)) {
+        try {
+            assertExactKeys(
+                artifact,
+                { required: ["path", "bytes", "sha256"] },
+                "trusted gate artifact",
+            );
+        } catch (error) {
+            fail(error.message);
+        }
+        if (
+            typeof artifact.path !== "string" ||
+            !artifact.path ||
+            seenArtifacts.has(artifact.path)
+        ) {
             fail(`${job.job} has invalid or duplicate artifact evidence`);
         }
         seenArtifacts.add(artifact.path);
-        if (!Number.isSafeInteger(artifact.bytes) || artifact.bytes < 0 || !isSha256(artifact.sha256)) {
+        if (
+            !Number.isSafeInteger(artifact.bytes) ||
+            artifact.bytes < 0 ||
+            !isSha256(artifact.sha256)
+        ) {
             fail(`${job.job} has invalid artifact evidence for ${artifact.path}`);
         }
     }
@@ -109,5 +172,7 @@ if (seenJobs.size !== expectedJobs.size || [...expectedJobs].some((job) => !seen
 }
 
 console.log(`Trusted gate receipt passed for commit ${expectedCommit}`);
-console.log(`Workflow run: ${receipt.run.repository}/${receipt.run.workflow} #${receipt.run.id} attempt ${receipt.run.attempt}`);
+console.log(
+    `Workflow run: ${receipt.run.repository}/${receipt.run.workflow} #${receipt.run.id} attempt ${receipt.run.attempt}`,
+);
 console.log(`Manifest SHA-256: ${receipt.manifestSha256}`);

@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 import fs from "node:fs";
 import path from "node:path";
+import crypto from "node:crypto";
+import { execFileSync } from "node:child_process";
 import {
     parseOptions,
     publishJsonNoOverwrite,
@@ -27,11 +29,136 @@ const common = {
     release,
     finishedAt: o.now,
 };
+const trustedManifestText = fs.readFileSync(
+        path.resolve("config/trusted-validation-manifest.json"),
+        "utf8",
+    ),
+    trustedManifest = JSON.parse(trustedManifestText),
+    trustedJobs = trustedManifest.requiredJobs.map((job) => ({
+        job: job.id,
+        receiptSha256: hash,
+        artifacts: job.requiredArtifacts.map((artifactPath) => ({
+            path: artifactPath,
+            bytes: 1,
+            sha256: hash,
+        })),
+    }));
 const files = {
-    trusted: write("trusted", { ...common, receiptType: "trusted-validation-gate" }),
-    bundle: write("bundle", { ...common, receiptType: "immutable-release-bundle" }),
-    health: write("health", { ...common, receiptType: "vps-health-gate" }),
+    trusted: write("trusted", {
+        schemaVersion: 1,
+        receiptType: "trusted-validation-gate",
+        status: "success",
+        commit: o.commit,
+        manifestId: trustedManifest.manifestId,
+        manifestSha256: crypto.createHash("sha256").update(trustedManifestText).digest("hex"),
+        generatedAt: o.now,
+        run: {
+            id: "fixture-lifecycle",
+            attempt: "1",
+            repository: "fixture/repository",
+            workflow: "fixture-ci",
+        },
+        jobs: trustedJobs,
+    }),
 };
+const migrationMetadata = {
+        schemaVersion: 1,
+        releaseVersion: o.version,
+        classification: "backward-compatible",
+        rationale: "additive fixture migration",
+        rollbackStrategy: "retain expanded fixture schema",
+        testedPostgresMajors: [13],
+        expectedDurationSeconds: 5,
+        expectedAffectedRows: { maximum: 10, basis: "fixture limit" },
+        lockRisk: "low",
+        transactionStrategy: "single transaction",
+        diskSpaceRequiredBytes: 100,
+        specialDeploymentPlan: null,
+        migrations: [
+            {
+                id: "20260101000000_fixture_expand",
+                phase: "expand",
+                classification: "backward-compatible",
+                rationale: "add fixture column safely",
+                backfill: null,
+            },
+        ],
+    },
+    migrationMetadataPath = write("migration-metadata", migrationMetadata),
+    environmentSchemaPath = write("environment-schema", {
+        schemaVersion: 1,
+        requiredKeys: ["DB_URL", "REDIS_CONN"],
+    }),
+    source = path.join(root, "bundle-source");
+fs.mkdirSync(source, { mode: 0o700 });
+for (const name of ["compose.yml", "deploy-helper.sh", "application.tar"])
+    fs.writeFileSync(path.join(source, name), `${name} fixture\n`, { mode: 0o600 });
+const bundleSpecPath = write("bundle-spec", {
+        schemaVersion: 1,
+        artifacts: [
+            { source: "compose.yml", path: "compose.yml", kind: "compose" },
+            {
+                source: "deploy-helper.sh",
+                path: "deploy-helper.sh",
+                kind: "deployment-helper",
+            },
+            {
+                source: "application.tar",
+                path: "application.tar",
+                kind: "built-artifact",
+            },
+        ],
+        images: [`fixture/application@sha256:${hash}`],
+        endpoints: { health: "/api/healthcheck" },
+    }),
+    bundleDirectory = path.join(root, "immutable-bundle");
+execFileSync(
+    process.execPath,
+    [
+        path.resolve("scripts/immutable-release-bundle.mjs"),
+        "create",
+        "--source",
+        source,
+        "--spec",
+        bundleSpecPath,
+        "--output",
+        bundleDirectory,
+        "--version",
+        o.version,
+        "--commit",
+        o.commit,
+        "--trusted-receipt",
+        files.trusted,
+        "--trusted-manifest",
+        path.resolve("config/trusted-validation-manifest.json"),
+        "--migration-metadata",
+        migrationMetadataPath,
+        "--environment-schema",
+        environmentSchemaPath,
+    ],
+    { stdio: "ignore" },
+);
+files.bundle = path.join(bundleDirectory, "release-manifest.json");
+const healthPolicyPath = path.resolve("config/vps-health-maintenance-policy.json"),
+    healthPolicy = JSON.parse(fs.readFileSync(healthPolicyPath, "utf8"));
+files.health = write("health", {
+    schemaVersion: 1,
+    receiptType: "vps-health-gate",
+    status: "passed",
+    observedAt: o.now,
+    adapterMode: "read-only",
+    policy: { id: healthPolicy.policyId, sha256: sha256File(healthPolicyPath) },
+    factsSha256: hash,
+    summary: { blocking: 0, warning: 0, informational: 1 },
+    checks: [
+        {
+            id: "fixture-health",
+            classification: "informational",
+            observed: { healthy: true },
+            recommendation: "none",
+        },
+    ],
+});
 files.backup = write(
     "backup",
     receiptEnvelope({
@@ -86,6 +213,30 @@ const children = Object.entries(files).map(([key, file]) => ({
     path: file,
     sha256: sha256File(file),
 }));
+if (o.index)
+    publishJsonNoOverwrite(o.index, {
+        schemaVersion: 1,
+        receiptType: "release-evidence-index",
+        releaseId: release.releaseId,
+        release: { version: release.version, commit: release.commit },
+        scope: "fixture",
+        createdAt: o.now,
+        components: Object.entries(files)
+            .map(([key, file]) => ({
+                receiptType: types[key],
+                stage: key,
+                path: file,
+                sha256: sha256File(file),
+                releaseVersion: release.version,
+                commit: release.commit,
+                scope: "fixture",
+                finishedAt: o.now,
+                maximumAgeSeconds: key === "health" ? 300 : null,
+            }))
+            .sort((a, b) => a.receiptType.localeCompare(b.receiptType)),
+        retentionClass: "release-evidence",
+        confidentiality: "operational-confidential",
+    });
 const policyPath = path.resolve("config/release-state-machine.json"),
     policy = JSON.parse(fs.readFileSync(policyPath, "utf8"));
 publishJsonNoOverwrite(
