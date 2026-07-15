@@ -56,7 +56,9 @@ const record = {
     status: "qualified",
     recordedAt: new Date().toISOString(),
     release: manifest.value.release,
+    bundleManifestPath: path.resolve(manifestFile),
     bundleManifestSha256: crypto.createHash("sha256").update(manifest.bytes).digest("hex"),
+    smokeReceiptPath: path.resolve(options.smoke),
     smokeReceiptSha256: crypto.createHash("sha256").update(smoke.bytes).digest("hex"),
 };
 const recordName = `${manifest.value.release.version}-${manifest.value.release.commit}.json`;

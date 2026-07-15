@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import { assertExactKeys, readJson } from "./lib/phase10-safe-io.mjs";
+import { implementedSemanticVerifiers } from "./lib/receipt-verifier.mjs";
 
 const fail = (message) => {
     console.error(`Phase 10 contract rejected: ${message}`);
@@ -106,33 +107,7 @@ try {
         throw new Error("application membership is invalid");
     if (topology.activationOrder.map((x) => x.service).join(",") !== "server,ui")
         throw new Error("activation order is invalid");
-    const semanticVerifiers = new Set([
-        "release-prepare",
-        "release-deploy",
-        "release-evidence-index",
-        "release-alert",
-        "phase10-qualification",
-        "backup-qualification",
-        "rollback-compatibility",
-        "immutable-bundle",
-        "controlled-migration",
-        "app-only-rollback",
-        "reduced-downtime",
-        "maintenance-plan",
-        "maintenance-execution",
-        "archive-v2-compatibility",
-        "database-invariant-compatibility",
-        "application-restore-compatibility",
-        "remote-download-compatibility",
-        "resilience-compatibility",
-        "release-lifecycle-state",
-        "trusted-gate-compatibility",
-        "vps-health-compatibility",
-        "known-good-compatibility",
-        "release-local-verification",
-        "release-recovery-plan",
-        "legacy-evidence-compatibility",
-    ]);
+    const semanticVerifiers = implementedSemanticVerifiers;
     const receiptTypes = new Set();
     for (const entry of receipts.types) {
         assertExactKeys(
@@ -156,6 +131,12 @@ try {
         )
             throw new Error(`incomplete receipt schema ${entry.schema}`);
     }
+    const registeredSemanticVerifiers = new Set(
+        receipts.types.map((entry) => entry.semanticVerifier),
+    );
+    for (const verifier of semanticVerifiers)
+        if (!registeredSemanticVerifiers.has(verifier))
+            throw new Error(`implemented semantic verifier is unregistered: ${verifier}`);
     const documentPaths = new Set();
     for (const entry of authority.documents) {
         if (documentPaths.has(entry.path))

@@ -94,13 +94,20 @@ EOF
     make_adapter; export ADAPTER_LOG="$ROOT/adapter.log"
     run node scripts/app-only-rollback.mjs --bundle "$ROOT/bundle" --adapter "$ROOT/adapter.mjs" --receipt "$ROOT/plan.json"
     [ "$status" -eq 0 ]; [ "$(cat "$ROOT/adapter.log")" = inspect ]
+    run node scripts/verify-release-receipt.mjs --receipt "$ROOT/plan.json" --type app-only-rollback --version 5.0.0 --commit "$COMMIT"
+    [ "$status" -eq 0 ]
     grep -q '"status": "planned"' "$ROOT/plan.json"
     grep -q '"databaseRestored": false' "$ROOT/plan.json"
+    node -e 'const fs=require("fs"),p=process.argv[1],r=require(p);r.databaseRestored=true;fs.writeFileSync(p,JSON.stringify(r))' "$ROOT/plan.json"
+    run node scripts/verify-release-receipt.mjs --receipt "$ROOT/plan.json" --type app-only-rollback
+    [ "$status" -ne 0 ]
 }
 
 @test "fixture rollback targets application services and preserves state identities and writes" {
     make_adapter; export ADAPTER_LOG="$ROOT/adapter.log"
     run node scripts/app-only-rollback.mjs --bundle "$ROOT/bundle" --adapter "$ROOT/adapter.mjs" --receipt "$ROOT/result.json" --execute true --fixture true --confirm ROLLBACK-APP-ONLY-5.0.0
+    [ "$status" -eq 0 ]
+    run node scripts/verify-release-receipt.mjs --receipt "$ROOT/result.json" --type app-only-rollback --version 5.0.0 --commit "$COMMIT"
     [ "$status" -eq 0 ]
     [ "$(tr '\n' ' ' < "$ROOT/adapter.log")" = "inspect load activate health public-smoke post-smoke inspect " ]
     grep -q '"status": "success"' "$ROOT/result.json"
@@ -147,8 +154,15 @@ EOF
     cat > "$ROOT/smoke.json" <<EOF
 {"status":"success","releaseVersion":"5.0.0","commit":"$COMMIT","health":"passed","publicSmoke":"passed","postDeploySmoke":"passed"}
 EOF
+    chmod 600 "$ROOT/smoke.json"
     run node scripts/record-known-good-release.mjs --bundle "$ROOT/bundle" --smoke "$ROOT/smoke.json" --output "$ROOT/known-good"
     [ "$status" -eq 0 ]; [ -f "$ROOT/known-good/current.json" ]; [ "$(stat -c %a "$ROOT/known-good/current.json")" = 600 ]
+    RECORD=$(node -e 'const path=require("path"),p=require(process.argv[1]);process.stdout.write(path.join(path.dirname(process.argv[1]),p.record))' "$ROOT/known-good/current.json")
+    run node scripts/verify-release-receipt.mjs --receipt "$RECORD" --type last-known-good-release --version 5.0.0 --commit "$COMMIT"
+    [ "$status" -eq 0 ]
+    node -e 'const fs=require("fs"),p=process.argv[1],r=require(p);r.smokeReceiptSha256="0".repeat(64);fs.writeFileSync(p,JSON.stringify(r))' "$RECORD"
+    run node scripts/verify-release-receipt.mjs --receipt "$RECORD" --type last-known-good-release
+    [ "$status" -ne 0 ]
     run node scripts/record-known-good-release.mjs --bundle "$ROOT/bundle" --smoke "$ROOT/smoke.json" --output "$ROOT/known-good"
     [ "$status" -ne 0 ]
 }

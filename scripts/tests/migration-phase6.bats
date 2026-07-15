@@ -31,6 +31,11 @@ EOF
 @test "runner uses advisory lock and writes owner-only success evidence" {
   run env MIGRATION_STUB_STATE="$WORK/state.json" MIGRATION_STUB_LOG="$WORK/log" node scripts/run-controlled-migrations.mjs --metadata "$WORK/metadata.json" --policy "$WORK/policy.json" --adapter scripts/tests/fixtures/migration-adapter-stub.mjs --trusted-receipt "$WORK/trusted.json" --backup-receipt "$WORK/backup.json" --commit "$COMMIT" --output "$WORK/out/receipt.json"
   [ "$status" -eq 0 ]; [ "$(stat -c %a "$WORK/out/receipt.json")" = 600 ]; grep -q '^acquire-lock ' "$WORK/log"; grep -q '^apply ' "$WORK/log"; grep -q '^release-lock ' "$WORK/log"
+  run node scripts/verify-release-receipt.mjs --receipt "$WORK/out/receipt.json" --type controlled-migration --version 1.2.3 --commit "$COMMIT"
+  [ "$status" -eq 0 ]
+  node -e 'const fs=require("fs"),p=process.argv[1],r=require(p);r.checks.expectedEndingState=false;fs.writeFileSync(p,JSON.stringify(r))' "$WORK/out/receipt.json"
+  run node scripts/verify-release-receipt.mjs --receipt "$WORK/out/receipt.json" --type controlled-migration
+  [ "$status" -ne 0 ]
 }
 @test "lock contention never applies migrations and records failure" {
   run env MIGRATION_STUB_STATE="$WORK/state.json" MIGRATION_STUB_LOG="$WORK/log" MIGRATION_STUB_LOCKED=1 node scripts/run-controlled-migrations.mjs --metadata "$WORK/metadata.json" --policy "$WORK/policy.json" --adapter scripts/tests/fixtures/migration-adapter-stub.mjs --trusted-receipt "$WORK/trusted.json" --backup-receipt "$WORK/backup.json" --commit "$COMMIT" --output "$WORK/out/receipt.json"

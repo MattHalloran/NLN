@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import crypto from "node:crypto";
 import { spawnSync } from "node:child_process";
 import {
     ContractError,
@@ -23,6 +24,47 @@ const statuses = new Set([
     "failure",
     "passed",
 ]);
+
+export const implementedSemanticVerifiers = Object.freeze(
+    new Set([
+        "release-prepare",
+        "release-deploy",
+        "release-evidence-index",
+        "release-alert",
+        "phase10-qualification",
+        "backup-qualification",
+        "rollback-compatibility",
+        "immutable-bundle",
+        "controlled-migration",
+        "app-only-rollback",
+        "reduced-downtime",
+        "maintenance-plan",
+        "maintenance-execution",
+        "archive-v2-compatibility",
+        "database-invariant-compatibility",
+        "application-restore-compatibility",
+        "remote-download-compatibility",
+        "resilience-compatibility",
+        "release-lifecycle-state",
+        "trusted-gate-compatibility",
+        "vps-health-compatibility",
+        "known-good-compatibility",
+        "release-local-verification",
+        "release-recovery-plan",
+        "legacy-evidence-compatibility",
+    ]),
+);
+
+const hash256 = (value) => /^[0-9a-f]{64}$/.test(value ?? "");
+const cryptoHashJson = (value) =>
+    crypto.createHash("sha256").update(JSON.stringify(value)).digest("hex");
+
+function exactDuration(startedAt, finishedAt, duration, label) {
+    const started = Date.parse(isoTimestamp(startedAt, `${label} startedAt`));
+    const finished = Date.parse(isoTimestamp(finishedAt, `${label} finishedAt`));
+    if (finished < started || duration !== finished - started)
+        throw new ContractError(`${label} duration does not match its timestamps`);
+}
 
 function valueTypeMatches(value, type) {
     if (type === "null") return value === null;
@@ -212,6 +254,129 @@ export function verifyReceiptFile(
             )
                 throw new ContractError("immutable bundle semantic verification failed");
         }
+        if (entry.semanticVerifier === "controlled-migration") {
+            exactDuration(value.startedAt, value.finishedAt, value.durationMs, "migration");
+            const success = value.status === "success";
+            if (
+                !["success", "failure"].includes(value.status) ||
+                value.releaseVersion !==
+                    (options.expectedRelease?.version ?? value.releaseVersion) ||
+                value.commit !== (options.expectedRelease?.commit ?? value.commit) ||
+                !/^[0-9a-f]{40}$/.test(value.commit ?? "") ||
+                !hash256(value.policySha256) ||
+                !hash256(value.metadataSha256) ||
+                !hash256(value.trustedReceiptSha256) ||
+                !hash256(value.backupReceiptSha256) ||
+                !value.checks ||
+                typeof value.checks !== "object" ||
+                (success && Object.values(value.checks).some((check) => check !== true)) ||
+                (success && (!value.before || !value.after || value.failure !== null)) ||
+                (!success && (!value.failure?.stage || !value.failure?.message))
+            )
+                throw new ContractError("controlled migration evidence is inconsistent");
+        }
+        if (entry.semanticVerifier === "app-only-rollback") {
+            exactDuration(
+                value.startedAt,
+                value.finishedAt,
+                value.durationMilliseconds,
+                "app rollback",
+            );
+            const success = value.status === "success";
+            if (
+                !["planned", "success", "failed"].includes(value.status) ||
+                value.databaseRestored !== false ||
+                !value.release ||
+                value.release.version !==
+                    (options.expectedRelease?.version ?? value.release.version) ||
+                value.release.commit !==
+                    (options.expectedRelease?.commit ?? value.release.commit) ||
+                !/^[0-9a-f]{40}$/.test(value.release.commit ?? "") ||
+                (success &&
+                    (!hash256(value.protectedStateBeforeSha256) || value.failure !== null)) ||
+                (value.status === "failed" && !value.failure)
+            )
+                throw new ContractError("app rollback evidence is inconsistent");
+        }
+        if (entry.semanticVerifier === "reduced-downtime") {
+            exactDuration(
+                value.startedAt,
+                value.finishedAt,
+                value.durationMilliseconds,
+                "reduced-downtime rehearsal",
+            );
+            if (
+                !["planned", "success", "failed", "recovered"].includes(value.status) ||
+                value.fixture !== true ||
+                value.productionMutation !== false ||
+                value.databaseRestored !== false ||
+                value.releaseVersion !==
+                    (options.expectedRelease?.version ?? value.releaseVersion) ||
+                !Number.isSafeInteger(value.userVisibleDowntimeMilliseconds) ||
+                value.userVisibleDowntimeMilliseconds < 0 ||
+                !Array.isArray(value.events) ||
+                (value.status === "success" &&
+                    (!hash256(value.protectedStateBeforeSha256) ||
+                        value.protectedStateBeforeSha256 !== value.protectedStateAfterSha256 ||
+                        value.failure !== null)) ||
+                (value.status === "recovered" &&
+                    (value.rollbackAttempted !== true ||
+                        value.recovered !== true ||
+                        !value.failure)) ||
+                (value.status === "failed" && !value.failure) ||
+                (value.status === "planned" &&
+                    (value.rollbackAttempted !== false || value.recovered !== false))
+            )
+                throw new ContractError("reduced-downtime evidence is inconsistent");
+        }
+        if (entry.semanticVerifier === "maintenance-plan") {
+            const { planHash, ...basis } = value,
+                expectedHash = cryptoHashJson(basis);
+            isoTimestamp(value.createdAt, "maintenance plan createdAt");
+            if (
+                value.status !== "planned" ||
+                value.fixture !== true ||
+                value.productionMutation !== false ||
+                !value.hostFingerprint ||
+                !Array.isArray(value.actions) ||
+                value.actions.length < 1 ||
+                new Set(value.actions.map((action) => action.id)).size !== value.actions.length ||
+                value.actions.some(
+                    (action) =>
+                        !action.id ||
+                        !action.commandClass ||
+                        !action.reason ||
+                        (action.destructive === true && !action.recoveryProcedure),
+                ) ||
+                planHash !== expectedHash
+            )
+                throw new ContractError("maintenance plan evidence is inconsistent");
+        }
+        if (entry.semanticVerifier === "maintenance-execution") {
+            exactDuration(
+                value.startedAt,
+                value.finishedAt,
+                value.durationMilliseconds,
+                "maintenance execution",
+            );
+            const success = value.status === "success";
+            if (
+                !["success", "failed"].includes(value.status) ||
+                value.fixture !== true ||
+                value.productionMutation !== false ||
+                !hash256(value.planHash) ||
+                !Array.isArray(value.events) ||
+                (success &&
+                    (!value.baselineFingerprint ||
+                        value.postHealth?.status !== "passed" ||
+                        value.postHealth?.databaseHealthy !== true ||
+                        value.postHealth?.redisHealthy !== true ||
+                        value.postHealth?.publicHealthy !== true ||
+                        value.failure !== null)) ||
+                (!success && !value.failure)
+            )
+                throw new ContractError("maintenance execution evidence is inconsistent");
+        }
         if (entry.semanticVerifier === "vps-health-compatibility") {
             const policyPath = path.resolve("config/vps-health-maintenance-policy.json"),
                 policy = readJson(policyPath, "VPS health policy");
@@ -318,6 +483,33 @@ export function verifyReceiptFile(
                 !value.result?.assuranceLimit
             )
                 throw new ContractError("legacy compatibility evidence overstates assurance");
+        }
+        if (entry.semanticVerifier === "known-good-compatibility") {
+            isoTimestamp(value.recordedAt, "known-good recordedAt");
+            if (value.bundleManifestPath)
+                regularFile(value.bundleManifestPath, "known-good bundle manifest", {
+                    ownerOnly: true,
+                });
+            if (value.smokeReceiptPath)
+                regularFile(value.smokeReceiptPath, "known-good smoke receipt", {
+                    ownerOnly: true,
+                });
+            if (
+                value.status !== "qualified" ||
+                !value.release ||
+                value.release.version !==
+                    (options.expectedRelease?.version ?? value.release.version) ||
+                value.release.commit !==
+                    (options.expectedRelease?.commit ?? value.release.commit) ||
+                !/^[0-9a-f]{40}$/.test(value.release.commit ?? "") ||
+                !hash256(value.bundleManifestSha256) ||
+                !hash256(value.smokeReceiptSha256) ||
+                !value.bundleManifestPath ||
+                !value.smokeReceiptPath ||
+                sha256File(value.bundleManifestPath) !== value.bundleManifestSha256 ||
+                sha256File(value.smokeReceiptPath) !== value.smokeReceiptSha256
+            )
+                throw new ContractError("known-good evidence is incomplete");
         }
         if (entry.semanticVerifier === "release-alert") {
             isoTimestamp(value.observedAt, "release alert observedAt");
