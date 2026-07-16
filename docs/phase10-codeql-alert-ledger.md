@@ -10,7 +10,8 @@
 ## Disposition rules
 
 - `resolved-at-dbe026d` means the remediation and regression test exist and the PR
-  CodeQL gate passed at `dbe026d87f5e` without the annotation.
+  CodeQL gate passed at `dbe026d5474c0284f9153b636a1d5d3e58fc17bd` without the
+  annotation.
 - Test-only findings are fixed in the harness instead of dismissed. That keeps
   synthetic applications representative of the production middleware contract.
 - No query, severity, workflow, or branch-protection rule is suppressed or weakened.
@@ -47,8 +48,9 @@ reported again, now exclusively on uses of `.length` from the request-derived Mu
 file array. The follow-up retains the runtime `Array.isArray` rejection and removes
 all polymorphic `.length` reads by counting and processing files through explicit
 iteration. Its status remains `implemented-awaiting-CodeQL` until GitHub analyzes the
-follow-up commit. GitHub then analyzed `dbe026d87f5e`; both language analyses and the
-separate PR CodeQL gate passed, with zero PR-gate annotations.
+follow-up commit. GitHub then analyzed
+`dbe026d5474c0284f9153b636a1d5d3e58fc17bd`; both language analyses and the separate
+PR CodeQL gate passed, with zero PR-gate annotations.
 
 ## Required closure evidence
 
