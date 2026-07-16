@@ -41,6 +41,11 @@ create_archive() {
     assert_output --partial "archive verified"
 }
 
+@test "disposable extraction preserves manifest modes under a restrictive caller umask" {
+    grep -q '"--same-permissions"' "$ARCHIVE_SCRIPT"
+    grep -q 'fs.mkdtempSync(path.join(os.tmpdir(), "runtime-state-v2-verify-"))' "$ARCHIVE_SCRIPT"
+}
+
 @test "archives are reproducible for identical input" {
     create_archive >/dev/null
     FIRST_HASH=$(sha256sum "$ARCHIVE" | cut -d' ' -f1)

@@ -221,7 +221,15 @@ if (command === "create") {
     try {
         run(
             "tar",
-            ["--extract", "--no-same-owner", "-zf", archive, "-C", extract],
+            [
+                "--extract",
+                "--no-same-owner",
+                "--same-permissions",
+                "-zf",
+                archive,
+                "-C",
+                extract,
+            ],
             "archive extraction",
         );
         const extractedManifest = path.join(extract, ...receipt.contentManifestPath.split("/"));
