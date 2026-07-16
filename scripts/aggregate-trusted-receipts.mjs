@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import { execFileSync } from "node:child_process";
 
 const args = process.argv.slice(2);
 const options = {};
@@ -22,8 +23,18 @@ const sha256 = (data) => crypto.createHash("sha256").update(data).digest("hex");
 const manifestPath = options.manifest ?? "config/trusted-validation-manifest.json";
 const receiptsDir = path.resolve(options["receipts-dir"] ?? ".validation/trusted-jobs");
 const outputPath = path.resolve(options.output ?? ".validation/trusted-gate.json");
+let checkedOutCommit = options.commit;
+if (!checkedOutCommit) {
+    try {
+        checkedOutCommit = execFileSync("git", ["rev-parse", "HEAD"], {
+            encoding: "utf8",
+        }).trim();
+    } catch (error) {
+        fail(`cannot determine checked-out commit: ${error.message}`);
+    }
+}
 const expected = {
-    commit: options.commit ?? process.env.GITHUB_SHA,
+    commit: checkedOutCommit,
     id: options["run-id"] ?? process.env.GITHUB_RUN_ID,
     attempt: options["run-attempt"] ?? process.env.GITHUB_RUN_ATTEMPT,
     repository: options.repository ?? process.env.GITHUB_REPOSITORY,

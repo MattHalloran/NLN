@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import { execFileSync } from "node:child_process";
 
 const args = process.argv.slice(2);
 const options = {};
@@ -23,7 +24,14 @@ const manifestPath = options.manifest ?? "config/trusted-validation-manifest.jso
 const root = path.resolve(options.root ?? ".");
 const jobId = options.job ?? process.env.GITHUB_JOB;
 const outputPath = path.resolve(options.output ?? `.validation/trusted-jobs/${jobId}.json`);
-const commit = options.commit ?? process.env.GITHUB_SHA;
+let commit = options.commit;
+if (!commit) {
+    try {
+        commit = execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
+    } catch (error) {
+        fail(`cannot determine checked-out commit: ${error.message}`);
+    }
+}
 const runId = options["run-id"] ?? process.env.GITHUB_RUN_ID;
 const runAttempt = options["run-attempt"] ?? process.env.GITHUB_RUN_ATTEMPT;
 const repository = options.repository ?? process.env.GITHUB_REPOSITORY;

@@ -66,6 +66,21 @@ aggregate_receipts() {
     node -e 'const r=require(process.argv[1]); if(r.status!=="success" || r.artifacts.length!==5 || r.artifacts.some(a=>!/^[0-9a-f]{64}$/.test(a.sha256))) process.exit(1)' "$WORK_DIR/receipts/validate.json"
 }
 
+@test "trusted job receipt binds checked-out HEAD instead of pull-request merge SHA" {
+    actual_head=$(git -C "$BATS_TEST_DIRNAME/../.." rev-parse HEAD)
+    receipt_path="$WORK_DIR/receipts/checked-out-head.json"
+
+    run env GITHUB_SHA=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa \
+        GITHUB_JOB=validate GITHUB_RUN_ID=1234 GITHUB_RUN_ATTEMPT=2 \
+        GITHUB_REPOSITORY=example/nln GITHUB_WORKFLOW=CI \
+        node "$CREATE_SCRIPT" --manifest "$WORK_DIR/config/manifest.json" \
+        --root "$WORK_DIR" --output "$receipt_path"
+
+    [ "$status" -eq 0 ]
+    recorded_head=$(node -e 'process.stdout.write(require(process.argv[1]).commit)' "$receipt_path")
+    [ "$recorded_head" = "$actual_head" ]
+}
+
 @test "trusted job receipt rejects missing required evidence" {
     rm "$WORK_DIR/test-results/pwa.json"
     run create_receipt validate
