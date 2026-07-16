@@ -46,9 +46,27 @@ mutate() {
 }
 
 @test "exact-commit trusted gate receipt is accepted" {
+    mutate 'r.generatedAt="2027-01-15T08:00:00.579Z"'
     run verify_receipt
     [ "$status" -eq 0 ]
     assert_output --partial "Trusted gate receipt passed for commit $COMMIT"
+}
+
+@test "malformed and future generation timestamps are rejected" {
+    mutate 'r.generatedAt="2027-01-15T08:00:00Z"'
+    run verify_receipt
+    [ "$status" -ne 0 ]
+    assert_output --partial "invalid generation timestamp"
+
+    mutate 'r.generatedAt="not-a-timestamp"'
+    run verify_receipt
+    [ "$status" -ne 0 ]
+    assert_output --partial "invalid generation timestamp"
+
+    mutate 'r.generatedAt=new Date((1800000000+1)*1000).toISOString()'
+    run verify_receipt
+    [ "$status" -ne 0 ]
+    assert_output --partial "generation timestamp is in the future"
 }
 
 @test "wrong commit, failed status, and stale evidence are rejected" {

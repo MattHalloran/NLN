@@ -109,8 +109,16 @@ if (
     fail("receipt has incomplete workflow run identity");
 }
 
-const generatedEpoch = Date.parse(receipt.generatedAt) / 1000;
-if (!Number.isInteger(generatedEpoch)) fail("receipt has an invalid generation timestamp");
+const generatedMillis = Date.parse(receipt.generatedAt);
+if (
+    typeof receipt.generatedAt !== "string" ||
+    !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(receipt.generatedAt) ||
+    !Number.isFinite(generatedMillis) ||
+    new Date(generatedMillis).toISOString() !== receipt.generatedAt
+) {
+    fail("receipt has an invalid generation timestamp");
+}
+const generatedEpoch = Math.floor(generatedMillis / 1000);
 const age = nowEpoch - generatedEpoch;
 if (age < 0) fail("receipt generation timestamp is in the future");
 if (age > maxAgeSeconds) fail(`receipt is stale: age=${age}s, max=${maxAgeSeconds}s`);
