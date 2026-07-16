@@ -163,7 +163,10 @@ export function createImageFileCountLimiter(
                 res.status(400).json({ error: "Invalid uploaded files" });
                 return;
             }
-            const fileCount = uploadedFiles?.length ?? 0;
+            let fileCount = 0;
+            for (const _file of uploadedFiles ?? []) {
+                fileCount += 1;
+            }
 
             if (fileCount === 0) {
                 // No files in request, skip limiting

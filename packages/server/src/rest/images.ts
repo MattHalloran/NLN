@@ -198,27 +198,31 @@ export function createImagesRouter(options: ImagesRouterOptions = {}): Router {
                 return res.status(400).json({ error: "Invalid uploaded files" });
             }
             const files = (uploadedFiles ?? []) as Express.Multer.File[];
+            let fileCount = 0;
+            for (const _file of files) {
+                fileCount += 1;
+            }
             const {
                 label,
                 alts: altArray,
                 descriptions: descArray,
             } = parseImageUploadInput(req.body);
 
-            if (!files || files.length === 0) {
+            if (fileCount === 0) {
                 return res.status(400).json({ error: "No files provided" });
             }
 
             // Limit files per request to prevent resource exhaustion
             // Each image generates 16 variants (8 sizes × 2 formats)
             const MAX_FILES_PER_REQUEST = UPLOAD_LIMITS.maxImageFilesPerRequest;
-            if (files.length > MAX_FILES_PER_REQUEST) {
+            if (fileCount > MAX_FILES_PER_REQUEST) {
                 logger.log(
                     LogLevel.warn,
-                    `Upload rejected: ${files.length} files exceeds limit of ${MAX_FILES_PER_REQUEST}`
+                    `Upload rejected: ${fileCount} files exceeds limit of ${MAX_FILES_PER_REQUEST}`
                 );
                 return res.status(400).json({
                     error: `Too many files in single request. Maximum ${MAX_FILES_PER_REQUEST} files per upload.`,
-                    filesProvided: files.length,
+                    filesProvided: fileCount,
                     maxAllowed: MAX_FILES_PER_REQUEST,
                     tip: "Split your upload into multiple batches.",
                 });
@@ -255,8 +259,8 @@ export function createImagesRouter(options: ImagesRouterOptions = {}): Router {
             const results = [];
 
             // Loop through every image passed in
-            for (let i = 0; i < files.length; i++) {
-                const file: Express.Multer.File | undefined = files[i];
+            let i = 0;
+            for (const file of files) {
                 if (file) {
                     const result = await saveImage({
                         file,
@@ -267,6 +271,7 @@ export function createImagesRouter(options: ImagesRouterOptions = {}): Router {
                     });
                     results.push(result);
                 }
+                i += 1;
             }
 
             // Audit log: image upload

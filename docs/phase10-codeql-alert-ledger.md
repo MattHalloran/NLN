@@ -1,9 +1,11 @@
 # Phase 10 CodeQL Alert Ledger
 
 > Scope: the 12 annotations reported by the CodeQL pull-request gate for PR #34 at
-> `56adb3e94414372a296327c025fce2f7dcc8ca91`. This file contains no production
-> values or vulnerability secrets. GitHub must rerun CodeQL on the eventual candidate
-> commit before any entry can be considered resolved.
+> `56adb3e94414372a296327c025fce2f7dcc8ca91`. The first remediation rerun at
+> `ecd59875d03ef07a5ec703120f608263e3e3fc6e` cleared seven annotations and retained
+> five file-array type-confusion annotations. This file contains no production values
+> or vulnerability secrets. GitHub must rerun CodeQL on the eventual candidate commit
+> before the ledger can close.
 
 ## Disposition rules
 
@@ -36,6 +38,16 @@ The integration-test Express application now declares an explicit request limite
 well. GitHub alert 28 currently points to that synthetic authorization handler but was
 not one of the 12 gate annotations. This change avoids leaving a parallel test harness
 with the same implicit middleware assumption.
+
+## First remediation rerun
+
+GitHub analyzed `ecd59875d03ef07a5ec703120f608263e3e3fc6e`. Alerts 1, 19, 20,
+21, 22, 29, and 30 no longer appeared in the PR gate. Alerts 23 through 27 were
+reported again, now exclusively on uses of `.length` from the request-derived Multer
+file array. The follow-up retains the runtime `Array.isArray` rejection and removes
+all polymorphic `.length` reads by counting and processing files through explicit
+iteration. Its status remains `implemented-awaiting-CodeQL` until GitHub analyzes the
+follow-up commit.
 
 ## Required closure evidence
 
