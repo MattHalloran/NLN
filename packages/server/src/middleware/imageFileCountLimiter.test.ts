@@ -1,4 +1,5 @@
 import express, { type RequestHandler } from "express";
+import rateLimit from "express-rate-limit";
 import request from "supertest";
 import { beforeEach, describe, expect, it } from "vitest";
 import { createImageFileCountLimiter } from "./rateLimiter.js";
@@ -55,18 +56,22 @@ const redisClient = new FakeRedis();
 
 function createAppWithFiles(
     fileCount: number,
-    options: Parameters<typeof createImageFileCountLimiter>[0] = {}
+    options: Parameters<typeof createImageFileCountLimiter>[0] = {},
+    filesOverride?: unknown
 ) {
     const app = express();
     const attachFiles: RequestHandler = (req, _res, next) => {
-        (req as unknown as { files?: Express.Multer.File[] }).files = Array.from(
-            { length: fileCount },
-            () => ({ fieldname: "files" }) as Express.Multer.File
-        );
+        (req as unknown as { files?: unknown }).files =
+            filesOverride ??
+            Array.from(
+                { length: fileCount },
+                () => ({ fieldname: "files" }) as Express.Multer.File
+            );
         next();
     };
 
     app.set("trust proxy", 1);
+    app.use(rateLimit({ windowMs: 60_000, max: 10_000 }));
     app.post(
         "/upload",
         attachFiles,
@@ -95,6 +100,14 @@ describe("image file-count rate limiter", () => {
         expect(response.status).toBe(200);
         expect(redisClient.values.get("rl:image-file-count:203.0.113.60")).toBe(2);
         expect(redisClient.ttls.get("rl:image-file-count:203.0.113.60")).toBe(900);
+    });
+
+    it("rejects a non-array uploaded files value before using its length", async () => {
+        const response = await request(createAppWithFiles(0, {}, { length: 99 })).post("/upload");
+
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({ error: "Invalid uploaded files" });
+        expect(redisClient.values.size).toBe(0);
     });
 
     it("rolls back attempted files when the file-count limit is exceeded", async () => {

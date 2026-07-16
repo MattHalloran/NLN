@@ -157,8 +157,13 @@ export function createImageFileCountLimiter(
             const { maxFiles, message, retryAfter, tip, windowMs } = RATE_LIMITS.imageFileCount;
 
             // Get file count from request
-            type MulterRequest = Request & { files?: Express.Multer.File[] };
-            const fileCount = ((req as MulterRequest).files || []).length;
+            type MulterRequest = Request & { files?: unknown };
+            const uploadedFiles = (req as MulterRequest).files;
+            if (uploadedFiles !== undefined && !Array.isArray(uploadedFiles)) {
+                res.status(400).json({ error: "Invalid uploaded files" });
+                return;
+            }
+            const fileCount = uploadedFiles?.length ?? 0;
 
             if (fileCount === 0) {
                 // No files in request, skip limiting

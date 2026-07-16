@@ -100,9 +100,8 @@ export function createApp(options: CreateAppOptions = {}) {
     app.options("*", cors(corsOptions));
     app.use(cors(corsOptions));
 
-    app.use(options.authenticateMiddleware ?? auth.authenticate);
-    logger.log(LogLevel.info, "🔐 Authentication middleware enabled");
-
+    // Apply coarse API limits before authentication so an attacker cannot force
+    // unbounded authorization work. Route-specific limiters remain inside the router.
     app.use(REST_ROUTES.root, requestIdentityDiagnostics);
     app.use(REST_ROUTES.root, limiters.publicReadApiLimiter);
     app.use(REST_ROUTES.root, limiters.generalMutationApiLimiter);
@@ -110,6 +109,9 @@ export function createApp(options: CreateAppOptions = {}) {
         LogLevel.info,
         "🛡️  Rate limiting enabled: reads 600/15m, mutations 100/15m per client"
     );
+
+    app.use(options.authenticateMiddleware ?? auth.authenticate);
+    logger.log(LogLevel.info, "🔐 Authentication middleware enabled");
 
     app.use(REST_ROUTES.root, options.csrfProtectionMiddleware ?? csrfProtection);
     logger.log(LogLevel.info, "🛡️  CSRF protection enabled for all state-changing requests");

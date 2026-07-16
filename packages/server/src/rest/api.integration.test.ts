@@ -12,6 +12,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { randomUUID } from "crypto";
 import cookieParser from "cookie-parser";
+import rateLimit from "express-rate-limit";
 import { COOKIE, REST_ROUTES } from "@local/shared";
 import { createRestRouter } from "./index.js";
 import * as auth from "../auth.js";
@@ -62,6 +63,7 @@ describe("REST API Integration Tests", () => {
         app.use(express.json());
         app.use(express.urlencoded({ extended: false }));
         app.use(cookieParser(process.env.JWT_SECRET));
+        app.use(rateLimit({ windowMs: 60_000, max: 10_000 }));
         // Attach TEST prisma instance, not the global one
         app.use((req: any, _res, next) => {
             req.prisma = prisma; // Use test prisma instance

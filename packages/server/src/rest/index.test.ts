@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 import { createRestApiInfo } from "./apiInfo.js";
 import { createRestRouter, createUploadFilesMiddleware } from "./index.js";
 import type { RateLimiters } from "../middleware/rateLimiter.js";
-import type { RateLimitRequestHandler } from "express-rate-limit";
+import rateLimit, { type RateLimitRequestHandler } from "express-rate-limit";
 
 const passThrough = Object.assign(
     ((_req, _res, next) => {
@@ -179,6 +179,7 @@ describe("REST API manifest", () => {
 
     it("creates a disk-backed upload middleware for local parser-order tests", async () => {
         const app = express();
+        app.use(rateLimit({ windowMs: 60_000, max: 10_000 }));
         app.post("/upload", createUploadFilesMiddleware(), (req: Request, res) => {
             const files = (req as Request & { files?: Express.Multer.File[] }).files ?? [];
             for (const file of files) {

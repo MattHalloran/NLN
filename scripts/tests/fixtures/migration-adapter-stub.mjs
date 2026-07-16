@@ -7,7 +7,7 @@ const input = JSON.parse(fs.readFileSync(0, "utf8") || "{}");
 if (log) fs.appendFileSync(log, `${command} ${JSON.stringify(input)}\n`);
 let state = JSON.parse(fs.readFileSync(statePath, "utf8"));
 if (process.env.MIGRATION_STUB_FAIL === command) {
-    console.error(`secret=${process.env.TEST_SECRET ?? "redacted"}`);
+    console.error("Injected migration adapter failure (details redacted)");
     process.exit(1);
 }
 if (command === "inspect") console.log(JSON.stringify(state));

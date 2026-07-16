@@ -21,6 +21,27 @@ function usage() {
 function fail(message) {
     throw new Error(message);
 }
+function publicFailureMessage(error) {
+    const message = error instanceof Error ? error.message : "";
+    const knownFailures = [
+        ["did not become ready", "disposable PostgreSQL did not become ready"],
+        ["must be owner-only", "an input must be owner-only"],
+        ["must be a regular file", "an input must be a regular file"],
+        ["already exists", "output evidence already exists"],
+        ["only an explicit PostgreSQL", "only an explicit PostgreSQL Alpine image is permitted"],
+        ["unsupported integrity check", "unsupported integrity check"],
+        ["upload file verification requires", "upload file verification requires --content-root"],
+        ["content root must be", "content root does not satisfy the security contract"],
+        [
+            "integrity check failed: upload_files_present_and_readable",
+            "integrity check failed: upload_files_present_and_readable",
+        ],
+    ];
+    return (
+        knownFailures.find(([fragment]) => message.includes(fragment))?.[1] ??
+        "disposable database verification failed; sensitive details withheld"
+    );
+}
 for (const required of ["--dump", "--expected", "--receipt"]) if (!options[required]) usage();
 const dumpPath = path.resolve(options["--dump"]),
     expectedPath = path.resolve(options["--expected"]),
@@ -260,7 +281,7 @@ try {
     if (verification.status !== 0) fail((verification.stderr || verification.stdout).trim());
     console.log("Disposable PostgreSQL restore and database invariants verified");
 } catch (error) {
-    console.error(`Runtime-state database restore rejected: ${error.message}`);
+    console.error(`Runtime-state database restore rejected: ${publicFailureMessage(error)}`);
     process.exitCode = 1;
 } finally {
     if (started) run(["rm", "-f", container], undefined, true);

@@ -2,7 +2,12 @@ import { IMAGE_LABELS, REST_CHILD_PATHS } from "@local/shared";
 import express, { type RequestHandler } from "express";
 import request from "supertest";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createImagesRouter, estimateImageUploadSizeMB, sortImagesByLabelIndex } from "./images.js";
+import {
+    createImagesRouter,
+    estimateImageUploadSizeMB,
+    parseImageUploadInput,
+    sortImagesByLabelIndex,
+} from "./images.js";
 
 const { auditAdminAction, loggerLog, removeImageLabelRelation } = vi.hoisted(() => ({
     auditAdminAction: vi.fn(),
@@ -59,6 +64,31 @@ describe("image REST helpers", () => {
         const oneMiB = 1024 * 1024;
 
         expect(estimateImageUploadSizeMB([{ size: oneMiB }, { size: oneMiB / 2 }])).toBe(5.25);
+    });
+
+    it("normalizes valid upload fields and rejects parameter type confusion", () => {
+        expect(
+            parseImageUploadInput({
+                label: "gallery",
+                alts: ["one", "two"],
+                descriptions: "description",
+            })
+        ).toEqual({
+            label: "gallery",
+            alts: ["one", "two"],
+            descriptions: ["description"],
+        });
+
+        expect(() => parseImageUploadInput([])).toThrow("Upload body must be an object");
+        expect(() => parseImageUploadInput({ label: ["gallery"] })).toThrow(
+            "label must be a string"
+        );
+        expect(() => parseImageUploadInput({ alts: [{ value: "alt" }] })).toThrow(
+            "alts must be a string or an array of strings"
+        );
+        expect(() => parseImageUploadInput({ descriptions: { value: "description" } })).toThrow(
+            "descriptions must be a string or an array of strings"
+        );
     });
 
     it("sorts images by the filtered label index and strips label metadata", () => {

@@ -96,6 +96,6 @@ describe("createApp", () => {
         const response = await request(app).get(REST_ROUTES.health);
 
         expect(response.status).toBe(200);
-        expect(order).toEqual(["prisma", "auth", "public-read", "general-mutation", "csrf"]);
+        expect(order).toEqual(["prisma", "public-read", "general-mutation", "auth", "csrf"]);
     });
 });

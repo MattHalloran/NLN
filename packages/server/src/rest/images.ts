@@ -32,6 +32,45 @@ type ImageWithFilteredLabels<TImage> = TImage & {
     image_labels: Array<{ index: number | null }>;
 };
 
+function optionalString(value: unknown, field: string): string | undefined {
+    if (value === undefined || value === null || value === "") {
+        return undefined;
+    }
+    if (typeof value !== "string") {
+        throw new TypeError(`${field} must be a string`);
+    }
+    return value;
+}
+
+function optionalStringArray(value: unknown, field: string): string[] {
+    if (value === undefined || value === null || value === "") {
+        return [];
+    }
+    if (typeof value === "string") {
+        return [value];
+    }
+    if (Array.isArray(value) && value.every((entry) => typeof entry === "string")) {
+        return value;
+    }
+    throw new TypeError(`${field} must be a string or an array of strings`);
+}
+
+export function parseImageUploadInput(body: unknown): {
+    label?: string;
+    alts: string[];
+    descriptions: string[];
+} {
+    if (body === null || typeof body !== "object" || Array.isArray(body)) {
+        throw new TypeError("Upload body must be an object");
+    }
+    const input = body as Record<string, unknown>;
+    return {
+        label: optionalString(input.label, "label"),
+        alts: optionalStringArray(input.alts, "alts"),
+        descriptions: optionalStringArray(input.descriptions, "descriptions"),
+    };
+}
+
 export function estimateImageUploadSizeMB(files: Array<{ size: number }>): number {
     return files.reduce((total, file) => total + (file.size / (1024 * 1024)) * 3.5, 0);
 }
@@ -153,13 +192,17 @@ export function createImagesRouter(options: ImagesRouterOptions = {}): Router {
                 throw new CustomError(CODE.Unauthorized);
             }
 
-            type MulterRequest = Request & { files?: Express.Multer.File[] };
-            const files = (req as MulterRequest).files || [];
-            const { label, alts, descriptions } = req.body as {
-                label?: string;
-                alts?: string | string[];
-                descriptions?: string | string[];
-            };
+            type MulterRequest = Request & { files?: unknown };
+            const uploadedFiles = (req as MulterRequest).files;
+            if (uploadedFiles !== undefined && !Array.isArray(uploadedFiles)) {
+                return res.status(400).json({ error: "Invalid uploaded files" });
+            }
+            const files = (uploadedFiles ?? []) as Express.Multer.File[];
+            const {
+                label,
+                alts: altArray,
+                descriptions: descArray,
+            } = parseImageUploadInput(req.body);
 
             if (!files || files.length === 0) {
                 return res.status(400).json({ error: "No files provided" });
@@ -208,12 +251,6 @@ export function createImagesRouter(options: ImagesRouterOptions = {}): Router {
             }
 
             const labels = label ? [label] : [];
-            const altArray = alts ? (Array.isArray(alts) ? alts : [alts]) : [];
-            const descArray = descriptions
-                ? Array.isArray(descriptions)
-                    ? descriptions
-                    : [descriptions]
-                : [];
 
             const results = [];
 
@@ -241,6 +278,9 @@ export function createImagesRouter(options: ImagesRouterOptions = {}): Router {
             return res.json(results);
         } catch (error) {
             logger.log(LogLevel.error, "Add images error:", error);
+            if (error instanceof TypeError) {
+                return res.status(400).json({ error: error.message });
+            }
             if (error instanceof CustomError) {
                 return res.status(401).json({ error: error.message, code: error.code });
             }
