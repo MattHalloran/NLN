@@ -77,3 +77,14 @@ setup() {
     [ "$status" -ne 0 ]
     assert_output --partial "release-critical action is not pinned to a full commit SHA"
 }
+
+@test "trusted validation manifest rejects default pull-request merge checkout" {
+    fixture="$BATS_TMPDIR/workflow-merge-checkout.yml"
+    awk 'index($0, "ref: ${{ github.event.pull_request.head.sha || github.sha }}") && !removed { removed=1; next } { print }' \
+        "$WORKFLOW_PATH" >"$fixture"
+
+    run node "$SCRIPT_PATH" --manifest "$MANIFEST_PATH" --workflow "$fixture"
+
+    [ "$status" -ne 0 ]
+    assert_output --partial "exact pull-request head or push commit"
+}

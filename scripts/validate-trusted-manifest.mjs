@@ -87,6 +87,16 @@ for (const action of actionUses) {
     if (!/^[0-9a-f]{40}$/.test(ref)) fail(`release-critical action is not pinned to a full commit SHA: ${action}`);
 }
 
+const checkoutMatches = [...workflow.matchAll(/^\s*uses:\s*actions\/checkout@[0-9a-f]{40}(?:\s*#.*)?$/gm)];
+const exactSourceRef = "ref: ${{ github.event.pull_request.head.sha || github.sha }}";
+for (const checkout of checkoutMatches) {
+    const nextStep = workflow.indexOf("\n      - name:", checkout.index + checkout[0].length);
+    const checkoutStep = workflow.slice(checkout.index, nextStep < 0 ? workflow.length : nextStep);
+    if (!checkoutStep.includes(exactSourceRef)) {
+        fail("every trusted checkout must select the exact pull-request head or push commit");
+    }
+}
+
 const jobHeader = (jobId) => new RegExp(`^  ${jobId.replace(/[.*+?^${}()|[\\]\\]/g, "\\$&")}:\\s*$`, "m");
 if (!jobHeader(manifest.trustedGateJob).test(workflow)) {
     fail(`workflow is missing trusted gate job ${manifest.trustedGateJob}`);
