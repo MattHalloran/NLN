@@ -100,6 +100,7 @@ teardown() {
     grep -q 'pg_dump' "$BATS_TEST_DIRNAME/../rollback.sh"
     grep -q 'psql -v ON_ERROR_STOP=1' "$BATS_TEST_DIRNAME/../rollback.sh"
     grep -q 'Using legacy raw Postgres directory restore' "$BATS_TEST_DIRNAME/../rollback.sh"
+    grep -q 'wait-for-postgres-database.sh' "$BATS_TEST_DIRNAME/../rollback.sh"
 }
 
 @test "rollback script validates image archive before stopping containers" {

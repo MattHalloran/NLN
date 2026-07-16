@@ -25,7 +25,7 @@
     },
     {
       "path": "scripts/rollback.sh",
-      "sha256": "4c934cb88cd75a492ef064faaa123257da2a2e15600c370963187d81cf318b2b",
+      "sha256": "ac6f2f246f11c4fbc7207436250626e39e58496bada33fdbd26fa5332e9f052d",
       "role": "legacy-data-destructive-recovery"
     }
   ],

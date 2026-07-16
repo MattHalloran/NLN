@@ -264,16 +264,9 @@ if [ -f "${DB_BACKUP_PATH}" ]; then
         exit 1
     fi
 
-    DB_READY=false
-    for _ in {1..30}; do
-        if docker exec nln_db pg_isready -U "${DB_USER}" -d "${DB_NAME}" >/dev/null 2>&1; then
-            DB_READY=true
-            break
-        fi
-        sleep 2
-    done
-
-    if [ "${DB_READY}" != true ]; then
+    if ! PGPASSWORD="${DB_PASSWORD}" "${HERE}/wait-for-postgres-database.sh" \
+        --container nln_db --user "${DB_USER}" --database "${DB_NAME}" \
+        --attempts 30 --delay-seconds 2; then
         error "Database did not become ready for restore"
         error "Emergency database dump is available at: ${EMERGENCY_DB_DUMP}"
         exit 1
