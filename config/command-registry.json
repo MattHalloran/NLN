@@ -442,6 +442,27 @@
       "safestNextCommand": "Phase 11 review; do not execute production"
     },
     {
+      "command": "qualify:phase10-test-results",
+      "aliases": [],
+      "audience": "phase-qualification-reviewer",
+      "effectClass": "local-fixture-mutation",
+      "availability": "candidate",
+      "defaultMode": "verify",
+      "productionExecution": false,
+      "confirmation": null,
+      "inputs": [
+        "exact candidate commit",
+        "commands and tool versions",
+        "suite counts",
+        "two clean-checkout receipts",
+        "push and pull-request trusted gate receipts",
+        "security gate outcomes",
+        "warnings and production-access confirmation"
+      ],
+      "receiptType": "phase10-test-results",
+      "safestNextCommand": "qualify:phase10 after independent usability"
+    },
+    {
       "command": "validate:trusted",
       "aliases": ["validate:release"],
       "audience": "release-qualifier",

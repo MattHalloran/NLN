@@ -28,6 +28,11 @@
       "semanticVerifier": "phase10-qualification"
     },
     {
+      "receiptType": "phase10-test-results",
+      "schema": "config/schemas/legacy-evidence.schema.json",
+      "semanticVerifier": "phase10-test-results"
+    },
+    {
       "receiptType": "runtime-state-backup-qualification",
       "schema": "config/schemas/receipt-envelope.schema.json",
       "semanticVerifier": "backup-qualification"

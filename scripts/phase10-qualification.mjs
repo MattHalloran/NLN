@@ -12,6 +12,7 @@ import {
     sha256File,
     isoTimestamp,
 } from "./lib/phase10-safe-io.mjs";
+import { verifyPhase10TestResults } from "./lib/phase10-test-results.mjs";
 
 const HELP =
     "phase10-qualification.mjs --commit SHA --trusted-manifest FILE --trusted-gate-one FILE --trusted-gate-two FILE --clean-checkout FILE --evidence-index FILE --test-results FILE --usability-results FILE --output FILE";
@@ -113,49 +114,11 @@ try {
         { stdio: "ignore" },
     );
     if (evidenceResult.status !== 0) throw new ContractError("fixture evidence index is invalid");
-    const tests = readJson(o["test-results"], "test results", { ownerOnly: true });
-    assertExactKeys(
-        tests,
-        {
-            required: ["status", "total", "failureInjectionScenarios"],
-            optional: ["fixtureMeasurements"],
-        },
-        "test results",
-    );
-    if (!Array.isArray(tests.failureInjectionScenarios))
-        throw new ContractError("failureInjectionScenarios must be an array");
-    for (const [index, scenario] of tests.failureInjectionScenarios.entries())
-        assertExactKeys(
-            scenario,
-            { required: ["id", "status"] },
-            `failure injection scenario ${index}`,
-        );
-    if (
-        tests.status !== "success" ||
-        !Number.isSafeInteger(tests.total) ||
-        tests.total < 1 ||
-        !Array.isArray(tests.failureInjectionScenarios) ||
-        tests.failureInjectionScenarios.length < 1 ||
-        tests.failureInjectionScenarios.some(
-            (x) => typeof x.id !== "string" || x.id.length < 1 || x.status !== "passed",
-        ) ||
-        new Set(tests.failureInjectionScenarios.map((x) => x.id)).size !==
-            tests.failureInjectionScenarios.length
-    )
-        throw new ContractError("test or failure-injection results are incomplete");
-    if (tests.fixtureMeasurements !== undefined) {
-        assertExactKeys(
-            tests.fixtureMeasurements,
-            { optional: ["downtimeMilliseconds", "rollbackRtoMilliseconds"] },
-            "fixture measurements",
-        );
-        for (const [name, values] of Object.entries(tests.fixtureMeasurements))
-            if (
-                !Array.isArray(values) ||
-                values.some((value) => !Number.isSafeInteger(value) || value < 0)
-            )
-                throw new ContractError(`${name} must contain non-negative integer milliseconds`);
-    }
+    const tests = verifyPhase10TestResults(o["test-results"], {
+        commit: o.commit,
+        trustedGateFiles: [o["trusted-gate-one"], o["trusted-gate-two"]],
+        cleanCheckout: clean,
+    });
     const usability = readJson(o["usability-results"], "usability results", {
         ownerOnly: true,
     });
@@ -235,8 +198,12 @@ try {
         validation: {
             testResultsSha256: inputs[4].sha256,
             usabilityResultsSha256: inputs[5].sha256,
-            totalTests: tests.total,
+            totalTests: tests.suites.reduce((total, suite) => total + suite.total, 0),
+            suiteCounts: tests.suites,
             failureInjectionScenarios: tests.failureInjectionScenarios.length,
+            security: tests.security,
+            warnings: tests.warnings,
+            production: tests.production,
         },
         fixtureMeasurements: {
             downtimeMilliseconds: durations.downtimeMilliseconds ?? [],

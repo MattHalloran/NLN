@@ -118,6 +118,12 @@
       "tests": ["scripts/tests/phase10-qualification.bats"]
     },
     {
+      "receiptType": "phase10-test-results",
+      "producer": "scripts/phase10-test-results.mjs",
+      "consumers": ["scripts/phase10-qualification.mjs"],
+      "tests": ["scripts/tests/phase10-qualification.bats"]
+    },
+    {
       "receiptType": "runtime-state-backup-qualification",
       "producer": "scripts/qualify-runtime-state-backup.mjs",
       "consumers": [

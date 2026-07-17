@@ -450,6 +450,17 @@ Prepare exact, owner-only paths for:
 - final test-results receipt; and
 - independent usability-results JSON.
 
+The test-results input uses `phase10-test-results` schema version 2. It strictly
+binds the candidate commit, commands and tool versions, validation timestamps,
+per-suite counts, both clean-checkout receipt hashes, the distinct push and pull
+request CI run identities and receipt hashes, CodeQL and GitGuardian conclusions,
+accepted non-blocking warnings, failure-injection outcomes, optional fixture timing
+measurements, and an explicit confirmation that production was neither accessed nor
+changed. Create or verify it with `yarn qualify:phase10-test-results`. Legacy
+unversioned summaries remain diagnostic history only and are deliberately rejected
+by final qualification; silently interpreting them would allow evidence from a
+different candidate to be relabelled.
+
 Regenerate the evidence index after all inputs exist. Do not use the stale
 `completion-audit.json` as a substitute for any required input.
 

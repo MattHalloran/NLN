@@ -13,6 +13,7 @@ import {
 } from "./phase10-safe-io.mjs";
 import { verifyBackupQualification } from "./backup-qualification.mjs";
 import { verifyRollbackCompatibility } from "./rollback-compatibility.mjs";
+import { verifyPhase10TestResults } from "./phase10-test-results.mjs";
 
 const registryPath = path.resolve("config/receipt-registry.json");
 const statuses = new Set([
@@ -33,6 +34,7 @@ export const implementedSemanticVerifiers = Object.freeze(
         "release-evidence-index",
         "release-alert",
         "phase10-qualification",
+        "phase10-test-results",
         "backup-qualification",
         "rollback-compatibility",
         "immutable-bundle",
@@ -453,6 +455,11 @@ export function verifyReceiptFile(
             )
                 throw new ContractError("Phase 10 qualification semantics are incomplete");
         }
+        if (entry.semanticVerifier === "phase10-test-results")
+            verifyPhase10TestResults(absolute, {
+                commit: options.expectedRelease?.commit ?? value.commit,
+                requireCurrentFiles: false,
+            });
         if (entry.semanticVerifier === "release-local-verification") {
             if (
                 !["planned", "success"].includes(value.status) ||

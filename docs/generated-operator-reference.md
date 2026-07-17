@@ -26,6 +26,7 @@ Registry: `nln-release-commands-v1`
 | `rollback.sh` | advanced-destructive | `production-data-destructive` | dry-run | `legacy-destructive-rollback` | review recovery decision matrix |
 | `qualify:clean-checkout` | candidate | `local-read-only` | verify | none | qualify:phase10 after external gates and usability |
 | `qualify:phase10` | candidate | `local-read-only` | verify | `phase10-qualification` | Phase 11 review; do not execute production |
+| `qualify:phase10-test-results` | candidate | `local-fixture-mutation` | verify | `phase10-test-results` | qualify:phase10 after independent usability |
 | `validate:trusted` | current | `local-read-only` | validate | `validation-receipt` | release prepare or current production readiness |
 | `runtime-state:manifest:capture` | advanced | `local-fixture-mutation` | create local manifest | `runtime-state-manifest-v2` | runtime-state:manifest:verify |
 | `runtime-state:manifest:verify` | advanced | `local-read-only` | verify | `runtime-state-manifest-verification` | runtime-state:archive:create |
@@ -86,6 +87,7 @@ Registry: `nln-release-commands-v1`
 | `release-evidence-index` | `release-evidence-index` | `config/schemas/release-evidence-index.schema.json` |
 | `release-alert` | `release-alert` | `config/schemas/release-alert-event.schema.json` |
 | `phase10-qualification` | `phase10-qualification` | `config/schemas/receipt-envelope.schema.json` |
+| `phase10-test-results` | `phase10-test-results` | `config/schemas/legacy-evidence.schema.json` |
 | `runtime-state-backup-qualification` | `backup-qualification` | `config/schemas/receipt-envelope.schema.json` |
 | `migration-rollback-compatibility` | `rollback-compatibility` | `config/schemas/receipt-envelope.schema.json` |
 | `immutable-release-bundle` | `immutable-bundle` | `config/schemas/receipt-envelope.schema.json` |

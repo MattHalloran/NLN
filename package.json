@@ -52,6 +52,7 @@
     "validate:legacy-release-evidence": "node scripts/verify-legacy-release-evidence.mjs",
     "release:summary": "node scripts/release-observability.mjs summarize",
     "qualify:phase10": "node scripts/phase10-qualification.mjs",
+    "qualify:phase10-test-results": "node scripts/phase10-test-results.mjs",
     "qualify:clean-checkout": "node scripts/qualify-clean-checkout.mjs",
     "qualify:remote-evidence": "node scripts/qualify-remote-evidence.mjs",
     "qualify:runtime-state-application-restore": "node scripts/qualify-runtime-state-application-restore.mjs",
