@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "policyId": "nln-github-deployment-governance-v1",
+  "productionIntegrationEnabled": false,
+  "protectedBranch": "master",
+  "requiredStatusChecks": ["Trusted Gate"],
+  "requireStrictStatusChecks": true,
+  "minimumApprovingReviews": 1,
+  "requireNoForcePushes": true,
+  "requireNoBranchDeletion": true,
+  "requiredExactCommitReceipts": [
+    { "event": "push", "filename": "push.json" },
+    { "event": "pull_request", "filename": "pull-request.json" }
+  ],
+  "maximumReceiptAgeSeconds": 604800,
+  "audit": {
+    "readOnly": true,
+    "publishBlockedEvidence": true,
+    "requireOwnerOnlyReceipts": true,
+    "allowEvidenceOverwrite": false
+  }
+}

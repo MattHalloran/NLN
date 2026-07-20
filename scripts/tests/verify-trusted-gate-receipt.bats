@@ -52,6 +52,12 @@ mutate() {
     assert_output --partial "Trusted gate receipt passed for commit $COMMIT"
 }
 
+@test "help documents exact-commit verification without requiring evidence" {
+    run node "$VERIFY_SCRIPT" --help
+    [ "$status" -eq 0 ]
+    assert_output --partial "local-read-only exact-commit"
+}
+
 @test "malformed and future generation timestamps are rejected" {
     mutate 'r.generatedAt="2027-01-15T08:00:00Z"'
     run verify_receipt

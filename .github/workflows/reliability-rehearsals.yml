@@ -1,0 +1,83 @@
+name: Synthetic Reliability Rehearsals
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 9 * * 3"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: synthetic-reliability-rehearsals
+  cancel-in-progress: false
+
+jobs:
+  encrypted-backup:
+    name: Synthetic Encrypted Backup Round Trip
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Use Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .nvmrc
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Rehearse encrypted publication, download, restore, and failure handling
+        run: |
+          umask 077
+          mkdir -p .validation/reliability
+          scripts/tests/helpers/bats-core/bin/bats \
+            --formatter tap \
+            scripts/tests/runtime-state-remote-publish.bats \
+            scripts/tests/runtime-state-remote-operations.bats \
+            > .validation/reliability/encrypted-backup.tap
+
+      - name: Upload encrypted-backup rehearsal evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: synthetic-encrypted-backup-rehearsal
+          path: .validation/reliability/encrypted-backup.tap
+          if-no-files-found: error
+
+  app-only-rollback:
+    name: Synthetic App-only Rollback
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Use Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .nvmrc
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Rehearse immutable app-only rollback and state preservation
+        run: |
+          umask 077
+          mkdir -p .validation/reliability
+          scripts/tests/helpers/bats-core/bin/bats \
+            --formatter tap \
+            scripts/tests/immutable-release-phase5.bats \
+            > .validation/reliability/app-only-rollback.tap
+
+      - name: Upload app-only rollback rehearsal evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: synthetic-app-only-rollback-rehearsal
+          path: .validation/reliability/app-only-rollback.tap
+          if-no-files-found: error

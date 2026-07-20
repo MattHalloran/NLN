@@ -14,6 +14,7 @@
   "commandEffectClasses": [
     "local-read-only",
     "local-fixture-mutation",
+    "external-read-only",
     "production-read-only",
     "production-copy-out",
     "production-app-mutation",

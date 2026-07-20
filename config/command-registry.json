@@ -32,6 +32,20 @@
       "rationale": "Exact trusted receipt verifier."
     },
     {
+      "alias": "audit:github-deployment-governance",
+      "owner": "release-governance",
+      "effectClass": "external-read-only",
+      "visibility": "advanced",
+      "rationale": "Audits branch protection and exact-commit trusted evidence without changing settings."
+    },
+    {
+      "alias": "audit:local-sensitive-permissions",
+      "owner": "security",
+      "effectClass": "local-read-only",
+      "visibility": "internal",
+      "rationale": "Audits owner-only permissions for ignored secrets, backups, and evidence."
+    },
+    {
       "alias": "validate:runtime-state-inventory",
       "owner": "backup",
       "effectClass": "local-read-only",
@@ -65,6 +79,41 @@
       "effectClass": "local-read-only",
       "visibility": "internal",
       "rationale": "Rehearsal policy validator."
+    },
+    {
+      "alias": "validate:phase11-adoption-policy",
+      "owner": "release-governance",
+      "effectClass": "local-read-only",
+      "visibility": "internal",
+      "rationale": "Fail-closed shadow-adoption and production-cutover boundary validator."
+    },
+    {
+      "alias": "validate:phase11-ci-rehearsals",
+      "owner": "release-governance",
+      "effectClass": "local-read-only",
+      "visibility": "internal",
+      "rationale": "Scheduled synthetic rehearsal coverage and workflow-safety validator."
+    },
+    {
+      "alias": "validate:phase9-disaster-recovery-policy",
+      "owner": "disaster-recovery",
+      "effectClass": "local-read-only",
+      "visibility": "internal",
+      "rationale": "Fixture-only disaster-recovery policy validator."
+    },
+    {
+      "alias": "rehearse:disaster-recovery",
+      "owner": "disaster-recovery",
+      "effectClass": "local-fixture-mutation",
+      "visibility": "advanced",
+      "rationale": "Disposable clean-host recovery and salvage rehearsal."
+    },
+    {
+      "alias": "qualify:phase9-disaster-recovery",
+      "owner": "disaster-recovery",
+      "effectClass": "local-read-only",
+      "visibility": "advanced",
+      "rationale": "Qualifies two fixture drills and the complete failure-injection matrix."
     },
     {
       "alias": "validate:vps-health-maintenance-policy",

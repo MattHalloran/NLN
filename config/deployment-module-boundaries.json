@@ -15,7 +15,8 @@
     "scripts/tests/fixtures/migration-adapter-stub.mjs",
     "scripts/tests/fixtures/reduced-downtime-adapter.mjs",
     "scripts/tests/fixtures/vps-health-maintenance-adapter.mjs",
-    "scripts/tests/fixtures/phase10-release-adapter.mjs"
+    "scripts/tests/fixtures/phase10-release-adapter.mjs",
+    "scripts/tests/fixtures/phase9-disaster-recovery-adapter.mjs"
   ],
   "forbiddenDomainImports": [
     "scripts/release.mjs",

@@ -4,6 +4,12 @@ import { execFileSync } from "node:child_process";
 import { assertExactKeys, parseJsonStrict, regularFile } from "./lib/phase10-safe-io.mjs";
 
 const args = process.argv.slice(2);
+if (args.includes("--help")) {
+    console.log(
+        "Usage: verify-trusted-gate-receipt.mjs --receipt FILE [--manifest FILE] [--commit SHA] [--max-age-seconds N] [--now-epoch N]\nEffect: local-read-only exact-commit trusted-gate verification.",
+    );
+    process.exit(0);
+}
 const options = {};
 for (let index = 0; index < args.length; index += 2) {
     const key = args[index];

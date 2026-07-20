@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "manifestId": "nln-phase11-ci-rehearsals-v1",
+  "productionIntegrationEnabled": false,
+  "rehearsals": [
+    {
+      "id": "synthetic-deploy",
+      "workflow": ".github/workflows/deploy-rehearsal.yml",
+      "requiredCommand": "./scripts/deploy-rehearsal.sh",
+      "requiredArtifact": ".validation/reliability/deploy-rehearsal.log"
+    },
+    {
+      "id": "clean-host-restore",
+      "workflow": ".github/workflows/restore-drill.yml",
+      "requiredCommand": "scripts/tests/phase9-disaster-recovery.bats",
+      "requiredArtifact": ".validation/phase9"
+    },
+    {
+      "id": "encrypted-backup",
+      "workflow": ".github/workflows/reliability-rehearsals.yml",
+      "requiredCommand": "scripts/tests/runtime-state-remote-publish.bats",
+      "requiredArtifact": ".validation/reliability/encrypted-backup.tap"
+    },
+    {
+      "id": "app-only-rollback",
+      "workflow": ".github/workflows/reliability-rehearsals.yml",
+      "requiredCommand": "scripts/tests/immutable-release-phase5.bats",
+      "requiredArtifact": ".validation/reliability/app-only-rollback.tap"
+    }
+  ],
+  "workflowSafety": {
+    "requireSchedule": true,
+    "requireManualDispatch": true,
+    "requireReadOnlyContentsPermission": true,
+    "requireImmutableActionPins": true,
+    "forbiddenText": [
+      "source .env-prod",
+      "-e .env-prod",
+      "--env-file .env-prod",
+      "deploy-production.sh",
+      "connectToServer.sh",
+      "keylessSsh.sh",
+      "ssh ",
+      "scp ",
+      "rsync ",
+      "SITE_IP",
+      "productionIntegrationEnabled: true"
+    ]
+  },
+  "evidence": {
+    "retainTapOutput": true,
+    "uploadEvenOnFailure": true,
+    "fixtureEvidenceQualifiesProduction": false
+  }
+}

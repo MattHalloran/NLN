@@ -5,6 +5,9 @@ on:
   schedule:
     - cron: "41 10 * * 2"
 
+permissions:
+  contents: read
+
 concurrency:
   group: restore-drill
   cancel-in-progress: false
@@ -16,10 +19,10 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
       - name: Use Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version-file: .nvmrc
           cache: yarn
@@ -59,10 +62,21 @@ jobs:
       - name: Run restore drill against fixture
         run: ./scripts/restore-drill.sh --backup /tmp/nln-fixture-backup
 
+      - name: Run Phase 9 clean-host and failure-injection qualification
+        run: |
+          umask 077
+          mkdir -p .validation/phase9
+          scripts/tests/helpers/bats-core/bin/bats \
+            --formatter tap \
+            scripts/tests/phase9-disaster-recovery.bats \
+            > .validation/phase9/phase9-disaster-recovery.tap
+
       - name: Upload restore drill receipts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: restore-drill-receipts
-          path: .validation/restore-drills
+          path: |
+            .validation/restore-drills
+            .validation/phase9
           if-no-files-found: ignore
