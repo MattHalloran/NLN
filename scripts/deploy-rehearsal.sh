@@ -273,6 +273,10 @@ wait_for_db() {
 
     if [ "${ready}" != true ]; then
         error "Disposable database did not become ready."
+        warning "Disposable database state:"
+        docker inspect --format 'status={{.State.Status}} exit={{.State.ExitCode}} error={{.State.Error}} health={{if .State.Health}}{{.State.Health.Status}}{{else}}unavailable{{end}}' nln_db 2>&1 || true
+        warning "Recent disposable database logs:"
+        docker logs --tail 200 nln_db 2>&1 || true
         exit 1
     fi
 }

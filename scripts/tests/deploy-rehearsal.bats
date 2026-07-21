@@ -141,6 +141,12 @@ teardown() {
     grep -q 'yarn prisma migrate deploy --schema=src/db/schema.prisma' "$SCRIPT_PATH"
 }
 
+@test "deploy rehearsal reports bounded database diagnostics when readiness fails" {
+    grep -q "docker inspect --format" "$SCRIPT_PATH"
+    grep -q "docker logs --tail 200 nln_db" "$SCRIPT_PATH"
+    ! grep -q "docker inspect nln_db" "$SCRIPT_PATH"
+}
+
 @test "deploy rehearsal executes disposable rollback probe" {
     grep -q 'ROLLBACK_PROBE_VERSION="${VERSION}-rollback-probe"' "$SCRIPT_PATH"
     grep -q 'run_rollback_probe' "$SCRIPT_PATH"
