@@ -43,10 +43,11 @@ const VARIANT_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/;
  * filesystem operation is attempted.
  */
 export const validateVariantId = (variantId: string): string => {
-    if (!VARIANT_ID_PATTERN.test(variantId)) {
+    const baseName = path.basename(variantId);
+    if (baseName !== variantId || !VARIANT_ID_PATTERN.test(baseName)) {
         throw new Error("Invalid landing-page variant ID");
     }
-    return variantId;
+    return baseName;
 };
 
 export const variantContentPath = (variantId: string): string =>
