@@ -187,6 +187,17 @@ install_project_env_file() {
     cp -p "${ENV_FILE}" "${REHEARSAL_PROJECT_DIR}/.env-prod"
 }
 
+make_database_init_scripts_readable() {
+    local init_dir="${REHEARSAL_PROJECT_DIR}/packages/db/entrypoint"
+
+    # CI deliberately uses umask 077. PostgreSQL drops privileges before it
+    # enumerates this read-only mount, so grant traversal/read access only to
+    # the public, tracked initialization scripts used by the disposable DB.
+    chmod a+rx "${init_dir}"
+    find "${init_dir}" -type d -exec chmod a+rx {} +
+    find "${init_dir}" -type f -exec chmod a+r {} +
+}
+
 require_clean_worktree() {
     local changes
     changes=$(git -C "${REPO_ROOT}" status --porcelain --untracked-files=no)
@@ -401,6 +412,7 @@ fi
 header "Creating disposable project clone"
 git clone --local --no-hardlinks "${REPO_ROOT}" "${REHEARSAL_PROJECT_DIR}" >/dev/null
 git -C "${REHEARSAL_PROJECT_DIR}" checkout "$(git -C "${REPO_ROOT}" rev-parse HEAD)" >/dev/null
+make_database_init_scripts_readable
 
 mkdir -p \
     "${REHEARSAL_PROJECT_DIR}/data/uploads" \

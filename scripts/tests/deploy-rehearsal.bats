@@ -147,6 +147,13 @@ teardown() {
     ! grep -q "docker inspect nln_db" "$SCRIPT_PATH"
 }
 
+@test "deploy rehearsal makes only tracked database initialization files container-readable" {
+    grep -q 'make_database_init_scripts_readable' "$SCRIPT_PATH"
+    grep -q 'REHEARSAL_PROJECT_DIR}/packages/db/entrypoint' "$SCRIPT_PATH"
+    grep -q 'find "${init_dir}" -type f -exec chmod a+r' "$SCRIPT_PATH"
+    ! grep -q 'chmod -R a+rX "${REHEARSAL_PROJECT_DIR}"' "$SCRIPT_PATH"
+}
+
 @test "deploy rehearsal executes disposable rollback probe" {
     grep -q 'ROLLBACK_PROBE_VERSION="${VERSION}-rollback-probe"' "$SCRIPT_PATH"
     grep -q 'run_rollback_probe' "$SCRIPT_PATH"
