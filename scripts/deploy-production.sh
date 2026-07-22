@@ -19,6 +19,7 @@ DEPLOY_VALIDATE_CMD="${DEPLOY_VALIDATE_CMD:-validate:ci}"
 VALIDATE_ENV_SCRIPT="${VALIDATE_ENV_SCRIPT:-${HERE}/validate-env.sh}"
 HEALTHCHECK_SCRIPT="${HEALTHCHECK_SCRIPT:-${HERE}/vps-healthcheck.sh}"
 BACKUP_SCRIPT="${BACKUP_SCRIPT:-${HERE}/backup.sh}"
+RECOVERY_PACKAGE_SCRIPT="${RECOVERY_PACKAGE_SCRIPT:-${HERE}/capture-production-recovery-package.sh}"
 BUILD_SCRIPT="${BUILD_SCRIPT:-${HERE}/build.sh}"
 SMOKE_SCRIPT="${SMOKE_SCRIPT:-./scripts/deploy-smoke.sh}"
 RECEIPT_SCRIPT="${RECEIPT_SCRIPT:-${HERE}/deploy-receipt.mjs}"
@@ -173,7 +174,7 @@ fi
 
 run_deploy_phase "Verifying offsite backup preflight" "${BACKUP_SCRIPT}" -e "${ENV_FILE}" --preflight-only
 
-run_deploy_phase "Creating mandatory offsite backup" "${BACKUP_SCRIPT}" -e "${ENV_FILE}" --verify-restore
+run_deploy_phase "Creating mandatory offsite recovery package" "${RECOVERY_PACKAGE_SCRIPT}" -e "${ENV_FILE}"
 
 run_deploy_phase "Building and transferring artifacts" \
     env BUILD_SKIP_PACKAGE_VERSION_UPDATE=true DEPLOY_CONFIRMED=true "${BUILD_SCRIPT}" -v "${VERSION}" -e "${ENV_FILE}" -d y

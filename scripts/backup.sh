@@ -222,9 +222,15 @@ create_runtime_backup() {
     ssh -i "${KEY_PATH}" -o BatchMode=yes "${REMOTE_SERVER}" "cd '${PROJECT_DIR}' && tar -czf - -T -" <"${paths_file}" |
         tar -xzf - -C "${staging_dir}"
 
+    # Tar preserves production source modes. Backups contain secrets and private
+    # assets, so normalize the expanded local copy regardless of remote modes.
+    find "${staging_dir}" -type d -exec chmod 700 {} +
+    find "${staging_dir}" -type f -exec chmod 600 {} +
+
     info "Creating logical Postgres dump..."
     mkdir -p "${staging_dir}/$(dirname "${db_dump}")"
     ssh -i "${KEY_PATH}" -o BatchMode=yes "${REMOTE_SERVER}" "$(remote_postgres_dump_script)" >"${staging_dir}/${db_dump}"
+    chmod 600 "${staging_dir}/${db_dump}"
 
     if [ ! -s "${staging_dir}/${db_dump}" ]; then
         error "Logical Postgres dump is missing or empty: ${db_dump}"

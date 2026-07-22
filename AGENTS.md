@@ -53,6 +53,12 @@ That setup script creates `~/.ssh/id_rsa_${SITE_IP}` if needed, appends the publ
 ./scripts/backup.sh -e .env-prod
 ```
 
+- Before a production deployment, prefer the complete recovery package, which also captures the exact running commit, compiled artifacts, Compose configuration, and Docker images:
+
+```bash
+./scripts/capture-production-recovery-package.sh -e .env-prod
+```
+
 - Preview backup size and included paths without creating an archive:
 
 ```bash

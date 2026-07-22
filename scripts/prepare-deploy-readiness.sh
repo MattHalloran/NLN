@@ -16,7 +16,7 @@ HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 ENV_FILE="${HERE}/../.env-prod"
 VERSION=""
 VALIDATE_ENV_SCRIPT="${VALIDATE_ENV_SCRIPT:-${HERE}/validate-env.sh}"
-BACKUP_SCRIPT="${BACKUP_SCRIPT:-${HERE}/backup.sh}"
+RECOVERY_PACKAGE_SCRIPT="${RECOVERY_PACKAGE_SCRIPT:-${HERE}/capture-production-recovery-package.sh}"
 READINESS_SCRIPT="${READINESS_SCRIPT:-${HERE}/deploy-readiness.sh}"
 
 usage() {
@@ -26,7 +26,7 @@ Usage: $0 -v VERSION [options]
   -e, --env-file FILE       Environment file to validate (default: .env-prod)
   -h, --help                Show this help message
 
-Creates a verified local/offsite runtime-state backup, runs deploy-readiness.sh
+Creates a verified local/offsite production recovery package, runs deploy-readiness.sh
 with that backup as --migration-backup, then prints the exact production deploy
 command. It does not run deploy-production.sh.
 EOF
@@ -64,17 +64,14 @@ validate_deploy_version "${VERSION}"
 header "Validating environment"
 "${VALIDATE_ENV_SCRIPT}" "${ENV_FILE}"
 
-header "Verifying backup preflight"
-"${BACKUP_SCRIPT}" -e "${ENV_FILE}" --preflight-only
-
-header "Creating verified runtime-state backup"
-backup_output=$("${BACKUP_SCRIPT}" -e "${ENV_FILE}" --verify-restore --print-backup-dir)
+header "Creating verified production recovery package"
+backup_output=$("${RECOVERY_PACKAGE_SCRIPT}" -e "${ENV_FILE}")
 printf '%s\n' "${backup_output}"
 backup_dir=$(printf '%s\n' "${backup_output}" | sed -n 's/^backup_dir=//p' | tail -n 1)
 
 if [ -z "${backup_dir}" ]; then
     error "Could not determine backup directory from backup.sh output."
-    error "Expected a final backup_dir=PATH line from --print-backup-dir."
+    error "Expected backup_dir=PATH from the recovery-package capture."
     exit 1
 fi
 

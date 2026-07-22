@@ -165,6 +165,11 @@ teardown() {
     grep -q "redis_data_classification=operationally-important-recoverable" "$manifest"
     grep -q -- "- data/postgres.sql" "$manifest"
     tar -tzf "$archive" | grep -q 'data/postgres.sql'
+    staging=$(dirname "$archive")/runtime-state
+    [ "$(stat -c %a "$staging")" = 700 ]
+    [ "$(stat -c %a "$staging/.env-prod")" = 600 ]
+    find "$staging" -type d ! -perm 700 | grep . && false || true
+    find "$staging" -type f ! -perm 600 | grep . && false || true
 }
 
 @test "runtime-state backup can print machine-readable backup directory" {
