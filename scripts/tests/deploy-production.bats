@@ -70,6 +70,7 @@ install_script_stubs() {
     VALIDATE_ENV_SCRIPT="${BATS_TMPDIR}/validate-env"
     HEALTHCHECK_SCRIPT="${BATS_TMPDIR}/healthcheck"
     BACKUP_SCRIPT="${BATS_TMPDIR}/backup"
+    RECOVERY_PACKAGE_SCRIPT="${BATS_TMPDIR}/recovery-package"
     BUILD_SCRIPT="${BATS_TMPDIR}/build"
     SMOKE_SCRIPT="./scripts/deploy-smoke.sh"
     YARN_CMD="${BATS_TMPDIR}/yarn"
@@ -90,6 +91,11 @@ fi
 if [[ "$*" != *"--preflight-only"* ]] && [ "${BACKUP_FAIL:-false}" = "true" ]; then
   exit 1
 fi
+exit 0'
+
+    write_executable "${RECOVERY_PACKAGE_SCRIPT}" '#!/usr/bin/env bash
+echo "recovery:$*" >>"${DEPLOY_ORDER_LOG}"
+[ "${BACKUP_FAIL:-false}" = "true" ] && exit 1
 exit 0'
 
     write_executable "${BUILD_SCRIPT}" '#!/usr/bin/env bash
@@ -124,6 +130,7 @@ run_deploy_production() {
         VALIDATE_ENV_SCRIPT="${VALIDATE_ENV_SCRIPT}" \
         HEALTHCHECK_SCRIPT="${HEALTHCHECK_SCRIPT}" \
         BACKUP_SCRIPT="${BACKUP_SCRIPT}" \
+        RECOVERY_PACKAGE_SCRIPT="${RECOVERY_PACKAGE_SCRIPT}" \
         BUILD_SCRIPT="${BUILD_SCRIPT}" \
         SMOKE_SCRIPT="${SMOKE_SCRIPT}" \
         YARN_CMD="${YARN_CMD}" \
@@ -159,7 +166,7 @@ EOF
     run_deploy_production
 
     assert_equal "$status" 0
-    expected=$'validate\nhealth\nssh:test ! -f \'/var/tmp/9.9.9/runtime-state/manifest.txt\'\nbackup:-e '"${ENV_FILE}"$' --preflight-only\nbackup:-e '"${ENV_FILE}"$' --verify-restore\nbuild:-v 9.9.9 -e '"${ENV_FILE}"$' -d y\nssh:cd \'/srv/app\' && DEPLOY_VALIDATE_CMD=\'validate:ci\' ./scripts/deploy.sh -v \'9.9.9\'\nssh:cd \'/srv/app\' && ./scripts/deploy-smoke.sh -e .env-prod --admin\nssh:docker ps --format \'table {{.Names}}\\t{{.Status}}\''
+    expected=$'validate\nhealth\nssh:test ! -f \'/var/tmp/9.9.9/runtime-state/manifest.txt\'\nbackup:-e '"${ENV_FILE}"$' --preflight-only\nrecovery:-e '"${ENV_FILE}"$'\nbuild:-v 9.9.9 -e '"${ENV_FILE}"$' -d y\nssh:cd \'/srv/app\' && DEPLOY_VALIDATE_CMD=\'validate:ci\' ./scripts/deploy.sh -v \'9.9.9\'\nssh:cd \'/srv/app\' && ./scripts/deploy-smoke.sh -e .env-prod --admin\nssh:docker ps --format \'table {{.Names}}\\t{{.Status}}\''
     assert_equal "$(cat "${DEPLOY_ORDER_LOG}")" "${expected}"
     assert_output --partial "Deploy readiness receipt is fresh"
 }
@@ -174,6 +181,7 @@ EOF
         VALIDATE_ENV_SCRIPT="${VALIDATE_ENV_SCRIPT}" \
         HEALTHCHECK_SCRIPT="${HEALTHCHECK_SCRIPT}" \
         BACKUP_SCRIPT="${BACKUP_SCRIPT}" \
+        RECOVERY_PACKAGE_SCRIPT="${RECOVERY_PACKAGE_SCRIPT}" \
         BUILD_SCRIPT="${BUILD_SCRIPT}" \
         SMOKE_SCRIPT="${SMOKE_SCRIPT}" \
         YARN_CMD="${YARN_CMD}" \
@@ -282,6 +290,7 @@ EOF
         VALIDATE_ENV_SCRIPT="${VALIDATE_ENV_SCRIPT}" \
         HEALTHCHECK_SCRIPT="${HEALTHCHECK_SCRIPT}" \
         BACKUP_SCRIPT="${BACKUP_SCRIPT}" \
+        RECOVERY_PACKAGE_SCRIPT="${RECOVERY_PACKAGE_SCRIPT}" \
         BUILD_SCRIPT="${BUILD_SCRIPT}" \
         SMOKE_SCRIPT="${SMOKE_SCRIPT}" \
         YARN_CMD="${YARN_CMD}" \
@@ -302,7 +311,7 @@ EOF
     assert_output --partial "Emergency validation/readiness receipt bypass enabled"
     grep -q '^health$' "${DEPLOY_ORDER_LOG}"
     grep -q '^backup:.*--preflight-only' "${DEPLOY_ORDER_LOG}"
-    grep -q '^backup:.*--verify-restore' "${DEPLOY_ORDER_LOG}"
+    grep -q '^recovery:' "${DEPLOY_ORDER_LOG}"
 }
 
 @test "invalid version is rejected before validation or ssh" {
@@ -493,5 +502,5 @@ EOF
     [ -f "$receipt" ]
     grep -q '"version": "9.9.9"' "$receipt"
     grep -q '"status": "success"' "$receipt"
-    grep -q '"phase": "Creating mandatory offsite backup"' "$receipt"
+    grep -q '"phase": "Creating mandatory offsite recovery package"' "$receipt"
 }

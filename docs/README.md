@@ -14,6 +14,8 @@ The supported sequence remains:
 
 Do not substitute candidate `release` commands for this path. Phase 10 does not authorize production access or mutation.
 
+Preparation creates a [complete production recovery package](production-recovery-package.md): restore-tested runtime data plus the exact currently running commit, source, compiled artifacts, Compose configuration, and Docker images.
+
 ## Candidate local and rehearsal workflow
 
 The Phase 10 interface is fixture/local only. Discover it without reading secrets or contacting a host:
@@ -37,11 +39,13 @@ Maintenance is never bundled with a routine release. Use [VPS maintenance](vps-m
 ## Authoritative references
 
 - [Release Runbook](release-runbook.md) — only current live-window procedure.
+- [Production Recovery Package](production-recovery-package.md) — complete pre-deployment application-and-data capture.
 - [Deployment SLI/SLO](deployment-slo.md) — formulas, windows, scope, and owners.
 - [Deployment command catalog](deployment-command-catalog.md) — stable ownership and effects.
 - [Generated operator reference](generated-operator-reference.md) — registry-derived command and receipt names.
 - [Deployment evidence reference](deployment-evidence-reference.md) — receipt relationships, compatibility limits, storage, and verification.
 - [Deployment reliability architecture](deployment-reliability-architecture.md) — policies, adapters, extension rules, and testing boundaries.
 - [Deployment reliability master plan](deployment-reliability-master-plan.md) — reserved phase taxonomy.
+- [Deployment plan archive](deployment-plan-archive.md) — historical plans and implementation journals.
 - [Deployment architecture/reference](../DEPLOYMENT.md) — background, not a live procedure.
 - [Testing and Validation Guide](../TESTING.md) and [Environment Variables](../ENVIRONMENT.md).

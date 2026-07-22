@@ -26,7 +26,7 @@ Run the deployment wrapper during the approved deployment window:
 - [ ] The trusted validation gate passed for the commit being deployed.
 - [ ] `.deploy-readiness/<VERSION>.receipt` exists, is fresh, and matches the current commit.
 - [ ] The readiness receipt records restored-backup migration rehearsal success.
-- [ ] A verified runtime-state backup path is recorded.
+- [ ] A qualified production recovery-package path is recorded, including the exact current production commit and images.
 - [ ] Restore drill receipt is recorded if this deploy includes risky migrations, restore tooling changes, or other high-risk runtime changes.
 - [ ] Migration risk has been reviewed; destructive migrations have an explicit review marker and documented rollback implications.
 - [ ] Expected downtime window is accepted.
@@ -52,7 +52,7 @@ Preparation/readiness failure:
 Stop. Fix the failing validation, backup, migration rehearsal, or VPS health condition. Re-run readiness before deploying.
 
 Backup failure:
-Stop. Do not deploy without a fresh verified runtime-state backup. Investigate backup logs, disk space, SSH access, and restore verification output.
+Stop. Do not deploy without a fresh qualified production recovery package. Investigate backup logs, disk space, SSH access, image export, checksums, and restore verification output. See [Production Recovery Package](production-recovery-package.md).
 
 Critical VPS health failure:
 Stop. Review the healthcheck output and schedule the recommended maintenance separately using [vps-maintenance.md](vps-maintenance.md). The healthcheck is read-only and must not perform remediation automatically.
@@ -73,11 +73,11 @@ Prefer app-only recovery when possible. Database restore or older-version rollba
 
 For Redis-specific restore expectations, use [redis-runtime-state.md](redis-runtime-state.md). Redis is operationally important but recoverable; PostgreSQL is the data of record.
 
-| Mode | Restores app? | Restores DB? | Typical speed | Data-loss risk |
-| --- | --- | --- | --- | --- |
-| automatic non-database recovery | yes | no | fastest | low for DB |
-| runtime-state restore | yes/runtime files | yes | slower | reverts to backup |
-| older-version rollback | yes | yes | slower | reverts to old backup |
+| Mode                            | Restores app?     | Restores DB? | Typical speed | Data-loss risk        |
+| ------------------------------- | ----------------- | ------------ | ------------- | --------------------- |
+| automatic non-database recovery | yes               | no           | fastest       | low for DB            |
+| runtime-state restore           | yes/runtime files | yes          | slower        | reverts to backup     |
+| older-version rollback          | yes               | yes          | slower        | reverts to old backup |
 
 App-only non-database recovery:
 Use when the new app fails to start or fails health checks after artifact replacement, but the database should remain intact. This is the fastest and least destructive recovery mode.
@@ -118,6 +118,7 @@ Read-only inspection, `./scripts/vps-healthcheck.sh -e .env-prod`, `./scripts/ba
 - [ ] Containers are healthy or in the expected running state.
 - [ ] Recent server logs do not show new fatal errors.
 - [ ] Deployment receipt, backup path, readiness receipt, and smoke result are recorded.
+- [ ] The pre-deployment recovery package still passes `sha256sum -c SHA256SUMS`.
 - [ ] Actual downtime and any recovery actions are recorded.
 - [ ] `/var/tmp/<VERSION>/deploy-downtime.receipt` is recorded when remote deployment reaches public endpoint verification.
 

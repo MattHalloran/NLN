@@ -1,4 +1,5 @@
 #!/bin/sh
+umask 077
 HERE=$(dirname $0)
 . "${HERE}/utils.sh"
 
@@ -25,6 +26,7 @@ else
     # Create backup directory if it doesn't exist
     BACKUP_DIR="${PROJECT_DIR}/data/migration-backups"
     mkdir -p "${BACKUP_DIR}"
+    chmod 700 "${BACKUP_DIR}"
 
     # Create pre-migration backup
     BACKUP_FILE="${BACKUP_DIR}/pre-migration-$(date +%Y%m%d-%H%M%S).sql"
@@ -67,6 +69,7 @@ else
             PGPASSWORD="${DB_DUMP_PASSWORD}" pg_dump -h "${DB_HOST}" -p "${DB_PORT}" -U "${DB_DUMP_USER}" -d "${DB_DUMP_NAME}" -F p -f "${BACKUP_FILE}" 2>/dev/null
 
             if [ $? -eq 0 ]; then
+                chmod 600 "${BACKUP_FILE}"
                 success "✓ Pre-migration backup created successfully"
                 # Keep only the last 10 backups
                 ls -t ${BACKUP_DIR}/pre-migration-*.sql 2>/dev/null | tail -n +11 | xargs -r rm

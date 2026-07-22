@@ -78,6 +78,7 @@
     "runtime-state:archive:verify": "node scripts/runtime-state-archive-v2.mjs verify",
     "runtime-state:backup:verify-compatible": "node scripts/verify-runtime-state-backup.mjs",
     "runtime-state:backup:qualify": "node scripts/release.mjs verify-backup",
+    "backup:production-recovery": "./scripts/capture-production-recovery-package.sh",
     "runtime-state:backup:create-qualification": "node scripts/qualify-runtime-state-backup.mjs",
     "validate:runtime-state-backup": "node scripts/runtime-state-manifest-v2.mjs verify",
     "validate:runtime-state-archive": "node scripts/runtime-state-archive-v2.mjs verify",

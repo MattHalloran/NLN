@@ -24,7 +24,7 @@ The standard production deployment path is:
 ./scripts/deploy-production.sh -v <VERSION> -e .env-prod
 ```
 
-`prepare-deploy-readiness.sh` creates a verified local/offsite runtime-state backup, runs the non-deploying readiness gate, and prints the exact production deploy command. `deploy-production.sh` is the only routine production deployment entry point. It validates the matching readiness receipt, runs read-only VPS health checks, creates a fresh mandatory offsite backup, builds/transfers artifacts, runs the remote deploy, and runs post-deploy smoke checks.
+`prepare-deploy-readiness.sh` creates a verified local/offsite [production recovery package](docs/production-recovery-package.md), runs the non-deploying readiness gate, and prints the exact production deploy command. The package includes restore-tested runtime data plus the exact current production commit, source, compiled artifacts, Compose configuration, and images. `deploy-production.sh` is the only routine production deployment entry point. It validates the matching readiness receipt, runs read-only VPS health checks, creates another fresh mandatory recovery package, builds/transfers artifacts, runs the remote deploy, and runs post-deploy smoke checks.
 
 Lower-level scripts such as `build.sh`, `deploy.sh`, `rollback.sh`, and `restore-runtime-state.sh --execute` remain available for advanced recovery, local rehearsal, and debugging. They are not equivalent normal deployment paths because they can bypass wrapper sequencing or mutate production state directly.
 
@@ -39,28 +39,33 @@ Do not run production deploys, rollbacks, runtime restores with `--execute`, con
 ## Recent Improvements
 
 ### 1. Automatic Environment File Loading (docker-compose-prod.yml)
+
 - **What**: Production docker-compose now automatically loads `.env-prod` via `env_file` directive
 - **Why**: Simplifies deployment commands and prevents using wrong environment file
 - **Impact**: No longer need to specify `--env-file .env-prod` when starting containers
 
 ### 2. Environment Validation (`validate-env.sh`)
+
 - **What**: Validates all required environment variables before deployment
 - **Why**: Prevents deployment failures due to missing or malformed configuration
 - **When**: Runs automatically at the start of `build.sh` and `deploy.sh`
 
 ### 3. Health Check Polling (in `deploy.sh`)
+
 - **What**: Waits for all containers to become healthy before declaring success
 - **Why**: Prevents "deployment succeeded" messages when containers actually failed
 - **Timeout**: 5 minutes with status updates every 15 seconds
 - **What it checks**: All 4 containers (ui, server, db, redis) must be healthy or running
 
 ### 4. Pre-Migration Database Backup (in `server.sh`)
+
 - **What**: Creates a SQL dump backup immediately before running migrations
 - **Where**: `data/migration-backups/pre-migration-YYYYMMDD-HHMMSS.sql`
 - **Why**: Provides a restore point if migrations corrupt data
 - **Retention**: Keeps the last 10 backups automatically
 
 ### 5. Rollback Script (`rollback.sh`)
+
 - **What**: Automated rollback to a previous version
 - **Why**: Quick recovery from failed deployments
 - **What it does**:
@@ -71,32 +76,38 @@ Do not run production deploys, rollbacks, runtime restores with `--execute`, con
   - Starts containers with health checks
 
 ### 6. Improved Error Handling
+
 - **Git pull failures**: Now exits with error instead of warning
 - **Migration failures**: Now exits with error and provides restore instructions
 - **Container startup failures**: Now detected and reported
 - **Failed deploy recovery**: If startup, health, or public endpoint verification fails after artifact swap, `deploy.sh` attempts non-database recovery by restoring previous build artifacts and application images, then prints explicit runtime restore and older-version rollback commands.
 
 ### 7. Mandatory Offsite Backup and VPS Health Gate (`deploy-production.sh`)
+
 - **What**: The standard deployment wrapper now runs a non-mutating VPS health check and requires a successful offsite backup before build/transfer.
 - **Why**: Prevents routine deployments from proceeding without a fresh offsite recovery point or with critical VPS health problems.
 - **Policy**: Critical health issues block deployment; cleanup/update findings are warnings with recommended operator commands only.
 
 ### 8. Logical Runtime-State Database Backups
+
 - **What**: Runtime-state backups now require `data/postgres.sql`, created with `pg_dump`, instead of copying live Postgres data files as the primary backup.
 - **Why**: A logical dump is consistent while Postgres is running and is safer to validate and restore.
 - **Compatibility**: Legacy `/var/tmp/<VERSION>/postgres` raw backups are still recognized by rollback as a fallback for older deployments.
 
 ### 9. Staged Artifact Deployment
+
 - **What**: `deploy.sh` validates Git state and extracts artifacts into `/var/tmp/<VERSION>/staged-artifacts` before replacing live `dist` directories.
 - **Why**: Git or extraction failures now stop before live build artifacts are changed.
 - **Commit check**: `build.sh` transfers `deploy-commit.txt`; `deploy.sh` fast-forwards the remote repository and verifies `HEAD` matches that commit.
 
 ### 10. Disposable Deploy Rehearsal
+
 - **What**: `deploy-rehearsal.sh` runs a local disposable rehearsal of the production deploy path.
 - **Why**: Verifies build artifacts, logical backup creation, container restart, public endpoint checks, SQL dump restore, and rollback execution before touching production.
 - **Safety**: Generates a loopback-only env by default, refuses production-looking env values, and refuses to replace existing local `nln_*` containers unless explicitly allowed.
 
 ### 11. Non-Deploying Readiness Gate
+
 - **What**: `deploy-readiness.sh` runs the pre-production confidence checks without deploying.
 - **Why**: Gives one command for env validation, clean/synced git state, local validation, rehearsal, restored-backup migration rehearsal, read-only VPS health, version-slot freshness, and backup preflight.
 - **Safety**: It must not deploy, restart, restore, prune, update, clean up, or create backup archives.
@@ -104,32 +115,38 @@ Do not run production deploys, rollbacks, runtime restores with `--execute`, con
 - **Migration gate**: A recent local runtime-state backup is required through `--migration-backup PATH`. The readiness receipt is not accepted by production deploy unless this restored-backup migration rehearsal passed.
 
 ### 12. Readiness Receipt Enforcement
+
 - **What**: `deploy-production.sh` now requires a fresh readiness receipt for the same version, commit, and validation command before it builds or transfers artifacts.
 - **Why**: The expensive local validation and rehearsal can be completed before the deploy window, while the actual deploy still verifies that the current commit is clean, pushed, synchronized, and recently rehearsed.
 - **Freshness**: Receipts are valid for 4 hours by default. Override with `DEPLOY_READINESS_RECEIPT_MAX_AGE_SECONDS` only when the deploy window has been intentionally planned.
 
 ### 13. Post-Deploy Smoke Gate
+
 - **What**: `deploy-production.sh` runs `deploy-smoke.sh --admin` after the remote deploy completes.
 - **Why**: Public page checks, Prisma migration status, recent fatal log scanning, and reversible admin API checks all need to pass before the wrapper reports success.
 - **Safety**: The standalone smoke script keeps admin checks explicit; the production wrapper opts into them for the standard deploy path.
 
 ### 14. Migration Risk Checks
+
 - **What**: `scripts/check-migrations.sh` runs as part of `yarn check:drift`.
 - **Why**: Potentially destructive migration SQL, such as dropping columns/tables, truncation, broad deletes, type changes, or new NOT NULL constraints, must carry an explicit review marker before passing validation.
 - **Marker**: Use `-- deploy-safe: allow-destructive-migration: <reason>` only after backup and rollback implications are reviewed.
 
 ### 15. Prepare Deploy Readiness Wrapper
+
 - **What**: `prepare-deploy-readiness.sh` creates a verified runtime-state backup and runs `deploy-readiness.sh` with that backup as the migration rehearsal input.
 - **Why**: Operators no longer need to manually discover the correct backup path before readiness.
 - **Safety**: It does not deploy. Production interaction is limited to the existing backup read/copy behavior and readiness preflight checks.
 
 ### 16. Deployment Lock
+
 - **What**: Deploy, rollback, and execute-mode runtime restore paths acquire a `flock`-based deployment lock.
 - **Why**: Prevents overlapping deploy/rollback/restore operations from different shells or operators.
 - **Scope**: The standard wrapper uses a local lock under `.deploy-lock/`; production mutation scripts use `/var/lock/nln-deploy.lock` by default.
 - **Force behavior**: An actively held `flock` cannot be overridden. If lock metadata appears stale, first confirm no deploy, rollback, or restore process is running.
 
 ### 17. Pre-Downtime Migration Safety Gate
+
 - **What**: `deploy.sh` runs `check-deploy-migration-gate.sh` after artifact staging and runtime backup validation, before stopping containers.
 - **Why**: Destructive migration SQL is blocked before downtime unless it carries an explicit review marker, and pending migration status is reported when the running DB is readable.
 - **Safety**: The gate is read-only and does not run `prisma migrate deploy`. It requires readiness receipt proof and pending migration status by default; missing DB status requires an explicit override.
@@ -137,6 +154,7 @@ Do not run production deploys, rollbacks, runtime restores with `--execute`, con
 ## Prerequisites
 
 ### On Development Machine
+
 - Access to production server via SSH
 - SSH keys configured (`~/.ssh/id_rsa_{SITE_IP}`)
   - Use `./scripts/keylessSsh.sh -e .env-prod` to set up if needed
@@ -175,6 +193,7 @@ If that key does not exist locally, or if batch-mode SSH fails because the publi
 That script creates `~/.ssh/id_rsa_${SITE_IP}` when missing, appends the public key to root's `authorized_keys` on the VPS, and verifies passwordless SSH with `BatchMode=yes`.
 
 ### On Production Server
+
 - Docker and Docker Compose installed
 - Nginx reverse proxy running
 - Sufficient disk space in `/var/tmp` for backups
@@ -284,6 +303,7 @@ The drill creates a disposable project, runs the production build/deploy path lo
 **Note**: The production docker-compose file (`docker-compose-prod.yml`) now automatically loads `.env-prod` via the `env_file` directive. No need to manually specify `--env-file` when starting containers.
 
 The deploy script will:
+
 1. ✓ Validate environment configuration
 2. ✓ Fast-forward Git and verify the built commit
 3. ✓ Stage build artifacts under `/var/tmp/{VERSION}/staged-artifacts`
@@ -308,6 +328,7 @@ The standard wrapper runs:
 This script is non-mutating. It only reads remote state and prints recommendations.
 
 Critical blockers:
+
 - SSH batch-mode failure
 - Missing project directory or required runtime paths
 - Docker or docker-compose unavailable
@@ -315,6 +336,7 @@ Critical blockers:
 - Low disk space on the project, `/var/tmp`, or Docker data filesystem
 
 Warnings only:
+
 - Many or large `/var/tmp/<VERSION>` deployment backups
 - Large application logs
 - Available system package updates
@@ -397,6 +419,7 @@ If deployment fails or you discover issues:
 ```
 
 This will:
+
 1. Create emergency SQL dump of the current database
 2. Stop current containers
 3. Restore database from specified version backup
@@ -410,6 +433,7 @@ Database rollback restores the logical dump from the target version's backup. Wr
 ### Manual Rollback (if rollback.sh fails)
 
 1. **Create an emergency SQL dump**:
+
    ```bash
    mkdir -p /var/tmp/manual-emergency-backup
    set -a
@@ -420,11 +444,13 @@ Database rollback restores the logical dump from the target version's backup. Wr
    ```
 
 2. **Stop containers**:
+
    ```bash
    docker-compose -f docker-compose-prod.yml down
    ```
 
 3. **Restore database from logical dump**:
+
    ```bash
    ROLLBACK_VERSION="<PREVIOUS_VERSION>"  # e.g., "3.0.0"
    rm -rf data/postgres
@@ -438,14 +464,17 @@ Database rollback restores the logical dump from the target version's backup. Wr
    ```
 
 4. **Load old images**:
+
    ```bash
    docker load -i /var/tmp/${ROLLBACK_VERSION}/production-docker-images.tar.gz
    ```
 
 5. **Start containers**:
+
    ```bash
    docker-compose -f docker-compose-prod.yml up -d
    ```
+
    Note: The `.env-prod` file is automatically loaded via the `env_file` directive in `docker-compose-prod.yml`
 
 6. **Monitor startup**:
@@ -459,17 +488,20 @@ Database rollback restores the logical dump from the target version's backup. Wr
 ### Build Failures
 
 **Environment validation failed**
+
 - Check that all required variables are set in `.env-prod`
 - Verify URLs start with http:// or https://
 - Verify IP addresses are valid
 - Run `./scripts/validate-env.sh .env-prod` for details
 
 **Build fails with "yarn build failed"**
+
 - Check for TypeScript errors: `yarn typecheck`
 - Check for ESLint errors: `yarn lint`
 - Verify all dependencies are installed: `yarn install`
 
 **Docker build fails**
+
 - Check Docker is running: `docker version`
 - Check disk space: `df -h`
 - Try rebuilding without cache: `docker-compose build --no-cache`
@@ -477,11 +509,13 @@ Database rollback restores the logical dump from the target version's backup. Wr
 ### Deployment Failures
 
 **"Docker images archive not found"**
+
 - Verify build.sh completed successfully
 - Check files exist in `/var/tmp/{VERSION}/`
 - Re-run build.sh if necessary
 
 **"Timeout waiting for containers to become healthy"**
+
 - Check container logs: `docker logs nln_server`, `docker logs nln_ui`
 - Common issues:
   - Database migrations failed
@@ -490,12 +524,14 @@ Database rollback restores the logical dump from the target version's backup. Wr
   - Out of memory
 
 **"Migrations failed"**
+
 - Check migration backup exists: `ls data/migration-backups/`
 - Check database logs: `docker logs nln_db`
 - Restore from pre-migration backup if needed (instructions printed in error)
 - Consider rolling back to previous version
 
 **"Could not pull latest changes from repository"**
+
 - Check for uncommitted changes: `git status`
 - Check for merge conflicts: `git diff`
 - Resolve conflicts and re-run deploy.sh
@@ -504,6 +540,7 @@ Database rollback restores the logical dump from the target version's backup. Wr
 ### Health Check Issues
 
 **Server health check not responding**
+
 - Server may still be initializing (especially after migrations)
 - Check server logs: `docker logs nln_server`
 - Verify server started: `docker exec nln_server ps aux | grep node`
@@ -513,12 +550,14 @@ Database rollback restores the logical dump from the target version's backup. Wr
   ```
 
 **Redis shows "no healthcheck"**
+
 - This is normal for Redis in some configurations
 - Verify it's running: `docker exec nln_redis redis-cli ping`
 
 ### Nginx Reverse Proxy Issues
 
 **"nginx-proxy-le container constantly restarting"**
+
 - Check logs: `docker logs nginx-proxy-le`
 - Common error: "can't get nginx-proxy container ID"
 - Solution: Restart nginx proxy containers:
@@ -532,6 +571,7 @@ Database rollback restores the logical dump from the target version's backup. Wr
   The main nginx-proxy will continue to work for HTTPS (existing certificates)
 
 **"502 Bad Gateway after deployment"**
+
 - Verify all app containers are healthy: `docker ps`
 - Check if nginx can reach containers:
   ```bash
@@ -545,6 +585,7 @@ Database rollback restores the logical dump from the target version's backup. Wr
   ```
 
 **UI container not accessible from nginx-proxy**
+
 - The serve configuration may be binding to localhost instead of 0.0.0.0
 - Check with: `docker logs nln_ui | grep "Accepting connections"`
 - Should see: `Accepting connections at http://0.0.0.0:3001` or similar
@@ -590,6 +631,7 @@ Database rollback restores the logical dump from the target version's backup. Wr
    - **Impact**: Website not accessible despite healthy containers
    - **Mitigation**: Restart the UI container with `docker restart nln_ui`
    - **Verification**:
+
      ```bash
      # Check what interface UI is listening on
      docker logs nln_ui | grep "Accepting connections"
@@ -664,6 +706,7 @@ Database rollback restores the logical dump from the target version's backup. Wr
 ### Automatic Backups
 
 **Deployment Backups** (`/var/tmp/{VERSION}/runtime-state`)
+
 - Created at start of each deployment
 - One backup per version
 - Includes `data/postgres.sql`, `data/uploads`, `assets`, `data/redis`, `data/migration-backups`, `.env-prod`, optional `.env`, and optional `jwt_*`
@@ -671,17 +714,20 @@ Database rollback restores the logical dump from the target version's backup. Wr
 - Manual cleanup (not automatic)
 
 **Docker Image Archives** (`/var/tmp/{VERSION}/production-docker-images.tar.gz`)
+
 - Created by `build.sh`
 - Includes existing compose tags (`nln_ui:prod`, `nln_server:prod`)
 - Also includes audit tags (`nln_ui:{VERSION}`, `nln_server:{VERSION}`)
 - Compose still runs the `:prod` tags
 
 **Migration Backups** (`data/migration-backups/`)
+
 - Created before each migration run
 - Keeps last 10 backups automatically
 - SQL format (easy to inspect and restore)
 
 **Emergency Database Backups** (created by rollback.sh)
+
 - Created at `/var/tmp/emergency-backup-{timestamp}/`
 - Contains `current-postgres.sql`
 - Manual cleanup after verifying rollback worked
@@ -755,6 +801,7 @@ Keep at least the latest known-good version and any versions needed for recent i
 ## Support
 
 For issues not covered in this guide:
+
 - Check container logs: `docker logs <container_name>`
 - Check application logs: `ls -lh data/logs/`
 - Review recent commits: `git log --oneline -10`
