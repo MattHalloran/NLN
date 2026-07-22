@@ -150,12 +150,15 @@ docker exec -i -e PGPASSWORD="${DB_PASSWORD}" "${RESTORE_CONTAINER}" \
     psql -v ON_ERROR_STOP=1 -U "${DB_USER}" -d "${DB_NAME}" <"${BACKUP_DIR}/${db_dump}"
 
 header "Running checked-in migrations against restored backup"
+# The repository's node_modules is installed on the glibc host and mounted
+# read-only. Use a matching glibc runtime so Prisma can load the exact
+# checked-in schema engine instead of looking for an unavailable musl build.
 docker run --rm \
     --network "container:${RESTORE_CONTAINER}" \
     -v "$(cd "${HERE}/.." && pwd):/workspace:ro" \
     -w /workspace/packages/server \
     -e "DB_URL=postgresql://${DB_USER}:${DB_PASSWORD}@localhost:5432/${DB_NAME}" \
-    node:20-alpine \
+    node:20-bookworm \
     sh -lc 'yarn prisma migrate deploy --schema=src/db/schema.prisma && yarn prisma migrate status --schema=src/db/schema.prisma'
 
 success "Migration rehearsal passed against restored backup"
