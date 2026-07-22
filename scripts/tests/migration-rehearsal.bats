@@ -66,6 +66,8 @@ teardown() {
     assert_equal "$status" 0
     grep -q 'docker:run -d --name nln_migration_rehearsal_' "${MIGRATION_LOG}"
     grep -q 'docker:exec -i -e PGPASSWORD=rehearsal-password' "${MIGRATION_LOG}"
+    grep -q 'node:20-bookworm' "${MIGRATION_LOG}"
+    ! grep -q 'node:20-alpine' "${MIGRATION_LOG}"
     grep -q 'yarn prisma migrate deploy --schema=src/db/schema.prisma' "${MIGRATION_LOG}"
     assert_output --partial "Migration rehearsal passed"
 }
