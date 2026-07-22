@@ -12,10 +12,11 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { randomUUID } from "crypto";
 import cookieParser from "cookie-parser";
+import rateLimit from "express-rate-limit";
 import { COOKIE, REST_ROUTES } from "@local/shared";
-import restRouter from "./index.js";
+import { createRestRouter } from "./index.js";
 import * as auth from "../auth.js";
-import { loginLimiter, passwordResetLimiter, signupLimiter } from "../middleware/rateLimiter.js";
+import { createRateLimiters, type RateLimiters } from "../middleware/rateLimiter.js";
 import {
     startPostgresTestDatabase,
     stopPostgresTestDatabase,
@@ -25,6 +26,7 @@ describe("REST API Integration Tests", () => {
     let container: StartedPostgreSqlContainer;
     let prisma: PrismaClient;
     let app: Express;
+    let limiters: RateLimiters;
 
     beforeAll(async () => {
         const database = await startPostgresTestDatabase("test_api_db");
@@ -61,13 +63,15 @@ describe("REST API Integration Tests", () => {
         app.use(express.json());
         app.use(express.urlencoded({ extended: false }));
         app.use(cookieParser(process.env.JWT_SECRET));
+        app.use(rateLimit({ windowMs: 60_000, max: 10_000 }));
         // Attach TEST prisma instance, not the global one
         app.use((req: any, _res, next) => {
             req.prisma = prisma; // Use test prisma instance
             next();
         });
         app.use(auth.authenticate);
-        app.use(REST_ROUTES.root, restRouter);
+        limiters = createRateLimiters();
+        app.use(REST_ROUTES.root, createRestRouter({ limiters }));
     }, 120000);
 
     afterAll(async () => {
@@ -75,7 +79,11 @@ describe("REST API Integration Tests", () => {
     });
 
     beforeEach(async () => {
-        for (const limiter of [loginLimiter, passwordResetLimiter, signupLimiter]) {
+        for (const limiter of [
+            limiters.loginLimiter,
+            limiters.passwordResetLimiter,
+            limiters.signupLimiter,
+        ]) {
             limiter.resetKey("::/56");
             limiter.resetKey("127.0.0.1");
         }
@@ -129,6 +137,31 @@ describe("REST API Integration Tests", () => {
             expect(response.body).toHaveProperty("name", "New Life Nursery REST API");
             expect(response.body).toHaveProperty("version");
             expect(response.body).toHaveProperty("endpoints");
+            expect(response.body.endpoints.v1).toMatchObject({
+                health: REST_ROUTES.health,
+                csrfToken: REST_ROUTES.csrfToken,
+                auth: {
+                    login: REST_ROUTES.auth.login,
+                    session: REST_ROUTES.auth.session,
+                },
+                landingPage: {
+                    root: REST_ROUTES.landingPage.root,
+                    contactInfo: REST_ROUTES.landingPage.contactInfo,
+                    variants: REST_ROUTES.landingPage.variants,
+                },
+                storage: {
+                    stats: REST_ROUTES.storage.stats,
+                    cleanupPreview: REST_ROUTES.storage.cleanupPreview,
+                },
+                logs: {
+                    root: REST_ROUTES.logs.root,
+                    stats: REST_ROUTES.logs.stats,
+                },
+                newsletter: {
+                    subscribe: REST_ROUTES.newsletter.subscribe,
+                    subscribers: REST_ROUTES.newsletter.subscribers,
+                },
+            });
         });
     });
 

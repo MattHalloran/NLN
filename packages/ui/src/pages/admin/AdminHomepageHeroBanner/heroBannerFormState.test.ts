@@ -3,6 +3,7 @@ import type { HeroBanner } from "@local/shared";
 import {
     buildUploadedHeroBanners,
     deleteHeroBanner,
+    normalizeHeroBannerOrder,
     reorderHeroBanners,
     updateHeroBannerField,
 } from "./heroBannerFormState";
@@ -61,6 +62,13 @@ describe("hero banner form state", () => {
             { id: "two", displayOrder: 1 },
             { id: "three", displayOrder: 2 },
             { id: "one", displayOrder: 3 },
+        ]);
+    });
+
+    it("normalizes display order from current array order before save", () => {
+        expect(normalizeHeroBannerOrder([banner("two", 2), banner("one", 1)])).toMatchObject([
+            { id: "two", displayOrder: 1 },
+            { id: "one", displayOrder: 2 },
         ]);
     });
 

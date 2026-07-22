@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "policyId": "nln-controlled-migrations-v1",
+  "productionIntegrationEnabled": false,
+  "supportedPostgresMajors": [13],
+  "minimumFreeBytes": 1073741824,
+  "lockTimeoutMs": 5000,
+  "statementTimeoutMs": 300000,
+  "advisoryLockId": 734615921,
+  "allowedClassifications": ["none", "backward-compatible", "bounded-window", "incompatible"],
+  "allowedLockRisks": ["low", "medium", "high"],
+  "requireQualifiedBackup": true,
+  "maximumQualifiedBackupAgeSeconds": 3600,
+  "operationalObjectivesPath": "config/deployment-operational-objectives.json",
+  "backupPolicyPath": "config/runtime-state-backup-policy.json",
+  "runtimeStateInventoryPath": "config/runtime-state-inventory.json",
+  "requireTrustedGate": true,
+  "requireSpecialPlanForHighRisk": true,
+  "requireSpecialPlanForIncompatible": true,
+  "applicationStartupMigrationRemovalApproved": false
+}

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "nln-release-alert-event-v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "eventType", "eventId", "severity", "scope", "category", "observedAt", "releaseId", "evidence", "owner", "message"],
+  "properties": {
+    "schemaVersion": { "const": 1 }, "eventType": { "const": "release-alert" }, "eventId": { "type": "string" },
+    "severity": { "enum": ["warning", "critical"] }, "scope": { "enum": ["fixture", "local", "production"] },
+    "category": { "enum": ["stale-backup", "restore-overdue", "stale-trusted-evidence", "repeated-failure", "downtime-slo", "rto-slo", "rpo-slo", "missing-remote-verification", "missing-resilience-evidence", "health-blocker", "maintenance-blocker"] },
+    "observedAt": { "type": "string" }, "releaseId": { "type": ["string", "null"] }, "evidence": { "type": "array" },
+    "owner": { "type": "string" }, "message": { "type": "string" }
+  }
+}

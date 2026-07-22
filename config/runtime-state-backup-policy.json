@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "policyId": "nln-runtime-state-backup-policy-v1",
+  "qualification": {
+    "maximumCaptureDurationSeconds": 1800,
+    "maximumQualifiedAgeSeconds": 86400,
+    "maximumPreDeployAgeSeconds": 3600,
+    "requireStableCapture": true,
+    "requireDatabaseRestoreVerification": true,
+    "requireV2ForFullQualification": true,
+    "legacyBackupsAreReadableOnly": true
+  },
+  "recoveryPointObjectives": {
+    "routineDeploy": "latest-qualified-pre-deploy-backup",
+    "databaseRollback": "emergency-dump-immediately-before-mutation",
+    "maximumRoutineDataExposureSeconds": 3600
+  },
+  "retention": {
+    "qualifiedBackups": { "dailyCopies": 14, "weeklyCopies": 8, "monthlyCopies": 12 },
+    "failedOrUnqualifiedEvidenceDays": 14,
+    "optionalDiagnosticLogsDays": 7,
+    "deletionCommandMustBeSeparate": true,
+    "deletionDryRunByDefault": true,
+    "deploymentMayDeleteBackups": false,
+    "preserveIncidentHolds": true
+  },
+  "restoreVerificationCadence": {
+    "fixtureMaximumIntervalHours": 168,
+    "qualifiedBackupMaximumIntervalHours": 2160,
+    "qualifiedBackupRequiresExplicitApproval": true
+  }
+}

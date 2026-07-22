@@ -10,6 +10,9 @@ write_env_file() {
 SERVER_LOCATION=dns
 CREATE_MOCK_DATA=false
 DB_PULL=false
+TRUST_PROXY_HOPS=1
+E2E_DISABLE_RATE_LIMITS=false
+RATE_LIMIT_DIAGNOSTICS=false
 PORT_UI=3101
 PORT_SERVER=5331
 PORT_DB=55433
@@ -67,6 +70,13 @@ teardown() {
     grep -q 'host setup remains disabled' "$BATS_TEST_DIRNAME/../deploy.sh"
 }
 
+@test "deploy rehearsal verifies isolated container endpoints without host port publication" {
+    grep -q 'docker exec nln_ui wget -q --spider "http://127.0.0.1:${PORT_UI}"' "$BATS_TEST_DIRNAME/../deploy.sh"
+    grep -q 'docker exec nln_server wget -q --spider "http://127.0.0.1:${PORT_SERVER}/healthcheck"' "$BATS_TEST_DIRNAME/../deploy.sh"
+    grep -q 'curl -fsS "${ui_url}"' "$BATS_TEST_DIRNAME/../deploy.sh"
+    grep -q 'curl -fsS "${server_health_url}"' "$BATS_TEST_DIRNAME/../deploy.sh"
+}
+
 @test "deploy script validates rehearsal commit without git pull" {
     grep -q 'Rehearsal repository is at expected commit' "$BATS_TEST_DIRNAME/../deploy.sh"
     grep -q 'DEPLOY_REHEARSAL' "$BATS_TEST_DIRNAME/../deploy.sh"
@@ -82,10 +92,29 @@ teardown() {
     grep -q 'restore-runtime-state.sh' "$SCRIPT_PATH"
 }
 
+@test "deploy rehearsal makes disposable Redis state readable for non-root backup" {
+    grep -q 'make_runtime_state_readable' "$SCRIPT_PATH"
+    grep -q 'docker exec nln_redis' "$SCRIPT_PATH"
+    grep -q 'chmod -R a+rX "${REHEARSAL_PROJECT_DIR}/data/redis"' "$SCRIPT_PATH"
+    ! grep -q 'chmod -R a+rX "${PROJECT_DIR}/data/redis"' "$SCRIPT_PATH"
+}
+
+@test "deploy rehearsal cleanup removes only container-owned disposable state" {
+    grep -q -- '--user 0:0' "$SCRIPT_PATH"
+    grep -q -- '-v "${REHEARSAL_PROJECT_DIR}:/rehearsal-project"' "$SCRIPT_PATH"
+    grep -q 'rm -rf /rehearsal-project/data/postgres /rehearsal-project/data/redis' "$SCRIPT_PATH"
+}
+
 @test "deploy rehearsal installs project-local env file for docker compose env_file" {
     grep -q 'install_project_env_file' "$SCRIPT_PATH"
     grep -q 'cp -p "${ENV_FILE}" "${REHEARSAL_PROJECT_DIR}/.env-prod"' "$SCRIPT_PATH"
     grep -q 'env_file: .env-prod' "$BATS_TEST_DIRNAME/../../docker-compose-prod.yml"
+}
+
+@test "generated rehearsal environment satisfies production proxy and rate-limit safeguards" {
+    grep -q '^TRUST_PROXY_HOPS=1$' "$SCRIPT_PATH"
+    grep -q '^E2E_DISABLE_RATE_LIMITS=false$' "$SCRIPT_PATH"
+    grep -q '^RATE_LIMIT_DIAGNOSTICS=false$' "$SCRIPT_PATH"
 }
 
 @test "deploy rehearsal replacement flag removes existing local containers" {
@@ -112,9 +141,27 @@ teardown() {
     grep -q 'yarn prisma migrate deploy --schema=src/db/schema.prisma' "$SCRIPT_PATH"
 }
 
+@test "deploy rehearsal reports bounded database diagnostics when readiness fails" {
+    grep -q "docker inspect --format" "$SCRIPT_PATH"
+    grep -q "docker logs --tail 200 nln_db" "$SCRIPT_PATH"
+    ! grep -q "docker inspect nln_db" "$SCRIPT_PATH"
+}
+
+@test "deploy rehearsal makes only tracked database initialization files container-readable" {
+    grep -q 'make_database_init_scripts_readable' "$SCRIPT_PATH"
+    grep -q 'REHEARSAL_PROJECT_DIR}/packages/db/entrypoint' "$SCRIPT_PATH"
+    grep -q 'find "${init_dir}" -type f -exec chmod a+r' "$SCRIPT_PATH"
+    ! grep -q 'chmod -R a+rX "${REHEARSAL_PROJECT_DIR}"' "$SCRIPT_PATH"
+}
+
 @test "deploy rehearsal executes disposable rollback probe" {
     grep -q 'ROLLBACK_PROBE_VERSION="${VERSION}-rollback-probe"' "$SCRIPT_PATH"
     grep -q 'run_rollback_probe' "$SCRIPT_PATH"
-    grep -q 'ROLLBACK_CONFIRMED=true ./scripts/rollback.sh -v "${ROLLBACK_PROBE_VERSION}"' "$SCRIPT_PATH"
+    grep -q 'docker exec --user 0:0 nln_db' "$SCRIPT_PATH"
+    grep -q 'chmod -R a+rwX /var/lib/postgresql/data' "$SCRIPT_PATH"
+    grep -q './data/postgres:/var/lib/postgresql/data' "$BATS_TEST_DIRNAME/../../docker-compose-prod.yml"
+    grep -q 'DEPLOY_REHEARSAL=true ROLLBACK_CONFIRMED=true ./scripts/rollback.sh -v "${ROLLBACK_PROBE_VERSION}"' "$SCRIPT_PATH"
+    grep -q 'docker exec nln_ui wget -q --spider "http://127.0.0.1:${PORT_UI}"' "$BATS_TEST_DIRNAME/../rollback.sh"
+    grep -q 'docker exec nln_server wget -q --spider "http://127.0.0.1:${PORT_SERVER}/healthcheck"' "$BATS_TEST_DIRNAME/../rollback.sh"
     grep -q 'rm -rf "/var/tmp/${ROLLBACK_PROBE_VERSION}"' "$SCRIPT_PATH"
 }

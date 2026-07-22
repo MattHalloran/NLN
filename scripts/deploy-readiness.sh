@@ -14,9 +14,12 @@ VERSION=""
 YARN_CMD="${YARN_CMD:-yarn}"
 DEPLOY_VALIDATE_CMD="${DEPLOY_VALIDATE_CMD:-validate:ci}"
 VALIDATE_ENV_SCRIPT="${VALIDATE_ENV_SCRIPT:-${HERE}/validate-env.sh}"
+CHECK_RATE_LIMIT_CONFIG_SCRIPT="${CHECK_RATE_LIMIT_CONFIG_SCRIPT:-${HERE}/check-rate-limit-config.sh}"
 HEALTHCHECK_SCRIPT="${HEALTHCHECK_SCRIPT:-${HERE}/vps-healthcheck.sh}"
 BACKUP_SCRIPT="${BACKUP_SCRIPT:-${HERE}/backup.sh}"
 REHEARSAL_SCRIPT="${REHEARSAL_SCRIPT:-${HERE}/deploy-rehearsal.sh}"
+MIGRATION_REHEARSAL_SCRIPT="${MIGRATION_REHEARSAL_SCRIPT:-${HERE}/rehearse-migrations-from-backup.sh}"
+MIGRATION_BACKUP="${DEPLOY_MIGRATION_REHEARSAL_BACKUP:-}"
 SKIP_VALIDATION=false
 SKIP_REHEARSAL=false
 SKIP_VPS=false
@@ -29,6 +32,8 @@ Usage: $0 -v VERSION [options]
       --skip-validation     Skip local yarn validation
       --skip-rehearsal      Skip disposable local deploy rehearsal
       --skip-vps            Skip read-only/preflight VPS checks
+      --migration-backup PATH
+                            Required: run migration rehearsal against a local runtime-state backup
   -h, --help                Show this help message
 
 This script does not deploy, restart, restore, prune, update, clean up, or create
@@ -58,6 +63,10 @@ while [ $# -gt 0 ]; do
     --skip-vps)
         SKIP_VPS=true
         shift
+        ;;
+    --migration-backup)
+        MIGRATION_BACKUP="$2"
+        shift 2
         ;;
     -h | --help)
         usage
@@ -92,6 +101,9 @@ run_local_gates() {
     header "Validating environment"
     "${VALIDATE_ENV_SCRIPT}" "${ENV_FILE}"
 
+    header "Checking rate-limit proxy configuration"
+    "${CHECK_RATE_LIMIT_CONFIG_SCRIPT}" "${REPO_ROOT}/docker-compose-prod.yml"
+
     deploy_require_clean_synced_worktree "${REPO_ROOT}"
 
     if [ "${SKIP_VALIDATION}" != true ]; then
@@ -108,6 +120,15 @@ run_local_gates() {
     else
         warning "Skipping deploy rehearsal by request."
     fi
+
+    if [ -z "${MIGRATION_BACKUP}" ]; then
+        error "Restored-backup migration rehearsal is required for production readiness."
+        error "Pass --migration-backup PATH using a recent local runtime-state backup."
+        exit 1
+    fi
+
+    header "Running restored-backup migration rehearsal"
+    "${MIGRATION_REHEARSAL_SCRIPT}" --backup "${MIGRATION_BACKUP}"
 }
 
 run_vps_preflight_gates() {
@@ -146,6 +167,11 @@ run_vps_preflight_gates() {
 
 run_local_gates
 run_vps_preflight_gates
-deploy_write_readiness_receipt "${REPO_ROOT}" "${VERSION}" "${DEPLOY_VALIDATE_CMD}" "${SKIP_VALIDATION}" "${SKIP_REHEARSAL}" "${SKIP_VPS}"
+if [ -n "${MIGRATION_BACKUP}" ]; then
+    MIGRATION_REHEARSAL_SKIPPED=false
+else
+    MIGRATION_REHEARSAL_SKIPPED=true
+fi
+deploy_write_readiness_receipt "${REPO_ROOT}" "${VERSION}" "${DEPLOY_VALIDATE_CMD}" "${SKIP_VALIDATION}" "${SKIP_REHEARSAL}" "${SKIP_VPS}" "${MIGRATION_REHEARSAL_SKIPPED}"
 
 success "Deploy readiness checks passed for version ${VERSION}. No deployment was run."

@@ -65,13 +65,18 @@ EOF
 
 install_script_stubs() {
     VALIDATE_ENV_SCRIPT="${BATS_TMPDIR}/validate-env"
+    CHECK_RATE_LIMIT_CONFIG_SCRIPT="${BATS_TMPDIR}/check-rate-limit-config"
     HEALTHCHECK_SCRIPT="${BATS_TMPDIR}/healthcheck"
     BACKUP_SCRIPT="${BATS_TMPDIR}/backup"
     REHEARSAL_SCRIPT="${BATS_TMPDIR}/deploy-rehearsal"
+    MIGRATION_REHEARSAL_SCRIPT="${BATS_TMPDIR}/migration-rehearsal"
     YARN_CMD="${BATS_TMPDIR}/yarn"
 
     write_executable "${VALIDATE_ENV_SCRIPT}" '#!/usr/bin/env bash
 echo validate >>"${READINESS_ORDER_LOG}"'
+
+    write_executable "${CHECK_RATE_LIMIT_CONFIG_SCRIPT}" '#!/usr/bin/env bash
+echo "rate-limit-config:$*" >>"${READINESS_ORDER_LOG}"'
 
     write_executable "${HEALTHCHECK_SCRIPT}" '#!/usr/bin/env bash
 echo "health:$*" >>"${READINESS_ORDER_LOG}"'
@@ -81,6 +86,9 @@ echo "backup:$*" >>"${READINESS_ORDER_LOG}"'
 
     write_executable "${REHEARSAL_SCRIPT}" '#!/usr/bin/env bash
 echo "rehearsal:$*" >>"${READINESS_ORDER_LOG}"'
+
+    write_executable "${MIGRATION_REHEARSAL_SCRIPT}" '#!/usr/bin/env bash
+echo "migration-rehearsal:$*" >>"${READINESS_ORDER_LOG}"'
 
     write_executable "${YARN_CMD}" '#!/usr/bin/env bash
 echo "yarn:$*" >>"${READINESS_ORDER_LOG}"'
@@ -105,10 +113,12 @@ teardown() {
 run_readiness() {
     run env \
         VALIDATE_ENV_SCRIPT="${VALIDATE_ENV_SCRIPT}" \
+        CHECK_RATE_LIMIT_CONFIG_SCRIPT="${CHECK_RATE_LIMIT_CONFIG_SCRIPT}" \
         DEPLOY_READINESS_RECEIPT_DIR="${DEPLOY_READINESS_RECEIPT_DIR}" \
         HEALTHCHECK_SCRIPT="${HEALTHCHECK_SCRIPT}" \
         BACKUP_SCRIPT="${BACKUP_SCRIPT}" \
         REHEARSAL_SCRIPT="${REHEARSAL_SCRIPT}" \
+        MIGRATION_REHEARSAL_SCRIPT="${MIGRATION_REHEARSAL_SCRIPT}" \
         YARN_CMD="${YARN_CMD}" \
         READINESS_ORDER_LOG="${READINESS_ORDER_LOG}" \
         GIT_AHEAD="${GIT_AHEAD:-0}" \
@@ -121,13 +131,18 @@ run_readiness() {
 }
 
 @test "readiness runs validation, rehearsal, read-only VPS checks, and backup preflight" {
-    run_readiness
+    migration_backup="${BATS_TMPDIR}/migration-backup-fixture"
+    mkdir -p "${migration_backup}"
+
+    run_readiness --migration-backup "${migration_backup}"
 
     assert_equal "$status" 0
     assert_output --partial "No deployment was run"
     grep -q '^validate$' "${READINESS_ORDER_LOG}"
+    grep -q '^rate-limit-config:.*/docker-compose-prod.yml$' "${READINESS_ORDER_LOG}"
     grep -q '^yarn:validate:ci$' "${READINESS_ORDER_LOG}"
     grep -q '^rehearsal:-v rehearsal-9.9.9$' "${READINESS_ORDER_LOG}"
+    grep -q '^migration-rehearsal:--backup '"${migration_backup}"'$' "${READINESS_ORDER_LOG}"
     grep -q '^health:-e '"${ENV_FILE}"'$' "${READINESS_ORDER_LOG}"
     grep -q "^ssh:test ! -f '/var/tmp/9.9.9/runtime-state/manifest.txt'$" "${READINESS_ORDER_LOG}"
     grep -q '^backup:-e '"${ENV_FILE}"' --preflight-only$' "${READINESS_ORDER_LOG}"
@@ -137,6 +152,15 @@ run_readiness() {
     grep -q '^validation_skipped=false$' "${DEPLOY_READINESS_RECEIPT_DIR}/9.9.9.receipt"
     grep -q '^rehearsal_skipped=false$' "${DEPLOY_READINESS_RECEIPT_DIR}/9.9.9.receipt"
     grep -q '^vps_skipped=false$' "${DEPLOY_READINESS_RECEIPT_DIR}/9.9.9.receipt"
+    grep -q '^migration_rehearsal_skipped=false$' "${DEPLOY_READINESS_RECEIPT_DIR}/9.9.9.receipt"
+}
+
+@test "readiness requires restored-backup migration rehearsal" {
+    run_readiness
+
+    assert_equal "$status" 1
+    assert_output --partial "Restored-backup migration rehearsal is required"
+    [ ! -f "${DEPLOY_READINESS_RECEIPT_DIR}/9.9.9.receipt" ]
 }
 
 @test "readiness blocks when branch is ahead of upstream" {
@@ -147,28 +171,37 @@ run_readiness() {
     assert_equal "$status" 1
     assert_output --partial "ahead=5"
     refute grep -q '^yarn:' "${READINESS_ORDER_LOG}"
+    grep -q '^rate-limit-config:.*/docker-compose-prod.yml$' "${READINESS_ORDER_LOG}"
     refute grep -q '^rehearsal:' "${READINESS_ORDER_LOG}"
+    refute grep -q '^migration-rehearsal:' "${READINESS_ORDER_LOG}"
     refute grep -q '^health:' "${READINESS_ORDER_LOG}"
     [ ! -f "${DEPLOY_READINESS_RECEIPT_DIR}/9.9.9.receipt" ]
 }
 
 @test "readiness skip flags avoid expensive local and VPS gates" {
-    run_readiness --skip-validation --skip-rehearsal --skip-vps
+    migration_backup="${BATS_TMPDIR}/migration-backup-fixture"
+    mkdir -p "${migration_backup}"
+
+    run_readiness --skip-validation --skip-rehearsal --skip-vps --migration-backup "${migration_backup}"
 
     assert_equal "$status" 0
     refute grep -q '^yarn:' "${READINESS_ORDER_LOG}"
     refute grep -q '^rehearsal:' "${READINESS_ORDER_LOG}"
     refute grep -q '^health:' "${READINESS_ORDER_LOG}"
     refute grep -q '^backup:' "${READINESS_ORDER_LOG}"
+    grep -q '^migration-rehearsal:--backup '"${migration_backup}"'$' "${READINESS_ORDER_LOG}"
     grep -q '^validation_skipped=true$' "${DEPLOY_READINESS_RECEIPT_DIR}/9.9.9.receipt"
     grep -q '^rehearsal_skipped=true$' "${DEPLOY_READINESS_RECEIPT_DIR}/9.9.9.receipt"
     grep -q '^vps_skipped=true$' "${DEPLOY_READINESS_RECEIPT_DIR}/9.9.9.receipt"
+    grep -q '^migration_rehearsal_skipped=false$' "${DEPLOY_READINESS_RECEIPT_DIR}/9.9.9.receipt"
 }
 
 @test "readiness blocks reused production version slot" {
     export VERSION_EXISTS=true
+    migration_backup="${BATS_TMPDIR}/migration-backup-fixture"
+    mkdir -p "${migration_backup}"
 
-    run_readiness --skip-validation --skip-rehearsal
+    run_readiness --skip-validation --skip-rehearsal --migration-backup "${migration_backup}"
 
     assert_equal "$status" 1
     assert_output --partial "Runtime-state backup already exists"

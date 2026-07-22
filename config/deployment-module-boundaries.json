@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "contractId": "nln-deployment-module-boundaries-v1",
+  "productionIntegrationEnabled": false,
+  "domainLibraryRoot": "scripts/lib",
+  "operatorEntrypoints": [
+    "scripts/release.mjs",
+    "scripts/release-evidence.mjs",
+    "scripts/release-state.mjs",
+    "scripts/release-observability.mjs",
+    "scripts/verify-release-receipt.mjs",
+    "scripts/qualify-runtime-state-backup.mjs"
+  ],
+  "fixtureAdapters": [
+    "scripts/tests/fixtures/migration-adapter-stub.mjs",
+    "scripts/tests/fixtures/reduced-downtime-adapter.mjs",
+    "scripts/tests/fixtures/vps-health-maintenance-adapter.mjs",
+    "scripts/tests/fixtures/phase10-release-adapter.mjs",
+    "scripts/tests/fixtures/phase9-disaster-recovery-adapter.mjs"
+  ],
+  "forbiddenDomainImports": [
+    "scripts/release.mjs",
+    "scripts/deploy-production.sh",
+    "scripts/deploy.sh",
+    "scripts/backup.sh",
+    "scripts/connectToServer.sh"
+  ],
+  "forbiddenFixtureBuiltins": [
+    "node:net",
+    "node:tls",
+    "node:dns",
+    "node:http",
+    "node:https",
+    "node:dgram",
+    "node:cluster"
+  ]
+}

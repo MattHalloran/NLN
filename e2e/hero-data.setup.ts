@@ -1,7 +1,10 @@
-import { CSRF, DEFAULT_SERVER_URLS, LOCAL_DEV_ORIGINS, REST_ROUTES } from "@local/shared";
+import { CSRF, REST_ROUTES } from "@local/shared";
 import { test as setup } from "./fixtures/auth";
 import { testHeroBanners, testHeroSettings } from "./fixtures/test-data";
 import { expect } from "@playwright/test";
+import { E2E_SERVER_ORIGIN, E2E_UI_ORIGIN } from "./fixtures/urls";
+
+const HERO_VARIANT_ID = "variant-homepage-official";
 
 /**
  * Hero Data Setup
@@ -14,12 +17,12 @@ setup("seed hero banner test data", async ({ authenticatedPage }) => {
 
     try {
         // Navigate to the app to ensure CSRF token is initialized
-        await authenticatedPage.goto(LOCAL_DEV_ORIGINS[0]);
+        await authenticatedPage.goto(E2E_UI_ORIGIN);
         await expect(authenticatedPage.locator("body")).toBeVisible();
 
         // Fetch CSRF token from the server
         const csrfResponse = await authenticatedPage.request.get(
-            `${DEFAULT_SERVER_URLS.localOrigin}${REST_ROUTES.csrfToken}`,
+            `${E2E_SERVER_ORIGIN}${REST_ROUTES.csrfToken}`,
             {
                 headers: {
                     "Content-Type": "application/json",
@@ -42,7 +45,7 @@ setup("seed hero banner test data", async ({ authenticatedPage }) => {
 
         // Use the authenticated page's request context which has the stored session
         const response = await authenticatedPage.request.put(
-            `${DEFAULT_SERVER_URLS.localOrigin}${REST_ROUTES.landingPage.root}`,
+            `${E2E_SERVER_ORIGIN}${REST_ROUTES.landingPage.root}?variantId=${HERO_VARIANT_ID}`,
             {
                 data: {
                     heroBanners: testHeroBanners,

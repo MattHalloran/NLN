@@ -2,6 +2,7 @@ import { test, expect } from "../../fixtures/auth";
 import { gotoAdminPage } from "../../fixtures/admin";
 import type { Page } from "@playwright/test";
 import { APP_LINKS, REST_ROUTES, stripApiPrefix } from "@local/shared";
+import { allowRuntimeIssue } from "../../fixtures/runtime-guard";
 
 /**
  * Simplified E2E Tests for Admin Contact Info Management
@@ -116,6 +117,14 @@ test.describe("Contact Info - Advanced Features", () => {
         const noteInput = authenticatedPage.locator('[data-testid^="note-input-"] input').last();
         await noteInput.fill(note);
 
+        allowRuntimeIssue(
+            authenticatedPage,
+            (issue) =>
+                (issue.kind === "response" &&
+                    issue.message.includes(stripApiPrefix(REST_ROUTES.landingPage.contactInfo)) &&
+                    issue.message.startsWith("500 ")) ||
+                (issue.kind === "console" && /status of 500/i.test(issue.message)),
+        );
         await authenticatedPage.route(
             `**${REST_ROUTES.landingPage.contactInfo}**`,
             async (route) => {
@@ -137,7 +146,10 @@ test.describe("Contact Info - Advanced Features", () => {
                 response.url().includes(stripApiPrefix(REST_ROUTES.landingPage.contactInfo)) &&
                 response.request().method() === "PUT",
         );
-        await authenticatedPage.getByTestId("save-changes-button").click();
+        const saveButton = authenticatedPage.getByTestId("save-changes-button");
+        await saveButton.scrollIntoViewIfNeeded();
+        await expect(saveButton).toBeVisible();
+        await saveButton.click();
 
         expect((await saveResponse).status()).toBe(500);
         await expect(

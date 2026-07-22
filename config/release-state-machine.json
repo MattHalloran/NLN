@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "contractId": "nln-release-state-machine-v1",
+  "productionIntegrationEnabled": false,
+  "states": [
+    { "id": "draft", "requiredReceiptTypes": [] },
+    { "id": "validated", "requiredReceiptTypes": ["trusted-validation-gate"] },
+    {
+      "id": "bundled",
+      "requiredReceiptTypes": ["trusted-validation-gate", "immutable-release-bundle"]
+    },
+    {
+      "id": "backup-qualified",
+      "requiredReceiptTypes": [
+        "trusted-validation-gate",
+        "immutable-release-bundle",
+        "runtime-state-backup-qualification"
+      ]
+    },
+    {
+      "id": "locally-verified",
+      "optional": true,
+      "requiredReceiptTypes": ["release-local-verification"]
+    },
+    { "id": "migration-qualified", "requiredReceiptTypes": ["migration-rollback-compatibility"] },
+    { "id": "health-qualified", "requiredReceiptTypes": ["vps-health-gate"] },
+    {
+      "id": "deploy-ready",
+      "requiredReceiptTypes": [
+        "trusted-validation-gate",
+        "immutable-release-bundle",
+        "runtime-state-backup-qualification",
+        "migration-rollback-compatibility",
+        "vps-health-gate"
+      ]
+    },
+    { "id": "activating", "runtimeOnly": true, "requiredReceiptTypes": ["release-prepare"] },
+    { "id": "deployed", "runtimeOnly": true, "requiredReceiptTypes": ["release-deploy"] },
+    {
+      "id": "known-good",
+      "runtimeOnly": true,
+      "requiredReceiptTypes": ["release-deploy", "last-known-good-release"]
+    }
+  ],
+  "failureStates": [
+    "blocked",
+    "activation-failed",
+    "recovered-by-app-rollback",
+    "recovery-required"
+  ]
+}

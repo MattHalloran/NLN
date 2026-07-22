@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "contractId": "nln-operational-vocabulary-v1",
+  "backupAssuranceStates": [
+    "captured",
+    "content-verified",
+    "database-restore-verified",
+    "application-restore-verified",
+    "qualified",
+    "encrypted-published",
+    "remote-download-verified",
+    "resilience-qualified"
+  ],
+  "commandEffectClasses": [
+    "local-read-only",
+    "local-fixture-mutation",
+    "external-read-only",
+    "production-read-only",
+    "production-copy-out",
+    "production-app-mutation",
+    "production-data-destructive",
+    "maintenance-mutation"
+  ],
+  "receiptStatuses": ["success", "failed", "planned", "recovered", "blocked"],
+  "receiptScopes": ["fixture", "local", "production"],
+  "recoveryTerms": {
+    "rollback-app": "Application-only rollback; database and protected runtime state are preserved.",
+    "restore-data": "Deliberate database or runtime-state restore with a declared data-loss boundary.",
+    "restore-disaster": "Clean-host disaster recovery.",
+    "rollback.sh": "Deprecated destructive legacy application-and-database recovery."
+  }
+}

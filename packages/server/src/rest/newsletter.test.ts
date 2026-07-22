@@ -14,6 +14,9 @@ describe("newsletter helpers", () => {
         expect(isValidNewsletterEmail("person@example.com")).toBe(true);
         expect(isValidNewsletterEmail("person@example")).toBe(false);
         expect(isValidNewsletterEmail("not an email")).toBe(false);
+        expect(isValidNewsletterEmail("person@@example.com")).toBe(false);
+        expect(isValidNewsletterEmail(`person@${"a".repeat(255)}.com`)).toBe(false);
+        expect(isValidNewsletterEmail(`!@!.${"!.".repeat(100_000)}`)).toBe(false);
     });
 
     it("builds subscriber filters from optional query params", () => {

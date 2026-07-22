@@ -80,6 +80,23 @@ docker-compose up -d
 # Adminer (DB): http://localhost:8081
 ```
 
+### Running Local Production
+
+Use this when you need the production-built UI and server running locally without touching the production VPS:
+
+```bash
+bash scripts/start-local-production.sh -v <VERSION>
+```
+
+This builds production artifacts with `VITE_API_BASE_URL=/api`, starts Docker with `docker-compose.local-production.yml`, and serves browser API traffic through the UI origin at `http://localhost:3001/api`. That same-origin path avoids local CORS drift and lets CSRF/auth cookies behave like the remote production proxy topology.
+
+```bash
+# Validate the local production browser runtime
+yarn test:e2e:production-local
+```
+
+The production-local gate checks public page loading, CSRF-backed newsletter signup, and admin login/session cookies. It uses local Docker only and does not run production SSH, backup, deploy, cleanup, update, prune, restart, or deletion commands.
+
 ### Verify Installation
 
 ```bash
@@ -116,28 +133,21 @@ Comprehensive documentation is available in the [`/docs`](docs) directory:
 
 ### Getting Started
 - [📖 Documentation Index](docs/README.md) - Central documentation hub
-- [🚀 Setup Guide](docs/getting-started/setup.md) - Detailed setup instructions
 - [⚙️ Environment Variables](ENVIRONMENT.md) - Complete env var reference (532 lines)
 
 ### Development
 - [💻 Testing Guide](TESTING.md) - Validation tiers and test commands
 - [🧪 Server Testing](packages/server/TESTING.md) - Server unit and integration tests
-- [🎭 E2E Testing](E2E_TESTING.md) - Playwright E2E test suite
-- [🐛 Debugging Guide](docs/development/debugging.md) - Debug techniques
+- [🎭 Lighthouse CI](docs/lighthouse-ci.md) - Public page performance and quality checks
 
 ### Architecture
 - [🏗️ System Overview](docs/architecture/overview.md) - Architecture and data flow
 - [🔌 REST API](docs/api/rest-api.md) - API endpoint reference
-- [🔐 Authentication](docs/api/authentication.md) - Auth system documentation
 
 ### Deployment
-- [🚀 Deployment Guide](DEPLOYMENT.md) - Production deployment (410 lines)
-- [🔒 Security Checklist](SECURITY_CHECKLIST.md) - Pre-deployment security (343 lines)
+- [🚀 Operations Hub](docs/README.md) - Current procedure, candidate workflow, recovery, and maintenance lanes
+- [📋 Release Runbook](docs/release-runbook.md) - Only current routine production procedure
 - [📧 Email Protection](docs/EMAIL_PROTECTION.md) - Development email safety
-
-### Contributing
-- [🤝 Contributing Guidelines](CONTRIBUTING.md) - How to contribute
-- [📋 Code Standards](docs/development/code-style.md) - Coding conventions
 
 ## Development Commands
 
@@ -151,17 +161,29 @@ yarn validate
 # Full local validation gate
 yarn validate:full
 
+# Browser validation gate
+yarn validate:browser
+
+# Stable public visitor E2E suite
+yarn test:e2e:public
+
+# Public-page visual regression snapshots
+yarn test:visual
+
 # Stable admin E2E suite
 yarn test:e2e:admin
+
+# Production-built local stack browser gate
+yarn test:e2e:production-local
+
+# Read-only smoke check for a deployed public URL
+yarn smoke:public https://<your-site>
 
 # Type checking
 yarn typecheck
 
 # Lint code
 yarn lint
-
-# Build for production
-yarn build
 
 # Start development servers
 yarn workspace ui start-development
@@ -170,15 +192,19 @@ yarn workspace server start-development
 
 ## Testing
 
-The project includes comprehensive test coverage:
+The project includes layered test coverage:
 
-- **Unit Tests**: 108+ tests with Vitest
-- **Integration Tests**: 158+ tests with Testcontainers (PostgreSQL, Redis)
-- **E2E Tests**: 29 tests with Playwright (admin panel workflows)
+- **Unit Tests**: Shared, UI, and server Vitest suites with coverage thresholds
+- **Integration Tests**: Server Vitest suites with Testcontainers-backed PostgreSQL and Redis
+- **Browser Tests**: Playwright public visitor flows, visual snapshots, stable admin flows, accessibility checks, and PWA checks
+- **Script Tests**: Bats coverage for backup, deploy, rollback, readiness, healthcheck, and migration safety
 
 ```bash
 # Run fast unit tests
 yarn test
+
+# Run the quick local quality gate
+yarn validate
 
 # Run full local validation
 yarn validate:full
@@ -194,12 +220,7 @@ See [Testing Guide](TESTING.md) for details.
 
 ## Deployment
 
-The project uses a two-phase deployment process:
-
-1. **Build Phase** (local machine) - `./scripts/build.sh`
-2. **Deploy Phase** (production server) - `./scripts/deploy.sh`
-
-See the [Deployment Guide](DEPLOYMENT.md) for complete instructions.
+Use the [Operations Hub](docs/README.md) to select the correct safety lane. The only routine production procedure is the [Release Runbook](docs/release-runbook.md), which uses `prepare-deploy-readiness.sh` followed by `deploy-production.sh`. Direct `deploy.sh` is advanced-only. Phase 10 `release` commands are candidate fixture/local tools and cannot execute against production.
 
 ### Key Deployment Features
 - ✅ Environment validation

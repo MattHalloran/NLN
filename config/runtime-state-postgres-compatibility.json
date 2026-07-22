@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "matrixId": "nln-runtime-state-postgres-compatibility-v1",
+  "productionMajor": 13,
+  "productionQualifiedImage": null,
+  "productionImageQualification": "deferred-phase11",
+  "adoption": {
+    "requireDigestPinnedImagesBeforeProductionUse": true,
+    "allowUnqualifiedMatrixCaseForProduction": false
+  },
+  "cases": [
+    {
+      "caseId": "pg13-dump-to-pg13-restore",
+      "dumpServerMajor": 13,
+      "dumpToolMajor": 13,
+      "restoreServerMajor": 13,
+      "fixtureImage": "postgres:13-alpine",
+      "classification": "required-current-production",
+      "required": true,
+      "evidence": "real-disposable-synthetic-restore"
+    },
+    {
+      "caseId": "pg13-dump-to-pg14-restore",
+      "dumpServerMajor": 13,
+      "dumpToolMajor": 13,
+      "restoreServerMajor": 14,
+      "fixtureImage": "postgres:14-alpine",
+      "classification": "exploratory-forward-restore",
+      "required": false,
+      "evidence": "pending"
+    },
+    {
+      "caseId": "pg13-dump-to-pg15-restore",
+      "dumpServerMajor": 13,
+      "dumpToolMajor": 13,
+      "restoreServerMajor": 15,
+      "fixtureImage": "postgres:15-alpine",
+      "classification": "exploratory-forward-restore",
+      "required": false,
+      "evidence": "pending"
+    }
+  ]
+}

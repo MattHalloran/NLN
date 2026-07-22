@@ -71,6 +71,7 @@ install_script_stubs() {
     HEALTHCHECK_SCRIPT="${BATS_TMPDIR}/healthcheck"
     BACKUP_SCRIPT="${BATS_TMPDIR}/backup"
     BUILD_SCRIPT="${BATS_TMPDIR}/build"
+    SMOKE_SCRIPT="./scripts/deploy-smoke.sh"
     YARN_CMD="${BATS_TMPDIR}/yarn"
 
     write_executable "${VALIDATE_ENV_SCRIPT}" '#!/usr/bin/env bash
@@ -99,6 +100,7 @@ echo "yarn:$*" >>"${DEPLOY_ORDER_LOG}"'
 }
 
 setup() {
+    rm -rf "${BATS_TMPDIR}"
     mkdir -p "${BATS_MOCK_BINDIR}" "${BATS_TMPDIR}/home/.ssh"
     export HOME="${BATS_TMPDIR}/home"
     export DEPLOY_ORDER_LOG="${BATS_TMPDIR}/order.log"
@@ -118,10 +120,12 @@ teardown() {
 run_deploy_production() {
     run env \
         DEPLOY_READINESS_RECEIPT_DIR="${DEPLOY_READINESS_RECEIPT_DIR}" \
+        DEPLOY_LOCK_PATH="${BATS_TMPDIR}/deploy-production.lock" \
         VALIDATE_ENV_SCRIPT="${VALIDATE_ENV_SCRIPT}" \
         HEALTHCHECK_SCRIPT="${HEALTHCHECK_SCRIPT}" \
         BACKUP_SCRIPT="${BACKUP_SCRIPT}" \
         BUILD_SCRIPT="${BUILD_SCRIPT}" \
+        SMOKE_SCRIPT="${SMOKE_SCRIPT}" \
         YARN_CMD="${YARN_CMD}" \
         VERSION_EXISTS="${VERSION_EXISTS:-false}" \
         HEALTH_FAIL="${HEALTH_FAIL:-false}" \
@@ -145,6 +149,7 @@ validation_command=${DEPLOY_VALIDATE_CMD:-validate:ci}
 validation_skipped=false
 rehearsal_skipped=false
 vps_skipped=false
+migration_rehearsal_skipped=false
 created_at=2026-06-20T12:00:00Z
 created_epoch=$(date -u +%s)
 EOF
@@ -154,7 +159,7 @@ EOF
     run_deploy_production
 
     assert_equal "$status" 0
-    expected=$'validate\nhealth\nssh:test ! -f \'/var/tmp/9.9.9/runtime-state/manifest.txt\'\nbackup:-e '"${ENV_FILE}"$' --preflight-only\nbackup:-e '"${ENV_FILE}"$' --verify-restore\nbuild:-v 9.9.9 -e '"${ENV_FILE}"$' -d y\nssh:cd \'/srv/app\' && ./scripts/deploy.sh -v \'9.9.9\'\nssh:docker ps --format \'table {{.Names}}\\t{{.Status}}\''
+    expected=$'validate\nhealth\nssh:test ! -f \'/var/tmp/9.9.9/runtime-state/manifest.txt\'\nbackup:-e '"${ENV_FILE}"$' --preflight-only\nbackup:-e '"${ENV_FILE}"$' --verify-restore\nbuild:-v 9.9.9 -e '"${ENV_FILE}"$' -d y\nssh:cd \'/srv/app\' && DEPLOY_VALIDATE_CMD=\'validate:ci\' ./scripts/deploy.sh -v \'9.9.9\'\nssh:cd \'/srv/app\' && ./scripts/deploy-smoke.sh -e .env-prod --admin\nssh:docker ps --format \'table {{.Names}}\\t{{.Status}}\''
     assert_equal "$(cat "${DEPLOY_ORDER_LOG}")" "${expected}"
     assert_output --partial "Deploy readiness receipt is fresh"
 }
@@ -165,10 +170,12 @@ EOF
 
     run env \
         DEPLOY_READINESS_RECEIPT_DIR="${DEPLOY_READINESS_RECEIPT_DIR}" \
+        DEPLOY_LOCK_PATH="${BATS_TMPDIR}/deploy-production.lock" \
         VALIDATE_ENV_SCRIPT="${VALIDATE_ENV_SCRIPT}" \
         HEALTHCHECK_SCRIPT="${HEALTHCHECK_SCRIPT}" \
         BACKUP_SCRIPT="${BACKUP_SCRIPT}" \
         BUILD_SCRIPT="${BUILD_SCRIPT}" \
+        SMOKE_SCRIPT="${SMOKE_SCRIPT}" \
         YARN_CMD="${YARN_CMD}" \
         DEPLOY_VALIDATE_CMD="${DEPLOY_VALIDATE_CMD}" \
         DEPLOY_ORDER_LOG="${DEPLOY_ORDER_LOG}" \
@@ -186,6 +193,18 @@ EOF
 
     assert_equal "$status" 1
     assert_output --partial "Deploy readiness receipt not found"
+    refute grep -q '^health' "${DEPLOY_ORDER_LOG}"
+    refute grep -q '^backup:' "${DEPLOY_ORDER_LOG}"
+    refute grep -q '^build:' "${DEPLOY_ORDER_LOG}"
+}
+
+@test "readiness receipt without restored-backup migration rehearsal blocks deployment" {
+    sed -i 's/^migration_rehearsal_skipped=false$/migration_rehearsal_skipped=true/' "${DEPLOY_READINESS_RECEIPT_DIR}/9.9.9.receipt"
+
+    run_deploy_production
+
+    assert_equal "$status" 1
+    assert_output --partial "did not include restored-backup migration rehearsal"
     refute grep -q '^health' "${DEPLOY_ORDER_LOG}"
     refute grep -q '^backup:' "${DEPLOY_ORDER_LOG}"
     refute grep -q '^build:' "${DEPLOY_ORDER_LOG}"
@@ -243,14 +262,44 @@ EOF
     refute grep -q '^build:' "${DEPLOY_ORDER_LOG}"
 }
 
-@test "skip-tests skips yarn only, not health or offsite backup" {
+@test "skip-tests requires explicit emergency bypass" {
     rm -f "${DEPLOY_READINESS_RECEIPT_DIR}/9.9.9.receipt"
 
     run_deploy_production --skip-tests
 
+    assert_equal "$status" 1
+    assert_output --partial "DEPLOY_ALLOW_UNVALIDATED=true"
+    refute grep -q '^health' "${DEPLOY_ORDER_LOG}"
+    refute grep -q '^backup:' "${DEPLOY_ORDER_LOG}"
+}
+
+@test "emergency skip-tests bypass skips readiness only, not health or offsite backup" {
+    rm -f "${DEPLOY_READINESS_RECEIPT_DIR}/9.9.9.receipt"
+
+    run env \
+        DEPLOY_ALLOW_UNVALIDATED=true \
+        DEPLOY_READINESS_RECEIPT_DIR="${DEPLOY_READINESS_RECEIPT_DIR}" \
+        VALIDATE_ENV_SCRIPT="${VALIDATE_ENV_SCRIPT}" \
+        HEALTHCHECK_SCRIPT="${HEALTHCHECK_SCRIPT}" \
+        BACKUP_SCRIPT="${BACKUP_SCRIPT}" \
+        BUILD_SCRIPT="${BUILD_SCRIPT}" \
+        SMOKE_SCRIPT="${SMOKE_SCRIPT}" \
+        YARN_CMD="${YARN_CMD}" \
+        VERSION_EXISTS="${VERSION_EXISTS:-false}" \
+        HEALTH_FAIL="${HEALTH_FAIL:-false}" \
+        BACKUP_PREFLIGHT_FAIL="${BACKUP_PREFLIGHT_FAIL:-false}" \
+        BACKUP_FAIL="${BACKUP_FAIL:-false}" \
+        DEPLOY_ORDER_LOG="${DEPLOY_ORDER_LOG}" \
+        GIT_AHEAD="${GIT_AHEAD:-0}" \
+        GIT_BEHIND="${GIT_BEHIND:-0}" \
+        GIT_CHANGES="${GIT_CHANGES:-}" \
+        GIT_COMMIT="${GIT_COMMIT:-abc123}" \
+        GIT_NO_UPSTREAM="${GIT_NO_UPSTREAM:-false}" \
+        "$SCRIPT_PATH" -v 9.9.9 -e "$ENV_FILE" --skip-tests
+
     assert_equal "$status" 0
     refute grep -q '^yarn:' "${DEPLOY_ORDER_LOG}"
-    assert_output --partial "Skipping validation/readiness receipt gate"
+    assert_output --partial "Emergency validation/readiness receipt bypass enabled"
     grep -q '^health$' "${DEPLOY_ORDER_LOG}"
     grep -q '^backup:.*--preflight-only' "${DEPLOY_ORDER_LOG}"
     grep -q '^backup:.*--verify-restore' "${DEPLOY_ORDER_LOG}"
@@ -328,9 +377,42 @@ EOF
     grep -q 'verify_deploy_manifest' "$BATS_TEST_DIRNAME/../deploy.sh"
 }
 
+@test "deploy validates transferred readiness receipt before staging and downtime" {
+    grep -q 'TRANSFERRED_READINESS_RECEIPT="${TMP_DIR}/deploy-readiness.receipt"' "$BATS_TEST_DIRNAME/../deploy.sh"
+    grep -q 'deploy_verify_readiness_receipt_file' "$BATS_TEST_DIRNAME/../deploy.sh"
+    manifest_line=$(grep -n '^verify_deploy_manifest$' "$BATS_TEST_DIRNAME/../deploy.sh" | tail -n 1 | cut -d: -f1)
+    receipt_line=$(grep -n '^verify_transferred_readiness_receipt$' "$BATS_TEST_DIRNAME/../deploy.sh" | tail -n 1 | cut -d: -f1)
+    stage_line=$(grep -n '^stage_artifacts$' "$BATS_TEST_DIRNAME/../deploy.sh" | tail -n 1 | cut -d: -f1)
+    backup_line=$(grep -n '^create_runtime_state_backup$' "$BATS_TEST_DIRNAME/../deploy.sh" | tail -n 1 | cut -d: -f1)
+    [ "${manifest_line}" -lt "${receipt_line}" ]
+    [ "${receipt_line}" -lt "${stage_line}" ]
+    [ "${receipt_line}" -lt "${backup_line}" ]
+}
+
+@test "deploy records remote downtime from docker-compose down through public endpoint verification" {
+    grep -q 'DOWNTIME_TIMING_RECEIPT="${TMP_DIR}/deploy-downtime.receipt"' "$BATS_TEST_DIRNAME/../deploy.sh"
+    grep -q '^mark_downtime_start$' "$BATS_TEST_DIRNAME/../deploy.sh"
+    grep -q '^write_downtime_receipt$' "$BATS_TEST_DIRNAME/../deploy.sh"
+    grep -q 'downtime_seconds=' "$BATS_TEST_DIRNAME/../deploy.sh"
+
+    start_line=$(grep -n '^mark_downtime_start$' "$BATS_TEST_DIRNAME/../deploy.sh" | tail -n 1 | cut -d: -f1)
+    down_line=$(grep -n 'docker-compose --env-file "${TMP_DIR}/.env-prod" -f "${HERE}/../docker-compose-prod.yml" down' "$BATS_TEST_DIRNAME/../deploy.sh" | tail -n 1 | cut -d: -f1)
+    public_line=$(grep -n '^verify_public_endpoints$' "$BATS_TEST_DIRNAME/../deploy.sh" | tail -n 1 | cut -d: -f1)
+    receipt_line=$(grep -n '^write_downtime_receipt$' "$BATS_TEST_DIRNAME/../deploy.sh" | tail -n 1 | cut -d: -f1)
+
+    [ "${start_line}" -lt "${down_line}" ]
+    [ "${public_line}" -lt "${receipt_line}" ]
+}
+
 @test "build transfers env file explicitly as .env-prod and sends checksum manifest" {
     grep -q 'deploy-manifest.sha256' "$BATS_TEST_DIRNAME/../build.sh"
     grep -q '"root@${BUILD_DIR}.env-prod"' "$BATS_TEST_DIRNAME/../build.sh"
+}
+
+@test "build includes readiness receipt in transferred checksum manifest when present" {
+    grep -q 'deploy-readiness.receipt' "$BATS_TEST_DIRNAME/../build.sh"
+    grep -q 'READINESS_RECEIPT_SOURCE="$(deploy_receipt_path "${HERE}/.." "${VERSION}")"' "$BATS_TEST_DIRNAME/../build.sh"
+    grep -q 'MANIFEST_INPUTS+=("$(basename "${READINESS_RECEIPT_FILE}")")' "$BATS_TEST_DIRNAME/../build.sh"
 }
 
 @test "production deploy no longer runs setup.sh host mutation" {
@@ -355,6 +437,18 @@ EOF
     grep -q 'verify_public_endpoints' "$BATS_TEST_DIRNAME/../deploy.sh"
     grep -q 'curl -fsS "${ui_url}"' "$BATS_TEST_DIRNAME/../deploy.sh"
     grep -q 'curl -fsS "${server_health_url}"' "$BATS_TEST_DIRNAME/../deploy.sh"
+}
+
+@test "production wrapper runs post-deploy smoke before final container inventory" {
+    grep -q 'Running post-deploy smoke checks' "$SCRIPT_PATH"
+    grep -q '\${SMOKE_SCRIPT} -e .env-prod' "$SCRIPT_PATH"
+
+    run_deploy_production
+
+    assert_equal "$status" 0
+    smoke_line=$(grep -n "deploy-smoke.sh" "${DEPLOY_ORDER_LOG}" | cut -d: -f1)
+    inventory_line=$(grep -n "docker ps --format" "${DEPLOY_ORDER_LOG}" | tail -n 1 | cut -d: -f1)
+    [ "${smoke_line}" -lt "${inventory_line}" ]
 }
 
 @test "deploy snapshots previous images before loading new images" {
@@ -389,4 +483,15 @@ EOF
 @test "migration risk checks are part of drift gate" {
     grep -q 'scripts/check-migrations.sh' "$BATS_TEST_DIRNAME/../../package.json"
     "$BATS_TEST_DIRNAME/../check-migrations.sh" >/dev/null
+}
+
+@test "production wrapper writes deploy timing receipt" {
+    run_deploy_production
+
+    assert_equal "$status" 0
+    receipt="$BATS_TEST_DIRNAME/../../.validation/deploy-9.9.9.json"
+    [ -f "$receipt" ]
+    grep -q '"version": "9.9.9"' "$receipt"
+    grep -q '"status": "success"' "$receipt"
+    grep -q '"phase": "Creating mandatory offsite backup"' "$receipt"
 }

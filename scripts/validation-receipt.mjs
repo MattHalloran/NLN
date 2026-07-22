@@ -49,9 +49,12 @@ const unitCoverageArtifacts = coverageSummaries
 const allCoverageArtifacts = coverageSummaries.map(([, relativePath]) => relativePath);
 
 const playwrightResults = [
+    ["public e2e", "test-results/public.json"],
+    ["visual e2e", "test-results/visual.json"],
     ["admin e2e", "test-results/admin.json"],
     ["accessibility e2e", "test-results/accessibility.json"],
     ["pwa", "test-results/pwa.json"],
+    ["production e2e", "test-results/production.json"],
     ["smoke e2e", "test-results/smoke.json"],
 ];
 
@@ -73,7 +76,13 @@ const expectedArtifactsByCommand = [
     },
     {
         pattern: /validate:release|validate:full|validate:trusted|ci e2e job/i,
-        artifacts: ["test-results/admin.json", "test-results/accessibility.json"],
+        artifacts: [
+            "test-results/public.json",
+            "test-results/visual.json",
+            "test-results/admin.json",
+            "test-results/accessibility.json",
+            "test-results/production.json",
+        ],
     },
     {
         pattern: /validate:release|ci validate job/i,
@@ -204,8 +213,10 @@ const lines = [
     "",
 ];
 
-fs.mkdirSync(outputDir, { recursive: true });
+fs.mkdirSync(outputDir, { recursive: true, mode: 0o700 });
+fs.chmodSync(outputDir, 0o700);
 fs.writeFileSync(outputPath, `${lines.join("\n")}\n`, "utf8");
+fs.chmodSync(outputPath, 0o600);
 
 console.log(`Validation receipt written to ${outputPath}`);
 

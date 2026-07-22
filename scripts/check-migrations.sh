@@ -10,9 +10,13 @@ if [ ! -d "${MIGRATION_ROOT}" ]; then
     exit 1
 fi
 
+scanned_files=0
+destructive_files=0
+marked_destructive_files=0
 failures=0
 
 while IFS= read -r migration_file; do
+    scanned_files=$((scanned_files + 1))
     risky_lines=$(grep -nEi \
         '(^|[[:space:];])(DROP[[:space:]]+(TABLE|COLUMN|SCHEMA|DATABASE)|TRUNCATE[[:space:]]+TABLE|DELETE[[:space:]]+FROM|ALTER[[:space:]]+TABLE.*ALTER[[:space:]]+COLUMN.*(TYPE|SET[[:space:]]+NOT[[:space:]]+NULL)|ALTER[[:space:]]+TABLE.*RENAME[[:space:]]+COLUMN)' \
         "${migration_file}" || true)
@@ -21,8 +25,12 @@ while IFS= read -r migration_file; do
         continue
     fi
 
+    destructive_files=$((destructive_files + 1))
+
     if grep -Fq "${ALLOW_MARKER}" "${migration_file}"; then
+        marked_destructive_files=$((marked_destructive_files + 1))
         echo "Allowed destructive migration marker found in ${migration_file}"
+        echo "Destructive migration still requires release notes/runbook sign-off and rollback implications review."
         continue
     fi
 
@@ -33,7 +41,9 @@ while IFS= read -r migration_file; do
 done < <(find "${MIGRATION_ROOT}" -mindepth 2 -maxdepth 2 -name migration.sql -print | sort)
 
 if [ "${failures}" -gt 0 ]; then
+    echo "Migration risk summary: scanned=${scanned_files} destructive=${destructive_files} marked_destructive=${marked_destructive_files} failures=${failures}" >&2
     exit 1
 fi
 
+echo "Migration risk summary: scanned=${scanned_files} destructive=${destructive_files} marked_destructive=${marked_destructive_files} failures=${failures}"
 echo "Migration risk checks passed."

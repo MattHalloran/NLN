@@ -1,5 +1,6 @@
 import fs from "fs";
 import http from "http";
+import https from "https";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -11,6 +12,30 @@ const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
 const publicDir = path.resolve(rootDir, config.public ?? "dist");
 const port = Number(process.env.PORT || process.env.PORT_UI || 3001);
 const host = process.env.HOST || "127.0.0.1";
+export const parseProxyApiTarget = (value) => {
+    if (!value) return null;
+    const target = new URL(value);
+    if (!["http:", "https:"].includes(target.protocol)) {
+        throw new Error("PROXY_API_TARGET must use HTTP or HTTPS");
+    }
+    if (target.username || target.password || target.search || target.hash) {
+        throw new Error("PROXY_API_TARGET must not contain credentials, a query, or a fragment");
+    }
+    if (target.pathname !== "/") {
+        throw new Error("PROXY_API_TARGET must be an origin without a path");
+    }
+    return target;
+};
+const proxyApiTarget = parseProxyApiTarget(process.env.PROXY_API_TARGET);
+
+export const buildProxyRequestTarget = (requestUrl, configuredTarget) => {
+    const incoming = new URL(requestUrl ?? "/", "http://local.invalid");
+    if (!incoming.pathname.startsWith("/api/")) return null;
+    const target = new URL(configuredTarget.origin);
+    target.pathname = incoming.pathname;
+    target.search = incoming.search;
+    return target;
+};
 
 const mimeTypes = new Map([
     [".br", "application/octet-stream"],
@@ -83,7 +108,44 @@ const resolveRequestPath = (url) => {
     return { filePath, requestPath: relativePath };
 };
 
+const proxyApiRequest = (request, response) => {
+    if (!proxyApiTarget) return false;
+
+    const target = buildProxyRequestTarget(request.url, proxyApiTarget);
+    if (!target) return false;
+    const transport = target.protocol === "https:" ? https : http;
+    const proxyRequest = transport.request(
+        target,
+        {
+            method: request.method,
+            headers: {
+                ...request.headers,
+                host: target.host,
+            },
+        },
+        (proxyResponse) => {
+            response.writeHead(proxyResponse.statusCode ?? 502, proxyResponse.headers);
+            proxyResponse.pipe(response);
+        },
+    );
+
+    proxyRequest.on("error", (error) => {
+        console.error(`API proxy error: ${error.message}`);
+        if (!response.headersSent) {
+            response.writeHead(502, { "Content-Type": "text/plain; charset=utf-8" });
+        }
+        response.end("Bad gateway");
+    });
+
+    request.pipe(proxyRequest);
+    return true;
+};
+
 const server = http.createServer((request, response) => {
+    if (new URL(request.url ?? "/", "http://localhost").pathname.startsWith("/api/")) {
+        if (proxyApiRequest(request, response)) return;
+    }
+
     const resolved = resolveRequestPath(request.url ?? "/");
     if (!resolved || !fs.existsSync(resolved.filePath)) {
         response.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
@@ -111,6 +173,11 @@ server.on("error", (error) => {
     process.exitCode = 1;
 });
 
-server.listen(port, host, () => {
-    console.log(`Serving ${publicDir} on http://${host}:${port}`);
-});
+if (process.argv[1] && path.resolve(process.argv[1]) === __filename) {
+    server.listen(port, host, () => {
+        console.log(`Serving ${publicDir} on http://${host}:${port}`);
+        if (proxyApiTarget) {
+            console.log(`Proxying /api to ${proxyApiTarget}`);
+        }
+    });
+}

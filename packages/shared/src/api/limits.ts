@@ -25,6 +25,7 @@ export const CLEANUP_LIMITS = {
 export const UPLOAD_LIMITS = {
     maxUploadFileSizeBytes: 10 * 1024 * 1024,
     maxImageFilesPerRequest: 15,
+    maxUploadTextFieldsPerRequest: 64,
 } as const;
 
 export const IMAGE_PROCESSING_LIMITS = {

@@ -673,9 +673,30 @@ Get admin dashboard statistics (Admin only).
 
 ## Rate Limiting
 
-Currently no rate limiting is enforced. Future versions may implement:
-- 100 requests per minute per IP
-- 1000 requests per hour per authenticated user
+REST API traffic is rate limited by client identity. In production, the server
+trusts the configured reverse-proxy hop count, resolves the real client address
+through Express, and stores limiter counters in Redis with explicit limiter
+prefixes.
+
+Current per-client limits:
+- Public `GET`/`HEAD` REST reads: 600 requests per 15 minutes
+- General state-changing REST requests: 100 requests per 15 minutes
+- Login attempts: 5 requests per 15 minutes in production, 20 in development
+- Password reset requests: 3 requests per hour
+- Signup requests: 3 requests per hour
+- Image upload requests: 25 requests per 15 minutes
+- Image upload file count: 100 files per 15 minutes
+- Newsletter subscribe requests: 5 requests per hour
+
+Image upload requests are guarded before expensive processing. The upload
+request limiter runs before multipart parsing, the parser enforces maximum file
+size, file count, and text field count, and the file-count limiter runs after
+parsing but before image processing.
+
+The response uses standard `RateLimit-*` headers when a standard request
+limiter applies. Exceeded limits return `429` with the shared
+`RateLimitExceeded` error code, except image file-count limits, which return the
+file-count-specific error code and upload guidance.
 
 ## Caching
 

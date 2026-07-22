@@ -299,6 +299,15 @@ describe("Landing Page API Integration Tests", () => {
             expect(res.headers).toHaveProperty("etag");
             expect(res.headers).toHaveProperty("last-modified");
         });
+
+        it("should not cache full admin content reads", async () => {
+            const res = await request(app).get(
+                `${REST_ROUTES.landingPage.root}?onlyActive=false&abTest=false`
+            );
+
+            expect(res.status).toBe(200);
+            expect(res.headers["cache-control"]).toBe("no-store");
+        });
     });
 
     describe("PUT /api/rest/v1/landing-page", () => {

@@ -8,7 +8,9 @@ const swDest = "./dist/service-worker.js";
 
 const copyFile = promisify(fs.copyFile);
 const mkdir = promisify(fs.mkdir);
+const readFile = promisify(fs.readFile);
 const rm = promisify(fs.rm);
+const writeFile = promisify(fs.writeFile);
 
 const WORKBOX_MODULES = [
     "workbox-core",
@@ -53,6 +55,14 @@ async function copyWorkboxRuntime() {
 async function buildServiceWorker() {
     // Copy the service worker template to the dist folder
     await copyFile(swSrc, swDest);
+    const serviceWorkerSource = await readFile(swDest, "utf8");
+    await writeFile(
+        swDest,
+        serviceWorkerSource.replace(
+            "__ENABLE_LOCAL_PWA__",
+            JSON.stringify(process.env.VITE_ENABLE_LOCAL_PWA === "true"),
+        ),
+    );
     await copyFile("./dist/manifest.json", "./dist/site.webmanifest");
     await copyWorkboxRuntime();
 

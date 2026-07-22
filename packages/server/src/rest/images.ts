@@ -1,15 +1,25 @@
 import { Router, Request, Response } from "express";
 import { CODE, MAX_IMAGE_STORAGE_MB, REST_CHILD_PATHS, UPLOAD_LIMITS } from "@local/shared";
 import { CustomError } from "../error.js";
-import { saveImage, deleteImage, checkImageUsage } from "../utils/index.js";
+import {
+    saveImage,
+    deleteImage,
+    checkImageUsage,
+    isKnownImageLabel,
+    removeImageLabelRelation,
+} from "../utils/index.js";
 import { logger, LogLevel } from "../logger.js";
 import { auditAdminAction, AuditEventType } from "../utils/auditLogger.js";
-import { imageUploadLimiter, imageFileCountLimiter } from "../middleware/rateLimiter.js";
+import { createRateLimiters, type RateLimiters } from "../middleware/rateLimiter.js";
 import fs from "fs";
 import path from "path";
 import { ASSETS_DIR, IMAGE_ASSETS_DIR } from "../config/paths.js";
 
-const router = Router();
+type ImagesRouterLimiters = Pick<RateLimiters, "imageFileCountLimiter">;
+
+export type ImagesRouterOptions = {
+    limiters?: ImagesRouterLimiters;
+};
 
 type ImageUpdate = {
     hash: string;
@@ -21,6 +31,45 @@ type ImageUpdate = {
 type ImageWithFilteredLabels<TImage> = TImage & {
     image_labels: Array<{ index: number | null }>;
 };
+
+function optionalString(value: unknown, field: string): string | undefined {
+    if (value === undefined || value === null || value === "") {
+        return undefined;
+    }
+    if (typeof value !== "string") {
+        throw new TypeError(`${field} must be a string`);
+    }
+    return value;
+}
+
+function optionalStringArray(value: unknown, field: string): string[] {
+    if (value === undefined || value === null || value === "") {
+        return [];
+    }
+    if (typeof value === "string") {
+        return [value];
+    }
+    if (Array.isArray(value) && value.every((entry) => typeof entry === "string")) {
+        return value;
+    }
+    throw new TypeError(`${field} must be a string or an array of strings`);
+}
+
+export function parseImageUploadInput(body: unknown): {
+    label?: string;
+    alts: string[];
+    descriptions: string[];
+} {
+    if (body === null || typeof body !== "object" || Array.isArray(body)) {
+        throw new TypeError("Upload body must be an object");
+    }
+    const input = body as Record<string, unknown>;
+    return {
+        label: optionalString(input.label, "label"),
+        alts: optionalStringArray(input.alts, "alts"),
+        descriptions: optionalStringArray(input.descriptions, "descriptions"),
+    };
+}
 
 export function estimateImageUploadSizeMB(files: Array<{ size: number }>): number {
     return files.reduce((total, file) => total + (file.size / (1024 * 1024)) * 3.5, 0);
@@ -69,496 +118,574 @@ function calculateCurrentStorageMB(): number {
     }
 }
 
-/**
- * GET /api/rest/v1/images?label=:label
- * Get images by label
- */
-router.get("/", async (req: Request, res: Response) => {
-    try {
-        const { label } = req.query;
-        const { prisma } = req;
+export function createImagesRouter(options: ImagesRouterOptions = {}): Router {
+    const router = Router();
+    const defaultLimiters = options.limiters ? undefined : createRateLimiters();
+    const { imageFileCountLimiter } = options.limiters ?? defaultLimiters!;
 
-        if (!label || typeof label !== "string") {
-            return res.status(400).json({ error: "Label parameter required" });
-        }
+    /**
+     * GET /api/rest/v1/images?label=:label
+     * Get images by label
+     */
+    router.get("/", async (req: Request, res: Response) => {
+        try {
+            const { label } = req.query;
+            const { prisma } = req;
 
-        if (!prisma) {
-            return res.status(500).json({ error: "Database connection not available" });
-        }
+            if (!label || typeof label !== "string") {
+                return res.status(400).json({ error: "Label parameter required" });
+            }
 
-        // Optimized: Single query with join and sorting
-        // Get all images with the specified label, sorted by index
-        const images = await prisma.image.findMany({
-            where: {
-                image_labels: {
-                    some: { label },
-                },
-            },
-            select: {
-                hash: true,
-                alt: true,
-                description: true,
-                files: {
-                    select: {
-                        src: true,
-                        width: true,
-                        height: true,
+            if (!prisma) {
+                return res.status(500).json({ error: "Database connection not available" });
+            }
+
+            // Optimized: Single query with join and sorting
+            // Get all images with the specified label, sorted by index
+            const images = await prisma.image.findMany({
+                where: {
+                    image_labels: {
+                        some: { label },
                     },
                 },
-                image_labels: {
-                    where: { label },
-                    select: { index: true },
+                select: {
+                    hash: true,
+                    alt: true,
+                    description: true,
+                    files: {
+                        select: {
+                            src: true,
+                            width: true,
+                            height: true,
+                        },
+                    },
+                    image_labels: {
+                        where: { label },
+                        select: { index: true },
+                    },
                 },
-            },
-        });
-
-        // Sort by the label's index (extracted from the filtered image_labels)
-        // Each image should have exactly one matching label after filtering
-        const imageData = sortImagesByLabelIndex(images);
-
-        return res.json(imageData);
-    } catch (error) {
-        logger.log(LogLevel.error, "Get images error:", error);
-        return res.status(500).json({ error: "Failed to get images" });
-    }
-});
-
-/**
- * POST /api/rest/v1/images
- * Add images (admin only, multipart/form-data)
- * Rate limited: 25 upload requests per 15 minutes
- * Max files per request: 15
- */
-router.post("/", imageUploadLimiter, imageFileCountLimiter, async (req: Request, res: Response) => {
-    try {
-        const { isAdmin } = req;
-
-        // Must be admin
-        if (!isAdmin) {
-            throw new CustomError(CODE.Unauthorized);
-        }
-
-        type MulterRequest = Request & { files?: Express.Multer.File[] };
-        const files = (req as MulterRequest).files || [];
-        const { label, alts, descriptions } = req.body as {
-            label?: string;
-            alts?: string | string[];
-            descriptions?: string | string[];
-        };
-
-        if (!files || files.length === 0) {
-            return res.status(400).json({ error: "No files provided" });
-        }
-
-        // Limit files per request to prevent resource exhaustion
-        // Each image generates 16 variants (8 sizes × 2 formats)
-        const MAX_FILES_PER_REQUEST = UPLOAD_LIMITS.maxImageFilesPerRequest;
-        if (files.length > MAX_FILES_PER_REQUEST) {
-            logger.log(
-                LogLevel.warn,
-                `Upload rejected: ${files.length} files exceeds limit of ${MAX_FILES_PER_REQUEST}`
-            );
-            return res.status(400).json({
-                error: `Too many files in single request. Maximum ${MAX_FILES_PER_REQUEST} files per upload.`,
-                filesProvided: files.length,
-                maxAllowed: MAX_FILES_PER_REQUEST,
-                tip: "Split your upload into multiple batches.",
             });
+
+            // Sort by the label's index (extracted from the filtered image_labels)
+            // Each image should have exactly one matching label after filtering
+            const imageData = sortImagesByLabelIndex(images);
+
+            return res.json(imageData);
+        } catch (error) {
+            logger.log(LogLevel.error, "Get images error:", error);
+            return res.status(500).json({ error: "Failed to get images" });
         }
+    });
 
-        // Check storage quota before processing upload
-        const currentStorageMB = calculateCurrentStorageMB();
+    /**
+     * POST /api/rest/v1/images
+     * Add images (admin only, multipart/form-data)
+     * Request-rate limited before multipart parsing in the parent REST router.
+     * Max files per request: 15
+     */
+    router.post("/", imageFileCountLimiter, async (req: Request, res: Response) => {
+        try {
+            const { isAdmin } = req;
 
-        // Calculate estimated upload size based on actual file sizes
-        // Each image generates up to 16 variants (8 sizes × 2 formats: original + WebP)
-        // Typical multiplier: 2.5-3x original size for all variants
-        // We use 3.5x to remain conservative while being more realistic than 100MB flat rate
-        const estimatedUploadSizeMB = estimateImageUploadSizeMB(files);
-
-        const projectedStorageMB = currentStorageMB + estimatedUploadSizeMB;
-
-        if (projectedStorageMB > MAX_IMAGE_STORAGE_MB) {
-            logger.log(
-                LogLevel.warn,
-                `Upload rejected: Storage quota exceeded (current: ${currentStorageMB}MB, estimated upload: ${estimatedUploadSizeMB}MB, quota: ${MAX_IMAGE_STORAGE_MB}MB)`
-            );
-            return res.status(507).json({
-                error: "Insufficient storage: Upload would exceed storage quota",
-                currentStorageMB: Math.round(currentStorageMB),
-                estimatedUploadSizeMB,
-                quotaMB: MAX_IMAGE_STORAGE_MB,
-                availableMB: Math.round(MAX_IMAGE_STORAGE_MB - currentStorageMB),
-                tip: "Delete unused images or contact administrator to increase quota.",
-            });
-        }
-
-        const labels = label ? [label] : [];
-        const altArray = alts ? (Array.isArray(alts) ? alts : [alts]) : [];
-        const descArray = descriptions
-            ? Array.isArray(descriptions)
-                ? descriptions
-                : [descriptions]
-            : [];
-
-        const results = [];
-
-        // Loop through every image passed in
-        for (let i = 0; i < files.length; i++) {
-            const file: Express.Multer.File | undefined = files[i];
-            if (file) {
-                const result = await saveImage({
-                    file,
-                    alt: altArray[i],
-                    description: descArray[i],
-                    labels,
-                    errorOnDuplicate: false,
-                });
-                results.push(result);
+            // Must be admin
+            if (!isAdmin) {
+                throw new CustomError(CODE.Unauthorized);
             }
-        }
 
-        // Audit log: image upload
-        auditAdminAction(req, AuditEventType.ADMIN_IMAGE_UPLOAD, "images", undefined, {
-            uploadedCount: results.filter((r) => r.success).length,
-            label,
-        });
+            type MulterRequest = Request & { files?: unknown };
+            const uploadedFiles = (req as MulterRequest).files;
+            if (uploadedFiles !== undefined && !Array.isArray(uploadedFiles)) {
+                return res.status(400).json({ error: "Invalid uploaded files" });
+            }
+            const files = (uploadedFiles ?? []) as Express.Multer.File[];
+            let fileCount = 0;
+            for (const _file of files) {
+                fileCount += 1;
+            }
+            const {
+                label,
+                alts: altArray,
+                descriptions: descArray,
+            } = parseImageUploadInput(req.body);
 
-        return res.json(results);
-    } catch (error) {
-        logger.log(LogLevel.error, "Add images error:", error);
-        if (error instanceof CustomError) {
-            return res.status(401).json({ error: error.message, code: error.code });
-        }
-        return res.status(500).json({ error: "Failed to add images" });
-    }
-});
+            if (fileCount === 0) {
+                return res.status(400).json({ error: "No files provided" });
+            }
 
-/**
- * PUT /api/rest/v1/images
- * Update images (admin only)
- */
-router.put("/", async (req: Request, res: Response) => {
-    try {
-        const { images } = req.body as { images?: unknown };
-        const { prisma, isAdmin } = req;
-
-        // Must be admin
-        if (!isAdmin) {
-            throw new CustomError(CODE.Unauthorized);
-        }
-        if (!prisma) {
-            return res.status(500).json({ error: "Database connection not available" });
-        }
-
-        if (!Array.isArray(images)) {
-            return res.status(400).json({ error: "Images array required" });
-        }
-
-        const imageUpdates = images as ImageUpdate[];
-
-        // Loop through update data passed in
-        for (let i = 0; i < imageUpdates.length; i++) {
-            const curr = imageUpdates[i];
-
-            if (curr.label) {
-                // Update position in label
-                await prisma.image_labels.update({
-                    where: { hash_label: { hash: curr.hash, label: curr.label } },
-                    data: { index: i },
+            // Limit files per request to prevent resource exhaustion
+            // Each image generates 16 variants (8 sizes × 2 formats)
+            const MAX_FILES_PER_REQUEST = UPLOAD_LIMITS.maxImageFilesPerRequest;
+            if (fileCount > MAX_FILES_PER_REQUEST) {
+                logger.log(
+                    LogLevel.warn,
+                    `Upload rejected: ${fileCount} files exceeds limit of ${MAX_FILES_PER_REQUEST}`
+                );
+                return res.status(400).json({
+                    error: `Too many files in single request. Maximum ${MAX_FILES_PER_REQUEST} files per upload.`,
+                    filesProvided: fileCount,
+                    maxAllowed: MAX_FILES_PER_REQUEST,
+                    tip: "Split your upload into multiple batches.",
                 });
             }
 
-            // Update alt and description
-            await prisma.image.update({
-                where: { hash: curr.hash },
-                data: {
-                    alt: curr.alt,
-                    description: curr.description,
-                },
+            // Check storage quota before processing upload
+            const currentStorageMB = calculateCurrentStorageMB();
+
+            // Calculate estimated upload size based on actual file sizes
+            // Each image generates up to 16 variants (8 sizes × 2 formats: original + WebP)
+            // Typical multiplier: 2.5-3x original size for all variants
+            // We use 3.5x to remain conservative while being more realistic than 100MB flat rate
+            const estimatedUploadSizeMB = estimateImageUploadSizeMB(files);
+
+            const projectedStorageMB = currentStorageMB + estimatedUploadSizeMB;
+
+            if (projectedStorageMB > MAX_IMAGE_STORAGE_MB) {
+                logger.log(
+                    LogLevel.warn,
+                    `Upload rejected: Storage quota exceeded (current: ${currentStorageMB}MB, estimated upload: ${estimatedUploadSizeMB}MB, quota: ${MAX_IMAGE_STORAGE_MB}MB)`
+                );
+                return res.status(507).json({
+                    error: "Insufficient storage: Upload would exceed storage quota",
+                    currentStorageMB: Math.round(currentStorageMB),
+                    estimatedUploadSizeMB,
+                    quotaMB: MAX_IMAGE_STORAGE_MB,
+                    availableMB: Math.round(MAX_IMAGE_STORAGE_MB - currentStorageMB),
+                    tip: "Delete unused images or contact administrator to increase quota.",
+                });
+            }
+
+            const labels = label ? [label] : [];
+
+            const results = [];
+
+            // Loop through every image passed in
+            let i = 0;
+            for (const file of files) {
+                if (file) {
+                    const result = await saveImage({
+                        file,
+                        alt: altArray[i],
+                        description: descArray[i],
+                        labels,
+                        errorOnDuplicate: false,
+                    });
+                    results.push(result);
+                }
+                i += 1;
+            }
+
+            // Audit log: image upload
+            auditAdminAction(req, AuditEventType.ADMIN_IMAGE_UPLOAD, "images", undefined, {
+                uploadedCount: results.filter((r) => r.success).length,
+                label,
             });
+
+            return res.json(results);
+        } catch (error) {
+            logger.log(LogLevel.error, "Add images error:", error);
+            if (error instanceof TypeError) {
+                return res.status(400).json({ error: error.message });
+            }
+            if (error instanceof CustomError) {
+                return res.status(401).json({ error: error.message, code: error.code });
+            }
+            return res.status(500).json({ error: "Failed to add images" });
         }
+    });
 
-        // Audit log: image update
-        auditAdminAction(req, AuditEventType.ADMIN_IMAGE_UPDATE, "images", undefined, {
-            updatedCount: imageUpdates.length,
-        });
+    /**
+     * PUT /api/rest/v1/images
+     * Update images (admin only)
+     */
+    router.put("/", async (req: Request, res: Response) => {
+        try {
+            const { images } = req.body as { images?: unknown };
+            const { prisma, isAdmin } = req;
 
-        return res.json({ success: true });
-    } catch (error) {
-        logger.log(LogLevel.error, "Update images error:", error);
-        if (error instanceof CustomError) {
-            return res.status(401).json({ error: error.message, code: error.code });
+            // Must be admin
+            if (!isAdmin) {
+                throw new CustomError(CODE.Unauthorized);
+            }
+            if (!prisma) {
+                return res.status(500).json({ error: "Database connection not available" });
+            }
+
+            if (!Array.isArray(images)) {
+                return res.status(400).json({ error: "Images array required" });
+            }
+
+            const imageUpdates = images as ImageUpdate[];
+
+            // Loop through update data passed in
+            for (let i = 0; i < imageUpdates.length; i++) {
+                const curr = imageUpdates[i];
+
+                if (curr.label) {
+                    // Update position in label
+                    await prisma.image_labels.update({
+                        where: { hash_label: { hash: curr.hash, label: curr.label } },
+                        data: { index: i },
+                    });
+                }
+
+                // Update alt and description
+                await prisma.image.update({
+                    where: { hash: curr.hash },
+                    data: {
+                        alt: curr.alt,
+                        description: curr.description,
+                    },
+                });
+            }
+
+            // Audit log: image update
+            auditAdminAction(req, AuditEventType.ADMIN_IMAGE_UPDATE, "images", undefined, {
+                updatedCount: imageUpdates.length,
+            });
+
+            return res.json({ success: true });
+        } catch (error) {
+            logger.log(LogLevel.error, "Update images error:", error);
+            if (error instanceof CustomError) {
+                return res.status(401).json({ error: error.message, code: error.code });
+            }
+            return res.status(500).json({ error: "Failed to update images" });
         }
-        return res.status(500).json({ error: "Failed to update images" });
-    }
-});
+    });
 
-/**
- * DELETE /api/rest/v1/images/:hash
- * Delete an image and all its variants (admin only)
- *
- * Query params:
- * - force: Set to "true" to delete even if image is in use (default: false)
- */
-router.delete(REST_CHILD_PATHS.images.hash, async (req: Request, res: Response) => {
-    try {
-        const { hash } = req.params;
-        const { force } = req.query;
-        const { isAdmin } = req;
+    /**
+     * DELETE /api/rest/v1/images/:hash/labels/:label
+     * Remove an image from a label-backed collection without deleting the asset.
+     */
+    router.delete(REST_CHILD_PATHS.images.label, async (req: Request, res: Response) => {
+        try {
+            const { hash, label } = req.params;
+            const { prisma, isAdmin } = req;
 
-        // Must be admin
-        if (!isAdmin) {
-            throw new CustomError(CODE.Unauthorized);
-        }
+            // Must be admin
+            if (!isAdmin) {
+                throw new CustomError(CODE.Unauthorized);
+            }
 
-        if (!hash || typeof hash !== "string") {
-            return res.status(400).json({ error: "Image hash required" });
-        }
+            if (!prisma) {
+                return res.status(500).json({ error: "Database connection not available" });
+            }
 
-        // Check if image is in use first
-        const usage = await checkImageUsage(hash);
+            if (!hash || typeof hash !== "string") {
+                return res.status(400).json({ error: "Image hash required" });
+            }
 
-        if (!usage.exists) {
-            return res.status(404).json({ error: "Image not found" });
-        }
+            if (!label || typeof label !== "string" || !isKnownImageLabel(label)) {
+                return res.status(400).json({ error: "Known image label required" });
+            }
 
-        // Block deletion if image is in use (unless force=true)
-        const isInUse = usage.usedInPlants.length > 0 || usage.usedInLabels.length > 0;
-        if (isInUse && force !== "true") {
-            logger.log(LogLevel.warn, "Blocked deletion of in-use image", {
+            const result = await removeImageLabelRelation(prisma, { hash, label });
+
+            if (!result.exists) {
+                return res.status(404).json({ error: "Image not found" });
+            }
+
+            auditAdminAction(req, AuditEventType.ADMIN_IMAGE_UPDATE, "images", undefined, {
                 hash,
-                usage,
+                removedLabel: label,
+                removed: result.removed,
+                remainingLabels: result.remainingLabels,
+                remainingPlantUsage: result.remainingPlantUsage,
+                unlabeled: result.unlabeled,
             });
 
-            return res.status(409).json({
-                error: "Cannot delete image while in use",
-                usage: {
-                    usedInPlants: usage.usedInPlants,
-                    usedInLabels: usage.usedInLabels,
-                    warnings: usage.warnings,
-                },
-                hint: "Remove image from all galleries/labels first, or add ?force=true to force deletion",
-            });
-        }
-
-        // Delete the image
-        const result = await deleteImage(hash, force === "true");
-
-        if (!result.success) {
-            logger.log(LogLevel.error, "Image deletion failed", {
+            return res.json({
+                success: true,
                 hash,
-                errors: result.errors,
+                removedLabel: label,
+                removed: result.removed,
+                remainingLabels: result.remainingLabels,
+                remainingPlantUsage: result.remainingPlantUsage,
+                unlabeled: result.unlabeled,
+                message: result.removed
+                    ? `Removed image from ${label}`
+                    : `Image was already absent from ${label}`,
             });
+        } catch (error) {
+            logger.log(LogLevel.error, "Remove image label error:", error);
+            if (error instanceof CustomError) {
+                return res.status(401).json({ error: error.message, code: error.code });
+            }
+            return res.status(500).json({ error: "Failed to remove image label" });
+        }
+    });
 
-            // If image not found, return 404
-            if (result.errors.includes("Image not found")) {
-                return res.status(404).json({
-                    error: "Image not found",
+    /**
+     * DELETE /api/rest/v1/images/:hash
+     * Delete an image and all its variants (admin only)
+     *
+     * Query params:
+     * - force: Set to "true" to delete even if image is in use (default: false)
+     */
+    router.delete(REST_CHILD_PATHS.images.hash, async (req: Request, res: Response) => {
+        try {
+            const { hash } = req.params;
+            const { force } = req.query;
+            const { isAdmin } = req;
+
+            // Must be admin
+            if (!isAdmin) {
+                throw new CustomError(CODE.Unauthorized);
+            }
+
+            if (!hash || typeof hash !== "string") {
+                return res.status(400).json({ error: "Image hash required" });
+            }
+
+            // Check if image is in use first
+            const usage = await checkImageUsage(hash);
+
+            if (!usage.exists) {
+                return res.status(404).json({ error: "Image not found" });
+            }
+
+            // Block deletion if image is in use (unless force=true)
+            const isInUse = usage.usedInPlants.length > 0 || usage.usedInLabels.length > 0;
+            if (isInUse && force !== "true") {
+                logger.log(LogLevel.warn, "Blocked deletion of in-use image", {
+                    hash,
+                    usage,
+                });
+
+                return res.status(409).json({
+                    error: "Cannot delete image while in use",
+                    usage: {
+                        usedInPlants: usage.usedInPlants,
+                        usedInLabels: usage.usedInLabels,
+                        warnings: usage.warnings,
+                    },
+                    hint: "Remove image from all galleries/labels first, or add ?force=true to force deletion",
+                });
+            }
+
+            // Delete the image
+            const result = await deleteImage(hash, force === "true");
+
+            if (!result.success) {
+                logger.log(LogLevel.error, "Image deletion failed", {
+                    hash,
                     errors: result.errors,
                 });
+
+                // If image not found, return 404
+                if (result.errors.includes("Image not found")) {
+                    return res.status(404).json({
+                        error: "Image not found",
+                        errors: result.errors,
+                    });
+                }
+
+                return res.status(500).json({
+                    error: "Failed to delete image",
+                    errors: result.errors,
+                    deletedFiles: result.deletedFiles,
+                    usage: result.usage,
+                });
             }
 
-            return res.status(500).json({
-                error: "Failed to delete image",
-                errors: result.errors,
+            // Audit log: image deletion
+            auditAdminAction(req, AuditEventType.ADMIN_IMAGE_DELETE, "images", undefined, {
+                hash,
                 deletedFiles: result.deletedFiles,
                 usage: result.usage,
             });
+
+            return res.json({
+                success: true,
+                deletedFiles: result.deletedFiles,
+                usage: result.usage,
+                message: `Successfully deleted image and ${result.deletedFiles} file(s)`,
+            });
+        } catch (error) {
+            logger.log(LogLevel.error, "Delete image error:", error);
+            if (error instanceof CustomError) {
+                return res.status(401).json({ error: error.message, code: error.code });
+            }
+            return res.status(500).json({ error: "Failed to delete image" });
         }
+    });
 
-        // Audit log: image deletion
-        auditAdminAction(req, AuditEventType.ADMIN_IMAGE_DELETE, "images", undefined, {
-            hash,
-            deletedFiles: result.deletedFiles,
-            usage: result.usage,
-        });
+    /**
+     * GET /api/rest/v1/images/:hash/usage
+     * Check where an image is being used (admin only)
+     */
+    router.get(REST_CHILD_PATHS.images.usage, async (req: Request, res: Response) => {
+        try {
+            const { hash } = req.params;
+            const { isAdmin } = req;
 
-        return res.json({
-            success: true,
-            deletedFiles: result.deletedFiles,
-            usage: result.usage,
-            message: `Successfully deleted image and ${result.deletedFiles} file(s)`,
-        });
-    } catch (error) {
-        logger.log(LogLevel.error, "Delete image error:", error);
-        if (error instanceof CustomError) {
-            return res.status(401).json({ error: error.message, code: error.code });
+            // Must be admin
+            if (!isAdmin) {
+                throw new CustomError(CODE.Unauthorized);
+            }
+
+            if (!hash || typeof hash !== "string") {
+                return res.status(400).json({ error: "Image hash required" });
+            }
+
+            const usage = await checkImageUsage(hash);
+
+            if (!usage.exists) {
+                return res.status(404).json({ error: "Image not found" });
+            }
+
+            return res.json(usage);
+        } catch (error) {
+            logger.log(LogLevel.error, "Check image usage error:", error);
+            if (error instanceof CustomError) {
+                return res.status(401).json({ error: error.message, code: error.code });
+            }
+            return res.status(500).json({ error: "Failed to check image usage" });
         }
-        return res.status(500).json({ error: "Failed to delete image" });
-    }
-});
+    });
 
-/**
- * GET /api/rest/v1/images/:hash/usage
- * Check where an image is being used (admin only)
- */
-router.get(REST_CHILD_PATHS.images.usage, async (req: Request, res: Response) => {
-    try {
-        const { hash } = req.params;
-        const { isAdmin } = req;
+    /**
+     * GET /api/rest/v1/images/:hash/variants
+     * Get all variants for an image with detailed stats (admin only)
+     * Useful for debugging and verifying which variants exist
+     */
+    router.get(REST_CHILD_PATHS.images.variants, async (req: Request, res: Response) => {
+        try {
+            const { hash } = req.params;
+            const { prisma, isAdmin } = req;
 
-        // Must be admin
-        if (!isAdmin) {
-            throw new CustomError(CODE.Unauthorized);
-        }
+            // Must be admin
+            if (!isAdmin) {
+                throw new CustomError(CODE.Unauthorized);
+            }
 
-        if (!hash || typeof hash !== "string") {
-            return res.status(400).json({ error: "Image hash required" });
-        }
+            if (!hash || typeof hash !== "string") {
+                return res.status(400).json({ error: "Image hash required" });
+            }
 
-        const usage = await checkImageUsage(hash);
+            if (!prisma) {
+                return res.status(500).json({ error: "Database connection not available" });
+            }
 
-        if (!usage.exists) {
-            return res.status(404).json({ error: "Image not found" });
-        }
-
-        return res.json(usage);
-    } catch (error) {
-        logger.log(LogLevel.error, "Check image usage error:", error);
-        if (error instanceof CustomError) {
-            return res.status(401).json({ error: error.message, code: error.code });
-        }
-        return res.status(500).json({ error: "Failed to check image usage" });
-    }
-});
-
-/**
- * GET /api/rest/v1/images/:hash/variants
- * Get all variants for an image with detailed stats (admin only)
- * Useful for debugging and verifying which variants exist
- */
-router.get(REST_CHILD_PATHS.images.variants, async (req: Request, res: Response) => {
-    try {
-        const { hash } = req.params;
-        const { prisma, isAdmin } = req;
-
-        // Must be admin
-        if (!isAdmin) {
-            throw new CustomError(CODE.Unauthorized);
-        }
-
-        if (!hash || typeof hash !== "string") {
-            return res.status(400).json({ error: "Image hash required" });
-        }
-
-        if (!prisma) {
-            return res.status(500).json({ error: "Database connection not available" });
-        }
-
-        // Get image with all file variants
-        const image = await prisma.image.findUnique({
-            where: { hash },
-            select: {
-                hash: true,
-                alt: true,
-                description: true,
-                created_at: true,
-                files: {
-                    select: {
-                        src: true,
-                        width: true,
-                        height: true,
+            // Get image with all file variants
+            const image = await prisma.image.findUnique({
+                where: { hash },
+                select: {
+                    hash: true,
+                    alt: true,
+                    description: true,
+                    created_at: true,
+                    files: {
+                        select: {
+                            src: true,
+                            width: true,
+                            height: true,
+                        },
                     },
                 },
-            },
-        });
+            });
 
-        if (!image) {
-            return res.status(404).json({ error: "Image not found" });
-        }
-
-        // Calculate file sizes and categorize variants
-        const variants: Array<{
-            src: string;
-            width: number;
-            height: number;
-            size: string;
-            format: string;
-            fileSizeBytes?: number;
-            fileSizeMB?: number;
-        }> = [];
-
-        let totalSizeBytes = 0;
-        let webpCount = 0;
-        let originalFormatCount = 0;
-
-        for (const file of image.files) {
-            try {
-                const filePath = path.join(ASSETS_DIR, file.src);
-                const stats = fs.existsSync(filePath) ? fs.statSync(filePath) : null;
-
-                // Extract size code and format from filename
-                const fileName = path.basename(file.src);
-                const sizeMatch = fileName.match(
-                    /-(XXS|XS|S|M|ML|L|XL|XXL)\.(webp|jpeg|jpg|png|bmp|gif|ico)/i
-                );
-                const sizeCode = sizeMatch?.[1] || "unknown";
-                const format = sizeMatch?.[2]?.toLowerCase() || "unknown";
-
-                if (format === "webp") {
-                    webpCount++;
-                } else {
-                    originalFormatCount++;
-                }
-
-                const variant = {
-                    src: file.src,
-                    width: file.width,
-                    height: file.height,
-                    size: sizeCode,
-                    format,
-                    fileSizeBytes: stats?.size,
-                    fileSizeMB: stats
-                        ? Math.round((stats.size / 1024 / 1024) * 100) / 100
-                        : undefined,
-                };
-
-                variants.push(variant);
-                if (stats) {
-                    totalSizeBytes += stats.size;
-                }
-            } catch (error) {
-                logger.log(LogLevel.warn, `Error getting stats for variant ${file.src}:`, error);
-                variants.push({
-                    src: file.src,
-                    width: file.width,
-                    height: file.height,
-                    size: "unknown",
-                    format: "unknown",
-                });
+            if (!image) {
+                return res.status(404).json({ error: "Image not found" });
             }
-        }
 
-        // Sort variants by size (XXL → XXS), then by format (original → webp)
-        const sizeOrder = ["XXL", "XL", "L", "ML", "M", "S", "XS", "XXS"];
-        variants.sort((a, b) => {
-            const sizeA = sizeOrder.indexOf(a.size);
-            const sizeB = sizeOrder.indexOf(b.size);
-            if (sizeA !== sizeB) {
-                return sizeA - sizeB;
+            // Calculate file sizes and categorize variants
+            const variants: Array<{
+                src: string;
+                width: number;
+                height: number;
+                size: string;
+                format: string;
+                fileSizeBytes?: number;
+                fileSizeMB?: number;
+            }> = [];
+
+            let totalSizeBytes = 0;
+            let webpCount = 0;
+            let originalFormatCount = 0;
+
+            for (const file of image.files) {
+                try {
+                    const filePath = path.join(ASSETS_DIR, file.src);
+                    const stats = fs.existsSync(filePath) ? fs.statSync(filePath) : null;
+
+                    // Extract size code and format from filename
+                    const fileName = path.basename(file.src);
+                    const sizeMatch = fileName.match(
+                        /-(XXS|XS|S|M|ML|L|XL|XXL)\.(webp|jpeg|jpg|png|bmp|gif|ico)/i
+                    );
+                    const sizeCode = sizeMatch?.[1] || "unknown";
+                    const format = sizeMatch?.[2]?.toLowerCase() || "unknown";
+
+                    if (format === "webp") {
+                        webpCount++;
+                    } else {
+                        originalFormatCount++;
+                    }
+
+                    const variant = {
+                        src: file.src,
+                        width: file.width,
+                        height: file.height,
+                        size: sizeCode,
+                        format,
+                        fileSizeBytes: stats?.size,
+                        fileSizeMB: stats
+                            ? Math.round((stats.size / 1024 / 1024) * 100) / 100
+                            : undefined,
+                    };
+
+                    variants.push(variant);
+                    if (stats) {
+                        totalSizeBytes += stats.size;
+                    }
+                } catch (error) {
+                    logger.log(
+                        LogLevel.warn,
+                        `Error getting stats for variant ${file.src}:`,
+                        error
+                    );
+                    variants.push({
+                        src: file.src,
+                        width: file.width,
+                        height: file.height,
+                        size: "unknown",
+                        format: "unknown",
+                    });
+                }
             }
-            // Within same size, show original format first
-            return a.format === "webp" ? 1 : -1;
-        });
 
-        return res.json({
-            hash: image.hash,
-            alt: image.alt,
-            description: image.description,
-            createdAt: image.created_at,
-            variantCount: variants.length,
-            webpVariants: webpCount,
-            originalFormatVariants: originalFormatCount,
-            totalStorageMB: Math.round((totalSizeBytes / 1024 / 1024) * 100) / 100,
-            variants,
-        });
-    } catch (error) {
-        logger.log(LogLevel.error, "Get image variants error:", error);
-        if (error instanceof CustomError) {
-            return res.status(401).json({ error: error.message, code: error.code });
+            // Sort variants by size (XXL → XXS), then by format (original → webp)
+            const sizeOrder = ["XXL", "XL", "L", "ML", "M", "S", "XS", "XXS"];
+            variants.sort((a, b) => {
+                const sizeA = sizeOrder.indexOf(a.size);
+                const sizeB = sizeOrder.indexOf(b.size);
+                if (sizeA !== sizeB) {
+                    return sizeA - sizeB;
+                }
+                // Within same size, show original format first
+                return a.format === "webp" ? 1 : -1;
+            });
+
+            return res.json({
+                hash: image.hash,
+                alt: image.alt,
+                description: image.description,
+                createdAt: image.created_at,
+                variantCount: variants.length,
+                webpVariants: webpCount,
+                originalFormatVariants: originalFormatCount,
+                totalStorageMB: Math.round((totalSizeBytes / 1024 / 1024) * 100) / 100,
+                variants,
+            });
+        } catch (error) {
+            logger.log(LogLevel.error, "Get image variants error:", error);
+            if (error instanceof CustomError) {
+                return res.status(401).json({ error: error.message, code: error.code });
+            }
+            return res.status(500).json({ error: "Failed to get image variants" });
         }
-        return res.status(500).json({ error: "Failed to get image variants" });
-    }
-});
+    });
 
-export default router;
+    return router;
+}

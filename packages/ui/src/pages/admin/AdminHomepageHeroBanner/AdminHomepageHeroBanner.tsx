@@ -59,6 +59,7 @@ import { getServerUrl } from "utils/serverUrl";
 import {
     buildUploadedHeroBanners,
     deleteHeroBanner,
+    normalizeHeroBannerOrder,
     reorderHeroBanners,
     updateHeroBannerField,
 } from "./heroBannerFormState";
@@ -414,11 +415,10 @@ export const AdminHomepageHeroBanner = () => {
             // Update hero banners and settings
             await updateLandingPageContent.mutate({
                 data: {
-                    heroBanners: data.banners.map((b) => ({
+                    heroBanners: normalizeHeroBannerOrder(data.banners).map((b) => ({
                         ...b,
                         width: b.width || 0,
                         height: b.height || 0,
-                        displayOrder: b.displayOrder || 0,
                     })),
                     heroSettings: data.settings,
                 },
@@ -436,6 +436,7 @@ export const AdminHomepageHeroBanner = () => {
             return data;
         },
         refetchDependencies: [refetchLandingPage],
+        verifyAfterSave: false,
         pageName: "hero-section",
         endpointName: REST_ROUTES.landingPage.root,
         successMessage: "All hero settings saved successfully!",
@@ -1876,6 +1877,7 @@ export const AdminHomepageHeroBanner = () => {
                                                                         >
                                                                             <Box
                                                                                 {...provided.dragHandleProps}
+                                                                                data-testid={`hero-drag-handle-${index}`}
                                                                                 sx={{
                                                                                     display: "flex",
                                                                                     flexDirection:

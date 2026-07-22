@@ -56,7 +56,7 @@ router.get("/", async (req: Request, res: Response) => {
             const responseContent = await enrichHeroBannerFiles(content, req.prisma);
 
             res.set({
-                "Cache-Control": "public, max-age=300",
+                "Cache-Control": onlyActive ? "public, max-age=300" : "no-store",
                 ETag: `"${Buffer.from(JSON.stringify(responseContent)).toString("base64").substring(0, 20)}"`,
                 "Last-Modified": responseContent.metadata.lastUpdated,
             });
@@ -93,7 +93,7 @@ router.get("/", async (req: Request, res: Response) => {
 
                     try {
                         res.set({
-                            "Cache-Control": "public, max-age=60", // Shorter cache for variants
+                            "Cache-Control": onlyActive ? "public, max-age=60" : "no-store",
                             "X-Variant-ID": variantId,
                         });
 
@@ -153,7 +153,7 @@ router.get("/", async (req: Request, res: Response) => {
 
                     try {
                         res.set({
-                            "Cache-Control": "public, max-age=60",
+                            "Cache-Control": onlyActive ? "public, max-age=60" : "no-store",
                             "X-Variant-ID": assignedVariant.id,
                         });
 
@@ -184,7 +184,7 @@ router.get("/", async (req: Request, res: Response) => {
         logger.info("No enabled variants. Returning official landing page");
 
         // Try cache first for official content
-        const cached = await getCachedContent();
+        const cached = onlyActive ? await getCachedContent() : null;
         if (cached) {
             logger.info("Returning cached official landing page content");
             const responseContent = await enrichHeroBannerFiles(cached, req.prisma);
@@ -202,11 +202,13 @@ router.get("/", async (req: Request, res: Response) => {
         const content = aggregateLandingPageContent(onlyActive);
 
         // Cache it
-        await setCachedContent(content);
+        if (onlyActive) {
+            await setCachedContent(content);
+        }
         const responseContent = await enrichHeroBannerFiles(content, req.prisma);
 
         res.set({
-            "Cache-Control": "public, max-age=300",
+            "Cache-Control": onlyActive ? "public, max-age=300" : "no-store",
             ETag: `"${Buffer.from(JSON.stringify(responseContent)).toString("base64").substring(0, 20)}"`,
             "Last-Modified": responseContent.metadata.lastUpdated,
         });

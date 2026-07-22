@@ -16,10 +16,10 @@ export default defineConfig({
             reporter: ["text", "json", "json-summary", "html"],
             include: ["src/**/*.{ts,tsx}"],
             thresholds: {
-                statements: 8.6,
-                branches: 69,
-                functions: 34.7,
-                lines: 8.6,
+                statements: 16,
+                branches: 71,
+                functions: 40.8,
+                lines: 16,
                 "src/api/rest/**/*.{ts,tsx}": {
                     statements: 50,
                     branches: 77,
@@ -81,6 +81,12 @@ export default defineConfig({
                     lines: 100,
                 },
                 "src/pages/admin/AdminMainPage/AdminMainPage.tsx": {
+                    statements: 100,
+                    branches: 100,
+                    functions: 100,
+                    lines: 100,
+                },
+                "src/pages/admin/adminRoutes.ts": {
                     statements: 100,
                     branches: 100,
                     functions: 100,

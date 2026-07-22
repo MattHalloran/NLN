@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "contractId": "nln-operational-sli-v1",
+  "aggregationWindowDays": 30,
+  "indicators": [
+    {
+      "id": "deployment-success-rate",
+      "formula": "successful production deploy receipts / completed production deploy receipts",
+      "unit": "ratio",
+      "clock": "receipt.finishedAt",
+      "evidence": "release-deploy receipts",
+      "scope": "production",
+      "minimumSamples": 5,
+      "alertThreshold": 0.95,
+      "owner": "release-operator"
+    },
+    {
+      "id": "deployment-downtime-ms",
+      "formula": "userVisibleDowntimeFinishedAt - userVisibleDowntimeStartedAt",
+      "unit": "milliseconds",
+      "clock": "monotonic duration recorded by deploy adapter",
+      "evidence": "release-deploy receipts",
+      "scope": "production",
+      "minimumSamples": 1,
+      "alertThreshold": 60000,
+      "owner": "release-operator"
+    },
+    {
+      "id": "fixture-rollback-rto-ms",
+      "formula": "rollback finishedAt - rollback startedAt",
+      "unit": "milliseconds",
+      "clock": "receipt timestamps",
+      "evidence": "app-only-rollback receipts",
+      "scope": "fixture",
+      "minimumSamples": 3,
+      "alertThreshold": 300000,
+      "owner": "release-operator"
+    }
+  ]
+}

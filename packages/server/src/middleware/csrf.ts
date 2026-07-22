@@ -19,6 +19,8 @@ import { CODE, CSRF, REST_ROUTES } from "@local/shared";
 import { doubleCsrf } from "csrf-csrf";
 import { Request, Response, NextFunction } from "express";
 import { logger, LogLevel } from "../logger.js";
+import { getCookieSecurityOptions } from "../config/runtimePolicy.js";
+import { getClientIp } from "./clientIdentity.js";
 
 // CSRF secret - MUST be set in environment variables
 // NOTE: We use process.env.CSRF_SECRET dynamically in getSecret to ensure
@@ -35,23 +37,17 @@ const csrfConfig = doubleCsrf({
             );
             return "temporary-csrf-secret-CHANGE-IN-PRODUCTION";
         }
-        logger.log(
-            LogLevel.debug,
-            `[CSRF] Secret read: ${secret.substring(0, 20)}... (length: ${secret.length})`
-        );
+        logger.log(LogLevel.debug, "CSRF secret is configured", { secretLength: secret.length });
         return secret;
     },
     cookieName: CSRF.CookieName,
     cookieOptions: {
         // CRITICAL: httpOnly MUST be false so client can read the token
         httpOnly: false,
-        // Secure in production (HTTPS only)
-        secure: process.env.NODE_ENV === "production",
+        ...getCookieSecurityOptions(),
         // SameSite lax provides additional CSRF protection
-        sameSite: "lax",
         // Cookie valid for 24 hours
         maxAge: CSRF.TokenTtlMs,
-        path: "/",
     },
     // Token size in bytes (64 bytes = 512 bits)
     size: CSRF.TokenSizeBytes,
@@ -66,7 +62,7 @@ const csrfConfig = doubleCsrf({
             return userId;
         }
         // Fallback to IP address for unauthenticated requests
-        const sessionId = req.ip || req.connection?.remoteAddress || "unknown";
+        const sessionId = getClientIp(req);
         logger.log(
             LogLevel.debug,
             `[CSRF] Session ID: IP=${sessionId}, headers=${JSON.stringify({
@@ -132,7 +128,7 @@ export const csrfTokenEndpoint = (req: Request, res: Response) => {
         const token = generateCsrfToken(req, res);
 
         logger.log(LogLevel.debug, "CSRF token generated", {
-            ip: req.ip,
+            ip: getClientIp(req),
             userAgent: req.headers["user-agent"],
         });
 
@@ -166,7 +162,7 @@ export const csrfErrorHandler = (
         err.message?.includes("CSRF")
     ) {
         logger.log(LogLevel.error, "🚫 CSRF validation failed", {
-            ip: req.ip,
+            ip: getClientIp(req),
             method: req.method,
             path: req.path,
             userAgent: req.headers["user-agent"],
@@ -174,12 +170,6 @@ export const csrfErrorHandler = (
             errorMessage: err.message,
             hasToken: !!req.headers[CSRF.HeaderName.toLowerCase()],
             hasCookie: !!req.cookies[CSRF.CookieName],
-            tokenValue: req.headers[CSRF.HeaderName.toLowerCase()]
-                ? `${String(req.headers[CSRF.HeaderName.toLowerCase()]).substring(0, 20)}...`
-                : "none",
-            cookieValue: req.cookies[CSRF.CookieName]
-                ? `${String(req.cookies[CSRF.CookieName]).substring(0, 20)}...`
-                : "none",
         });
 
         res.status(403).json({

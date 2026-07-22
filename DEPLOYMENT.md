@@ -1,5 +1,7 @@
 # Deployment Guide
 
+> Authority: deployment architecture and reference. Use `docs/release-runbook.md` as the only current live-window procedure.
+
 This document describes the production deployment process for the New Life Nursery website.
 
 ## Table of Contents
@@ -15,23 +17,24 @@ This document describes the production deployment process for the New Life Nurse
 
 ## Overview
 
-The deployment process is a two-phase manual workflow:
+The standard production deployment path is:
 
-1. **Build Phase** (`build.sh`) - Run on your development machine
-   - Validates environment configuration
-   - Builds UI and server code
-   - Creates production Docker images
-   - Compresses and transfers artifacts to VPS
+```bash
+./scripts/prepare-deploy-readiness.sh -v <VERSION> -e .env-prod
+./scripts/deploy-production.sh -v <VERSION> -e .env-prod
+```
 
-2. **Deploy Phase** (`deploy.sh`) - Run on the production server
-   - Validates environment configuration
-   - Verifies the remote repository can fast-forward to the commit that was built
-   - Backs up current runtime state
-   - Stages build artifacts before replacing live files
-   - Loads new Docker images
-   - Restarts containers with health checks
-   - Verifies public UI and API endpoints
-   - Verifies successful deployment
+`prepare-deploy-readiness.sh` creates a verified local/offsite runtime-state backup, runs the non-deploying readiness gate, and prints the exact production deploy command. `deploy-production.sh` is the only routine production deployment entry point. It validates the matching readiness receipt, runs read-only VPS health checks, creates a fresh mandatory offsite backup, builds/transfers artifacts, runs the remote deploy, and runs post-deploy smoke checks.
+
+Lower-level scripts such as `build.sh`, `deploy.sh`, `rollback.sh`, and `restore-runtime-state.sh --execute` remain available for advanced recovery, local rehearsal, and debugging. They are not equivalent normal deployment paths because they can bypass wrapper sequencing or mutate production state directly.
+
+## Production Safety Boundary
+
+Do not commit concrete production IPs, hostnames, credentials, tokens, private keys, database URLs, or copied `.env-prod` values. Use placeholders such as `<VERSION>`, `${SITE_IP}`, and `${PROJECT_DIR}` in committed documentation.
+
+During deployment tooling work, production must remain unaffected unless a deployment or recovery action is separately and explicitly approved. Allowed production interactions are read-only inspection, `./scripts/vps-healthcheck.sh -e .env-prod`, `./scripts/backup.sh -e .env-prod --preflight-only`, and read/copy backup creation such as `./scripts/backup.sh -e .env-prod --verify-restore`.
+
+Do not run production deploys, rollbacks, runtime restores with `--execute`, container restarts, `docker-compose down/up`, cleanup, package updates, image or volume pruning, file deletion, production migration execution, or production file modification unless that production action has been explicitly approved.
 
 ## Recent Improvements
 
@@ -95,19 +98,41 @@ The deployment process is a two-phase manual workflow:
 
 ### 11. Non-Deploying Readiness Gate
 - **What**: `deploy-readiness.sh` runs the pre-production confidence checks without deploying.
-- **Why**: Gives one command for env validation, clean/synced git state, local validation, rehearsal, read-only VPS health, version-slot freshness, and backup preflight.
+- **Why**: Gives one command for env validation, clean/synced git state, local validation, rehearsal, restored-backup migration rehearsal, read-only VPS health, version-slot freshness, and backup preflight.
 - **Safety**: It must not deploy, restart, restore, prune, update, clean up, or create backup archives.
 - **Receipt**: On success, it writes a local `.deploy-readiness/<VERSION>.receipt` proving the exact commit, validation command, rehearsal, and VPS preflight that passed.
+- **Migration gate**: A recent local runtime-state backup is required through `--migration-backup PATH`. The readiness receipt is not accepted by production deploy unless this restored-backup migration rehearsal passed.
 
 ### 12. Readiness Receipt Enforcement
 - **What**: `deploy-production.sh` now requires a fresh readiness receipt for the same version, commit, and validation command before it builds or transfers artifacts.
 - **Why**: The expensive local validation and rehearsal can be completed before the deploy window, while the actual deploy still verifies that the current commit is clean, pushed, synchronized, and recently rehearsed.
 - **Freshness**: Receipts are valid for 4 hours by default. Override with `DEPLOY_READINESS_RECEIPT_MAX_AGE_SECONDS` only when the deploy window has been intentionally planned.
 
-### 13. Migration Risk Checks
+### 13. Post-Deploy Smoke Gate
+- **What**: `deploy-production.sh` runs `deploy-smoke.sh --admin` after the remote deploy completes.
+- **Why**: Public page checks, Prisma migration status, recent fatal log scanning, and reversible admin API checks all need to pass before the wrapper reports success.
+- **Safety**: The standalone smoke script keeps admin checks explicit; the production wrapper opts into them for the standard deploy path.
+
+### 14. Migration Risk Checks
 - **What**: `scripts/check-migrations.sh` runs as part of `yarn check:drift`.
 - **Why**: Potentially destructive migration SQL, such as dropping columns/tables, truncation, broad deletes, type changes, or new NOT NULL constraints, must carry an explicit review marker before passing validation.
 - **Marker**: Use `-- deploy-safe: allow-destructive-migration: <reason>` only after backup and rollback implications are reviewed.
+
+### 15. Prepare Deploy Readiness Wrapper
+- **What**: `prepare-deploy-readiness.sh` creates a verified runtime-state backup and runs `deploy-readiness.sh` with that backup as the migration rehearsal input.
+- **Why**: Operators no longer need to manually discover the correct backup path before readiness.
+- **Safety**: It does not deploy. Production interaction is limited to the existing backup read/copy behavior and readiness preflight checks.
+
+### 16. Deployment Lock
+- **What**: Deploy, rollback, and execute-mode runtime restore paths acquire a `flock`-based deployment lock.
+- **Why**: Prevents overlapping deploy/rollback/restore operations from different shells or operators.
+- **Scope**: The standard wrapper uses a local lock under `.deploy-lock/`; production mutation scripts use `/var/lock/nln-deploy.lock` by default.
+- **Force behavior**: An actively held `flock` cannot be overridden. If lock metadata appears stale, first confirm no deploy, rollback, or restore process is running.
+
+### 17. Pre-Downtime Migration Safety Gate
+- **What**: `deploy.sh` runs `check-deploy-migration-gate.sh` after artifact staging and runtime backup validation, before stopping containers.
+- **Why**: Destructive migration SQL is blocked before downtime unless it carries an explicit review marker, and pending migration status is reported when the running DB is readable.
+- **Safety**: The gate is read-only and does not run `prisma migrate deploy`. It requires readiness receipt proof and pending migration status by default; missing DB status requires an explicit override.
 
 ## Prerequisites
 
@@ -156,89 +181,58 @@ That script creates `~/.ssh/id_rsa_${SITE_IP}` when missing, appends the public 
 
 ## Deployment Process
 
-### Step 1: Pre-Deployment Checklist
+### Step 1: Prepare Readiness
 
-Before starting deployment, verify:
-
-```bash
-# Run the same default validation gate used by deploy-production.sh
-yarn validate:ci
-
-# Verify git status
-git status
-
-# Validate environment configuration (optional - runs automatically in build.sh)
-./scripts/validate-env.sh .env-prod
-```
-
-For high-confidence deploys, run the disposable local rehearsal before the production wrapper:
+Before the deployment window, run:
 
 ```bash
-./scripts/deploy-rehearsal.sh -v rehearsal-<VERSION>
+./scripts/prepare-deploy-readiness.sh -v <VERSION> -e .env-prod
 ```
 
-The rehearsal creates a temp project clone, generates a local loopback production-shaped env file, starts disposable Postgres and Redis containers, runs the production build locally, runs `deploy.sh` in rehearsal mode, verifies public UI/API responses, verifies the runtime-state SQL dump restores into a separate disposable Postgres container, executes a disposable rollback probe, and runs a full runtime-state restore dry run.
+This wrapper validates the env file, verifies backup preflight, creates a verified local/offsite runtime-state backup, runs readiness with that backup as `--migration-backup`, and prints the production deploy command to run later.
 
-Important constraints:
-- The rehearsal requires a clean tracked worktree so `deploy-commit.txt` matches the cloned project.
-- It uses the production compose container names (`nln_ui`, `nln_server`, `nln_db`, `nln_redis`) and refuses to run if those local containers already exist. Use `--replace-local-containers` only when those containers are disposable local state.
-- It does not read `.env-prod` unless explicitly passed with `-e`; explicit env files are copied into the temp rehearsal directory and forced to use the disposable `PROJECT_DIR`.
-
-Or run the combined non-deploying readiness gate:
+Manual equivalent, if the wrapper is unavailable:
 
 ```bash
-./scripts/deploy-readiness.sh -v <VERSION> -e .env-prod
+./scripts/backup.sh -e .env-prod --preflight-only
+./scripts/backup.sh -e .env-prod --verify-restore
+SITE_IP=$(grep SITE_IP .env-prod | cut -d= -f2)
+./scripts/deploy-readiness.sh -v <VERSION> -e .env-prod --migration-backup backups/${SITE_IP}/<BACKUP_TIMESTAMP>
 ```
 
-This checks the env file, clean/synced git state, local validation, disposable deploy rehearsal, read-only VPS health, fresh deployment version slot, and offsite backup preflight. It does not deploy, restart, restore, prune, update, clean up, or create backup archives.
+The readiness gate checks the env file, clean/synced git state, local validation, disposable deploy rehearsal, restored-backup migration rehearsal, read-only VPS health, fresh deployment version slot, and offsite backup preflight. It does not deploy, restart, restore, prune, update, clean up, or create backup archives.
 
-When this passes, it writes `.deploy-readiness/<VERSION>.receipt`. The standard production wrapper requires that receipt to be fresh and bound to the current commit before it proceeds.
+When readiness passes, it writes `.deploy-readiness/<VERSION>.receipt`. The standard production wrapper requires that receipt to be fresh and bound to the current commit before it proceeds.
 
-### Step 2: Build (On Development Machine)
+### Step 2: Optional Restore Drill
+
+Before a high-risk deployment, after backup/restore script changes, or on a monthly cadence, run a local restore drill:
 
 ```bash
-cd /path/to/NLN
-./scripts/build.sh -v <VERSION> -e .env-prod -d y
-
-# Example:
-# ./scripts/build.sh -v 3.0.1 -e .env-prod -d y
+./scripts/restore-drill.sh --backup backups/${SITE_IP}/<BACKUP_TIMESTAMP>
 ```
 
-Arguments:
-- `-v`: Version number (updates all package.json files unless `BUILD_SKIP_PACKAGE_VERSION_UPDATE=true`)
-- `-e`: Environment file path (defaults to `.env-prod`)
-- `-d`: Deploy to VPS (y/N) - if 'y', automatically transfers files
+To create a fresh read/copy backup first:
 
-The build script will:
-1. ✓ Validate environment configuration
-2. ✓ Update version numbers unless `BUILD_SKIP_PACKAGE_VERSION_UPDATE=true`
-3. ✓ Build shared packages
-4. ✓ Build server
-5. ✓ Build UI with production settings
-6. ✓ Generate sitemap
-7. ✓ Build Docker images
-8. ✓ Tag Docker images as both `:prod` and `:<VERSION>`
-9. ✓ Compress artifacts
-10. ✓ Transfer to VPS at `/var/tmp/{VERSION}/`
+```bash
+./scripts/restore-drill.sh --create-backup -e .env-prod
+```
 
-### Step 3: Deploy (On Production Server)
+The drill validates the runtime-state backup, restores the SQL dump into disposable local Postgres through `rehearse-migrations-from-backup.sh`, runs checked-in migrations against that restored data, runs a local dry-run runtime-state restore validation, and writes a local receipt under `.validation/restore-drills/`.
 
-#### Simplified Workflow (Recommended)
+The drill must not run production deploy, restart, restore, rollback, cleanup, migration execution, or deletion commands.
 
-Complete deployment from your development machine with the standard wrapper:
+### Step 3: Deploy From Development Machine
+
+Complete the approved deployment with the standard wrapper:
 
 ```bash
 ./scripts/deploy-production.sh -v <VERSION> -e .env-prod
 ```
 
-This wrapper validates the environment, verifies the git worktree is clean and synchronized, verifies the fresh readiness receipt, runs non-mutating VPS health checks, refuses reused deployment versions, creates a mandatory offsite backup, builds and transfers artifacts, deploys remotely, and prints final container status.
+The wrapper validates the environment, verifies the git worktree is clean and synchronized, verifies the fresh readiness receipt, acquires a local deployment lock, runs non-mutating VPS health checks, refuses reused deployment versions, creates a mandatory offsite backup, builds and transfers artifacts, deploys remotely, runs post-deploy smoke checks, and prints final container status.
 
-Run readiness first:
-
-```bash
-./scripts/deploy-readiness.sh -v <VERSION> -e .env-prod
-./scripts/deploy-production.sh -v <VERSION> -e .env-prod
-```
+The remote deploy also acquires the production mutation lock, validates transferred artifacts, creates a runtime-state backup, runs the read-only pre-downtime migration gate with the readiness receipt proof, loads images, stops containers, swaps artifacts, starts containers, waits for health checks, and verifies public endpoints.
 
 The wrapper uses `<VERSION>` as the deployment slot and Docker image tag, but it does not mutate package.json versions during the build. If package version bumps are needed, make and commit them before running the production wrapper so the built commit and remote checkout stay identical.
 
@@ -252,69 +246,40 @@ The deploy wrapper will only accept this when the readiness receipt was created 
 
 Use a fresh version for each deployment. The wrapper refuses to deploy if `/var/tmp/<VERSION>/runtime-state/manifest.txt` already exists on the VPS, because reusing a version would prevent a fresh pre-deployment runtime-state backup from being created.
 
-### Rehearsal and Recovery Drill
+Do not use `--skip-tests` for normal production deployments. It is reserved for an explicit emergency bypass and requires `DEPLOY_ALLOW_UNVALIDATED=true`; VPS health checks, version-slot checks, mandatory offsite backup, and post-deploy smoke still run.
 
-Before a high-risk deployment, run a local drill:
+### Advanced Manual Recovery / Debugging
+
+Use this section only for explicit recovery/debugging work. Routine production deployments should use `deploy-production.sh`, not manual build plus SSH deploy.
+
+Manual build/transfer:
+
+```bash
+cd /path/to/NLN
+./scripts/build.sh -v <VERSION> -e .env-prod -d y
+```
+
+Manual remote deploy:
+
+```bash
+SITE_IP=$(grep SITE_IP .env-prod | cut -d= -f2)
+PROJECT_DIR=$(grep PROJECT_DIR .env-prod | cut -d= -f2)
+
+ssh -i ~/.ssh/id_rsa_${SITE_IP} root@${SITE_IP} \
+  "cd ${PROJECT_DIR} && ./scripts/deploy.sh -v <VERSION>"
+```
+
+Manual paths are more error-prone because they can bypass the standard wrapper sequencing, readiness receipt enforcement, mandatory offsite backup timing, and post-deploy smoke gate. Keep them available for recovery and debugging, but do not use them as the normal release process.
+
+If `deploy.sh` is run directly for advanced recovery/debugging, the pre-downtime migration gate still requires readiness receipt proof unless `DEPLOY_ALLOW_MISSING_READINESS_RECEIPT=true` is set intentionally. Missing production DB migration status fails closed unless `DEPLOY_ALLOW_MISSING_DB_MIGRATION_STATUS=true` is set intentionally.
+
+For a focused local rehearsal, run:
 
 ```bash
 ./scripts/deploy-rehearsal.sh -v rehearsal-<VERSION>
 ```
 
 The drill creates a disposable project, runs the production build/deploy path locally, verifies the runtime SQL dump restores into a separate disposable Postgres container, executes a disposable rollback probe, and dry-runs full runtime-state restore. It must not read `.env-prod` unless you explicitly pass `-e`, and it refuses production-looking endpoints.
-
-Manual equivalent:
-
-```bash
-# Set version
-VERSION="3.0.1"
-
-# Build and transfer without the interactive transfer confirmation
-DEPLOY_CONFIRMED=true ./scripts/build.sh -v ${VERSION} -e .env-prod -d y
-
-# Deploy remotely
-SITE_IP=$(grep SITE_IP .env-prod | cut -d= -f2)
-PROJECT_DIR=$(grep PROJECT_DIR .env-prod | cut -d= -f2)
-
-ssh -i ~/.ssh/id_rsa_${SITE_IP} root@${SITE_IP} \
-  "cd ${PROJECT_DIR} && ./scripts/deploy.sh -v ${VERSION}"
-
-# Quick verification
-ssh -i ~/.ssh/id_rsa_${SITE_IP} root@${SITE_IP} \
-  'docker ps --format "table {{.Names}}\t{{.Status}}"'
-```
-
-#### Option A: SSH In and Deploy Manually
-
-```bash
-# Connect to production server
-./scripts/connectToServer.sh
-
-# Once connected, navigate to project and deploy
-cd ${PROJECT_DIR}  # e.g., /root/NLN or /srv/app
-./scripts/deploy.sh -v <VERSION>
-```
-
-#### Option B: Remote Deployment (One-Liner)
-
-Deploy directly from your development machine without manually SSH'ing in:
-
-```bash
-# Set variables from your .env-prod
-SITE_IP=$(grep SITE_IP .env-prod | cut -d= -f2)
-VERSION="<VERSION>"
-PROJECT_DIR=$(grep PROJECT_DIR .env-prod | cut -d= -f2)
-
-# Deploy with one command (simplified)
-ssh -i ~/.ssh/id_rsa_${SITE_IP} root@${SITE_IP} \
-  "cd ${PROJECT_DIR} && ./scripts/deploy.sh -v ${VERSION}"
-```
-
-This one-liner will:
-1. Connect to production server via SSH
-2. Navigate to project directory
-3. Run the deploy script with the specified version
-
-**Note**: The deploy script (`deploy.sh`) handles git operations internally and verifies the remote checkout matches the commit built by `build.sh`, so you do not need to run `git stash && git fetch && git pull` manually.
 
 **Note**: The production docker-compose file (`docker-compose-prod.yml`) now automatically loads `.env-prod` via the `env_file` directive. No need to manually specify `--env-file` when starting containers.
 
@@ -323,7 +288,7 @@ The deploy script will:
 2. ✓ Fast-forward Git and verify the built commit
 3. ✓ Stage build artifacts under `/var/tmp/{VERSION}/staged-artifacts`
 4. ✓ Backup current runtime state to `/var/tmp/{VERSION}/runtime-state`
-5. ✓ Run setup.sh
+5. ✓ Run the pre-downtime migration safety gate
 6. ✓ Load Docker images
 7. ✓ Stop old containers
 8. ✓ Swap staged artifacts into place
@@ -439,6 +404,8 @@ This will:
 5. Start containers
 6. Wait for health checks
 7. Verify successful rollback
+
+Database rollback restores the logical dump from the target version's backup. Writes made after that backup can be lost from the live database. `rollback.sh` creates an emergency dump before stopping containers; use that dump as the manual salvage source if recent writes must be recovered. High-risk schema changes should use expand/migrate/contract patterns and carry an explicit destructive-migration review marker only after backup and rollback implications are understood.
 
 ### Manual Rollback (if rollback.sh fails)
 

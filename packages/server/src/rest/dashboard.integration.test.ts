@@ -10,7 +10,7 @@ import express, { Express } from "express";
 import request from "supertest";
 import bcrypt from "bcryptjs";
 import { REST_ROUTES } from "@local/shared";
-import restRouter from "./index.js";
+import { createRestRouter } from "./index.js";
 import {
     createRestTestApp,
     loginAndGetCookie,
@@ -375,7 +375,7 @@ describe("Dashboard API Integration Tests", () => {
                 };
                 next();
             });
-            errorApp.use(REST_ROUTES.root, restRouter);
+            errorApp.use(REST_ROUTES.root, createRestRouter());
 
             const res = await request(errorApp).get(REST_ROUTES.dashboard.stats);
 

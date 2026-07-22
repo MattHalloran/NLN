@@ -18,14 +18,6 @@ interface ImageWithFallbackProps {
 }
 
 /**
- * Converts an image path to its WebP equivalent
- * Example: /images/foo-L.jpg -> /images/foo-L.webp
- */
-function toWebP(src: string): string {
-    return src.replace(/\.(jpg|jpeg|png|gif|bmp)$/i, ".webp");
-}
-
-/**
  * Image component with built-in fallback handling.
  * Shows NoImageIcon or a fallback image when the primary image fails to load.
  */
@@ -95,44 +87,39 @@ export const ImageWithFallback = ({
     }
 
     const imageSrc = hasError && fallbackSrc ? fallbackSrc : src;
-    const webpSrc = toWebP(imageSrc);
 
     if (component === "div") {
         return (
-            <picture>
-                <source srcSet={webpSrc} type="image/webp" />
-                <CardMedia
-                    component="img"
-                    image={imageSrc}
-                    alt={alt}
-                    className={className}
-                    onClick={onClick}
-                    onError={handleError}
-                    onLoad={handleLoad}
-                    sx={sx}
-                    style={style}
-                    loading={loading}
-                />
-            </picture>
+            <CardMedia
+                component="img"
+                image={imageSrc}
+                alt={alt}
+                className={className}
+                onClick={onClick}
+                onError={handleError}
+                onLoad={handleLoad}
+                sx={sx}
+                style={style}
+                loading={loading}
+            />
         );
     }
 
     return (
-        <picture onClick={onClick} className={className}>
-            <source srcSet={webpSrc} type="image/webp" />
-            <img
-                src={imageSrc}
-                alt={alt}
-                onError={handleError}
-                onLoad={handleLoad}
-                loading={loading}
-                style={{
-                    width: "100%",
-                    height: "auto",
-                    objectFit: "cover",
-                    ...style,
-                }}
-            />
-        </picture>
+        <img
+            src={imageSrc}
+            alt={alt}
+            onClick={onClick}
+            className={className}
+            onError={handleError}
+            onLoad={handleLoad}
+            loading={loading}
+            style={{
+                width: "100%",
+                height: "auto",
+                objectFit: "cover",
+                ...style,
+            }}
+        />
     );
 };

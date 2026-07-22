@@ -15,6 +15,130 @@ function locationFor(overrides: Partial<TestLocation>): TestLocation {
 }
 
 describe("serverUrl", () => {
+    it("uses an explicit API base URL before inferred location rules", () => {
+        expect(
+            getServerUrlForLocation(
+                locationFor({
+                    host: `localhost:${DEFAULT_PORTS.ui}`,
+                    hostname: "localhost",
+                    origin: `http://localhost:${DEFAULT_PORTS.ui}`,
+                    port: String(DEFAULT_PORTS.ui),
+                    protocol: "http:",
+                }),
+                String(DEFAULT_PORTS.server),
+                "/api",
+            ),
+        ).toBe(API_PREFIX);
+
+        expect(
+            getServerUrlForLocation(
+                locationFor({
+                    host: "app.example.com",
+                    hostname: "app.example.com",
+                    origin: "https://app.example.com",
+                    protocol: "https:",
+                }),
+                String(DEFAULT_PORTS.server),
+                "https://api.example.com/api/",
+            ),
+        ).toBe("https://api.example.com/api");
+    });
+
+    it("normalizes relative explicit API base URLs", () => {
+        expect(
+            getServerUrlForLocation(
+                locationFor({
+                    host: "app.example.com",
+                    hostname: "app.example.com",
+                    origin: "https://app.example.com",
+                    protocol: "https:",
+                }),
+                String(DEFAULT_PORTS.server),
+                "/internal-api/",
+            ),
+        ).toBe("https://app.example.com/internal-api");
+    });
+
+    it("uses VITE_SERVER_URL when it is compatible with the current host", () => {
+        expect(
+            getServerUrlForLocation(
+                locationFor({
+                    host: `localhost:${DEFAULT_PORTS.ui}`,
+                    hostname: "localhost",
+                    origin: `http://localhost:${DEFAULT_PORTS.ui}`,
+                    port: String(DEFAULT_PORTS.ui),
+                    protocol: "http:",
+                }),
+                String(DEFAULT_PORTS.server),
+                undefined,
+                "http://localhost:7000/api",
+            ),
+        ).toBe("http://localhost:7000/api");
+
+        expect(
+            getServerUrlForLocation(
+                locationFor({
+                    host: "app.example.com",
+                    hostname: "app.example.com",
+                    origin: "https://app.example.com",
+                    protocol: "https:",
+                }),
+                String(DEFAULT_PORTS.server),
+                undefined,
+                "https://api.example.com/api",
+            ),
+        ).toBe("https://api.example.com/api");
+    });
+
+    it("adds the API prefix to explicit origin-only server URLs", () => {
+        expect(
+            getServerUrlForLocation(
+                locationFor({
+                    host: "app.example.com",
+                    hostname: "app.example.com",
+                    origin: "https://app.example.com",
+                    protocol: "https:",
+                }),
+                String(DEFAULT_PORTS.server),
+                undefined,
+                "https://api.example.com/",
+            ),
+        ).toBe("https://api.example.com/api");
+    });
+
+    it("ignores malformed explicit server URLs", () => {
+        expect(
+            getServerUrlForLocation(
+                locationFor({
+                    host: "app.example.com",
+                    hostname: "app.example.com",
+                    origin: "https://app.example.com",
+                    protocol: "https:",
+                }),
+                String(DEFAULT_PORTS.server),
+                undefined,
+                "not a url",
+            ),
+        ).toBe("https://app.example.com/api");
+    });
+
+    it("does not let a public VITE_SERVER_URL redirect localhost builds to production", () => {
+        expect(
+            getServerUrlForLocation(
+                locationFor({
+                    host: `localhost:${DEFAULT_PORTS.ui}`,
+                    hostname: "localhost",
+                    origin: `http://localhost:${DEFAULT_PORTS.ui}`,
+                    port: String(DEFAULT_PORTS.ui),
+                    protocol: "http:",
+                }),
+                String(DEFAULT_PORTS.server),
+                undefined,
+                "https://newlifenursery.example/api",
+            ),
+        ).toBe(DEFAULT_SERVER_URLS.localApi);
+    });
+
     it("uses nginx proxy routing for local standard ports", () => {
         expect(
             getServerUrlForLocation(
@@ -41,6 +165,20 @@ describe("serverUrl", () => {
                 }),
             ),
         ).toBe(DEFAULT_SERVER_URLS.localApi);
+    });
+
+    it("uses the local API port for 127.0.0.1 dev", () => {
+        expect(
+            getServerUrlForLocation(
+                locationFor({
+                    host: `127.0.0.1:${DEFAULT_PORTS.ui}`,
+                    hostname: "127.0.0.1",
+                    origin: `http://127.0.0.1:${DEFAULT_PORTS.ui}`,
+                    port: String(DEFAULT_PORTS.ui),
+                    protocol: "http:",
+                }),
+            ),
+        ).toBe(`http://127.0.0.1:${DEFAULT_PORTS.server}${API_PREFIX}`);
     });
 
     it("uses an explicit server port for LAN development hosts", () => {

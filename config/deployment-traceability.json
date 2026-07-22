@@ -1,0 +1,290 @@
+{
+  "schemaVersion": 1,
+  "inventoryId": "nln-deployment-traceability-v1",
+  "productionIntegrationEnabled": false,
+  "frozenProductionEntrypoints": [
+    {
+      "path": "scripts/prepare-deploy-readiness.sh",
+      "sha256": "9e7fd40dbaa94c911754a439ed742960da8f94f7b154172b347662f30a8b5101",
+      "role": "current-readiness"
+    },
+    {
+      "path": "scripts/deploy-production.sh",
+      "sha256": "b275ce71cd964302f737ed263a074406fc7a9248b453985e68244c4fd6b3f6c7",
+      "role": "current-production-wrapper"
+    },
+    {
+      "path": "scripts/deploy.sh",
+      "sha256": "ab34dc1afe705a16bb5cfb420bced1172baa795ef323ee4a974863c7ff159101",
+      "role": "legacy-remote-deploy"
+    },
+    {
+      "path": "scripts/server.sh",
+      "sha256": "9272038fb3623bcb83aff6a33b73c2b2cb838ef487f37bb588face25a159978b",
+      "role": "legacy-server-lifecycle"
+    },
+    {
+      "path": "scripts/rollback.sh",
+      "sha256": "ac6f2f246f11c4fbc7207436250626e39e58496bada33fdbd26fa5332e9f052d",
+      "role": "legacy-data-destructive-recovery"
+    }
+  ],
+  "contracts": [
+    {
+      "path": "config/command-registry.json",
+      "owner": "operator-interface",
+      "concern": "commands"
+    },
+    { "path": "config/receipt-registry.json", "owner": "evidence", "concern": "receipts" },
+    {
+      "path": "config/deployment-topology.json",
+      "owner": "release-lifecycle",
+      "concern": "service-topology"
+    },
+    {
+      "path": "config/migration-compatibility.json",
+      "owner": "migration",
+      "concern": "migration-metadata"
+    },
+    {
+      "path": "config/runtime-state-backup-policy.json",
+      "owner": "backup",
+      "concern": "backup-rpo-retention"
+    },
+    {
+      "path": "config/runtime-state-postgres-compatibility.json",
+      "owner": "backup",
+      "concern": "postgres-image-identity"
+    },
+    { "path": "config/operational-sli.json", "owner": "reliability", "concern": "sli-slo" },
+    {
+      "path": "config/deployment-operational-objectives.json",
+      "owner": "reliability",
+      "concern": "operational-objectives"
+    },
+    {
+      "path": "config/documentation-authority-map.json",
+      "owner": "documentation",
+      "concern": "documentation-authority"
+    },
+    {
+      "path": "config/release-state-machine.json",
+      "owner": "release-lifecycle",
+      "concern": "release-state-machine"
+    },
+    {
+      "path": "config/deployment-module-boundaries.json",
+      "owner": "phase10",
+      "concern": "module-boundaries"
+    },
+    {
+      "path": "config/release-exit-codes.json",
+      "owner": "release-operator",
+      "concern": "release-exit-codes"
+    }
+  ],
+  "receiptFlows": [
+    {
+      "receiptType": "release-prepare",
+      "producer": "scripts/release.mjs",
+      "consumers": ["scripts/release.mjs", "scripts/release-observability.mjs"],
+      "tests": ["scripts/tests/phase10-operator-interface.bats"]
+    },
+    {
+      "receiptType": "release-deploy",
+      "producer": "scripts/release.mjs",
+      "consumers": ["scripts/release-observability.mjs"],
+      "tests": [
+        "scripts/tests/phase10-operator-interface.bats",
+        "scripts/tests/phase10-observability.bats"
+      ]
+    },
+    {
+      "receiptType": "release-evidence-index",
+      "producer": "scripts/release-evidence.mjs",
+      "consumers": ["scripts/release.mjs", "scripts/release-evidence.mjs"],
+      "tests": ["scripts/tests/phase10-operator-interface.bats"]
+    },
+    {
+      "receiptType": "release-alert",
+      "producer": "scripts/release-observability.mjs",
+      "consumers": ["scripts/release-observability.mjs"],
+      "tests": ["scripts/tests/phase10-observability.bats"]
+    },
+    {
+      "receiptType": "phase10-qualification",
+      "producer": "scripts/phase10-qualification.mjs",
+      "consumers": ["scripts/verify-release-receipt.mjs"],
+      "tests": ["scripts/tests/phase10-qualification.bats"]
+    },
+    {
+      "receiptType": "phase10-test-results",
+      "producer": "scripts/phase10-test-results.mjs",
+      "consumers": ["scripts/phase10-qualification.mjs"],
+      "tests": ["scripts/tests/phase10-qualification.bats"]
+    },
+    {
+      "receiptType": "runtime-state-backup-qualification",
+      "producer": "scripts/qualify-runtime-state-backup.mjs",
+      "consumers": [
+        "scripts/run-controlled-migrations.mjs",
+        "scripts/plan-vps-maintenance.mjs",
+        "scripts/release.mjs"
+      ],
+      "tests": [
+        "scripts/tests/runtime-state-backup-qualification.bats",
+        "scripts/tests/migration-phase6.bats",
+        "scripts/tests/vps-health-maintenance-phase8.bats"
+      ]
+    },
+    {
+      "receiptType": "migration-rollback-compatibility",
+      "producer": "scripts/evaluate-migration-compatibility.mjs",
+      "consumers": [
+        "scripts/app-only-rollback.mjs",
+        "scripts/rehearse-reduced-downtime-deploy.mjs"
+      ],
+      "tests": [
+        "scripts/tests/migration-phase6.bats",
+        "scripts/tests/reduced-downtime-deployment.bats"
+      ]
+    },
+    {
+      "receiptType": "immutable-release-bundle",
+      "producer": "scripts/immutable-release-bundle.mjs",
+      "consumers": ["scripts/app-only-rollback.mjs", "scripts/record-known-good-release.mjs"],
+      "tests": ["scripts/tests/immutable-release-phase5.bats"]
+    },
+    {
+      "receiptType": "controlled-migration",
+      "producer": "scripts/run-controlled-migrations.mjs",
+      "consumers": ["scripts/rehearse-reduced-downtime-deploy.mjs"],
+      "tests": ["scripts/tests/migration-phase6.bats"]
+    },
+    {
+      "receiptType": "app-only-rollback",
+      "producer": "scripts/app-only-rollback.mjs",
+      "consumers": ["scripts/release-observability.mjs"],
+      "tests": ["scripts/tests/immutable-release-phase5.bats"]
+    },
+    {
+      "receiptType": "reduced-downtime-deployment-rehearsal",
+      "producer": "scripts/rehearse-reduced-downtime-deploy.mjs",
+      "consumers": ["scripts/release.mjs", "scripts/release-observability.mjs"],
+      "tests": ["scripts/tests/reduced-downtime-deployment.bats"]
+    },
+    {
+      "receiptType": "vps-maintenance-plan",
+      "producer": "scripts/plan-vps-maintenance.mjs",
+      "consumers": ["scripts/execute-vps-maintenance.mjs"],
+      "tests": ["scripts/tests/vps-health-maintenance-phase8.bats"]
+    },
+    {
+      "receiptType": "vps-maintenance-execution",
+      "producer": "scripts/execute-vps-maintenance.mjs",
+      "consumers": ["scripts/release-observability.mjs"],
+      "tests": ["scripts/tests/vps-health-maintenance-phase8.bats"]
+    },
+    {
+      "receiptType": "nln-runtime-state-archive",
+      "producer": "scripts/runtime-state-archive-v2.mjs",
+      "consumers": ["scripts/qualify-runtime-state-backup.mjs"],
+      "tests": ["scripts/tests/runtime-state-archive-v2.bats"]
+    },
+    {
+      "receiptType": "nln-runtime-state-database-invariant-verification",
+      "producer": "scripts/verify-runtime-state-database-invariants.mjs",
+      "consumers": ["scripts/qualify-runtime-state-backup.mjs"],
+      "tests": ["scripts/tests/runtime-state-database-invariants.bats"]
+    },
+    {
+      "receiptType": "runtime-state-application-restore-verification",
+      "producer": "scripts/qualify-runtime-state-application-restore.mjs",
+      "consumers": ["scripts/qualify-runtime-state-backup.mjs"],
+      "tests": [
+        "scripts/tests/runtime-state-application-restore-qualification.bats",
+        "scripts/tests/verify-production-backup-locally.bats"
+      ]
+    },
+    {
+      "receiptType": "runtime-state-remote-download-verification",
+      "producer": "scripts/qualify-remote-evidence.mjs",
+      "consumers": ["scripts/qualify-runtime-state-backup.mjs", "scripts/plan-vps-maintenance.mjs"],
+      "tests": ["scripts/tests/phase10-evidence-contracts.bats"]
+    },
+    {
+      "receiptType": "runtime-state-resilience-qualification",
+      "producer": "scripts/qualify-remote-evidence.mjs",
+      "consumers": ["scripts/qualify-runtime-state-backup.mjs"],
+      "tests": ["scripts/tests/phase10-evidence-contracts.bats"]
+    },
+    {
+      "receiptType": "release-lifecycle-state",
+      "producer": "scripts/release-state.mjs",
+      "consumers": ["scripts/verify-release-receipt.mjs"],
+      "tests": ["scripts/tests/release-state-machine.bats"]
+    },
+    {
+      "receiptType": "trusted-validation-gate",
+      "producer": "scripts/aggregate-trusted-receipts.mjs",
+      "consumers": [
+        "scripts/immutable-release-bundle.mjs",
+        "scripts/run-controlled-migrations.mjs",
+        "scripts/release-state.mjs"
+      ],
+      "tests": ["scripts/tests/trusted-receipts.bats"]
+    },
+    {
+      "receiptType": "vps-health-gate",
+      "producer": "scripts/evaluate-vps-health.mjs",
+      "consumers": ["scripts/release-state.mjs", "scripts/plan-vps-maintenance.mjs"],
+      "tests": ["scripts/tests/vps-health-maintenance-phase8.bats"]
+    },
+    {
+      "receiptType": "last-known-good-release",
+      "producer": "scripts/record-known-good-release.mjs",
+      "consumers": ["scripts/app-only-rollback.mjs", "scripts/release-state.mjs"],
+      "tests": ["scripts/tests/immutable-release-phase5.bats"]
+    },
+    {
+      "receiptType": "release-local-verification",
+      "producer": "scripts/release.mjs",
+      "consumers": ["scripts/release-state.mjs", "scripts/release-observability.mjs"],
+      "tests": ["scripts/tests/phase10-release-commands.bats"]
+    },
+    {
+      "receiptType": "release-recovery-plan",
+      "producer": "scripts/release.mjs",
+      "consumers": ["scripts/verify-release-receipt.mjs"],
+      "tests": ["scripts/tests/phase10-release-commands.bats"]
+    },
+    {
+      "receiptType": "legacy-evidence-compatibility-verification",
+      "producer": "scripts/verify-legacy-release-evidence.mjs",
+      "consumers": ["scripts/verify-release-receipt.mjs"],
+      "tests": ["scripts/tests/legacy-evidence-compatibility.bats"]
+    }
+  ],
+  "adapters": [
+    {
+      "path": "scripts/tests/fixtures/migration-adapter-stub.mjs",
+      "scope": "fixture",
+      "externalCommands": []
+    },
+    {
+      "path": "scripts/tests/fixtures/reduced-downtime-adapter.mjs",
+      "scope": "fixture",
+      "externalCommands": []
+    },
+    {
+      "path": "scripts/tests/fixtures/vps-health-maintenance-adapter.mjs",
+      "scope": "fixture",
+      "externalCommands": []
+    },
+    {
+      "path": "scripts/tests/fixtures/runtime-state-local-provider.mjs",
+      "scope": "fixture",
+      "externalCommands": []
+    }
+  ]
+}

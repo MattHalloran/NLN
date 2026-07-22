@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "policyId": "nln-phase10-qualification-v1",
+  "productionIntegrationEnabled": false,
+  "requiredTrustedGateRuns": 2,
+  "requireCleanCheckout": true,
+  "requiredUsabilityExercises": [
+    "find-current-release",
+    "explain-candidate-production-boundary",
+    "diagnose-stale-backup",
+    "choose-app-rollback",
+    "respond-incompatible-migration",
+    "find-release-evidence-chain",
+    "identify-downtime-slo"
+  ],
+  "remainingDependencies": ["phase9-disaster-recovery", "phase11-shadow-adoption-and-cutover"]
+}

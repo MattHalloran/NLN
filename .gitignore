@@ -206,7 +206,11 @@ scripts/tests/tmp
 /backups/
 *.tar.gz
 .deploy-readiness/
+.deploy-lock/
 .validation/
+
+# Local deployment-safety audit fixtures and receipts
+repository-safety-fixture.tmp
 
 # Playwright E2E Testing
 test-results/

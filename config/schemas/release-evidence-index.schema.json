@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "nln-release-evidence-index-v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "receiptType", "releaseId", "release", "scope", "createdAt", "components", "retentionClass", "confidentiality"],
+  "properties": {
+    "schemaVersion": { "const": 1 }, "receiptType": { "const": "release-evidence-index" }, "releaseId": { "type": "string" },
+    "release": { "type": "object" }, "scope": { "const": "fixture" }, "createdAt": { "type": "string" },
+    "components": { "type": "array", "uniqueItems": true }, "retentionClass": { "const": "release-evidence" }, "confidentiality": { "const": "operational-confidential" }
+  }
+}

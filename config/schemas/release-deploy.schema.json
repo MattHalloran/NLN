@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "nln-release-deploy-v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "receiptType",
+    "receiptId",
+    "status",
+    "scope",
+    "producer",
+    "release",
+    "startedAt",
+    "finishedAt",
+    "durationMilliseconds",
+    "policy",
+    "inputs",
+    "checks",
+    "outputs",
+    "childReceipts",
+    "result",
+    "failure",
+    "productionMutation",
+    "userVisibleDowntimeBegan",
+    "databaseMutationOccurred",
+    "measuredDowntimeMilliseconds",
+    "safestNextAction"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "receiptType": { "const": "release-deploy" },
+    "receiptId": { "type": "string" },
+    "status": { "enum": ["planned", "success", "failed", "recovered", "blocked"] },
+    "scope": { "enum": ["fixture", "local"] },
+    "producer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 }
+      }
+    },
+    "release": { "type": "object" },
+    "startedAt": { "type": "string" },
+    "finishedAt": { "type": "string" },
+    "durationMilliseconds": { "type": "integer", "minimum": 0 },
+    "policy": { "type": "object" },
+    "inputs": { "type": "array" },
+    "checks": { "type": "array" },
+    "outputs": { "type": "array" },
+    "childReceipts": { "type": "array" },
+    "result": { "type": "object" },
+    "failure": { "type": ["object", "null"] },
+    "productionMutation": { "const": false },
+    "userVisibleDowntimeBegan": { "type": "boolean" },
+    "databaseMutationOccurred": { "type": "boolean" },
+    "measuredDowntimeMilliseconds": { "type": "integer", "minimum": 0 },
+    "safestNextAction": { "type": "string" }
+  }
+}

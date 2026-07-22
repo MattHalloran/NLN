@@ -1,18 +1,40 @@
 import { defineConfig, devices } from "@playwright/test";
 import type { PlaywrightTestConfig } from "@playwright/test";
-import { E2E_TIMEOUTS, E2E_URLS } from "@local/shared";
+import { DEFAULT_PORTS, E2E_TIMEOUTS } from "@local/shared";
 import * as dotenv from "dotenv";
 
-dotenv.config();
+if (process.env.E2E_IGNORE_DOTENV !== "true") dotenv.config();
 process.env.E2E_MANAGE_SERVICES ??= "true";
+const uiPort = Number(process.env.PORT_UI ?? DEFAULT_PORTS.ui),
+    serverPort = Number(process.env.PORT_SERVER ?? DEFAULT_PORTS.server),
+    uiUrl = `http://localhost:${uiPort}`,
+    serverHealthcheck = `http://localhost:${serverPort}/healthcheck`;
+
+if (
+    !Number.isSafeInteger(uiPort) ||
+    uiPort < 1024 ||
+    uiPort > 65535 ||
+    !Number.isSafeInteger(serverPort) ||
+    serverPort < 1024 ||
+    serverPort > 65535
+)
+    throw new Error("E2E UI and server ports must be valid unprivileged ports");
 
 type E2EConfigOptions = {
     testMatch: PlaywrightTestConfig["testMatch"];
     reportName: string;
     testIgnore?: PlaywrightTestConfig["testIgnore"];
+    uiServerCommand?: string;
+    uiServerTimeout?: number;
 };
 
-export const createE2EConfig = ({ testMatch, reportName, testIgnore = [] }: E2EConfigOptions) =>
+export const createE2EConfig = ({
+    testMatch,
+    reportName,
+    testIgnore = [],
+    uiServerCommand = "cd packages/ui && yarn start-development",
+    uiServerTimeout = E2E_TIMEOUTS.uiStartMs,
+}: E2EConfigOptions) =>
     defineConfig({
         testDir: "./e2e",
         testMatch,
@@ -41,7 +63,7 @@ export const createE2EConfig = ({ testMatch, reportName, testIgnore = [] }: E2EC
         outputDir: `test-results/${reportName}-artifacts`,
         globalTeardown: "./e2e/teardown/e2e-services.teardown.ts",
         use: {
-            baseURL: E2E_URLS.ui,
+            baseURL: uiUrl,
             trace: "on-first-retry",
             screenshot: "only-on-failure",
             video: "retain-on-failure",
@@ -74,17 +96,17 @@ export const createE2EConfig = ({ testMatch, reportName, testIgnore = [] }: E2EC
         webServer: [
             {
                 command: "E2E_MANAGE_SERVICES=true bash scripts/start-e2e-server.sh",
-                url: E2E_URLS.serverHealthcheck,
+                url: serverHealthcheck,
                 reuseExistingServer: !process.env.CI,
                 timeout: E2E_TIMEOUTS.serverStartMs,
                 stdout: "pipe",
                 stderr: "pipe",
             },
             {
-                command: "cd packages/ui && yarn start-development",
-                url: E2E_URLS.ui,
+                command: uiServerCommand,
+                url: uiUrl,
                 reuseExistingServer: !process.env.CI,
-                timeout: E2E_TIMEOUTS.uiStartMs,
+                timeout: uiServerTimeout,
                 stdout: "ignore",
                 stderr: "pipe",
             },

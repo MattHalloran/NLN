@@ -88,3 +88,9 @@ teardown() {
     assert_equal "$status" 1
     assert_output --partial "Could not run VPS health checks"
 }
+
+@test "healthcheck script documents read-only behavior and does not contain direct remediation commands" {
+    grep -q "Non-mutating production VPS health checks" "$SCRIPT_PATH"
+    grep -q "must not run cleanup, package update, restart, prune, or delete commands" "$SCRIPT_PATH"
+    ! grep -Eq '^[[:space:]]*(rm[[:space:]]+-rf|docker[[:space:]]+system[[:space:]]+prune|apt[[:space:]]+upgrade|systemctl[[:space:]]+restart)' "$SCRIPT_PATH"
+}

@@ -61,6 +61,7 @@ deploy_write_readiness_receipt() {
     local validation_skipped="$4"
     local rehearsal_skipped="$5"
     local vps_skipped="$6"
+    local migration_rehearsal_skipped="${7:-true}"
     local receipt_dir receipt_path commit created_at
 
     receipt_dir=$(deploy_receipt_dir "${repo_root}")
@@ -77,6 +78,7 @@ deploy_write_readiness_receipt() {
         echo "validation_skipped=${validation_skipped}"
         echo "rehearsal_skipped=${rehearsal_skipped}"
         echo "vps_skipped=${vps_skipped}"
+        echo "migration_rehearsal_skipped=${migration_rehearsal_skipped}"
         echo "created_at=${created_at}"
         echo "created_epoch=$(date -u +%s)"
     } >"${receipt_path}"
@@ -96,7 +98,7 @@ deploy_verify_readiness_receipt() {
     local version="$2"
     local validation_cmd="$3"
     local max_age_seconds="$4"
-    local receipt_path now created_epoch age commit receipt_commit
+    local receipt_path commit
 
     header "Verifying deploy readiness receipt"
     receipt_path=$(deploy_receipt_path "${repo_root}" "${version}")
@@ -113,11 +115,32 @@ deploy_verify_readiness_receipt() {
     fi
 
     commit=$(deploy_current_commit "${repo_root}")
+    deploy_verify_readiness_receipt_file "${receipt_path}" "${version}" "${validation_cmd}" "${max_age_seconds}" "${commit}"
+}
+
+deploy_verify_readiness_receipt_file() {
+    local receipt_path="$1"
+    local version="$2"
+    local validation_cmd="$3"
+    local max_age_seconds="$4"
+    local expected_commit="$5"
+    local now created_epoch age receipt_commit
+
+    if [ ! -f "${receipt_path}" ]; then
+        error "Deploy readiness receipt not found: ${receipt_path}"
+        return 1
+    fi
+
+    if [ "$(deploy_receipt_value "${receipt_path}" version)" != "${version}" ]; then
+        error "Deploy readiness receipt version does not match ${version}: ${receipt_path}"
+        return 1
+    fi
+
     receipt_commit=$(deploy_receipt_value "${receipt_path}" commit)
-    if [ "${receipt_commit}" != "${commit}" ]; then
+    if [ "${receipt_commit}" != "${expected_commit}" ]; then
         error "Deploy readiness receipt was created for a different commit."
         error "Receipt: ${receipt_commit}"
-        error "Current:  ${commit}"
+        error "Expected: ${expected_commit}"
         return 1
     fi
 
@@ -135,6 +158,12 @@ deploy_verify_readiness_receipt() {
         return 1
     fi
 
+    if [ "$(deploy_receipt_value "${receipt_path}" migration_rehearsal_skipped)" != "false" ]; then
+        error "Deploy readiness receipt did not include restored-backup migration rehearsal."
+        error "Run deploy-readiness with --migration-backup PATH before production deploy."
+        return 1
+    fi
+
     created_epoch=$(deploy_receipt_value "${receipt_path}" created_epoch)
     if ! [[ "${created_epoch}" =~ ^[0-9]+$ ]]; then
         error "Deploy readiness receipt has an invalid timestamp: ${receipt_path}"
@@ -149,5 +178,5 @@ deploy_verify_readiness_receipt() {
         return 1
     fi
 
-    success "Deploy readiness receipt is fresh for ${version} at commit ${commit}"
+    success "Deploy readiness receipt is fresh for ${version} at commit ${expected_commit}"
 }

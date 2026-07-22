@@ -2,7 +2,9 @@
  * Comprehensive Audit Logging System
  *
  * This module provides structured audit logging for security-relevant events.
- * Audit logs are written to both Winston logs and can optionally be stored in a database.
+ * Audit records are emitted through Winston as structured log payloads. Runtime
+ * log retention is the source of truth unless a future migration introduces a
+ * dedicated audit-log table and retention policy.
  *
  * Usage:
  *   import { auditLog, AuditEventType } from './utils/auditLogger';
@@ -10,7 +12,7 @@
  *   auditLog({
  *     eventType: AuditEventType.AUTH_LOGIN_SUCCESS,
  *     userId: customer.id,
- *     ip: req.ip,
+ *     ip: getRequestMetadata(req).ip,
  *     userAgent: req.headers['user-agent'],
  *     details: { email }
  *   });
@@ -18,6 +20,7 @@
 
 import { Request } from "express";
 import { logger, LogLevel } from "../logger.js";
+import { getClientIp } from "../middleware/clientIdentity.js";
 
 /**
  * Comprehensive list of audit event types
@@ -94,7 +97,7 @@ export function getRequestMetadata(req: Request): {
     };
 
     return {
-        ip: req.ip || req.socket.remoteAddress,
+        ip: getClientIp(req),
         userAgent: req.headers["user-agent"],
         userId: typedReq.customerId,
         userName: typedReq.customer
@@ -142,10 +145,6 @@ export function auditLog(entry: AuditLogEntry): void {
         default:
             logger.log(LogLevel.info, logMessage, auditPayload);
     }
-
-    // TODO: Optional database storage
-    // If you want to store audit logs in the database, implement here:
-    // await prisma.auditLog.create({ data: auditPayload });
 }
 
 /**
@@ -155,7 +154,7 @@ export function auditAuthEvent(
     req: Request,
     eventType: AuditEventType,
     status: "success" | "failure" | "warning",
-    details?: Record<string, unknown>,
+    details?: Record<string, unknown>
 ): void {
     const metadata = getRequestMetadata(req);
     auditLog({
@@ -174,7 +173,7 @@ export function auditAdminAction(
     eventType: AuditEventType,
     resource: string,
     beforeState?: Record<string, unknown>,
-    afterState?: Record<string, unknown>,
+    afterState?: Record<string, unknown>
 ): void {
     const metadata = getRequestMetadata(req);
     auditLog({
@@ -194,7 +193,7 @@ export function auditSecurityEvent(
     req: Request,
     eventType: AuditEventType,
     errorMessage?: string,
-    details?: Record<string, unknown>,
+    details?: Record<string, unknown>
 ): void {
     const metadata = getRequestMetadata(req);
     auditLog({

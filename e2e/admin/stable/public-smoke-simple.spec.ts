@@ -8,10 +8,62 @@ const expectUsablePage = async (page: import("@playwright/test").Page, heading: 
     await expect(page.locator("body")).not.toBeEmpty();
 };
 
+const expectHomepageHeroImageLoaded = async (page: import("@playwright/test").Page) => {
+    const heroImages = page.getByTestId("homepage-hero").locator("img");
+
+    await expect(heroImages.first()).toBeAttached();
+    await expect
+        .poll(async () =>
+            heroImages.evaluateAll((images) =>
+                images.some(
+                    (image) =>
+                        image instanceof HTMLImageElement &&
+                        image.complete &&
+                        image.naturalWidth > 0 &&
+                        image.naturalHeight > 0 &&
+                        image.currentSrc.length > 0,
+                ),
+            ),
+        )
+        .toBe(true);
+};
+
+const waitForHomepageViewTracking = (page: import("@playwright/test").Page) =>
+    page.waitForResponse(
+        (response) =>
+            response.url().includes("/rest/v1/landing-page/variants/") &&
+            response.url().endsWith("/track") &&
+            response.request().method() === "POST",
+    );
+
+const gotoHomeAndExpectUsable = async (page: import("@playwright/test").Page) => {
+    const viewTrackingResponsePromise = waitForHomepageViewTracking(page);
+
+    await page.goto(APP_LINKS.Home);
+    await expectUsablePage(page, /new life nursery|wholesale nursery/i);
+    await expectHomepageHeroImageLoaded(page);
+
+    const viewTrackingResponse = await viewTrackingResponsePromise;
+    expect(viewTrackingResponse.status()).toBe(200);
+    const partnerLogos = page.locator("footer img[alt*='member'], footer img[alt*='Plant Brand']");
+    await expect(partnerLogos).toHaveCount(3);
+    await expect
+        .poll(() =>
+            partnerLogos.evaluateAll((images) =>
+                images.every(
+                    (image) =>
+                        image instanceof HTMLImageElement &&
+                        image.complete &&
+                        image.naturalWidth > 0,
+                ),
+            ),
+        )
+        .toBe(true);
+};
+
 test.describe("Public Site - Smoke", () => {
     test("loads the core public pages and navigates between them", async ({ page }) => {
-        await page.goto(APP_LINKS.Home);
-        await expectUsablePage(page, /new life nursery|wholesale nursery/i);
+        await gotoHomeAndExpectUsable(page);
         await expect(page.getByRole("button", { name: /browse plants/i })).toBeVisible();
 
         await page.goto(APP_LINKS.About);
@@ -36,8 +88,7 @@ test.describe("Public Site - Smoke", () => {
     }) => {
         await page.setViewportSize({ width: 390, height: 844 });
 
-        await page.goto(APP_LINKS.Home);
-        await expectUsablePage(page, /new life nursery|wholesale nursery/i);
+        await gotoHomeAndExpectUsable(page);
 
         await page.goto(APP_LINKS.About);
         await expectUsablePage(page, /our heritage/i);
@@ -62,8 +113,7 @@ test.describe("Public Site - Smoke", () => {
     });
 
     test("submits the public newsletter signup from the homepage", async ({ page }) => {
-        await page.goto(APP_LINKS.Home);
-        await expectUsablePage(page, /new life nursery|wholesale nursery/i);
+        await gotoHomeAndExpectUsable(page);
 
         const emailInput = page.getByPlaceholder(/enter your email address/i);
         await emailInput.scrollIntoViewIfNeeded();

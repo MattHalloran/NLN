@@ -188,6 +188,100 @@ describe("restApi client", () => {
         expect(csrfMocks.getCsrfToken).not.toHaveBeenCalled();
     });
 
+    it("uses typed storage cleanup endpoints with query params where supported", async () => {
+        const { restApi } = await import("./client");
+        vi.mocked(fetch).mockResolvedValueOnce(
+            jsonResponse({
+                items: [],
+                total: 0,
+            }),
+        );
+
+        await restApi.getCleanupHistory({ status: "completed", limit: 25, offset: 50 });
+
+        expect(fetch).toHaveBeenCalledWith(
+            `https://server.test/api${stripApiPrefix(
+                REST_ROUTES.storage.cleanupHistory,
+            )}?status=completed&limit=25&offset=50`,
+            expect.objectContaining({
+                method: "GET",
+                credentials: "include",
+            }),
+        );
+    });
+
+    it("sends destructive storage cleanup requests through CSRF-protected endpoints", async () => {
+        const { restApi } = await import("./client");
+        vi.mocked(fetch).mockResolvedValueOnce(
+            jsonResponse({ success: true, deletedCount: 2, freedMB: 1.5 }),
+        );
+
+        await expect(restApi.cleanOrphanedFiles()).resolves.toEqual({
+            success: true,
+            deletedCount: 2,
+            freedMB: 1.5,
+        });
+
+        expect(fetch).toHaveBeenCalledWith(
+            `https://server.test/api${stripApiPrefix(REST_ROUTES.storage.orphanedFiles)}`,
+            expect.objectContaining({
+                method: "DELETE",
+                credentials: "include",
+            }),
+        );
+        const [, init] = vi.mocked(fetch).mock.calls[0] ?? [];
+        expect((init?.headers as Headers).get(CSRF.HeaderName)).toBe("csrf-token");
+    });
+
+    it("filters logs through the shared logs route", async () => {
+        const { restApi } = await import("./client");
+        vi.mocked(fetch).mockResolvedValueOnce(
+            jsonResponse({
+                logs: [],
+                total: 0,
+                file: "combined",
+            }),
+        );
+
+        await restApi.getLogs({
+            file: "combined",
+            lines: 100,
+            offset: 200,
+            level: "error",
+            search: "newsletter",
+            dateFrom: "2026-06-01",
+            dateTo: "2026-06-23",
+        });
+
+        expect(fetch).toHaveBeenCalledWith(
+            `https://server.test/api${stripApiPrefix(
+                REST_ROUTES.logs.root,
+            )}?file=combined&lines=100&offset=200&level=error&search=newsletter&dateFrom=2026-06-01&dateTo=2026-06-23`,
+            expect.objectContaining({
+                method: "GET",
+                credentials: "include",
+            }),
+        );
+    });
+
+    it("deletes or unsubscribes newsletter subscribers with the shared dynamic route", async () => {
+        const { restApi } = await import("./client");
+        vi.mocked(fetch).mockResolvedValueOnce(
+            jsonResponse({ success: true, message: "Subscriber removed" }),
+        );
+
+        await restApi.deleteNewsletterSubscriber(42, "delete");
+
+        expect(fetch).toHaveBeenCalledWith(
+            `https://server.test/api${stripApiPrefix(REST_ROUTES.newsletter.subscriber("42"))}`,
+            expect.objectContaining({
+                method: "DELETE",
+                credentials: "include",
+                body: JSON.stringify({ action: "delete" }),
+            }),
+        );
+    });
+
     it("throws an ApiError when newsletter subscriber export fails", async () => {
         const { ApiError, restApi } = await import("./client");
         vi.mocked(fetch).mockResolvedValueOnce(

@@ -1,0 +1,82 @@
+name: Restore Drill
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "41 10 * * 2"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: restore-drill
+  cancel-in-progress: false
+
+jobs:
+  fixture-restore-drill:
+    name: Fixture Restore Drill
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Use Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .nvmrc
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Create synthetic runtime-state backup
+        run: |
+          backup_dir=/tmp/nln-fixture-backup/runtime-state
+          mkdir -p \
+            "$backup_dir/data/uploads" \
+            "$backup_dir/assets" \
+            "$backup_dir/data/redis" \
+            "$backup_dir/data/migration-backups"
+          cat >"$backup_dir/.env-prod" <<'EOF'
+          DB_NAME=nln_restore_drill
+          DB_USER=nln_restore_drill
+          DB_PASSWORD=nln_restore_drill_password
+          EOF
+          cat >"$backup_dir/data/postgres.sql" <<'EOF'
+          -- Synthetic empty database fixture for migration rehearsal.
+          EOF
+          cat >"$backup_dir/manifest.txt" <<'EOF'
+          backup_type=runtime-state
+          database_dump=data/postgres.sql
+          redis_backup_semantics=best-effort-file-copy
+          paths:
+          - data/postgres.sql
+          - data/uploads
+          - assets
+          - data/redis
+          - data/migration-backups
+          - .env-prod
+          EOF
+
+      - name: Run restore drill against fixture
+        run: ./scripts/restore-drill.sh --backup /tmp/nln-fixture-backup
+
+      - name: Run Phase 9 clean-host and failure-injection qualification
+        run: |
+          umask 077
+          mkdir -p .validation/phase9
+          scripts/tests/helpers/bats-core/bin/bats \
+            --formatter tap \
+            scripts/tests/phase9-disaster-recovery.bats \
+            > .validation/phase9/phase9-disaster-recovery.tap
+
+      - name: Upload restore drill receipts
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: restore-drill-receipts
+          path: |
+            .validation/restore-drills
+            .validation/phase9
+          if-no-files-found: ignore

@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "inventoryId": "nln-runtime-state-v1",
+  "backupFormatTarget": 2,
+  "entries": [
+    {
+      "path": "data/postgres.sql",
+      "classification": "irreplaceable-business-data",
+      "required": true,
+      "capture": "transaction-consistent-logical-dump",
+      "integrity": "sha256-and-disposable-restore",
+      "restorePriority": 1
+    },
+    {
+      "path": "data/uploads",
+      "classification": "irreplaceable-user-content",
+      "required": true,
+      "capture": "recursive-file-copy",
+      "integrity": "per-file-sha256-and-database-reference-check",
+      "restorePriority": 2
+    },
+    {
+      "path": "assets",
+      "classification": "irreplaceable-managed-content",
+      "required": true,
+      "capture": "recursive-file-copy",
+      "integrity": "per-file-sha256-and-readability-check",
+      "restorePriority": 2
+    },
+    {
+      "path": ".env-prod",
+      "classification": "irreplaceable-secret-configuration",
+      "required": true,
+      "capture": "regular-file-copy",
+      "integrity": "sha256-encrypted-owner-only",
+      "restorePriority": 1
+    },
+    {
+      "path": ".env",
+      "classification": "optional-secret-configuration",
+      "required": false,
+      "capture": "regular-file-copy-if-present",
+      "integrity": "sha256-encrypted-owner-only",
+      "restorePriority": 3
+    },
+    {
+      "path": "jwt_*",
+      "classification": "optional-secret-key-material",
+      "required": false,
+      "capture": "regular-files-matching-glob-if-present",
+      "integrity": "sha256-encrypted-owner-only",
+      "restorePriority": 1
+    },
+    {
+      "path": "data/redis",
+      "classification": "operationally-important-recoverable",
+      "required": true,
+      "capture": "best-effort-persistence-file-copy",
+      "integrity": "per-file-sha256-and-queue-metadata",
+      "restorePriority": 4
+    },
+    {
+      "path": "data/migration-backups",
+      "classification": "recovery-evidence",
+      "required": true,
+      "capture": "recursive-file-copy",
+      "integrity": "per-file-sha256",
+      "restorePriority": 4
+    },
+    {
+      "path": "data/logs",
+      "classification": "optional-diagnostic-data",
+      "required": false,
+      "capture": "recursive-file-copy-when-requested",
+      "integrity": "per-file-sha256",
+      "restorePriority": 5
+    }
+  ],
+  "objectRequirements": {
+    "recordFileType": true,
+    "recordBytes": true,
+    "recordMode": true,
+    "recordSha256": true,
+    "rejectSymlinks": true,
+    "rejectSpecialFiles": true,
+    "detectChangesDuringCapture": true
+  },
+  "databaseRequirements": {
+    "recordServerVersion": true,
+    "recordDumpToolVersion": true,
+    "recordAppliedMigrations": true,
+    "requireDisposableRestore": true,
+    "requireStructuralInvariants": true,
+    "requireSafeRowCountInvariants": true
+  },
+  "compatibility": {
+    "readLegacyManifestTxt": true,
+    "rewriteLegacyBackups": false,
+    "deleteLegacyBackups": false
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "policyId": "nln-vps-health-maintenance-v1",
+  "productionIntegrationEnabled": false,
+  "healthAdapterMode": "read-only",
+  "thresholds": {
+    "minimumFreeBytes": 5368709120,
+    "minimumFreeInodes": 10000,
+    "maximumContainerRestarts": 3,
+    "maximumLoadPerCpu": 2,
+    "maximumBackupAgeSeconds": 86400,
+    "maximumRestoreDrillAgeSeconds": 604800,
+    "minimumTlsDaysRemaining": 21,
+    "maximumClockOffsetSeconds": 5,
+    "maximumPackageMetadataAgeSeconds": 86400
+  },
+  "thresholdSources": {
+    "maximumBackupAgeSeconds": {
+      "policyPath": "config/runtime-state-backup-policy.json",
+      "jsonPointer": "/qualification/maximumQualifiedAgeSeconds"
+    },
+    "maximumRestoreDrillAgeSeconds": {
+      "policyPath": "config/runtime-state-backup-policy.json",
+      "jsonPointer": "/restoreVerificationCadence/fixtureMaximumIntervalHours",
+      "multiplier": 3600
+    }
+  },
+  "requiredDiskAreas": ["project", "docker", "backup", "database"],
+  "requiredContainers": ["ui", "server", "db", "redis"],
+  "protectedCleanupClasses": [
+    "current-release",
+    "known-good-release",
+    "qualified-backup",
+    "incident-hold",
+    "database-volume",
+    "redis-volume"
+  ],
+  "maintenance": {
+    "dryRunDefault": true,
+    "requireQualifiedBackup": true,
+    "requireRemoteCopy": true,
+    "requireRestoreEvidence": true,
+    "requireExactPlanHash": true,
+    "requireUnchangedHostFingerprint": true,
+    "requireExactConfirmation": true,
+    "postHealthRequired": true,
+    "deploymentIntegrationEnabled": false
+  }
+}

@@ -9,6 +9,8 @@ HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 . "${HERE}/utils.sh"
 # shellcheck source=scripts/runtime-state.sh
 . "${HERE}/runtime-state.sh"
+# shellcheck source=scripts/deploy-lock.sh
+. "${HERE}/deploy-lock.sh"
 
 VERSION=""
 EXECUTE=false
@@ -90,6 +92,8 @@ if [ "${EXECUTE}" != true ]; then
     info "Run with --execute to restore this runtime-state backup."
     exit 0
 fi
+
+deploy_lock_acquire "${DEPLOY_LOCK_PATH:-/var/lock/nln-deploy.lock}" "restore-runtime-state.sh" "${VERSION}" "${PROJECT_DIR}"
 
 warning "This will stop containers and replace current runtime state from ${BACKUP_DIR}."
 prompt "Type yes to restore version ${VERSION}:"

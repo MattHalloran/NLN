@@ -162,18 +162,30 @@ assert(
     "destructive forceCleanup helper must not be exposed in service worker registration",
 );
 assert(
-    registration.includes("cleanupDevelopmentServiceWorkers") &&
-    registration.includes("import.meta.env.DEV") &&
-    registration.includes("isLocalhost"),
-    "development service worker cleanup must be gated to local dev only",
+    registration.includes("cleanupLocalServiceWorkers") && registration.includes("isLocalhost"),
+    "local service worker cleanup must stay gated to localhost",
 );
 
 const indexSource = read("src/index.tsx");
+const pwaUpdatePolicySource = read("src/pwaUpdatePolicy.ts");
+assert(
+    indexSource.includes("VITE_ENABLE_LOCAL_PWA") &&
+        indexSource.includes("serviceWorkerRegistration.cleanupLocalServiceWorkers()"),
+    "local production validation must clear local service workers unless explicitly enabled",
+);
 assert(indexSource.includes("nln-service-worker-update-ready"), "visible service worker updates must dispatch an update event");
 assert(indexSource.includes("window.location.replace"), "production www traffic must be canonicalized before app startup");
 assert(indexSource.includes("hadControllerAtStartup"), "controllerchange handling must distinguish first install from updates");
 assert(indexSource.includes("isServiceWorkerUpdateActivationExpected"), "service worker updates must mark expected controller changes");
-assert(indexSource.includes("reloadWhenIdle"), "visible tabs with updates must eventually reload when idle");
+assert(indexSource.includes("createServiceWorkerUpdateScheduler"), "service worker update scheduling must use the tested policy helper");
+assert(indexSource.includes("isPwaAutoReloadSafe"), "service worker update scheduling must use reload-safety state");
+assert(pwaUpdatePolicySource.includes("reloadWhenIdle"), "visible public tabs with updates must eventually reload when idle");
+assert(
+    pwaUpdatePolicySource.includes("dispatchUpdateReloadAction") &&
+        pwaUpdatePolicySource.includes("isAutoReloadSafe") &&
+        pwaUpdatePolicySource.includes("setTimeoutFn(reloadWhenIdle"),
+    "service worker update prompts must be limited to unsafe reload state",
+);
 assert(indexSource.includes("sessionStorage.removeItem(CHUNK_RELOAD_KEY)"), "chunk-load recovery lockout must reset after a clean app boot");
 
 if (failures.length > 0) {

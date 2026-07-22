@@ -28,6 +28,7 @@ BACKUP_COUNT=""
 WILL_LOOP=false
 INTERVAL=86400
 OUTPUT_DIR=""
+PRINT_BACKUP_DIR=false
 
 usage() {
     cat <<EOF
@@ -42,6 +43,7 @@ Usage: $0 [options]
       --include-logs        Include data/logs in runtime-state backup
       --preflight-only      Print remote size estimates and exit without creating an archive
       --verify-restore      Restore the new logical dump into disposable local Postgres
+      --print-backup-dir    Print backup_dir=PATH after a backup is created
       --allow-provision     Allow keylessSsh.sh to create/install SSH keys if needed
   -h, --help                Show this help message
 EOF
@@ -87,6 +89,10 @@ while [ $# -gt 0 ]; do
         ;;
     --verify-restore)
         VERIFY_RESTORE=true
+        shift
+        ;;
+    --print-backup-dir)
+        PRINT_BACKUP_DIR=true
         shift
         ;;
     --allow-provision)
@@ -188,6 +194,7 @@ print_runtime_preflight() {
     info "Backup mode: runtime-state"
     info "Include logs: ${INCLUDE_LOGS}"
     info "Database backup: logical pg_dump saved as $(runtime_state_database_dump_path)"
+    warning "Redis backup semantics: best-effort file copy for operational state; PostgreSQL remains the data-of-record backup."
     ssh -i "${KEY_PATH}" -o BatchMode=yes "${REMOTE_SERVER}" "$(remote_runtime_paths_script "${INCLUDE_LOGS}")" |
         ssh -i "${KEY_PATH}" -o BatchMode=yes "${REMOTE_SERVER}" "cd '${PROJECT_DIR}' && xargs -r du -sh"
 }
@@ -209,6 +216,7 @@ create_runtime_backup() {
     ssh -i "${KEY_PATH}" -o BatchMode=yes "${REMOTE_SERVER}" "$(remote_runtime_paths_script "${INCLUDE_LOGS}")" >"${paths_file}"
     chmod 600 "${paths_file}"
 
+    warning "Redis backup semantics: best-effort file copy for operational state; PostgreSQL remains the data-of-record backup."
     info "Collecting runtime-state files..."
     mkdir -p "${staging_dir}"
     ssh -i "${KEY_PATH}" -o BatchMode=yes "${REMOTE_SERVER}" "cd '${PROJECT_DIR}' && tar -czf - -T -" <"${paths_file}" |
@@ -231,6 +239,8 @@ create_runtime_backup() {
         echo "project_dir=${PROJECT_DIR}"
         echo "include_logs=${INCLUDE_LOGS}"
         echo "database_dump=${db_dump}"
+        echo "redis_backup_semantics=best-effort-file-copy"
+        echo "redis_data_classification=operationally-important-recoverable"
         echo "paths:"
         echo "- ${db_dump}"
         sed 's/^/- /' "${paths_file}"
@@ -407,6 +417,10 @@ while true; do
     fi
 
     cleanup_old_backups
+
+    if [ "${PRINT_BACKUP_DIR}" = true ]; then
+        printf 'backup_dir=%s\n' "${BACKUP_ROOT}/${timestamp}"
+    fi
 
     if ! is_yes "${WILL_LOOP}"; then
         exit 0

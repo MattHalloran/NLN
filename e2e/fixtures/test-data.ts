@@ -25,19 +25,20 @@ export const mockHeroBanner = createTestHeroBanner({
 export const testHeroBanners = [
     createTestHeroBanner({
         id: "e2e-hero-1",
+        src: "/images/Newlife-16-S.jpeg",
         alt: "E2E Test Banner 1",
         description: "Beautiful spring flowers in full bloom",
     }),
     createTestHeroBanner({
         id: "e2e-hero-2",
-        src: "/images/test-hero-2.jpg",
+        src: "/images/bluestar-XXL.jpg",
         alt: "E2E Test Banner 2",
         description: "Summer garden with vibrant colors",
         displayOrder: 2,
     }),
     createTestHeroBanner({
         id: "e2e-hero-3",
-        src: "/images/test-hero-3.jpg",
+        src: "/images/tiny_tot_arborvitae_3-M.jpg",
         alt: "E2E Test Banner 3",
         description: "Fall foliage and seasonal plants",
         displayOrder: 3,

@@ -10,8 +10,9 @@
 # 5. Verifies containers are healthy
 #
 # Arguments:
-# -v: Version number to roll back to (REQUIRED)
-# -h: Show this help message
+# -v, --version: Version number to roll back to (REQUIRED)
+# --dry-run: Validate inputs and print the rollback summary without changing containers or data
+# -h, --help: Show this help message
 #
 # Prerequisites:
 # - The version backup must exist at /var/tmp/{VERSION}/
@@ -25,31 +26,36 @@ HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 . "${HERE}/utils.sh"
 # shellcheck source=scripts/runtime-state.sh
 . "${HERE}/runtime-state.sh"
+# shellcheck source=scripts/deploy-lock.sh
+. "${HERE}/deploy-lock.sh"
 
-# Parse arguments
 VERSION=""
-while getopts "v:h" opt; do
-    case $opt in
-    v)
-        VERSION=$OPTARG
+DRY_RUN=false
+while [ $# -gt 0 ]; do
+    case "$1" in
+    -v | --version)
+        VERSION="${2:-}"
+        shift 2
         ;;
-    h)
-        echo "Usage: $0 -v VERSION [-h]"
+    --dry-run)
+        DRY_RUN=true
+        shift
+        ;;
+    -h | --help)
+        echo "Usage: $0 -v VERSION [--dry-run] [-h]"
         echo "  -v: Version number to roll back to (REQUIRED, e.g., \"2.2.5\")"
+        echo "  --dry-run: Validate rollback inputs and print the rollback summary without mutation"
         echo "  -h: Show this help message"
         echo ""
-        echo "Example: $0 -v 2.2.5"
+        echo "Example: $0 -v 2.2.5 --dry-run"
         echo ""
         echo "This script rolls back your deployment to a previous version."
         echo "It will restore the database and Docker containers from backups."
         exit 0
         ;;
-    \?)
-        error "Invalid option: -$OPTARG"
-        exit 1
-        ;;
-    :)
-        error "Option -$OPTARG requires an argument."
+    *)
+        error "Unknown option: $1"
+        echo "Usage: $0 -v VERSION [--dry-run] [-h]"
         exit 1
         ;;
     esac
@@ -65,14 +71,18 @@ fi
 validate_deploy_version "${VERSION}"
 
 header "Rolling back to version ${VERSION}"
+deploy_lock_acquire "${DEPLOY_LOCK_PATH:-/var/lock/nln-deploy.lock}" "rollback.sh" "${VERSION}" "$(cd "${HERE}/.." && pwd)"
+
+ROLLBACK_BACKUP_ROOT="${ROLLBACK_BACKUP_ROOT:-/var/tmp}"
 
 # Check if backup directory exists
-BACKUP_DIR="/var/tmp/${VERSION}"
+BACKUP_DIR="${ROLLBACK_BACKUP_ROOT}/${VERSION}"
 if [ ! -d "${BACKUP_DIR}" ]; then
     error "Backup directory not found: ${BACKUP_DIR}"
     error "Available versions:"
     found_version=false
-    for version_dir in /var/tmp/*; do
+    for version_dir in "${ROLLBACK_BACKUP_ROOT}"/*; do
+        [ -e "${version_dir}" ] || continue
         version_name=$(basename "${version_dir}")
         if [[ "${version_name}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "${version_name}"
@@ -123,7 +133,7 @@ verify_public_endpoints() {
     ui_url="${UI_URL:-}"
     server_health_url="${SERVER_URL:-}"
 
-    if [ -z "${ui_url}" ] || [ -z "${server_health_url}" ]; then
+    if [ "${DEPLOY_REHEARSAL:-false}" != "true" ] && { [ -z "${ui_url}" ] || [ -z "${server_health_url}" ]; }; then
         warning "UI_URL or SERVER_URL is not set; skipping public endpoint verification."
         return 0
     fi
@@ -131,7 +141,13 @@ verify_public_endpoints() {
     server_health_url="${server_health_url%/}/healthcheck"
 
     for attempt in {1..12}; do
-        if curl -fsS "${ui_url}" >/dev/null && curl -fsS "${server_health_url}" >/dev/null; then
+        if [ "${DEPLOY_REHEARSAL:-false}" = "true" ]; then
+            if docker exec nln_ui wget -q --spider "http://127.0.0.1:${PORT_UI}" && \
+                docker exec nln_server wget -q --spider "http://127.0.0.1:${PORT_SERVER}/healthcheck"; then
+                success "Rehearsal rollback UI and API endpoints are responding inside their isolated containers"
+                return 0
+            fi
+        elif curl -fsS "${ui_url}" >/dev/null && curl -fsS "${server_health_url}" >/dev/null; then
             success "Public UI and API healthcheck endpoints are responding"
             return 0
         fi
@@ -157,6 +173,27 @@ if ! gzip -t "${DOCKER_IMAGES_ARCHIVE}"; then
     exit 1
 fi
 
+EXPECTED_EMERGENCY_DB_DUMP="/var/tmp/emergency-backup-<timestamp>/current-postgres.sql"
+print_rollback_summary() {
+    warning "Rollback summary for ${VERSION}:"
+    warning "  Backup directory: ${BACKUP_DIR}"
+    warning "  Environment file: ${BACKUP_DIR}/.env-prod"
+    warning "  Database backup selected: ${DB_BACKUP_PATH}"
+    warning "  Docker image archive: ${DOCKER_IMAGES_ARCHIVE}"
+    warning "  Expected emergency dump before mutation: ${EXPECTED_EMERGENCY_DB_DUMP}"
+    warning "  Containers affected: nln_ui nln_server nln_db nln_redis"
+    warning "Data-loss risk: this rollback replaces the live database with the ${VERSION} backup."
+    warning "Writes made after that backup may be lost from the live database."
+    warning "The emergency dump is retained for manual salvage of recent writes."
+}
+
+print_rollback_summary
+
+if [ "${DRY_RUN}" = true ]; then
+    success "Rollback dry-run completed. No containers, files, images, or databases were changed."
+    exit 0
+fi
+
 if [ "${ROLLBACK_CONFIRMED:-false}" != "true" ]; then
     # Confirm rollback with user
     warning "WARNING: This will:"
@@ -164,6 +201,8 @@ if [ "${ROLLBACK_CONFIRMED:-false}" != "true" ]; then
     warning "  2. Replace the current database with the ${VERSION} database backup"
     warning "  3. Load Docker images from ${VERSION}"
     warning "  4. Start containers with the old version"
+    warning "Writes made after the selected backup may be lost from the live database."
+    warning "An emergency dump will be created before mutation and retained for manual salvage."
     echo ""
     prompt "Are you absolutely sure you want to roll back to version ${VERSION}? (yes/no)"
     read -r CONFIRM
@@ -225,16 +264,9 @@ if [ -f "${DB_BACKUP_PATH}" ]; then
         exit 1
     fi
 
-    DB_READY=false
-    for _ in {1..30}; do
-        if docker exec nln_db pg_isready -U "${DB_USER}" -d "${DB_NAME}" >/dev/null 2>&1; then
-            DB_READY=true
-            break
-        fi
-        sleep 2
-    done
-
-    if [ "${DB_READY}" != true ]; then
+    if ! PGPASSWORD="${DB_PASSWORD}" "${HERE}/wait-for-postgres-database.sh" \
+        --container nln_db --user "${DB_USER}" --database "${DB_NAME}" \
+        --attempts 30 --delay-seconds 2; then
         error "Database did not become ready for restore"
         error "Emergency database dump is available at: ${EMERGENCY_DB_DUMP}"
         exit 1

@@ -32,7 +32,23 @@ export const landingPageContentPath = (): string =>
 export const variantsPath = (): string => path.join(serverDataDir(), LANDING_PAGE_VARIANTS_FILE);
 
 export const variantContentFileName = (variantId: string): string =>
-    `landing-page-variant-${variantId}.json`;
+    `landing-page-variant-${validateVariantId(variantId)}.json`;
+
+const VARIANT_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/;
+
+/**
+ * Variant IDs become part of a filename, so accept only a deliberately small
+ * portable character set. This rejects path separators, traversal sequences,
+ * control characters, and ambiguous platform-specific filenames before any
+ * filesystem operation is attempted.
+ */
+export const validateVariantId = (variantId: string): string => {
+    const baseName = path.basename(variantId);
+    if (baseName !== variantId || !VARIANT_ID_PATTERN.test(baseName)) {
+        throw new Error("Invalid landing-page variant ID");
+    }
+    return baseName;
+};
 
 export const variantContentPath = (variantId: string): string =>
     path.join(serverDataDir(), variantContentFileName(variantId));

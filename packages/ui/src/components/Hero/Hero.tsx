@@ -11,6 +11,7 @@ import {
     DEFAULT_HERO_TEXT,
     DEFAULT_TRUST_BADGES,
 } from "@local/shared";
+import { getHeroBannerFiles } from "./heroImages";
 
 // Icon mapping for trust badges (matches AdminHomepageHeroBanner)
 const TRUST_BADGE_ICONS = {
@@ -49,23 +50,27 @@ export const Hero = ({
     const heroSettings = data?.content?.hero?.settings;
     const heroText = data?.content?.hero?.text;
     // Convert hero banners to the format expected by Slider
-    const images = heroBanners.map((banner) => ({
-        hash: banner.id,
-        alt: banner.alt,
-        description: banner.description,
-        files: banner.files?.length
-            ? banner.files
-            : [
-                  {
-                      src: banner.src,
-                      width: banner.width,
-                      height: banner.height,
-                  },
-              ],
-    }));
+    const images = heroBanners.map((banner) => {
+        const sourceFile = banner.files?.[0];
+        const shouldDeriveGeneratedFiles = !banner.files?.length || banner.files.length === 1;
+
+        return {
+            hash: banner.id,
+            alt: banner.alt,
+            description: banner.description,
+            files: shouldDeriveGeneratedFiles
+                ? getHeroBannerFiles({
+                      src: banner.src || sourceFile?.src,
+                      width: banner.width || sourceFile?.width,
+                      height: banner.height || sourceFile?.height,
+                  })
+                : banner.files,
+        };
+    });
 
     return (
         <Box
+            data-testid="homepage-hero"
             sx={{
                 overflow: "hidden",
                 pointerEvents: "none",

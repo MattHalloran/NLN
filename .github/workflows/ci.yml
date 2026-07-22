@@ -10,10 +10,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Audit tracked repository safety
+        run: bash scripts/audit-public-repository-safety.sh
+
+      - name: Validate trusted gate manifest
+        run: node scripts/validate-trusted-manifest.mjs
 
       - name: Use Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version-file: .nvmrc
           cache: yarn
@@ -28,20 +36,14 @@ jobs:
         run: yarn workspace @local/shared build
 
       - name: Prepare Prisma schema
-        run: |
-          mkdir -p packages/server/dist/db
-          cp packages/server/src/db/schema.prisma packages/server/dist/db/schema.prisma
-          cp -R packages/server/src/db/migrations packages/server/dist/db/migrations
+        run: yarn validate:prisma-client
 
-      - name: Generate Prisma client
-        run: yarn workspace server prisma generate --schema src/db/schema.prisma
-
-      - name: Validate node-only gate
-        run: yarn validate
+      - name: Validate quick gate
+        run: yarn validate:quick
 
       - name: Upload unit coverage
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: unit-coverage
           path: |
@@ -68,7 +70,7 @@ jobs:
 
       - name: Upload Lighthouse results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: lighthouse-results
           path: .lighthouseci
@@ -76,7 +78,7 @@ jobs:
 
       - name: Upload PWA Playwright report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: playwright-report-pwa
           path: |
@@ -87,15 +89,26 @@ jobs:
       - name: Validation receipt
         if: always()
         run: |
-          VALIDATION_COMMAND="ci validate job: yarn validate, shared build, ui build, pwa, lighthouse" yarn validation:receipt
+          VALIDATION_COMMAND="ci validate job: yarn validate:quick, shared build, ui build, pwa, lighthouse" yarn validation:receipt
 
       - name: Upload validation receipt
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: validation-receipt-validate
           path: .validation/latest-receipt.md
           if-no-files-found: ignore
+
+      - name: Create trusted validate receipt
+        run: node scripts/trusted-job-receipt.mjs --job validate
+
+      - name: Upload trusted validate receipt
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: trusted-job-receipt-validate
+          path: .validation/trusted-jobs/validate.json
+          if-no-files-found: error
+          include-hidden-files: true
 
   integration:
     name: Integration Tests
@@ -107,10 +120,12 @@ jobs:
       TESTCONTAINERS_RYUK_DISABLED: true
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Use Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version-file: .nvmrc
           cache: yarn
@@ -122,13 +137,7 @@ jobs:
         run: yarn workspace @local/shared build
 
       - name: Prepare Prisma schema
-        run: |
-          mkdir -p packages/server/dist/db
-          cp packages/server/src/db/schema.prisma packages/server/dist/db/schema.prisma
-          cp -R packages/server/src/db/migrations packages/server/dist/db/migrations
-
-      - name: Generate Prisma client
-        run: yarn workspace server prisma generate --schema src/db/schema.prisma
+        run: yarn validate:prisma-client
 
       - name: Integration tests
         run: yarn test:integration
@@ -139,7 +148,7 @@ jobs:
 
       - name: Upload integration coverage
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: integration-coverage
           path: packages/server/coverage-integration
@@ -152,11 +161,22 @@ jobs:
 
       - name: Upload validation receipt
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: validation-receipt-integration
           path: .validation/latest-receipt.md
           if-no-files-found: ignore
+
+      - name: Create trusted integration receipt
+        run: node scripts/trusted-job-receipt.mjs --job integration
+
+      - name: Upload trusted integration receipt
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: trusted-job-receipt-integration
+          path: .validation/trusted-jobs/integration.json
+          if-no-files-found: error
+          include-hidden-files: true
 
   e2e:
     name: E2E
@@ -186,10 +206,12 @@ jobs:
       ALLOW_MIGRATION_WITHOUT_BACKUP: true
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Use Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version-file: .nvmrc
           cache: yarn
@@ -201,13 +223,7 @@ jobs:
         run: yarn workspace @local/shared build
 
       - name: Prepare Prisma schema
-        run: |
-          mkdir -p packages/server/dist/db
-          cp packages/server/src/db/schema.prisma packages/server/dist/db/schema.prisma
-          cp -R packages/server/src/db/migrations packages/server/dist/db/migrations
-
-      - name: Generate Prisma client
-        run: yarn workspace server prisma generate --schema src/db/schema.prisma
+        run: yarn validate:prisma-client
 
       - name: Install Chromium
         run: yarn playwright install --with-deps chromium
@@ -217,7 +233,7 @@ jobs:
 
       - name: Upload accessibility Playwright report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: playwright-report-accessibility
           path: |
@@ -225,12 +241,39 @@ jobs:
             test-results/accessibility.json
           if-no-files-found: ignore
 
-      - name: Run E2E tests
+      - name: Run public visitor E2E tests
+        run: yarn test:e2e:public
+
+      - name: Upload public Playwright report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: playwright-report-public
+          path: |
+            playwright-report/public
+            test-results/public.json
+          if-no-files-found: ignore
+
+      - name: Run visual regression tests
+        run: yarn test:visual
+
+      - name: Upload visual Playwright report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: playwright-report-visual
+          path: |
+            playwright-report/visual
+            test-results/visual.json
+            test-results/visual-artifacts
+          if-no-files-found: ignore
+
+      - name: Run admin E2E tests
         run: yarn test:e2e:admin
 
       - name: Upload Playwright report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: playwright-report-admin
           path: |
@@ -238,18 +281,90 @@ jobs:
             test-results/admin.json
           if-no-files-found: ignore
 
+      - name: Run production-build E2E smoke tests
+        run: yarn test:e2e:production
+
+      - name: Upload production Playwright report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: playwright-report-production
+          path: |
+            playwright-report/production
+            test-results/production.json
+          if-no-files-found: ignore
+
       - name: Validation receipt
         if: always()
         run: |
-          VALIDATION_COMMAND="ci e2e job: yarn test:e2e:admin" yarn validation:receipt
+          VALIDATION_COMMAND="ci e2e job: yarn test:a11y, yarn test:e2e:public, yarn test:visual, yarn test:e2e:admin, yarn test:e2e:production" yarn validation:receipt
 
       - name: Upload validation receipt
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: validation-receipt-e2e
           path: .validation/latest-receipt.md
           if-no-files-found: ignore
+
+      - name: Create trusted e2e receipt
+        run: node scripts/trusted-job-receipt.mjs --job e2e
+
+      - name: Upload trusted e2e receipt
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: trusted-job-receipt-e2e
+          path: .validation/trusted-jobs/e2e.json
+          if-no-files-found: error
+          include-hidden-files: true
+
+  deploy-rehearsal:
+    name: Deploy Rehearsal
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Use Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .nvmrc
+          cache: yarn
+
+      - name: Install system prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+
+      - name: Run disposable deploy rehearsal
+        run: ./scripts/deploy-rehearsal.sh -v "rehearsal-ci-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+
+      - name: Validation receipt
+        if: always()
+        run: |
+          VALIDATION_COMMAND="ci deploy-rehearsal job: ./scripts/deploy-rehearsal.sh" yarn validation:receipt
+
+      - name: Upload validation receipt
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: validation-receipt-deploy-rehearsal
+          path: .validation/latest-receipt.md
+          if-no-files-found: error
+
+      - name: Create trusted deploy rehearsal receipt
+        run: node scripts/trusted-job-receipt.mjs --job deploy-rehearsal
+
+      - name: Upload trusted deploy rehearsal receipt
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: trusted-job-receipt-deploy-rehearsal
+          path: .validation/trusted-jobs/deploy-rehearsal.json
+          if-no-files-found: error
+          include-hidden-files: true
 
   trusted-gate:
     name: Trusted Gate
@@ -258,17 +373,43 @@ jobs:
       - validate
       - integration
       - e2e
+      - deploy-rehearsal
     if: always()
     steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
       - name: Check required validation jobs
         run: |
           if [ "${{ needs.validate.result }}" != "success" ] || \
              [ "${{ needs.integration.result }}" != "success" ] || \
-             [ "${{ needs.e2e.result }}" != "success" ]; then
+             [ "${{ needs.e2e.result }}" != "success" ] || \
+             [ "${{ needs.deploy-rehearsal.result }}" != "success" ]; then
             echo "Required validation jobs did not all pass."
             echo "validate=${{ needs.validate.result }}"
             echo "integration=${{ needs.integration.result }}"
             echo "e2e=${{ needs.e2e.result }}"
+            echo "deploy-rehearsal=${{ needs.deploy-rehearsal.result }}"
             exit 1
           fi
           echo "Trusted gate passed."
+
+      - name: Download trusted job receipts
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          pattern: trusted-job-receipt-*
+          path: .validation/trusted-jobs
+          merge-multiple: true
+
+      - name: Aggregate trusted validation evidence
+        run: node scripts/aggregate-trusted-receipts.mjs
+
+      - name: Upload trusted gate receipt
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: trusted-gate-receipt
+          path: .validation/trusted-gate.json
+          if-no-files-found: error
+          include-hidden-files: true

@@ -1,6 +1,7 @@
 import { APP_LINKS, REST_ROUTES, stripApiPrefix } from "@local/shared";
 import { test, expect } from "../../fixtures/auth";
 import type { Page } from "@playwright/test";
+import { allowRuntimeIssue } from "../../fixtures/runtime-guard";
 
 const injectLandingPageSaveFailure = async (page: Page) => {
     await page.route(`**${REST_ROUTES.landingPage.root}**`, async (route) => {
@@ -85,6 +86,14 @@ test.describe("About Content - Admin", () => {
             .getByRole("button", { name: /save all changes/i })
             .first();
         await expect(saveButton).toBeVisible();
+        allowRuntimeIssue(
+            authenticatedPage,
+            (issue) =>
+                (issue.kind === "response" &&
+                    issue.message.includes(stripApiPrefix(REST_ROUTES.landingPage.root)) &&
+                    issue.message.startsWith("500 ")) ||
+                (issue.kind === "console" && /status of 500/i.test(issue.message)),
+        );
         await injectLandingPageSaveFailure(authenticatedPage);
 
         const saveResponsePromise = authenticatedPage.waitForResponse(

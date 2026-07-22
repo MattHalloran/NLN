@@ -151,6 +151,7 @@ EOF
 @test "restore-runtime-state execute restores runtime paths with fixture project" {
     install_docker_compose_stub
     install_docker_stub
+    export DEPLOY_LOCK_PATH="${BATS_TMPDIR}/restore-runtime-state.lock"
 
     run bash -c "printf 'yes\n' | '$SCRIPT_PATH' -v '$VERSION' --execute"
 
@@ -168,4 +169,5 @@ EOF
     grep -q "up -d db" "${BATS_TMPDIR}/docker-compose.log"
     grep -q "up -d" "${BATS_TMPDIR}/docker-compose.log"
     grep -q "psql" "${BATS_TMPDIR}/docker.log"
+    grep -q '^command=restore-runtime-state.sh$' "${DEPLOY_LOCK_PATH}"
 }

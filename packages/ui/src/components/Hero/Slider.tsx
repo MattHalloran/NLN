@@ -8,6 +8,7 @@ import { Slide } from "./Slide";
 
 const DEFAULT_DELAY = HERO_SETTINGS_LIMITS.autoPlayDelay.defaultMs;
 const DEFAULT_DURATION = HERO_SETTINGS_LIMITS.fadeTransitionDuration.defaultMs;
+const MIN_INITIAL_AUTOPLAY_DELAY_MS = 10000;
 
 interface SliderProps {
     images?: Image[];
@@ -67,9 +68,12 @@ export const Slider = ({
         if (!autoPlay || images.length <= 1) return;
 
         if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        const delay =
+            slideIndex === 0 ? Math.max(slidingDelay, MIN_INITIAL_AUTOPLAY_DELAY_MS) : slidingDelay;
+
         timeoutRef.current = setTimeout(() => {
             setSlideIndex((index) => (index === images.length - 1 ? 0 : index + 1));
-        }, slidingDelay);
+        }, delay);
 
         return () => {
             if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -82,8 +86,8 @@ export const Slider = ({
         const previousIndex = slideIndex === 0 ? images.length - 1 : slideIndex - 1;
         const nextIndex = slideIndex === images.length - 1 ? 0 : slideIndex + 1;
         const visibleIndexes = canPreloadNeighbors
-            ? new Set([previousIndex, slideIndex, nextIndex])
-            : new Set([slideIndex]);
+            ? [...new Set([previousIndex, slideIndex, nextIndex])]
+            : [slideIndex];
 
         return [...visibleIndexes].map((index) => {
             const offset = index === slideIndex ? 0 : index === previousIndex ? -100 : 100;
@@ -93,7 +97,8 @@ export const Slider = ({
                     width={width}
                     key={`slide-${index}`}
                     image={images[index]}
-                    isPriority={index === slideIndex && slideIndex === 0}
+                    isPriority={index === slideIndex}
+                    loading={canPreloadNeighbors || index === slideIndex ? "eager" : "lazy"}
                     fadeTransition={fadeTransition}
                     isActive={fadeTransition ? index === slideIndex : undefined}
                     offsetPercent={fadeTransition ? undefined : offset}

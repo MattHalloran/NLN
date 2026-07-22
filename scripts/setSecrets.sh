@@ -1,9 +1,11 @@
 #!/bin/bash
+set -euo pipefail
+
 # Sets secrets from an environment variable and .pem files into the secrets location.
-# Useful when developing locally with Docker Compose, instead of Kubernetes.
+# Legacy Vault helper. Useful only for environments that still run the local
+# Vault workflow; normal production deploys source settings from .env-prod.
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 . "${HERE}/utils.sh"
-. "${HERE}/vaultTools.sh"
 
 # Variable to hold environment
 environment=""
@@ -36,11 +38,32 @@ while getopts ":e:" opt; do
     esac
 done
 
+usage() {
+    echo "Usage: $0 -e dev|prod"
+    echo
+    echo "Production Vault writes are disabled by default."
+    echo "Set NLN_ALLOW_PROD_VAULT_WRITE=true only for an intentional legacy Vault rotation."
+}
+
 # Exit if no environment set
 if [ -z "$environment" ]; then
     error "No environment set. Please use -e option with 'dev' or 'prod'."
+    usage
     exit 1
 fi
+
+if [ "$environment" == "prod" ] && [ "${NLN_ALLOW_PROD_VAULT_WRITE:-}" != "true" ]; then
+    error "Refusing production Vault writes."
+    error "Production deploys use .env-prod; set NLN_ALLOW_PROD_VAULT_WRITE=true only for an intentional legacy Vault rotation."
+    exit 1
+fi
+
+if [ ! -f "${HERE}/vaultTools.sh" ]; then
+    error "Vault helper ${HERE}/vaultTools.sh is missing; this legacy secret sync workflow is unavailable."
+    exit 1
+fi
+
+. "${HERE}/vaultTools.sh"
 
 # Set env file based on the environment
 env_file="${HERE}/../.env"
@@ -55,7 +78,12 @@ fi
 # Source the env file
 . "$env_file"
 # Export vault address, so vault commands can be run
-export VAULT_ADDR=$VAULT_ADDR
+export VAULT_ADDR="${VAULT_ADDR:-}"
+
+if [ -z "$VAULT_ADDR" ]; then
+    error "VAULT_ADDR is not set in $env_file."
+    exit 1
+fi
 
 # Check if Vault is initialized and unsealed
 assert_vault_initialized
@@ -108,7 +136,6 @@ while IFS= read -r line || [ -n "$line" ]; do
         key=$(echo "$line" | cut -d '=' -f 1)
         value=$(echo "$line" | cut -d '=' -f 2-)
 
-        # Set the secret in the vault. TODO probably won't work for prod, since it's sealed
         echo "setting secret $key in vault"
         vault kv put secret/vrooli/$environment/$key value="$value"
         if [ $? -ne 0 ]; then

@@ -14,6 +14,10 @@ const withDisplayOrder = (banners: HeroBanner[]): HeroBanner[] =>
         displayOrder: index + 1,
     }));
 
+export function normalizeHeroBannerOrder(banners: HeroBanner[]): HeroBanner[] {
+    return withDisplayOrder(banners);
+}
+
 export function buildUploadedHeroBanners(
     uploadResults: UploadedImageResult[],
     acceptedFiles: File[],

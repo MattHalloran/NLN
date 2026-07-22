@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "policyId": "nln-immutable-release-v1",
+  "productionIntegrationEnabled": false,
+  "topologyPath": "config/deployment-topology.json",
+  "bundle": {
+    "schemaVersion": 1,
+    "noOverwrite": true,
+    "requireTrustedGate": true,
+    "requireImageDigests": true,
+    "requiredArtifactKinds": ["compose", "deployment-helper", "built-artifact"],
+    "optionalArtifactKinds": ["image-archive"]
+  },
+  "rollback": {
+    "applicationServices": ["server", "ui"],
+    "protectedStateServices": ["db", "redis"],
+    "requireDatabaseCompatibility": true,
+    "requirePreAndPostStateIdentity": true,
+    "requireHealth": true,
+    "requirePublicSmoke": true,
+    "requirePostDeploySmoke": true,
+    "automaticInvocationEnabled": false,
+    "maximumRehearsedRtoSeconds": 300
+  }
+}

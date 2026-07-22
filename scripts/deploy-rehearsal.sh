@@ -85,6 +85,14 @@ cleanup() {
         (cd "${REHEARSAL_PROJECT_DIR}" && docker-compose --env-file "${ENV_FILE}" -f docker-compose-prod.yml down) >/dev/null 2>&1 || true
     fi
 
+    if [ "${KEEP}" != true ] && [ -d "${REHEARSAL_PROJECT_DIR}" ] && command -v docker >/dev/null 2>&1; then
+        docker run --rm --user 0:0 \
+            -v "${REHEARSAL_PROJECT_DIR}:/rehearsal-project" \
+            redis:7-alpine \
+            rm -rf /rehearsal-project/data/postgres /rehearsal-project/data/redis \
+            >/dev/null 2>&1 || true
+    fi
+
     if [ "${KEEP}" != true ]; then
         rm -rf "${WORK_ROOT}"
         rm -rf "${TMP_VERSION_DIR}"
@@ -179,6 +187,17 @@ install_project_env_file() {
     cp -p "${ENV_FILE}" "${REHEARSAL_PROJECT_DIR}/.env-prod"
 }
 
+make_database_init_scripts_readable() {
+    local init_dir="${REHEARSAL_PROJECT_DIR}/packages/db/entrypoint"
+
+    # CI deliberately uses umask 077. PostgreSQL drops privileges before it
+    # enumerates this read-only mount, so grant traversal/read access only to
+    # the public, tracked initialization scripts used by the disposable DB.
+    chmod a+rx "${init_dir}"
+    find "${init_dir}" -type d -exec chmod a+rx {} +
+    find "${init_dir}" -type f -exec chmod a+r {} +
+}
+
 require_clean_worktree() {
     local changes
     changes=$(git -C "${REPO_ROOT}" status --porcelain --untracked-files=no)
@@ -201,6 +220,9 @@ write_generated_env() {
 SERVER_LOCATION=dns
 CREATE_MOCK_DATA=false
 DB_PULL=false
+TRUST_PROXY_HOPS=1
+E2E_DISABLE_RATE_LIMITS=false
+RATE_LIMIT_DIAGNOSTICS=false
 PORT_UI=${ui_port}
 PORT_SERVER=${server_port}
 PORT_DB=${db_port}
@@ -262,6 +284,10 @@ wait_for_db() {
 
     if [ "${ready}" != true ]; then
         error "Disposable database did not become ready."
+        warning "Disposable database state:"
+        docker inspect --format 'status={{.State.Status}} exit={{.State.ExitCode}} error={{.State.Error}} health={{if .State.Health}}{{.State.Health.Status}}{{else}}unavailable{{end}}' nln_db 2>&1 || true
+        warning "Recent disposable database logs:"
+        docker logs --tail 200 nln_db 2>&1 || true
         exit 1
     fi
 }
@@ -288,6 +314,12 @@ INSERT INTO deploy_rehearsal_probe (id, note)
 VALUES (1, 'logical dump restore probe')
 ON CONFLICT (id) DO UPDATE SET note = EXCLUDED.note;
 SQL
+}
+
+make_runtime_state_readable() {
+    header "Making disposable Redis state readable for host-side backup"
+    docker exec nln_redis \
+        chmod -R a+rX "${REHEARSAL_PROJECT_DIR}/data/redis"
 }
 
 verify_dump_restores() {
@@ -341,8 +373,10 @@ run_rollback_probe() {
         exit 1
     fi
 
+    docker exec --user 0:0 nln_db \
+        chmod -R a+rwX /var/lib/postgresql/data
     cp -a "${TMP_VERSION_DIR}" "${rollback_probe_dir}"
-    (cd "${REHEARSAL_PROJECT_DIR}" && ROLLBACK_CONFIRMED=true ./scripts/rollback.sh -v "${ROLLBACK_PROBE_VERSION}")
+    (cd "${REHEARSAL_PROJECT_DIR}" && DEPLOY_REHEARSAL=true ROLLBACK_CONFIRMED=true ./scripts/rollback.sh -v "${ROLLBACK_PROBE_VERSION}")
 }
 
 header "Preparing deploy rehearsal"
@@ -378,6 +412,7 @@ fi
 header "Creating disposable project clone"
 git clone --local --no-hardlinks "${REPO_ROOT}" "${REHEARSAL_PROJECT_DIR}" >/dev/null
 git -C "${REHEARSAL_PROJECT_DIR}" checkout "$(git -C "${REPO_ROOT}" rev-parse HEAD)" >/dev/null
+make_database_init_scripts_readable
 
 mkdir -p \
     "${REHEARSAL_PROJECT_DIR}/data/uploads" \
@@ -401,6 +436,7 @@ docker network create nginx-proxy >/dev/null 2>&1 || true
 wait_for_db
 apply_baseline_migrations
 seed_disposable_database
+make_runtime_state_readable
 
 header "Building deploy artifacts"
 (cd "${REHEARSAL_PROJECT_DIR}" && TEST=false BUILD_SKIP_PACKAGE_VERSION_UPDATE=true ./scripts/build.sh -v "${VERSION}" -d n -e "${ENV_FILE}")

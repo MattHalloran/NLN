@@ -193,14 +193,33 @@ Docker Network: proxy (Production only)
 **Responsibilities**:
 - Session storage (Express sessions)
 - Background job queue (Bull)
-- Caching layer (future use)
-- Rate limiting (future use)
+- Shared rate-limit counters for production API limiters
+- Caching layer for selected server features
 
 **Configuration**:
 - Max memory: 256MB
 - Eviction policy: allkeys-lru
 - Persistence: AOF (Append Only File)
 - Data directory: `./data/redis/`
+
+### API Rate Limiting And Proxy Trust
+
+The Express API is intended to run behind the production reverse proxy rather
+than being exposed directly to the public internet. `TRUST_PROXY_HOPS` controls
+how many proxy hops Express trusts when resolving `req.ip`; production startup
+and deploy-readiness checks reject unsafe or missing proxy/rate-limit settings.
+
+All standard production rate limiters use Redis-backed counters keyed as
+`rl:<limiter-id>:<client-identity>`. Local and unit-test construction can inject
+memory stores so rate-limit behavior can be tested without a running Redis
+service. Proxy behavior is covered locally with forwarded-IP unit tests, a
+disposable proxy topology integration test, and the
+`scripts/rate-limit-proxy-smoke.mjs` checker for controlled proxy smoke tests.
+
+Image uploads have layered abuse controls: a request-count limiter runs before
+multipart parsing, `multer` enforces parser-level file size, file count, and
+text field count limits, and a Redis-backed file-count limiter runs after
+parsing before image processing.
 
 ### 6. Email Service
 

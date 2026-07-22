@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "policyId": "nln-phase11-adoption-v1",
+  "productionIntegrationEnabled": false,
+  "productionAccessAllowed": false,
+  "vpsMutationAllowed": false,
+  "permittedVpsOperations": ["approved-read-only-observation", "approved-read-copy-backup"],
+  "requiredProgramPrerequisites": [
+    "phase9-disaster-recovery-qualified",
+    "phase10-qualified",
+    "trusted-gate-required-by-branch-protection"
+  ],
+  "stages": [
+    {
+      "id": "local-only",
+      "productionFacing": false,
+      "automationAllowed": true,
+      "requiredEvidence": [
+        "failure-injection-matrix",
+        "two-clean-checkout-validations",
+        "two-exact-commit-trusted-gate-receipts"
+      ]
+    },
+    {
+      "id": "ci-rehearsal",
+      "productionFacing": false,
+      "automationAllowed": true,
+      "requiredEvidence": [
+        "scheduled-synthetic-deploy-rehearsal",
+        "scheduled-synthetic-rollback-rehearsal",
+        "scheduled-encrypted-backup-rehearsal",
+        "scheduled-clean-host-restore-rehearsal",
+        "zero-unresolved-flaky-or-hanging-tests"
+      ]
+    },
+    {
+      "id": "production-observation",
+      "productionFacing": true,
+      "automationAllowed": false,
+      "requiredEvidence": [
+        "explicit-stage-approval",
+        "read-only-command-review",
+        "legacy-and-candidate-health-comparison"
+      ]
+    },
+    {
+      "id": "backup-qualification",
+      "productionFacing": true,
+      "automationAllowed": false,
+      "requiredEvidence": [
+        "explicit-stage-approval",
+        "approved-read-copy-path",
+        "encrypted-durable-publication",
+        "different-host-download-and-restore-verification",
+        "copied-data-cleanup-receipt"
+      ]
+    },
+    {
+      "id": "evidence-canary",
+      "productionFacing": true,
+      "automationAllowed": false,
+      "requiredEvidence": [
+        "explicit-stage-approval",
+        "exact-commit-trusted-gate-receipt",
+        "qualified-remote-backup",
+        "immutable-release-bundle",
+        "legacy-mutation-sequence-unchanged"
+      ]
+    },
+    {
+      "id": "deployment-cutover",
+      "productionFacing": true,
+      "automationAllowed": false,
+      "requiredEvidence": [
+        "explicit-production-mutation-approval",
+        "low-risk-nondestructive-release",
+        "go-no-go-record",
+        "named-operators",
+        "maintenance-window",
+        "migration-compatibility",
+        "exact-transition-app-rollback-rehearsal",
+        "health-and-capacity-gates",
+        "stop-conditions",
+        "legacy-path-retained"
+      ]
+    },
+    {
+      "id": "stabilization",
+      "productionFacing": true,
+      "automationAllowed": false,
+      "requiredEvidence": [
+        "multiple-successful-new-path-releases",
+        "multiple-successful-recovery-rehearsals",
+        "measured-slo-review",
+        "explicit-legacy-deprecation-approval"
+      ]
+    }
+  ],
+  "promotion": {
+    "sequentialOnly": true,
+    "requireAllStageEvidence": true,
+    "requireFreshEvidence": true,
+    "requireExactCommitBinding": true,
+    "allowEmergencyBypass": false,
+    "allowImplicitApproval": false
+  }
+}

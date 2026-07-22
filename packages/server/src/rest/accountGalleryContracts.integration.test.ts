@@ -263,6 +263,143 @@ describe("Account and gallery REST contracts", () => {
         });
     });
 
+    it("removes a gallery label without deleting the image and reindexes the gallery", async () => {
+        await prisma.image.createMany({
+            data: [
+                { hash: "gallery-first", alt: "First image" },
+                { hash: "gallery-remove", alt: "Remove image" },
+                { hash: "gallery-last", alt: "Last image" },
+            ],
+        });
+        await prisma.image_labels.createMany({
+            data: [
+                { hash: "gallery-first", label: IMAGE_LABELS.Gallery, index: 0 },
+                { hash: "gallery-remove", label: IMAGE_LABELS.Gallery, index: 1 },
+                { hash: "gallery-last", label: IMAGE_LABELS.Gallery, index: 2 },
+            ],
+        });
+
+        const { agent, csrfToken } = await loginAdmin(app);
+
+        const response = await agent
+            .delete(REST_ROUTES.images.label("gallery-remove", IMAGE_LABELS.Gallery))
+            .set(CSRF.HeaderName, csrfToken)
+            .expect(200);
+
+        expect(response.body).toMatchObject({
+            success: true,
+            hash: "gallery-remove",
+            removedLabel: IMAGE_LABELS.Gallery,
+            removed: true,
+            remainingLabels: [],
+            remainingPlantUsage: 0,
+            unlabeled: true,
+        });
+
+        const removedImage = await prisma.image.findUniqueOrThrow({
+            where: { hash: "gallery-remove" },
+        });
+        expect(removedImage.unlabeled_since).toBeInstanceOf(Date);
+
+        const galleryLabels = await prisma.image_labels.findMany({
+            where: { label: IMAGE_LABELS.Gallery },
+            orderBy: [{ index: "asc" }],
+            select: { hash: true, index: true },
+        });
+        expect(galleryLabels).toEqual([
+            { hash: "gallery-first", index: 0 },
+            { hash: "gallery-last", index: 1 },
+        ]);
+    });
+
+    it("removes only the gallery label while preserving other image usage", async () => {
+        await prisma.image.create({
+            data: {
+                hash: "gallery-shared",
+                alt: "Shared image",
+                image_labels: {
+                    create: [
+                        { label: IMAGE_LABELS.Gallery, index: 0 },
+                        { label: IMAGE_LABELS.HeroBanner, index: 0 },
+                    ],
+                },
+            },
+        });
+        const plant = await prisma.plant.create({
+            data: { latinName: "Shared image plant" },
+        });
+        await prisma.plant_images.create({
+            data: {
+                plantId: plant.id,
+                hash: "gallery-shared",
+                index: 0,
+                isDisplay: true,
+            },
+        });
+
+        const { agent, csrfToken } = await loginAdmin(app);
+
+        const response = await agent
+            .delete(REST_ROUTES.images.label("gallery-shared", IMAGE_LABELS.Gallery))
+            .set(CSRF.HeaderName, csrfToken)
+            .expect(200);
+
+        expect(response.body).toMatchObject({
+            success: true,
+            removedLabel: IMAGE_LABELS.Gallery,
+            removed: true,
+            remainingLabels: [IMAGE_LABELS.HeroBanner],
+            remainingPlantUsage: 1,
+            unlabeled: false,
+        });
+
+        const sharedImage = await prisma.image.findUniqueOrThrow({
+            where: { hash: "gallery-shared" },
+            include: { image_labels: true, plant_images: true },
+        });
+        expect(sharedImage.unlabeled_since).toBeNull();
+        expect(sharedImage.image_labels.map(({ label }) => label)).toEqual([
+            IMAGE_LABELS.HeroBanner,
+        ]);
+        expect(sharedImage.plant_images).toHaveLength(1);
+    });
+
+    it("validates gallery label removal requests", async () => {
+        await prisma.image.create({
+            data: {
+                hash: "gallery-validation",
+                image_labels: { create: { label: IMAGE_LABELS.Gallery, index: 0 } },
+            },
+        });
+
+        const { agent, csrfToken } = await loginAdmin(app);
+
+        await agent
+            .delete(REST_ROUTES.images.label("gallery-validation", IMAGE_LABELS.Gallery))
+            .expect(403);
+
+        await agent
+            .delete(REST_ROUTES.images.label("gallery-validation", "unknown-label"))
+            .set(CSRF.HeaderName, csrfToken)
+            .expect(400);
+
+        await agent
+            .delete(REST_ROUTES.images.label("missing-image", IMAGE_LABELS.Gallery))
+            .set(CSRF.HeaderName, csrfToken)
+            .expect(404);
+
+        const idempotent = await agent
+            .delete(REST_ROUTES.images.label("gallery-validation", IMAGE_LABELS.Seasonal))
+            .set(CSRF.HeaderName, csrfToken)
+            .expect(200);
+        expect(idempotent.body).toMatchObject({
+            success: true,
+            removed: false,
+            remainingLabels: [IMAGE_LABELS.Gallery],
+            unlabeled: false,
+        });
+    });
+
     it("blocks in-use image deletion without force and deletes it with force", async () => {
         const imageDir = path.join(testProject.projectDir, "assets/images");
         fs.mkdirSync(imageDir, { recursive: true });

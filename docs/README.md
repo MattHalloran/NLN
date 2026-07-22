@@ -1,104 +1,47 @@
-# Documentation Index
+# Operations and Documentation Hub
 
-Welcome to the New Life Nursery (NLN) project documentation. This guide will help you navigate through all available documentation.
+> Authority: operator hub. This page routes operators by role and safety boundary; it is not itself a live-window procedure.
 
-## Quick Links
+## Current supported routine release
 
-- [Main README](../README.md) - Project overview and quick start
-- [Contributing Guidelines](../CONTRIBUTING.md) - How to contribute to this project
+There is exactly one production procedure: [Release Runbook](release-runbook.md).
+The supported sequence remains:
 
-## Getting Started
+```bash
+./scripts/prepare-deploy-readiness.sh -v <VERSION> -e .env-prod
+./scripts/deploy-production.sh -v <VERSION> -e .env-prod
+```
 
-Start here if you're new to the project:
+Do not substitute candidate `release` commands for this path. Phase 10 does not authorize production access or mutation.
 
-- **[Setup Guide](getting-started/setup.md)** - Complete setup instructions for local development
-- **[Prerequisites](getting-started/prerequisites.md)** - Required tools and software
-- **[First Run](getting-started/first-run.md)** - Your first steps after installation
+## Candidate local and rehearsal workflow
 
-## Architecture
+The Phase 10 interface is fixture/local only. Discover it without reading secrets or contacting a host:
 
-Understand how the system is built:
+```bash
+yarn release --help
+yarn release prepare --help
+yarn release evidence verify --help
+```
 
-- **[System Overview](architecture/overview.md)** - High-level architecture and components
-- **[Database Schema](architecture/database-schema.md)** - PostgreSQL database structure
-- **[Technology Stack](architecture/tech-stack.md)** - Technologies and libraries used
+See the [generated command reference](generated-operator-reference.md), [evidence reference](deployment-evidence-reference.md), [capability matrix](deployment-capability-matrix.md), and [Phase 10 architecture](deployment-reliability-architecture.md).
 
-## Development
+## Advanced recovery and destructive restore
 
-Guides for developing and extending the application:
+Start with the [recovery decision matrix](recovery-decision-matrix.md). `rollback-app` means application-only recovery with the database preserved. `restore-data` and legacy `rollback.sh` can replace data and require separate authorization. Redis recovery expectations are in [Redis runtime state](redis-runtime-state.md).
 
-- **[Local Development](development/local-development.md)** - Day-to-day development workflow
-- **[Testing Guide](development/testing.md)** - Unit, integration, and E2E testing
-- **[E2E Testing](../E2E_TESTING.md)** - Playwright E2E test suite documentation
-- **[Debugging](development/debugging.md)** - Debugging tips and techniques
-- **[Code Style](development/code-style.md)** - Coding standards and conventions
+## Maintenance and disaster recovery
 
-## API Documentation
+Maintenance is never bundled with a routine release. Use [VPS maintenance](vps-maintenance.md) for read-only health and separately authorized maintenance. Phase 9 disaster recovery and Phase 11 production adoption remain dependencies, not supported Phase 10 operations.
 
-Reference for API endpoints and usage:
+## Authoritative references
 
-- **[REST API Reference](api/rest-api.md)** - Complete REST API documentation
-- **[Authentication](api/authentication.md)** - Authentication and authorization
-- **[Error Codes](api/error-codes.md)** - API error codes and handling
-
-## Deployment
-
-Guides for deploying to production:
-
-- **[Deployment Guide](../DEPLOYMENT.md)** - Complete production deployment process
-- **[Environment Variables](../ENVIRONMENT.md)** - Environment variable reference
-- **[Rollback Procedures](deployment/rollback-procedures.md)** - How to rollback failed deployments
-
-## Security
-
-Security documentation and best practices:
-
-- **[Security Checklist](../SECURITY_CHECKLIST.md)** - Pre-deployment security checklist
-- **[Email Protection](EMAIL_PROTECTION.md)** - Email safety in development environments
-- **[Secrets Management](security/secrets-management.md)** - Managing sensitive credentials
-
-## Operations
-
-Guides for operating and maintaining the system:
-
-- **[Monitoring](operations/monitoring.md)** - System monitoring and alerts
-- **[Troubleshooting](operations/troubleshooting.md)** - Common issues and solutions
-- **[Backup & Restore](operations/backup-restore.md)** - Database backup procedures
-
-## Additional Resources
-
-### Reports & History
-
-Historical reports and implementation summaries are archived in `/archive/reports/`:
-
-- [Week 1 Deployment Fixes](../archive/reports/WEEK1_DEPLOYMENT_FIXES.md)
-- [E2E Test Improvements](../archive/reports/E2E_TEST_IMPROVEMENTS.md)
-- [E2E Testing Final Summary](../archive/reports/E2E_FINAL_SUMMARY.md)
-
-### Package-Specific Documentation
-
-- **Server Package**: [Testing Guide](../packages/server/TESTING.md), [Integration Tests Summary](../packages/server/INTEGRATION_TESTS_SUMMARY.md)
-- **UI Package**: [Performance Guide](../packages/ui/CLAUDE.md)
-
-## Documentation Standards
-
-When contributing documentation:
-
-1. Use clear, concise language
-2. Include code examples where appropriate
-3. Add "Last Updated" dates to documents
-4. Use consistent markdown formatting
-5. Keep table of contents updated
-6. Add cross-references to related docs
-
-## Need Help?
-
-- Check the [Troubleshooting Guide](operations/troubleshooting.md)
-- Review [Common Issues](operations/troubleshooting.md#common-issues)
-- Search existing documentation using your editor's search
-- Create an issue on GitHub for documentation gaps
-
----
-
-**Last Updated**: October 14, 2025
-**Maintained By**: Development Team
+- [Release Runbook](release-runbook.md) — only current live-window procedure.
+- [Deployment SLI/SLO](deployment-slo.md) — formulas, windows, scope, and owners.
+- [Deployment command catalog](deployment-command-catalog.md) — stable ownership and effects.
+- [Generated operator reference](generated-operator-reference.md) — registry-derived command and receipt names.
+- [Deployment evidence reference](deployment-evidence-reference.md) — receipt relationships, compatibility limits, storage, and verification.
+- [Deployment reliability architecture](deployment-reliability-architecture.md) — policies, adapters, extension rules, and testing boundaries.
+- [Deployment reliability master plan](deployment-reliability-master-plan.md) — reserved phase taxonomy.
+- [Deployment architecture/reference](../DEPLOYMENT.md) — background, not a live procedure.
+- [Testing and Validation Guide](../TESTING.md) and [Environment Variables](../ENVIRONMENT.md).

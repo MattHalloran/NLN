@@ -1,6 +1,30 @@
 /* eslint-disable no-undef */
 /* eslint-disable no-restricted-globals */
 /* global importScripts workbox */
+const IS_LOCALHOST_SERVICE_WORKER =
+    self.location.hostname === "localhost" ||
+    self.location.hostname === "[::1]" ||
+    /^127(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$/.test(self.location.hostname);
+const ENABLE_LOCAL_PWA = __ENABLE_LOCAL_PWA__;
+
+if (IS_LOCALHOST_SERVICE_WORKER && !ENABLE_LOCAL_PWA) {
+    self.addEventListener("install", (event) => {
+        event.waitUntil(self.skipWaiting());
+    });
+
+    self.addEventListener("activate", (event) => {
+        event.waitUntil(
+            (async () => {
+                const cacheNames = await caches.keys();
+                await Promise.all(cacheNames.map((cacheName) => caches.delete(cacheName)));
+                await self.registration.unregister();
+
+                const windowClients = await self.clients.matchAll({ type: "window" });
+                await Promise.all(windowClients.map((client) => client.navigate(client.url)));
+            })(),
+        );
+    });
+} else {
 // Import Workbox from the local build output so service worker startup does not
 // depend on a third-party CDN.
 importScripts("./workbox/workbox-sw.js");
@@ -121,3 +145,4 @@ self.addEventListener("activate", (event) => {
         }),
     );
 });
+}

@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "contractId": "nln-deployment-topology-v1",
+  "applicationServices": ["server", "ui"],
+  "protectedStateServices": ["db", "redis"],
+  "activationOrder": [
+    { "service": "server", "thenCheck": "server-health" },
+    { "service": "ui", "thenCheck": "ui-health" }
+  ],
+  "protectedLifecycle": {
+    "recreateStateServices": false,
+    "replaceVolumes": false,
+    "recreateDependencies": false
+  },
+  "healthContract": {
+    "server": "/api/health",
+    "ui": "/",
+    "dependencies": ["postgres", "redis"]
+  }
+}

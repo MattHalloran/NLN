@@ -21,6 +21,7 @@ load "${HERE}/__stub.bash"
 
 setup() {
     # Reset any environment variables or settings here if necessary
+    mkdir -p "$BATS_MOCK_BINDIR"
     : # Noop for now
 }
 

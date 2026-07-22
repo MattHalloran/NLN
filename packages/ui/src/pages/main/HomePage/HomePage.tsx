@@ -12,6 +12,7 @@ import { useLandingPage } from "hooks/useLandingPage";
 import { restApi } from "api/rest/client";
 import { handleError } from "utils/errorLogger";
 import { getServerUrl } from "utils/serverUrl";
+import { getEnabledHomeSections } from "./homeSections";
 
 type LazyNamedComponent<TModule, TExport extends keyof TModule> =
     TModule[TExport] extends ComponentType<infer TProps> ? ComponentType<TProps> : never;
@@ -68,11 +69,10 @@ export const HomePage = () => {
     }, [landingPageData]);
 
     // Filter and order sections based on configuration
-    const orderedSections = useMemo(() => {
-        return sectionConfig.order
-            .filter((sectionId) => sectionConfig.enabled[sectionId])
-            .filter((sectionId) => SECTION_COMPONENTS[sectionId]); // Only render sections we have components for
-    }, [sectionConfig]);
+    const orderedSections = useMemo(
+        () => getEnabledHomeSections(sectionConfig, SECTION_COMPONENTS),
+        [sectionConfig],
+    );
 
     // Track "view" event when landing page loads with variant
     // Resets and tracks again if variant changes (e.g., after localStorage expiration or variant reassignment)

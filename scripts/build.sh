@@ -15,6 +15,8 @@ set -euo pipefail
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 # shellcheck disable=SC1091
 . "${HERE}/utils.sh"
+# shellcheck source=scripts/deploy-safety.sh
+. "${HERE}/deploy-safety.sh"
 
 # Read arguments
 ENV_FILE="${HERE}/../.env-prod"
@@ -26,6 +28,7 @@ TAR_FILES=()
 COMMIT_FILE=""
 MANIFEST_FILE=""
 UI_ENV_FILE=""
+READINESS_RECEIPT_FILE=""
 
 cleanup_build_artifacts() {
     if [ ${#TAR_FILES[@]} -gt 0 ]; then
@@ -39,6 +42,9 @@ cleanup_build_artifacts() {
     fi
     if [ -n "${UI_ENV_FILE}" ]; then
         rm -f "${UI_ENV_FILE}"
+    fi
+    if [ -n "${READINESS_RECEIPT_FILE}" ]; then
+        rm -f "${READINESS_RECEIPT_FILE}"
     fi
     rm -f "${HERE}/../production-docker-images.tar" "${HERE}/../production-docker-images.tar.gz"
 }
@@ -62,6 +68,11 @@ while getopts ":v:d:he:" opt; do
         echo "  -d --deploy: Deploy to VPS (y/N)"
         echo "  -e --env-file: .env file location (e.g. \"/root/my-folder/.env\")"
         echo "  -h --help: Show this help message"
+        echo ""
+        echo "Routine production deployments should use:"
+        echo "  ./scripts/prepare-deploy-readiness.sh -v <VERSION> -e .env-prod"
+        echo "  ./scripts/deploy-production.sh -v <VERSION> -e .env-prod"
+        echo "Use build.sh directly only for advanced recovery, debugging, or local rehearsal."
         exit 0
         ;;
     \?)
@@ -112,6 +123,11 @@ else
     SHOULD_UPDATE_VERSION=true
 fi
 validate_deploy_version "${VERSION}"
+
+if is_yes "${DEPLOY}"; then
+    warning "build.sh is a lower-level artifact transfer path."
+    warning "Routine production deployments should use ./scripts/deploy-production.sh after prepare-deploy-readiness.sh."
+fi
 
 if [ "${BUILD_ALLOW_DIRTY_WORKTREE:-false}" != "true" ]; then
     WORKTREE_CHANGES=$(git -C "${HERE}/.." status --porcelain --untracked-files=no)
@@ -191,6 +207,9 @@ UI_ENV_FILE="${HERE}/../packages/ui/.env"
     echo "VITE_SERVER_LOCATION=${SERVER_LOCATION}"
     echo "VITE_PORT_SERVER=${PORT_SERVER}"
     echo "VITE_SERVER_URL=${SERVER_URL}"
+    if [ -n "${VITE_API_BASE_URL:-}" ]; then
+        echo "VITE_API_BASE_URL=${VITE_API_BASE_URL}"
+    fi
     echo "VITE_SITE_IP=${SITE_IP}"
 } >"${UI_ENV_FILE}"
 
@@ -256,8 +275,25 @@ for dir in "${DIRECTORIES[@]}"; do
 done
 
 COMMIT_FILE="${HERE}/../deploy-commit.txt"
-git -C "${HERE}/.." rev-parse HEAD >"${COMMIT_FILE}"
+if [ -n "${BUILD_SOURCE_COMMIT:-}" ]; then
+    if [[ ! "${BUILD_SOURCE_COMMIT}" =~ ^[0-9a-f]{40}$ ]]; then
+        error "BUILD_SOURCE_COMMIT must be a full lowercase Git commit hash."
+        exit 1
+    fi
+    printf '%s\n' "${BUILD_SOURCE_COMMIT}" >"${COMMIT_FILE}"
+else
+    git -C "${HERE}/.." rev-parse HEAD >"${COMMIT_FILE}"
+fi
 TAR_FILES+=("${COMMIT_FILE}")
+
+READINESS_RECEIPT_SOURCE="$(deploy_receipt_path "${HERE}/.." "${VERSION}")"
+if [ -f "${READINESS_RECEIPT_SOURCE}" ]; then
+    READINESS_RECEIPT_FILE="${HERE}/../deploy-readiness.receipt"
+    cp -p "${READINESS_RECEIPT_SOURCE}" "${READINESS_RECEIPT_FILE}"
+    TAR_FILES+=("${READINESS_RECEIPT_FILE}")
+else
+    warning "No deploy readiness receipt found for ${VERSION}; lower-level builds will not include remote receipt proof."
+fi
 
 # Build Docker images
 cd "${HERE}/.."
@@ -303,11 +339,17 @@ TAR_FILES+=("production-docker-images.tar.gz")
 MANIFEST_FILE="${HERE}/../deploy-manifest.sha256"
 (
     cd "${HERE}/.."
-    sha256sum "$(basename "${COMMIT_FILE}")" \
-        "packages.ui.dist.tar.gz" \
-        "packages.server.dist.tar.gz" \
-        "packages.shared.dist.tar.gz" \
-        "production-docker-images.tar.gz" >"${MANIFEST_FILE}"
+    MANIFEST_INPUTS=(
+        "$(basename "${COMMIT_FILE}")"
+        "packages.ui.dist.tar.gz"
+        "packages.server.dist.tar.gz"
+        "packages.shared.dist.tar.gz"
+        "production-docker-images.tar.gz"
+    )
+    if [ -n "${READINESS_RECEIPT_FILE}" ]; then
+        MANIFEST_INPUTS+=("$(basename "${READINESS_RECEIPT_FILE}")")
+    fi
+    sha256sum "${MANIFEST_INPUTS[@]}" >"${MANIFEST_FILE}"
 )
 TAR_FILES+=("${MANIFEST_FILE}")
 

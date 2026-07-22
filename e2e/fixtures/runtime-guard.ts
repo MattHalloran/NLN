@@ -1,11 +1,14 @@
 import type { Page, Response } from "@playwright/test";
 
 type RuntimeIssue = {
-    kind: "console" | "pageerror" | "response";
+    kind: "console" | "pageerror" | "requestfailed" | "response";
     message: string;
 };
 
+type RuntimeIssueMatcher = (issue: RuntimeIssue) => boolean;
+
 type RuntimeGuard = {
+    allowIssue: (matcher: RuntimeIssueMatcher) => void;
     assertClean: () => void;
 };
 
@@ -15,9 +18,7 @@ const ALLOWED_CONSOLE_PATTERNS = [
     /\[vite\] connecting/i,
     /\[vite\] connected/i,
     /Download the React DevTools/i,
-    /Failed to execute 'write' on 'Document'/i,
     /Failed to load resource: the server responded with a status of 401/i,
-    /Failed to load resource: the server responded with a status of 500/i,
     /Failed to load resource: the server responded with a status of 403/i,
     /^Error in AdminContactPage$/i,
     /^Action: updateContactInfo$/i,
@@ -35,14 +36,6 @@ const ALLOWED_RESPONSE_FAILURES = [
         status: 401,
         pattern: /\/api\/rest\/v1\/auth\/session$/,
     },
-    {
-        status: 500,
-        pattern: /\/api\/rest\/v1\/landing-page\/contact-info(?:\?|$)/,
-    },
-    {
-        status: 500,
-        pattern: /\/api\/rest\/v1\/landing-page(?:\?|$)/,
-    },
 ];
 
 const isAllowedConsoleMessage = (message: string) =>
@@ -53,8 +46,35 @@ const isAllowedResponseFailure = (response: Response) =>
         ({ status, pattern }) => response.status() === status && pattern.test(response.url()),
     );
 
+const isMonitoredDataOrMediaUrl = (url: string) => {
+    const pathname = new URL(url).pathname;
+
+    return (
+        pathname.startsWith("/api/") ||
+        /\/rest\/v\d+(?:\/|$)/.test(pathname) ||
+        pathname.startsWith("/images/") ||
+        /\.(?:avif|br|css|gif|ico|jpe?g|js|json|png|svg|webmanifest|webp)(?:$|\?)/i.test(pathname)
+    );
+};
+
+const isAllowedRequestFailure = (url: string, errorText = "") => {
+    const { hostname, pathname } = new URL(url);
+
+    if (errorText !== "net::ERR_ABORTED") return false;
+
+    if (hostname !== "localhost" && hostname !== "127.0.0.1") return true;
+
+    return (
+        pathname.endsWith("/service-worker.js") ||
+        pathname.startsWith("/api/images/") ||
+        pathname.endsWith("/auth/session") ||
+        /\/variants\/[^/]+\/track$/.test(pathname)
+    );
+};
+
 export const attachRuntimeGuard = (page: Page): RuntimeGuard => {
     const issues: RuntimeIssue[] = [];
+    const allowedIssueMatchers: RuntimeIssueMatcher[] = [];
 
     page.on("console", (message) => {
         const type = message.type();
@@ -77,6 +97,7 @@ export const attachRuntimeGuard = (page: Page): RuntimeGuard => {
 
     page.on("response", (response) => {
         const status = response.status();
+        const contentType = response.headers()["content-type"] ?? "";
 
         if (status >= 400 && !isAllowedResponseFailure(response)) {
             issues.push({
@@ -84,13 +105,43 @@ export const attachRuntimeGuard = (page: Page): RuntimeGuard => {
                 message: `${status} ${response.url()}`,
             });
         }
+
+        if (
+            status < 400 &&
+            contentType.includes("text/html") &&
+            isMonitoredDataOrMediaUrl(response.url())
+        ) {
+            issues.push({
+                kind: "response",
+                message: `${status} ${contentType} for data/media URL ${response.url()}`,
+            });
+        }
+    });
+
+    page.on("requestfailed", (request) => {
+        const errorText = request.failure()?.errorText ?? "failed";
+        if (isAllowedRequestFailure(request.url(), errorText)) return;
+        if (!isMonitoredDataOrMediaUrl(request.url())) return;
+
+        issues.push({
+            kind: "requestfailed",
+            message: `${request.url()} ${errorText}`,
+        });
     });
 
     const guard = {
+        allowIssue: (matcher: RuntimeIssueMatcher) => {
+            allowedIssueMatchers.push(matcher);
+        },
         assertClean: () => {
-            if (issues.length === 0) return;
+            const unexpectedIssues = issues.filter(
+                (issue) => !allowedIssueMatchers.some((matcher) => matcher(issue)),
+            );
+            if (unexpectedIssues.length === 0) return;
 
-            const details = issues.map((issue) => `- ${issue.kind}: ${issue.message}`).join("\n");
+            const details = unexpectedIssues
+                .map((issue) => `- ${issue.kind}: ${issue.message}`)
+                .join("\n");
             throw new Error(`Unexpected browser/runtime issues detected:\n${details}`);
         },
     };
@@ -101,4 +152,12 @@ export const attachRuntimeGuard = (page: Page): RuntimeGuard => {
 
 export const assertRuntimeClean = (page: Page) => {
     pageGuards.get(page)?.assertClean();
+};
+
+export const allowRuntimeIssue = (page: Page, matcher: RuntimeIssueMatcher) => {
+    const guard = pageGuards.get(page);
+    if (!guard) {
+        throw new Error("Runtime guard is not attached to this page");
+    }
+    guard.allowIssue(matcher);
 };

@@ -5,13 +5,13 @@ import { Express } from "express";
 import jwt from "jsonwebtoken";
 import request from "supertest";
 import { COOKIE, REST_ROUTES } from "@local/shared";
+import { buildNewsletterSubscribersCsv, buildNewsletterWhereFilter } from "./newsletter.js";
 import {
     createRestTestApp,
     startPostgresTestDatabase,
     stopPostgresTestDatabase,
     truncatePublicTables,
 } from "../__tests__/integrationUtils.js";
-import { newsletterSubscribeLimiter } from "../middleware/rateLimiter.js";
 
 describe("Newsletter API Integration Tests", () => {
     let container: StartedPostgreSqlContainer;
@@ -52,8 +52,6 @@ describe("Newsletter API Integration Tests", () => {
     });
 
     beforeEach(async () => {
-        newsletterSubscribeLimiter.resetKey("::/56");
-        newsletterSubscribeLimiter.resetKey("127.0.0.1");
         await truncatePublicTables(prisma);
 
         const adminRole = await prisma.role.create({
@@ -154,6 +152,44 @@ describe("Newsletter API Integration Tests", () => {
         await expect(prisma.newsletter_subscription.count()).resolves.toBe(0);
     });
 
+    it("rejects missing public subscription emails before touching the database", async () => {
+        const response = await request(app).post(REST_ROUTES.newsletter.subscribe).send({
+            source: "footer",
+        });
+
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({ error: "Email is required" });
+        await expect(prisma.newsletter_subscription.count()).resolves.toBe(0);
+    });
+
+    it("accepts already-active subscribers without creating duplicates", async () => {
+        await prisma.newsletter_subscription.create({
+            data: {
+                email: "active@example.com",
+                variant_id: "variant-a",
+                source: "homepage",
+                status: "active",
+            },
+        });
+
+        const response = await request(app).post(REST_ROUTES.newsletter.subscribe).send({
+            email: "active@example.com",
+            variantId: "variant-b",
+        });
+
+        expect(response.status).toBe(200);
+        expect(response.body.message).toMatch(/already subscribed/i);
+        await expect(prisma.newsletter_subscription.count()).resolves.toBe(1);
+        await expect(
+            prisma.newsletter_subscription.findUniqueOrThrow({
+                where: { email: "active@example.com" },
+            })
+        ).resolves.toMatchObject({
+            variant_id: "variant-a",
+            status: "active",
+        });
+    });
+
     it("reactivates an unsubscribed visitor without duplicating the subscription", async () => {
         await prisma.newsletter_subscription.create({
             data: {
@@ -211,6 +247,59 @@ describe("Newsletter API Integration Tests", () => {
                 .set("Cookie", userCookie)
                 .send({ action: "unsubscribe" })
         ).resolves.toHaveProperty("status", 401);
+    });
+
+    it("uses default subscriber pagination and supports status and variant filters", async () => {
+        await prisma.newsletter_subscription.createMany({
+            data: [
+                {
+                    email: "active-a@example.com",
+                    variant_id: "variant-a",
+                    source: "homepage",
+                    status: "active",
+                },
+                {
+                    email: "active-b@example.com",
+                    variant_id: "variant-b",
+                    source: "footer",
+                    status: "active",
+                },
+                {
+                    email: "inactive-a@example.com",
+                    variant_id: "variant-a",
+                    source: "homepage",
+                    status: "unsubscribed",
+                },
+            ],
+        });
+
+        const defaultResponse = await request(app)
+            .get(REST_ROUTES.newsletter.subscribers)
+            .set("Cookie", adminCookie);
+
+        expect(defaultResponse.status).toBe(200);
+        expect(defaultResponse.body.pagination).toMatchObject({
+            page: 1,
+            limit: 50,
+            total: 3,
+            totalPages: 1,
+        });
+        expect(defaultResponse.body.stats.byStatus).toMatchObject({
+            active: 2,
+            unsubscribed: 1,
+        });
+
+        const filteredResponse = await request(app)
+            .get(`${REST_ROUTES.newsletter.subscribers}?status=active&variantId=variant-a`)
+            .set("Cookie", adminCookie);
+
+        expect(filteredResponse.status).toBe(200);
+        expect(filteredResponse.body.pagination.total).toBe(1);
+        expect(filteredResponse.body.subscribers[0]).toMatchObject({
+            email: "active-a@example.com",
+            variant_id: "variant-a",
+            status: "active",
+        });
     });
 
     it("lets admins search, export, inspect stats, unsubscribe, and delete subscribers", async () => {
@@ -289,5 +378,76 @@ describe("Newsletter API Integration Tests", () => {
                 where: { id: otherSubscriber.id },
             })
         ).resolves.toBeNull();
+    });
+
+    it("exports only the requested subscriber status", async () => {
+        await prisma.newsletter_subscription.createMany({
+            data: [
+                {
+                    email: "active@example.com",
+                    variant_id: "variant-a",
+                    source: "homepage",
+                    status: "active",
+                },
+                {
+                    email: "unsubscribed@example.com",
+                    variant_id: "variant-b",
+                    source: "footer",
+                    status: "unsubscribed",
+                },
+            ],
+        });
+
+        const response = await request(app)
+            .get(`${REST_ROUTES.newsletter.subscribersExport}?status=unsubscribed`)
+            .set("Cookie", adminCookie);
+
+        expect(response.status).toBe(200);
+        expect(response.text).toContain("unsubscribed@example.com");
+        expect(response.text).not.toContain("active@example.com");
+    });
+
+    it("rejects invalid subscriber IDs before mutating subscribers", async () => {
+        const response = await request(app)
+            .delete(REST_ROUTES.newsletter.subscriber("not-a-number"))
+            .set("Cookie", adminCookie)
+            .send({ action: "unsubscribe" });
+
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({ error: "Invalid subscriber ID" });
+    });
+
+    it("builds newsletter filter and CSV helper edge cases", () => {
+        expect(
+            buildNewsletterWhereFilter({
+                status: "active",
+                variantId: "variant-a",
+                search: "lead",
+            })
+        ).toEqual({
+            status: "active",
+            variant_id: "variant-a",
+            email: {
+                contains: "lead",
+                mode: "insensitive",
+            },
+        });
+
+        expect(
+            buildNewsletterSubscribersCsv([
+                {
+                    email: "lead@example.com",
+                    variant_id: null,
+                    source: 'homepage "hero"',
+                    status: "active",
+                    created_at: "2026-01-02T03:04:05.000Z",
+                },
+            ])
+        ).toBe(
+            [
+                "Email,Variant ID,Source,Status,Subscribed At",
+                '"lead@example.com","","homepage ""hero""","active","2026-01-02T03:04:05.000Z"',
+            ].join("\n")
+        );
     });
 });

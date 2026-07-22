@@ -4,6 +4,7 @@ import {
     DashboardStats,
     DeepPartial,
     Image,
+    ImageLabel,
     LandingPageContent,
     LandingPageVariant,
     UpdateLandingPageContentRequest,
@@ -237,6 +238,22 @@ export function useDeleteImage() {
             errors?: string[];
         }
     >((input) => restApi.deleteImage(input.hash, input.force));
+}
+
+export function useRemoveImageLabel() {
+    return useRestMutation<
+        { hash: string; label: ImageLabel },
+        {
+            success: boolean;
+            hash: string;
+            removedLabel: ImageLabel;
+            removed: boolean;
+            remainingLabels: string[];
+            remainingPlantUsage: number;
+            unlabeled: boolean;
+            message: string;
+        }
+    >((input) => restApi.removeImageLabel(input.hash, input.label));
 }
 
 export function useCheckImageUsage(hash: string) {

@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "releaseVersion": "3.0.4",
+  "classification": "backward-compatible",
+  "rationale": "The currently checked-in post-baseline migrations add tables, columns, or indexes without removing application-visible data structures.",
+  "rollbackStrategy": "Prefer application-only rollback while retaining the migrated schema; use a forward fix if later evidence invalidates compatibility.",
+  "testedPostgresMajors": [13],
+  "expectedDurationSeconds": 120,
+  "expectedAffectedRows": { "maximum": 1000000, "basis": "conservative fixture rehearsal bound" },
+  "lockRisk": "medium",
+  "transactionStrategy": "migration-defined",
+  "diskSpaceRequiredBytes": 1073741824,
+  "specialDeploymentPlan": null,
+  "migrations": [
+    {
+      "id": "20221024020836_initial_migration",
+      "phase": "expand",
+      "classification": "backward-compatible",
+      "rationale": "Baseline schema.",
+      "backfill": null
+    },
+    {
+      "id": "20251024011700_add_email_verification_tokens",
+      "phase": "expand",
+      "classification": "backward-compatible",
+      "rationale": "Adds nullable columns and an index.",
+      "backfill": null
+    },
+    {
+      "id": "20251027000000_add_image_retention_policy",
+      "phase": "expand",
+      "classification": "backward-compatible",
+      "rationale": "Adds a nullable column and rebuilds its supporting index.",
+      "backfill": null
+    },
+    {
+      "id": "20251027141500_add_cleanup_log_table",
+      "phase": "expand",
+      "classification": "backward-compatible",
+      "rationale": "Adds an independent table.",
+      "backfill": null
+    },
+    {
+      "id": "20251028184142_add_orphaned_records_to_cleanup_log",
+      "phase": "expand",
+      "classification": "backward-compatible",
+      "rationale": "Adds a defaulted column.",
+      "backfill": null
+    },
+    {
+      "id": "20251029000000_add_newsletter_subscription",
+      "phase": "expand",
+      "classification": "backward-compatible",
+      "rationale": "Adds an independent table and indexes.",
+      "backfill": null
+    }
+  ]
+}

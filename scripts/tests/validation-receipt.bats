@@ -18,9 +18,12 @@ write_required_release_artifacts() {
     printf '%s\n' "$minimal_coverage_summary" > packages/ui/coverage/coverage-summary.json
     printf '%s\n' "$minimal_coverage_summary" > packages/server/coverage/coverage-summary.json
     printf '%s\n' "$minimal_coverage_summary" > packages/server/coverage-integration/coverage-summary.json
+    printf '%s\n' "$minimal_playwright_result" > test-results/public.json
+    printf '%s\n' "$minimal_playwright_result" > test-results/visual.json
     printf '%s\n' "$minimal_playwright_result" > test-results/admin.json
     printf '%s\n' "$minimal_playwright_result" > test-results/accessibility.json
     printf '%s\n' "$minimal_playwright_result" > test-results/pwa.json
+    printf '%s\n' "$minimal_playwright_result" > test-results/production.json
     printf '{"results":[]}\n' > .lighthouseci/assertion-results.json
     printf '{"links":{}}\n' > .lighthouseci/links.json
 }
@@ -50,4 +53,6 @@ write_required_release_artifacts() {
     [ "$status" -eq 0 ]
     [[ "$output" == *"Validation receipt written"* ]]
     grep -Fq "All required artifacts" .validation/latest-receipt.md
+    [ "$(stat -c '%a' .validation)" = "700" ]
+    [ "$(stat -c '%a' .validation/latest-receipt.md)" = "600" ]
 }

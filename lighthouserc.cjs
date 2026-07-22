@@ -10,14 +10,20 @@
  * @see https://github.com/GoogleChrome/lighthouse-ci/blob/main/docs/configuration.md
  */
 
+const lighthouseBaseUrl = process.env.LIGHTHOUSE_BASE_URL || 'http://localhost:3001';
+const parsedLighthouseUrl = new URL(lighthouseBaseUrl);
+if (!['localhost', '127.0.0.1'].includes(parsedLighthouseUrl.hostname)) {
+  throw new Error('LIGHTHOUSE_BASE_URL must use a loopback host');
+}
+
 module.exports = {
   ci: {
     collect: {
       // URLs to test (relative to baseUrl)
       url: [
-        'http://localhost:3001/',            // Homepage (priority 1.0)
-        'http://localhost:3001/about',       // About page (priority 0.7)
-        'http://localhost:3001/gallery',     // Gallery page (priority 0.3)
+        `${lighthouseBaseUrl}/`,            // Homepage (priority 1.0)
+        `${lighthouseBaseUrl}/about`,       // About page (priority 0.7)
+        `${lighthouseBaseUrl}/gallery`,     // Gallery page (priority 0.3)
       ],
 
       // Use the median of three local runs to reduce variance. CI runs once so
@@ -73,7 +79,7 @@ module.exports = {
 
         // Specific important metrics
         'first-contentful-paint': ['warn', { maxNumericValue: 2000 }],  // 2s
-        'largest-contentful-paint': ['warn', { maxNumericValue: 2500 }], // 2.5s
+        'largest-contentful-paint': ['error', { maxNumericValue: 2500 }], // 2.5s
         'cumulative-layout-shift': ['warn', { maxNumericValue: 0.1 }],   // 0.1
         'total-blocking-time': ['warn', { maxNumericValue: 300 }],       // 300ms
 

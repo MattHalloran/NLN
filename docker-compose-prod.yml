@@ -1,5 +1,4 @@
 # Run this file by typing: docker-compose up -f docker-compose-prod.yml -d
-version: "3.9"
 services:
   ui:
     build:
@@ -74,10 +73,11 @@ services:
       VIRTUAL_HOST: "${VIRTUAL_HOST}"
       VIRTUAL_PORT: "${PORT_SERVER:-5331}"
       VIRTUAL_PATH: "/api"
+      TRUST_PROXY_HOPS: "${TRUST_PROXY_HOPS}"
       LETSENCRYPT_HOST: "${VIRTUAL_HOST}"
       LETSENCRYPT_EMAIL: "${LETSENCRYPT_EMAIL}"
-    ports:
-      - ${PORT_SERVER:-5331}:${PORT_SERVER:-5331}
+    expose:
+      - ${PORT_SERVER:-5331}
     networks:
       - proxy
       - app

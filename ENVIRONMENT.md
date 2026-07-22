@@ -12,6 +12,7 @@ This document provides a comprehensive reference for all environment variables u
 - [Redis Configuration](#redis-configuration)
 - [Email Configuration](#email-configuration)
 - [Security Configuration](#security-configuration)
+- [Runtime Topologies](#runtime-topologies)
 - [Debug/Development Settings](#debugdevelopment-settings)
 - [Production Settings](#production-settings)
 - [Validation](#validation)
@@ -295,7 +296,16 @@ These variables **MUST** be set for the application to function correctly. The s
 - **Options**: `development`, `production`
 - **Description**: Node.js environment mode
 - **Example**: `production`
-- **Note**: Affects logging, error handling, and security settings
+- **Note**: Affects build/runtime behavior, but does not by itself mean public HTTPS production. Use `APP_RUNTIME` for topology-specific security policy.
+
+### APP_RUNTIME
+- **Required**: No
+- **Type**: Enum
+- **Default**: Derived from `NODE_ENV` and `SERVER_LOCATION`
+- **Options**: `development`, `local-production`, `production`, `staging`
+- **Description**: Explicit runtime topology used for CORS, Helmet/CSP, and cookie security policy
+- **Example**: `local-production`
+- **Note**: `local-production` is for production-built containers served over local HTTP. It should not be used on the public HTTPS VPS.
 
 ### SERVER_LOCATION
 - **Required**: No
@@ -317,7 +327,7 @@ These variables **MUST** be set for the application to function correctly. The s
 - **Required**: No (required if SERVER_LOCATION=dns)
 - **Type**: IP Address
 - **Description**: IP address of the production server
-- **Example**: `192.81.123.456`
+- **Example**: `192.0.2.10`
 - **Note**: Only used if SERVER_LOCATION is set to 'dns'
 
 ### VIRTUAL_HOST
@@ -327,12 +337,83 @@ These variables **MUST** be set for the application to function correctly. The s
 - **Example**: `newlifenurseryinc.com,www.newlifenurseryinc.com`
 - **Note**: No spaces between comma-separated values
 
+### TRUST_PROXY_HOPS
+- **Required**: Yes for production/staging, optional for local development
+- **Type**: Positive integer
+- **Default**: `1` in local development
+- **Description**: Number of trusted reverse-proxy hops in front of Express. This controls how Express resolves `req.ip`, which is used for anonymous CSRF identity and rate-limit buckets.
+- **Example**: `1`
+- **Note**: The standard nginx-proxy topology uses one trusted hop. If another public proxy or load balancer is added, update this value and run the local proxy/rate-limit tests before deploying.
+
+### E2E_DISABLE_RATE_LIMITS
+- **Required**: No
+- **Type**: Boolean
+- **Default**: `false`
+- **Description**: Disables API rate-limit middleware for managed local E2E server runs.
+- **Example**: `false`
+- **Note**: Production validation fails if this is set to `true`.
+
+### RATE_LIMIT_DIAGNOSTICS
+- **Required**: No
+- **Type**: Boolean
+- **Default**: `false`
+- **Description**: Logs sanitized request identity fields used by rate limiting for selected routes.
+- **Example**: `false`
+- **Note**: Keep disabled in production unless temporarily debugging a proxy identity issue.
+
+### Rate-limit diagnostics workflow
+
+Rate-limit diagnostics are for short-lived proxy identity debugging. When
+`RATE_LIMIT_DIAGNOSTICS=true`, the server logs sanitized identity fields for
+selected API routes:
+
+- HTTP method and route path
+- Express-resolved `req.ip` and `req.ips`
+- `X-Forwarded-For` and `X-Real-IP`
+- the rate-limit identity key
+
+Diagnostics must not log cookies, authorization headers, request bodies, secret
+environment values, or production infrastructure values. Production validation
+fails when `RATE_LIMIT_DIAGNOSTICS=true`; use it only as a temporary, explicit
+operator action and set it back to `false` before normal deployment readiness.
+
+Before changing proxy topology or `TRUST_PROXY_HOPS`, run the local checks:
+
+```bash
+yarn workspace server vitest run --config vitest.config.mts src/middleware/clientIdentity.test.ts src/middleware/rateLimiter.test.ts src/config/proxyTrust.test.ts --coverage.enabled=false
+yarn workspace server vitest run --config vitest.integration.config.mts src/middleware/proxyTopology.integration.test.ts --coverage.enabled=false
+bash scripts/check-rate-limit-config.sh docker-compose-prod.yml
+```
+
+For a production-like local proxy or another controlled test proxy that maps
+`X-Test-Client-IP` to the forwarded client identity, run:
+
+```bash
+node scripts/rate-limit-proxy-smoke.mjs --url http://localhost:3001/api/v1/health
+```
+
+The smoke check fails if two configured client identities consume the same
+`RateLimit-Remaining` bucket.
+
 ### CORS_ORIGINS
 - **Required**: No
 - **Type**: Comma-separated list of URL origins
 - **Description**: Additional browser origins allowed to call the API
 - **Example**: `https://newlifenurseryinc.com,https://www.newlifenurseryinc.com`
-- **Note**: Use full origins including protocol. `VIRTUAL_HOST` domains are also allowed automatically.
+- **Note**: Use full origins including protocol. `VIRTUAL_HOST` domains are also allowed automatically. In the preferred local-production path, the browser calls same-origin `/api`, so CORS is only a fallback and diagnostic surface.
+
+### UI_URL
+- **Required**: No
+- **Type**: URL origin
+- **Description**: Browser origin for the UI. Used by server runtime policy to allow local-production credentialed CORS when needed.
+- **Example**: `http://localhost:3001`
+
+### COOKIE_SECURE
+- **Required**: No
+- **Type**: Boolean
+- **Description**: Explicitly overrides whether CSRF and auth cookies use the `Secure` attribute
+- **Example**: `false`
+- **Note**: Leave unset for normal production. Set to `false` only for local HTTP production validation; public HTTPS production should use secure cookies.
 
 ### VITE_PORT_SERVER
 - **Required**: No
@@ -356,6 +437,13 @@ These variables **MUST** be set for the application to function correctly. The s
 - **Description**: Server URL for Vite/UI in production
 - **Example**: `https://newlifenurseryinc.com/api`
 
+### VITE_API_BASE_URL
+- **Required**: No
+- **Type**: URL or path
+- **Description**: Explicit UI API base URL. Takes precedence over inferred localhost/production URL rules.
+- **Example**: `/api`
+- **Note**: Local production uses `/api` so browser requests go through the production UI server proxy and stay same-origin.
+
 ### VITE_GOOGLE_MAPS_EMBED_API_KEY
 - **Required**: No
 - **Type**: String
@@ -368,6 +456,24 @@ These variables **MUST** be set for the application to function correctly. The s
 - **Type**: IP Address
 - **Description**: Site IP for Vite/UI
 - **Example**: `192.81.123.456`
+
+## Runtime Topologies
+
+The app supports three common browser/runtime shapes:
+
+- **Development**: Vite UI on `http://localhost:3001` calls the Node API on `http://localhost:5331/api`. This is split-origin and requires local CORS.
+- **Local production**: production-built UI runs on `http://localhost:3001` and proxies `/api` to the server container. Browser traffic should use same-origin `http://localhost:3001/api`, with `APP_RUNTIME=local-production`, `VITE_API_BASE_URL=/api`, `PROXY_API_TARGET=http://server:5331`, and `COOKIE_SECURE=false`.
+- **Remote production**: public HTTPS domain serves UI and proxies `/api` on the same origin. Use `APP_RUNTIME=production` or leave it derived from `NODE_ENV=production` and `SERVER_LOCATION=dns`; cookies should remain secure.
+
+Do not assume `.env-prod` alone is localhost-compatible. It contains public production DNS values, so local production validation must apply local-safe overrides from `docker-compose.local-production.yml` or `scripts/start-local-production.sh`.
+
+Validate the production-built local browser runtime with:
+
+```bash
+yarn test:e2e:production-local
+```
+
+That gate checks CORS/CSRF-sensitive public traffic, newsletter signup, and admin auth/session cookies against the local Docker stack.
 
 ---
 
@@ -520,6 +626,9 @@ Response format:
 - [ ] Set `CREATE_MOCK_DATA=false`
 - [ ] Set `EMAIL_MODE=production`
 - [ ] Set `SERVER_LOCATION=dns`
+- [ ] Set `TRUST_PROXY_HOPS=1` for the standard nginx-proxy topology
+- [ ] Confirm `E2E_DISABLE_RATE_LIMITS=false`
+- [ ] Confirm `RATE_LIMIT_DIAGNOSTICS=false`
 - [ ] Configure `SERVER_URL` with production domain
 - [ ] Set `VIRTUAL_HOST` with production domains
 - [ ] Update `SITE_IP` with production server IP

@@ -5,6 +5,7 @@ import { deleteFile } from "../../utils/fileIO.js";
 import type Bull from "bull";
 import fs from "fs";
 import path from "path";
+import { URL } from "url";
 import type { LandingPageContent } from "../../types/landingPage.js";
 import { ASSETS_DIR, landingPageContentPath } from "../../config/paths.js";
 
@@ -21,6 +22,85 @@ interface CleanupResult {
     errors: string[];
     backupPath?: string;
     durationMs: number;
+}
+
+type JsonRecord = Record<string, unknown>;
+
+const IMAGE_PATH_KEYS = new Set(["src", "image", "url", "path"]);
+const IMAGE_EXTENSION_PATTERN = /\.(avif|gif|heic|jpe?g|png|webp)$/i;
+
+function isRecord(value: unknown): value is JsonRecord {
+    return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+export function normalizeLandingPageImagePath(value: string): string | null {
+    const trimmed = value.trim();
+
+    if (!trimmed) {
+        return null;
+    }
+
+    if (/^(data|mailto|tel):/i.test(trimmed)) {
+        return null;
+    }
+
+    let pathValue = trimmed;
+
+    try {
+        const parsed = new URL(trimmed);
+        if (!["http:", "https:"].includes(parsed.protocol)) {
+            return null;
+        }
+        pathValue = parsed.pathname;
+    } catch {
+        // Relative paths are expected here.
+    }
+
+    pathValue = pathValue.split(/[?#]/, 1)[0].replace(/^\/+/, "");
+
+    if (pathValue.startsWith("assets/images/")) {
+        pathValue = pathValue.slice("assets/".length);
+    }
+
+    if (!pathValue.startsWith("images/")) {
+        if (!IMAGE_EXTENSION_PATTERN.test(pathValue)) {
+            return null;
+        }
+        pathValue = `images/${pathValue}`;
+    }
+
+    return pathValue;
+}
+
+export function collectLandingPageImagePaths(value: unknown): Set<string> {
+    const imagePaths = new Set<string>();
+
+    const visit = (node: unknown, key?: string): void => {
+        if (Array.isArray(node)) {
+            for (const item of node) {
+                visit(item);
+            }
+            return;
+        }
+
+        if (!isRecord(node)) {
+            if (typeof node === "string" && key && IMAGE_PATH_KEYS.has(key)) {
+                const normalized = normalizeLandingPageImagePath(node);
+                if (normalized) {
+                    imagePaths.add(normalized);
+                }
+            }
+            return;
+        }
+
+        for (const [childKey, childValue] of Object.entries(node)) {
+            visit(childValue, childKey);
+        }
+    };
+
+    visit(value);
+
+    return imagePaths;
 }
 
 /**
@@ -89,7 +169,7 @@ function verifyBackup(sourcePath: string, backupPath: string): boolean {
  * @param imageFiles Array of image file src paths
  * @returns True if image is found in landing page JSON, false otherwise
  */
-function isImageReferencedInLandingPageJSON(imageFiles: Array<{ src: string }>): boolean {
+export function isImageReferencedInLandingPageJSON(imageFiles: Array<{ src: string }>): boolean {
     try {
         const contentPath = landingPageContentPath();
 
@@ -100,28 +180,7 @@ function isImageReferencedInLandingPageJSON(imageFiles: Array<{ src: string }>):
 
         const contentStr = fs.readFileSync(contentPath, "utf-8");
         const content: LandingPageContent = JSON.parse(contentStr);
-
-        // Extract all image src paths from landing page JSON
-        const jsonImagePaths = new Set<string>();
-
-        // Check hero banners
-        if (content.content?.hero?.banners) {
-            for (const banner of content.content.hero.banners) {
-                if (banner.src) {
-                    // Normalize path (remove leading slash, ensure images/ prefix)
-                    let normalized = banner.src.startsWith("/")
-                        ? banner.src.substring(1)
-                        : banner.src;
-                    if (!normalized.startsWith("images/")) {
-                        normalized = `images/${normalized}`;
-                    }
-                    jsonImagePaths.add(normalized);
-                }
-            }
-        }
-
-        // Check seasonal content (if exists)
-        // TODO: Add seasonal content check when structure is defined
+        const jsonImagePaths = collectLandingPageImagePaths(content);
 
         // Check if any of the image file variants match
         for (const file of imageFiles) {

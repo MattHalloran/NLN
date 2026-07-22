@@ -1,5 +1,6 @@
 import { useSnackbar } from "notistack";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { usePwaReloadBlocker } from "../pwaReloadSafety";
 import { trackMutationError, trackMutationSuccess } from "../utils/errorMonitoring";
 import { PubSub } from "../utils/pubsub";
 import { useBlockNavigation } from "./useBlockNavigation";
@@ -76,6 +77,14 @@ export interface UseAdminFormConfig<TData> {
      * to ensure the cache is updated before refetch runs
      */
     refetchDependencies?: Array<() => Promise<unknown>>;
+
+    /**
+     * Whether to refetch through fetchFn after a successful save.
+     *
+     * Disable this for forms whose fetchFn depends on external hook state that may not have
+     * propagated yet; the mutation response will become the verified local state instead.
+     */
+    verifyAfterSave?: boolean;
 }
 
 /**
@@ -162,6 +171,7 @@ export function useAdminForm<TData>({
     pageName = "unknown",
     endpointName = "unknown",
     refetchDependencies = [],
+    verifyAfterSave = true,
 }: UseAdminFormConfig<TData>): UseAdminFormReturn<TData> {
     const { enqueueSnackbar } = useSnackbar();
 
@@ -213,6 +223,7 @@ export function useAdminForm<TData>({
 
     // Block navigation if there are unsaved changes
     useBlockNavigation(blockNavigation && isDirty);
+    usePwaReloadBlocker(isDirty || isSaving);
 
     // Fetch initial data
     const refetch = useCallback(async () => {
@@ -306,31 +317,36 @@ export function useAdminForm<TData>({
                 }
             }
 
-            // Try to refetch to get fresh data from server
             let refetchSuccess = true;
-            try {
-                await refetch();
-            } catch (refetchError) {
-                refetchSuccess = false;
+            if (verifyAfterSave) {
+                // Try to refetch to get fresh data from server
+                try {
+                    await refetch();
+                } catch (refetchError) {
+                    refetchSuccess = false;
 
-                // CRITICAL FIX: If refetch fails after successful mutation,
-                // use the mutation response instead of rolling back
-                console.warn(
-                    "Refetch failed after successful save. Using mutation response.",
-                    refetchError,
-                );
-
-                if (lastMutationResponseRef.current) {
-                    setData(lastMutationResponseRef.current);
-                    setOriginalData(lastMutationResponseRef.current);
-                }
-
-                if (showNotifications) {
-                    enqueueSnackbar(
-                        "Changes saved, but failed to verify. Please refresh the page to see the latest data.",
-                        { variant: "warning" },
+                    // CRITICAL FIX: If refetch fails after successful mutation,
+                    // use the mutation response instead of rolling back
+                    console.warn(
+                        "Refetch failed after successful save. Using mutation response.",
+                        refetchError,
                     );
+
+                    if (lastMutationResponseRef.current) {
+                        setData(lastMutationResponseRef.current);
+                        setOriginalData(lastMutationResponseRef.current);
+                    }
+
+                    if (showNotifications) {
+                        enqueueSnackbar(
+                            "Changes saved, but failed to verify. Please refresh the page to see the latest data.",
+                            { variant: "warning" },
+                        );
+                    }
                 }
+            } else if (lastMutationResponseRef.current) {
+                setData(lastMutationResponseRef.current);
+                setOriginalData(lastMutationResponseRef.current);
             }
 
             // Track successful mutation
@@ -406,6 +422,7 @@ export function useAdminForm<TData>({
         errorMessagePrefix,
         pageName,
         endpointName,
+        verifyAfterSave,
         enqueueSnackbar,
     ]);
 
