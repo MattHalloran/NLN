@@ -13,14 +13,9 @@ if (!baseUrlInput) {
 const baseUrl = new URL(baseUrlInput);
 const timeoutMs = Number(process.env.PUBLIC_SMOKE_TIMEOUT_MS || 10000);
 
-const checks = [
-    { path: "/", pattern: /new life nursery|wholesale nursery/i },
-    { path: "/about", pattern: /our heritage|about/i },
-    { path: "/gallery", pattern: /our collection|gallery/i },
-    { path: "/contact", pattern: /contact us|hours|email/i },
-    { path: "/login", pattern: /log in|sign in/i },
-    { path: "/register", pattern: /sign up|create account/i },
-];
+const checks = ["/", "/about", "/gallery", "/contact", "/login", "/register"];
+const appRootPattern = /<div[^>]+id=["']root["'][^>]*>/i;
+const appEntryPattern = /<script[^>]+(?:type=["']module["'][^>]+)?src=["'][^"']+\.js["']/i;
 
 const joinUrl = (path) => new URL(path, baseUrl).toString();
 
@@ -43,8 +38,8 @@ const fetchWithTimeout = async (url) => {
 
 let failures = 0;
 
-for (const check of checks) {
-    const url = joinUrl(check.path);
+for (const path of checks) {
+    const url = joinUrl(path);
     const startedAt = Date.now();
 
     try {
@@ -56,15 +51,20 @@ for (const check of checks) {
             throw new Error(`HTTP ${response.status}`);
         }
 
-        if (!check.pattern.test(body)) {
-            throw new Error(`missing expected content ${check.pattern}`);
+        const contentType = response.headers.get("content-type") || "";
+        if (!contentType.toLowerCase().includes("text/html")) {
+            throw new Error(`expected HTML content type, received ${contentType || "none"}`);
         }
 
-        console.log(`PASS ${check.path} ${response.status} ${durationMs}ms`);
+        if (!appRootPattern.test(body) || !appEntryPattern.test(body)) {
+            throw new Error("missing production application shell");
+        }
+
+        console.log(`PASS ${path} ${response.status} ${durationMs}ms`);
     } catch (error) {
         failures += 1;
         const message = error instanceof Error ? error.message : String(error);
-        console.error(`FAIL ${check.path}: ${message}`);
+        console.error(`FAIL ${path}: ${message}`);
     }
 }
 

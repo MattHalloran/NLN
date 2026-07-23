@@ -166,7 +166,7 @@ EOF
     run_deploy_production
 
     assert_equal "$status" 0
-    expected=$'validate\nhealth\nssh:test ! -f \'/var/tmp/9.9.9/runtime-state/manifest.txt\'\nbackup:-e '"${ENV_FILE}"$' --preflight-only\nrecovery:-e '"${ENV_FILE}"$'\nbuild:-v 9.9.9 -e '"${ENV_FILE}"$' -d y\nssh:cd \'/srv/app\' && DEPLOY_VALIDATE_CMD=\'validate:ci\' ./scripts/deploy.sh -v \'9.9.9\'\nssh:cd \'/srv/app\' && ./scripts/deploy-smoke.sh -e .env-prod --admin\nssh:docker ps --format \'table {{.Names}}\\t{{.Status}}\''
+    expected=$'validate\nhealth\nssh:test ! -f \'/var/tmp/9.9.9/runtime-state/manifest.txt\'\nbackup:-e '"${ENV_FILE}"$' --preflight-only\nrecovery:-e '"${ENV_FILE}"$'\nssh:cd \'/srv/app\' &&\n     test -z \"$(git status --porcelain --untracked-files=no)\" &&\n     git fetch origin master &&\n     git merge-base --is-ancestor HEAD \'abc123\' &&\n     git checkout master &&\n     git pull --ff-only origin master &&\n     test \"$(git rev-parse HEAD)\" = \'abc123\'\nbuild:-v 9.9.9 -e '"${ENV_FILE}"$' -d y\nssh:cd \'/srv/app\' && DEPLOY_NONINTERACTIVE=true DEPLOY_VALIDATE_CMD=\'validate:ci\' ./scripts/deploy.sh -v \'9.9.9\'\nssh:cd \'/srv/app\' && ./scripts/deploy-smoke.sh -e .env-prod --admin\nssh:docker ps --format \'table {{.Names}}\\t{{.Status}}\''
     assert_equal "$(cat "${DEPLOY_ORDER_LOG}")" "${expected}"
     assert_output --partial "Deploy readiness receipt is fresh"
 }
@@ -374,6 +374,19 @@ EOF
     grep -q 'Remote commit does not match built artifact commit' "$BATS_TEST_DIRNAME/../deploy.sh"
 }
 
+@test "production wrapper fast-forwards clean remote code after recovery capture and before build" {
+    grep -q 'Preparing exact remote deployment code' "$SCRIPT_PATH"
+    grep -q 'git merge-base --is-ancestor HEAD' "$SCRIPT_PATH"
+    grep -q 'git pull --ff-only origin master' "$SCRIPT_PATH"
+    grep -q 'DEPLOY_NONINTERACTIVE=true' "$SCRIPT_PATH"
+
+    recovery_line=$(grep -n 'Creating mandatory offsite recovery package' "$SCRIPT_PATH" | cut -d: -f1)
+    prepare_line=$(grep -n 'Preparing exact remote deployment code' "$SCRIPT_PATH" | cut -d: -f1)
+    build_line=$(grep -n 'Building and transferring artifacts' "$SCRIPT_PATH" | cut -d: -f1)
+    [ "${recovery_line}" -lt "${prepare_line}" ]
+    [ "${prepare_line}" -lt "${build_line}" ]
+}
+
 @test "deploy stages artifacts before swapping live directories" {
     grep -q 'STAGING_DIR="${TMP_DIR}/staged-artifacts"' "$BATS_TEST_DIRNAME/../deploy.sh"
     grep -q 'stage_artifacts' "$BATS_TEST_DIRNAME/../deploy.sh"
@@ -446,6 +459,15 @@ EOF
     grep -q 'verify_public_endpoints' "$BATS_TEST_DIRNAME/../deploy.sh"
     grep -q 'curl -fsS "${ui_url}"' "$BATS_TEST_DIRNAME/../deploy.sh"
     grep -q 'curl -fsS "${server_health_url}"' "$BATS_TEST_DIRNAME/../deploy.sh"
+    grep -q 'PUBLIC_HEALTHCHECK_URL' "$BATS_TEST_DIRNAME/../deploy.sh"
+    grep -q 'server_health_url="${ui_url%/}/healthcheck"' "$BATS_TEST_DIRNAME/../deploy.sh"
+}
+
+@test "deploy recognizes current proxy names exactly and routine deploys never bootstrap proxy" {
+    grep -q "grep -Fxq" "$BATS_TEST_DIRNAME/../deploy.sh"
+    grep -q 'container_is_running nginx-proxy-acme' "$BATS_TEST_DIRNAME/../deploy.sh"
+    grep -q 'container_is_running nginx-proxy-le' "$BATS_TEST_DIRNAME/../deploy.sh"
+    grep -q 'Routine deployments do not bootstrap or restart proxy infrastructure' "$BATS_TEST_DIRNAME/../deploy.sh"
 }
 
 @test "production wrapper runs post-deploy smoke before final container inventory" {
@@ -474,7 +496,10 @@ EOF
     grep -q 'attempt_failed_deploy_recovery "public endpoint verification failed"' "$BATS_TEST_DIRNAME/../deploy.sh"
     grep -q 'restore_previous_artifacts' "$BATS_TEST_DIRNAME/../deploy.sh"
     grep -q 'restore_previous_images' "$BATS_TEST_DIRNAME/../deploy.sh"
-    grep -q -- '--force-recreate' "$BATS_TEST_DIRNAME/../deploy.sh"
+    grep -q 'up -d --no-deps server ui' "$BATS_TEST_DIRNAME/../deploy.sh"
+    grep -q "docker rm -f nln_ui nln_server" "$BATS_TEST_DIRNAME/../deploy.sh"
+    grep -q "Protected database or Redis container identity changed" "$BATS_TEST_DIRNAME/../deploy.sh"
+    refute grep -q 'up -d --force-recreate' "$BATS_TEST_DIRNAME/../deploy.sh"
 }
 
 @test "deploy recovery prints explicit runtime restore and older rollback guidance" {

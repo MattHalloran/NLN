@@ -249,7 +249,7 @@ Complete the approved deployment with the standard wrapper:
 ./scripts/deploy-production.sh -v <VERSION> -e .env-prod
 ```
 
-The wrapper validates the environment, verifies the git worktree is clean and synchronized, verifies the fresh readiness receipt, acquires a local deployment lock, runs non-mutating VPS health checks, refuses reused deployment versions, creates a mandatory offsite backup, builds and transfers artifacts, deploys remotely, runs post-deploy smoke checks, and prints final container status.
+The wrapper validates the environment, verifies the git worktree is clean and synchronized, verifies the fresh readiness receipt, acquires a local deployment lock, runs non-mutating VPS health checks, refuses reused deployment versions, creates a mandatory offsite recovery package, fast-forwards a clean remote checkout to the exact validated commit, builds and transfers artifacts, deploys remotely, runs post-deploy smoke checks, and prints final container status. Capturing the previous source before the remote fast-forward preserves the bootstrap recovery boundary.
 
 The remote deploy also acquires the production mutation lock, validates transferred artifacts, creates a runtime-state backup, runs the read-only pre-downtime migration gate with the readiness receipt proof, loads images, stops containers, swaps artifacts, starts containers, waits for health checks, and verifies public endpoints.
 
@@ -264,6 +264,8 @@ DEPLOY_VALIDATE_CMD=validate ./scripts/deploy-production.sh -v <VERSION> -e .env
 The deploy wrapper will only accept this when the readiness receipt was created with the same `DEPLOY_VALIDATE_CMD` value.
 
 Use a fresh version for each deployment. The wrapper refuses to deploy if `/var/tmp/<VERSION>/runtime-state/manifest.txt` already exists on the VPS, because reusing a version would prevent a fresh pre-deployment runtime-state backup from being created.
+
+A version is consumed once that manifest exists, even if activation later fails. Preserve it as incident evidence, fix the cause, and use a new version for the retry.
 
 Do not use `--skip-tests` for normal production deployments. It is reserved for an explicit emergency bypass and requires `DEPLOY_ALLOW_UNVALIDATED=true`; VPS health checks, version-slot checks, mandatory offsite backup, and post-deploy smoke still run.
 
@@ -315,7 +317,7 @@ The deploy script will:
 9. ✓ Start new containers (automatically uses `.env-prod`)
 10. ✓ Wait for health checks
 11. ✓ Verify internal server healthcheck
-12. ✓ Verify public UI and API healthcheck endpoints
+12. ✓ Verify the public UI and canonical public health endpoint (`PUBLIC_HEALTHCHECK_URL`, or `${UI_URL}/healthcheck` by default)
 
 ### VPS Health Checks
 
@@ -359,7 +361,7 @@ docker logs nln_server
 docker logs nln_ui
 
 # Verify website is accessible
-curl ${SERVER_URL}/healthcheck
+curl ${PUBLIC_HEALTHCHECK_URL:-${UI_URL}/healthcheck}
 
 # Check migration backups were created
 ls -lh data/migration-backups/
@@ -391,7 +393,7 @@ ssh -i ~/.ssh/id_rsa_${SITE_IP} root@${SITE_IP} "docker ps --format 'table {{.Na
 
 # Verify website is accessible
 curl ${UI_URL}
-curl ${SERVER_URL}/healthcheck
+curl ${PUBLIC_HEALTHCHECK_URL:-${UI_URL}/healthcheck}
 ```
 
 #### Quick Verification One-Liner
@@ -556,19 +558,14 @@ Database rollback restores the logical dump from the target version's backup. Wr
 
 ### Nginx Reverse Proxy Issues
 
-**"nginx-proxy-le container constantly restarting"**
+**"nginx-proxy-acme container constantly restarting"**
 
-- Check logs: `docker logs nginx-proxy-le`
+- Check the current companion first: `docker logs nginx-proxy-acme`
+- Older installations may still use the legacy `nginx-proxy-le` name.
 - Common error: "can't get nginx-proxy container ID"
-- Solution: Restart nginx proxy containers:
-  ```bash
-  docker restart nginx-proxy nginx-proxy-le
-  ```
-- If still restarting, you can temporarily stop it:
-  ```bash
-  docker stop nginx-proxy-le
-  ```
-  The main nginx-proxy will continue to work for HTTPS (existing certificates)
+- Treat proxy restart or removal as separate maintenance. Do not perform it during
+  an application deployment; the routine deployment fails closed when the proxy
+  pair is unavailable.
 
 **"502 Bad Gateway after deployment"**
 

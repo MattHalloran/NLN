@@ -10,12 +10,12 @@
     },
     {
       "path": "scripts/deploy-production.sh",
-      "sha256": "fd80139aaaf120ad281ccb9dae8eca32fa7f6c1915f556cfc9b502b5bf63d54d",
+      "sha256": "312b460996415cd5d83d3235f0a922f13663e942eb41becd3e4bd16594bc368f",
       "role": "current-production-wrapper"
     },
     {
       "path": "scripts/deploy.sh",
-      "sha256": "ab34dc1afe705a16bb5cfb420bced1172baa795ef323ee4a974863c7ff159101",
+      "sha256": "51ff83749eb21506ff112cebbbc054e0f826148761598c514ffddb7ae23e707a",
       "role": "legacy-remote-deploy"
     },
     {

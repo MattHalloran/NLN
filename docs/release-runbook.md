@@ -57,8 +57,17 @@ Stop. Do not deploy without a fresh qualified production recovery package. Inves
 Critical VPS health failure:
 Stop. Review the healthcheck output and schedule the recommended maintenance separately using [vps-maintenance.md](vps-maintenance.md). The healthcheck is read-only and must not perform remediation automatically.
 
+Routine deployment is non-interactive for proxy infrastructure. Both
+`nginx-proxy` and either `nginx-proxy-acme` (current) or `nginx-proxy-le`
+(legacy transition only) must already be running. Restore proxy infrastructure
+separately; deployment must not clone, bootstrap, restart, or reconfigure it.
+
 Deployment fails before downtime:
 The live app should still be running. Fix the cause, then re-run the standard wrapper only after confirming the version slot and backup state are still valid.
+
+If `/var/tmp/<VERSION>/runtime-state/manifest.txt` exists, that version is
+consumed even when activation failed. Preserve it and use a fresh version for
+the retry.
 
 Deployment fails after artifact swap or app startup:
 Use the automatic non-database recovery output from `deploy.sh` first. This is the fastest recovery path because it restores previous application artifacts/images without replacing the database.
@@ -68,6 +77,11 @@ Stop and treat this as a data-protection incident. Do not repeatedly restart or 
 
 Bad deploy discovered after new production writes:
 Prefer app-only recovery when possible. Database restore or older-version rollback can discard writes made after the selected backup, so record the emergency dump path and decide whether manual salvage is required.
+
+App-only recovery recreates only `nln_ui` and `nln_server` from the archived
+previous images. It verifies that the exact `nln_db` and `nln_redis` container
+identities did not change; protected state containers must not be
+force-recreated as part of application recovery.
 
 ## Recovery Choices
 

@@ -146,6 +146,19 @@ for container in nln_ui nln_server nln_db nln_redis; do
   fi
 done
 
+if docker ps --format '{{.Names}}' 2>/dev/null | grep -Fxq nginx-proxy; then
+  ok "Container is running: nginx-proxy"
+else
+  critical "Expected production proxy container is not running: nginx-proxy"
+fi
+
+if docker ps --format '{{.Names}}' 2>/dev/null | grep -Fxq nginx-proxy-acme ||
+   docker ps --format '{{.Names}}' 2>/dev/null | grep -Fxq nginx-proxy-le; then
+  ok "Production ACME companion is running"
+else
+  critical "Expected production ACME companion is not running"
+fi
+
 check_disk_path() {
   path="\$1"
   label="\$2"

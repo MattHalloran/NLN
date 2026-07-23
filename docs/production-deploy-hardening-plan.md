@@ -254,10 +254,11 @@ Status: Implemented locally for deploy and rollback. `deploy.sh` and `rollback.s
 
    ```bash
    curl -fsS "$UI_URL"
-   curl -fsS "$SERVER_URL/healthcheck"
+   curl -fsS "${UI_URL%/}/healthcheck"
    ```
 
-   Use the correct public API health URL if it differs.
+   `UI_URL/healthcheck` is the canonical public proxy health endpoint. The
+   server URL is not assumed to expose that route publicly.
 
 2. Verify the nginx-proxy path, not just internal container health.
 3. If public verification fails:
