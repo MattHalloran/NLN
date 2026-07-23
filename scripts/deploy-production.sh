@@ -27,6 +27,7 @@ RECEIPT_MAX_AGE_SECONDS="${DEPLOY_READINESS_RECEIPT_MAX_AGE_SECONDS:-14400}"
 DEPLOY_TIMINGS_FILE=""
 DEPLOY_RECEIPT_STATUS="failed"
 DEPLOY_RECEIPT_PATH=""
+EXPECTED_COMMIT=""
 
 usage() {
     cat <<EOF
@@ -176,10 +177,21 @@ run_deploy_phase "Verifying offsite backup preflight" "${BACKUP_SCRIPT}" -e "${E
 
 run_deploy_phase "Creating mandatory offsite recovery package" "${RECOVERY_PACKAGE_SCRIPT}" -e "${ENV_FILE}"
 
+EXPECTED_COMMIT=$(git -C "${REPO_ROOT}" rev-parse HEAD)
+run_deploy_phase "Preparing exact remote deployment code" \
+    ssh -i "${KEY_PATH}" -o BatchMode=yes "root@${SITE_IP}" \
+    "cd '${PROJECT_DIR}' &&
+     test -z \"\$(git status --porcelain --untracked-files=no)\" &&
+     git fetch origin master &&
+     git merge-base --is-ancestor HEAD '${EXPECTED_COMMIT}' &&
+     git checkout master &&
+     git pull --ff-only origin master &&
+     test \"\$(git rev-parse HEAD)\" = '${EXPECTED_COMMIT}'"
+
 run_deploy_phase "Building and transferring artifacts" \
     env BUILD_SKIP_PACKAGE_VERSION_UPDATE=true DEPLOY_CONFIRMED=true "${BUILD_SCRIPT}" -v "${VERSION}" -e "${ENV_FILE}" -d y
 
-REMOTE_DEPLOY_ENV="DEPLOY_VALIDATE_CMD='${DEPLOY_VALIDATE_CMD}'"
+REMOTE_DEPLOY_ENV="DEPLOY_NONINTERACTIVE=true DEPLOY_VALIDATE_CMD='${DEPLOY_VALIDATE_CMD}'"
 if [ "${SKIP_TESTS}" = true ]; then
     REMOTE_DEPLOY_ENV="DEPLOY_ALLOW_MISSING_READINESS_RECEIPT=true ${REMOTE_DEPLOY_ENV}"
 fi

@@ -91,9 +91,24 @@ if [ "${DEPLOY_REHEARSAL:-false}" = "true" ]; then
     warning "Deploy rehearsal mode enabled; skipping proxy bootstrap checks."
 fi
 
-# Check if nginx-proxy and nginx-proxy-le are running
-if [ "${DEPLOY_REHEARSAL:-false}" != "true" ] && { [ ! "$(docker ps -q -f name=nginx-proxy)" ] || [ ! "$(docker ps -q -f name=nginx-proxy-le)" ]; }; then
+container_is_running() {
+    docker ps --format '{{.Names}}' 2>/dev/null | grep -Fxq "$1"
+}
+
+production_proxy_is_running() {
+    container_is_running nginx-proxy &&
+        { container_is_running nginx-proxy-acme || container_is_running nginx-proxy-le; }
+}
+
+# The current proxy stack uses nginx-proxy-acme. The legacy
+# nginx-proxy-le name remains accepted during an intentional transition.
+if [ "${DEPLOY_REHEARSAL:-false}" != "true" ] && ! production_proxy_is_running; then
     error "Proxy containers are not running!"
+    if [ "${DEPLOY_NONINTERACTIVE:-false}" = "true" ]; then
+        error "Routine deployments do not bootstrap or restart proxy infrastructure."
+        error "Restore the proxy separately, then rerun deployment with a fresh version."
+        exit 1
+    fi
     if [ -z "$NGINX_LOCATION" ]; then
         while true; do
             prompt "Enter path to proxy container directory (defaults to /root/NginxSSLReverseProxy):"
@@ -428,14 +443,17 @@ verify_public_endpoints() {
 
     local ui_url server_health_url attempt
     ui_url="${UI_URL:-}"
-    server_health_url="${SERVER_URL:-}"
+    server_health_url="${PUBLIC_HEALTHCHECK_URL:-}"
 
-    if [ "${DEPLOY_REHEARSAL:-false}" != "true" ] && { [ -z "${ui_url}" ] || [ -z "${server_health_url}" ]; }; then
-        warning "UI_URL or SERVER_URL is not set; skipping public endpoint verification."
-        return 0
+    if [ "${DEPLOY_REHEARSAL:-false}" != "true" ]; then
+        if [ -z "${ui_url}" ]; then
+            error "UI_URL is required for public endpoint verification."
+            exit 1
+        fi
+        if [ -z "${server_health_url}" ]; then
+            server_health_url="${ui_url%/}/healthcheck"
+        fi
     fi
-
-    server_health_url="${server_health_url%/}/healthcheck"
 
     for attempt in {1..12}; do
         if [ "${DEPLOY_REHEARSAL:-false}" = "true" ]; then
@@ -598,6 +616,10 @@ restore_previous_images() {
 
 attempt_failed_deploy_recovery() {
     local reason="$1"
+    local db_container_id redis_container_id
+
+    db_container_id=$(docker inspect --format '{{.Id}}' nln_db 2>/dev/null || true)
+    redis_container_id=$(docker inspect --format '{{.Id}}' nln_redis 2>/dev/null || true)
 
     warning "Deployment verification failed: ${reason}"
     warning "Attempting non-database recovery by restoring previous artifacts and application images."
@@ -605,13 +627,27 @@ attempt_failed_deploy_recovery() {
     restore_previous_artifacts || true
     restore_previous_images || true
 
-    if docker-compose --env-file "${TMP_DIR}/.env-prod" -f "${HERE}/../docker-compose-prod.yml" up -d --force-recreate; then
-        warning "Previous artifacts/images were restarted. Verify the site and database state before retrying deployment."
-    else
+    # Recreate only application containers. Recreating PostgreSQL or Redis is
+    # unnecessary for an app rollback and can trigger legacy Compose volume
+    # inspection failures. Their exact identities are protected below.
+    docker rm -f nln_ui nln_server >/dev/null 2>&1 || true
+    if ! docker-compose --env-file "${TMP_DIR}/.env-prod" -f "${HERE}/../docker-compose-prod.yml" \
+        up -d --no-deps server ui; then
         error "Automatic non-database recovery could not restart containers."
+        print_manual_recovery_guidance
+        return 1
     fi
 
-    print_manual_recovery_guidance
+    if [ -z "${db_container_id}" ] || [ -z "${redis_container_id}" ] ||
+        [ "$(docker inspect --format '{{.Id}}' nln_db 2>/dev/null || true)" != "${db_container_id}" ] ||
+        [ "$(docker inspect --format '{{.Id}}' nln_redis 2>/dev/null || true)" != "${redis_container_id}" ]; then
+        error "Protected database or Redis container identity changed during application recovery."
+        print_manual_recovery_guidance
+        return 1
+    fi
+
+    warning "Previous application artifacts/images were restarted without recreating PostgreSQL or Redis."
+    return 0
 }
 
 # Validate environment configuration from the temporary directory

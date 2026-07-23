@@ -113,7 +113,7 @@ are_local_containers_running() {
 }
 
 are_remote_containers_running() {
-    # Look for running Docker containers with names 'nginx-proxy' and 'nginx-proxy-le'
+    # Look for the current remote proxy container pair.
     if [ "$(docker ps -q -f name=nginx-proxy)" ] && [ "$(docker ps -q -f name=nginx-proxy-acme)" ]; then
         return 0
     fi

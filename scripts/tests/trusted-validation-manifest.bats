@@ -18,6 +18,18 @@ setup() {
     assert_output --regexp 'Manifest SHA-256: [a-f0-9]{64}'
 }
 
+@test "branch CI runs once through pull requests while master retains push validation" {
+    run awk '
+        /^  push:$/ { in_push=1; next }
+        in_push && /^  pull_request:$/ { exit }
+        in_push && /^      - master$/ { found=1 }
+        END { exit(found ? 0 : 1) }
+    ' "$WORKFLOW_PATH"
+
+    assert_success
+    grep -q '^  pull_request:$' "$WORKFLOW_PATH"
+}
+
 @test "trusted validation manifest rejects a skipped receipt requirement" {
     fixture="${BATS_TMPDIR}/manifest.json"
     sed '0,/"receiptRequired": true/s//"receiptRequired": false/' "$MANIFEST_PATH" >"$fixture"
