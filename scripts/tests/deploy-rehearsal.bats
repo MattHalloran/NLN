@@ -141,6 +141,14 @@ teardown() {
     grep -q 'yarn prisma migrate deploy --schema=src/db/schema.prisma' "$SCRIPT_PATH"
 }
 
+@test "deploy rehearsal waits for the exact database to accept queries" {
+    run grep -c 'wait-for-postgres-database.sh' "$SCRIPT_PATH"
+
+    assert_success
+    assert_output "2"
+    refute grep -q 'pg_isready' "$SCRIPT_PATH"
+}
+
 @test "deploy rehearsal reports bounded database diagnostics when readiness fails" {
     grep -q "docker inspect --format" "$SCRIPT_PATH"
     grep -q "docker logs --tail 200 nln_db" "$SCRIPT_PATH"

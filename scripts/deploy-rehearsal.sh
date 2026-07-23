@@ -273,16 +273,10 @@ refuse_existing_local_containers() {
 }
 
 wait_for_db() {
-    local ready=false
-    for _ in $(seq 1 30); do
-        if docker exec nln_db pg_isready -U "${DB_USER}" -d "${DB_NAME}" >/dev/null 2>&1; then
-            ready=true
-            break
-        fi
-        sleep 2
-    done
-
-    if [ "${ready}" != true ]; then
+    if ! PGPASSWORD="${DB_PASSWORD}" "${REHEARSAL_PROJECT_DIR}/scripts/wait-for-postgres-database.sh" \
+        --container nln_db \
+        --user "${DB_USER}" \
+        --database "${DB_NAME}"; then
         error "Disposable database did not become ready."
         warning "Disposable database state:"
         docker inspect --format 'status={{.State.Status}} exit={{.State.ExitCode}} error={{.State.Error}} health={{if .State.Health}}{{.State.Health.Status}}{{else}}unavailable{{end}}' nln_db 2>&1 || true
@@ -339,15 +333,10 @@ verify_dump_restores() {
         -e POSTGRES_PASSWORD="${DB_PASSWORD}" \
         postgres:13-alpine >/dev/null
 
-    local ready=false
-    for _ in $(seq 1 30); do
-        if docker exec "${RESTORE_CONTAINER}" pg_isready -U "${DB_USER}" -d "${DB_NAME}" >/dev/null 2>&1; then
-            ready=true
-            break
-        fi
-        sleep 2
-    done
-    if [ "${ready}" != true ]; then
+    if ! PGPASSWORD="${DB_PASSWORD}" "${REHEARSAL_PROJECT_DIR}/scripts/wait-for-postgres-database.sh" \
+        --container "${RESTORE_CONTAINER}" \
+        --user "${DB_USER}" \
+        --database "${DB_NAME}"; then
         error "Restore verification database did not become ready."
         exit 1
     fi
